@@ -282,13 +282,22 @@ let detect_matching_props_violations cx =
   in
   let is_lit t =
     match drop_generic t with
-    | DefT (_, (BoolT (Some _) | StrT (Literal _) | NumT (Literal _))) -> true
+    | DefT
+        ( _,
+          ( BoolT (Some _)
+          | SingletonBoolT _
+          | StrT (Literal _)
+          | SingletonStrT _
+          | NumT (Literal _)
+          | SingletonNumT _ )
+        ) ->
+      true
     | _ -> false
   in
   let matching_props_checks =
     Base.List.filter_map (Context.matching_props cx) ~f:(fun (prop_name, sentinel, obj_t) ->
         match peek cx sentinel with
-        (* Limit the check to promitive literal sentinels *)
+        (* Limit the check to primitive literal sentinels *)
         | [t] when is_lit t -> Some (TypeUtil.reason_of_t sentinel, prop_name, sentinel, obj_t)
         | _ -> None
     )
@@ -321,28 +330,36 @@ let detect_matching_props_violations cx =
     let obj_reason = TypeUtil.reason_of_t obj in
     (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
        `sentinel` rather than the other way around. *)
-    match
-      Flow_js.possible_concrete_types_for_inspection cx obj_reason obj
-      |> Base.List.map ~f:drop_generic
-      |> Base.List.bind ~f:(Flow_js.possible_concrete_types_for_inspection cx obj_reason)
-      |> Base.List.filter ~f:(function
-             | DefT (_, MixedT _)
-             | DefT (_, NullT)
-             | DefT (_, VoidT) ->
-               false
-             | _ -> true
-             )
-    with
-    | [] -> Flow_js.flow cx (EmptyT.make obj_reason, u)
-    | [obj] -> Flow_js.flow cx (obj, u)
-    | t0 :: t1 :: ts ->
-      (* When the object type is a union, as long as one of them has a matching prop, it should be
-       * good. (e.g. obj.type === 'a' when `typeof obj = {type: 'a'} | {type: 'b'}`). Therefore,
-       * we turn unions into intersections below.
-       *
-       * We have to invoke the speculation kit directly, so that we won't hit the logic of
-       * non-speculating IntersectionT ~> LookupT handler. *)
-      SpeculationKit.try_intersection cx DepthTrace.dummy_trace u obj_reason (InterRep.make t0 t1 ts)
+    let rec sentinel_check o =
+      match
+        Flow_js.possible_concrete_types_for_inspection cx obj_reason o
+        |> Base.List.map ~f:drop_generic
+        |> Base.List.bind ~f:(Flow_js.possible_concrete_types_for_inspection cx obj_reason)
+        |> Base.List.filter ~f:(function
+               | DefT (_, MixedT _)
+               | DefT (_, NullT)
+               | DefT (_, VoidT) ->
+                 false
+               | _ -> true
+               )
+      with
+      | [] -> Flow_js.flow cx (EmptyT.make obj_reason, u)
+      | [IntersectionT (_, rep)] -> InterRep.members rep |> Base.List.iter ~f:sentinel_check
+      | [o] -> Flow_js.flow cx (o, u)
+      | t0 :: t1 :: ts ->
+        (* When the object type is a union, as long as one of them has a matching prop, it should be
+         * good. (e.g. obj.type === 'a' when `typeof obj = {type: 'a'} | {type: 'b'}`). Therefore,
+         * we turn unions into intersections below.
+         * We have to invoke the speculation kit directly, so that we won't hit the logic of
+         * non-speculating IntersectionT ~> LookupT handler. *)
+        SpeculationKit.try_intersection
+          cx
+          DepthTrace.dummy_trace
+          u
+          obj_reason
+          (InterRep.make t0 t1 ts)
+    in
+    sentinel_check obj
   in
   Base.List.iter ~f:step matching_props_checks
 

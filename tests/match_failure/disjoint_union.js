@@ -53,8 +53,8 @@ function singleton() {
     switch (x.type) {
       case A: break;
       case B: break;
-      case C: break; // TODO error C is not included in 'A' | 'B'
-      case D: break; // TODO error D is not included in 'A' | 'B'
+      case C: break; // error C is not included in 'A' | 'B'
+      case D: break; // error D is not included in 'A' | 'B'
     }
   }
 
@@ -62,32 +62,32 @@ function singleton() {
     switch (x.type) {
       case OBJ.A: break;
       case OBJ.B: break;
-      case OBJ.C: break; // TODO error C is not included in 'A' | 'B'
-      case OBJ.D: break; // TODO error D is not included in 'A' | 'B'
+      case OBJ.C: break; // error C is not included in 'A' | 'B'
+      case OBJ.D: break; // error D is not included in 'A' | 'B'
     }
   }
 
   function test2(x: AorB) {
     if (x.type === A) {};
     if (x.type === B) {};
-    if (x.type === C) {}; // TODO error C is not included in 'A' | 'B'
-    if (x.type === D) {}; // TODO error D is not included in 'A' | 'B'
+    if (x.type === C) {}; // error C is not included in 'A' | 'B'
+    if (x.type === D) {}; // error D is not included in 'A' | 'B'
   }
 
   function test3(x: AorB & AorC) {
     switch (x.type) {
       case A: break;
-      case B: break; // TODO error B is not included in 'A'
-      case C: break; // TODO error C is not included in 'A'
-      case D: break; // TODO error D is not included in 'A'
+      case B: break; // error B is not included in 'A'
+      case C: break; // error C is not included in 'A'
+      case D: break; // error D is not included in 'A'
     }
   }
 
   function test4(x: AorB & AorC) {
     if (x.type === A) {};
-    if (x.type === B) {}; // TODO error B is not included in 'A'
-    if (x.type === C) {}; // TODO error C is not included in 'A'
-    if (x.type === D) {}; // TODO error D is not included in 'A'
+    if (x.type === B) {}; // error B is not included in 'A'
+    if (x.type === C) {}; // error C is not included in 'A'
+    if (x.type === D) {}; // error D is not included in 'A'
   }
 
   type AandP = {type: 'A', ...} & {prop: 1, ...};
@@ -97,16 +97,16 @@ function singleton() {
     switch (x.type) {
       case A: break;
       case B: break;
-      case C: break; // TODO error C is not included in 'A'|'B'
-      case D: break; // TODO error D is not included in 'A'|'B'
+      case C: break; // error C is not included in 'A'|'B'
+      case D: break; // error D is not included in 'A'|'B'
     }
   }
 
   function test6(x: AandP | BandP) {
     if (x.type === A) {};
     if (x.type === B) {};
-    if (x.type === C) {}; // TODO error C is not included in 'A'|'B'
-    if (x.type === D) {}; // TODO error D is not included in 'A'|'B'
+    if (x.type === C) {}; // error C is not included in 'A'|'B'
+    if (x.type === D) {}; // error D is not included in 'A'|'B'
   }
 }
 
@@ -137,7 +137,7 @@ function literal_types() {
 
   function test3(x: AorB & AorC) {
     switch (x.type) {
-      case A: break; // TODO okay
+      case A: break;
       case B: break; // error B is not included in 'A'
       case C: break; // error C is not included in 'A'
       case D: break; // error D is not included in 'A'
@@ -145,7 +145,7 @@ function literal_types() {
   }
 
   function test4(x: AorB & AorC) {
-    if (x.type === A) {}; // TODO okay
+    if (x.type === A) {};
     if (x.type === B) {}; // error B is not included in 'A'
     if (x.type === C) {}; // error C is not included in 'A'
     if (x.type === D) {}; // error D is not included in 'A'

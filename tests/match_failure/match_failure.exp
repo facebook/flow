@@ -70,6 +70,540 @@ References:
                  ^^^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:56:12
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:56:12
+   56|       case C: break; // error C is not included in 'A' | 'B'
+                  ^
+
+References:
+   disjoint_union.js:45:9
+   45|   const C: 'C' = 'C';
+               ^ [1]
+   disjoint_union.js:52:18
+   52|   function test1(x: AorB) {
+                        ^ [2]
+   disjoint_union.js:45:12
+   45|   const C: 'C' = 'C';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:57:12
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:57:12
+   57|       case D: break; // error D is not included in 'A' | 'B'
+                  ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:52:18
+   52|   function test1(x: AorB) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:65:12
+
+Cannot compare `OBJ.C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `OBJ.C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `OBJ.C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `B` [5].
+
+   disjoint_union.js:65:12
+   65|       case OBJ.C: break; // error C is not included in 'A' | 'B'
+                  ^^^^^ [1]
+
+References:
+   disjoint_union.js:61:19
+   61|   function test1a(x: AorB) {
+                         ^ [2]
+   disjoint_union.js:45:12
+   45|   const C: 'C' = 'C';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:66:12
+
+Cannot compare `OBJ.D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `OBJ.D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `OBJ.D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `B` [5].
+
+   disjoint_union.js:66:12
+   66|       case OBJ.D: break; // error D is not included in 'A' | 'B'
+                  ^^^^^ [1]
+
+References:
+   disjoint_union.js:61:19
+   61|   function test1a(x: AorB) {
+                         ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:73:20
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:73:20
+   73|     if (x.type === C) {}; // error C is not included in 'A' | 'B'
+                          ^
+
+References:
+   disjoint_union.js:45:9
+   45|   const C: 'C' = 'C';
+               ^ [1]
+   disjoint_union.js:70:18
+   70|   function test2(x: AorB) {
+                        ^ [2]
+   disjoint_union.js:45:12
+   45|   const C: 'C' = 'C';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:74:20
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:74:20
+   74|     if (x.type === D) {}; // error D is not included in 'A' | 'B'
+                          ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:70:18
+   70|   function test2(x: AorB) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:80:12
+
+Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with string
+   literal `C` [5].
+
+   disjoint_union.js:80:12
+   80|       case B: break; // error B is not included in 'A'
+                  ^
+
+References:
+   disjoint_union.js:44:9
+   44|   const B: 'B' = 'B';
+               ^ [1]
+   disjoint_union.js:77:18
+   77|   function test3(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:44:12
+   44|   const B: 'B' = 'B';
+                  ^^^ [3]
+   disjoint_union.js:50:22
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                            ^^^ [4]
+   disjoint_union.js:50:36
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:81:12
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:81:12
+   81|       case C: break; // error C is not included in 'A'
+                  ^
+
+References:
+   disjoint_union.js:45:9
+   45|   const C: 'C' = 'C';
+               ^ [1]
+   disjoint_union.js:77:18
+   77|   function test3(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:45:12
+   45|   const C: 'C' = 'C';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:82:12
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:82:12
+   82|       case D: break; // error D is not included in 'A'
+                  ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:77:18
+   77|   function test3(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:82:12
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `C` [5].
+
+   disjoint_union.js:82:12
+   82|       case D: break; // error D is not included in 'A'
+                  ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:77:18
+   77|   function test3(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:50:22
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                            ^^^ [4]
+   disjoint_union.js:50:36
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:88:20
+
+Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with string
+   literal `C` [5].
+
+   disjoint_union.js:88:20
+   88|     if (x.type === B) {}; // error B is not included in 'A'
+                          ^
+
+References:
+   disjoint_union.js:44:9
+   44|   const B: 'B' = 'B';
+               ^ [1]
+   disjoint_union.js:86:18
+   86|   function test4(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:44:12
+   44|   const B: 'B' = 'B';
+                  ^^^ [3]
+   disjoint_union.js:50:22
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                            ^^^ [4]
+   disjoint_union.js:50:36
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:89:20
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:89:20
+   89|     if (x.type === C) {}; // error C is not included in 'A'
+                          ^
+
+References:
+   disjoint_union.js:45:9
+   45|   const C: 'C' = 'C';
+               ^ [1]
+   disjoint_union.js:86:18
+   86|   function test4(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:45:12
+   45|   const C: 'C' = 'C';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:90:20
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:90:20
+   90|     if (x.type === D) {}; // error D is not included in 'A'
+                          ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:86:18
+   86|   function test4(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:49:22
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                            ^^^ [4]
+   disjoint_union.js:49:36
+   49|   type AorB = {type: 'A'} | {type: 'B'};
+                                          ^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:90:20
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `C` [5].
+
+   disjoint_union.js:90:20
+   90|     if (x.type === D) {}; // error D is not included in 'A'
+                          ^
+
+References:
+   disjoint_union.js:46:9
+   46|   const D: 'D' = 'D';
+               ^ [1]
+   disjoint_union.js:86:18
+   86|   function test4(x: AorB & AorC) {
+                        ^ [2]
+   disjoint_union.js:46:12
+   46|   const D: 'D' = 'D';
+                  ^^^ [3]
+   disjoint_union.js:50:22
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                            ^^^ [4]
+   disjoint_union.js:50:36
+   50|   type AorC = {type: 'A'} | {type: 'C'};
+                                          ^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- disjoint_union.js:100:12
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:100:12
+   100|       case C: break; // error C is not included in 'A'|'B'
+                   ^
+
+References:
+   disjoint_union.js:45:9
+    45|   const C: 'C' = 'C';
+                ^ [1]
+   disjoint_union.js:96:18
+    96|   function test5(x: AandP | BandP) {
+                         ^ [2]
+   disjoint_union.js:45:12
+    45|   const C: 'C' = 'C';
+                   ^^^ [3]
+   disjoint_union.js:93:23
+    93|   type AandP = {type: 'A', ...} & {prop: 1, ...};
+                              ^^^ [4]
+   disjoint_union.js:94:23
+    94|   type BandP = {type: 'B', ...} & {prop: 1, ...};
+                              ^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- disjoint_union.js:101:12
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:101:12
+   101|       case D: break; // error D is not included in 'A'|'B'
+                   ^
+
+References:
+   disjoint_union.js:46:9
+    46|   const D: 'D' = 'D';
+                ^ [1]
+   disjoint_union.js:96:18
+    96|   function test5(x: AandP | BandP) {
+                         ^ [2]
+   disjoint_union.js:46:12
+    46|   const D: 'D' = 'D';
+                   ^^^ [3]
+   disjoint_union.js:93:23
+    93|   type AandP = {type: 'A', ...} & {prop: 1, ...};
+                              ^^^ [4]
+   disjoint_union.js:94:23
+    94|   type BandP = {type: 'B', ...} & {prop: 1, ...};
+                              ^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- disjoint_union.js:108:20
+
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:108:20
+   108|     if (x.type === C) {}; // error C is not included in 'A'|'B'
+                           ^
+
+References:
+   disjoint_union.js:45:9
+    45|   const C: 'C' = 'C';
+                ^ [1]
+   disjoint_union.js:105:18
+   105|   function test6(x: AandP | BandP) {
+                         ^ [2]
+   disjoint_union.js:45:12
+    45|   const C: 'C' = 'C';
+                   ^^^ [3]
+   disjoint_union.js:93:23
+    93|   type AandP = {type: 'A', ...} & {prop: 1, ...};
+                              ^^^ [4]
+   disjoint_union.js:94:23
+    94|   type BandP = {type: 'B', ...} & {prop: 1, ...};
+                              ^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------- disjoint_union.js:109:20
+
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
+
+   disjoint_union.js:109:20
+   109|     if (x.type === D) {}; // error D is not included in 'A'|'B'
+                           ^
+
+References:
+   disjoint_union.js:46:9
+    46|   const D: 'D' = 'D';
+                ^ [1]
+   disjoint_union.js:105:18
+   105|   function test6(x: AandP | BandP) {
+                         ^ [2]
+   disjoint_union.js:46:12
+    46|   const D: 'D' = 'D';
+                   ^^^ [3]
+   disjoint_union.js:93:23
+    93|   type AandP = {type: 'A', ...} & {prop: 1, ...};
+                              ^^^ [4]
+   disjoint_union.js:94:23
+    94|   type BandP = {type: 'B', ...} & {prop: 1, ...};
+                              ^^^ [5]
+
+
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:126:12
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
@@ -190,34 +724,13 @@ References:
                                            ^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------- disjoint_union.js:140:12
-
-Cannot compare `A` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
-
-   disjoint_union.js:140:12
-   140|       case A: break; // TODO okay
-                   ^
-
-References:
-   disjoint_union.js:114:9
-   114|   const A = 'A';
-                ^ [1]
-   disjoint_union.js:138:18
-   138|   function test3(x: AorB & AorC) {
-                         ^ [2]
-   disjoint_union.js:114:13
-   114|   const A = 'A';
-                    ^^^ [3]
-   disjoint_union.js:119:36
-   119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
-
-
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:141:12
 
-Cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `C` [5].
 
    disjoint_union.js:141:12
    141|       case B: break; // error B is not included in 'A'
@@ -233,15 +746,21 @@ References:
    disjoint_union.js:115:13
    115|   const B = 'B';
                     ^^^ [3]
-   disjoint_union.js:119:22
-   119|   type AorB = {type: 'A'} | {type: 'B'};
+   disjoint_union.js:120:22
+   120|   type AorC = {type: 'A'} | {type: 'C'};
                              ^^^ [4]
+   disjoint_union.js:120:36
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:142:12
 
-Cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `B` [5].
 
    disjoint_union.js:142:12
    142|       case C: break; // error C is not included in 'A'
@@ -260,36 +779,18 @@ References:
    disjoint_union.js:119:22
    119|   type AorB = {type: 'A'} | {type: 'B'};
                              ^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------- disjoint_union.js:142:12
-
-Cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
-
-   disjoint_union.js:142:12
-   142|       case C: break; // error C is not included in 'A'
-                   ^
-
-References:
-   disjoint_union.js:116:9
-   116|   const C = 'C';
-                ^ [1]
-   disjoint_union.js:138:18
-   138|   function test3(x: AorB & AorC) {
-                         ^ [2]
-   disjoint_union.js:116:13
-   116|   const C = 'C';
-                    ^^^ [3]
    disjoint_union.js:119:36
    119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:143:12
 
-Cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `B` [5].
 
    disjoint_union.js:143:12
    143|       case D: break; // error D is not included in 'A'
@@ -308,12 +809,18 @@ References:
    disjoint_union.js:119:22
    119|   type AorB = {type: 'A'} | {type: 'B'};
                              ^^^ [4]
+   disjoint_union.js:119:36
+   119|   type AorB = {type: 'A'} | {type: 'B'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:143:12
 
-Cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `C` [5].
 
    disjoint_union.js:143:12
    143|       case D: break; // error D is not included in 'A'
@@ -329,39 +836,21 @@ References:
    disjoint_union.js:117:13
    117|   const D = 'D';
                     ^^^ [3]
-   disjoint_union.js:119:36
-   119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------- disjoint_union.js:148:20
-
-Cannot compare `A` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
-
-   disjoint_union.js:148:20
-   148|     if (x.type === A) {}; // TODO okay
-                           ^
-
-References:
-   disjoint_union.js:114:9
-   114|   const A = 'A';
-                ^ [1]
-   disjoint_union.js:147:18
-   147|   function test4(x: AorB & AorC) {
-                         ^ [2]
-   disjoint_union.js:114:13
-   114|   const A = 'A';
-                    ^^^ [3]
-   disjoint_union.js:119:36
-   119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
+   disjoint_union.js:120:22
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                             ^^^ [4]
+   disjoint_union.js:120:36
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:149:20
 
-Cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `C` [5].
 
    disjoint_union.js:149:20
    149|     if (x.type === B) {}; // error B is not included in 'A'
@@ -377,15 +866,21 @@ References:
    disjoint_union.js:115:13
    115|   const B = 'B';
                     ^^^ [3]
-   disjoint_union.js:119:22
-   119|   type AorB = {type: 'A'} | {type: 'B'};
+   disjoint_union.js:120:22
+   120|   type AorC = {type: 'A'} | {type: 'C'};
                              ^^^ [4]
+   disjoint_union.js:120:36
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:150:20
 
-Cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `B` [5].
 
    disjoint_union.js:150:20
    150|     if (x.type === C) {}; // error C is not included in 'A'
@@ -404,36 +899,18 @@ References:
    disjoint_union.js:119:22
    119|   type AorB = {type: 'A'} | {type: 'B'};
                              ^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------- disjoint_union.js:150:20
-
-Cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
-
-   disjoint_union.js:150:20
-   150|     if (x.type === C) {}; // error C is not included in 'A'
-                           ^
-
-References:
-   disjoint_union.js:116:9
-   116|   const C = 'C';
-                ^ [1]
-   disjoint_union.js:147:18
-   147|   function test4(x: AorB & AorC) {
-                         ^ [2]
-   disjoint_union.js:116:13
-   116|   const C = 'C';
-                    ^^^ [3]
    disjoint_union.js:119:36
    119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:151:20
 
-Cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `A` [4].
-[incompatible-type]
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `B` [5].
 
    disjoint_union.js:151:20
    151|     if (x.type === D) {}; // error D is not included in 'A'
@@ -452,12 +929,18 @@ References:
    disjoint_union.js:119:22
    119|   type AorB = {type: 'A'} | {type: 'B'};
                              ^^^ [4]
+   disjoint_union.js:119:36
+   119|   type AorB = {type: 'A'} | {type: 'B'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:151:20
 
-Cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal `B` [4].
-[incompatible-type]
+Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
+   `C` [5].
 
    disjoint_union.js:151:20
    151|     if (x.type === D) {}; // error D is not included in 'A'
@@ -473,9 +956,12 @@ References:
    disjoint_union.js:117:13
    117|   const D = 'D';
                     ^^^ [3]
-   disjoint_union.js:119:36
-   119|   type AorB = {type: 'A'} | {type: 'B'};
-                                           ^^^ [4]
+   disjoint_union.js:120:22
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                             ^^^ [4]
+   disjoint_union.js:120:36
+   120|   type AorC = {type: 'A'} | {type: 'C'};
+                                           ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:161:12
@@ -656,4 +1142,4 @@ References:
 
 
 
-Found 26 errors
+Found 40 errors
