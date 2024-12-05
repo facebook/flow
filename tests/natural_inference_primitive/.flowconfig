@@ -8,7 +8,6 @@
 
 [options]
 all=true
-as_const=true
 experimental.natural_inference.exports.primitive_const=true
 
 [strict]
