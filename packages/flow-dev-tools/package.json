@@ -20,7 +20,8 @@
     "flow-dev-tools": "./bin/tool"
   },
   "scripts": {
-    "test": "node src/__tests__/all-tests.js"
+    "test": "node src/__tests__/all-tests.js",
+    "facebook-tests": "node src/facebook/__tests__/all-facebook-tests.js"
   },
   "engines": {
     "node": ">=12"
