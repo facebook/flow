@@ -27,6 +27,7 @@ Note that this script keeps its stdout open, and does not terminate. That is
 because a closed pipe is an error for the language server. You can terminate
 the connection explicitly with control-C.
 """
+
 import fileinput
 import sys
 import time
@@ -63,17 +64,13 @@ def to_http(line):
     "method": "{method}",
     "params": {params}
 }}
-    """.strip().format(
-        method=method, params=line
-    )
+    """.strip().format(method=method, params=line)
     content_length = len(json_rpc_payload)
     return """
 Content-Length: {}\r
 \r
 {}
-""".strip().format(
-        content_length, json_rpc_payload
-    )
+""".strip().format(content_length, json_rpc_payload)
 
 
 if __name__ == "__main__":
