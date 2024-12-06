@@ -108,10 +108,20 @@ let send_errors =
         Lsp.Initialize.(client.lsp_initialize_params.initializationOptions.detailedErrorRendering)
         ~default:false
     in
+    let should_include_vscode_detailed_diagnostics =
+      if vscode_detailed_diagnostics then
+        fun error ->
+      let open Flow_errors_utils in
+      match loc_of_printable_error error |> Loc.source with
+      | None -> false
+      | Some source -> SMap.mem (File_key.to_string source) client.opened_files
+      else
+        Base.Fn.const false
+    in
     let diagnostics =
       Flow_lsp_conversions.diagnostics_of_flow_errors
         ~unsaved_content:None
-        ~vscode_detailed_diagnostics
+        ~should_include_vscode_detailed_diagnostics
         ~errors
         ~warnings
     in

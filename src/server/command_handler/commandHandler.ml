@@ -3601,7 +3601,8 @@ let handle_live_errors_request =
             let live_diagnostics =
               Flow_lsp_conversions.diagnostics_of_flow_errors
                 ~unsaved_content:(Some (File_path.make file_path, content))
-                ~vscode_detailed_diagnostics:(vscode_detailed_diagnostics client)
+                ~should_include_vscode_detailed_diagnostics:
+                  (Base.Fn.const (vscode_detailed_diagnostics client))
                 ~errors:live_errors
                 ~warnings:live_warnings
               |> Lsp.UriMap.find_opt live_errors_uri
