@@ -1476,7 +1476,6 @@ let to_printable_error :
       text "Cannot build a typed interface for this module. "
       :: text "You should annotate the exports of this module with types. "
       :: features
-    | MessageCannotCalculateReactConfig reason -> [ref reason; text " cannot calculate config"]
     | MessageCannotCallMaybeReactHook { callee_loc; hooks; non_hooks } ->
       let hook_blame =
         match hooks with

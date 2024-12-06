@@ -668,12 +668,6 @@ class virtual ['a] t =
               false_t = false_t';
             }
       | TypeMap ObjectKeyMirror -> t
-      | ReactConfigType default_props ->
-        let default_props' = self#type_ cx map_cx default_props in
-        if default_props' == default_props then
-          t
-        else
-          ReactConfigType default_props'
       | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
         let property_type' = self#type_ cx map_cx property_type in
         let homomorphic' =

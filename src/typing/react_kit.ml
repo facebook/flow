@@ -51,7 +51,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | CreateElement _
       | ConfigCheck _ ->
         Error_message.ENotAReactComponent { reason; use_op }
-      | GetConfigType _ -> Error_message.EInvalidReactConfigType { reason; use_op }
     in
     Flow_js_utils.add_output cx err
 
@@ -858,27 +857,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
-    let get_config_with_props_and_defaults default_props tout =
-      Object.(
-        Object.Rest.(
-          let props = l in
-          let tool = Resolve Next in
-          let state = One default_props in
-          rec_flow
-            cx
-            trace
-            ( props,
-              ObjKitT
-                ( Op UnknownUse,
-                  reason_op,
-                  tool,
-                  Rest (ReactConfigMerge Polarity.Neutral, state),
-                  tout
-                )
-            )
-        )
-      )
-    in
     let get_instance tout =
       let component = l in
       match drop_generic component with
@@ -940,6 +918,5 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | ConfigCheck { props = jsx_props; instance } -> config_check use_op ~instance ~jsx_props
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
-    | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout
     | GetRef tout -> get_instance tout
 end

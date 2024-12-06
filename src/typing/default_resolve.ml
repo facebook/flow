@@ -65,7 +65,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     | ConfigCheck { props = tout; instance = _ }
     | GetProps tout
     | GetConfig tout
-    | GetConfigType (_, tout)
     | GetRef tout ->
       resolve tout
   in

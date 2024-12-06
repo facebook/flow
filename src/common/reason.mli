@@ -178,7 +178,6 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactRef
-  | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized

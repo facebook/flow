@@ -40,7 +40,6 @@ let string_of_destructor = function
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
-  | ReactConfigType _ -> "ReactConfig"
   | MappedType _ -> "MappedType"
 
 let string_of_destruct_kind = function
@@ -452,8 +451,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | ConfigCheck { props; instance = _ } -> spf "ConfigCheck (%s)" (kid props)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
-      | GetConfigType (default_props, tout) ->
-        spf "GetConfigType (%s, %s)" (kid default_props) (kid tout)
       | GetRef tout -> spf "GetRef (%s)" (kid tout)
     )
   in
@@ -1571,11 +1568,6 @@ let dump_error_message =
     | ENotAReactComponent { reason; use_op } ->
       spf
         "ENotAReactComponent { reason = %s; use_op = %s }"
-        (dump_reason cx reason)
-        (string_of_use_op use_op)
-    | EInvalidReactConfigType { reason; use_op } ->
-      spf
-        "EInvalidReactConfigType { reason = %s; use_op = %s }"
         (dump_reason cx reason)
         (string_of_use_op use_op)
     | EReactElementFunArity (reason, _, _) ->

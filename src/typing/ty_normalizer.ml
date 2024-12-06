@@ -446,7 +446,6 @@ module Make (I : INPUT) : S = struct
     | TypeMap _
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactConfigType _
     | ReactCheckComponentConfig _
     | ReactDRO _
     | MakeHooklike
@@ -485,8 +484,7 @@ module Make (I : INPUT) : S = struct
         | TypeMap _
         | EnumType
         | ReactElementPropsType
-        | ReactElementConfigType
-        | ReactConfigType _ ->
+        | ReactElementConfigType ->
           false)
       )
     | Env.EvaluateAll ->
@@ -1756,9 +1754,6 @@ module Make (I : INPUT) : S = struct
       | T.ReactCheckComponentConfig pmap -> check_component ~env ty pmap
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
-      | T.ReactConfigType default_props ->
-        let%map default_props' = type__ ~env default_props in
-        Ty.Utility (Ty.ReactConfigType (ty, default_props'))
       | T.RestType ((T.Object.Rest.SpreadReversal | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->

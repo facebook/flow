@@ -218,7 +218,6 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrType of 'loc virtual_reason_desc
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactRef
-  | RReactConfig
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
   | RUninitialized
@@ -313,8 +312,7 @@ let rec map_desc_locs f = function
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RModule _ | RNamespace _ | ROptionalChain
-    | RReactProps | RReactElement _ | RReactDefaultProps | RReactChildren | RReactRef | RReactConfig
-      ) as r ->
+    | RReactProps | RReactElement _ | RReactDefaultProps | RReactChildren | RReactRef ) as r ->
     r
   | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
   | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
@@ -719,7 +717,6 @@ let rec string_of_desc = function
   | RReactChildrenOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactChildrenOrUndefinedOrType desc -> spf "children array or %s" (string_of_desc desc)
   | RReactRef -> "React component ref"
-  | RReactConfig -> "config of React component"
   | RPossiblyMissingPropFromObj (propname, desc) ->
     spf
       "possibly missing property `%s` in %s"
@@ -1441,7 +1438,6 @@ let classification_of_reason_desc desc =
   | RReactChildrenOrType _
   | RReactChildrenOrUndefinedOrType _
   | RReactRef
-  | RReactConfig
   | RPossiblyMissingPropFromObj _
   | RUnionBranching _
   | REnum _

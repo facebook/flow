@@ -293,7 +293,6 @@ and utility =
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
-  | ReactConfigType of t * t
 
 and component_props =
   | UnflattenedComponentProps of t
@@ -697,7 +696,6 @@ class ['A] comparator_ty =
       | Class _ -> 13
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
-      | ReactConfigType _ -> 21
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
       | Required _ -> 24
@@ -867,7 +865,6 @@ let string_of_utility_ctor = function
   | StringSuffix _ -> "StringSuffix"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
-  | ReactConfigType _ -> "React$Config"
 
 let types_of_utility = function
   | Keys t -> Some [t]
@@ -892,7 +889,6 @@ let types_of_utility = function
     Some [StrLit (Reason.OrdinaryName arg); t]
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
-  | ReactConfigType (t1, t2) -> Some [t1; t2]
 
 let string_of_prop_source = function
   | Interface -> "interface"

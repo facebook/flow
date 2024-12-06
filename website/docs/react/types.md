@@ -293,7 +293,7 @@ type *of* a React component so you need to use `typeof` as in
 ## `React.Config<Props, DefaultProps>` {#toc-react-config}
 
 :::warning
-This type will be removed in 0.256.0. This type is usually only useful for legacy class components.
+This type will be removed in 0.257.0. This type is usually only useful for legacy class components.
 You can create your own equivalent type with
 
 ```flow

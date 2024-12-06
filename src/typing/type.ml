@@ -1600,7 +1600,6 @@ module rec TypeTerm : sig
     | TypeMap of type_map
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactConfigType of t
     | ReactCheckComponentConfig of Property.t NameUtils.Map.t
     | ReactDRO of react_dro
     | MakeHooklike
@@ -3058,7 +3057,6 @@ and React : sig
       }
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out
-    | GetConfigType of TypeTerm.t * TypeTerm.t_out
     | GetRef of TypeTerm.t_out
 end =
   React

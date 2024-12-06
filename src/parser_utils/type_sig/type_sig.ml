@@ -560,11 +560,6 @@ type ('loc, 'a) annot =
       loc: 'loc;
       config: 'a;
     }
-  | ReactConfig of {
-      loc: 'loc;
-      props: 'a;
-      default: 'a;
-    }
   | ReactCreateClass of 'loc
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a

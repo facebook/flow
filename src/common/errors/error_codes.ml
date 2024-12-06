@@ -96,7 +96,6 @@ type error_code =
   | InvalidModule
   | InvalidPropertyTypeArg
   | InvalidPropType
-  | InvalidReactConfig
   | InvalidReactCreateElement
   | InvalidRendersTypeArgument
   | InvalidSupportsPlatformDecl
@@ -309,7 +308,6 @@ let string_of_code : error_code -> string = function
   | InvalidModule -> "invalid-module"
   | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
-  | InvalidReactConfig -> "invalid-react-config"
   | InvalidReactCreateElement -> "invalid-react-create-element"
   | InvalidRendersTypeArgument -> "invalid-render"
   | InvalidSupportsPlatformDecl -> "invalid-supports-platform"

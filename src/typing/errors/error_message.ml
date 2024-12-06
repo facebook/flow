@@ -312,10 +312,6 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
-  | EInvalidReactConfigType of {
-      reason: 'loc virtual_reason;
-      use_op: 'loc virtual_use_op;
-    }
   | EInvalidReactCreateElement of {
       create_element_loc: 'loc;
       invalid_react: 'loc virtual_reason;
@@ -991,8 +987,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | ENotAReactComponent { reason; use_op } ->
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
-  | EInvalidReactConfigType { reason; use_op } ->
-    EInvalidReactConfigType { reason = map_reason reason; use_op = map_use_op use_op }
   | EInvalidReactCreateElement { create_element_loc; invalid_react } ->
     EInvalidReactCreateElement
       { create_element_loc = f create_element_loc; invalid_react = map_reason invalid_react }
@@ -1519,8 +1513,6 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EEnumIncompatible { contents with use_op })
   | ENotAReactComponent { reason; use_op } ->
     util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
-  | EInvalidReactConfigType { reason; use_op } ->
-    util use_op (fun use_op -> EInvalidReactConfigType { reason; use_op })
   | EFunctionCallExtraArg (rl, ru, n, op) ->
     util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
@@ -1918,7 +1910,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInexactMayOverwriteIndexer _
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
-  | EInvalidReactConfigType _
   | EIncompatibleWithUseOp _
   | EEnumIncompatible _
   | EIncompatibleDefs _
@@ -2543,14 +2534,6 @@ let friendly_message_of_msg = function
         use_op;
         explanation = None;
       }
-  | EInvalidReactConfigType { reason; use_op } ->
-    UseOp
-      {
-        loc = loc_of_reason reason;
-        message = MessageCannotCalculateReactConfig reason;
-        use_op;
-        explanation = None;
-      }
   | EReactElementFunArity (_, fn_name, n) ->
     Normal (MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name; n })
   | EReactRefInRender { usage; kind = Argument; in_hook } ->
@@ -3061,7 +3044,6 @@ let error_code_of_message err : error_code option =
   | EInvalidLHSInAssignment _ -> Some InvalidLhs
   | EInvalidObjectKit _ -> Some NotAnObject
   | EInvalidPrototype _ -> Some NotAnObject
-  | EInvalidReactConfigType _ -> Some InvalidReactConfig
   | EInvalidReactCreateElement _ -> Some InvalidReactCreateElement
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof

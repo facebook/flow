@@ -6827,11 +6827,6 @@ struct
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetProps (OpenT tout)))
         | ReactElementConfigType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig (OpenT tout)))
-        | ReactConfigType default_props ->
-          rec_flow
-            cx
-            trace
-            (t, ReactKitT (use_op, reason, React.GetConfigType (default_props, OpenT tout)))
         | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
           let (property_type, homomorphic) =
             substitute_mapped_type_distributive_tparams

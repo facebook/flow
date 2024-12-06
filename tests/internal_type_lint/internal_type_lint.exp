@@ -16,44 +16,36 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:15
 
-`React$Config` is an internal Flow type. Use `React.Config` instead. [internal-type]
+`React$ElementRef` is an internal Flow type. Use `React.ElementRef` instead. [internal-type]
 
-   10| type T3_bad = React$Config<{}, {}>; // error
-                     ^^^^^^^^^^^^^^^^^^^^
+   10| type T3_bad = React$ElementRef<C>; // error
+                     ^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:15
 
-`React$ElementRef` is an internal Flow type. Use `React.ElementRef` instead. [internal-type]
+`React$ElementConfig` is an internal Flow type. Use `React.ElementConfig` instead. [internal-type]
 
-   12| type T4_bad = React$ElementRef<C>; // error
-                     ^^^^^^^^^^^^^^^^^^^
+   12| type T4_bad = React$ElementConfig<C>; // error
+                     ^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:15
 
-`React$ElementConfig` is an internal Flow type. Use `React.ElementConfig` instead. [internal-type]
+`React$ElementProps` is an internal Flow type. Use `React.ElementProps` instead. [internal-type]
 
-   14| type T5_bad = React$ElementConfig<C>; // error
-                     ^^^^^^^^^^^^^^^^^^^^^^
+   14| type T5_bad = React$ElementProps<C>; // error
+                     ^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:15
 
-`React$ElementProps` is an internal Flow type. Use `React.ElementProps` instead. [internal-type]
-
-   16| type T6_bad = React$ElementProps<C>; // error
-                     ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:18:15
-
 `$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
 [internal-type]
 
-   18| type T7_bad = $ReactDeepReadOnly<{}>; // error
+   16| type T6_bad = $ReactDeepReadOnly<{}>; // error
                      ^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 7 errors
+Found 6 errors

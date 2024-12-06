@@ -2406,14 +2406,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       | _ -> Err (loc, CheckError))
     | _ -> Err (loc, CheckError)
   end
-  | "React$Config" -> begin
-    match targs with
-    | Some (_, { arguments = [props; default]; _ }) ->
-      let props = annot opts scope tbls xs props in
-      let default = annot opts scope tbls xs default in
-      Annot (ReactConfig { loc; props; default })
-    | _ -> Err (loc, CheckError)
-  end
   | "React$ElementProps" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

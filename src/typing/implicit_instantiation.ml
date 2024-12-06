@@ -261,8 +261,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ReactDRO _
       | MakeHooklike
       | PartialType
-      | RequiredType
-      | ReactConfigType _ ->
+      | RequiredType ->
         merge_lower_or_upper_bounds r (OpenT tout)
       | ReactCheckComponentConfig pmap ->
         merge_lower_or_upper_bounds r (OpenT tout)

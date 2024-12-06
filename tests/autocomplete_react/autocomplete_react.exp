@@ -436,10 +436,6 @@ Flags: --pretty
       "name":"ComponentType",
       "type":"type ComponentType<-P> = React$ComponentType<P>"
     },
-    {
-      "name":"Config",
-      "type":"type Config<Props, DefaultProps> = React$Config<Props, DefaultProps>"
-    },
     {"name":"Context","type":"type Context<T> = React$Context<T>"},
     {
       "name":"ElementConfig",

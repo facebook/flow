@@ -896,13 +896,6 @@ and merge_annot env file = function
       DefT
         (reason, ReactAbstractComponentT { config; instance; renders; component_kind = Structural })
     )
-  | ReactConfig { loc; props; default } ->
-    let reason = Reason.(mk_reason RReactConfig loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let props = merge env file props in
-    let default = merge env file default in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (props, TypeDestructorT (use_op, reason, ReactConfigType default), id))
   | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in

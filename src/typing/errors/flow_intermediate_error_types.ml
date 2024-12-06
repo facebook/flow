@@ -355,7 +355,6 @@ type 'loc message =
     }
   | MessageCannotAssignToInvalidLHS
   | MessageCannotBuildTypedInterface of 'loc Signature_error.t
-  | MessageCannotCalculateReactConfig of 'loc virtual_reason
   | MessageCannotCallMaybeReactHook of {
       callee_loc: 'loc;
       hooks: 'loc list;

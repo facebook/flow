@@ -8,8 +8,8 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
                                  ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:285:16
-   285| declare module react {
+   <BUILTINS>/react.js:284:16
+   284| declare module react {
                        ^^^^^ [1]
 
 
@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:816:38
+   <BUILTINS>/react.js:804:38
                                              v
-   816|     declare const Profiler: component(
-   817|       children?: React$Node,
-   818|       id: string,
-   819|       onRender: ProfilerOnRenderFnType,
-   820|     );
+   804|     declare const Profiler: component(
+   805|       children?: React$Node,
+   806|       id: string,
+   807|       onRender: ProfilerOnRenderFnType,
+   808|     );
             ^ [2]
 
 
@@ -49,13 +49,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:816:38
+   <BUILTINS>/react.js:804:38
                                              v
-   816|     declare const Profiler: component(
-   817|       children?: React$Node,
-   818|       id: string,
-   819|       onRender: ProfilerOnRenderFnType,
-   820|     );
+   804|     declare const Profiler: component(
+   805|       children?: React$Node,
+   806|       id: string,
+   807|       onRender: ProfilerOnRenderFnType,
+   808|     );
             ^ [2]
 
 
