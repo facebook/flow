@@ -39,3 +39,17 @@ match(1)
 {
   // block statement
 }
+
+match(1) + 2;
+
+match(1)[2];
+
+match(1) ? 2 : 3;
+
+match(1) < 2;
+
+match(1) && 2;
+
+match();
+
+match(...b);

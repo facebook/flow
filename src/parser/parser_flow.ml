@@ -344,7 +344,9 @@ module rec Parse : PARSER = struct
       when (parse_options env).pattern_matching
            && (not (Peek.ith_is_line_terminator ~i:1 env))
            && Peek.ith_token ~i:1 env = T_LPAREN ->
-      match_statement_or_match_call env
+      (match Try.to_parse env Statement.match_statement with
+      | Try.ParsedSuccessfully m -> m
+      | Try.FailedToParse -> Statement.expression env)
     | T_THROW -> throw env
     | T_TRY -> try_ env
     | T_WHILE -> while_ env

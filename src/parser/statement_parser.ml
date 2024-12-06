@@ -579,56 +579,7 @@ module Statement
           }
     )
 
-  and match_statement_or_match_call env =
-    let leading = Peek.comments env in
-    let start_loc = Peek.loc env in
-    (* Consume `match` as an identifier, in case it's a call expression. *)
-    let id = Parse.identifier env in
-    (* Allows trailing comma. *)
-    let args = Expression.arguments env in
-    (* `match (<exprs>) {` *)
-    if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then
-      let arg = Parser_common.reparse_arguments_as_match_argument env args in
-      match_statement ~start_loc ~leading ~arg env
-    else
-      (* It's actually a call expression statement of the form `match(...)` *)
-      let callee = (fst id, Ast.Expression.Identifier id) in
-      let (args_loc, _) = args in
-      let expr_loc = Loc.btwn start_loc args_loc in
-      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      let call =
-        Ast.Expression.Call { Ast.Expression.Call.callee; targs = None; arguments = args; comments }
-      in
-      (* Could have a chained call after this. *)
-      let expression =
-        Pattern_cover.as_expression
-          env
-          (Expression.call_cover
-             ~allow_optional_chain:true
-             ~in_optional_chain:false
-             env
-             start_loc
-             (Cover_expr (expr_loc, call))
-          )
-      in
-      with_loc
-        ~start_loc
-        (fun env ->
-          let (trailing, expression) =
-            match semicolon ~expected:"the end of an expression statement (`;`)" env with
-            | Explicit comments -> (comments, expression)
-            | Implicit { remove_trailing; _ } ->
-              ([], remove_trailing expression (fun remover expr -> remover#expression expr))
-          in
-          Statement.Expression
-            {
-              Statement.Expression.expression;
-              directive = None;
-              comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-            })
-        env
-
-  and match_statement env ~start_loc ~leading ~arg =
+  and match_statement env =
     let open Statement.Match in
     let case env =
       let leading = Peek.comments env in
@@ -658,9 +609,13 @@ module Statement
       | _ -> case_list env (with_loc case env :: acc)
     in
     with_loc
-      ~start_loc
       (fun env ->
-        Expect.token env T_LCURLY;
+        let leading = Peek.comments env in
+        Expect.token env T_MATCH;
+        if Peek.is_line_terminator env then raise Try.Rollback;
+        let args = Expression.arguments env in
+        if Peek.is_line_terminator env || not (Eat.maybe env T_LCURLY) then raise Try.Rollback;
+        let arg = Parser_common.reparse_arguments_as_match_argument env args in
         let cases = case_list env [] in
         Expect.token env T_RCURLY;
         let trailing = Eat.trailing_comments env in

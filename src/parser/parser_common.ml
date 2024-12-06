@@ -227,7 +227,7 @@ module type STATEMENT = sig
 
   val interface : env -> (Loc.t, Loc.t) Statement.t
 
-  val match_statement_or_match_call : env -> (Loc.t, Loc.t) Statement.t
+  val match_statement : env -> (Loc.t, Loc.t) Statement.t
 
   val maybe_labeled : env -> (Loc.t, Loc.t) Statement.t
 
