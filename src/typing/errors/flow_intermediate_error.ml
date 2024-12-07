@@ -1173,13 +1173,16 @@ let to_printable_error :
       [
         text "React ";
         hardcoded_string_desc_ref "component properties" props_loc;
-        text " and their nested props and elements cannot be written to";
+        text " and their nested props and elements cannot be written to. ";
+        text "(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props)";
       ]
     | ExplanationReactHookArgsDeepReadOnly props_loc ->
       [
         text "React ";
         hardcoded_string_desc_ref "hook arguments" props_loc;
-        text " and their nested elements cannot be written to";
+        text " and their nested elements cannot be written to. ";
+        text
+          "(https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)";
       ]
     | ExplanationReactHookIncompatibleWithEachOther ->
       [
@@ -1195,7 +1198,9 @@ let to_printable_error :
       [
         text "The return value of a ";
         hardcoded_string_desc_ref "React hook" hook_loc;
-        text " cannot be written to";
+        text " cannot be written to. ";
+        text
+          "(https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)";
       ]
     | ExplanationReactImmutable annot_loc ->
       [
@@ -1498,15 +1503,17 @@ let to_printable_error :
       @ non_hook_blame
       @ [
           text
-            ". Function callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a component renders.";
+            ". Function callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a component renders. ";
         ]
+      @ [text "(https://react.dev/reference/rules/rules-of-hooks)"]
     | MessageCannotCallNonReactHookWithIllegalName callee_loc ->
       [
         text "Cannot call function because ";
         hardcoded_string_desc_ref "callee" callee_loc;
         text " has a name that indicates it is a React hook (starting with ";
         code "use";
-        text ") but it is defined as a non-hook function.";
+        text ") but it is defined as a non-hook function. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
     | MessageCannotCallObjectFunctionOnEnum { reason; enum_reason } ->
       let suggestion =
@@ -1536,7 +1543,8 @@ let to_printable_error :
       [
         text "Cannot call ";
         ref reason;
-        text " because React components cannot be called. Use JSX instead.";
+        text " because React components cannot be called. Use JSX instead. ";
+        text "(https://react.dev/reference/rules/react-calls-components-and-hooks)";
       ]
     | MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name; n } ->
       [
@@ -1558,13 +1566,15 @@ let to_printable_error :
       [
         text "Cannot call ";
         hardcoded_string_desc_ref "hook" callee_loc;
-        text " because React hooks cannot be called in conditional contexts.";
+        text " because React hooks cannot be called in conditional contexts. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
     | MessageCannotCallReactHookInNonComponentOrHook callee_loc ->
       [
         text "Cannot call ";
         hardcoded_string_desc_ref "hook" callee_loc;
-        text " because React hooks can only be called within components or hooks.";
+        text " because React hooks can only be called within components or hooks. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
     | MessageCannotCallReactHookWithIllegalName callee_loc ->
       [
@@ -1572,7 +1582,8 @@ let to_printable_error :
         hardcoded_string_desc_ref "callee" callee_loc;
         text "'s name does not conform to React hook rules. Hook names must begin with ";
         code "use";
-        text " followed by a capitalized letter.";
+        text " followed by a capitalized letter. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
     | MessageCannotCallFunctionWithExtraArg { def_reason; param_count } ->
       let msg =
@@ -2933,7 +2944,12 @@ let to_printable_error :
     | MessageInvalidGraphQL Graphql.InvalidGraphQL ->
       [text "Expected a GraphQL fragment, query, mutation, or subscription."]
     | MessageInvalidHookNaming ->
-      [text "Hooks must have names that begin with "; code "use"; text "."]
+      [
+        text "Hooks must have names that begin with ";
+        code "use";
+        text ". ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
+      ]
     | MessageInvalidImportStarUse import_star_reason ->
       [
         text "The default export of a module cannot be accessed from an ";

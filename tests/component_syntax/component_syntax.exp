@@ -653,7 +653,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:5:1
 
-Cannot call component Foo [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
+Cannot call component Foo [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
 
    call.js:5:1
    5| Foo(); // ERROR, even with fixme
@@ -1400,7 +1401,8 @@ Components may not be nested directly within other components. [nested-component
 
 Error --------------------------------------------------------------------------------------------------- errors.js:45:1
 
-Cannot call component Baz [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
+Cannot call component Baz [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
 
    errors.js:45:1
    45| Baz(); // error
@@ -1414,7 +1416,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:48:1
 
-Cannot call component Poly [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
+Cannot call component Poly [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
 
    errors.js:48:1
    48| Poly(); // error
@@ -1428,7 +1431,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:49:1
 
-Cannot call component Poly [1] because React components cannot be called. Use JSX instead. [react-rule-call-component]
+Cannot call component Poly [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
 
    errors.js:49:1
    49| Poly<number>(); // error

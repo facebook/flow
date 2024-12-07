@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------- componentlike_name.js:12:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    componentlike_name.js:12:3
    12|   useState(); // ERROR
@@ -141,7 +142,8 @@ Cannot assign `42` to `v2[1].a` because property `a` is not writable. [cannot-wr
 Error ------------------------------------------------------------------------------------------------------ dro.js:32:7
 
 Cannot assign `42` to `x.y` because property `y` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. [react-rule-unsafe-mutation]
+and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+[react-rule-unsafe-mutation]
 
    dro.js:32:7
    32|     x.y = 42 // error;
@@ -156,7 +158,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:36:10
 
 Cannot assign `42` to `rest.bar` because property `bar` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [react-rule-unsafe-mutation]
+props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+[react-rule-unsafe-mutation]
 
    dro.js:36:10
    36|     rest.bar = 42; // error;
@@ -171,7 +174,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:37:5
 
 Cannot call `rest.baz.push` because property `push` is not readable. React component properties [1] and their nested
-props and elements cannot be written to. [react-rule-unsafe-mutation]
+props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+[react-rule-unsafe-mutation]
 
    dro.js:37:5
    37|     rest.baz.push("hello"); // error
@@ -186,7 +190,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
 
 Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. React component properties [1] and
-their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
+their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:38:5
    38|     rest.qux[0] = 42; // error
@@ -201,7 +206,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:39:5
 
 Cannot call `rest.qux[1].pop` because property `pop` is not readable. React component properties [1] and their nested
-props and elements cannot be written to. [react-rule-unsafe-mutation]
+props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+[react-rule-unsafe-mutation]
 
    dro.js:39:5
    39|     rest.qux[1].pop(); // error
@@ -216,7 +222,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
 
 Cannot assign `0` to `obj.prop` because property `prop` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. [react-rule-unsafe-mutation]
+props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+[react-rule-unsafe-mutation]
 
    dro.js:56:9
    56|     obj.prop = 0; // error
@@ -640,7 +647,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:132:5
 
 Cannot assign function to `x.constructor` because property `constructor` is not writable. React component properties [1]
-and their nested props and elements cannot be written to. [react-rule-unsafe-mutation]
+and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:132:5
    132|   x.constructor = () => {}; // error cannot write to constructor property
@@ -735,7 +743,8 @@ Cannot read `current` from `ref4` [1] because `ref` values may not be read durin
 
 Error ------------------------------------------------------------------------- invalidComponentExportDefaultAnon.js:5:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    invalidComponentExportDefaultAnon.js:5:3
    5|   useState(); // ERROR
