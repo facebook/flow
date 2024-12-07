@@ -164,6 +164,7 @@
                 "internalSlots":[]
               }
             },
+            "const":false,
             "variance":null,
             "default":null
           }

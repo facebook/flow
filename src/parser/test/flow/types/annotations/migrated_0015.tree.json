@@ -38,6 +38,7 @@
             "range":[13,14],
             "name":"T",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -47,6 +48,7 @@
             "range":[15,16],
             "name":"S",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

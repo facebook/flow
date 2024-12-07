@@ -32,6 +32,7 @@
             "range":[9,15],
             "name":"number",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

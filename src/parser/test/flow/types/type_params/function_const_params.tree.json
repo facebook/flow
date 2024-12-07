@@ -43,13 +43,9 @@
             "range":[12,19],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":17}},
-              "range":[12,17]
-            }
+            "default":null
           }
         ]
       },
@@ -98,13 +94,9 @@
             "range":[44,51],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":17}},
-              "range":[44,49]
-            }
+            "default":null
           },
           {
             "type":"TypeParameter",
@@ -112,6 +104,7 @@
             "range":[53,54],
             "name":"Y",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }
@@ -162,6 +155,7 @@
             "range":[79,80],
             "name":"X",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -171,13 +165,9 @@
             "range":[82,89],
             "name":"Y",
             "bound":null,
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":3,"column":15},"end":{"line":3,"column":20}},
-              "range":[82,87]
-            }
+            "default":null
           }
         ]
       },
@@ -226,6 +216,7 @@
             "range":[114,125],
             "name":"Y",
             "bound":null,
+            "const":true,
             "variance":null,
             "default":{
               "type":"GenericTypeAnnotation",
@@ -240,11 +231,6 @@
                 "optional":false
               },
               "typeParameters":null
-            },
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":4,"column":12},"end":{"line":4,"column":17}},
-              "range":[114,119]
             }
           }
         ]
@@ -312,13 +298,9 @@
                 "typeParameters":null
               }
             },
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":5,"column":12},"end":{"line":5,"column":17}},
-              "range":[150,155]
-            }
+            "default":null
           }
         ]
       },
@@ -417,21 +399,9 @@
                 "typeParameters":null
               }
             },
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":6,"column":14},"end":{"line":6,"column":29}},
-                  "range":[188,203],
-                  "value":" comment 1 "
-                }
-              ],
-              "loc":{"source":null,"start":{"line":6,"column":30},"end":{"line":6,"column":35}},
-              "range":[204,209]
-            }
+            "default":null
           }
         ]
       },

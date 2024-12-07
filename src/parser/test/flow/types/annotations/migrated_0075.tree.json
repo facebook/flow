@@ -40,6 +40,7 @@
             "range":[10,11],
             "name":"A",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -49,6 +50,7 @@
             "range":[12,13],
             "name":"B",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

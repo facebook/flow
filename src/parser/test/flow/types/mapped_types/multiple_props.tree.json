@@ -57,6 +57,7 @@
               "range":[29,30],
               "name":"K",
               "bound":null,
+              "const":false,
               "variance":null,
               "default":null
             },
@@ -125,6 +126,7 @@
               "range":[81,82],
               "name":"K",
               "bound":null,
+              "const":false,
               "variance":null,
               "default":null
             },

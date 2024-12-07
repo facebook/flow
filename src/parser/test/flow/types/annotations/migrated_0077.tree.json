@@ -22,10 +22,6 @@
         "range":[19,21],
         "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
@@ -38,6 +34,7 @@
             "range":[11,12],
             "name":"A",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -47,11 +44,16 @@
             "range":[13,14],
             "name":"B",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }
         ]
-      }
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]

@@ -2199,12 +2199,10 @@ with type t = Impl.t = struct
               backwards-compatibility. TODO: change this? *)
            ("name", string name);
            ("bound", hint type_annotation bound);
+           ("const", bool (Option.is_some const));
            ("variance", option variance tp_var);
            ("default", option _type default);
          ]
-        @ (match const with
-          | Some (loc, comments) -> [("const", node ?comments "ConstModifier" loc [])]
-          | None -> [])
         @
         match bound_kind with
         | Type.TypeParam.Colon -> []

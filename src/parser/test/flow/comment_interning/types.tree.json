@@ -149,6 +149,7 @@
                 "typeParameters":null
               }
             },
+            "const":false,
             "variance":{
               "type":"Variance",
               "leadingComments":[

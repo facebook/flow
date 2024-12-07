@@ -35,6 +35,7 @@
                 "range":[17,23]
               }
             },
+            "const":false,
             "variance":null,
             "default":null,
             "usesExtendsBound":true

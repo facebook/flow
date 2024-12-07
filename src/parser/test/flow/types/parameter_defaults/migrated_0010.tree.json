@@ -36,6 +36,7 @@
               "range":[9,10],
               "name":"S",
               "bound":null,
+              "const":false,
               "variance":null,
               "default":null
             },
@@ -59,6 +60,7 @@
                   }
                 }
               },
+              "const":false,
               "variance":null,
               "default":{
                 "type":"StringTypeAnnotation",

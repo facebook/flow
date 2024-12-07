@@ -26,6 +26,7 @@
             "range":[7,11],
             "name":"A",
             "bound":null,
+            "const":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":9}},
@@ -74,6 +75,7 @@
             "range":[25,30],
             "name":"A",
             "bound":null,
+            "const":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":10}},
@@ -122,6 +124,7 @@
             "range":[44,52],
             "name":"A",
             "bound":null,
+            "const":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":13}},
@@ -170,6 +173,7 @@
             "range":[67,69],
             "name":"in",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }
@@ -213,6 +217,7 @@
             "range":[84,87],
             "name":"out",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

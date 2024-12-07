@@ -38,6 +38,7 @@
                       "range":[9,12],
                       "name":"key",
                       "bound":null,
+                      "const":false,
                       "variance":null,
                       "default":null
                     },

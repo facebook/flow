@@ -639,6 +639,7 @@
                     "range":[736,737],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -737,6 +738,7 @@
                     "range":[846,847],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -848,6 +850,7 @@
                     "range":[963,964],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -1454,6 +1457,7 @@
                     "range":[1813,1814],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -1506,7 +1510,8 @@
                 "range":[1925,1929]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -1560,6 +1565,7 @@
                     "range":[1935,1936],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -1623,6 +1629,7 @@
                     "range":[2004,2005],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }

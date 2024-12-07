@@ -82,6 +82,7 @@
                     "range":[19,20],
                     "name":"U",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -95,7 +96,6 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":12}},
@@ -107,11 +107,13 @@
             "range":[10,11],
             "name":"T",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }
         ]
       },
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

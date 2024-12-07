@@ -52,6 +52,7 @@
             "range":[9,14],
             "name":"class",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -61,6 +62,7 @@
             "range":[15,16],
             "name":"C",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

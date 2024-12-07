@@ -283,6 +283,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         param.bound = param.typeAnnotation || null;
         param.default = param.default || null;
         param.variance = param.variance || null;
+        param.const = param.const || false;
         delete param.typeAnnotation;
         delete param.optional;
       }

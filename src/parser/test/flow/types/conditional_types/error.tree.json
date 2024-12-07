@@ -108,6 +108,7 @@
                       "range":[171,177]
                     }
                   },
+                  "const":false,
                   "variance":null,
                   "default":null,
                   "usesExtendsBound":true

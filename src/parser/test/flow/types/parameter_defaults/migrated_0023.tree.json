@@ -32,6 +32,7 @@
             "range":[7,26],
             "name":"HasDefault",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":{
               "type":"StringTypeAnnotation",
@@ -45,6 +46,7 @@
             "range":[28,37],
             "name":"NoDefault",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

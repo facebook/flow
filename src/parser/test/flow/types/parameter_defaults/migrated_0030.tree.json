@@ -64,6 +64,7 @@
                       "range":[15,25],
                       "name":"T",
                       "bound":null,
+                      "const":false,
                       "variance":null,
                       "default":{
                         "type":"StringTypeAnnotation",

@@ -252,6 +252,7 @@
                     "range":[179,180],
                     "name":"X",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }

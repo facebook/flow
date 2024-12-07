@@ -22,10 +22,6 @@
         "range":[27,29],
         "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
@@ -38,6 +34,7 @@
             "range":[13,23],
             "name":"T",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":{
               "type":"StringTypeAnnotation",
@@ -46,7 +43,11 @@
             }
           }
         ]
-      }
+      },
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]

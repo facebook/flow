@@ -32,13 +32,9 @@
             "range":[9,16],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":null,
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":14}},
-              "range":[9,14]
-            }
+            "default":null
           }
         ]
       },
@@ -76,18 +72,14 @@
             "range":[30,38],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":16}},
               "range":[36,37],
               "kind":"plus"
             },
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":14}},
-              "range":[30,35]
-            }
+            "default":null
           }
         ]
       },
@@ -125,18 +117,14 @@
             "range":[52,60],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":3,"column":15},"end":{"line":3,"column":16}},
               "range":[58,59],
               "kind":"minus"
             },
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":14}},
-              "range":[52,57]
-            }
+            "default":null
           }
         ]
       },
@@ -174,18 +162,14 @@
             "range":[74,84],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":4,"column":15},"end":{"line":4,"column":17}},
               "range":[80,82],
               "kind":"in"
             },
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":14}},
-              "range":[74,79]
-            }
+            "default":null
           }
         ]
       },
@@ -223,18 +207,14 @@
             "range":[98,109],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":5,"column":15},"end":{"line":5,"column":18}},
               "range":[104,107],
               "kind":"out"
             },
-            "default":null,
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":14}},
-              "range":[98,103]
-            }
+            "default":null
           }
         ]
       },
@@ -272,6 +252,7 @@
             "range":[123,137],
             "name":"X",
             "bound":null,
+            "const":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":6,"column":15},"end":{"line":6,"column":17}},
@@ -291,11 +272,6 @@
                 "optional":false
               },
               "typeParameters":null
-            },
-            "const":{
-              "type":"ConstModifier",
-              "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":6,"column":14}},
-              "range":[123,128]
             }
           }
         ]

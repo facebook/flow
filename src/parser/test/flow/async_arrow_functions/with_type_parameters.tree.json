@@ -140,6 +140,7 @@
                   "range":[17,18],
                   "name":"T",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null
                 },
@@ -149,6 +150,7 @@
                   "range":[20,21],
                   "name":"R",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null
                 },
@@ -158,6 +160,7 @@
                   "range":[23,24],
                   "name":"S",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null
                 }

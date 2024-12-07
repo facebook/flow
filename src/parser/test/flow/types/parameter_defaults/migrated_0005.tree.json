@@ -46,6 +46,7 @@
                 }
               }
             },
+            "const":false,
             "variance":null,
             "default":{
               "type":"StringTypeAnnotation",

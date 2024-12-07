@@ -67,6 +67,7 @@
                     "range":[62,63],
                     "name":"X",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }

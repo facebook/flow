@@ -26,6 +26,7 @@
             "range":[7,17],
             "name":"S",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":{
               "type":"NumberTypeAnnotation",
@@ -53,6 +54,7 @@
                 }
               }
             },
+            "const":false,
             "variance":null,
             "default":{
               "type":"StringTypeAnnotation",

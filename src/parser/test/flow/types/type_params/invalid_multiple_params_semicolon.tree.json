@@ -32,6 +32,7 @@
             "range":[7,8],
             "name":"U",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           },
@@ -41,6 +42,7 @@
             "range":[10,11],
             "name":"V",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":null
           }

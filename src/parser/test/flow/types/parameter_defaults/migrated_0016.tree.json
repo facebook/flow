@@ -26,6 +26,7 @@
             "range":[12,22],
             "name":"T",
             "bound":null,
+            "const":false,
             "variance":null,
             "default":{
               "type":"StringTypeAnnotation",

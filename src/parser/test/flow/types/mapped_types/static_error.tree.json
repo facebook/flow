@@ -67,6 +67,7 @@
                   "range":[24,27],
                   "name":"key",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null
                 },

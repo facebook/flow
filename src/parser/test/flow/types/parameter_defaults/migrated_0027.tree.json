@@ -39,7 +39,6 @@
             "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":36}},
             "range":[20,36],
             "params":[],
-            "this":null,
             "returnType":{
               "type":"AnyTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
@@ -57,6 +56,7 @@
                   "range":[21,31],
                   "name":"T",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":{
                     "type":"StringTypeAnnotation",
@@ -65,7 +65,8 @@
                   }
                 }
               ]
-            }
+            },
+            "this":null
           }
         },
         "optional":false

@@ -478,6 +478,7 @@
           "range":[559,560],
           "name":"T",
           "bound":null,
+          "const":false,
           "variance":null,
           "default":null
         }]
@@ -525,6 +526,7 @@
                 "range":[586,587],
                 "name":"E",
                 "bound":null,
+                "const":false,
                 "variance":null,
                 "default":null,
                 "usesExtendsBound":true
@@ -599,6 +601,7 @@
                       "range":[642,648]
                     }
                   },
+                  "const":false,
                   "variance":null,
                   "default":null,
                   "usesExtendsBound":true
@@ -653,6 +656,7 @@
                   "range":[683,684],
                   "name":"T",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null,
                   "usesExtendsBound":true
@@ -722,6 +726,7 @@
                     "range":[750,751],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null,
                     "usesExtendsBound":true
@@ -821,6 +826,7 @@
                     "range":[894,900]
                   }
                 },
+                "const":false,
                 "variance":null,
                 "default":null,
                 "usesExtendsBound":true
@@ -864,6 +870,7 @@
                   "range":[916,917],
                   "name":"A",
                   "bound":null,
+                  "const":false,
                   "variance":null,
                   "default":null,
                   "usesExtendsBound":true
@@ -883,6 +890,7 @@
                     "range":[933,934],
                     "name":"B",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null,
                     "usesExtendsBound":true
@@ -898,6 +906,7 @@
                     "range":[949,950],
                     "name":"C",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null,
                     "usesExtendsBound":true
@@ -913,6 +922,7 @@
                     "range":[959,960],
                     "name":"D",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null,
                     "usesExtendsBound":true
@@ -928,6 +938,7 @@
                     "range":[969,970],
                     "name":"E",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null,
                     "usesExtendsBound":true

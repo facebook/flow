@@ -21,7 +21,6 @@
         "range":[19,21],
         "body":[]
       },
-      "superClass":null,
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":18}},
@@ -33,6 +32,7 @@
             "range":[10,13],
             "name":"T1",
             "bound":null,
+            "const":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
@@ -47,6 +47,7 @@
             "range":[14,17],
             "name":"T2",
             "bound":null,
+            "const":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
@@ -57,6 +58,7 @@
           }
         ]
       },
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

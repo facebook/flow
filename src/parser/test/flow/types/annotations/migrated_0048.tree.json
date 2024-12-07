@@ -59,6 +59,7 @@
                     "range":[18,19],
                     "name":"T",
                     "bound":null,
+                    "const":false,
                     "variance":null,
                     "default":null
                   }
@@ -72,8 +73,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

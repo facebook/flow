@@ -361,12 +361,11 @@ function custom_ast_types(fork) {
     .field('argument', def('FlowType'));
   def('TypeParameter')
     .field('usesExtendsBound', or(undefined, Boolean))
-    .field('const', or(def('ConstModifier'), null), defaults['null']);
+    .field('const', Boolean);
   def('Variance').field(
     'kind',
     or('plus', 'minus', 'readonly', 'in', 'out', 'in-out'),
   );
-  def('ConstModifier').bases('Node');
   def('AsExpression')
     .bases('Expression')
     .build('expression', 'typeAnnotation')
