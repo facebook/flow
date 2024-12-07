@@ -4,5 +4,5 @@ match (a) {
   },
   'foo': {
     const y = 1;
-  } // <-- no final separator
+  },
 }

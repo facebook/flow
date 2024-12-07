@@ -596,7 +596,7 @@ module Statement
       | T_EOF
       | T_RCURLY ->
         ()
-      | _ -> Expect.token env T_COMMA);
+      | _ -> ignore @@ Eat.maybe env T_COMMA);
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
       { Case.pattern; body; guard; comments }

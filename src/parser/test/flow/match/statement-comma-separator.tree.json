@@ -1,12 +1,12 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":1}},
-  "range":[0,100],
+  "range":[0,75],
   "body":[
     {
       "type":"MatchStatement",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":8,"column":1}},
-      "range":[0,100],
+      "range":[0,75],
       "argument":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":8}},
@@ -71,8 +71,8 @@
         },
         {
           "type":"MatchStatementCase",
-          "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":7,"column":3}},
-          "range":[43,72],
+          "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":7,"column":4}},
+          "range":[43,73],
           "pattern":{
             "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":7}},
@@ -87,14 +87,6 @@
           },
           "body":{
             "type":"BlockStatement",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":29}},
-                "range":[73,98],
-                "value":" <-- no final separator"
-              }
-            ],
             "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":7,"column":3}},
             "range":[50,72],
             "body":[
@@ -133,12 +125,5 @@
       ]
     }
   ],
-  "comments":[
-    {
-      "type":"Line",
-      "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":29}},
-      "range":[73,98],
-      "value":" <-- no final separator"
-    }
-  ]
+  "comments":[]
 }

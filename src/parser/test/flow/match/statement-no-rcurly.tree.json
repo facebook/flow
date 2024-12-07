@@ -7,12 +7,12 @@
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":0}},
-  "range":[0,98],
+  "range":[0,96],
   "body":[
     {
       "type":"MatchStatement",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":0}},
-      "range":[0,98],
+      "range":[0,96],
       "argument":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":8}},
@@ -24,8 +24,8 @@
       "cases":[
         {
           "type":"MatchStatementCase",
-          "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":4,"column":4}},
-          "range":[14,40],
+          "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":4,"column":3}},
+          "range":[14,39],
           "pattern":{
             "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
@@ -77,38 +77,46 @@
         },
         {
           "type":"MatchStatementCase",
-          "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":7,"column":4}},
-          "range":[43,73],
+          "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":7,"column":3}},
+          "range":[42,71],
           "pattern":{
             "type":"MatchLiteralPattern",
             "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":7}},
-            "range":[43,48],
+            "range":[42,47],
             "literal":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":7}},
-              "range":[43,48],
+              "range":[42,47],
               "value":"foo",
               "raw":"'foo'"
             }
           },
           "body":{
             "type":"BlockStatement",
+            "trailingComments":[
+              {
+                "type":"Line",
+                "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":23}},
+                "range":[72,95],
+                "value":" <-- unfinished match"
+              }
+            ],
             "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":7,"column":3}},
-            "range":[50,72],
+            "range":[49,71],
             "body":[
               {
                 "type":"VariableDeclaration",
                 "loc":{"source":null,"start":{"line":6,"column":4},"end":{"line":6,"column":16}},
-                "range":[56,68],
+                "range":[55,67],
                 "declarations":[
                   {
                     "type":"VariableDeclarator",
                     "loc":{"source":null,"start":{"line":6,"column":10},"end":{"line":6,"column":15}},
-                    "range":[62,67],
+                    "range":[61,66],
                     "id":{
                       "type":"Identifier",
                       "loc":{"source":null,"start":{"line":6,"column":10},"end":{"line":6,"column":11}},
-                      "range":[62,63],
+                      "range":[61,62],
                       "name":"y",
                       "typeAnnotation":null,
                       "optional":false
@@ -116,7 +124,7 @@
                     "init":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":6,"column":14},"end":{"line":6,"column":15}},
-                      "range":[66,67],
+                      "range":[65,66],
                       "value":2,
                       "raw":"2"
                     }
@@ -135,7 +143,7 @@
     {
       "type":"Line",
       "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":23}},
-      "range":[74,97],
+      "range":[72,95],
       "value":" <-- unfinished match"
     }
   ]
