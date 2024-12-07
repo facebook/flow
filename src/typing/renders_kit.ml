@@ -83,10 +83,18 @@ module Make (Flow : INPUT) : S = struct
              explanation = None;
            }
         )
-    | ( NominalRenders { renders_id = id1; renders_name = _; renders_super },
-        NominalRenders { renders_id = id2; renders_name = _; renders_super = _ }
+    | ( NominalRenders { renders_id = id1; renders_name = name_1; renders_super },
+        NominalRenders { renders_id = id2; renders_name = name_2; renders_super = _ }
       ) ->
-      if ALoc.equal_id id1 id2 then
+      if
+        ALoc.equal_id id1 id2
+        ||
+        let file_options = Context.((metadata cx).file_options) in
+        TypeUtil.nominal_id_have_same_logical_module
+          ~file_options
+          (id1, Some name_1)
+          (id2, Some name_2)
+      then
         ()
       else
         (* We reposition the super using l's reason for better error messages *)

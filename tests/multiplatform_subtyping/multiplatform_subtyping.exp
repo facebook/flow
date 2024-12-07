@@ -449,16 +449,32 @@ Read the docs on Flow's multi-platform support for more information: https://flo
 [incompatible-type]
 
    component.ios.js:1:26
-   1| declare export component Foo(bar: string, baz: number); // incompatible-type with baz prop, otherwise ok
+   1| declare export component Foo(bar: string, baz: number) renders Base; // incompatible-type with baz prop, otherwise ok
                                ^^^
 
 References:
    component.js.flow:1:48
-   1| declare export component Foo(bar: string, baz: boolean)
+   1| declare export component Foo(bar: string, baz: boolean) renders Base;
                                                      ^^^^^^^ [1]
    component.ios.js:1:48
-   1| declare export component Foo(bar: string, baz: number); // incompatible-type with baz prop, otherwise ok
+   1| declare export component Foo(bar: string, baz: number) renders Base; // incompatible-type with baz prop, otherwise ok
                                                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- component.ios.js:5:45
+
+Cannot conform to common interface module because `Acid` [1] does not render `Base` [2] in property `DifferentRenders`.
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   component.ios.js:5:45
+   5| declare export component DifferentRenders() renders Acid; // error: incompatible renders type
+                                                  ^^^^^^^^^^^^ [1]
+
+References:
+   component.js.flow:4:45
+   4| declare export component DifferentRenders() renders Base;
+                                                  ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:11:21
@@ -670,4 +686,4 @@ References:
 
 
 
-Found 37 errors
+Found 38 errors
