@@ -611,19 +611,6 @@ module Opts = struct
           Ok opts
     )
 
-  let react_rules_parser =
-    let open Options in
-    enum
-      ~init:(fun opts -> { opts with react_rules = [] })
-      ~multiple:true
-      [
-        ("validateRefAccessDuringRender", ValidateRefAccessDuringRender);
-        ("deepReadOnlyProps", DeepReadOnlyProps);
-        ("deepReadOnlyHookReturns", DeepReadOnlyHookReturns);
-        ("rulesOfHooks", RulesOfHooks);
-      ]
-      (fun opts v -> Ok { opts with react_rules = v :: opts.react_rules })
-
   let hook_compatibility_includes_parser =
     string
       ~init:(fun opts -> { opts with hook_compatibility_includes = [] })
@@ -1027,7 +1014,6 @@ module Opts = struct
       ( "experimental.component_syntax.hooklike_functions.excludes",
         hook_compatibility_excludes_parser
       );
-      ("experimental.react_rule", react_rules_parser);
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
