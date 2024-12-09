@@ -113,7 +113,6 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: File_path.t;
   strict_es6_import_export: bool;
-  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;

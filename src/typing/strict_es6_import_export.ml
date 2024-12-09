@@ -491,9 +491,4 @@ let detect_errors_from_ast cx ast =
   ignore (visitor#program ast)
 
 let detect_errors cx ast metadata =
-  if metadata.Context.strict_es6_import_export then
-    let excludes = Base.List.map ~f:Str.regexp metadata.Context.strict_es6_import_export_excludes in
-    let file_key = Context.file cx in
-    let file_str = File_key.to_string file_key |> Sys_utils.normalize_filename_dir_sep in
-    let excluded = Base.List.exists ~f:(fun r -> Str.string_match r file_str 0) excludes in
-    if not excluded then detect_errors_from_ast cx ast
+  if metadata.Context.strict_es6_import_export then detect_errors_from_ast cx ast

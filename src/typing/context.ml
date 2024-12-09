@@ -69,7 +69,6 @@ type metadata = {
   relay_integration_module_prefix_includes: Str.regexp list;
   root: File_path.t;
   strict_es6_import_export: bool;
-  strict_es6_import_export_excludes: string list;
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
@@ -299,7 +298,6 @@ let metadata_of_options options =
       Options.relay_integration_module_prefix_includes options;
     root = Options.root options;
     strict_es6_import_export = Options.strict_es6_import_export options;
-    strict_es6_import_export_excludes = Options.strict_es6_import_export_excludes options;
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;

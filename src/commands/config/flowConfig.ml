@@ -136,7 +136,6 @@ module Opts = struct
     shm_hash_table_pow: int;
     shm_heap_size: int;
     strict_es6_import_export: bool;
-    strict_es6_import_export_excludes: string list;
     suppress_types: SSet.t;
     ts_syntax: bool;
     type_expansion_recursion_limit: int;
@@ -274,7 +273,6 @@ module Opts = struct
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
-      strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
@@ -955,17 +953,6 @@ module Opts = struct
   let shm_hash_table_pow_parser =
     uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
 
-  let strict_es6_import_export_excludes_parser =
-    string
-      ~init:(fun opts -> { opts with strict_es6_import_export_excludes = [] })
-      ~multiple:true
-      (fun opts v ->
-        Ok
-          {
-            opts with
-            strict_es6_import_export_excludes = v :: opts.strict_es6_import_export_excludes;
-          })
-
   let strict_es6_import_export_parser =
     boolean (fun opts v -> Ok { opts with strict_es6_import_export = v })
 
@@ -1044,7 +1031,6 @@ module Opts = struct
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
@@ -1891,8 +1877,6 @@ let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
-
-let strict_es6_import_export_excludes c = c.options.Opts.strict_es6_import_export_excludes
 
 let strict_mode c = c.strict_mode
 

@@ -69,7 +69,6 @@ let stub_metadata ~root ~checked =
     relay_integration_module_prefix_includes = [];
     root;
     strict_es6_import_export = false;
-    strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
     ts_syntax = true;
