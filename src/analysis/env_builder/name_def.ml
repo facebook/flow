@@ -612,6 +612,13 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
                 (* Autocompletion in LTI will use hints to find the expected type of the object
                    we are completing. There are similar case for identifiers and literals below. *)
                 false
+              | Property.NumberLiteral (loc, { Ast.NumberLiteral.value = key_value; _ })
+                when Js_number.is_float_safe_integer key_value ->
+                let name = Dtoa.ecma_string_of_float key_value in
+                if autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc then
+                  false
+                else
+                  synthesizable value
               | _ -> synthesizable value)
             | (_, Get { key = _; value = (_, fn); comments = _ })
             | (_, Set { key = _; value = (_, fn); comments = _ })
@@ -1985,6 +1992,12 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                       Some h
                     ) ->
                     Base.Continue_or_stop.Continue (ObjectPropPatternHint (name, l, h) :: acc)
+                  | ( Ast.Pattern.Object.Property.NumberLiteral (l, { Ast.NumberLiteral.value; _ }),
+                      Some h
+                    )
+                    when Js_number.is_float_safe_integer value ->
+                    let name = Dtoa.ecma_string_of_float value in
+                    Base.Continue_or_stop.Continue (ObjectPropPatternHint (name, l, h) :: acc)
                   | _ -> Base.Continue_or_stop.Stop None)
                 | Ast.Pattern.Object.RestElement (_, { Ast.Pattern.RestElement.argument; _ }) ->
                   other_pattern_hint_opt argument
@@ -3031,6 +3044,21 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                   )
                   when autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc ->
                   true
+                | ( _,
+                    Init
+                      {
+                        key =
+                          Property.NumberLiteral (loc, { Ast.NumberLiteral.value = key_value; _ });
+                        value;
+                        _;
+                      }
+                  )
+                  when Js_number.is_float_safe_integer key_value ->
+                  let name = Dtoa.ecma_string_of_float key_value in
+                  if autocomplete_hooks.Env_api.With_ALoc.obj_prop_decl_hook name loc then
+                    true
+                  else
+                    expression_has_autocomplete ~autocomplete_hooks value
                 | (_, Init { value; _ }) -> expression_has_autocomplete ~autocomplete_hooks value
                 | _ -> false)
               | SpreadProperty _ -> false
@@ -3047,6 +3075,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       in
       let visit_object_key_and_compute_hint = function
         | Ast.Expression.Object.Property.StringLiteral (_, { Ast.StringLiteral.value = name; _ }) ->
+          decompose_hints (Decomp_ObjProp name) object_hints
+        | Ast.Expression.Object.Property.NumberLiteral (_, { Ast.NumberLiteral.value; _ })
+          when Js_number.is_float_safe_integer value ->
+          let name = Dtoa.ecma_string_of_float value in
           decompose_hints (Decomp_ObjProp name) object_hints
         | Ast.Expression.Object.Property.NumberLiteral _
         | Ast.Expression.Object.Property.BigIntLiteral _ ->

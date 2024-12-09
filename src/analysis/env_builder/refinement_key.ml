@@ -122,10 +122,14 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     let open Ast.Expression.Member in
     match property with
     | PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
-    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ })
+    | PropertyExpression (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ }) ->
+      (match lookup_of_expression ~allow_optional _object with
+      | Some { base; projections } -> Some { base; projections = Prop name :: projections }
+      | None -> None)
     | PropertyExpression
-        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value = _; raw = name; comments = _ })
-      ->
+        (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw = _; comments = _ })
+      when Js_number.is_float_safe_integer value ->
+      let name = Dtoa.ecma_string_of_float value in
       (match lookup_of_expression ~allow_optional _object with
       | Some { base; projections } -> Some { base; projections = Prop name :: projections }
       | None -> None)

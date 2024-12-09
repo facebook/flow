@@ -5578,9 +5578,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let propname =
             match property with
             | PropertyIdentifier (_, { Flow_ast.Identifier.name; _ })
-            | PropertyExpression (_, StringLiteral { Flow_ast.StringLiteral.value = name; _ })
-            | PropertyExpression
-                (_, NumberLiteral { Flow_ast.NumberLiteral.value = _; raw = name; _ }) ->
+            | PropertyExpression (_, StringLiteral { Flow_ast.StringLiteral.value = name; _ }) ->
+              Some name
+            | PropertyExpression (_, NumberLiteral { Flow_ast.NumberLiteral.value; _ })
+              when Js_number.is_float_safe_integer value ->
+              let name = Dtoa.ecma_string_of_float value in
               Some name
             | _ -> None
           in
