@@ -147,6 +147,20 @@ module Make
           ) ->
           literal_check_of_expr value
           |> Base.Option.value_map ~default:acc ~f:(fun check -> SMap.add name check acc)
+        | ( _,
+            Init
+              {
+                key =
+                  Ast.Expression.Object.Property.NumberLiteral
+                    (_, { Ast.NumberLiteral.value = key_value; _ });
+                value;
+                shorthand = _;
+              }
+          )
+          when Js_number.is_float_safe_integer key_value ->
+          let name = Dtoa.ecma_string_of_float key_value in
+          literal_check_of_expr value
+          |> Base.Option.value_map ~default:acc ~f:(fun check -> SMap.add name check acc)
         | _ -> acc)
       | Ast.Expression.Object.SpreadProperty _ -> acc
     )

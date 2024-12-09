@@ -64,3 +64,9 @@ function function_statics() {
     ...
   } = x => {}; // okay `x` inferred as `mixed`
 }
+
+// Numeric literal key names
+type B = {0: 'a', f: (string) => string} | {0: 'b', f: number => number};
+{
+  const b: B = {f: (v) => (v as string), 0: 'a'}; // OK
+}
