@@ -153,12 +153,17 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     | Property.Computed (loc, { Ast.ComputedKey.expression; comments }) ->
       let (acc, e) = object_computed_property cx acc expression in
       (acc, xs, Property.Computed (loc, { Ast.ComputedKey.expression = e; comments }))
+    | Property.NumberLiteral (loc, ({ Ast.NumberLiteral.value; comments; _ } as lit))
+      when Js_number.is_float_safe_integer value ->
+      let name = Dtoa.ecma_string_of_float value in
+      let acc = object_named_property ~has_default ~parent_loc cx acc loc name comments in
+      (acc, name :: xs, Property.NumberLiteral (loc, lit))
     | Property.NumberLiteral (loc, _)
     | Property.BigIntLiteral (loc, _) ->
       Flow_js.add_output
         cx
         (Error_message.EUnsupportedSyntax
-           (loc, Flow_intermediate_error_types.DestructuringObjectPropertyLiteralNonString)
+           (loc, Flow_intermediate_error_types.DestructuringObjectPropertyInvalidLiteral)
         );
       (acc, xs, Tast_utils.error_mapper#pattern_object_property_key key)
 

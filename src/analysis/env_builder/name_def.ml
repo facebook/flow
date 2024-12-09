@@ -79,6 +79,11 @@ end = struct
     | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
       let acc = object_computed_property (parent_loc, acc) expression direct_default in
       (acc, xs, true)
+    | Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ })
+      when Js_number.is_float_safe_integer value ->
+      let name = Dtoa.ecma_string_of_float value in
+      let acc = object_named_property (parent_loc, acc) loc name direct_default in
+      (acc, xs, true)
     | Property.NumberLiteral _ -> (acc, xs, false)
     | Property.BigIntLiteral _ -> (acc, xs, false)
 

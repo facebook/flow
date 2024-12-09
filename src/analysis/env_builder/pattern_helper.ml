@@ -49,6 +49,11 @@ let object_property (parent_loc, bind) xs key direct_default =
   | Property.Computed (_, { Ast.ComputedKey.expression; comments = _ }) ->
     let bind = object_computed_property (parent_loc, bind) expression direct_default in
     (bind, xs, true)
+  | Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ })
+    when Js_number.is_float_safe_integer value ->
+    let name = Dtoa.ecma_string_of_float value in
+    let bind = object_named_property (parent_loc, bind) loc name direct_default in
+    (bind, xs, true)
   | Property.NumberLiteral (_, _) -> (bind, xs, false)
   | Property.BigIntLiteral (_, _) -> (bind, xs, false)
 

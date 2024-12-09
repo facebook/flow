@@ -64,7 +64,7 @@ type unsupported_syntax =
   | ClassPropertyComputed
   | RequireDynamicArgument
   | CatchParameterDeclaration
-  | DestructuringObjectPropertyLiteralNonString
+  | DestructuringObjectPropertyInvalidLiteral
   | DestructuringExpressionPattern
   | JSXTypeArgs
   | PredicateFunction

@@ -2039,22 +2039,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               match prop with
               | RestElement prop -> ignore @@ this#pattern_object_rest_property ?kind prop
               | Property ((_, { Property.key; pattern; default; shorthand = _ }) as prop) ->
-                (match key with
-                | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ })
-                | Property.StringLiteral (loc, { Ast.StringLiteral.value = x; _ }) ->
+                let handle_prop_with_name loc name =
                   Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default);
                   let acc =
                     let open Ast.Expression in
                     let property =
-                      Member.PropertyIdentifier (loc, { Ast.Identifier.name = x; comments = None })
+                      Member.PropertyIdentifier (loc, { Ast.Identifier.name; comments = None })
                     in
                     (loc, Member { Member._object = acc; property; comments = None })
                   in
-                  (match pattern with
+                  match pattern with
                   | ( _,
                       Identifier
                         {
-                          Identifier.name = (loc, { Ast.Identifier.name = x; comments = _ });
+                          Identifier.name = (loc, { Ast.Identifier.name; comments = _ });
                           annot;
                           optional = _;
                         }
@@ -2070,9 +2068,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                         ~get_assigned_val:(fun reason ->
                           Val.replace_refinement_base_write ~base:(Val.one reason) refined_v)
                         loc
-                        x)
+                        name)
                   | _ ->
-                    ignore @@ this#binding_pattern_track_object_destructuring ?kind ~acc pattern)
+                    ignore @@ this#binding_pattern_track_object_destructuring ?kind ~acc pattern
+                in
+                (match key with
+                | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ })
+                | Property.StringLiteral (loc, { Ast.StringLiteral.value = x; _ }) ->
+                  handle_prop_with_name loc x
+                | Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ })
+                  when Js_number.is_float_safe_integer value ->
+                  let name = Dtoa.ecma_string_of_float value in
+                  handle_prop_with_name loc name
                 | _ -> ignore @@ this#pattern_object_property ?kind prop)
           );
           this#with_current_pattern_bindings expr ~f:(fun () ->

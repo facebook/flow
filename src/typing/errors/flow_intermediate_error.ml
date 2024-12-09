@@ -3864,8 +3864,11 @@ let to_printable_error :
       [code "declare namespace"; text " statement is not supported yet."]
     | MessageUnsupportedSyntax DestructuringExpressionPattern ->
       [text "Unsupported expression pattern in destructuring."]
-    | MessageUnsupportedSyntax DestructuringObjectPropertyLiteralNonString ->
-      [text "Unsupported non-string literal object property in destructuring."]
+    | MessageUnsupportedSyntax DestructuringObjectPropertyInvalidLiteral ->
+      [
+        text
+          "Unsupported literal object property in destructuring. String literals and int-like number literals are supported.";
+      ]
     | MessageUnsupportedSyntax ExistsType ->
       [
         text "The existential type ";
