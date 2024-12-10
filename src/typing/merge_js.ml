@@ -106,22 +106,77 @@ let detect_sketchy_null_checks cx tast =
               |> Type_filter.not_maybe cx
               |> type_of_filtering_result
             with
-            | DefT (_, BoolT _) -> { exists_check with bool_loc = t_loc }
-            | DefT (_, StrT _) -> { exists_check with string_loc = t_loc }
-            | DefT (_, NumT _) -> { exists_check with number_loc = t_loc }
-            | DefT (_, BigIntT _) -> { exists_check with bigint_loc = t_loc }
+            | DefT (_, BoolGeneralT)
+            | DefT (_, BoolT_UNSOUND _) ->
+              { exists_check with bool_loc = t_loc }
+            | DefT (_, StrGeneralT _)
+            | DefT (_, StrT_UNSOUND _) ->
+              { exists_check with string_loc = t_loc }
+            | DefT (_, NumGeneralT _)
+            | DefT (_, NumT_UNSOUND _) ->
+              { exists_check with number_loc = t_loc }
+            | DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)) ->
+              { exists_check with bigint_loc = t_loc }
             | DefT (_, MixedT _) -> { exists_check with mixed_loc = t_loc }
-            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, BoolT _); _ }))
-            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, BoolT _); _ })) ->
+            | DefT
+                ( _,
+                  EnumValueT
+                    (ConcreteEnum
+                      { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+                      )
+                )
+            | DefT
+                ( _,
+                  EnumValueT
+                    (AbstractEnum
+                      { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+                      )
+                ) ->
               { exists_check with enum_bool_loc = t_loc }
-            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, StrT _); _ }))
-            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, StrT _); _ })) ->
+            | DefT
+                ( _,
+                  EnumValueT
+                    (ConcreteEnum
+                      { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+                      )
+                )
+            | DefT
+                ( _,
+                  EnumValueT
+                    (AbstractEnum
+                      { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+                      )
+                ) ->
               { exists_check with enum_string_loc = t_loc }
-            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, NumT _); _ }))
-            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, NumT _); _ })) ->
+            | DefT
+                ( _,
+                  EnumValueT
+                    (ConcreteEnum
+                      { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)); _ }
+                      )
+                )
+            | DefT
+                ( _,
+                  EnumValueT
+                    (AbstractEnum
+                      { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)); _ }
+                      )
+                ) ->
               { exists_check with enum_number_loc = t_loc }
-            | DefT (_, EnumValueT (ConcreteEnum { representation_t = DefT (_, BigIntT _); _ }))
-            | DefT (_, EnumValueT (AbstractEnum { representation_t = DefT (_, BigIntT _); _ })) ->
+            | DefT
+                ( _,
+                  EnumValueT
+                    (ConcreteEnum
+                      { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)); _ }
+                      )
+                )
+            | DefT
+                ( _,
+                  EnumValueT
+                    (AbstractEnum
+                      { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)); _ }
+                      )
+                ) ->
               { exists_check with enum_bigint_loc = t_loc }
             | _ -> exists_check
           in
@@ -284,11 +339,7 @@ let detect_matching_props_violations cx =
     match drop_generic t with
     | DefT
         ( _,
-          ( BoolT (Some _)
-          | SingletonBoolT _
-          | StrT (Literal _)
-          | SingletonStrT _
-          | NumT (Literal _)
+          ( BoolT_UNSOUND _ | SingletonBoolT _ | StrT_UNSOUND _ | SingletonStrT _ | NumT_UNSOUND _
           | SingletonNumT _ )
         ) ->
       true
@@ -385,13 +436,13 @@ let detect_literal_subtypes =
           match check with
           | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
             let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
-            DefT (reason, NumT (Literal (Some sense, (num, raw))))
+            DefT (reason, NumT_UNSOUND (Some sense, (num, raw)))
           | Env_api.SingletonBool (lit_loc, b) ->
             let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
-            DefT (reason, BoolT (Some b))
+            DefT (reason, BoolT_UNSOUND b)
           | Env_api.SingletonStr (lit_loc, sense, str) ->
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
-            DefT (reason, StrT (Literal (Some sense, Reason.OrdinaryName str)))
+            DefT (reason, StrT_UNSOUND (Some sense, Reason.OrdinaryName str))
         in
         let use_op =
           Op

@@ -339,14 +339,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc), t_ast)
     | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc), t_ast)
     | (loc, (Symbol _ as t_ast)) -> ((loc, SymbolT.at loc), t_ast)
-    | (loc, (Number _ as t_ast)) -> ((loc, NumT.at loc), t_ast)
-    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntT.at loc), t_ast)
-    | (loc, (String _ as t_ast)) -> ((loc, StrT.at loc), t_ast)
+    | (loc, (Number _ as t_ast)) -> ((loc, NumModuleT.at loc), t_ast)
+    | (loc, (BigInt _ as t_ast)) -> ((loc, BigIntModuleT.at loc), t_ast)
+    | (loc, (String _ as t_ast)) -> ((loc, StrModuleT.at loc), t_ast)
     | (loc, (Boolean { raw; comments = _ } as t_ast)) ->
       (match raw with
       | `Bool -> Flow_js_utils.add_output env.cx (Error_message.EDeprecatedBool loc)
       | `Boolean -> ());
-      ((loc, BoolT.at loc), t_ast)
+      ((loc, BoolModuleT.at loc), t_ast)
     | (loc, (Unknown _ as t_ast)) ->
       if not (Context.ts_syntax env.cx) then
         Flow_js_utils.add_output
@@ -745,7 +745,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | [prefix] -> create_string_prefix_type ~prefix ~remainder:None
           | [prefix; remainder] ->
             let use_op = Op (TypeApplication { type_ = reason }) in
-            Context.add_post_inference_subtyping_check cx remainder use_op (StrT.at loc);
+            Context.add_post_inference_subtyping_check cx remainder use_op (StrModuleT.at loc);
             create_string_prefix_type ~prefix ~remainder:(Some remainder)
           | _ ->
             error_type
@@ -770,7 +770,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | [suffix] -> create_string_suffix_type ~suffix ~remainder:None
           | [suffix; remainder] ->
             let use_op = Op (TypeApplication { type_ = reason }) in
-            Context.add_post_inference_subtyping_check cx remainder use_op (StrT.at loc);
+            Context.add_post_inference_subtyping_check cx remainder use_op (StrModuleT.at loc);
             create_string_suffix_type ~suffix ~remainder:(Some remainder)
           | _ ->
             error_type
@@ -2330,7 +2330,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   and convert_type_guard env fparams gloc kind id_name t comments =
     let (name_loc, { Ast.Identifier.name; _ }) = id_name in
     let (((_, type_guard), _) as t') = convert env t in
-    let bool_t = BoolT.at gloc in
+    let bool_t = BoolModuleT.at gloc in
     let guard' = (gloc, { T.TypeGuard.guard = (id_name, Some t'); kind; comments }) in
     let one_sided = kind = Ast.Type.TypeGuard.Implies in
     let reason = Reason.mk_reason RTypeGuard gloc in
@@ -2355,7 +2355,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           }
         ) ->
       if meth_kind <> MethodKind then (
-        let bool_t = BoolT.at gloc in
+        let bool_t = BoolModuleT.at gloc in
         let return = Tast_utils.error_mapper#function_type_return_annotation return in
         let kind = method_kind_to_string meth_kind in
         Flow_js_utils.add_output

@@ -161,13 +161,15 @@ let visitor =
       | OptionalT _ ->
         Kind.Checked
       | DefT (_, ArrT _)
-      | DefT (_, BigIntT _)
-      | DefT (_, BoolT _)
+      | DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+      | DefT (_, BoolGeneralT)
+      | DefT (_, BoolT_UNSOUND _)
       | DefT (_, ClassT _)
       | DefT (_, FunT _)
       | DefT (_, InstanceT _)
       | DefT (_, MixedT _)
-      | DefT (_, NumT _)
+      | DefT (_, NumGeneralT _)
+      | DefT (_, NumT_UNSOUND _)
       | DefT (_, NullT)
       | DefT (_, SymbolT)
       | DefT (_, ObjT _)
@@ -178,7 +180,8 @@ let visitor =
       | DefT (_, SingletonStrT _)
       | DefT (_, SingletonBigIntT _)
       | DefT (_, SingletonBoolT _)
-      | DefT (_, StrT _)
+      | DefT (_, StrGeneralT _)
+      | DefT (_, StrT_UNSOUND _)
       | DefT (_, VoidT)
       | DefT (_, EnumObjectT _)
       | DefT (_, EnumValueT _) ->

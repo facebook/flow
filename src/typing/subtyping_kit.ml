@@ -706,7 +706,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*******************************)
     (* common implicit conversions *)
     (*******************************)
-    | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, NumT _)) -> ()
+    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+        DefT (_, (NumGeneralT _ | NumT_UNSOUND _))
+      ) ->
+      ()
     | (DefT (r, (NullT | VoidT)), MaybeT (_, tout)) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r, tout)
     | (DefT (r, MixedT Mixed_everything), MaybeT (_, tout)) ->
@@ -915,7 +918,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
        o as {[string]: boolean}: // OK
        ```
     *)
-    | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _))) -> ()
+    | ( DefT (_, NumericStrKeyT _),
+        DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _))
+      ) ->
+      ()
     | (DefT (rl, NumericStrKeyT (actual, _)), DefT (ru, SingletonNumT (expected, _))) ->
       if actual = expected then
         ()
@@ -931,7 +937,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
     | (_, DefT (r, NumericStrKeyT (_, s))) ->
-      let u = DefT (r, StrT (Literal (None, OrdinaryName s))) in
+      let u = DefT (r, StrT_UNSOUND (None, OrdinaryName s)) in
       rec_flow_t cx trace ~use_op (l, u)
     (***********************)
     (* Singletons and keys *)
@@ -948,16 +954,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * describing a keyset can be modeled using unions of singleton strings.
 
      * One may also legitimately wonder why SingletonStrT(_, key) cannot be
-     * always replaced by StrT(_, Some key). The reason is that types of the
+     * always replaced by StrT_UNSOUND(_, Some key). The reason is that types of the
      * latter form (string literal types) are inferred to be the type of string
      * literals appearing as values, and we don't want to prematurely narrow
      * down the type of the location where such values may appear, since that
      * would preclude other strings to be stored in that location. Thus, by
-     * necessity we allow all string types to flow to StrT (whereas only
+     * necessity we allow all string types to flow to StrT_UNSOUND (whereas only
      * exactly matching string literal types may flow to SingletonStrT).
      * *)
-    | (DefT (rl, StrT actual), DefT (ru, SingletonStrT expected)) ->
-      if TypeUtil.literal_eq expected actual then
+    | (DefT (rl, StrT_UNSOUND (_, actual)), DefT (ru, SingletonStrT expected)) ->
+      if expected = actual then
         ()
       else
         (* TODO: ordered_reasons should not be necessary *)
@@ -965,8 +971,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
-    | (DefT (rl, NumT actual), DefT (ru, SingletonNumT expected)) ->
-      if TypeUtil.number_literal_eq expected actual then
+    | (DefT (rl, StrGeneralT _), DefT (ru, SingletonStrT _)) ->
+      (* TODO: ordered_reasons should not be necessary *)
+      let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
+      add_output
+        cx
+        (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, NumT_UNSOUND (_, (actual, _))), DefT (ru, SingletonNumT (expected, _))) ->
+      if expected = actual then
         ()
       else
         (* TODO: ordered_reasons should not be necessary *)
@@ -974,8 +986,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
-    | (DefT (rl, BoolT actual), DefT (ru, SingletonBoolT expected)) ->
-      if TypeUtil.boolean_literal_eq expected actual then
+    | (DefT (rl, NumGeneralT _), DefT (ru, SingletonNumT _)) ->
+      (* TODO: ordered_reasons should not be necessary *)
+      let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
+      add_output
+        cx
+        (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, BoolT_UNSOUND actual), DefT (ru, SingletonBoolT expected)) ->
+      if expected = actual then
         ()
       else
         (* TODO: ordered_reasons should not be necessary *)
@@ -983,8 +1001,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
-    | (DefT (rl, BigIntT actual), DefT (ru, SingletonBigIntT expected)) ->
-      if TypeUtil.bigint_literal_eq expected actual then
+    | (DefT (rl, BoolGeneralT), DefT (ru, SingletonBoolT _)) ->
+      (* TODO: ordered_reasons should not be necessary *)
+      let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
+      add_output
+        cx
+        (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, BigIntT_UNSOUND (_, (actual, _))), DefT (ru, SingletonBigIntT (expected, _))) ->
+      if expected = actual then
         ()
       else
         (* TODO: ordered_reasons should not be necessary *)
@@ -992,18 +1016,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
         add_output
           cx
           (Error_message.EExpectedBigIntLit { reason_lower = rl; reason_upper = ru; use_op })
+    | (DefT (rl, BigIntGeneralT _), DefT (ru, SingletonBigIntT _)) ->
+      (* TODO: ordered_reasons should not be necessary *)
+      let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
+      add_output
+        cx
+        (Error_message.EExpectedBigIntLit { reason_lower = rl; reason_upper = ru; use_op })
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
-    | ( ( DefT (reason_s, StrT literal)
-        | GenericT { reason = reason_s; bound = DefT (_, StrT literal); _ } ),
+    | ( ( DefT (reason_s, StrT_UNSOUND (_, x))
+        | GenericT { reason = reason_s; bound = DefT (_, StrT_UNSOUND (_, x)); _ } ),
         KeysT (reason_op, o)
       ) ->
-      let reason_next =
-        match literal with
-        | Literal (_, x) -> replace_desc_new_reason (RProperty (Some x)) reason_s
-        | _ -> replace_desc_new_reason RUnknownString reason_s
-      in
+      let reason_next = replace_desc_new_reason (RProperty (Some x)) reason_s in
+      (* check that o has key x *)
+      let u = HasOwnPropT (use_op, reason_next, l) in
+      rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
+    | ( ( DefT (reason_s, StrGeneralT _)
+        | GenericT { reason = reason_s; bound = DefT (_, StrGeneralT _); _ } ),
+        KeysT (reason_op, o)
+      ) ->
+      let reason_next = replace_desc_new_reason RUnknownString reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
@@ -1012,7 +1046,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         KeysT (reason_op, o)
       ) ->
       let reason_next = replace_desc_new_reason (RProperty (Some (OrdinaryName s))) reason_s in
-      let l = DefT (reason_s, StrT (Literal (None, OrdinaryName s))) in
+      let l = DefT (reason_s, StrT_UNSOUND (None, OrdinaryName s)) in
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | ( ( StrUtilT { reason = reason_s; op; remainder }
@@ -1112,9 +1146,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       begin
         match u with
-        | DefT (_, (StrT (Literal (_, x)) | SingletonStrT x)) -> check (UnionEnum.Str x)
-        | DefT (_, (BoolT (Some x) | SingletonBoolT x)) -> check (UnionEnum.Bool x)
-        | DefT (_, (NumT (Literal (_, x)) | SingletonNumT x)) -> check (UnionEnum.Num x)
+        | DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT x)) -> check (UnionEnum.Str x)
+        | DefT (_, (BoolT_UNSOUND x | SingletonBoolT x)) -> check (UnionEnum.Bool x)
+        | DefT (_, (NumT_UNSOUND (_, x) | SingletonNumT x)) -> check (UnionEnum.Num x)
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (_, IntersectionT (_, rep)) ->
@@ -1127,7 +1161,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* String enum sets can be handled in logarithmic time by just
      * checking for membership in the set.
      *)
-    | (DefT (reason_l, (StrT (Literal (_, x)) | SingletonStrT x)), UnionT (reason_u, rep))
+    | (DefT (reason_l, (StrT_UNSOUND (_, x) | SingletonStrT x)), UnionT (reason_u, rep))
       when match UnionRep.check_enum rep with
            | Some enums ->
              if not (UnionEnumSet.mem (UnionEnum.Str x) enums) then
@@ -1222,13 +1256,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* literals *)
     (************)
     | (DefT (reason, SingletonStrT key), _) ->
-      rec_flow_t cx trace ~use_op (DefT (reason, StrT (Literal (None, key))), u)
+      rec_flow_t cx trace ~use_op (DefT (reason, StrT_UNSOUND (None, key)), u)
     | (DefT (reason, SingletonNumT lit), _) ->
-      rec_flow_t cx trace ~use_op (DefT (reason, NumT (Literal (None, lit))), u)
+      rec_flow_t cx trace ~use_op (DefT (reason, NumT_UNSOUND (None, lit)), u)
     | (DefT (reason, SingletonBoolT b), _) ->
-      rec_flow_t cx trace ~use_op (DefT (reason, BoolT (Some b)), u)
+      rec_flow_t cx trace ~use_op (DefT (reason, BoolT_UNSOUND b), u)
     | (DefT (reason, SingletonBigIntT lit), _) ->
-      rec_flow_t cx trace ~use_op (DefT (reason, BigIntT (Literal (None, lit))), u)
+      rec_flow_t cx trace ~use_op (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, NullT), u)
     (************)
     (* StrUtilT *)
@@ -1243,16 +1277,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         StrUtilT { reason = _; op = StrPrefix prefix2; remainder = Some remainder2 }
       )
       when prefix1 = prefix2 ->
-      let remainder1 = Option.value ~default:(StrT.why reason) remainder1 in
+      let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, StrT (Literal (None, OrdinaryName s))),
+    | ( DefT (reason, StrT_UNSOUND (None, OrdinaryName s)),
         StrUtilT { reason = _; op = StrPrefix prefix; remainder }
       )
       when String.starts_with ~prefix s ->
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_prefix_exn ~prefix s in
           let reason = replace_desc_reason (RStringWithoutPrefix { prefix }) reason in
-          let str_t = DefT (reason, StrT (Literal (None, OrdinaryName chopped))) in
+          let str_t = DefT (reason, StrT_UNSOUND (None, OrdinaryName chopped)) in
           rec_flow_t cx trace ~use_op (str_t, remainder)
       )
     (* suffix *)
@@ -1265,16 +1299,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         StrUtilT { reason = _; op = StrSuffix suffix2; remainder = Some remainder2 }
       )
       when suffix1 = suffix2 ->
-      let remainder1 = Option.value ~default:(StrT.why reason) remainder1 in
+      let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, StrT (Literal (None, OrdinaryName s))),
+    | ( DefT (reason, StrT_UNSOUND (None, OrdinaryName s)),
         StrUtilT { reason = _; op = StrSuffix suffix; remainder }
       )
       when String.ends_with ~suffix s ->
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_suffix_exn ~suffix s in
           let reason = replace_desc_reason (RStringWithoutSuffix { suffix }) reason in
-          let str_t = DefT (reason, StrT (Literal (None, OrdinaryName chopped))) in
+          let str_t = DefT (reason, StrT_UNSOUND (None, OrdinaryName chopped)) in
           rec_flow_t cx trace ~use_op (str_t, remainder)
       )
     (* both *)
@@ -1285,7 +1319,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           Truthy
       in
-      rec_flow_t cx trace ~use_op (DefT (reason, StrT literal_kind), u)
+      rec_flow_t cx trace ~use_op (DefT (reason, StrGeneralT literal_kind), u)
     (*
      * When do we consider a polymorphic type <X:U> T to be a subtype of another
      * polymorphic type <X:U'> T'? This is the subject of a long line of
@@ -2224,19 +2258,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ }) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
-    | ( DefT (reason, BoolT _),
+    | ( DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Boolean })
-    | ( DefT (reason, NumT _),
+    | ( DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
-    | ( DefT (reason, StrT _),
+    | ( DefT (reason, (StrGeneralT _ | StrT_UNSOUND _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2407,11 +2441,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       let representation_type =
         match representation_t with
-        | DefT (_, BoolT _) -> Some "boolean"
-        | DefT (_, NumT _) -> Some "number"
-        | DefT (_, StrT _) -> Some "string"
+        | DefT (_, BoolGeneralT)
+        | DefT (_, BoolT_UNSOUND _) ->
+          Some "boolean"
+        | DefT (_, NumGeneralT _)
+        | DefT (_, NumT_UNSOUND _) ->
+          Some "number"
+        | DefT (_, StrGeneralT _)
+        | DefT (_, StrT_UNSOUND _) ->
+          Some "string"
         | DefT (_, SymbolT) -> Some "symbol"
-        | DefT (_, BigIntT _) -> Some "bigint"
+        | DefT (_, BigIntGeneralT _)
+        | DefT (_, BigIntT_UNSOUND _) ->
+          Some "bigint"
         | _ -> None
       in
       let casting_syntax = Context.casting_syntax cx in

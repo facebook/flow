@@ -76,8 +76,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
            {
              literal =
                (match literal with
-               | Literal (_, name) -> replace_desc_reason (RIdentifier name) reason
-               | _ -> reason);
+               | `Literal name -> replace_desc_reason (RIdentifier name) reason
+               | `General _ -> reason);
            }
         )
     in
@@ -85,8 +85,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
      * any. Run the HasOwnPropT check to give the user an error if they use a
      * non-literal without a dictionary. *)
     (match literal with
-    | Literal _ -> ()
-    | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, StrT literal))));
+    | `Literal _ -> ()
+    | `General gen ->
+      rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, DefT (reason, StrGeneralT gen))));
 
     (* Get the intrinsic from the map. *)
     let intrinsic =
@@ -103,14 +104,14 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   from_annot = false;
                   propref =
                     (match literal with
-                    | Literal (_, name) ->
+                    | `Literal name ->
                       let reason =
                         replace_desc_reason
                           (RReactElement { name_opt = Some name; from_component_syntax = false })
                           reason
                       in
                       mk_named_prop ~reason name
-                    | _ -> Computed (DefT (reason, StrT AnyLiteral)));
+                    | `General _ -> Computed (DefT (reason, StrGeneralT AnyLiteral)));
                   tout;
                   hint = hint_unavailable;
                 }
@@ -262,7 +263,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         "React$RefSetter"
         [VoidT.why reason_ref]
       |> Option.some
-    | DefT (_, StrT lit) ->
+    | DefT (_, StrT_UNSOUND (_, name)) ->
       let instance =
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
             get_intrinsic
@@ -271,7 +272,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               ~component_reason:(reason_of_t component)
               ~reason_op:reason_ref
               ~artifact:`Instance
-              ~literal:lit
+              ~literal:(`Literal name)
               ~prop_polarity:Polarity.Positive
               tout
         )
@@ -291,7 +292,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               ~component_reason:(reason_of_t component)
               ~reason_op:reason_ref
               ~artifact:`Instance
-              ~literal:(Literal (None, name))
+              ~literal:(`Literal name)
               ~prop_polarity:Polarity.Positive
               tout
         )
@@ -338,17 +339,27 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ~component_reason:(reason_of_t component)
         ~reason_op
         ~artifact:`Props
-        ~literal:(Literal (None, name))
+        ~literal:(`Literal name)
         ~prop_polarity:Polarity.Positive
         tout
-    | DefT (_, StrT lit) ->
+    | DefT (_, StrGeneralT gen) ->
       get_intrinsic
         cx
         trace
         ~component_reason:(reason_of_t component)
         ~reason_op
         ~artifact:`Props
-        ~literal:lit
+        ~literal:(`General gen)
+        ~prop_polarity:Polarity.Positive
+        tout
+    | DefT (_, StrT_UNSOUND (_, name)) ->
+      get_intrinsic
+        cx
+        trace
+        ~component_reason:(reason_of_t component)
+        ~reason_op
+        ~artifact:`Props
+        ~literal:(`Literal name)
         ~prop_polarity:Polarity.Positive
         tout
     (* any and any specializations *)
@@ -469,13 +480,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (reason, ReactAbstractComponentT _) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
       | DefT (_, SingletonStrT name) ->
-        get_intrinsic
-          ~artifact:`Props
-          ~literal:(Literal (None, name))
-          ~prop_polarity:Polarity.Negative
-          tin
-      | DefT (_, StrT lit) ->
-        get_intrinsic ~artifact:`Props ~literal:lit ~prop_polarity:Polarity.Negative tin
+        get_intrinsic ~artifact:`Props ~literal:(`Literal name) ~prop_polarity:Polarity.Negative tin
+      | DefT (_, StrGeneralT gen) ->
+        get_intrinsic ~artifact:`Props ~literal:(`General gen) ~prop_polarity:Polarity.Negative tin
+      | DefT (_, StrT_UNSOUND (_, name)) ->
+        get_intrinsic ~artifact:`Props ~literal:(`Literal name) ~prop_polarity:Polarity.Negative tin
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
@@ -883,11 +892,21 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (_, SingletonStrT name) ->
         get_intrinsic
           ~artifact:`Instance
-          ~literal:(Literal (None, name))
+          ~literal:(`Literal name)
           ~prop_polarity:Polarity.Positive
           tout
-      | DefT (_, StrT lit) ->
-        get_intrinsic ~artifact:`Instance ~literal:lit ~prop_polarity:Polarity.Positive tout
+      | DefT (_, StrGeneralT gen) ->
+        get_intrinsic
+          ~artifact:`Instance
+          ~literal:(`General gen)
+          ~prop_polarity:Polarity.Positive
+          tout
+      | DefT (_, StrT_UNSOUND (_, name)) ->
+        get_intrinsic
+          ~artifact:`Instance
+          ~literal:(`Literal name)
+          ~prop_polarity:Polarity.Positive
+          tout
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
       (* ...otherwise, error. *)

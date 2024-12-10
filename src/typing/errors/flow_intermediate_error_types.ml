@@ -159,12 +159,6 @@ module InvalidObjKey = struct
     else
       Other
 
-  let kind_of_num_lit = function
-    | Type.Truthy
-    | Type.AnyLiteral ->
-      NumberNonLit
-    | Type.Literal (_, (value, _)) -> kind_of_num_value value
-
   let str_of_kind = function
     | Other -> "other"
     | NumberNonLit -> "number not literal"

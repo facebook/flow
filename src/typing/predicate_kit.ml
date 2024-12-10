@@ -892,16 +892,16 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector
   in
   let sentinel_of_literal = function
-    | DefT (_, StrT (Literal (_, value)))
+    | DefT (_, StrT_UNSOUND (_, value))
     | DefT (_, SingletonStrT value) ->
       Some UnionEnum.(One (Str value))
-    | DefT (_, NumT (Literal (_, value)))
+    | DefT (_, NumT_UNSOUND (_, value))
     | DefT (_, SingletonNumT value) ->
       Some UnionEnum.(One (Num value))
-    | DefT (_, BoolT (Some value))
+    | DefT (_, BoolT_UNSOUND value)
     | DefT (_, SingletonBoolT value) ->
       Some UnionEnum.(One (Bool value))
-    | DefT (_, BigIntT (Literal (_, value)))
+    | DefT (_, BigIntT_UNSOUND (_, value))
     | DefT (_, SingletonBigIntT value) ->
       Some UnionEnum.(One (BigInt value))
     | DefT (_, VoidT) -> Some UnionEnum.(One Void)
@@ -1057,7 +1057,7 @@ and concretize_and_run_sentinel_prop_test
 and eq_test cx _trace result_collector (sense, left, right) =
   let expected_loc = loc_of_t right in
   match right with
-  | DefT (_, StrT (Literal (_, value)))
+  | DefT (_, StrT_UNSOUND (_, value))
   | DefT (_, SingletonStrT value) ->
     let filtered =
       if sense then
@@ -1066,7 +1066,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_string_literal value left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, NumT (Literal (_, value)))
+  | DefT (_, NumT_UNSOUND (_, value))
   | DefT (_, SingletonNumT value) ->
     let filtered =
       if sense then
@@ -1075,7 +1075,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_number_literal value left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BoolT (Some true))
+  | DefT (_, BoolT_UNSOUND true)
   | DefT (_, SingletonBoolT true) ->
     let filtered =
       if sense then
@@ -1084,7 +1084,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_true left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BoolT (Some false))
+  | DefT (_, BoolT_UNSOUND false)
   | DefT (_, SingletonBoolT false) ->
     let filtered =
       if sense then
@@ -1093,7 +1093,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_false left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BigIntT (Literal (_, value)))
+  | DefT (_, BigIntT_UNSOUND (_, value))
   | DefT (_, SingletonBigIntT value) ->
     let filtered =
       if sense then

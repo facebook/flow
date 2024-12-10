@@ -1477,14 +1477,14 @@ struct
           ) ->
           (match (drop_generic key, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
-          | (DefT (_, StrT (Literal (_, x))), _) when Context.has_prop cx mapr x -> ()
+          | (DefT (_, StrT_UNSOUND (_, x)), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
           | (_, Indexed { key = expected_key; _ }) ->
             rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, expected_key)
           | _ ->
             let (prop, suggestion) =
               match drop_generic key with
-              | DefT (_, StrT (Literal (_, prop))) ->
+              | DefT (_, StrT_UNSOUND (_, prop)) ->
                 (Some prop, prop_typo_suggestion cx [mapr] (display_string_of_name prop))
               | _ -> (None, None)
             in
@@ -1503,8 +1503,8 @@ struct
             HasOwnPropT
               ( use_op,
                 reason_op,
-                ( ( DefT (_, StrT (Literal (_, x)))
-                  | GenericT { bound = DefT (_, StrT (Literal (_, x))); _ } ) as key
+                ( ( DefT (_, StrT_UNSOUND (_, x))
+                  | GenericT { bound = DefT (_, StrT_UNSOUND (_, x)); _ } ) as key
                 )
               )
           ) ->
@@ -1562,7 +1562,7 @@ struct
               trace
               (dict_key, ToStringT { orig_t = None; reason = reason_op; t_out = keys })
           | None -> ())
-        | (AnyT _, GetKeysT (reason_op, keys)) -> rec_flow cx trace (StrT.why reason_op, keys)
+        | (AnyT _, GetKeysT (reason_op, keys)) -> rec_flow cx trace (StrModuleT.why reason_op, keys)
         (* In general, typechecking is monotonic in the sense that more constraints
            produce more errors. However, sometimes we may want to speculatively try
            out constraints, backtracking if they produce errors (and removing the
@@ -2260,13 +2260,13 @@ struct
           ) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (DefT (reason, SingletonStrT key), _) ->
-          rec_flow cx trace (DefT (reason, StrT (Literal (None, key))), u)
+          rec_flow cx trace (DefT (reason, StrT_UNSOUND (None, key)), u)
         | (DefT (reason, SingletonNumT lit), _) ->
-          rec_flow cx trace (DefT (reason, NumT (Literal (None, lit))), u)
+          rec_flow cx trace (DefT (reason, NumT_UNSOUND (None, lit)), u)
         | (DefT (reason, SingletonBoolT b), _) ->
-          rec_flow cx trace (DefT (reason, BoolT (Some b)), u)
+          rec_flow cx trace (DefT (reason, BoolT_UNSOUND b), u)
         | (DefT (reason, SingletonBigIntT lit), _) ->
-          rec_flow cx trace (DefT (reason, BigIntT (Literal (None, lit))), u)
+          rec_flow cx trace (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
         (* NullProtoT is necessary as an upper bound, to distinguish between
            (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
            a lower bound, it's the same as DefT (_, NullT) *)
@@ -3472,7 +3472,7 @@ struct
           let dict =
             {
               dict_name = None;
-              key = StrT.make reason;
+              key = StrModuleT.make reason;
               value = l;
               dict_polarity = Polarity.Neutral;
             }
@@ -3733,7 +3733,7 @@ struct
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
-        | ( DefT (reason_s, StrT _),
+        | ( DefT (reason_s, (StrGeneralT _ | StrT_UNSOUND _)),
             GetElemT
               {
                 use_op;
@@ -3745,8 +3745,8 @@ struct
                 tout;
               }
           ) ->
-          rec_flow cx trace (key_t, UseT (use_op, NumT.why reason_s));
-          rec_flow_t cx trace ~use_op:unknown_use (StrT.why reason_op, OpenT tout)
+          rec_flow cx trace (key_t, UseT (use_op, NumModuleT.why reason_s));
+          rec_flow_t cx trace ~use_op:unknown_use (StrModuleT.why reason_op, OpenT tout)
         (* Expressions may be used as keys to access objects and arrays. In
            general, we cannot evaluate such expressions at compile time. However,
            in some idiomatic special cases, we can; in such cases, we know exactly
@@ -3775,7 +3775,7 @@ struct
           rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
         (* If we are accessing `Iterable<T>` with a number, and have `access_iterables = true`,
            then output `T`. *)
-        | ( DefT (_, NumT _),
+        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
             ElemT
               ( use_op,
                 _,
@@ -3826,7 +3826,7 @@ struct
             | None -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
-        | ( DefT (_, NumT _),
+        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
             ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action)
           ) ->
           let (write_action, read_action) =
@@ -3984,7 +3984,7 @@ struct
             let key_t =
               let r = reason_of_t value_t in
               match index with
-              | None -> NumT.why r
+              | None -> NumModuleT.why r
               | Some i -> DefT (r, SingletonNumT (float_of_int i, string_of_int i))
             in
             Slice_utils.mk_mapped_prop_type
@@ -4861,7 +4861,7 @@ struct
           | OpenT _ ->
             let loc = loc_of_t elem_t in
             add_output cx Error_message.(EInternal (loc, PropRefComputedOpen))
-          | DefT (_, StrT (Literal _)) ->
+          | DefT (_, StrT_UNSOUND _) ->
             let loc = loc_of_t elem_t in
             add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
           | AnyT (_, src) ->
@@ -5040,15 +5040,17 @@ struct
             else
               Truthy
           in
-          rec_flow cx trace (DefT (reason, StrT literal_kind), u)
+          rec_flow cx trace (DefT (reason, StrGeneralT literal_kind), u)
         (*******************************)
         (* ToString abstract operation *)
         (*******************************)
 
         (* ToStringT passes through strings unchanged, and flows a generic StrT otherwise *)
-        | (DefT (_, StrT _), ToStringT { orig_t = None; t_out; _ }) -> rec_flow cx trace (l, t_out)
-        | (DefT (_, StrT _), ToStringT { orig_t = Some t; t_out; _ }) -> rec_flow cx trace (t, t_out)
-        | (_, ToStringT { reason; t_out; _ }) -> rec_flow cx trace (StrT.why reason, t_out)
+        | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), ToStringT { orig_t = None; t_out; _ }) ->
+          rec_flow cx trace (l, t_out)
+        | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), ToStringT { orig_t = Some t; t_out; _ }) ->
+          rec_flow cx trace (t, t_out)
+        | (_, ToStringT { reason; t_out; _ }) -> rec_flow cx trace (StrModuleT.why reason, t_out)
         (**********************)
         (* Array library call *)
         (**********************)
@@ -5145,22 +5147,23 @@ struct
         (***********************)
         (* String library call *)
         (***********************)
-        | (DefT (reason, StrT _), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (StrGeneralT _ | StrT_UNSOUND _)), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "String", u)
         (***********************)
         (* Number library call *)
         (***********************)
-        | (DefT (reason, NumT _), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Number", u)
         (***********************)
         (* Boolean library call *)
         (***********************)
-        | (DefT (reason, BoolT _), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
         (***********************)
         (* BigInt library call *)
         (***********************)
-        | (DefT (reason, BigIntT _), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _)), u)
+          when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "BigInt", u)
         (***********************)
         (* Symbol library call *)
@@ -5241,14 +5244,15 @@ struct
         (* computed properties *)
         | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
           TypeCollector.add collector t
-        | (DefT (lreason, StrT (Literal _)), WriteComputedObjPropCheckT _) ->
+        | (DefT (lreason, StrT_UNSOUND _), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
         | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
-        | (DefT (_, StrT _), WriteComputedObjPropCheckT { err_on_str_key = (use_op, reason_obj); _ })
-          ->
+        | ( DefT (_, StrGeneralT _),
+            WriteComputedObjPropCheckT { err_on_str_key = (use_op, reason_obj); _ }
+          ) ->
           add_output
             cx
             (Error_message.EPropNotFound
@@ -5260,8 +5264,12 @@ struct
                  suggestion = None;
                }
             )
-        | (DefT (reason, NumT lit), WriteComputedObjPropCheckT { reason_key; _ }) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
+        | (DefT (reason, NumGeneralT _), WriteComputedObjPropCheckT { reason_key; _ }) ->
+          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
+          add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
+        | (DefT (reason, NumT_UNSOUND (_, (value, _))), WriteComputedObjPropCheckT { reason_key; _ })
+          ->
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->
           let reason = reason_of_t l in
@@ -5486,7 +5494,7 @@ struct
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
-      | UseT (Op (Coercion _), DefT (_, StrT _)) ->
+      | UseT (Op (Coercion _), DefT (_, (StrGeneralT _ | StrT_UNSOUND _))) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
         true
       | ReactKitT _ ->

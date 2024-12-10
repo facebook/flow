@@ -149,7 +149,7 @@ let rec synthesizable_expression cx ?cond exp =
 
 let mk_selector_reason_has_default cx loc = function
   | Selector.Elem { index = n; has_default } ->
-    let key = DefT (mk_reason RNumber loc, NumT (Literal (None, (float n, string_of_int n)))) in
+    let key = DefT (mk_reason RNumber loc, NumT_UNSOUND (None, (float n, string_of_int n))) in
     (Type.Elem key, mk_reason (RArrayNthElement n) loc, has_default)
   | Selector.Prop { prop; prop_loc; has_default } ->
     ( Type.Prop (prop, has_default),
@@ -772,7 +772,7 @@ let rec resolve_binding cx reason loc b =
     (match kind with
     | In ->
       TypeAssertions.assert_for_in_rhs cx right_t;
-      StrT.at loc
+      StrModuleT.at loc
     | Of { await } -> Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->
     let t = resolve_binding cx reason loc binding in

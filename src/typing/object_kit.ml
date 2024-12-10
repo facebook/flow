@@ -52,8 +52,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
    *)
   let partition_keys_and_indexer cx trace use_op reason keys =
     let key_upper_bound_reason desc = mk_reason desc (loc_of_reason reason) in
-    let str_t = StrT.make (key_upper_bound_reason RString) in
-    let num_t = NumT.make (key_upper_bound_reason RNumber) in
+    let str_t = StrModuleT.make (key_upper_bound_reason RString) in
+    let num_t = NumModuleT.make (key_upper_bound_reason RNumber) in
     let symbol_t = SymbolT.make (key_upper_bound_reason RSymbol) in
     let union = UnionT (reason, UnionRep.make str_t num_t [symbol_t]) in
     let compatibility_use_op =
@@ -67,7 +67,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     |> List.fold_left
          (fun (keys, indexers) t ->
            match t with
-           | DefT (r, StrT (Literal (_, name)))
+           | DefT (r, StrT_UNSOUND (_, name))
            | DefT (r, SingletonStrT name) ->
              ((name, r) :: keys, indexers)
            | DefT (_, EmptyT) -> (keys, indexers)

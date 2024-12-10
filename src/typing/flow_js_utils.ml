@@ -116,10 +116,14 @@ end = struct
           | None -> acc
           | Some t -> this#type_ cx pole acc t)
         (* Base types *)
-        | DefT (_, NumT _)
-        | DefT (_, StrT _)
-        | DefT (_, BoolT _)
-        | DefT (_, BigIntT _)
+        | DefT (_, NumGeneralT _)
+        | DefT (_, NumT_UNSOUND _)
+        | DefT (_, StrGeneralT _)
+        | DefT (_, StrT_UNSOUND _)
+        | DefT (_, BoolGeneralT)
+        | DefT (_, BoolT_UNSOUND _)
+        | DefT (_, BigIntGeneralT _)
+        | DefT (_, BigIntT_UNSOUND _)
         | DefT (_, EmptyT)
         | DefT (_, MixedT _)
         | DefT (_, NullT)
@@ -282,10 +286,18 @@ let ground_subtype = function
   | (_, UseT (_, OpenT _)) ->
     false
   | (UnionT _, _) -> false
-  | (DefT (_, NumT _), UseT (_, DefT (_, NumT _)))
-  | (DefT (_, StrT _), UseT (_, DefT (_, StrT _)))
-  | (DefT (_, BoolT _), UseT (_, DefT (_, BoolT _)))
-  | (DefT (_, BigIntT _), UseT (_, DefT (_, BigIntT _)))
+  | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+      UseT (_, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
+    )
+  | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _)),
+      UseT (_, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
+    )
+  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _)),
+      UseT (_, DefT (_, (BoolGeneralT | BoolT_UNSOUND _)))
+    )
+  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
+      UseT (_, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)))
+    )
   | (DefT (_, SymbolT), UseT (_, DefT (_, SymbolT)))
   | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
   | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
@@ -295,7 +307,7 @@ let ground_subtype = function
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
       UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
     )
     when String.starts_with ~prefix s ->
@@ -305,17 +317,17 @@ let ground_subtype = function
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
     true
-  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
       UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
     )
     when String.ends_with ~suffix s ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
-      UseT (_, DefT (_, StrT Truthy))
+      UseT (_, DefT (_, StrGeneralT Truthy))
     )
     when arg <> "" ->
     true
-  | (StrUtilT _, UseT (_, DefT (_, StrT AnyLiteral))) -> true
+  | (StrUtilT _, UseT (_, DefT (_, StrGeneralT AnyLiteral))) -> true
   | (l, UseT (_, DefT (_, MixedT mixed_flavor))) -> TypeUtil.is_mixed_subtype l mixed_flavor
   (* we handle the any propagation check later *)
   | (AnyT _, _) -> false
@@ -514,8 +526,7 @@ let error_message_kind_of_upper = function
   | HasOwnPropT
       ( _,
         r,
-        ( DefT (_, StrT (Literal (_, name)))
-        | GenericT { bound = DefT (_, StrT (Literal (_, name))); _ } )
+        (DefT (_, StrT_UNSOUND (_, name)) | GenericT { bound = DefT (_, StrT_UNSOUND (_, name)); _ })
       ) ->
     Error_message.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (loc_of_reason r, None)
@@ -771,7 +782,7 @@ let default_this_type cx ~needs_this_param func =
 
 let string_key s reason =
   let key_reason = replace_desc_reason (RPropertyIsAString s) reason in
-  DefT (key_reason, StrT (Literal (None, s)))
+  DefT (key_reason, StrT_UNSOUND (None, s))
 
 (* common case checking a function as an object *)
 let quick_error_fun_as_obj cx ~use_op reason statics reason_o props =
@@ -1594,7 +1605,7 @@ module ImportModuleNsTKit = struct
       if exports.has_every_named_export then
         Indexed
           {
-            key = StrT.why reason;
+            key = StrModuleT.why reason;
             value = AnyT.untyped reason;
             dict_name = None;
             dict_polarity = Polarity.Neutral;
@@ -2102,7 +2113,7 @@ let is_str_intlike str = Str.string_match int_regex str 0
 let type_of_key_name cx name reason =
   let str_key () =
     let key_reason = replace_desc_reason (RPropertyIsAString name) reason in
-    DefT (key_reason, StrT (Literal (None, name)))
+    DefT (key_reason, StrT_UNSOUND (None, name))
   in
   let str = display_string_of_name name in
   (* We don't want the `NumericStrKeyT` type to leak out of the obj-to-obj
@@ -2341,16 +2352,22 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedOpen));
           F.error_type cx trace reason_op
-        | GenericT { bound = DefT (_, StrT (Literal _)); _ }
-        | DefT (_, StrT (Literal _)) ->
+        | GenericT { bound = DefT (_, StrT_UNSOUND _); _ }
+        | DefT (_, StrT_UNSOUND _) ->
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
-        | GenericT { bound = DefT (_, NumT lit); _ }
-        | DefT (_, NumT lit) ->
+        | GenericT { bound = DefT (_, NumGeneralT _); _ }
+        | DefT (_, NumGeneralT _) ->
           let reason_prop = reason_of_t elem_t in
-          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
+          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
+          add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
+          F.error_type cx trace reason_op
+        | GenericT { bound = DefT (_, NumT_UNSOUND (_, (value, _))); _ }
+        | DefT (_, NumT_UNSOUND (_, (value, _))) ->
+          let reason_prop = reason_of_t elem_t in
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
           F.error_type cx trace reason_op
         | _ ->
@@ -2383,7 +2400,7 @@ let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
   in
   let (can_write_tuple, value, use_op) =
     match l with
-    | DefT (index_reason, NumT (Literal (_, (float_value, _)))) -> begin
+    | DefT (index_reason, NumT_UNSOUND (_, (float_value, _))) -> begin
       match elements with
       | None -> (false, elem_t, use_op)
       | Some elements ->
@@ -2477,13 +2494,13 @@ let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
 
 let propref_for_elem_t = function
   | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT name)); _ })
-  | GenericT { bound = DefT (_, StrT (Literal (_, name))); reason; _ }
-  | DefT (reason, StrT (Literal (_, name))) ->
+  | GenericT { bound = DefT (_, StrT_UNSOUND (_, name)); reason; _ }
+  | DefT (reason, StrT_UNSOUND (_, name)) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
   | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT (value, raw))); _ })
-  | GenericT { bound = DefT (_, NumT (Literal (_, (value, raw)))); reason = reason_num; _ }
-  | DefT (reason_num, NumT (Literal (_, (value, raw))))
+  | GenericT { bound = DefT (_, NumT_UNSOUND (_, (value, raw))); reason = reason_num; _ }
+  | DefT (reason_num, NumT_UNSOUND (_, (value, raw)))
     when Js_number.is_float_safe_integer value ->
     let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
@@ -2609,25 +2626,25 @@ let unary_negate_lit ~annot_loc reason (value, raw) =
 let flow_unary_arith cx l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
-  | (Minus, DefT (lreason, NumT (Literal (_, lit)))) ->
+  | (Minus, DefT (lreason, NumT_UNSOUND (_, lit))) ->
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
-    DefT (reason, NumT (Literal (None, lit)))
+    DefT (reason, NumT_UNSOUND (None, lit))
   | (Minus, DefT (lreason, SingletonNumT lit)) ->
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
     DefT (reason, SingletonNumT lit)
-  | (Minus, DefT (_, NumT (AnyLiteral | Truthy))) -> l
-  | (Minus, DefT (_, BigIntT (Literal (_, (value, raw))))) ->
+  | (Minus, DefT (_, NumGeneralT _)) -> l
+  | (Minus, DefT (_, BigIntT_UNSOUND (_, (value, raw)))) ->
     let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
-    DefT (replace_desc_reason RBigInt reason, BigIntT (Literal (None, (value, raw))))
-  | (Minus, DefT (_, BigIntT (AnyLiteral | Truthy))) -> l
-  | (Plus, DefT (reason_bigint, BigIntT _)) ->
+    DefT (replace_desc_reason RBigInt reason, BigIntT_UNSOUND (None, (value, raw)))
+  | (Minus, DefT (_, BigIntGeneralT _)) -> l
+  | (Plus, DefT (reason_bigint, (BigIntGeneralT _ | BigIntT_UNSOUND _))) ->
     add_output cx (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
-  | (Plus, _) -> NumT.why reason
-  | (BitNot, DefT (_, NumT _)) -> NumT.why reason
-  | (BitNot, DefT (_, BigIntT _)) -> BigIntT.why reason
-  | (Update, DefT (_, NumT _)) -> NumT.why reason
-  | (Update, DefT (_, BigIntT _)) -> BigIntT.why reason
+  | (Plus, _) -> NumModuleT.why reason
+  | (BitNot, DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) -> NumModuleT.why reason
+  | (BitNot, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
+  | (Update, DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) -> NumModuleT.why reason
+  | (Update, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
   | (_, AnyT (_, src)) ->
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
@@ -2650,19 +2667,25 @@ let flow_arith cx reason l r kind =
   | (_, _, DefT (_, EmptyT)) ->
     EmptyT.why reason
   (* num <> num *)
-  | (_, DefT (_, NumT _), DefT (_, NumT _)) -> NumT.why reason
-  | (RShift3, DefT (reason, BigIntT _), _) ->
+  | (_, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) ->
+    NumModuleT.why reason
+  | (RShift3, DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _)), _) ->
     add_output cx (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
-  | (_, DefT (_, BigIntT _), DefT (_, BigIntT _)) -> BigIntT.why reason
+  | ( _,
+      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
+      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+    ) ->
+    BigIntModuleT.why reason
   (* str + str *)
   (* str + num *)
   (* num + str *)
-  | (Plus, DefT (_, StrT _), DefT (_, StrT _))
-  | (Plus, DefT (_, StrT _), DefT (_, NumT _))
-  | (Plus, DefT (_, NumT _), DefT (_, StrT _)) ->
-    StrT.why reason
+  | (Plus, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
+  | (Plus, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
+  | (Plus, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
+    ->
+    StrModuleT.why reason
   | _ ->
     add_output
       cx
@@ -2940,7 +2963,7 @@ end = struct
         )
 
   let on_concretized_bad_non_element_normalization normalization_cx = function
-    | DefT (invalid_type_reason, BoolT (Some false))
+    | DefT (invalid_type_reason, BoolT_UNSOUND false)
     | DefT (invalid_type_reason, SingletonBoolT false)
     | DefT (invalid_type_reason, NullT)
     | DefT (invalid_type_reason, VoidT) ->

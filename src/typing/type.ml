@@ -182,11 +182,15 @@ module rec TypeTerm : sig
     | AnyT of reason * any_source
 
   and def_t =
-    | NumT of number_literal literal
+    | NumGeneralT of literal
+    | NumT_UNSOUND of bool option * number_literal
     (* TODO StrT should perhaps not allow internal names *)
-    | StrT of name literal
-    | BoolT of bool option
-    | BigIntT of bigint_literal literal
+    | StrGeneralT of literal
+    | StrT_UNSOUND of bool option * name
+    | BoolGeneralT
+    | BoolT_UNSOUND of bool
+    | BigIntGeneralT of literal
+    | BigIntT_UNSOUND of bool option * bigint_literal
     | EmptyT
     | MixedT of mixed_flavor
     | NullT
@@ -1038,8 +1042,7 @@ module rec TypeTerm : sig
     (* e1 === e2 *)
     | EqTest
 
-  and 'a literal =
-    | Literal of bool option * 'a
+  and literal =
     | Truthy
     | AnyLiteral
 
@@ -2389,17 +2392,17 @@ end = struct
     TypeTerm.(
       function
       | DefT (_, SingletonStrT lit)
-      | DefT (_, StrT (Literal (_, lit))) ->
+      | DefT (_, StrT_UNSOUND (_, lit)) ->
         Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
       | DefT (_, SingletonNumT lit)
-      | DefT (_, NumT (Literal (_, lit))) ->
+      | DefT (_, NumT_UNSOUND (_, lit)) ->
         Some (UnionEnum.Num lit)
       | DefT (_, SingletonBigIntT lit)
-      | DefT (_, BigIntT (Literal (_, lit))) ->
+      | DefT (_, BigIntT_UNSOUND (_, lit)) ->
         Some (UnionEnum.BigInt lit)
       | DefT (_, SingletonBoolT lit)
-      | DefT (_, BoolT (Some lit)) ->
+      | DefT (_, BoolT_UNSOUND lit) ->
         Some (UnionEnum.Bool lit)
       | DefT (_, VoidT) -> Some UnionEnum.Void
       | DefT (_, NullT) -> Some UnionEnum.Null
@@ -2463,14 +2466,22 @@ end = struct
     let open UnionEnum in
     function
     | DefT (_, SingletonStrT _) -> Some SingletonStrTag
-    | DefT (_, StrT _) -> Some StrTag
+    | DefT (_, StrGeneralT _)
+    | DefT (_, StrT_UNSOUND _) ->
+      Some StrTag
     | DefT (_, NumericStrKeyT _) -> Some NumericStrKeyTag
     | DefT (_, SingletonNumT _) -> Some SingletonNumTag
-    | DefT (_, NumT _) -> Some NumTag
+    | DefT (_, NumGeneralT _)
+    | DefT (_, NumT_UNSOUND _) ->
+      Some NumTag
     | DefT (_, SingletonBigIntT _) -> Some SingletonBigIntTag
-    | DefT (_, BigIntT _) -> Some BingIntTag
+    | DefT (_, BigIntGeneralT _)
+    | DefT (_, BigIntT_UNSOUND _) ->
+      Some BingIntTag
     | DefT (_, SingletonBoolT _) -> Some SingletonBoolTag
-    | DefT (_, BoolT _) -> Some BoolTag
+    | DefT (_, BoolGeneralT)
+    | DefT (_, BoolT_UNSOUND _) ->
+      Some BoolTag
     | DefT (_, VoidT) -> Some VoidTag
     | DefT (_, NullT) -> Some NullTag
     | _ -> None
@@ -3717,28 +3728,28 @@ module Primitive (P : PrimitiveType) = struct
     P.make r
 end
 
-module NumT = Primitive (struct
+module NumModuleT = Primitive (struct
   let desc = RNumber
 
-  let make r = DefT (r, NumT AnyLiteral)
+  let make r = DefT (r, NumGeneralT AnyLiteral)
 end)
 
-module StrT = Primitive (struct
+module StrModuleT = Primitive (struct
   let desc = RString
 
-  let make r = DefT (r, StrT AnyLiteral)
+  let make r = DefT (r, StrGeneralT AnyLiteral)
 end)
 
-module BoolT = Primitive (struct
+module BoolModuleT = Primitive (struct
   let desc = RBoolean
 
-  let make r = DefT (r, BoolT None)
+  let make r = DefT (r, BoolGeneralT)
 end)
 
-module BigIntT = Primitive (struct
+module BigIntModuleT = Primitive (struct
   let desc = RBigInt
 
-  let make r = DefT (r, BigIntT AnyLiteral)
+  let make r = DefT (r, BigIntGeneralT AnyLiteral)
 end)
 
 module SymbolT = Primitive (struct
@@ -3876,9 +3887,9 @@ module Locationless = struct
     let t = P.make (locationless_reason P.desc)
   end
 
-  module NumT = LocationLess (NumT)
-  module StrT = LocationLess (StrT)
-  module BoolT = LocationLess (BoolT)
+  module NumModuleT = LocationLess (NumModuleT)
+  module StrModuleT = LocationLess (StrModuleT)
+  module BoolModuleT = LocationLess (BoolModuleT)
   module MixedT = LocationLess (MixedT)
   module EmptyT = LocationLess (EmptyT)
   module VoidT = LocationLess (VoidT)
@@ -3991,8 +4002,10 @@ let string_of_defer_use_ctor = function
 
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
-  | BigIntT _ -> "BigIntT"
-  | BoolT _ -> "BoolT"
+  | BigIntGeneralT _ -> "BigIntT"
+  | BigIntT_UNSOUND _ -> "BigIntT_UNSOUND"
+  | BoolGeneralT -> "BoolT"
+  | BoolT_UNSOUND _ -> "BoolT_UNSOUND"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | EnumValueT _ -> "EnumValueT"
@@ -4001,7 +4014,8 @@ let string_of_def_ctor = function
   | InstanceT _ -> "InstanceT"
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
-  | NumT _ -> "NumT"
+  | NumGeneralT _ -> "NumT"
+  | NumT_UNSOUND _ -> "NumT_UNSOUND"
   | ObjT _ -> "ObjT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
@@ -4011,7 +4025,8 @@ let string_of_def_ctor = function
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"
   | SingletonBigIntT _ -> "SingletonBigIntT"
-  | StrT _ -> "StrT"
+  | StrGeneralT _ -> "StrT"
+  | StrT_UNSOUND _ -> "StrT_UNSOUND"
   | SymbolT -> "SymbolT"
   | TypeT _ -> "TypeT"
   | VoidT -> "VoidT"

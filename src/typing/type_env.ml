@@ -400,7 +400,7 @@ let possibly_refined_write_state_of_state
              | (Env_api.Uninitialized reason, _) ->
                Type.(VoidT.make reason) |> base_possibly_refined_write_state
              | (Env_api.Number reason, _) ->
-               Type.(NumT.make reason) |> base_possibly_refined_write_state
+               Type.(NumModuleT.make reason) |> base_possibly_refined_write_state
              | (Env_api.DeclaredFunction loc, _) ->
                provider_type_for_def_loc ~intersect:true cx env loc
                |> base_possibly_refined_write_state

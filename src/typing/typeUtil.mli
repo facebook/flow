@@ -33,14 +33,6 @@ val mod_loc_of_virtual_use_op : ('a -> 'b) -> 'a Type.virtual_use_op -> 'b Type.
 
 module TypeExSet : Flow_set.S with type elt = Type.t
 
-val literal_eq : 'a -> 'a Type.literal -> bool
-
-val number_literal_eq : Type.number_literal -> Type.number_literal Type.literal -> bool
-
-val bigint_literal_eq : Type.bigint_literal -> Type.bigint_literal Type.literal -> bool
-
-val boolean_literal_eq : bool -> bool option -> bool
-
 (* Under a multiplatform world, we might have two nominal constructs under two different
  * files, but they are logically the same thing. e.g. class Foo under A.ios.js and A.js.flow.
  *

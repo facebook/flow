@@ -748,7 +748,7 @@ module rec ConsGen : S = struct
       let own_props = Context.find_props cx inst.own_props in
       let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
       union_of_ts reason_op keylist
-    | (AnyT _, Annot_GetKeysT reason_op) -> StrT.why reason_op
+    | (AnyT _, Annot_GetKeysT reason_op) -> StrModuleT.why reason_op
     (***********)
     (* $Values *)
     (***********)
@@ -789,25 +789,25 @@ module rec ConsGen : S = struct
     (* any propagation *)
     | (AnyT _, Annot_NotT _) -> t
     (* !x when x is of unknown truthiness *)
-    | (DefT (_, BoolT None), Annot_NotT reason)
-    | (DefT (_, StrT AnyLiteral), Annot_NotT reason)
-    | (DefT (_, NumT AnyLiteral), Annot_NotT reason) ->
-      BoolT.at (loc_of_reason reason)
+    | (DefT (_, BoolGeneralT), Annot_NotT reason)
+    | (DefT (_, StrGeneralT AnyLiteral), Annot_NotT reason)
+    | (DefT (_, NumGeneralT AnyLiteral), Annot_NotT reason) ->
+      BoolModuleT.at (loc_of_reason reason)
     (* !x when x is falsy *)
-    | (DefT (_, BoolT (Some false)), Annot_NotT reason)
+    | (DefT (_, BoolT_UNSOUND false), Annot_NotT reason)
     | (DefT (_, SingletonBoolT false), Annot_NotT reason)
-    | (DefT (_, StrT (Literal (_, OrdinaryName ""))), Annot_NotT reason)
+    | (DefT (_, StrT_UNSOUND (_, OrdinaryName "")), Annot_NotT reason)
     | (DefT (_, SingletonStrT (OrdinaryName "")), Annot_NotT reason)
-    | (DefT (_, NumT (Literal (_, (0., _)))), Annot_NotT reason)
+    | (DefT (_, NumT_UNSOUND (_, (0., _))), Annot_NotT reason)
     | (DefT (_, SingletonNumT (0., _)), Annot_NotT reason)
     | (DefT (_, NullT), Annot_NotT reason)
     | (DefT (_, VoidT), Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit true) reason in
-      DefT (reason, BoolT (Some true))
+      DefT (reason, BoolT_UNSOUND true)
     (* !x when x is truthy *)
     | (_, Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit false) reason in
-      DefT (reason, BoolT (Some false))
+      DefT (reason, BoolT_UNSOUND false)
     (**********)
     (* Mixins *)
     (**********)
@@ -1070,9 +1070,9 @@ module rec ConsGen : S = struct
     (********************)
     (* GetElemT / ElemT *)
     (********************)
-    | (DefT (_, StrT _), Annot_GetElemT (reason_op, _use_op, _index)) ->
+    | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), Annot_GetElemT (reason_op, _use_op, _index)) ->
       (* NOTE bypassing check that index is a number *)
-      StrT.why reason_op
+      StrModuleT.why reason_op
     | ((DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key))
       ->
       elab_t cx key (Annot_ElemT (reason_op, use_op, t))
@@ -1085,7 +1085,9 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, ArrT arrtype))) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
-    | (DefT (_, NumT _), Annot_ElemT (reason_op, use_op, DefT (reason_tup, ArrT arrtype))) ->
+    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+        Annot_ElemT (reason_op, use_op, DefT (reason_tup, ArrT arrtype))
+      ) ->
       let (value, _, _, _) =
         Flow_js_utils.array_elem_check ~write_action:false cx t use_op reason_op reason_tup arrtype
       in
@@ -1120,12 +1122,12 @@ module rec ConsGen : S = struct
     (* Singleton primitive types *)
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
-      elab_t cx (DefT (reason, StrT (Literal (None, OrdinaryName s)))) op
+      elab_t cx (DefT (reason, StrT_UNSOUND (None, OrdinaryName s))) op
     | (DefT (reason, SingletonStrT key), _) ->
-      elab_t cx (DefT (reason, StrT (Literal (None, key)))) op
+      elab_t cx (DefT (reason, StrT_UNSOUND (None, key))) op
     | (DefT (reason, SingletonNumT lit), _) ->
-      elab_t cx (DefT (reason, NumT (Literal (None, lit)))) op
-    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT (Some b))) op
+      elab_t cx (DefT (reason, NumT_UNSOUND (None, lit))) op
+    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT_UNSOUND b)) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (********************)
     (* Function Statics *)
@@ -1194,8 +1196,8 @@ module rec ConsGen : S = struct
     (*************)
     (* ToStringT *)
     (*************)
-    | (DefT (_, StrT _), Annot_ToStringT _) -> t
-    | (_, Annot_ToStringT { reason; _ }) -> StrT.why reason
+    | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), Annot_ToStringT _) -> t
+    | (_, Annot_ToStringT { reason; _ }) -> StrModuleT.why reason
     (************)
     (* GetPropT *)
     (************)
@@ -1214,13 +1216,13 @@ module rec ConsGen : S = struct
     (************************)
     (* Promoting primitives *)
     (************************)
-    | (DefT (reason, StrT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, (StrGeneralT _ | StrT_UNSOUND _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
-    | (DefT (reason, NumT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
-    | (DefT (reason, BoolT _), _) when primitive_promoting_op op ->
+    | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Boolean" in
       elab_t cx builtin op
     | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->

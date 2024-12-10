@@ -294,9 +294,11 @@ module Operators = struct
 
   let check_comparator =
     let check_base cx = function
-      | (DefT (_, StrT _), DefT (_, StrT _))
-      | (DefT (_, NumT _), DefT (_, NumT _))
-      | (DefT (_, BigIntT _), DefT (_, BigIntT _))
+      | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
+      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
+      | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
+          DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+        )
       | (DefT (_, EmptyT), _)
       | (_, DefT (_, EmptyT))
       | (AnyT _, _)
@@ -338,8 +340,9 @@ module Operators = struct
     let will_fail_check_if_unmatched = function
       | DefT
           ( _,
-            ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-            | SymbolT | EnumObjectT _ | EnumValueT _ )
+            ( NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _ | BoolGeneralT
+            | BoolT_UNSOUND _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SymbolT
+            | EnumObjectT _ | EnumValueT _ )
           ) ->
         true
       | _ -> false
@@ -355,11 +358,15 @@ module Operators = struct
     in
     (* If we allow `==` on these two types. *)
     let equatable = function
-      | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, (NumT _ | SingletonNumT _)))
-      | ( (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _),
-          (DefT (_, (StrT _ | SingletonStrT _)) | StrUtilT _)
+      | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
         )
-      | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, (BoolT _ | SingletonBoolT _)))
+      | ( (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _),
+          (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _)
+        )
+      | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
+          DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _))
+        )
       | (DefT (_, SymbolT), DefT (_, SymbolT)) ->
         true
       | (t1, t2) -> (not (will_fail_check_if_unmatched t1)) && not (will_fail_check_if_unmatched t2)
@@ -552,7 +559,7 @@ module Operators = struct
         |> Base.List.iter ~f:(fun left ->
                begin
                  match left with
-                 | DefT (reason, NumT _) ->
+                 | DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)) ->
                    Flow_js_utils.add_output
                      cx
                      (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
@@ -623,25 +630,25 @@ module Operators = struct
   let unary_not =
     let f reason = function
       | AnyT (_, src) -> AnyT.why src reason
-      | DefT (_, BoolT None)
-      | DefT (_, StrT AnyLiteral)
-      | DefT (_, NumT AnyLiteral) ->
-        BoolT.at (loc_of_reason reason)
+      | DefT (_, BoolGeneralT)
+      | DefT (_, StrGeneralT AnyLiteral)
+      | DefT (_, NumGeneralT AnyLiteral) ->
+        BoolModuleT.at (loc_of_reason reason)
       (* !x when x is falsy *)
-      | DefT (_, BoolT (Some false))
+      | DefT (_, BoolT_UNSOUND false)
       | DefT (_, SingletonBoolT false)
-      | DefT (_, StrT (Literal (_, OrdinaryName "")))
+      | DefT (_, StrT_UNSOUND (_, OrdinaryName ""))
       | DefT (_, SingletonStrT (OrdinaryName ""))
-      | DefT (_, NumT (Literal (_, (0., _))))
+      | DefT (_, NumT_UNSOUND (_, (0., _)))
       | DefT (_, SingletonNumT (0., _))
       | DefT (_, NullT)
       | DefT (_, VoidT) ->
         let reason = replace_desc_reason (RBooleanLit true) reason in
-        DefT (reason, BoolT (Some true))
+        DefT (reason, BoolT_UNSOUND true)
       (* !x when x is truthy *)
       | _ ->
         let reason = replace_desc_reason (RBooleanLit false) reason in
-        DefT (reason, BoolT (Some false))
+        DefT (reason, BoolT_UNSOUND false)
     in
     fun cx reason t ->
       Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
@@ -681,8 +688,12 @@ module TypeAssertions = struct
       | AnyT _ -> ()
       (* the left-hand side of a `(x in y)` expression is a string or number
          TODO: also, symbols *)
-      | DefT (_, StrT _) -> ()
-      | DefT (_, NumT _) -> ()
+      | DefT (_, StrGeneralT _)
+      | DefT (_, StrT_UNSOUND _) ->
+        ()
+      | DefT (_, NumGeneralT _)
+      | DefT (_, NumT_UNSOUND _) ->
+        ()
       | l -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))
     )
 

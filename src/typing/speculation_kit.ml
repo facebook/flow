@@ -432,20 +432,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
         match l with
         | DefT
             ( _,
-              ( StrT (Literal _)
-              | NumT (Literal _)
-              | BoolT (Some _)
-              | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | SingletonBigIntT _
-              | BigIntT (Literal _)
-              | VoidT | NullT )
+              ( StrT_UNSOUND _ | NumT_UNSOUND _ | BoolT_UNSOUND _ | SingletonStrT _
+              | SingletonNumT _ | SingletonBoolT _ | SingletonBigIntT _ | BigIntT_UNSOUND _ | VoidT
+              | NullT )
             ) ->
           shortcut_enum cx trace reason_op use_op l rep
         (* Types that are definitely incompatible with enums, after the above case. *)
         | DefT
             ( _,
-              ( NumT _ | BigIntT _ | StrT _ | MixedT _ | SymbolT | FunT _ | ObjT _ | ArrT _
-              | ClassT _ | InstanceT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _
-              | EnumValueT _ | EnumObjectT _ )
+              ( NumGeneralT _ | BigIntGeneralT _ | StrGeneralT _ | MixedT _ | SymbolT | FunT _
+              | ObjT _ | ArrT _ | ClassT _ | InstanceT _ | TypeT _ | PolyT _
+              | ReactAbstractComponentT _ | EnumValueT _ | EnumObjectT _ )
             )
           when Base.Option.is_some (UnionRep.check_enum rep) ->
           add_output

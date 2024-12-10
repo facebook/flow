@@ -130,37 +130,32 @@ let rec dump_t_ (depth, tvars) cx t =
   else
     match t with
     | OpenT (_, id) -> p ~extra:(tvar id) t
-    | DefT (_, NumT lit) ->
+    | DefT (_, NumGeneralT lit) ->
       p
         ~extra:
           (match lit with
-          | Literal (_, (_, raw)) -> raw
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, StrT c) ->
+    | DefT (_, NumT_UNSOUND (_, (_, raw))) -> p ~extra:raw t
+    | DefT (_, StrGeneralT c) ->
       p
         ~extra:
           (match c with
-          | Literal (_, s) -> spf "%S" (display_string_of_name s)
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, BoolT c) ->
-      p
-        ~extra:
-          (match c with
-          | Some b -> spf "%B" b
-          | None -> "")
-        t
-    | DefT (_, BigIntT lit) ->
+    | DefT (_, StrT_UNSOUND (_, s)) -> p ~extra:(spf "%S" (display_string_of_name s)) t
+    | DefT (_, BoolGeneralT) -> p t
+    | DefT (_, BoolT_UNSOUND b) -> p ~extra:(spf "%B" b) t
+    | DefT (_, BigIntGeneralT lit) ->
       p
         ~extra:
           (match lit with
-          | Literal (_, (_, raw)) -> raw
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
+    | DefT (_, BigIntT_UNSOUND (_, (_, raw))) -> p ~extra:raw t
     | DefT (_, FunT (_, { params; rest_param; return_t; this_t; type_guard; _ })) ->
       p
         ~extra:

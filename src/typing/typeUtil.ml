@@ -472,25 +472,6 @@ module TypeExSet = Flow_set.Make (struct
   let compare = reasonless_compare
 end)
 
-let literal_eq x = function
-  | Literal (_, y) -> x = y
-  | Truthy -> false
-  | AnyLiteral -> false
-
-let number_literal_eq (x, _) = function
-  | Literal (_, (y, _)) -> x = y
-  | Truthy -> false
-  | AnyLiteral -> false
-
-let bigint_literal_eq (x, _) = function
-  | Literal (_, (y, _)) -> x = y
-  | Truthy -> false
-  | AnyLiteral -> false
-
-let boolean_literal_eq x = function
-  | Some y -> x = y
-  | None -> false
-
 let nominal_id_have_same_logical_module
     ~file_options
     ((a_id, a_name) : ALoc.id * string option)
@@ -512,14 +493,14 @@ let is_falsy = function
       ( _,
         ( NullT | VoidT
         | SingletonBoolT false
-        | BoolT (Some false)
+        | BoolT_UNSOUND false
         | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BoolT (Some false)); _ }
-            | AbstractEnum { representation_t = DefT (_, BoolT (Some false)) } )
+            ( ConcreteEnum { representation_t = DefT (_, BoolT_UNSOUND false); _ }
+            | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND false) } )
         | SingletonStrT (OrdinaryName "")
-        | StrT (Literal (_, OrdinaryName ""))
+        | StrT_UNSOUND (_, OrdinaryName "")
         | SingletonNumT (0., _)
-        | NumT (Literal (_, (0., _))) )
+        | NumT_UNSOUND (_, (0., _)) )
       ) ->
     true
   | _ -> false
@@ -554,14 +535,24 @@ let is_mixed_subtype l mixed_flavor =
 
 let quick_subtype t1 t2 =
   match (t1, t2) with
-  | (DefT (_, (NumT _ | SingletonNumT _)), DefT (_, NumT _))
-  | (DefT (_, (StrT _ | SingletonStrT _)), DefT (_, StrT _))
-  | (DefT (_, (BoolT _ | SingletonBoolT _)), DefT (_, BoolT _))
-  | (DefT (_, (BigIntT _ | SingletonBigIntT _)), DefT (_, BigIntT _))
+  | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _))
+    )
+  | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _))
+    )
+  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
+      DefT (_, (BoolGeneralT | BoolT_UNSOUND _))
+    )
+  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
+      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+    )
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
-  | (DefT (_, NumericStrKeyT _), DefT (_, (NumT _ | StrT _)))
+  | ( DefT (_, NumericStrKeyT _),
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _))
+    )
   | (DefT (_, EmptyT), _) ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
@@ -569,7 +560,7 @@ let quick_subtype t1 t2 =
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
       StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
     )
     when String.starts_with ~prefix s ->
@@ -579,24 +570,28 @@ let quick_subtype t1 t2 =
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
     true
-  | ( DefT (_, StrT (Literal (None, OrdinaryName s))),
+  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
       StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
     )
     when String.ends_with ~suffix s ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
-      DefT (_, StrT Truthy)
+      DefT (_, StrGeneralT Truthy)
     )
     when arg <> "" ->
     true
-  | (StrUtilT _, DefT (_, StrT AnyLiteral)) -> true
+  | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
-  | (DefT (_, StrT actual), DefT (_, SingletonStrT expected)) -> literal_eq expected actual
-  | (DefT (_, NumT actual), DefT (_, SingletonNumT expected)) -> number_literal_eq expected actual
-  | (DefT (_, BigIntT actual), DefT (_, SingletonBigIntT expected)) ->
-    bigint_literal_eq expected actual
-  | (DefT (_, BoolT actual), DefT (_, SingletonBoolT expected)) ->
-    boolean_literal_eq expected actual
+  | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _)) -> false
+  | (DefT (_, StrT_UNSOUND (_, actual)), DefT (_, SingletonStrT expected)) -> expected = actual
+  | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _)) -> false
+  | (DefT (_, NumT_UNSOUND (_, (actual, _))), DefT (_, SingletonNumT (expected, _))) ->
+    expected = actual
+  | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _)) -> false
+  | (DefT (_, BigIntT_UNSOUND (_, (actual, _))), DefT (_, SingletonBigIntT (expected, _))) ->
+    expected = actual
+  | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) -> false
+  | (DefT (_, BoolT_UNSOUND actual), DefT (_, SingletonBoolT expected)) -> expected = actual
   | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT (expected, _))) ->
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT expected)) ->
@@ -842,7 +837,7 @@ let dro_strict (_, dro_t) =
 let tuple_length reason ~inexact (num_req, num_total) =
   if inexact then
     let r = replace_desc_reason RNumber reason in
-    DefT (r, NumT AnyLiteral)
+    DefT (r, NumGeneralT AnyLiteral)
   else
     let t_of_n n =
       let r =
@@ -951,7 +946,7 @@ let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
           Nel.to_list generic_ts
           |> List.cons (DefT (reason, NullT))
           |> List.cons (DefT (reason, VoidT))
-          |> List.cons (DefT (reason, BoolT (Some false)))
+          |> List.cons (DefT (reason, BoolT_UNSOUND false))
           |> List.rev
           |> union_of_ts reason
         | Renders.Star -> failwith "Already banned above"

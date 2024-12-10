@@ -369,8 +369,8 @@ and type_of_hint_decomposition cx op reason t =
       | Decomp_ArrElement index ->
         let num =
           match index with
-          | Some i -> Literal (None, (float_of_int i, string_of_int i))
-          | None -> AnyLiteral
+          | Some i -> NumT_UNSOUND (None, (float_of_int i, string_of_int i))
+          | None -> NumGeneralT AnyLiteral
         in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t =
@@ -381,7 +381,7 @@ and type_of_hint_decomposition cx op reason t =
                   id = None;
                   from_annot = true;
                   access_iterables = true;
-                  key_t = DefT (reason, NumT num);
+                  key_t = DefT (reason, num);
                   tout;
                 }
             in
@@ -515,7 +515,7 @@ and type_of_hint_decomposition cx op reason t =
           cx
           t
           reason
-          (Computed (DefT (reason, StrT AnyLiteral)))
+          (Computed (DefT (reason, StrGeneralT AnyLiteral)))
       | Decomp_MethodName name ->
         SpeculationFlow.get_method_type_unsafe
           cx

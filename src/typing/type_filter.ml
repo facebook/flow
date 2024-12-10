@@ -116,9 +116,9 @@ let rec truthy cx t =
     | UnionT (r, rep) -> recurse_into_union cx truthy (r, UnionRep.members rep)
     | MaybeT (_, t) -> changed_result t
     | OptionalT { reason = _; type_ = t; use_desc = _ } -> truthy cx t
-    | DefT (r, BoolT None) -> DefT (r, BoolT (Some true)) |> changed_result
-    | DefT (r, StrT AnyLiteral) -> DefT (r, StrT Truthy) |> changed_result
-    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT Truthy) |> changed_result
+    | DefT (r, BoolGeneralT) -> DefT (r, BoolT_UNSOUND true) |> changed_result
+    | DefT (r, StrGeneralT AnyLiteral) -> DefT (r, StrGeneralT Truthy) |> changed_result
+    | DefT (r, NumGeneralT AnyLiteral) -> DefT (r, NumGeneralT Truthy) |> changed_result
     | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) -> recurse_into_intersection cx (truthy cx) (r, InterRep.members rep)
@@ -138,25 +138,25 @@ let rec not_truthy cx t =
     (* truthy things get removed *)
     | DefT
         ( r,
-          ( SingletonBoolT _
-          | BoolT (Some _)
+          ( SingletonBoolT _ | BoolT_UNSOUND _
           | EnumValueT
-              ( ConcreteEnum { representation_t = DefT (_, BoolT (Some _)); _ }
-              | AbstractEnum { representation_t = DefT (_, BoolT (Some _)) } )
-          | SingletonStrT _ | NumericStrKeyT _
-          | StrT (Literal _ | Truthy)
+              ( ConcreteEnum { representation_t = DefT (_, BoolT_UNSOUND _); _ }
+              | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND _) } )
+          | SingletonStrT _ | NumericStrKeyT _ | StrT_UNSOUND _
+          | StrGeneralT Truthy
           | EnumValueT
-              ( ConcreteEnum { representation_t = DefT (_, StrT Truthy); _ }
-              | AbstractEnum { representation_t = DefT (_, StrT Truthy) } )
+              ( ConcreteEnum { representation_t = DefT (_, StrGeneralT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, StrGeneralT Truthy) } )
           | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
           | SingletonNumT _
-          | NumT (Literal _ | Truthy)
+          | NumGeneralT Truthy
+          | NumT_UNSOUND _
           | EnumValueT
-              ( ConcreteEnum { representation_t = DefT (_, NumT Truthy); _ }
-              | AbstractEnum { representation_t = DefT (_, NumT Truthy) } )
+              ( ConcreteEnum { representation_t = DefT (_, NumGeneralT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, NumGeneralT Truthy) } )
           | EnumValueT
-              ( ConcreteEnum { representation_t = DefT (_, BigIntT Truthy); _ }
-              | AbstractEnum { representation_t = DefT (_, BigIntT Truthy) } )
+              ( ConcreteEnum { representation_t = DefT (_, BigIntGeneralT Truthy); _ }
+              | AbstractEnum { representation_t = DefT (_, BigIntGeneralT Truthy) } )
           | MixedT Mixed_truthy )
         ) ->
       DefT (r, EmptyT) |> changed_result
@@ -167,10 +167,10 @@ let rec not_truthy cx t =
       let (TypeFilterResult { type_ = t; changed }) = not_truthy cx t in
       TypeFilterResult
         { type_ = UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [t]); changed }
-    | DefT (r, BoolT None) -> DefT (r, BoolT (Some false)) |> changed_result
-    | DefT (r, StrT AnyLiteral) ->
-      DefT (r, StrT (Literal (None, OrdinaryName ""))) |> changed_result
-    | DefT (r, NumT AnyLiteral) -> DefT (r, NumT (Literal (None, (0., "0")))) |> changed_result
+    | DefT (r, BoolGeneralT) -> DefT (r, BoolT_UNSOUND false) |> changed_result
+    | DefT (r, StrGeneralT AnyLiteral) ->
+      DefT (r, StrT_UNSOUND (None, OrdinaryName "")) |> changed_result
+    | DefT (r, NumGeneralT AnyLiteral) -> DefT (r, NumT_UNSOUND (None, (0., "0"))) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
       recurse_into_intersection cx (not_truthy cx) (r, InterRep.members rep)
@@ -266,24 +266,23 @@ let string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, StrT (Literal (_, actual))) ->
+  | DefT (_, StrT_UNSOUND (_, actual)) ->
     if actual = expected then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, StrT (Literal (Some sense, expected)))
+      DefT (mk_reason expected_desc expected_loc, StrT_UNSOUND (Some sense, expected))
       |> changed_result
-  | DefT (r, StrT Truthy) when expected <> OrdinaryName "" ->
-    DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
-  | DefT (r, StrT AnyLiteral) ->
-    DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, StrT (Literal (None, expected))) |> changed_result
+  | DefT (r, StrGeneralT Truthy) when expected <> OrdinaryName "" ->
+    DefT (lit_reason r, StrT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, StrGeneralT AnyLiteral) ->
+    DefT (lit_reason r, StrT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, StrT_UNSOUND (None, expected)) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_string_literal expected = function
-  | DefT (r, StrT (Literal (_, actual))) when actual = expected ->
-    DefT (r, EmptyT) |> changed_result
+  | DefT (r, StrT_UNSOUND (_, actual)) when actual = expected -> DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
 let number_literal expected_loc sense expected t =
@@ -291,22 +290,22 @@ let number_literal expected_loc sense expected t =
   let expected_desc = RNumberLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, NumT (Literal (_, (_, actual_raw)))) ->
+  | DefT (_, NumT_UNSOUND (_, (_, actual_raw))) ->
     if actual_raw = expected_raw then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, NumT (Literal (Some sense, expected)))
+      DefT (mk_reason expected_desc expected_loc, NumT_UNSOUND (Some sense, expected))
       |> changed_result
-  | DefT (r, NumT Truthy) when snd expected <> "0" ->
-    DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
-  | DefT (r, NumT AnyLiteral) ->
-    DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, NumT (Literal (None, expected))) |> changed_result
+  | DefT (r, NumGeneralT Truthy) when snd expected <> "0" ->
+    DefT (lit_reason r, NumT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, NumGeneralT AnyLiteral) ->
+    DefT (lit_reason r, NumT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, NumT_UNSOUND (None, expected)) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_number_literal expected = function
-  | DefT (r, NumT (Literal (_, actual))) when snd actual = snd expected ->
+  | DefT (r, NumT_UNSOUND (_, actual)) when snd actual = snd expected ->
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
@@ -315,70 +314,71 @@ let bigint_literal expected_loc sense expected t =
   let expected_desc = RBigIntLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, BigIntT (Literal (_, (_, actual_raw)))) ->
+  | DefT (_, BigIntT_UNSOUND (_, (_, actual_raw))) ->
     if actual_raw = expected_raw then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, BigIntT (Literal (Some sense, expected)))
+      DefT (mk_reason expected_desc expected_loc, BigIntT_UNSOUND (Some sense, expected))
       |> changed_result
-  | DefT (r, BigIntT Truthy) when snd expected <> "0n" ->
-    DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
-  | DefT (r, BigIntT AnyLiteral) ->
-    DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BigIntT (Literal (None, expected))) |> changed_result
+  | DefT (r, BigIntGeneralT Truthy) when snd expected <> "0n" ->
+    DefT (lit_reason r, BigIntT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, BigIntGeneralT AnyLiteral) ->
+    DefT (lit_reason r, BigIntT_UNSOUND (None, expected)) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BigIntT_UNSOUND (None, expected)) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_bigint_literal expected = function
-  | DefT (r, BigIntT (Literal (_, actual))) when snd actual = snd expected ->
+  | DefT (r, BigIntT_UNSOUND (_, actual)) when snd actual = snd expected ->
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
 let true_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true)) |> unchanged_result
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
+  | DefT (r, BoolT_UNSOUND true) -> DefT (lit_reason r, BoolT_UNSOUND true) |> unchanged_result
+  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, BoolT_UNSOUND true) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT_UNSOUND true) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_true t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some true)) -> DefT (r, EmptyT) |> changed_result
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
+  | DefT (r, BoolT_UNSOUND true) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, BoolT_UNSOUND false) |> changed_result
   | t -> unchanged_result t
 
 let false_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false)) |> unchanged_result
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false)) |> changed_result
+  | DefT (r, BoolT_UNSOUND false) -> DefT (lit_reason r, BoolT_UNSOUND false) |> unchanged_result
+  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, BoolT_UNSOUND false) |> changed_result
+  | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT_UNSOUND false) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_false t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, BoolT (Some false)) -> DefT (r, EmptyT) |> changed_result
-  | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true)) |> changed_result
+  | DefT (r, BoolT_UNSOUND false) -> DefT (r, EmptyT) |> changed_result
+  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, BoolT_UNSOUND true) |> changed_result
   | t -> unchanged_result t
 
 let boolean loc t =
   match t with
   | DefT (r, MixedT Mixed_truthy) ->
-    DefT (replace_desc_new_reason BoolT.desc r, BoolT (Some true)) |> changed_result
+    DefT (replace_desc_new_reason BoolModuleT.desc r, BoolT_UNSOUND true) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RBoolean loc, BoolT None) |> changed_result
-  | DefT (_, BoolT _)
+    DefT (mk_reason RBoolean loc, BoolGeneralT) |> changed_result
+  | DefT (_, BoolGeneralT)
+  | DefT (_, BoolT_UNSOUND _)
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, BoolT _); _ }
-          | AbstractEnum { representation_t = DefT (_, BoolT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -389,27 +389,29 @@ let not_boolean t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, BoolT _); _ }
-          | AbstractEnum { representation_t = DefT (_, BoolT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)) } )
       )
-  | DefT (_, BoolT _) ->
+  | DefT (_, BoolGeneralT)
+  | DefT (_, BoolT_UNSOUND _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
 let string loc t =
   match t with
   | DefT (r, MixedT Mixed_truthy) ->
-    DefT (replace_desc_new_reason StrT.desc r, StrT Truthy) |> changed_result
+    DefT (replace_desc_new_reason StrModuleT.desc r, StrGeneralT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RString loc, StrT AnyLiteral) |> changed_result
+    DefT (mk_reason RString loc, StrGeneralT AnyLiteral) |> changed_result
   | StrUtilT _
-  | DefT (_, StrT _)
+  | DefT (_, StrGeneralT _)
+  | DefT (_, StrT_UNSOUND _)
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, StrT _); _ }
-          | AbstractEnum { representation_t = DefT (_, StrT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -421,10 +423,11 @@ let not_string t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, StrT _); _ }
-          | AbstractEnum { representation_t = DefT (_, StrT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)) } )
       )
-  | DefT (_, StrT _) ->
+  | DefT (_, StrGeneralT _)
+  | DefT (_, StrT_UNSOUND _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
@@ -444,16 +447,17 @@ let not_symbol t =
 let number loc t =
   match t with
   | DefT (r, MixedT Mixed_truthy) ->
-    DefT (replace_desc_new_reason NumT.desc r, NumT Truthy) |> changed_result
+    DefT (replace_desc_new_reason NumModuleT.desc r, NumGeneralT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RNumber loc, NumT AnyLiteral) |> changed_result
-  | DefT (_, NumT _)
+    DefT (mk_reason RNumber loc, NumGeneralT AnyLiteral) |> changed_result
+  | DefT (_, NumGeneralT _)
+  | DefT (_, NumT_UNSOUND _)
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, NumT _); _ }
-          | AbstractEnum { representation_t = DefT (_, NumT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -464,26 +468,27 @@ let not_number t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, NumT _); _ }
-          | AbstractEnum { representation_t = DefT (_, NumT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _)) } )
       )
-  | DefT (_, NumT _) ->
+  | DefT (_, NumGeneralT _)
+  | DefT (_, NumT_UNSOUND _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
 let bigint loc t =
   match t with
   | DefT (r, MixedT Mixed_truthy) ->
-    DefT (replace_desc_new_reason BigIntT.desc r, BigIntT Truthy) |> changed_result
+    DefT (replace_desc_new_reason BigIntModuleT.desc r, BigIntGeneralT Truthy) |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
-    DefT (mk_reason RBigInt loc, BigIntT AnyLiteral) |> changed_result
-  | DefT (_, BigIntT _)
+    DefT (mk_reason RBigInt loc, BigIntGeneralT AnyLiteral) |> changed_result
+  | DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, BigIntT _); _ }
-          | AbstractEnum { representation_t = DefT (_, BigIntT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -494,10 +499,11 @@ let not_bigint t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum { representation_t = DefT (_, BigIntT _); _ }
-          | AbstractEnum { representation_t = DefT (_, BigIntT _) } )
+          ( ConcreteEnum { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)) } )
       )
-  | DefT (_, BigIntT _) ->
+  | DefT (_, BigIntGeneralT _)
+  | DefT (_, BigIntT_UNSOUND _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
@@ -508,7 +514,7 @@ let rec object_ cx t =
     let reason = replace_desc_new_reason RObject r in
     let dict =
       {
-        key = StrT.why r;
+        key = StrModuleT.why r;
         value = DefT (replace_desc_new_reason MixedT.desc r, MixedT Mixed_everything);
         dict_name = None;
         dict_polarity = Polarity.Positive;
@@ -589,12 +595,11 @@ let not_array t =
 let sentinel_refinement =
   let open UnionEnum in
   let enum_match sense = function
-    | (DefT (_, StrT (Literal (_, value))), Str sentinel) when value = sentinel != sense -> true
-    | (DefT (_, NumT (Literal (_, (value, _)))), Num (sentinel, _)) when value = sentinel != sense
-      ->
+    | (DefT (_, StrT_UNSOUND (_, value)), Str sentinel) when value = sentinel != sense -> true
+    | (DefT (_, NumT_UNSOUND (_, (value, _))), Num (sentinel, _)) when value = sentinel != sense ->
       true
-    | (DefT (_, BoolT (Some value)), Bool sentinel) when value = sentinel != sense -> true
-    | (DefT (_, BigIntT (Literal (_, (value, _)))), BigInt (sentinel, _))
+    | (DefT (_, BoolT_UNSOUND value), Bool sentinel) when value = sentinel != sense -> true
+    | (DefT (_, BigIntT_UNSOUND (_, (value, _))), BigInt (sentinel, _))
       when value = sentinel != sense ->
       true
     | (DefT (_, NullT), Null)
@@ -606,13 +611,26 @@ let sentinel_refinement =
     let rec filtered_loop enum =
       match (v, enum) with
       | (_, One e) when enum_match sense (v, e) && not sense -> true
-      | (DefT (_, StrT _), One (Str sentinel)) when enum_match sense (v, Str sentinel) -> true
-      | (DefT (_, NumT _), One (Num sentinel)) when enum_match sense (v, Num sentinel) -> true
-      | (DefT (_, BoolT _), One (Bool sentinel)) when enum_match sense (v, Bool sentinel) -> true
-      | (DefT (_, BigIntT _), One (BigInt sentinel)) when enum_match sense (v, BigInt sentinel) ->
+      | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), One (Str sentinel))
+        when enum_match sense (v, Str sentinel) ->
         true
-      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many enums) when sense
-        ->
+      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), One (Num sentinel))
+        when enum_match sense (v, Num sentinel) ->
+        true
+      | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)), One (Bool sentinel))
+        when enum_match sense (v, Bool sentinel) ->
+        true
+      | (DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)), One (BigInt sentinel))
+        when enum_match sense (v, BigInt sentinel) ->
+        true
+      | ( DefT
+            ( _,
+              ( StrGeneralT _ | StrT_UNSOUND _ | NumGeneralT _ | NumT_UNSOUND _ | BoolGeneralT
+              | BoolT_UNSOUND _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | NullT | VoidT )
+            ),
+          Many enums
+        )
+        when sense ->
         UnionEnumSet.elements enums
         |> Base.List.for_all ~f:(fun enum ->
                if enum_match sense (v, enum) |> not then
@@ -620,20 +638,40 @@ let sentinel_refinement =
                else
                  true
            )
-      | (DefT (_, StrT _), One (Str _))
-      | (DefT (_, NumT _), One (Num _))
-      | (DefT (_, BoolT _), One (Bool _))
-      | (DefT (_, BigIntT _), One (BigInt _))
+      | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), One (Str _))
+      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), One (Num _))
+      | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)), One (Bool _))
+      | (DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)), One (BigInt _))
       | (DefT (_, NullT), One Null)
       | (DefT (_, VoidT), One Void)
-      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), Many _) ->
+      | ( DefT
+            ( _,
+              ( StrGeneralT _ | StrT_UNSOUND _ | NumGeneralT _ | NumT_UNSOUND _ | BoolGeneralT
+              | BoolT_UNSOUND _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | NullT | VoidT )
+            ),
+          Many _
+        ) ->
         false
       (* types don't match (would've been matched above) *)
       (* we don't prune other types like objects or instances, even though
          a test like `if (ObjT === StrT)` seems obviously unreachable, but
          we have to be wary of toString and valueOf on objects/instances. *)
-      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _) when sense -> true
-      | (DefT (_, (StrT _ | NumT _ | BoolT _ | BigIntT _ | NullT | VoidT)), _)
+      | ( DefT
+            ( _,
+              ( StrGeneralT _ | StrT_UNSOUND _ | NumGeneralT _ | NumT_UNSOUND _ | BoolGeneralT
+              | BoolT_UNSOUND _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | NullT | VoidT )
+            ),
+          _
+        )
+        when sense ->
+        true
+      | ( DefT
+            ( _,
+              ( StrGeneralT _ | StrT_UNSOUND _ | NumGeneralT _ | NumT_UNSOUND _ | BoolGeneralT
+              | BoolT_UNSOUND _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | NullT | VoidT )
+            ),
+          _
+        )
       | _ ->
         (* property exists, but is not something we can use for refinement *)
         false
@@ -720,16 +758,20 @@ let rec tag_of_def_t cx = function
   | SymbolT -> Some (TypeTagSet.singleton SymbolTag)
   | FunT _ -> Some (TypeTagSet.singleton FunTag)
   | SingletonBoolT _
-  | BoolT _ ->
+  | BoolGeneralT
+  | BoolT_UNSOUND _ ->
     Some (TypeTagSet.singleton BoolTag)
   | SingletonStrT _
   | NumericStrKeyT _
-  | StrT _ ->
+  | StrGeneralT _
+  | StrT_UNSOUND _ ->
     Some (TypeTagSet.singleton StringTag)
   | SingletonNumT _
-  | NumT _ ->
+  | NumGeneralT _
+  | NumT_UNSOUND _ ->
     Some (TypeTagSet.singleton NumberTag)
-  | BigIntT _
+  | BigIntGeneralT _
+  | BigIntT_UNSOUND _
   | SingletonBigIntT _ ->
     Some (TypeTagSet.singleton BigIntTag)
   | ObjT { call_t = Some _; props_tmap; _ } ->

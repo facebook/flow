@@ -730,10 +730,10 @@ module Make
       let max_literal_length = Context.max_literal_length cx in
       if max_literal_length = 0 || String.length value <= max_literal_length then
         let reason = mk_annot_reason RString loc in
-        DefT (reason, StrT (Literal (None, OrdinaryName value)))
+        DefT (reason, StrT_UNSOUND (None, OrdinaryName value))
       else
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-        DefT (reason, StrT AnyLiteral)
+        DefT (reason, StrGeneralT AnyLiteral)
 
   let string_literal cx ~singleton loc { Ast.StringLiteral.value; _ } =
     string_literal_value cx ~singleton loc value
@@ -744,7 +744,7 @@ module Make
       DefT (reason, SingletonBoolT value)
     else
       let reason = mk_annot_reason RBoolean loc in
-      DefT (reason, BoolT (Some value))
+      DefT (reason, BoolT_UNSOUND value)
 
   let null_literal loc = NullT.at loc
 
@@ -754,7 +754,7 @@ module Make
       DefT (reason, SingletonNumT (value, raw))
     else
       let reason = mk_annot_reason RNumber loc in
-      DefT (reason, NumT (Literal (None, (value, raw))))
+      DefT (reason, NumT_UNSOUND (None, (value, raw)))
 
   let bigint_literal ~singleton loc { Ast.BigIntLiteral.value; raw; _ } =
     if singleton then
@@ -762,7 +762,7 @@ module Make
       DefT (reason, SingletonBigIntT (value, raw))
     else
       let reason = mk_annot_reason RBigInt loc in
-      DefT (reason, BigIntT (Literal (None, (value, raw))))
+      DefT (reason, BigIntT_UNSOUND (None, (value, raw)))
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
@@ -1319,7 +1319,7 @@ module Make
               }
             ) ->
           let right_ast = eval_right () in
-          let (id_ast, _) = variable cx kind id None ~if_uninitialized:StrT.at in
+          let (id_ast, _) = variable cx kind id None ~if_uninitialized:StrModuleT.at in
           ( ForIn.LeftDeclaration
               ( decl_loc,
                 {
@@ -1342,7 +1342,7 @@ module Make
                 }
             ) ->
           let right_ast = eval_right () in
-          let t = StrT.at pat_loc in
+          let t = StrModuleT.at pat_loc in
           let use_op =
             Op
               (AssignVar
@@ -2266,11 +2266,18 @@ module Make
       match Flow_js_utils.propref_for_elem_t key with
       | Computed key ->
         (match key with
-        | DefT (_, StrT _)
+        | DefT (_, StrGeneralT _)
+        | DefT (_, StrT_UNSOUND _)
         | AnyT _ ->
           ObjectExpressionAcc.ComputedProp.NonLiteralKey { key; value; reason_obj }
-        | DefT (reason_key, NumT lit) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
+        | DefT (reason_key, NumGeneralT _) ->
+          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
+          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+        | DefT (reason_key, NumT_UNSOUND (_, (value, _))) ->
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           Flow_js_utils.add_output
             cx
             (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
@@ -2302,12 +2309,14 @@ module Make
       if
         List.for_all
           (function
-            | DefT (_, StrT _) -> true
+            | DefT (_, StrGeneralT _)
+            | DefT (_, StrT_UNSOUND _) ->
+              true
             | _ -> false)
           keys
       then
         (* Allow unions of `string` or singleton string types *)
-        single_key (DefT (reason_key, StrT AnyLiteral))
+        single_key (DefT (reason_key, StrGeneralT AnyLiteral))
       else begin
         Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
         ObjectExpressionAcc.ComputedProp.SpreadAny reason
@@ -2928,7 +2937,7 @@ module Make
           (function
             | Arg t
             | SpreadArg t ->
-              Flow.flow_t cx (t, StrT.at loc))
+              Flow.flow_t cx (t, StrModuleT.at loc))
           argts;
         let reason = mk_reason (RCustom "new Function(..)") loc in
         let proto = ObjProtoT reason in
@@ -3023,7 +3032,7 @@ module Make
       | Ok (targ_t, arg_t) ->
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason = replace_desc_reason (RCustom "array length") reason in
-        Flow.flow_t cx (arg_t, DefT (length_reason, NumT AnyLiteral));
+        Flow.flow_t cx (arg_t, DefT (length_reason, NumGeneralT AnyLiteral));
         let (targ_ts, targs_ast) =
           match targ_t with
           | Some (loc, ast, ExplicitArg t) -> (Some [ExplicitArg t], Some (loc, ast))
@@ -3260,7 +3269,7 @@ module Make
           let t = string_literal_value cx ~singleton:false elem_loc cooked in
           (t, [])
         | _ ->
-          let t_out = StrT.at loc in
+          let t_out = StrModuleT.at loc in
           let expressions =
             Base.List.map expressions ~f:(fun expr ->
                 let (((_, t), _) as e) = expression cx expr in
@@ -3272,7 +3281,8 @@ module Make
                        | t -> [t]
                        )
                 |> Base.List.iter ~f:(function
-                       | DefT (_, NumT _)
+                       | DefT (_, NumGeneralT _)
+                       | DefT (_, NumT_UNSOUND _)
                        | DefT (_, SingletonNumT _) ->
                          ()
                        | t ->
@@ -4795,7 +4805,7 @@ module Make
       let (((_, arg), _) as argument) = expression cx ?cond argument in
       let tout =
         match cond with
-        | Some _ -> BoolT.at loc
+        | Some _ -> BoolModuleT.at loc
         | None ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
@@ -4811,13 +4821,13 @@ module Make
       let (((_, argt), _) as argument) = expression cx ~as_const ~frozen argument in
       ( begin
           match argt with
-          | DefT (reason, NumT (Literal (sense, lit))) ->
+          | DefT (reason, NumT_UNSOUND (sense, lit)) ->
             (* special case for negative number literals, to avoid creating an unnecessary tvar. not
                having a tvar allows other special cases that match concrete lower bounds to proceed
                (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
                make a negative number not look like a literal.) *)
             let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
-            DefT (reason, NumT (Literal (sense, lit)))
+            DefT (reason, NumT_UNSOUND (sense, lit))
           | DefT (reason, SingletonNumT lit) ->
             let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
             DefT (reason, SingletonNumT lit)
@@ -4835,13 +4845,13 @@ module Make
       )
     | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
-      (StrT.at loc, { operator = Typeof; argument; comments })
+      (StrModuleT.at loc, { operator = Typeof; argument; comments })
     | { operator = Void; argument; comments } ->
       let argument = expression cx argument in
       (VoidT.at loc, { operator = Void; argument; comments })
     | { operator = Ast.Expression.Unary.Delete; argument; comments } ->
       let argument = delete cx loc argument in
-      (BoolT.at loc, { operator = Ast.Expression.Unary.Delete; argument; comments })
+      (BoolModuleT.at loc, { operator = Ast.Expression.Unary.Delete; argument; comments })
     | { operator = Await; argument; comments } ->
       let reason = mk_reason (RCustom "await") loc in
       let (((_, arg), _) as argument_ast) = expression cx argument in
@@ -4956,13 +4966,13 @@ module Make
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
       Operators.check_eq cx (t1, t2);
-      (BoolT.at loc, { operator; left; right; comments })
+      (BoolModuleT.at loc, { operator; left; right; comments })
     | In ->
       let (((_, t1), _) as left) = expression cx left in
       let (((_, t2), _) as right) = expression cx right in
       TypeAssertions.assert_binary_in_lhs cx t1;
       TypeAssertions.assert_binary_in_rhs cx t2;
-      (BoolT.at loc, { operator; left; right; comments })
+      (BoolModuleT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
       let reconstruct_ast = visit_eq_test cx ~cond loc left right in
@@ -4978,12 +4988,12 @@ module Make
           | _ -> matching_prop_check cx right left)
         cond;
       Operators.check_strict_eq ~cond_context:cond cx (t1, t2);
-      (BoolT.at loc, { operator; left; right; comments })
+      (BoolModuleT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in
       let (((_, right_t), _) as right) = expression cx right in
       TypeAssertions.assert_instanceof_rhs cx right_t;
-      (BoolT.at loc, { operator; left; right; comments })
+      (BoolModuleT.at loc, { operator; left; right; comments })
     | LessThan
     | LessThanEqual
     | GreaterThan
@@ -4991,7 +5001,7 @@ module Make
       let (((_, t1), _) as left) = expression cx left in
       let (((_, t2), _) as right) = expression cx right in
       Operators.check_comparator cx t1 t2;
-      (BoolT.at loc, { operator; left; right; comments })
+      (BoolModuleT.at loc, { operator; left; right; comments })
     | Plus
     | LShift
     | RShift
@@ -5854,7 +5864,7 @@ module Make
                 let t = EmptyT.at attr_loc in
                 (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
               (* <element name /> *)
-              | None -> (DefT (mk_reason RBoolean attr_loc, BoolT (Some true)), None)
+              | None -> (DefT (mk_reason RBoolean attr_loc, BoolT_UNSOUND true), None)
             in
             let acc =
               if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc then
@@ -6185,11 +6195,7 @@ module Make
     match Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value with
     | Some (loc, trimmed) ->
       Some
-        (DefT
-           ( mk_reason RJSXText (loc |> ALoc.of_loc),
-             StrT (Type.Literal (None, OrdinaryName trimmed))
-           )
-        )
+        (DefT (mk_reason RJSXText (loc |> ALoc.of_loc), StrT_UNSOUND (None, OrdinaryName trimmed)))
     | None -> None
 
   and jsx_title_member_to_string (_, member) =
@@ -8018,7 +8024,7 @@ module Make
         let (return_t, return, type_guard_opt) =
           match (return, type_guard_incompatible) with
           | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->
-            let return_t = BoolT.at loc in
+            let return_t = BoolModuleT.at loc in
             let return = Tast_utils.error_mapper#function_return_annotation return in
             Flow_js_utils.add_output
               cx
@@ -8442,7 +8448,12 @@ module Make
             ~init:(SMap.empty, None, BoolMap.empty)
             members
         in
-        (DefT (reason, BoolT bool_type), members, has_unknown_members)
+        let boolt =
+          match bool_type with
+          | Some b -> BoolT_UNSOUND b
+          | None -> BoolGeneralT
+        in
+        (DefT (reason, boolt), members, has_unknown_members)
       | (_, NumberBody { NumberBody.members; has_unknown_members; _ }) ->
         let reason = mk_reason RNumber (loc_of_reason enum_reason) in
         let (members, num_type, _) =
@@ -8472,7 +8483,7 @@ module Make
             ~init:(SMap.empty, Truthy, NumberMap.empty)
             members
         in
-        (DefT (reason, NumT num_type), members, has_unknown_members)
+        (DefT (reason, NumGeneralT num_type), members, has_unknown_members)
       | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
         let reason = mk_reason RBigInt (loc_of_reason enum_reason) in
         let (members, num_type, _) =
@@ -8502,7 +8513,7 @@ module Make
             ~init:(SMap.empty, Truthy, BigIntOptionMap.empty)
             members
         in
-        (DefT (reason, BigIntT num_type), members, has_unknown_members)
+        (DefT (reason, BigIntGeneralT num_type), members, has_unknown_members)
       | ( _,
           StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
         ) ->
@@ -8534,11 +8545,11 @@ module Make
             ~init:(SMap.empty, Truthy, SMap.empty)
             members
         in
-        (DefT (reason, StrT str_type), members, has_unknown_members)
+        (DefT (reason, StrGeneralT str_type), members, has_unknown_members)
       | (_, StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members; _ })
         ->
         let reason = mk_reason RString (loc_of_reason enum_reason) in
-        ( DefT (reason, StrT Truthy (* Member names can't be the empty string *)),
+        ( DefT (reason, StrGeneralT Truthy (* Member names can't be the empty string *)),
           defaulted_members members,
           has_unknown_members
         )

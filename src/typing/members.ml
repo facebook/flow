@@ -33,9 +33,9 @@ type t =
 let rec merge_type cx =
   let create_union rep = UnionT (locationless_reason (RCustom "union"), rep) in
   function
-  | (DefT (_, NumT _), (DefT (_, NumT _) as t))
-  | (DefT (_, StrT _), (DefT (_, StrT _) as t))
-  | (DefT (_, BoolT _), (DefT (_, BoolT _) as t))
+  | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)) as t))
+  | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)) as t))
+  | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)), (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)) as t))
   | (DefT (_, NullT), (DefT (_, NullT) as t))
   | (DefT (_, VoidT), (DefT (_, VoidT) as t)) ->
     t
@@ -578,17 +578,21 @@ let rec extract_type cx this_t =
   | UnionT _ as t -> Success t
   | StrUtilT { reason; _ }
   | DefT (reason, SingletonStrT _)
-  | DefT (reason, StrT _)
+  | DefT (reason, StrGeneralT _)
+  | DefT (reason, StrT_UNSOUND _)
   | DefT (reason, NumericStrKeyT _) ->
     get_builtin_type cx reason "String" |> extract_type cx
   | DefT (reason, SingletonNumT _)
-  | DefT (reason, NumT _) ->
+  | DefT (reason, NumGeneralT _)
+  | DefT (reason, NumT_UNSOUND _) ->
     get_builtin_type cx reason "Number" |> extract_type cx
   | DefT (reason, SingletonBoolT _)
-  | DefT (reason, BoolT _) ->
+  | DefT (reason, BoolGeneralT)
+  | DefT (reason, BoolT_UNSOUND _) ->
     get_builtin_type cx reason "Boolean" |> extract_type cx
   | DefT (reason, SingletonBigIntT _)
-  | DefT (reason, BigIntT _) ->
+  | DefT (reason, BigIntGeneralT _)
+  | DefT (reason, BigIntT_UNSOUND _) ->
     get_builtin_type cx reason "BigInt" |> extract_type cx
   | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t

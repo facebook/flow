@@ -150,7 +150,7 @@ module Make (Flow : INPUT) : S = struct
         rec_flow_t cx trace ~use_op (null_t, u_type);
         let void_t = DefT (reason, VoidT) in
         rec_flow_t cx trace ~use_op (void_t, u_type);
-        let false_t = DefT (reason, BoolT (Some false)) in
+        let false_t = DefT (reason, BoolT_UNSOUND false) in
         rec_flow_t cx trace ~use_op (false_t, u_type)
       | RendersMaybe -> ()
       | RendersStar -> ());
@@ -277,7 +277,7 @@ module Make (Flow : INPUT) : S = struct
 
   let non_renders_to_renders cx trace ~use_op l (renders_r, upper_renders) =
     match (l, upper_renders) with
-    | ( DefT (_, (NullT | VoidT | BoolT (Some false))),
+    | ( DefT (_, (NullT | VoidT | BoolT_UNSOUND false)),
         ( StructuralRenders
             { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
         | DefaultRenders )
@@ -394,7 +394,7 @@ module Make (Flow : INPUT) : S = struct
               FailedSynthesisState
             else
               on_concretized_react_node_types cx ~drop_renders_any ~state ts
-          | DefT (_, (NullT | VoidT | BoolT (Some false))) ->
+          | DefT (_, (NullT | VoidT | BoolT_UNSOUND false)) ->
             let renders_variant = merge_renders_variant (renders_variant, RendersMaybe) in
             IntermediateSynthesisState { normalized_render_type_collector; renders_variant }
           | DefT (_, ArrT (ArrayAT { elem_t = t; _ } | TupleAT { elem_t = t; _ } | ROArrayAT (t, _)))

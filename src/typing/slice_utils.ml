@@ -1607,7 +1607,8 @@ let resolve
    * `const {x, ...y} = 3;` tries to get `x` from Number.
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
    * copying/spreading an object. *)
-  | DefT (_, BoolT _)
+  | DefT (_, BoolGeneralT)
+  | DefT (_, BoolT_UNSOUND _)
     when match tool with
          | Spread _ -> true
          | _ -> false ->
@@ -1656,7 +1657,12 @@ let resolve
             flags with
             obj_kind =
               Indexed
-                { dict_name = None; key = StrT.make r; value = t; dict_polarity = Polarity.Neutral };
+                {
+                  dict_name = None;
+                  key = StrModuleT.make r;
+                  value = t;
+                  dict_polarity = Polarity.Neutral;
+                };
           }
         in
         Nel.one

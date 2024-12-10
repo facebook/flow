@@ -122,9 +122,9 @@ let eval_unary file loc t =
   | U.Not ->
     let reason = Reason.(mk_reason (RUnaryOperator ("not", TypeUtil.desc_of_t t)) loc) in
     ConsGen.unary_not file.cx reason t
-  | U.Typeof -> Type.StrT.at loc
+  | U.Typeof -> Type.StrModuleT.at loc
   | U.Void -> Type.VoidT.at loc
-  | U.Delete -> Type.BoolT.at loc
+  | U.Delete -> Type.BoolModuleT.at loc
   | U.Await ->
     (* This is a parse error *)
     Type.(AnyT.at (AnyError None) loc)
@@ -193,7 +193,7 @@ let add_name_field reason =
            {
              preferred_def_locs = None;
              key_loc = None;
-             type_ = StrT.why reason;
+             type_ = StrModuleT.why reason;
              polarity = Polarity.Neutral;
            }
         )
@@ -243,7 +243,8 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
   let representation_t =
     let open Type in
     match rep with
-    | BoolRep lit -> rep_t Reason.RBoolean (BoolT lit)
+    | BoolRep None -> rep_t Reason.RBoolean BoolGeneralT
+    | BoolRep (Some lit) -> rep_t Reason.RBoolean (BoolT_UNSOUND lit)
     | NumberRep { truthy } ->
       let lit =
         if truthy then
@@ -251,7 +252,7 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
         else
           AnyLiteral
       in
-      rep_t Reason.RNumber (NumT lit)
+      rep_t Reason.RNumber (NumGeneralT lit)
     | StringRep { truthy } ->
       let lit =
         if truthy then
@@ -259,7 +260,7 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
         else
           AnyLiteral
       in
-      rep_t Reason.RString (StrT lit)
+      rep_t Reason.RString (StrGeneralT lit)
     | SymbolRep -> rep_t Reason.RSymbol SymbolT
     | BigIntRep { truthy } ->
       let lit =
@@ -268,7 +269,7 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
         else
           AnyLiteral
       in
-      rep_t Reason.RBigInt (BigIntT lit)
+      rep_t Reason.RBigInt (BigIntGeneralT lit)
   in
   let enum_id = Context.make_aloc_id file.cx id_loc in
   let enum_info =
@@ -303,7 +304,7 @@ let merge_pattern file = function
     let reason = Reason.(mk_reason (RArrayNthElement i) loc) in
     let i =
       let reason = Reason.(mk_reason RNumber loc) in
-      Type.(DefT (reason, NumT (Literal (None, (float i, string_of_int i)))))
+      Type.(DefT (reason, NumT_UNSOUND (None, (float i, string_of_int i))))
     in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
@@ -555,10 +556,10 @@ and merge_annot env file = function
   | Void loc -> Type.VoidT.at loc
   | Null loc -> Type.NullT.at loc
   | Symbol loc -> Type.SymbolT.at loc
-  | Number loc -> Type.NumT.at loc
-  | BigInt loc -> Type.BigIntT.at loc
-  | String loc -> Type.StrT.at loc
-  | Boolean loc -> Type.BoolT.at loc
+  | Number loc -> Type.NumModuleT.at loc
+  | BigInt loc -> Type.BigIntModuleT.at loc
+  | String loc -> Type.StrModuleT.at loc
+  | Boolean loc -> Type.BoolModuleT.at loc
   | Exists loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Optional t -> TypeUtil.optional (merge env file t)
   | Maybe (loc, t) ->
@@ -1098,7 +1099,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
     merge_fun env file reason def statics
   | StringVal loc ->
     let reason = Reason.(mk_reason RString loc) in
-    Type.(DefT (reason, StrT AnyLiteral))
+    Type.(DefT (reason, StrGeneralT AnyLiteral))
   | StringLit (loc, lit) ->
     if Context.natural_inference_exports_primitive_const file.cx then
       if as_const || const_decl then
@@ -1106,20 +1107,20 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
         Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
       else
         let reason = Reason.(mk_reason RString loc) in
-        Type.(DefT (reason, StrT AnyLiteral))
+        Type.(DefT (reason, StrGeneralT AnyLiteral))
     else if as_const then
       let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
       Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
     else
       let reason = Reason.(mk_reason RString loc) in
-      Type.(DefT (reason, StrT (Literal (None, Reason.OrdinaryName lit))))
+      Type.(DefT (reason, StrT_UNSOUND (None, Reason.OrdinaryName lit)))
   | LongStringLit loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
-    Type.(DefT (reason, StrT AnyLiteral))
+    Type.(DefT (reason, StrGeneralT AnyLiteral))
   | NumberVal loc ->
     let reason = Reason.(mk_reason RNumber loc) in
-    Type.(DefT (reason, NumT AnyLiteral))
+    Type.(DefT (reason, NumGeneralT AnyLiteral))
   | NumberLit (loc, num, raw) ->
     if Context.natural_inference_exports_primitive_const file.cx then
       if as_const || const_decl then
@@ -1127,16 +1128,16 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
         Type.(DefT (reason, SingletonNumT (num, raw)))
       else
         let reason = Reason.(mk_reason RNumber loc) in
-        Type.(DefT (reason, NumT AnyLiteral))
+        Type.(DefT (reason, NumGeneralT AnyLiteral))
     else if as_const then
       let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
       Type.(DefT (reason, SingletonNumT (num, raw)))
     else
       let reason = Reason.(mk_reason RNumber loc) in
-      Type.(DefT (reason, NumT (Literal (None, (num, raw)))))
+      Type.(DefT (reason, NumT_UNSOUND (None, (num, raw))))
   | BigIntVal loc ->
     let reason = Reason.(mk_reason RBigInt loc) in
-    Type.(DefT (reason, BigIntT AnyLiteral))
+    Type.(DefT (reason, BigIntGeneralT AnyLiteral))
   | BigIntLit (loc, bigint, raw) ->
     if Context.natural_inference_exports_primitive_const file.cx then
       if as_const || const_decl then
@@ -1144,16 +1145,16 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
         Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
       else
         let reason = Reason.(mk_reason RBigInt loc) in
-        Type.(DefT (reason, BigIntT AnyLiteral))
+        Type.(DefT (reason, BigIntGeneralT AnyLiteral))
     else if as_const then
       let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
       Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
     else
       let reason = Reason.(mk_reason RBigInt loc) in
-      Type.(DefT (reason, BigIntT (Literal (None, (bigint, raw)))))
+      Type.(DefT (reason, BigIntT_UNSOUND (None, (bigint, raw))))
   | BooleanVal loc ->
     let reason = Reason.(mk_reason RBoolean loc) in
-    Type.(DefT (reason, BoolT None))
+    Type.(DefT (reason, BoolGeneralT))
   | BooleanLit (loc, lit) ->
     if Context.natural_inference_exports_primitive_const file.cx then
       if as_const || const_decl then
@@ -1161,13 +1162,13 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
         Type.(DefT (reason, SingletonBoolT lit))
       else
         let reason = Reason.(mk_reason RBoolean loc) in
-        Type.(DefT (reason, BoolT None))
+        Type.(DefT (reason, BoolGeneralT))
     else if as_const then
       let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
       Type.(DefT (reason, SingletonBoolT lit))
     else
       let reason = Reason.(mk_reason RBoolean loc) in
-      Type.(DefT (reason, BoolT (Some lit)))
+      Type.(DefT (reason, BoolT_UNSOUND lit))
   | NullLit loc -> Type.NullT.at loc
   | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
     merge_declare_module_implicitly_exported_object env file (loc, module_name, props)
@@ -2042,7 +2043,7 @@ let merge_resource_module_t cx file_key filename =
       Type.AnyT.make Type.Untyped reason
     | Some _ ->
       let reason = Reason.mk_reason Reason.RString ALoc.none in
-      Type.StrT.why reason
+      Type.StrModuleT.why reason
     | _ -> failwith "How did we find a resource file without an extension?!"
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in

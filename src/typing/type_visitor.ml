@@ -90,10 +90,14 @@ class ['a] t =
 
     method def_type cx pole acc =
       function
-      | NumT _
-      | StrT _
-      | BoolT _
-      | BigIntT _
+      | NumGeneralT _
+      | NumT_UNSOUND _
+      | StrGeneralT _
+      | StrT_UNSOUND _
+      | BoolGeneralT
+      | BoolT_UNSOUND _
+      | BigIntGeneralT _
+      | BigIntT_UNSOUND _
       | EmptyT
       | MixedT _
       | SymbolT
