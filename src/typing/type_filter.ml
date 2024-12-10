@@ -522,7 +522,7 @@ let rec object_ cx t =
       | Mixed_non_maybe
       | Mixed_non_null ->
         obj |> changed_result
-      | Mixed_function
+      | Mixed_function -> DefT (reason_of_t t, EmptyT) |> changed_result
       | Mixed_everything
       | Mixed_non_void ->
         let reason = replace_desc_new_reason RUnion (reason_of_t t) in

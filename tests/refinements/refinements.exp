@@ -9330,6 +9330,37 @@ References:
                 ^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- mixed.js:135:16
+
+Refined at [1]
+
+   mixed.js:135:16
+   135|     if (typeof x === 'object') {
+                       ^
+
+References:
+   mixed.js:134:7
+   134|   if (typeof x === 'function') {
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- mixed.js:136:7
+
+Refined at [1] [2]
+
+   mixed.js:136:7
+   136|       x as empty; // OK: Impossible to be both
+              ^
+
+References:
+   mixed.js:134:7
+   134|   if (typeof x === 'function') {
+              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   mixed.js:135:9
+   135|     if (typeof x === 'object') {
+                ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- mixed_object.js:2:32
 
 Refined at [1]
@@ -17001,7 +17032,7 @@ References:
 
 
 
-Found 1155 errors
+Found 1157 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

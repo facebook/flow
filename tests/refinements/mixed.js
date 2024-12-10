@@ -128,3 +128,12 @@ const loop = (condition: boolean) => {
     }
   }
 };
+
+{
+  declare const x: mixed;
+  if (typeof x === 'function') {
+    if (typeof x === 'object') {
+      x as empty; // OK: Impossible to be both
+    }
+  }
+}
