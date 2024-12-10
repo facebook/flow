@@ -238,53 +238,5 @@ References:
                    ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- union_key.js:11:23
 
-Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a key set [2]. Can you add an appropriate type annotation to `key` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
-
-   union_key.js:11:23
-   11|   return {...params, [key]: true}; // error key set is invalid-computed-prop
-                             ^^^ [1]
-
-References:
-   union_key.js:9:8
-    9|   key: T,
-              ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- union_key.js:17:23
-
-Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a key set [2]. Can you add an appropriate type annotation to `key` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
-
-   union_key.js:17:23
-   17|   return {...params, [key]: true}; // error key set is invalid-computed-prop
-                             ^^^ [1]
-
-References:
-   union_key.js:15:8
-   15|   key: T,
-              ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- union_key.js:23:23
-
-Cannot use `key` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a union type [2]. Can you add an appropriate type annotation to `key` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
-
-   union_key.js:23:23
-   23|   return {...params, [key]: true}; // error union is invalid-computed-prop
-                             ^^^ [1]
-
-References:
-   union_key.js:21:8
-   21|   key: T,
-              ^ [2]
-
-
-
-Found 19 errors
+Found 16 errors

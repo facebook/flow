@@ -3865,9 +3865,6 @@ struct
             MethodT (_, reason_call, _, Named { name = OrdinaryName "constructor"; _ }, action)
           ) ->
           add_specialized_callee_method_action cx trace (AnyT.untyped reason_call) action
-        (* computed properties *)
-        | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
-          TypeCollector.add collector t
         (**************************************************)
         (* array pattern can consume the rest of an array *)
         (**************************************************)
@@ -5241,6 +5238,9 @@ struct
             else
               rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
+        (* computed properties *)
+        | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
+          TypeCollector.add collector t
         | (DefT (lreason, StrT (Literal _)), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
