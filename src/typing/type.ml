@@ -841,7 +841,7 @@ module rec TypeTerm : sig
         reason: reason;
         reason_key: reason option;
         value_t: t;
-        err_on_str_key: (use_op * reason) option;
+        err_on_str_key: use_op * reason;
       }
     | CheckReactImmutableT of {
         lower_reason: reason;

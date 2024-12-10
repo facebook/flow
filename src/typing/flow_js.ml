@@ -5247,20 +5247,19 @@ struct
         | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
           let src = any_mod_src_keep_placeholder Untyped src in
           rec_flow_t cx trace ~use_op:unknown_use (value_t, AnyT.why src reason)
-        | (DefT (_, StrT _), WriteComputedObjPropCheckT { err_on_str_key; _ }) ->
-          Base.Option.iter err_on_str_key ~f:(fun (use_op, reason_obj) ->
-              add_output
-                cx
-                (Error_message.EPropNotFound
-                   {
-                     prop_name = None;
-                     reason_prop = TypeUtil.reason_of_t l;
-                     reason_obj;
-                     use_op;
-                     suggestion = None;
-                   }
-                )
-          )
+        | (DefT (_, StrT _), WriteComputedObjPropCheckT { err_on_str_key = (use_op, reason_obj); _ })
+          ->
+          add_output
+            cx
+            (Error_message.EPropNotFound
+               {
+                 prop_name = None;
+                 reason_prop = TypeUtil.reason_of_t l;
+                 reason_obj;
+                 use_op;
+                 suggestion = None;
+               }
+            )
         | (DefT (reason, NumT lit), WriteComputedObjPropCheckT { reason_key; _ }) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
           add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
@@ -7295,7 +7294,7 @@ struct
                 reason = TypeUtil.reason_of_t elem_t;
                 reason_key = None;
                 value_t = tin;
-                err_on_str_key = Some (use_op, reason_obj);
+                err_on_str_key = (use_op, reason_obj);
               }
           ))
 

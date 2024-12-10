@@ -80,6 +80,7 @@ module Make
             name: Reason.name;
             prop: Type.property;
           }
+        | IgnoredInvalidNonLiteralKey
         | NonLiteralKey of {
             key: Type.t;
             value: Type.t;
@@ -122,6 +123,7 @@ module Make
     let add_computed cx computed acc =
       match computed with
       | ComputedProp.Named { name; prop } -> add_prop (NameUtils.Map.add name prop) acc
+      | ComputedProp.IgnoredInvalidNonLiteralKey -> acc
       | ComputedProp.NonLiteralKey { key = _; value = _; reason_obj } ->
         (* No properties are added in this case. *)
         add_spread (Obj_type.mk ~obj_kind:Exact cx reason_obj) acc
@@ -2262,13 +2264,25 @@ module Make
   and create_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value =
     let single_key key =
       match Flow_js_utils.propref_for_elem_t key with
-      | Computed elem_t ->
-        let check =
-          WriteComputedObjPropCheckT
-            { reason; reason_key = Some reason_key; value_t = value; err_on_str_key = None }
-        in
-        Flow.flow cx (elem_t, check);
-        ObjectExpressionAcc.ComputedProp.NonLiteralKey { key; value; reason_obj }
+      | Computed key ->
+        (match key with
+        | DefT (_, StrT _)
+        | AnyT _ ->
+          ObjectExpressionAcc.ComputedProp.NonLiteralKey { key; value; reason_obj }
+        | DefT (reason_key, NumT lit) ->
+          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_lit lit in
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
+          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+        | _ ->
+          let reason = reason_of_t key in
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EObjectComputedPropertyAssign
+               (reason, Some reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
+            );
+          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey)
       | Named { name; _ } ->
         let prop =
           Field

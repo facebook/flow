@@ -83,11 +83,17 @@ References:
 
 Error --------------------------------------------------------------------------------------- non_literal_number.js:12:6
 
-Cannot use `n` [1] to assign a computed property. Only number literals are allowed, not `number` in general.
+Cannot use number [1] to assign a computed property. Only number literals are allowed, not `number` in general.
 [invalid-computed-prop]
 
+   non_literal_number.js:12:6
    12|     [n]: 1, // ERROR
-            ^ [1]
+            ^
+
+References:
+   non_literal_number.js:10:20
+   10|   declare const n: number;
+                          ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
@@ -620,7 +626,7 @@ Cannot access object with computed property using number [1]. Number literals mu
 
 Error ---------------------------------------------------------------------------------------------------- test.js:188:6
 
-Cannot use `1.1` [1] to assign a computed property. Only integer-like number literals are allowed.
+Cannot use number [1] to assign a computed property. Only integer-like number literals are allowed.
 [invalid-computed-prop]
 
    188|     [1.1]: true, // ERROR
@@ -629,8 +635,8 @@ Cannot use `1.1` [1] to assign a computed property. Only integer-like number lit
 
 Error ---------------------------------------------------------------------------------------------------- test.js:189:6
 
-Cannot use `9007199254740992` [1] to assign a computed property. Number literals must not be larger than
-`Number.MAX_SAFE_INTEGER`. [invalid-computed-prop]
+Cannot use number [1] to assign a computed property. Number literals must not be larger than `Number.MAX_SAFE_INTEGER`.
+[invalid-computed-prop]
 
    189|     [9007199254740992]: false, // ERROR
              ^^^^^^^^^^^^^^^^ [1]
@@ -638,8 +644,8 @@ Cannot use `9007199254740992` [1] to assign a computed property. Number literals
 
 Error ---------------------------------------------------------------------------------------------------- test.js:190:6
 
-Cannot use `-9007199254740992` [1] to assign a computed property. Number literals must not be smaller than
-`Number.MIN_SAFE_INTEGER`. [invalid-computed-prop]
+Cannot use number [1] to assign a computed property. Number literals must not be smaller than `Number.MIN_SAFE_INTEGER`.
+[invalid-computed-prop]
 
    190|     [-9007199254740992]: false, // ERROR
              ^^^^^^^^^^^^^^^^^ [1]
