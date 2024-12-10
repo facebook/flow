@@ -74,6 +74,21 @@ module Make
       | Spread of Type.t
       | Slice of { slice_pmap: Type.Properties.t }
 
+    module ComputedProp = struct
+      type t =
+        | Named of {
+            name: Reason.name;
+            prop: Type.property;
+          }
+        | NonLiteralKey of {
+            key: Type.t;
+            value: Type.t;
+            reason_obj: Reason.t;
+          }
+        | SpreadAny of Reason.t
+        | SpreadEmpty of Reason.t
+    end
+
     type t = {
       obj_pmap: Type.Properties.t;
       tail: element list;
@@ -103,6 +118,15 @@ module Make
         | Some slice -> slice :: acc.tail
       in
       { acc with obj_pmap = NameUtils.Map.empty; tail = Spread t :: tail }
+
+    let add_computed cx computed acc =
+      match computed with
+      | ComputedProp.Named { name; prop } -> add_prop (NameUtils.Map.add name prop) acc
+      | ComputedProp.NonLiteralKey { key = _; value = _; reason_obj } ->
+        (* No properties are added in this case. *)
+        add_spread (Obj_type.mk ~obj_kind:Exact cx reason_obj) acc
+      | ComputedProp.SpreadAny r -> add_spread (AnyT.error r) acc
+      | ComputedProp.SpreadEmpty r -> add_spread (DefT (r, EmptyT)) acc
 
     let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
 
@@ -2235,8 +2259,7 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const value
-      =
+  and create_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value =
     let single_key key =
       match Flow_js_utils.propref_for_elem_t key with
       | Computed elem_t ->
@@ -2245,24 +2268,21 @@ module Make
             { reason; reason_key = Some reason_key; value_t = value; err_on_str_key = None }
         in
         Flow.flow cx (elem_t, check);
-        (* No properties are added in this case. *)
-        Obj_type.mk ~obj_kind:Exact cx reason_obj
-      | Named { name; reason; _ } ->
+        ObjectExpressionAcc.ComputedProp.NonLiteralKey { key; value; reason_obj }
+      | Named { name; _ } ->
         let prop =
           Field
             {
               preferred_def_locs = None;
               key_loc = Some key_loc;
               type_ = value;
-              polarity = Polarity.object_literal_polarity as_const;
+              polarity = Polarity.object_literal_polarity (as_const || frozen);
             }
         in
-        let props = NameUtils.Map.singleton name prop in
-        let proto = NullT.make reason in
-        Obj_type.mk_with_proto ~obj_kind:Exact cx reason_obj ~props proto
+        ObjectExpressionAcc.ComputedProp.Named { name; prop }
     in
     match keys with
-    | [] -> DefT (reason_obj, EmptyT)
+    | [] -> ObjectExpressionAcc.ComputedProp.SpreadEmpty reason_obj
     | [key] -> single_key key
     | _ ->
       if
@@ -2276,7 +2296,7 @@ module Make
         single_key (DefT (reason_key, StrT AnyLiteral))
       else begin
         Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
-        AnyT.error reason
+        ObjectExpressionAcc.ComputedProp.SpreadAny reason
       end
 
   and object_ cx reason ~frozen ~as_const props =
@@ -2290,7 +2310,7 @@ module Make
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
-      create_obj_with_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const value
+      create_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value
     in
     let (acc, rev_prop_asts) =
       List.fold_left
@@ -2313,7 +2333,7 @@ module Make
             let (((_, kt), _) as k') = expression cx k in
             let (((_, vt), _) as v') = expression cx ~as_const v in
             let computed = mk_computed k kt vt in
-            ( ObjectExpressionAcc.add_spread computed acc,
+            ( ObjectExpressionAcc.add_computed cx computed acc,
               Property
                 ( prop_loc,
                   Property.Init
@@ -2341,7 +2361,7 @@ module Make
               | _ -> assert false
             in
             let computed = mk_computed k kt vt in
-            ( ObjectExpressionAcc.add_spread computed acc,
+            ( ObjectExpressionAcc.add_computed cx computed acc,
               Property
                 ( prop_loc,
                   Property.Method
