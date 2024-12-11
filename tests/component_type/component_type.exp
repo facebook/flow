@@ -618,16 +618,47 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:12:1
 
-Cannot cast `Component` to component because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `Component` to component because: [incompatible-cast]
+ - Either property `current` is missing in function type [1] but exists in object type [2].
+ - Or undefined [1] is incompatible with null [3] in the first parameter.
 
    function_lower.js:12:1
-   12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
-       ^^^^^^^^^ [1]
+    12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
+        ^^^^^^^^^
 
 References:
-   function_lower.js:12:45
-   12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
-                                                   ^^^^^^ [2]
+   function_lower.js:12:29
+    12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
+                                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:197:11
+   197|   | ((T | null) => mixed)
+                  ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:12:1
+
+Cannot cast `Component` to component because: [incompatible-cast]
+ - Either undefined [1] is incompatible with null [2] in property `current`.
+ - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
+   function type [3].
+
+   function_lower.js:12:1
+    12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
+        ^^^^^^^^^
+
+References:
+   function_lower.js:12:29
+    12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
+                                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:196:21
+   196|   | { -current: T | null, ... }
+                            ^^^^ [2]
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ function_lower.js:17:10
@@ -718,16 +749,47 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `Foo` to component because: [incompatible-cast]
+ - Either property `current` is missing in function type [1] but exists in object type [2].
+ - Or undefined [1] is incompatible with null [3] in the first parameter.
 
    function_to_component_type.js:8:1
-    8| Foo as component( // error: void ~> string
-       ^^^ [1]
+     8| Foo as component( // error: void ~> string
+        ^^^
 
 References:
-   function_to_component_type.js:10:26
-   10|     ref: React.RefSetter<string>
-                                ^^^^^^ [2]
+   function_to_component_type.js:10:10
+    10|     ref: React.RefSetter<string>
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:197:11
+   197|   | ((T | null) => mixed)
+                  ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1
+
+Cannot cast `Foo` to component because: [incompatible-cast]
+ - Either undefined [1] is incompatible with null [2] in property `current`.
+ - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
+   function type [3].
+
+   function_to_component_type.js:8:1
+     8| Foo as component( // error: void ~> string
+        ^^^
+
+References:
+   function_to_component_type.js:10:10
+    10|     ref: React.RefSetter<string>
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:196:21
+   196|   | { -current: T | null, ... }
+                            ^^^^ [2]
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- function_to_component_type.js:12:1
@@ -1144,7 +1206,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 60 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
