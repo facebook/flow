@@ -86,7 +86,6 @@ module Make
             value: Type.t;
             reason_obj: Reason.t;
           }
-        | SpreadAny of Reason.t
         | SpreadEmpty of Reason.t
     end
 
@@ -127,7 +126,6 @@ module Make
       | ComputedProp.NonLiteralKey { key = _; value = _; reason_obj } ->
         (* No properties are added in this case. *)
         add_spread (Obj_type.mk ~obj_kind:Exact cx reason_obj) acc
-      | ComputedProp.SpreadAny r -> add_spread (AnyT.error r) acc
       | ComputedProp.SpreadEmpty r -> add_spread (DefT (r, EmptyT)) acc
 
     let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
@@ -2261,7 +2259,7 @@ module Make
     in
     (acc.ObjectExpressionAcc.obj_pmap, List.rev rev_prop_asts)
 
-  and create_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value =
+  and create_computed_prop cx key_loc unconcretized_key concretized_keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value =
     let single_key key =
       match Flow_js_utils.propref_for_elem_t key with
       | Computed key ->
@@ -2302,25 +2300,19 @@ module Make
         in
         ObjectExpressionAcc.ComputedProp.Named { name; prop }
     in
-    match keys with
+    match concretized_keys with
     | [] -> ObjectExpressionAcc.ComputedProp.SpreadEmpty reason_obj
     | [key] -> single_key key
-    | _ ->
-      if
-        List.for_all
-          (function
-            | DefT (_, StrGeneralT _)
-            | DefT (_, StrT_UNSOUND _) ->
-              true
-            | _ -> false)
-          keys
-      then
-        (* Allow unions of `string` or singleton string types *)
-        single_key (DefT (reason_key, StrGeneralT AnyLiteral))
-      else begin
-        Flow_js_utils.add_output cx (Error_message.EComputedPropertyWithUnion reason);
-        ObjectExpressionAcc.ComputedProp.SpreadAny reason
-      end
+    | _ -> 
+      let should_ignore = Base.List.fold_until concretized_keys ~init:() ~finish:(fun () -> false) ~f:(fun _ k -> match single_key k with
+      | ObjectExpressionAcc.ComputedProp.Named  _
+      | ObjectExpressionAcc.ComputedProp.NonLiteralKey _ 
+      | ObjectExpressionAcc.ComputedProp.SpreadEmpty _ -> Base.Continue_or_stop.Continue ()
+      | ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey -> Base.Continue_or_stop.Stop true) in
+      if should_ignore then 
+        ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+      else
+        ObjectExpressionAcc.ComputedProp.NonLiteralKey { key = unconcretized_key; value; reason_obj } 
 
   and object_ cx reason ~frozen ~as_const props =
     let open Ast.Expression.Object in
@@ -2329,11 +2321,11 @@ module Make
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
       let (key_loc, _e) = k in
-      let keys = Flow.possible_concrete_types_for_computed_props cx reason key in
+      let concretized_keys = Flow.possible_concrete_types_for_computed_props cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
-      create_computed_prop cx key_loc keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value
+      create_computed_prop cx key_loc key concretized_keys ~reason ~reason_key ~reason_obj ~as_const ~frozen value
     in
     let (acc, rev_prop_asts) =
       List.fold_left
