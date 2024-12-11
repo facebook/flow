@@ -117,6 +117,7 @@ module Opts = struct
     munge_underscores: bool;
     natural_inference_exports_primitive_const: bool;
     no_flowlib: bool;
+    no_unchecked_indexed_access: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
@@ -254,6 +255,7 @@ module Opts = struct
       munge_underscores = false;
       natural_inference_exports_primitive_const = false;
       no_flowlib = false;
+      no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
@@ -1093,6 +1095,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with natural_inference_exports_primitive_const = v })
       );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
+      ("no_unchecked_indexed_access", 
+        boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
+      );
       ( "experimental.pattern_matching_expressions",
         boolean (fun opts v -> Ok { opts with pattern_matching_expressions = Some v })
       );
@@ -1822,6 +1827,8 @@ let natural_inference_exports_primitive_const c =
   c.options.Opts.natural_inference_exports_primitive_const
 
 let no_flowlib c = c.options.Opts.no_flowlib
+
+let no_unchecked_indexed_access c = c.options.Opts.no_unchecked_indexed_access
 
 let node_main_fields c = c.options.Opts.node_main_fields
 

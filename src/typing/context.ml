@@ -59,6 +59,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_exports_primitive_const: bool;
+  no_unchecked_indexed_access: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -287,6 +288,7 @@ let metadata_of_options options =
     missing_module_generators = Options.missing_module_generators options;
     natural_inference_exports_primitive_const =
       Options.natural_inference_exports_primitive_const options;
+    no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
     react_runtime = Options.react_runtime options;
@@ -642,6 +644,8 @@ let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let natural_inference_exports_primitive_const cx =
   cx.metadata.natural_inference_exports_primitive_const
+
+let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 
 let jsx cx = cx.metadata.jsx
 

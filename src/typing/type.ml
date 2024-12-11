@@ -3385,9 +3385,9 @@ module AConstraint = struct
         prop_ref: Reason.t * name;
       }
     | Annot_GetEnumT of Reason.t
-    | Annot_GetPropT of Reason.t * TypeTerm.use_op * TypeTerm.propref
+    | Annot_GetPropT of {reason: Reason.t; use_op: TypeTerm.use_op; from_annot: bool; prop_ref:TypeTerm.propref}
     | Annot_GetElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* key *)
-    | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
+    | Annot_ElemT of {reason: Reason.t; use_op: TypeTerm.use_op; from_annot: bool; source: TypeTerm.t } (* read action only *)
     | Annot_GetStaticsT of Reason.t
     | Annot_LookupT of Reason.t * TypeTerm.use_op * TypeTerm.propref * TypeTerm.t
     | Annot_ObjKitT of Reason.t * TypeTerm.use_op * Object.resolve_tool * Object.tool
@@ -3519,10 +3519,10 @@ module AConstraint = struct
     | Annot_CopyNamedExportsT (r, _)
     | Annot_CopyTypeExportsT (r, _)
     | Annot_GetTypeFromNamespaceT { reason = r; _ }
-    | Annot_GetPropT (r, _, _)
+    | Annot_GetPropT {reason=r;_}
     | Annot_GetElemT (r, _, _)
     | Annot_GetEnumT r
-    | Annot_ElemT (r, _, _)
+    | Annot_ElemT {reason=r; _}
     | Annot_GetStaticsT r
     | Annot_LookupT (r, _, _, _)
     | Annot_ObjKitT (r, _, _, _)
@@ -3542,9 +3542,9 @@ module AConstraint = struct
   let use_op_of_operation = function
     | Annot_SpecializeT (use_op, _, _, _)
     | Annot_GetTypeFromNamespaceT { use_op; _ }
-    | Annot_GetPropT (_, use_op, _)
+    | Annot_GetPropT {use_op;_}
     | Annot_GetElemT (_, use_op, _)
-    | Annot_ElemT (_, use_op, _)
+    | Annot_ElemT { use_op; _ }
     | Annot_LookupT (_, use_op, _, _)
     | Annot_ObjKitT (_, use_op, _, _) ->
       Some use_op
@@ -3602,7 +3602,7 @@ module AConstraint = struct
     | Annot_MixinT r -> replace_desc_reason (RCustom "mixins") r
     | Annot_UnaryArithT (r, _) -> replace_desc_reason (RCustom "unary minus") r
     | Annot_NotT r -> replace_desc_reason (RCustom "unary not") r
-    | Annot_GetPropT (r, _, propref) -> replace_desc_reason (RProperty (name_of_propref propref)) r
+    | Annot_GetPropT {reason;prop_ref;_} -> replace_desc_reason (RProperty (name_of_propref prop_ref)) reason
     | Annot_ObjRestT (r, _) -> replace_desc_reason (RCustom "rest") r
     | r -> reason_of_op r
 

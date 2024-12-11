@@ -132,6 +132,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_natural_inference_exports_primitive_const: bool;
+  opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
@@ -309,6 +310,8 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let natural_inference_exports_primitive_const opts =
   opts.opt_natural_inference_exports_primitive_const
+
+let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 
 let node_main_fields opts = opts.opt_node_main_fields
 
