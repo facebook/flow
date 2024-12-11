@@ -1,0 +1,149 @@
+Error -------------------------------------------------------------------------------------------------- arr_test.js:4:1
+
+Cannot cast `roArray[0]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   arr_test.js:4:1
+   4| roArray[0] as string; // error: void ~> string
+      ^^^^^^^^^^
+
+References:
+   arr_test.js:3:39
+   3| declare const roArray: $ReadOnlyArray<string>;
+                                            ^^^^^^ [1]
+   arr_test.js:4:15
+   4| roArray[0] as string; // error: void ~> string
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- arr_test.js:5:1
+
+Cannot cast `roArray[key]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   arr_test.js:5:1
+   5| roArray[key] as string; // error: void ~> string
+      ^^^^^^^^^^^^
+
+References:
+   arr_test.js:3:39
+   3| declare const roArray: $ReadOnlyArray<string>;
+                                            ^^^^^^ [1]
+   arr_test.js:5:17
+   5| roArray[key] as string; // error: void ~> string
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- arr_test.js:7:1
+
+Cannot cast `rwArray[0]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   arr_test.js:7:1
+   7| rwArray[0] as string; // error: void ~> string
+      ^^^^^^^^^^
+
+References:
+   arr_test.js:6:30
+   6| declare const rwArray: Array<string>;
+                                   ^^^^^^ [1]
+   arr_test.js:7:15
+   7| rwArray[0] as string; // error: void ~> string
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- arr_test.js:8:1
+
+Cannot cast `rwArray[key]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   arr_test.js:8:1
+   8| rwArray[key] as string; // error: void ~> string
+      ^^^^^^^^^^^^
+
+References:
+   arr_test.js:6:30
+   6| declare const rwArray: Array<string>;
+                                   ^^^^^^ [1]
+   arr_test.js:8:17
+   8| rwArray[key] as string; // error: void ~> string
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- arr_test.js:13:1
+
+Cannot get `tuple[3]` because tuple type [1] only has 3 elements, so index 3 is out of bounds. [invalid-tuple-index]
+
+   arr_test.js:13:1
+   13| tuple[3] as number; // error: out of bound
+       ^^^^^^^^
+
+References:
+   arr_test.js:9:22
+    9| declare const tuple: [0, 1, 2];
+                            ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- arr_test.js:14:1
+
+Cannot cast `tuple[key]` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   arr_test.js:14:1
+   14| tuple[key] as number; // error: void ~> number
+       ^^^^^^^^^^
+
+References:
+   arr_test.js:9:22
+    9| declare const tuple: [0, 1, 2];
+                            ^^^^^^^^^ [1]
+   arr_test.js:14:15
+   14| tuple[key] as number; // error: void ~> number
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- obj_test.js:5:11
+
+Cannot access object with computed property using string [1]. [invalid-computed-prop]
+
+   obj_test.js:5:11
+   5| recordObj[key] as string; // error: bad key
+                ^^^
+
+References:
+   obj_test.js:3:20
+   3| declare const key: string;
+                         ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- obj_test.js:6:1
+
+Cannot cast `dictObj[key]` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   obj_test.js:6:1
+   6| dictObj[key] as string; // error: void ~> string
+      ^^^^^^^^^^^^
+
+References:
+   obj_test.js:2:35
+   2| declare const dictObj: {[string]: string};
+                                        ^^^^^^ [1]
+   obj_test.js:6:17
+   6| dictObj[key] as string; // error: void ~> string
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- obj_test.js:7:1
+
+Cannot cast `dictObj.hahaha` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   obj_test.js:7:1
+   7| dictObj.hahaha as string; // error: void ~> string
+      ^^^^^^^^^^^^^^
+
+References:
+   obj_test.js:2:35
+   2| declare const dictObj: {[string]: string};
+                                        ^^^^^^ [1]
+   obj_test.js:7:19
+   7| dictObj.hahaha as string; // error: void ~> string
+                        ^^^^^^ [2]
+
+
+
+Found 9 errors
