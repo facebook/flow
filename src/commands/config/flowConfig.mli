@@ -216,6 +216,8 @@ val natural_inference_exports_primitive_const : config -> bool
 
 val no_flowlib : config -> bool
 
+val no_unchecked_indexed_access : config -> bool
+
 val node_main_fields : config -> string list
 
 val node_resolver_allow_root_relative : config -> bool
