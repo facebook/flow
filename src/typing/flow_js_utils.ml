@@ -2304,11 +2304,18 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     let t = tuple_length reason ~inexact arity in
     F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
 
-  let get_obj_prop cx trace use_op o propref reason_op =
+  let get_obj_prop cx trace use_op ~union_void_on_computed_prop_access o propref reason_op =
     let named_prop =
       match propref with
       | Named { name; _ } -> Context.get_prop cx o.props_tmap name
       | Computed _ -> None
+    in
+    let union_void_if_instructed t =
+      if union_void_on_computed_prop_access then 
+        let r = reason_of_t t in
+        UnionT (r, UnionRep.make t (VoidT.why r) []) 
+      else 
+        t
     in
     let dict_t = Obj_type.get_dict_opt o.flags.obj_kind in
     match (propref, named_prop, dict_t) with
@@ -2319,29 +2326,18 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
       F.dict_read_check cx trace ~use_op (type_of_key_name cx name reason_op, key);
-      let type_ = 
-        if Context.no_unchecked_indexed_access cx then 
-          let r = reason_of_t value in
-          UnionT (r, UnionRep.make value (VoidT.why r) []) 
-        else 
-          value 
-      in
+      let type_ = union_void_if_instructed value in
       Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty)
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op (k, key);
-      let type_ = 
-        if Context.no_unchecked_indexed_access cx then 
-          let r = reason_of_t value in
-          UnionT (r, UnionRep.make value (VoidT.why r) []) 
-        else 
-          value 
-      in
+      let type_ = union_void_if_instructed value in
       Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
-  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info =
+  let read_obj_prop cx trace ~use_op ~from_annot o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, ObjT o) in
-    match get_obj_prop cx trace use_op o propref reason_op with
+    let union_void_on_computed_prop_access = Context.no_unchecked_indexed_access cx && not from_annot in
+    match get_obj_prop cx trace use_op ~union_void_on_computed_prop_access o propref reason_op with
     | Some (p, _target_kind) ->
       Base.Option.iter ~f:(fun (id, _) -> Context.test_prop_hit cx id) lookup_info;
       perform_read_prop_action cx trace use_op propref p reason_op o.flags.react_dro
@@ -2398,14 +2394,14 @@ end
 (* ElemT utils *)
 (***************)
 
-let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
-  let union_void_under_no_unchecked_indexed_access cx elem_t =
-    if Context.no_unchecked_indexed_access cx then 
+let array_elem_check ~write_action ~union_void_on_computed_prop_access cx l use_op reason reason_tup arrtype =
+  let union_void_if_instructed elem_t =
+    if union_void_on_computed_prop_access then 
       let r = reason_of_t elem_t in
       UnionT (r, UnionRep.make elem_t (VoidT.why r) []) 
     else 
       elem_t 
-  in 
+  in
   let (elem_t, elements, is_index_restricted, is_tuple, tuple_is_inexact, react_dro) =
     match arrtype with
     | ArrayAT { elem_t; tuple_view; react_dro } ->
@@ -2414,13 +2410,13 @@ let array_elem_check ~write_action cx l use_op reason reason_tup arrtype =
           ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> elements)
           tuple_view
       in
-      let elem_t = union_void_under_no_unchecked_indexed_access cx elem_t in
+      let elem_t = union_void_if_instructed elem_t in
       (elem_t, elements, false, false, false, react_dro)
     | TupleAT { elem_t; elements; arity = _; inexact; react_dro } ->
-      let elem_t = union_void_under_no_unchecked_indexed_access cx elem_t in
+      let elem_t = union_void_if_instructed elem_t in
       (elem_t, Some elements, true, true, inexact, react_dro)
     | ROArrayAT (elem_t, react_dro) -> 
-      let elem_t = union_void_under_no_unchecked_indexed_access cx elem_t in
+      let elem_t = union_void_if_instructed elem_t in
       (elem_t, None, true, false, false, react_dro)
   in
   let (can_write_tuple, value, use_op) =
