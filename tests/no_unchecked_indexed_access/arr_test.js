@@ -12,3 +12,6 @@ tuple[1] as 1;
 tuple[2] as 2;
 tuple[3] as number; // error: out of bound
 tuple[key] as number; // error: void ~> number
+
+declare const typeTest: (typeof roArray)[number];
+typeTest as string; // todo: the flag should not affect type-level acccess
