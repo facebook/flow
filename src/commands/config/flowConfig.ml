@@ -59,7 +59,6 @@ module Opts = struct
     react_rules: Options.react_rules list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
-    enable_as_const: bool option;
     enable_const_params: bool option;
     enums: bool;
     estimate_recheck_time: bool option;
@@ -196,7 +195,6 @@ module Opts = struct
       react_rules = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
-      enable_as_const = None;
       enable_const_params = None;
       enums = false;
       estimate_recheck_time = None;
@@ -413,20 +411,6 @@ module Opts = struct
         ("both", Options.CastingSyntax.Both);
       ]
       (fun opts v -> Ok { opts with casting_syntax = Some v })
-
-  let const_assertion_parser =
-    boolean (fun opts v ->
-        match opts.casting_syntax with
-        | None
-        | Some Options.CastingSyntax.As
-        | Some Options.CastingSyntax.Both ->
-          Ok { opts with enable_as_const = Some v }
-        | Some Options.CastingSyntax.Colon ->
-          Error
-            ("Setting \"as_const\" to true requires that \"casting_syntax\" "
-            ^ "is set to \"as\" or \"both\"."
-            )
-    )
 
   let channel_mode_parser ~enabled =
     enum
@@ -998,7 +982,6 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
-      ("as_const", const_assertion_parser);
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -1706,8 +1689,6 @@ let react_rules c = c.options.Opts.react_rules
 let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 
 let emoji c = c.options.Opts.emoji
-
-let enable_as_const c = c.options.Opts.enable_as_const
 
 let enable_const_params c = c.options.Opts.enable_const_params
 

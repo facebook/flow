@@ -716,7 +716,6 @@ and ts_syntax_kind =
   | TSTypeParamExtends
   | TSReadonlyVariance
   | TSInOutVariance of [ `In | `Out | `InOut ]
-  | TSAsConst of Options.CastingSyntax.t
   | TSSatisfiesType of Options.CastingSyntax.t
   | TSReadonlyType of [ `Tuple | `Array ] option
 
@@ -2805,7 +2804,6 @@ let friendly_message_of_msg = function
     | TSInOutVariance `In -> Normal MessageTSVarianceIn
     | TSInOutVariance `Out -> Normal MessageTSVarianceOut
     | TSInOutVariance `InOut -> Normal MessageTSVarianceInOut
-    | TSAsConst enabled_casting_syntax -> Normal (MessageTSAsConst enabled_casting_syntax)
     | TSSatisfiesType enabled_casting_syntax ->
       Normal (MessageTSSatisfiesType enabled_casting_syntax)
     | TSReadonlyType (Some arg_kind) ->

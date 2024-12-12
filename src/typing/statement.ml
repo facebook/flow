@@ -2780,16 +2780,10 @@ module Make
           (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax });
         let t = AnyT.at (AnyError None) loc in
         ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
-    | AsConstExpression ({ AsConstExpression.expression = e; comments } as cast) ->
-      if Context.enable_as_const cx then (
-        check_const_assertion cx e;
-        let (((_, t), _) as e) = expression cx ~as_const:true e in
-        ((loc, t), AsConstExpression { AsConstExpression.expression = e; comments })
-      ) else
-        let kind = Error_message.TSAsConst (Context.casting_syntax cx) in
-        Flow_js_utils.add_output cx (Error_message.ETSSyntax { kind; loc });
-        let t = AnyT.at (AnyError None) loc in
-        ((loc, t), AsConstExpression (Tast_utils.error_mapper#as_const_expression cast))
+    | AsConstExpression { AsConstExpression.expression = e; comments } ->
+      check_const_assertion cx e;
+      let (((_, t), _) as e) = expression cx ~as_const:true e in
+      ((loc, t), AsConstExpression { AsConstExpression.expression = e; comments })
     | TSSatisfies cast ->
       Flow_js_utils.add_output
         cx

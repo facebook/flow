@@ -812,7 +812,6 @@ type 'loc message =
   | MessageThisInComponent of 'loc
   | MessageThisInExportedFunction
   | MessageThisSuperInObject of 'loc virtual_reason * This_finder.kind
-  | MessageTSAsConst of Options.CastingSyntax.t
   | MessageTSKeyofType
   | MessageTSNeverType
   | MessageTSParamExtends

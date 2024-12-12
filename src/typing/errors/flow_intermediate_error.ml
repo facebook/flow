@@ -3502,20 +3502,6 @@ let to_printable_error :
         text " inside object methods since these methods may be unbound and rebound.";
       ]
       @ suggestion
-    | MessageTSAsConst enabled_casting_syntax ->
-      let (example, _) = type_casting_examples enabled_casting_syntax in
-      [
-        code "as const";
-        text " syntax is not enabled by default. ";
-        text "Try adding a type annotation instead. ";
-        text "You can cast an expression to a type using the form ";
-        code example;
-        text ". ";
-        text "Alternatively, you can enable experimental support for ";
-        text "the feature by setting ";
-        code "as_const=true";
-        text " in your flow config.";
-      ]
     | MessageTSKeyofType ->
       [
         code "keyof";

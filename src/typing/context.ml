@@ -43,7 +43,6 @@ type metadata = {
   react_rules: Options.react_rules list;
   react_rules_always: bool;
   dev_only_refinement_info_as_errors: bool;
-  enable_as_const: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_jest_integration: bool;
@@ -271,7 +270,6 @@ let metadata_of_options options =
     react_rules = Options.react_rules options;
     react_rules_always = false;
     dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
-    enable_as_const = Options.as_const options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_jest_integration = Options.enable_jest_integration options;
@@ -484,8 +482,6 @@ let react_rules_always cx = cx.metadata.react_rules_always
 let react_rule_enabled cx rule = List.mem rule cx.metadata.react_rules
 
 let dev_only_refinement_info_as_errors cx = cx.metadata.dev_only_refinement_info_as_errors
-
-let enable_as_const cx = cx.metadata.enable_as_const
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local

@@ -32,7 +32,6 @@ let metadata =
     react_rules = [];
     react_rules_always = false;
     dev_only_refinement_info_as_errors = false;
-    enable_as_const = false;
     enable_const_params = false;
     enable_enums = true;
     enable_jest_integration = false;
