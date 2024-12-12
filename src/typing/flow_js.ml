@@ -1152,7 +1152,11 @@ struct
           rec_flow cx trace (t, u)
         | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
-        | (MaybeT (reason, t), _) ->
+        | (MaybeT (reason, t), _)
+          when match u with
+               | ConditionalT { distributive_tparam_name; _ } ->
+                 Option.is_some distributive_tparam_name
+               | _ -> true ->
           let reason = replace_desc_reason RNullOrVoid reason in
           let t = push_type_alias_reason reason t in
           rec_flow cx trace (NullT.make reason, u);
@@ -1197,7 +1201,11 @@ struct
           resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = _; type_ = t; use_desc = _ }, ExtractReactRefT _) ->
           rec_flow cx trace (t, u)
-        | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
+        | (OptionalT { reason = r; type_ = t; use_desc }, _)
+          when match u with
+               | ConditionalT { distributive_tparam_name; _ } ->
+                 Option.is_some distributive_tparam_name
+               | _ -> true ->
           let void = VoidT.why_with_use_desc ~use_desc r in
           rec_flow cx trace (void, u);
           rec_flow cx trace (t, u)

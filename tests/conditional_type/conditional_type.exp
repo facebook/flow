@@ -910,6 +910,81 @@ References:
              ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:2:1
+
+Cannot cast `true` to `MaybeStringExtendsString` because boolean [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   non_generic_maybe_nullable_tests.js:2:1
+   2| true as MaybeStringExtendsString; // error
+      ^^^^ [1]
+
+References:
+   non_generic_maybe_nullable_tests.js:2:9
+   2| true as MaybeStringExtendsString; // error
+              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:7:3
+
+Cannot cast `true` to `OptionalStringExtendsString` because boolean [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
+
+   non_generic_maybe_nullable_tests.js:7:3
+   7|   true as OptionalStringExtendsString; // error
+        ^^^^ [1]
+
+References:
+   non_generic_maybe_nullable_tests.js:7:11
+   7|   true as OptionalStringExtendsString; // error
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:13:1
+
+Cannot cast `false` to `StringExtendsMaybeString` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   non_generic_maybe_nullable_tests.js:13:1
+   13| false as StringExtendsMaybeString; // error
+       ^^^^^ [1]
+
+References:
+   non_generic_maybe_nullable_tests.js:13:10
+   13| false as StringExtendsMaybeString; // error
+                ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:16:1
+
+Cannot cast `true` to `StringOrNullOrVoidExtendsString` because boolean [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
+
+   non_generic_maybe_nullable_tests.js:16:1
+   16| true as StringOrNullOrVoidExtendsString; // error
+       ^^^^ [1]
+
+References:
+   non_generic_maybe_nullable_tests.js:16:9
+   16| true as StringOrNullOrVoidExtendsString; // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:21:1
+
+Cannot cast `false` to `StringExtendsStringOrNullOrVoid` because boolean [1] is incompatible with boolean literal
+`true` [2]. [incompatible-cast]
+
+   non_generic_maybe_nullable_tests.js:21:1
+   21| false as StringExtendsStringOrNullOrVoid; // error
+       ^^^^^ [1]
+
+References:
+   non_generic_maybe_nullable_tests.js:21:10
+   21| false as StringExtendsStringOrNullOrVoid; // error
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- poly_t_input.js:5:1
 
 Cannot cast `v1` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1087,7 +1162,7 @@ References:
 
 
 
-Found 70 errors
+Found 75 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
