@@ -3602,7 +3602,17 @@ struct
                 ignore_dicts;
               }
           ) ->
-          (match GetPropTKit.get_obj_prop cx trace unknown_use o propref reason_op with
+          (match
+             GetPropTKit.get_obj_prop
+               cx
+               trace
+               unknown_use
+               (* TODO: make `no_unchecked_indexed_access=true` work in deeper prototypes. *)
+               ~never_union_void_on_computed_prop_access:true
+               o
+               propref
+               reason_op
+           with
           | Some (p, target_kind) ->
             (match lookup_kind with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
@@ -3684,7 +3694,7 @@ struct
           ) ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason, OpenT tout)
         | ( DefT (reason_obj, ObjT o),
-            GetPropT { use_op; reason = reason_op; id; from_annot = _; propref; tout; hint = _ }
+            GetPropT { use_op; reason = reason_op; id; from_annot; propref; tout; hint = _ }
           ) ->
           let lookup_info =
             Base.Option.map id ~f:(fun id ->
@@ -3696,7 +3706,17 @@ struct
                 (id, lookup_default_tout)
             )
           in
-          GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op lookup_info tout
+          GetPropTKit.read_obj_prop
+            cx
+            trace
+            ~use_op
+            ~from_annot
+            o
+            propref
+            reason_obj
+            reason_op
+            lookup_info
+            tout
         | ( AnyT (_, src),
             GetPropT { use_op = _; reason; id; from_annot = _; propref = _; tout; hint = _ }
           ) ->
@@ -3721,6 +3741,7 @@ struct
                   cx
                   trace
                   ~use_op
+                  ~from_annot:false
                   o
                   propref
                   reason_obj
@@ -3829,14 +3850,22 @@ struct
         | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
             ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action)
           ) ->
-          let (write_action, read_action) =
+          let (write_action, read_action, never_union_void_on_computed_prop_access) =
             match action with
-            | ReadElem _ -> (false, true)
-            | CallElem _ -> (false, false)
-            | WriteElem _ -> (true, false)
+            | ReadElem { from_annot; _ } -> (false, true, from_annot)
+            | CallElem _ -> (false, false, false)
+            | WriteElem _ -> (true, false, true)
           in
           let (value, is_tuple, use_op, react_dro) =
-            array_elem_check ~write_action cx l use_op reason reason_tup arrtype
+            array_elem_check
+              ~write_action
+              ~never_union_void_on_computed_prop_access
+              cx
+              l
+              use_op
+              reason
+              reason_tup
+              arrtype
           in
           let value =
             match react_dro with
@@ -7239,7 +7268,16 @@ struct
   and write_obj_prop cx trace ~use_op ~mode o propref reason_obj reason_op tin prop_tout =
     let obj_t = DefT (reason_obj, ObjT o) in
     let action = WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal; mode } in
-    match GetPropTKit.get_obj_prop cx trace use_op o propref reason_op with
+    match
+      GetPropTKit.get_obj_prop
+        cx
+        trace
+        ~never_union_void_on_computed_prop_access:true
+        use_op
+        o
+        propref
+        reason_op
+    with
     | Some (p, target_kind) ->
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
     | None ->

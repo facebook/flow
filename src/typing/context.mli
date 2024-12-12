@@ -103,6 +103,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_exports_primitive_const: bool;
+  no_unchecked_indexed_access: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -304,6 +305,8 @@ val max_workers : t -> int
 val missing_module_generators : t -> (Str.regexp * string) list
 
 val natural_inference_exports_primitive_const : t -> bool
+
+val no_unchecked_indexed_access : t -> bool
 
 val jsx : t -> Options.jsx_mode
 

@@ -322,7 +322,14 @@ module rec ConsGen : S = struct
       ConsGen.elab_t
         cx
         t
-        (Annot_GetPropT (access_reason, use_op, mk_named_prop ~reason:prop_reason name))
+        (Annot_GetPropT
+           {
+             reason = access_reason;
+             use_op;
+             from_annot = false;
+             prop_ref = mk_named_prop ~reason:prop_reason name;
+           }
+        )
 
     let mk_react_dro cx _use_op (props_loc, dro_t) t =
       ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc, dro_t))
@@ -516,7 +523,14 @@ module rec ConsGen : S = struct
         elab_t
           cx
           t
-          (Annot_GetPropT (reason_op, use_op, Named { reason; name; from_indexed_access = true }))
+          (Annot_GetPropT
+             {
+               reason = reason_op;
+               use_op;
+               from_annot = true;
+               prop_ref = Named { reason; name; from_indexed_access = true };
+             }
+          )
       in
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (use_op, reason, ElementType { index_type }), _), _) ->
@@ -945,7 +959,17 @@ module rec ConsGen : S = struct
         | DefT (_, ObjT o) -> o.flags.react_dro
         | _ -> None
       in
-      (match GetPropTKit.get_obj_prop cx dummy_trace unknown_use o propref reason_op with
+      (match
+         GetPropTKit.get_obj_prop
+           cx
+           dummy_trace
+           (* TODO: make `no_unchecked_indexed_access=true` work in deeper prototypes. *)
+           ~never_union_void_on_computed_prop_access:true
+           unknown_use
+           o
+           propref
+           reason_op
+       with
       | Some (p, _) ->
         GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op react_dro
       | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref objt)
@@ -1009,10 +1033,13 @@ module rec ConsGen : S = struct
           ~seen
           values_type
           (Annot_GetPropT
-             ( reason_op,
-               use_op,
-               Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
-             )
+             {
+               reason = reason_op;
+               use_op;
+               from_annot = false;
+               prop_ref =
+                 Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
+             }
           ))
     | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
       elab_t cx ~seen values_type op
@@ -1025,16 +1052,19 @@ module rec ConsGen : S = struct
         ~seen
         t
         (Annot_GetPropT
-           ( reason_op,
-             use_op,
-             Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false }
-           )
+           {
+             reason = reason_op;
+             use_op;
+             from_annot = false;
+             prop_ref =
+               Named { reason = prop_ref_reason; name = prop_name; from_indexed_access = false };
+           }
         )
     (************)
     (* GetPropT *)
     (************)
     | ( DefT (reason_instance, InstanceT { super; inst; _ }),
-        Annot_GetPropT (reason_op, use_op, (Named _ as propref))
+        Annot_GetPropT { reason = reason_op; use_op; from_annot = _; prop_ref = Named _ as propref }
       ) ->
       GetPropTKit.read_instance_prop
         cx
@@ -1049,17 +1079,34 @@ module rec ConsGen : S = struct
         inst
         propref
         reason_op
-    | (DefT (reason, InstanceT _), Annot_GetPropT (_, _, Computed _)) ->
+    | (DefT (reason, InstanceT _), Annot_GetPropT { prop_ref = Computed _; _ }) ->
       error_unsupported cx reason op
     | ( DefT (_, ObjT _),
-        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "constructor"; _ })
+        Annot_GetPropT
+          {
+            reason = reason_op;
+            from_annot = _;
+            use_op = _;
+            prop_ref = Named { name = OrdinaryName "constructor"; _ };
+          }
       ) ->
       Unsoundness.why Constructor reason_op
-    | (DefT (reason_obj, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
-      GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op None
-    | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
+    | ( DefT (reason_obj, ObjT o),
+        Annot_GetPropT { reason = reason_op; use_op; from_annot; prop_ref }
+      ) ->
+      GetPropTKit.read_obj_prop
+        cx
+        dummy_trace
+        ~use_op
+        ~from_annot
+        o
+        prop_ref
+        reason_obj
+        reason_op
+        None
+    | (AnyT _, Annot_GetPropT { reason; _ }) -> AnyT (reason, Untyped)
     | ( DefT (reason, ClassT instance),
-        Annot_GetPropT (_, _, Named { name = OrdinaryName "prototype"; _ })
+        Annot_GetPropT { prop_ref = Named { name = OrdinaryName "prototype"; _ }; _ }
       ) ->
       reposition cx (loc_of_reason reason) instance
     (**************)
@@ -1075,21 +1122,41 @@ module rec ConsGen : S = struct
       StrModuleT.why reason_op
     | ((DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key))
       ->
-      elab_t cx key (Annot_ElemT (reason_op, use_op, t))
-    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, (ObjT _ | InstanceT _)) as obj))) ->
-      let propref = Flow_js_utils.propref_for_elem_t t in
-      elab_t cx obj (Annot_GetPropT (reason_op, use_op, propref))
-    | (_, Annot_ElemT (reason_op, _use_op, (AnyT _ as _obj))) ->
+      elab_t cx key (Annot_ElemT { reason = reason_op; use_op; from_annot = false; source = t })
+    | ( _,
+        Annot_ElemT
+          {
+            reason = reason_op;
+            use_op;
+            from_annot;
+            source = DefT (_, (ObjT _ | InstanceT _)) as obj;
+          }
+      ) ->
+      let prop_ref = Flow_js_utils.propref_for_elem_t t in
+      elab_t cx obj (Annot_GetPropT { reason = reason_op; from_annot; use_op; prop_ref })
+    | ( _,
+        Annot_ElemT
+          { reason = reason_op; use_op = _use_op; from_annot = _; source = AnyT _ as _obj }
+      ) ->
       let value = AnyT.untyped reason_op in
       reposition cx (loc_of_reason reason_op) value
-    | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, ArrT arrtype))) ->
+    | (AnyT _, Annot_ElemT { reason = reason_op; source = DefT (_, ArrT arrtype); _ }) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
     | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
-        Annot_ElemT (reason_op, use_op, DefT (reason_tup, ArrT arrtype))
+        Annot_ElemT
+          { reason = reason_op; use_op; from_annot; source = DefT (reason_tup, ArrT arrtype) }
       ) ->
       let (value, _, _, _) =
-        Flow_js_utils.array_elem_check ~write_action:false cx t use_op reason_op reason_tup arrtype
+        Flow_js_utils.array_elem_check
+          ~write_action:false
+          ~never_union_void_on_computed_prop_access:from_annot
+          cx
+          t
+          use_op
+          reason_op
+          reason_tup
+          arrtype
       in
       reposition cx (loc_of_reason reason_op) value
     | (DefT (_, ObjT o), Annot_ObjKeyMirror reason_op) ->
@@ -1145,7 +1212,13 @@ module rec ConsGen : S = struct
     (* Enums *)
     (*********)
     | ( DefT (enum_reason, EnumObjectT { enum_value_t; enum_info = ConcreteEnum enum_info }),
-        Annot_GetPropT (access_reason, use_op, Named { reason = prop_reason; name; _ })
+        Annot_GetPropT
+          {
+            reason = access_reason;
+            use_op;
+            from_annot = _;
+            prop_ref = Named { reason = prop_reason; name; _ };
+          }
       ) ->
       let access = (use_op, access_reason, None, (prop_reason, name)) in
       GetPropTKit.on_EnumObjectT
@@ -1205,7 +1278,8 @@ module rec ConsGen : S = struct
       let arr = get_builtin_typeapp cx reason "Array" [elem_t] in
       elab_t cx arr op
     | ( DefT (reason, ArrT (TupleAT { arity; inexact; _ })),
-        Annot_GetPropT (reason_op, _, Named { name = OrdinaryName "length"; _ })
+        Annot_GetPropT
+          { reason = reason_op; prop_ref = Named { name = OrdinaryName "length"; _ }; _ }
       ) ->
       GetPropTKit.on_array_length cx dummy_trace reason ~inexact arity reason_op
     | ( DefT (reason, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
@@ -1276,7 +1350,12 @@ module rec ConsGen : S = struct
   and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
   and get_prop cx use_op reason ?(op_reason = reason) name t =
-    elab_t cx t (Annot_GetPropT (op_reason, use_op, mk_named_prop ~reason name))
+    elab_t
+      cx
+      t
+      (Annot_GetPropT
+         { reason = op_reason; use_op; from_annot = false; prop_ref = mk_named_prop ~reason name }
+      )
 
   and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
