@@ -285,3 +285,14 @@ function sentinel_refinement() {
     }
   }
 }
+
+import type {Animal, Raccoon} from './opaque_exports';
+import {isAnimal, isRaccoon} from './opaque_exports';
+
+function getRaccoon(s: string): ?Raccoon {
+  if (!isAnimal(s)) return null;
+  if (isRaccoon(s)) {
+    return s; // okay
+  }
+  return null;
+}
