@@ -99,7 +99,14 @@ module type S = sig
 
   val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
-  val cjs_require : Context.t -> Type.t -> Reason.t -> FlowSymbol.symbol -> bool -> bool -> Type.t
+  val cjs_require :
+    Context.t ->
+    Type.t ->
+    Reason.t ->
+    FlowSymbol.symbol ->
+    is_strict:bool ->
+    legacy_interop:bool ->
+    Type.t
 
   val export_named :
     Context.t ->
@@ -669,7 +676,10 @@ module rec ConsGen : S = struct
       CJSRequireTKit.on_ModuleT
         cx
         ~reposition:(fun _ _ t -> t)
-        (reason, namespace_symbol, is_strict, legacy_interop)
+        ~reason
+        ~module_symbol:namespace_symbol
+        ~is_strict
+        ~legacy_interop
         m
     | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
       let (values_type, types_tmap) = ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m in
@@ -1380,7 +1390,7 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason namespace_symbol is_strict legacy_interop =
+  and cjs_require cx t reason namespace_symbol ~is_strict ~legacy_interop =
     elab_t cx t (Annot_CJSRequireT { reason; namespace_symbol; is_strict; legacy_interop })
 
   and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =

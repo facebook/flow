@@ -1518,7 +1518,7 @@ end
 
 module CJSRequireTKit = struct
   (* require('SomeModule') *)
-  let on_ModuleT cx ~reposition (reason, module_symbol, is_strict, legacy_interop) module_ =
+  let on_ModuleT cx ~reposition ~reason ~module_symbol ~is_strict ~legacy_interop module_ =
     let {
       module_reason;
       module_export_types = exports;

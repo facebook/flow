@@ -214,7 +214,7 @@ let require file loc index ~legacy_interop =
   let module_t = get_module_t loc resolved_require in
   let reason = Reason.(mk_reason (RModule mref) loc) in
   let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
-  ConsGen.cjs_require file.cx module_t reason symbol false legacy_interop
+  ConsGen.cjs_require file.cx module_t reason symbol ~is_strict:false ~legacy_interop
 
 let import file reason id_loc index kind ~remote ~local =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
@@ -804,7 +804,7 @@ and merge_annot env file = function
     let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
-    ConsGen.cjs_require file.cx module_t reason symbol false false
+    ConsGen.cjs_require file.cx module_t reason symbol ~is_strict:false ~legacy_interop:false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
     ->

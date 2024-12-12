@@ -275,7 +275,10 @@ module Import_export = struct
       Flow_js_utils.CJSRequireTKit.on_ModuleT
         cx
         ~reposition:Flow.reposition
-        (reason, namespace_symbol, is_strict, legacy_interop)
+        ~reason
+        ~module_symbol:namespace_symbol
+        ~is_strict
+        ~legacy_interop
         m
     | Error (lreason, any_source) -> AnyT (lreason, any_source)
 end
