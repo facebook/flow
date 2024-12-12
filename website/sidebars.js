@@ -54,6 +54,7 @@ module.exports = {
         'types/type-guards',
         'types/typeof',
         'types/casting',
+        'types/const-expression',
         'types/utilities',
         'types/modules',
         'types/comments',
