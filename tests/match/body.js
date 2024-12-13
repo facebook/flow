@@ -50,7 +50,8 @@ function f1() {
 function f2() {
   const out = match (x) {
     1 if invariant(false): true,
-    _: true,
+    _: 's',
   };
-  out; // ERROR: unreachable
+  out as string; // OK
+  out as empty; // ERROR
 }

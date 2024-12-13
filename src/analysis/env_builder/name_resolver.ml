@@ -2927,9 +2927,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               bindings
               (fun () ->
                 ignore @@ this#match_pattern pattern;
-                Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
                 let completion_state =
-                  this#run_to_completion (fun () -> ignore @@ this#expression body)
+                  this#run_to_completion (fun () ->
+                      Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+                      ignore @@ this#expression body
+                  )
                 in
                 completion_states := completion_state :: !completion_states)
               ()

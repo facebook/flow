@@ -2821,11 +2821,20 @@ module Make
                       name_loc
                 )
               in
-              let guard = Base.Option.map guard ~f:(expression cx) in
-              let ((((_, t), _) as body), throws) =
+              let (guard, guard_throws) =
+                match guard with
+                | Some guard ->
+                  let (guard, throws) =
+                    Abnormal.catch_expr_control_flow_exception (fun () -> expression cx guard)
+                  in
+                  (Some guard, throws)
+                | None -> (None, false)
+              in
+              let ((((_, t), _) as body), body_throws) =
                 Abnormal.catch_expr_control_flow_exception (fun () -> expression cx body)
               in
               let case_ast = (case_loc, { Match.Case.pattern; body; guard; comments }) in
+              let throws = guard_throws || body_throws in
               let all_throws = all_throws && throws in
               let ts =
                 if throws then

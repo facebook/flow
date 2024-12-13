@@ -91,12 +91,21 @@ Unreachable code. [unreachable-code]
          ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- body.js:55:3
+Error ----------------------------------------------------------------------------------------------------- body.js:56:3
 
-Unreachable code. [unreachable-code]
+Cannot cast `out` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
-   55|   out; // ERROR: unreachable
-         ^^^^
+   body.js:56:3
+   56|   out as empty; // ERROR
+         ^^^
+
+References:
+   body.js:53:8
+   53|     _: 's',
+              ^^^ [1]
+   body.js:56:10
+   56|   out as empty; // ERROR
+                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
