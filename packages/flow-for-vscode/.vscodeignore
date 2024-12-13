@@ -1,0 +1,20 @@
+## exclude everything
+**/**
+
+## include source files ##
+!package.json
+# only include js files (not *.map)
+!build/*.js
+!node_modules/flow-bin
+# only include required prettier files in plugin to reduce plugin size
+!node_modules/prettier/standalone.js
+!node_modules/prettier/parser-flow.js
+
+## include extra files ##
+!README.md
+!readme
+!CHANGELOG.md
+!LICENSE
+!flow-logo.png
+!signing.pem
+!PAST_FLOW_BIN_SHASUMS.txt
