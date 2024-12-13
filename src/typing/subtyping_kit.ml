@@ -897,13 +897,19 @@ module Make (Flow : INPUT) : OUTPUT = struct
       flow_type_args cx trace ~use_op lreason ureason ltargs utargs
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
-    | (OpaqueT (r, { underlying_t = Some t; _ }), _)
-      when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+    | ( OpaqueT
+          (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+        _
+      )
+      when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
       rec_flow_t cx trace ~use_op (t, u)
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
-    | (_, OpaqueT (r, { underlying_t = Some t; _ }))
-      when ALoc.source (loc_of_reason (reason_of_t l)) = ALoc.source (def_loc_of_reason r) ->
+    | ( _,
+        OpaqueT
+          (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ })
+      )
+      when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
       rec_flow_t cx trace ~use_op (l, t)
     (***********************)
     (* Numeric string keys *)

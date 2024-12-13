@@ -1446,8 +1446,11 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the underlying is `string`. *)
-        | (OpaqueT (r, { underlying_t = Some t; _ }), ToStringT { reason; t_out; _ })
-          when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+        | ( OpaqueT
+              (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+            ToStringT { reason; t_out; _ }
+          )
+          when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* Use the upper bound of OpaqueT if it's available, for operations that must be
          * performed on some concretized types. *)
@@ -1460,8 +1463,11 @@ struct
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* If the type is still in the same file it was defined, we allow it to
          * expose its underlying type information *)
-        | (OpaqueT (r, { underlying_t = Some t; _ }), _)
-          when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+        | ( OpaqueT
+              (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+            _
+          )
+          when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
           rec_flow cx trace (t, u)
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
@@ -6600,10 +6606,24 @@ struct
       in
       (match (t, d) with
       | ( GenericT
-            { bound = OpaqueT (_, { underlying_t = Some t; _ }); reason = r; id; name; no_infer },
+            {
+              bound =
+                OpaqueT
+                  ( _,
+                    {
+                      opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id;
+                      underlying_t = Some t;
+                      _;
+                    }
+                  );
+              reason = r;
+              id;
+              name;
+              no_infer;
+            },
           _
         )
-        when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+        when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
         eval_destructor
           cx
           ~trace
@@ -6613,8 +6633,8 @@ struct
           d
           tout
       | (OpaqueT (r, opaquetype), ReactDRO _) -> destruct_and_preserve_opaque_t r opaquetype
-      | (OpaqueT (r, { underlying_t = Some t; _ }), _)
-        when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+      | (OpaqueT (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId id; underlying_t = Some t; _ }), _)
+        when ALoc.source (id :> ALoc.t) = Some (Context.file cx) ->
         eval_destructor cx ~trace use_op reason t d tout
       (* Specialize TypeAppTs before evaluating them so that we can handle special
          cases. Like the union case below. mk_typeapp_instance will return an AnnotT
