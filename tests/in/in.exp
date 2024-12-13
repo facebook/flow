@@ -1,4 +1,4 @@
-Error ------------------------------------------------------------------------------------------------------ in.js:25:15
+Error ---------------------------------------------------------------------------------------------------- test.js:25:15
 
 Cannot use `in` because on the right-hand side, number [1] must be an object or array. [invalid-in-rhs]
 
@@ -6,7 +6,7 @@ Cannot use `in` because on the right-hand side, number [1] must be an object or 
                      ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:26:15
+Error ---------------------------------------------------------------------------------------------------- test.js:26:15
 
 Cannot use `in` because on the right-hand side, string [1] must be an object or array. [invalid-in-rhs]
 
@@ -14,7 +14,7 @@ Cannot use `in` because on the right-hand side, string [1] must be an object or 
                      ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:27:15
+Error ---------------------------------------------------------------------------------------------------- test.js:27:15
 
 Cannot use `in` because on the right-hand side, undefined [1] must be an object or array. [invalid-in-rhs]
 
@@ -22,7 +22,7 @@ Cannot use `in` because on the right-hand side, undefined [1] must be an object 
                      ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:28:15
+Error ---------------------------------------------------------------------------------------------------- test.js:28:15
 
 Cannot use `in` because on the right-hand side, null [1] must be an object or array. [invalid-in-rhs]
 
@@ -30,7 +30,7 @@ Cannot use `in` because on the right-hand side, null [1] must be an object or ar
                      ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- in.js:33:6
+Error ----------------------------------------------------------------------------------------------------- test.js:33:6
 
 Cannot use `in` because on the left-hand side, null [1] must be a string or number. [invalid-in-lhs]
 
@@ -38,7 +38,7 @@ Cannot use `in` because on the left-hand side, null [1] must be a string or numb
             ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- in.js:34:6
+Error ----------------------------------------------------------------------------------------------------- test.js:34:6
 
 Cannot use `in` because on the left-hand side, undefined [1] must be a string or number. [invalid-in-lhs]
 
@@ -46,7 +46,7 @@ Cannot use `in` because on the left-hand side, undefined [1] must be a string or
             ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- in.js:35:6
+Error ----------------------------------------------------------------------------------------------------- test.js:35:6
 
 Cannot use `in` because on the left-hand side, object literal [1] must be a string or number. [invalid-in-lhs]
 
@@ -54,7 +54,7 @@ Cannot use `in` because on the left-hand side, object literal [1] must be a stri
             ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:36:11
+Error ---------------------------------------------------------------------------------------------------- test.js:36:11
 
 Cannot use `in` because on the left-hand side, array type [1] must be a string or number. [invalid-in-lhs]
 
@@ -62,7 +62,7 @@ Cannot use `in` because on the left-hand side, array type [1] must be a string o
                  ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- in.js:37:6
+Error ----------------------------------------------------------------------------------------------------- test.js:37:6
 
 Cannot use `in` because on the left-hand side, boolean [1] must be a string or number. [invalid-in-lhs]
 
@@ -70,7 +70,7 @@ Cannot use `in` because on the left-hand side, boolean [1] must be a string or n
             ^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:42:18
+Error ---------------------------------------------------------------------------------------------------- test.js:42:18
 
 Cannot use `in` because on the right-hand side, number [1] must be an object or array. [invalid-in-rhs]
 
@@ -78,7 +78,7 @@ Cannot use `in` because on the right-hand side, number [1] must be an object or 
                         ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------- in.js:43:9
+Error ----------------------------------------------------------------------------------------------------- test.js:43:9
 
 Cannot use `in` because on the left-hand side, boolean literal `false` [1] must be a string or number. [invalid-in-lhs]
 
@@ -86,16 +86,16 @@ Cannot use `in` because on the left-hand side, boolean literal `false` [1] must 
                ^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ in.js:50:15
+Error ---------------------------------------------------------------------------------------------------- test.js:50:15
 
 Cannot use `in` because on the right-hand side, mixed [1] must be an object or array. [invalid-in-rhs]
 
-   in.js:50:15
+   test.js:50:15
    50|     ('foo' in y); // error
                      ^
 
 References:
-   in.js:48:26
+   test.js:48:26
    48|   function(x: Object, y: mixed) {
                                 ^^^^^ [1]
 
