@@ -234,6 +234,7 @@ struct
             | SingletonStrR _
             | SingletonNumR _
             | SingletonBigIntR _
+            | PropExistsR _
             | PropNullishR _
             | PropIsExactlyNullR _
             | PropNonVoidR _

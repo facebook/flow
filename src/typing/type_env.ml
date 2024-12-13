@@ -352,6 +352,9 @@ let predicate_of_refinement cx =
       Some (PropNonVoidP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
     | PropTruthyR { propname; loc } ->
       Some (PropTruthyP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc))
+    | PropExistsR { propname; loc } ->
+      let reason = mk_reason (RProperty (Some (OrdinaryName propname))) loc in
+      Some (PropExistsP { propname; reason })
   in
   pred
 

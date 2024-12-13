@@ -1,3 +1,387 @@
+Error ------------------------------------------------------------------------------------------------ refinement.js:7:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:7:5
+   7|     x as empty; // ERROR
+          ^
+
+References:
+   refinement.js:5:20
+   5|   declare const x: T0;
+                         ^^ [1]
+   refinement.js:7:10
+   7|     x as empty; // ERROR
+               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:10:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:10:5
+   10|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:5:20
+    5|   declare const x: T0;
+                          ^^ [1]
+   refinement.js:10:10
+   10|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:18:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:18:5
+   18|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:16:20
+   16|   declare const x: T0;
+                          ^^ [1]
+   refinement.js:18:10
+   18|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:29:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:29:5
+   29|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:27:20
+   27|   declare const x: T0 | {__proto__: null, a: 2};
+                          ^^ [1]
+   refinement.js:29:10
+   29|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:40:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:40:5
+   40|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:38:20
+   38|   declare const x: {(): boolean, a: 2};
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:40:10
+   40|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:48:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:48:5
+   48|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:38:20
+   38|   declare const x: {(): boolean, a: 2};
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:48:10
+   48|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:59:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:59:5
+   59|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:57:25
+   57|   declare const x: T0 | {a: 2, __proto__: {c: void}};
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:59:10
+   59|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:71:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:71:5
+   71|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:69:25
+   69|   declare const x: T0 | {a: 2, __proto__: {c: void} | {c: boolean}};
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:71:10
+   71|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:90:5
+
+Cannot cast `x` to object type because property `b` is missing in object type [1] but exists in object type [2].
+[prop-missing]
+
+   refinement.js:90:5
+   90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
+           ^
+
+References:
+   refinement.js:87:20
+   87|   declare const x: {a: 0, ...} | {a: 1, b: void, ...};
+                          ^^^^^^^^^^^ [1]
+   refinement.js:90:10
+   90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
+                ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:90:5
+
+Cannot cast `x` to object type because number literal `0` [1] is incompatible with number literal `1` [2] in property
+`a`. [incompatible-cast]
+
+   refinement.js:90:5
+   90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
+           ^
+
+References:
+   refinement.js:87:24
+   87|   declare const x: {a: 0, ...} | {a: 1, b: void, ...};
+                              ^ [1]
+   refinement.js:90:14
+   90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
+                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refinement.js:92:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:92:5
+   92|     x as empty; // ERROR
+           ^
+
+References:
+   refinement.js:87:20
+   87|   declare const x: {a: 0, ...} | {a: 1, b: void, ...};
+                          ^^^^^^^^^^^ [1]
+   refinement.js:92:10
+   92|     x as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:102:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:102:5
+   102|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:100:53
+   100|   declare const x: {a: 0, ...} & {xxx: void, ...} | {a: 1};
+                                                            ^^^^^^ [1]
+   refinement.js:102:10
+   102|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:102:5
+
+Cannot cast `x` to empty because: [incompatible-cast]
+ - Either object type [1] is incompatible with empty [2].
+ - Or object type [3] is incompatible with empty [2].
+
+   refinement.js:102:5
+   102|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:100:20
+   100|   declare const x: {a: 0, ...} & {xxx: void, ...} | {a: 1};
+                           ^^^^^^^^^^^ [1]
+   refinement.js:102:10
+   102|     x as empty; // ERROR
+                 ^^^^^ [2]
+   refinement.js:100:34
+   100|   declare const x: {a: 0, ...} & {xxx: void, ...} | {a: 1};
+                                         ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:113:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:113:5
+   113|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:111:29
+   111|   declare const x: {a: 0} | {a: 1, b?: boolean};
+                                    ^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:113:10
+   113|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:116:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:116:5
+   116|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:111:20
+   111|   declare const x: {a: 0} | {a: 1, b?: boolean};
+                           ^^^^^^ [1]
+   refinement.js:116:10
+   116|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:116:5
+
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:116:5
+   116|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:111:29
+   111|   declare const x: {a: 0} | {a: 1, b?: boolean};
+                                    ^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:116:10
+   116|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:117:5
+
+Cannot cast `x.a` to number literal `0` because number literal `1` [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
+
+   refinement.js:117:5
+   117|     x.a as 0; // ERROR: is optional so unknown
+            ^^^
+
+References:
+   refinement.js:111:33
+   111|   declare const x: {a: 0} | {a: 1, b?: boolean};
+                                        ^ [1]
+   refinement.js:117:12
+   117|     x.a as 0; // ERROR: is optional so unknown
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:126:5
+
+Cannot cast `x` to interface type because property `b` is missing in interface type [1] but exists in interface
+type [2]. [prop-missing]
+
+   refinement.js:126:5
+   126|     x as interface {a: 1, b: void}; // ERROR: could exist
+            ^
+
+References:
+   refinement.js:124:20
+   124|   declare const x: interface {a: 0} | interface {a: 1, b: void};
+                           ^^^^^^^^^^^^^^^^ [1]
+   refinement.js:126:10
+   126|     x as interface {a: 1, b: void}; // ERROR: could exist
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:126:5
+
+Cannot cast `x` to interface type because number literal `0` [1] is incompatible with number literal `1` [2] in property
+`a`. [incompatible-cast]
+
+   refinement.js:126:5
+   126|     x as interface {a: 1, b: void}; // ERROR: could exist
+            ^
+
+References:
+   refinement.js:124:34
+   124|   declare const x: interface {a: 0} | interface {a: 1, b: void};
+                                         ^ [1]
+   refinement.js:126:24
+   126|     x as interface {a: 1, b: void}; // ERROR: could exist
+                               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:128:5
+
+Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:128:5
+   128|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:124:20
+   124|   declare const x: interface {a: 0} | interface {a: 1, b: void};
+                           ^^^^^^^^^^^^^^^^ [1]
+   refinement.js:128:10
+   128|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:135:5
+
+Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:135:5
+   135|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:133:20
+   133|   declare const x: interface {m(): void};
+                           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:135:10
+   135|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:146:5
+
+Cannot cast `x` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   refinement.js:146:5
+   146|     x as empty; // ERROR
+            ^
+
+References:
+   refinement.js:144:20
+   144|   declare const x: A;
+                           ^ [1]
+   refinement.js:146:10
+   146|     x as empty; // ERROR
+                 ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:25:15
 
 Cannot use `in` because on the right-hand side, number [1] must be an object or array. [invalid-in-rhs]
@@ -101,4 +485,4 @@ References:
 
 
 
-Found 12 errors
+Found 34 errors

@@ -287,6 +287,9 @@ and predicate_no_concretization cx trace result_collector l ~p =
   | NotP TruthyP ->
     let filtered = Type_filter.not_truthy cx l in
     report_filtering_result_to_predicate_result filtered result_collector
+  | PropExistsP { propname; reason = _ } -> prop_exists_test cx propname true l result_collector
+  | NotP (PropExistsP { propname; reason = _ }) ->
+    prop_exists_test cx propname false l result_collector
   | PropTruthyP (key, r) -> prop_truthy_test cx trace key r true l result_collector
   | NotP (PropTruthyP (key, r)) -> prop_truthy_test cx trace key r false l result_collector
   | PropNonMaybeP (key, r) -> prop_non_maybe_test cx trace key r true l result_collector
@@ -493,6 +496,85 @@ and type_guard_diff cx t1 t2 =
     Type_filter.TypeFilterResult { type_ = DefT (r, EmptyT); changed = true }
   else
     Type_filter.TypeFilterResult { type_ = t1; changed = false }
+
+and prop_exists_test cx key sense obj result_collector =
+  match has_prop cx (OrdinaryName key) obj with
+  | Some has ->
+    if has = sense then
+      report_unchanged_filtering_result_to_predicate_result obj result_collector
+    else
+      report_changes_to_input result_collector
+  | None -> report_unchanged_filtering_result_to_predicate_result obj result_collector
+
+(**
+ * If an object has an own or non-own prop, representing `'key' in obj`.
+ * Returns `None` if it is unknown whether the object has the prop (for example
+ * due to inexact objects).
+ *)
+and has_prop cx key obj =
+  let all_have_prop xs =
+    Base.List.fold xs ~init:(Some true) ~f:(fun acc x ->
+        match (acc, x) with
+        | (None, _)
+        | (_, None) ->
+          None
+        | (Some a, Some b) -> Some (a && b)
+    )
+  in
+  let some_has_prop xs =
+    Base.List.fold xs ~init:(Some false) ~f:(fun acc x ->
+        match (acc, x) with
+        | (Some true, None)
+        | (None, Some true) ->
+          Some true
+        | (_, None)
+        | (None, _) ->
+          None
+        | (Some a, Some b) -> Some (a || b)
+    )
+  in
+  let find_key ~exact ~super ~props_list key =
+    let current_has_prop =
+      Base.List.map props_list ~f:(fun props ->
+          match Context.get_prop cx props key with
+          | Some prop ->
+            (match prop with
+            | Field { type_; _ } when Slice_utils.is_prop_optional type_ ->
+              (* If a field is optional, it is unknown whether it exists. *)
+              None
+            | _ -> Some true)
+          | None -> Some false
+      )
+      |> some_has_prop
+    in
+    match current_has_prop with
+    | Some true -> Some true
+    | Some false
+    | None ->
+      let super_ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t super) super in
+      let super_has_prop = Base.List.map super_ts ~f:(has_prop cx key) |> all_have_prop in
+      (match super_has_prop with
+      | Some true -> Some true
+      | Some false when not exact -> None
+      | Some false -> current_has_prop
+      | None -> None)
+  in
+  match obj with
+  | DefT (_, ObjT { flags; props_tmap; proto_t; _ }) ->
+    find_key ~exact:(Obj_type.is_exact flags.obj_kind) ~super:proto_t ~props_list:[props_tmap] key
+  | DefT (_, InstanceT { super; inst = { own_props; proto_props; _ }; _ }) ->
+    find_key ~exact:false ~super ~props_list:[own_props; proto_props] key
+  | NullProtoT _ -> Some false
+  | ObjProtoT _ -> Some (is_object_prototype_method key)
+  | FunProtoT _ -> Some (is_function_prototype key)
+  | IntersectionT (reason, rep) ->
+    InterRep.members rep
+    |> Base.List.map ~f:(fun t ->
+           let ts = possible_concrete_types_for_inspection cx reason t in
+           Base.List.map ts ~f:(has_prop cx key) |> all_have_prop
+       )
+    |> some_has_prop
+  | _ -> None
 
 and prop_truthy_test cx trace key reason sense obj result_collector =
   prop_exists_test_generic

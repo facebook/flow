@@ -5286,6 +5286,32 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           left
           right
 
+      method in_test loc prop_expr obj_expr =
+        ignore @@ this#expression prop_expr;
+        ignore
+        @@ (* We already ensure that RHS of `in` must be object,
+            * so the expression must be at least truthy as well *)
+        this#optional_chain_must_be_able_to_refine_base_object_to_non_maybe
+          ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropTruthyRefi
+          obj_expr;
+        match RefinementKey.of_expression obj_expr with
+        | None -> ()
+        | Some obj_refinement_key ->
+          let propname =
+            match prop_expr with
+            | (_, Flow_ast.Expression.StringLiteral { Ast.StringLiteral.value; _ }) -> Some value
+            | (_, Flow_ast.Expression.NumberLiteral { Ast.NumberLiteral.value; _ })
+              when Js_number.is_float_safe_integer value ->
+              Some (Dtoa.ecma_string_of_float value)
+            | _ -> None
+          in
+          Base.Option.iter propname ~f:(fun propname ->
+              this#add_single_refinement
+                obj_refinement_key
+                ~refining_locs:(L.LSet.singleton loc)
+                (PropExistsR { propname; loc })
+          )
+
       method instance_test loc expr instance =
         ignore
         @@ (* We already ensure that RHS of instanceof must be object,
@@ -5325,11 +5351,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | StrictEqual -> eq_test ~strict:true ~sense:true loc left right
         | StrictNotEqual -> eq_test ~strict:true ~sense:false loc left right
         | Instanceof -> this#instance_test loc left right
+        | In -> this#in_test loc left right
         | LessThan
         | LessThanEqual
         | GreaterThan
         | GreaterThanEqual
-        | In
         | LShift
         | RShift
         | RShift3

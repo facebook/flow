@@ -1013,6 +1013,11 @@ module rec TypeTerm : sig
     | SymbolP of ALoc.t (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
+    (* `if ('b' in a)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
+    | PropExistsP of {
+        propname: string;
+        reason: reason;
+      }
     (* `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))` *)
     | PropTruthyP of string * reason
     (* `if (a?.b === null)` yields `flow (a, PredicateT(PropIsExactlyNullP ("b"), tout))` *)
@@ -4283,6 +4288,7 @@ let rec string_of_predicate = function
   | SymbolP _ -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
+  | PropExistsP { propname; _ } -> spf "prop `%s` exists" propname
   | PropTruthyP (key, _) -> spf "prop `%s` is truthy" key
   | PropIsExactlyNullP (key, _) -> spf "prop `%s` is exactly null" key
   | PropNonVoidP (key, _) -> spf "prop `%s` is not undefined" key

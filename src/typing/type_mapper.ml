@@ -915,7 +915,8 @@ class virtual ['a] t =
       | PropNonMaybeP _
       | PropNonVoidP _
       | PropIsExactlyNullP _
-      | PropTruthyP _ ->
+      | PropTruthyP _
+      | PropExistsP _ ->
         p
       | LatentP ((lazy (use_op, loc, t, targs, argts)), i) ->
         let t' = self#type_ cx map_cx t in

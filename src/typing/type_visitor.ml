@@ -190,6 +190,7 @@ class ['a] t =
       | VoidP -> acc
       | ArrP -> acc
       | PropTruthyP _ -> acc
+      | PropExistsP _ -> acc
       | PropNonVoidP _ -> acc
       | PropIsExactlyNullP _ -> acc
       | PropNonMaybeP _ -> acc

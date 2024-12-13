@@ -156,6 +156,10 @@ module type S = sig
           prop: string;
           other_loc: L.t;
         }
+      | PropExistsR of {
+          propname: string;
+          loc: L.t;
+        }
       | PropNullishR of {
           propname: string;
           loc: L.t;
@@ -443,6 +447,10 @@ module Make
           prop: string;
           other_loc: L.t;
         }
+      | PropExistsR of {
+          propname: string;
+          loc: L.t;
+        }
       | PropNullishR of {
           propname: string;
           loc: L.t;
@@ -685,6 +693,7 @@ module Make
       else
         lit
     | SentinelR { prop; _ } -> Printf.sprintf "SentinelR %s" prop
+    | PropExistsR { propname; loc = _ } -> Printf.sprintf "PropExistsR (%s)" propname
     | PropNullishR { propname = prop; _ } -> Printf.sprintf "PropNullishR %s" prop
     | PropIsExactlyNullR { propname = prop; _ } -> Printf.sprintf "PropIsExactlyNullR %s" prop
     | PropNonVoidR { propname = prop; _ } -> Printf.sprintf "PropNonVoidR %s" prop

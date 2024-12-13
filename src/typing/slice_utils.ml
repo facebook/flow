@@ -1804,6 +1804,10 @@ let mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop key_t prop_o
     else
       t
 
+let is_prop_optional = function
+  | OptionalT _ -> true
+  | _ -> false
+
 let map_object
     poly_prop
     { variance; optional = mapped_type_optionality }
@@ -1817,10 +1821,6 @@ let map_object
     match variance with
     | Polarity.Neutral -> prop_polarity
     | _ -> variance
-  in
-  let is_prop_optional = function
-    | OptionalT _ -> true
-    | _ -> false
   in
   let props =
     let keys =
