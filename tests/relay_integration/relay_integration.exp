@@ -8,7 +8,7 @@ Cannot resolve module `MissingFile.graphql`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
-Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:13:2
    13| (fragment: string); // ERROR
@@ -16,7 +16,7 @@ Cannot cast `fragment` to string because number [1] is incompatible with string 
 
 References:
    MyFragment.graphql.js:1:18
-    1| module.exports = 1;
+    1| module.exports = 1 as const;
                         ^ [1]
    test.js:13:12
    13| (fragment: string); // ERROR
@@ -25,7 +25,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
-Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:23:2
    23| (query: string); // ERROR
@@ -33,7 +33,7 @@ Cannot cast `query` to string because number [1] is incompatible with string [2]
 
 References:
    MyQuery.graphql.js:1:18
-    1| module.exports = 2;
+    1| module.exports = 2 as const;
                         ^ [1]
    test.js:23:9
    23| (query: string); // ERROR
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:2
 
-Cannot cast `mutation` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `mutation` to string because number literal `3` [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:33:2
    33| (mutation: string); // ERROR
@@ -50,7 +50,7 @@ Cannot cast `mutation` to string because number [1] is incompatible with string 
 
 References:
    MyMutation.graphql.js:1:18
-    1| module.exports = 3;
+    1| module.exports = 3 as const;
                         ^ [1]
    test.js:33:12
    33| (mutation: string); // ERROR
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:2
 
-Cannot cast `subscription` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `subscription` to string because number literal `4` [1] is incompatible with string [2]. [incompatible-cast]
 
    test.js:43:2
    43| (subscription: string); // ERROR
@@ -67,7 +67,7 @@ Cannot cast `subscription` to string because number [1] is incompatible with str
 
 References:
    MySubscription.graphql.js:1:18
-    1| module.exports = 4;
+    1| module.exports = 4 as const;
                         ^ [1]
    test.js:43:16
    43| (subscription: string); // ERROR
@@ -76,7 +76,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:2
 
-Cannot cast `fragmentWithComment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `fragmentWithComment` to string because number literal `1` [1] is incompatible with string [2].
+[incompatible-cast]
 
    test.js:57:2
    57| (fragmentWithComment: string); // ERROR
@@ -84,7 +85,7 @@ Cannot cast `fragmentWithComment` to string because number [1] is incompatible w
 
 References:
    MyFragment.graphql.js:1:18
-    1| module.exports = 1;
+    1| module.exports = 1 as const;
                         ^ [1]
    test.js:57:23
    57| (fragmentWithComment: string); // ERROR
@@ -93,7 +94,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:2
 
-Cannot cast `fragmentWithCommas` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `fragmentWithCommas` to string because number literal `1` [1] is incompatible with string [2].
+[incompatible-cast]
 
    test.js:71:2
    71| (fragmentWithCommas: string); // ERROR
@@ -101,7 +103,7 @@ Cannot cast `fragmentWithCommas` to string because number [1] is incompatible wi
 
 References:
    MyFragment.graphql.js:1:18
-    1| module.exports = 1;
+    1| module.exports = 1 as const;
                         ^ [1]
    test.js:71:22
    71| (fragmentWithCommas: string); // ERROR

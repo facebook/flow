@@ -8,4 +8,4 @@ module.exports = {
   P2: !true,
   P3: -(-1),
   P4: !!1,
-};
+} as const;

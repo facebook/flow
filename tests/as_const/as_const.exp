@@ -558,7 +558,7 @@ Cannot cast `obj4` to object type because property `f` is read-only in const obj
 type [2]. [incompatible-variance]
 
    import-object.js:43:3
-   43|   obj4 as {f: 1}; // error cast to non-readonly
+   43|   obj4 as {f: number}; // error cast to non-readonly
          ^^^^
 
 References:
@@ -566,8 +566,8 @@ References:
    10| export const obj4 = {...p} as const;      // {+f: Num<1>}
                            ^^^^^^ [1]
    import-object.js:43:11
-   43|   obj4 as {f: 1}; // error cast to non-readonly
-                 ^^^^^^ [2]
+   43|   obj4 as {f: number}; // error cast to non-readonly
+                 ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- import-object.js:50:8

@@ -1,2 +1,2 @@
-export default "default"
-export const named = "named"
+export default "default" as const;
+export const named = "named" as const;

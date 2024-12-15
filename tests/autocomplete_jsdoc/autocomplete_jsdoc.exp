@@ -3470,8 +3470,8 @@ Flags: --lsp
 }
 {
   "label":"exportValue",
-  "kind":6,
-  "detail":"type exportValue = number",
+  "kind":12,
+  "detail":"type exportValue = 1",
   "documentation":{"kind":"markdown","value":"this is ExportValue"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,

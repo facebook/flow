@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- enum_client.js:6:5
 
-Cannot call `foo` with `"LOCATION"` bound to `x` because property `LOCATION` is missing in object literal [1].
+Cannot call `foo` with `"LOCATION"` bound to `x` because property `LOCATION` is missing in const object literal [1].
 [prop-missing]
 
    enum_client.js:6:5

@@ -1525,7 +1525,7 @@ types.js:38:7
 Flags: --strip-root --pretty
 {
   "documentation":"this is ExportValue",
-  "types":{"unevaluated":{"type":"type exportValue = number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"type exportValue = 1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"types.js",

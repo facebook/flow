@@ -5,7 +5,7 @@ Invalid trivially recursive definition of exports.  [recursive-definition]
 
 Error ----------------------------------------------------------------------------------------------------- dest.js:4:17
 
-Cannot assign `source.num` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `source.num` to `b` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
 
    dest.js:4:17
    4| var b: string = source.num; // Error: num ~> string
@@ -22,7 +22,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dest.js:7:17
 
-Cannot assign `source.str` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `source.str` to `d` because string literal `asdf` [1] is incompatible with number [2]. [incompatible-type]
 
    dest.js:7:17
    7| var d: number = source.str; // Error: num ~> string
@@ -39,7 +39,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- override_test.js:4:2
 
-Cannot cast `C1` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `C1` to number because string literal `asdf` [1] is incompatible with number [2]. [incompatible-cast]
 
    override_test.js:4:2
    4| (C1: number); // error
@@ -56,7 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- override_test.js:9:2
 
-Cannot cast `C2` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `C2` to number because string literal `asdf` [1] is incompatible with number [2]. [incompatible-cast]
 
    override_test.js:9:2
    9| (C2: number); // error

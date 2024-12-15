@@ -21,7 +21,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:8:2
 
-Cannot cast `y` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `y` to undefined because string literal `y` [1] is incompatible with undefined [2]. [incompatible-cast]
 
    b.js:8:2
    8| (y: void); // error

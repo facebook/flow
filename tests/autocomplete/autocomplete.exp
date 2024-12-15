@@ -1920,8 +1920,8 @@ Flags: --lsp
 }
 {
   "label":"Typhoon",
-  "kind":6,
-  "detail":"type Typhoon = string",
+  "kind":12,
+  "detail":"type Typhoon = \"not a type\"",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -2992,8 +2992,8 @@ Flags: --pretty
 {
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
-    {"name":"Typhoon","type":"declare var Typhoon: string"},
-    {"name":"Typhoons","type":"declare var Typhoons: string"},
+    {"name":"Typhoon","type":"declare var Typhoon: \"not a type\""},
+    {"name":"Typhoons","type":"declare var Typhoons: \"also not a type\""},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
     {"name":"default","type":"declare var default: number"}
@@ -3005,7 +3005,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"Typesafety","type":"interface Typesafety"},
-    {"name":"Typhoons","type":"declare var Typhoons: string"},
+    {"name":"Typhoons","type":"declare var Typhoons: \"also not a type\""},
     {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
     {"name":"default","type":"declare var default: number"}

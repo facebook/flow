@@ -19,7 +19,7 @@ function test_obj1() {
 }
 
 function test_obj2() {
-  obj2 as {+p: {f: 1}, +q: {f: number}, +d: {[string]: number}};
+  obj2 as {+p: {f: number}, +q: {f: number}, +d: {[string]: number}};
   _ as {
     +p: {f: number},
     +q: {f: number},
@@ -40,9 +40,9 @@ function test_obj3() {
 }
 
 function test_obj4() {
-  obj4 as {f: 1}; // error cast to non-readonly
-  obj4 as {+f: 1}; // okay
-  obj4 as {+f: 1, ...}; // okay
+  obj4 as {f: number}; // error cast to non-readonly
+  obj4 as {+f: number}; // okay
+  obj4 as {+f: number, ...}; // okay
   obj4 as {+f: number}; // okay
 
   _ as {f: 1} as typeof obj4; // okay

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- __tests__/test.js:11:2
 
-Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
 
    __tests__/test.js:11:2
    11| (fragment: string); // ERROR
@@ -8,7 +8,7 @@ Cannot cast `fragment` to string because number [1] is incompatible with string 
 
 References:
    __tests__/__generated__/TestFragment.graphql.js:1:18
-    1| module.exports = 1;
+    1| module.exports = 1 as const;
                         ^ [1]
    __tests__/test.js:11:12
    11| (fragment: string); // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- __tests__/test.js:21:2
 
-Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-cast]
 
    __tests__/test.js:21:2
    21| (query: string); // ERROR
@@ -25,7 +25,7 @@ Cannot cast `query` to string because number [1] is incompatible with string [2]
 
 References:
    __tests__/__generated__/TestQuery.graphql.js:1:18
-    1| module.exports = 2;
+    1| module.exports = 2 as const;
                         ^ [1]
    __tests__/test.js:21:9
    21| (query: string); // ERROR
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- non-prefixed.js:11:2
 
-Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
 
    non-prefixed.js:11:2
    11| (fragment: string); // ERROR
@@ -42,7 +42,7 @@ Cannot cast `fragment` to string because number [1] is incompatible with string 
 
 References:
    MyFragment.graphql.js:1:18
-    1| module.exports = 1;
+    1| module.exports = 1 as const;
                         ^ [1]
    non-prefixed.js:11:12
    11| (fragment: string); // ERROR
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- non-prefixed.js:21:2
 
-Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-cast]
 
    non-prefixed.js:21:2
    21| (query: string); // ERROR
@@ -59,7 +59,7 @@ Cannot cast `query` to string because number [1] is incompatible with string [2]
 
 References:
    MyQuery.graphql.js:1:18
-    1| module.exports = 2;
+    1| module.exports = 2 as const;
                         ^ [1]
    non-prefixed.js:21:9
    21| (query: string); // ERROR

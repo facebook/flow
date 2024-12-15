@@ -6,6 +6,6 @@ import type {
 } from './a';
 const A = require('./a');
 (A.P1: T1);
-(A.P2: T2);
+(A.P2: T2); // TODO compute boolean negation
 (A.P3: T3);
-(A.P4: T4);
+(A.P4: T4); // TODO compute boolean negation

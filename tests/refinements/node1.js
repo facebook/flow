@@ -1,1 +1,1 @@
-module.exports = 'Node1';
+module.exports = 'Node1' as const;

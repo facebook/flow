@@ -24,7 +24,7 @@ Cannot resolve module `./d3.tar`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------ main.js:6:2
 
-Cannot cast `d3_svg.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `d3_svg.x` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
 
    main.js:6:2
    6| (d3_svg.x: string); // error number ~> string
