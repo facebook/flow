@@ -482,9 +482,20 @@ and intersect cx t1 t2 =
       t1
     else if speculative_subtyping_succeeds cx t2 t1 then
       t2
-    else
-      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-      IntersectionT (r, InterRep.make t2 t1 [])
+    else (
+      match t1 with
+      | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
+        (* Apply the refinement on super and underlying type of opaque type.
+         * Preserve opaque_id to retain compatibility with original type. *)
+        let super_t =
+          Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
+        in
+        let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
+        OpaqueT (r, { opaquetype with underlying_t; super_t })
+      | _ ->
+        let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+        IntersectionT (r, InterRep.make t2 t1 [])
+    )
 
 (* This utility is expected to be used when negating the refinement of a type [t1]
  * with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
