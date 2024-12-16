@@ -13,6 +13,50 @@ References:
                                ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
+
+Cannot cast `o` to `A` because: [incompatible-cast]
+ - Either `O` [1] is incompatible with number [2] in property `value`.
+ - Or `O` [1] is incompatible with number literal `2` [3] in property `tag`.
+
+   distribute.js:9:1
+   9| o as A<number>; // error
+      ^
+
+References:
+   distribute.js:7:16
+   7| declare var o: O;
+                     ^ [1]
+   distribute.js:9:8
+   9| o as A<number>; // error
+             ^^^^^^ [2]
+   distribute.js:3:45
+   3| type A<T> = { +tag: 1, value: T } | { +tag: 2, value: T };
+                                                  ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
+
+Cannot cast `o` to `A` because: [incompatible-cast]
+ - Either `O` [1] is incompatible with number literal `1` [2] in property `tag`.
+ - Or `O` [1] is incompatible with number [3] in property `value`.
+
+   distribute.js:9:1
+   9| o as A<number>; // error
+      ^
+
+References:
+   distribute.js:7:16
+   7| declare var o: O;
+                     ^ [1]
+   distribute.js:3:21
+   3| type A<T> = { +tag: 1, value: T } | { +tag: 2, value: T };
+                          ^ [2]
+   distribute.js:9:8
+   9| o as A<number>; // error
+             ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
 Cannot return `y` because `SuperType` [1] is incompatible with `SuperOpaque` [2]. [incompatible-return]
@@ -222,4 +266,4 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 15 errors
+Found 17 errors

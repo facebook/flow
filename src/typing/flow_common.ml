@@ -87,6 +87,8 @@ module type BASE = sig
   val mk_react_dro : Context.t -> Type.use_op -> Type.react_dro -> Type.t -> Type.t
 
   val mk_hooklike : Context.t -> Type.use_op -> Type.t -> Type.t
+
+  val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 end
 
 module type BUILTINS = sig
@@ -302,8 +304,6 @@ module type S = sig
     unresolved_param list ->
     spread_resolve ->
     unit
-
-  val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
   val possible_concrete_types_for_predicate :
     predicate_concretizer_variant:Type.predicate_concretizer_variant ->

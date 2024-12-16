@@ -1216,6 +1216,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let node = get_builtin_type cx ~use_desc:true renders_r "React$Node" in
       if union_contains_instantiable_tvars || not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
+    (* The following case distributes the opaque constructor over a union/maybe/optional
+     * type in the super type position of the opaque type. *)
+    | (OpaqueT (lreason, ({ super_t = Some t; _ } as opaquetype)), UnionT (r, rep)) ->
+      let ts = possible_concrete_types_for_inspection cx (reason_of_t t) t in
+      begin
+        match ts with
+        | []
+        | [_] ->
+          (* Same as `_ ~> UnionT` case below *)
+          SpeculationKit.try_union cx trace use_op l r rep
+        | lt1 :: lt2 :: lts ->
+          let make_opaque t = OpaqueT (lreason, { opaquetype with super_t = Some t }) in
+          let union_of_opaques =
+            UnionRep.make (make_opaque lt1) (make_opaque lt2) (Base.List.map ~f:make_opaque lts)
+          in
+          rec_flow_t cx trace ~use_op (UnionT (lreason, union_of_opaques), u)
+      end
     | (_, UnionT (r, rep)) ->
       (* Try the branches of the union in turn, with the goal of selecting the
        * correct branch. This process is reused for intersections as well. See
