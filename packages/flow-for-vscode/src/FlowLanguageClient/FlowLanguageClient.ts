@@ -187,6 +187,7 @@ export default class FlowLanguageClient {
         // auto stop flow process
         config.stopFlowOnExit ? '--autostop' : null,
       ].filter((v) => v != null),
+      options: { shell: true },
 
       // see: clientOptions.workspaceFolder below
       // options: { cwd: flowconfigDir },
