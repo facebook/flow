@@ -217,23 +217,22 @@ References:
                                                ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- annotation.js:52:17
+Error ----------------------------------------------------------------------------------------------- annotation.js:52:2
 
-Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with function type [3].
+Cannot create `SpreadRef` element because property `ref` is missing in object type [1] but exists in props [2].
+[prop-missing]
 
-   annotation.js:52:17
-    52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
-                        ^ [1]
+   annotation.js:52:2
+   52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+        ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   annotation.js:51:40
+   51| declare var SpreadRef: component(...p: {ref: number}); // error
+                                              ^^^^^^^^^^^^^ [1]
+   annotation.js:52:1
+   52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:54:57
@@ -1249,23 +1248,22 @@ References:
                                           ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ declared.js:54:17
+Error ------------------------------------------------------------------------------------------------- declared.js:54:2
 
-Cannot create `SpreadRef` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with function type [3].
+Cannot create `SpreadRef` element because property `ref` is missing in object type [1] but exists in props [2].
+[prop-missing]
 
-   declared.js:54:17
-    54| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
-                        ^ [1]
+   declared.js:54:2
+   54| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+        ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   declared.js:53:35
+   53| declare component SpreadRef(...p: {ref: number}); // error
+                                         ^^^^^^^^^^^^^ [1]
+   declared.js:54:1
+   54| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
+       ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
