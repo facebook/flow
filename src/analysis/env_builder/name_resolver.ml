@@ -3170,9 +3170,51 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 | _ -> ());
                 recurse member pattern
             )
-          | (_, ArrayPattern _) ->
-            (* TODO:match *)
-            ()
+          | (loc, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
+            (match RefinementKey.of_expression acc with
+            | Some key ->
+              let refis =
+                this#start_refinement key ~refining_locs:(L.LSet.singleton loc) IsArrayR
+              in
+              (* Check the length *)
+              let refis =
+                this#extend_refinement
+                  key
+                  ~refining_locs:(L.LSet.singleton loc)
+                  (ArrLenR
+                     {
+                       op =
+                         ( if Base.Option.is_some rest then
+                           ArrLenGreaterThanEqual
+                         else
+                           ArrLenEqual
+                         );
+                       n = Base.List.length elements;
+                     }
+                  )
+                  refis
+              in
+              this#commit_refinement refis
+            | None -> ());
+            let number_of_i i =
+              Ast.Expression.NumberLiteral
+                { Ast.NumberLiteral.value = float i; raw = string_of_int i; comments = None }
+            in
+            Base.List.iteri elements ~f:(fun i { ArrayPattern.Element.pattern; index } ->
+                let (pat_loc, _) = pattern in
+                let member =
+                  ( index,
+                    let open Ast.Expression in
+                    Member
+                      {
+                        Member._object = acc;
+                        property = Member.PropertyExpression (pat_loc, number_of_i i);
+                        comments = None;
+                      }
+                  )
+                in
+                recurse member pattern
+            )
         in
         recurse arg root_pattern
 

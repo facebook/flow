@@ -223,6 +223,7 @@ struct
             | UndefinedR
             | MaybeR
             | IsArrayR
+            | ArrLenR _
             | BoolR _
             | FunctionR
             | NumberR _

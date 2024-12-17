@@ -308,6 +308,13 @@ let predicate_of_refinement cx =
       Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t;
       Some (BinaryP (InstanceofTest, t))
     | IsArrayR -> Some ArrP
+    | ArrLenR { op; n } ->
+      let op =
+        match op with
+        | Env_api.Refi.ArrLenEqual -> Type.ArrLenEqual
+        | Env_api.Refi.ArrLenGreaterThanEqual -> Type.ArrLenGreaterThanEqual
+      in
+      Some (ArrLenP { op; n })
     | BoolR loc -> Some (BoolP loc)
     | FunctionR -> Some FunP
     | NumberR loc -> Some (NumP loc)

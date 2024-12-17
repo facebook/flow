@@ -114,6 +114,11 @@ module type S = sig
   type values = read L.LMap.t
 
   module Refi : sig
+    type array_length_op =
+      | ArrLenEqual
+      | ArrLenGreaterThanEqual
+    [@@deriving show]
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -124,6 +129,10 @@ module type S = sig
       | MaybeR
       | InstanceOfR of (L.t, L.t) Ast.Expression.t
       | IsArrayR
+      | ArrLenR of {
+          op: array_length_op;
+          n: int;
+        }
       | BoolR of L.t
       | FunctionR
       | NumberR of L.t
@@ -407,6 +416,11 @@ module Make
   and write_locs = write_loc list
 
   module Refi = struct
+    type array_length_op =
+      | ArrLenEqual
+      | ArrLenGreaterThanEqual
+    [@@deriving show]
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -417,6 +431,10 @@ module Make
       | MaybeR
       | InstanceOfR of (L.t, L.t) Ast.Expression.t
       | IsArrayR
+      | ArrLenR of {
+          op: array_length_op;
+          n: int;
+        }
       | BoolR of L.t
       | FunctionR
       | NumberR of L.t
@@ -671,6 +689,13 @@ module Make
     | MaybeR -> "Maybe"
     | InstanceOfR _ -> "instanceof"
     | IsArrayR -> "isArray"
+    | ArrLenR { op; n } ->
+      let op =
+        match op with
+        | ArrLenEqual -> "==="
+        | ArrLenGreaterThanEqual -> ">="
+      in
+      Printf.sprintf "array length %s %i" op n
     | BoolR _ -> "bool"
     | FunctionR -> "function"
     | NumberR _ -> "number"

@@ -282,3 +282,126 @@
     const d: d as empty, // ERROR: `type: 'bar'` not checked
   };
 }
+
+// Disjoint tuple union
+{
+  declare const x: ['foo', number]
+                 | ['bar', string]
+                 | ['baz', boolean];
+
+  const e1 = match (x) {
+    ['foo', const a]: a as number, // OK
+    ['bar', const a]: a as string, // OK
+    ['baz', const a]: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+
+  const e2 = match (x) {
+    ['foo', const a]: a as number, // OK
+    ['bar', const a]: a as string, // OK
+    const d: d as empty, // ERROR: `'baz'` element not checked
+  };
+
+  // Using idents as pattern
+  declare const foo: 'foo';
+  declare const bar: 'bar';
+  declare const baz: 'baz';
+  const e3 = match (x) {
+    [foo, const a]: a as number, // OK
+    [bar, const a]: a as string, // OK
+    [baz, const a]: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+}
+
+// Combo union of tuples with sentinel property and primitive value
+{
+  declare const x: null | ['bar', number] | ['foo', string];
+
+  const e1 = match (x) {
+    ['bar', const a]: a as number, // OK
+    ['foo', const a]: a as string, // OK
+    null: 0,
+    const d: d as empty, // OK: all members checked
+  };
+}
+
+// Tuple length refinements
+{
+  declare const x: [number]
+                 | [string, string]
+                 | [boolean, boolean, boolean];
+
+  const e1 = match (x) {
+    [const a]: a as number, // OK
+    [const a, _]: a as string, // OK
+    [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
+    const d: d as empty, // OK: all members checked
+  };
+
+  const e2 = match (x) {
+    [...]: 0, // OK: matches all
+    const d: d as empty, // OK: all members checked
+  }
+
+  const e3 = match (x) {
+    [const a, _, ...]: a as string | boolean, // OK
+    [const a, ...]: a as number, // OK
+    const d: d as empty, // OK: all members checked
+  }
+}
+{
+  declare const x: [number] | Array<string>;
+
+  const e1 = match (x) {
+    []: 0, // OK
+    [const a]: a as string, // ERROR: `number` is not `string`
+    [const a, _]: a as string, // OK
+    const d: d as Array<string>, // OK: tuple checked, but array could have other lengths
+  };
+
+  const e2 = match (x) {
+    [...]: 0, // OK: matches all
+    const d: d as empty, // OK: all members checked
+  }
+}
+
+// Optional tuple elements
+{
+  declare const x: [a: 0, b?: 1, c?: 2];
+
+  const e1 = match (x) {
+    [_, ...]: 0,
+    const d: d as empty, // OK: all elements matched
+  };
+
+  const e2 = match (x) {
+    [_, _, ...]: 0,
+    const d: d as empty, // ERROR: does not match all possibilities
+  };
+
+  const e3 = match (x) {
+    [_]: 0,
+    const d: d as empty, // ERROR: does not match all possibilities
+  };
+
+  const e4 = match (x) {
+    [_, _, _]: 0,
+    const d: d as empty, // ERROR: does not match all possibilities
+  };
+}
+
+// Inexact tuple types
+{
+  declare const x: [a: 0, ...];
+
+  const e1 = match (x) {
+    [_, ...]: 0,
+    const d: d as empty, // OK: all elements matched
+  };
+
+  const e2 = match (x) {
+    [_]: 0,
+    const d: d as empty, // ERROR: does not match all elements
+  };
+}
