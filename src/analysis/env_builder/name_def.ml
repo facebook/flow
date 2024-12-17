@@ -3142,7 +3142,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private visit_match_expression x =
       let open Ast.Expression.Match in
-      let { arg; cases; comments = _ } = x in
+      let { arg; cases; arg_internal = _; comments = _ } = x in
       ignore @@ this#expression arg;
       Base.List.iter cases ~f:(function (_, { Case.pattern; body; guard; comments = _ }) ->
           let acc = Value { hints = []; expr = arg } in

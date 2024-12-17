@@ -1757,6 +1757,7 @@ and Expression : sig
     type ('M, 'T) t = {
       arg: ('M, 'T) Expression.t;
       cases: ('M, 'T) Case.t list;
+      arg_internal: 'M;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

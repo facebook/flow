@@ -2913,7 +2913,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! match_expression _ x =
         let open Flow_ast.Expression.Match in
-        let { arg; cases; comments = _ } = x in
+        let { arg; cases; arg_internal = _; comments = _ } = x in
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
         let completion_states = ref [] in

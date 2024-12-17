@@ -1421,6 +1421,7 @@ module Expression
           {
             Expression.Match.arg;
             cases;
+            arg_internal = start_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
       env
