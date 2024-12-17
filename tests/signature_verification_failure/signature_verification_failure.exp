@@ -166,19 +166,19 @@ spread in array: [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:22
 
-Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2]. [prop-missing]
+number [1] is incompatible with function type [2] in property `@@iterator`. [incompatible-type]
 
    misc.js:7:22
       7| export const d = [...c];
                               ^
 
 References:
-   misc.js:5:18
+   misc.js:5:32
       5| export const c = {['a' + 'b']: 42};
-                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1865:11
-   1865| interface $Iterable<+Yield,+Return,-Next> {
-                   ^^^^^^^^^ [2]
+                                        ^^ [1]
+   <BUILTINS>/core.js:1866:5
+   1866|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:19

@@ -7429,6 +7429,7 @@ struct
               | SetProperty _
               | UpdateProperty _
               | JSXCreateElement _
+              | ObjectAddComputedProperty _
               | ObjectSpread _
               | ObjectRest _
               | ObjectChain _

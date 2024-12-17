@@ -227,6 +227,7 @@ type 'loc root_message =
       index: 'loc virtual_reason_desc;
       object_: 'loc virtual_reason_desc;
     }
+  | RootCannotAddComputedProperty
   | RootCannotAssign of {
       init: 'loc virtual_reason_desc;
       target: 'loc virtual_reason_desc option;
@@ -335,6 +336,10 @@ type 'loc message =
   | MessageCannotAccessReactRefInRender of {
       usage: 'loc virtual_reason;
       in_hook: bool;
+    }
+  | MessageCannotAddComputedPropertyDueToPotentialOverwrite of {
+      key_loc: 'loc;
+      overwritten_locs: 'loc list;
     }
   | MessageCannotApplyNonPolymorphicType
   | MessageCannotAssignToObjectWithComputedProp of 'loc virtual_reason

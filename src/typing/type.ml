@@ -331,6 +331,7 @@ module rec TypeTerm : sig
     | AbstractEnum of { representation_t: t }
 
   and 'loc virtual_root_use_op =
+    | ObjectAddComputedProperty of { op: 'loc virtual_reason }
     | ObjectSpread of { op: 'loc virtual_reason }
     | ObjectRest of { op: 'loc virtual_reason }
     | ObjectChain of { op: 'loc virtual_reason }
@@ -4079,6 +4080,7 @@ let string_of_ctor = function
 
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | InitField _ -> "InitField"
+  | ObjectAddComputedProperty _ -> "ObjectAddComputedProperty"
   | ObjectSpread _ -> "ObjectSpread"
   | ObjectRest _ -> "ObjectRest"
   | ObjectChain _ -> "ObjectChain"

@@ -6,21 +6,6 @@ Invalid trivially recursive definition of `$Values`.  [recursive-definition]
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- eval_values.js:8:2
-
-Cannot cast object literal to `CyclicWith$Values` because property `comment` is missing in object literal [1] but exists
-in `CyclicWith$Values` [2]. [prop-missing]
-
-   eval_values.js:8:2
-   8| ({ [s]: val }) as CyclicWith$Values; // error, but should not stackoverflow
-       ^^^^^^^^^^^^ [1]
-
-References:
-   eval_values.js:8:19
-   8| ({ [s]: val }) as CyclicWith$Values; // error, but should not stackoverflow
-                        ^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------- eval_values.js:11:1
 
 Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -476,4 +461,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 34 errors
+Found 33 errors

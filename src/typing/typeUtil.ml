@@ -302,6 +302,7 @@ let rec mod_loc_of_virtual_use_op f =
   let mod_reason = Reason.map_reason_locs f in
   let mod_loc_of_root_use_op f = function
     | InitField { op; body } -> InitField { op = mod_reason op; body = mod_reason body }
+    | ObjectAddComputedProperty { op } -> ObjectAddComputedProperty { op = mod_reason op }
     | ObjectSpread { op } -> ObjectSpread { op = mod_reason op }
     | ObjectRest { op } -> ObjectRest { op = mod_reason op }
     | ObjectChain { op } -> ObjectChain { op = mod_reason op }

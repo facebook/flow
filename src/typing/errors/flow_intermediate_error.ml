@@ -441,6 +441,7 @@ let rec make_intermediate_error :
       | Op UnknownUse -> unknown_root loc frames
       | Op (Type.Speculation _) when speculation -> unknown_root loc frames
       | Op (Type.Speculation use) -> loop loc frames use
+      | Op (ObjectAddComputedProperty { op }) -> root loc frames op RootCannotAddComputedProperty
       | Op (ObjectSpread { op }) -> root loc frames op (RootCannotSpread (desc op))
       | Op (ObjectRest { op }) -> root loc frames op (RootCannotGetRest (desc op))
       | Op (ObjectChain { op }) -> root loc frames op (RootCannotCallObjectAssign (desc op))
@@ -1248,6 +1249,7 @@ let to_printable_error :
   let root_msg_to_friendly_msgs = function
     | RootCannotAccessIndex { index; object_ } ->
       [text "Cannot access "; desc index; text " on "; desc object_]
+    | RootCannotAddComputedProperty -> [text "Cannot add computed property"]
     | RootCannotAssign { init; target = None } ->
       [text "Cannot assign "; desc init; text " to variable"]
     | RootCannotAssign { init; target = Some target } ->
@@ -1411,6 +1413,14 @@ let to_printable_error :
         context;
         text ". (https://react.dev/reference/react/useRef).";
       ]
+    | MessageCannotAddComputedPropertyDueToPotentialOverwrite { key_loc; overwritten_locs } ->
+      [
+        text "Cannot add computed property because the indexer";
+        no_desc_ref key_loc;
+        text " may overwrite properties with explicit keys";
+      ]
+      @ Base.List.map overwritten_locs ~f:(fun l -> no_desc_ref l)
+      @ [text " in a way that Flow cannot track."]
     | MessageCannotApplyNonPolymorphicType ->
       [text "Cannot apply type because it is not a polymorphic type."]
     | MessageCannotAssignToInvalidLHS -> [text "Invalid left-hand side in assignment expression."]

@@ -3,7 +3,7 @@ type key = 'a' | 'b' | 'c';
 
 declare var k: key;
 const a = {[k]: 3}; // multiple lower bounds okay
-a as {}; // okay
+a as {}; // error
 
 let x;
 if (true) {

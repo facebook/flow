@@ -300,6 +300,10 @@ and 'loc t' =
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason * InvalidObjKey.t)
   | EObjectComputedPropertyAssign of
       ('loc virtual_reason * 'loc virtual_reason option * InvalidObjKey.t)
+  | EObjectComputedPropertyPotentialOverwrite of {
+      key_loc: 'loc;
+      overwritten_locs: 'loc list;
+    }
   | EInvalidLHSInAssignment of 'loc
   | EIncompatibleWithUseOp of {
       use_op: 'loc virtual_use_op;
@@ -1105,6 +1109,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2, kind)
   | EObjectComputedPropertyAssign (r1, r2, kind) ->
     EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2, kind)
+  | EObjectComputedPropertyPotentialOverwrite { key_loc; overwritten_locs } ->
+    EObjectComputedPropertyPotentialOverwrite
+      { key_loc = f key_loc; overwritten_locs = List.map f overwritten_locs }
   | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
   | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
   | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
@@ -1607,6 +1614,7 @@ let util_use_op_of_msg nope util = function
   | EInstanceofRHS _
   | EObjectComputedPropertyAccess _
   | EObjectComputedPropertyAssign _
+  | EObjectComputedPropertyPotentialOverwrite _
   | EInvalidConstructor _
   | EInvalidLHSInAssignment _
   | EUnsupportedImplements _
@@ -1744,6 +1752,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETemporaryHardcodedErrorForPrototyping (reason, _)
   | EComputedPropertyWithUnion reason ->
     Some (loc_of_reason reason)
+  | EObjectComputedPropertyPotentialOverwrite { key_loc = loc; overwritten_locs = _ }
   | EEnumAllMembersAlreadyChecked { loc; _ }
   | EEnumMemberAlreadyChecked { case_test_loc = loc; _ }
   | EEnumInvalidCheck { loc; _ } ->
@@ -2520,6 +2529,8 @@ let friendly_message_of_msg = function
     Normal (MessageCannotAssignToObjectWithComputedPropWithKey { reason_prop; reason_key; kind })
   | EObjectComputedPropertyAssign (reason_prop, None, _) ->
     Normal (MessageCannotAssignToObjectWithComputedProp reason_prop)
+  | EObjectComputedPropertyPotentialOverwrite { key_loc; overwritten_locs } ->
+    Normal (MessageCannotAddComputedPropertyDueToPotentialOverwrite { key_loc; overwritten_locs })
   | EInvalidLHSInAssignment _ -> Normal MessageCannotAssignToInvalidLHS
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation } ->
     Incompatible { reason_lower; reason_upper; use_op; explanation }
@@ -3064,6 +3075,7 @@ let error_code_of_message err : error_code option =
   | ENotAReactComponent _ -> Some NotAComponent
   | EObjectComputedPropertyAccess _ -> Some InvalidComputedProp
   | EObjectComputedPropertyAssign _ -> Some InvalidComputedProp
+  | EObjectComputedPropertyPotentialOverwrite _ -> Some InvalidComputedProp
   | EOnlyDefaultExport (_, _, _) -> Some MissingExport
   (* We don't want these to be suppressible *)
   | EParseError (_, _) -> None

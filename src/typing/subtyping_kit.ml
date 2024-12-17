@@ -180,17 +180,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
           OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
         );
-      rec_flow_p
-        cx
-        ~trace
-        ~use_op:
-          (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
-        lreason
-        ureason
-        (Computed uv)
-        ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
-          OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
-        )
+      if lit then
+        rec_flow_t
+          cx
+          trace
+          ~use_op:
+            (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
+          (mod_t None ldro lv, mod_t None udro uv)
+      else
+        rec_flow_p
+          cx
+          ~trace
+          ~use_op:
+            (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
+          lreason
+          ureason
+          (Computed uv)
+          ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
+            OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
+          )
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (

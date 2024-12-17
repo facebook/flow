@@ -6,7 +6,7 @@ function Component<TMap: Map>() {
   function addToMap<TKey: $Keys<TMap>>(key: TKey, value: TMap[TKey]): TMap {
     return {
       ...map,
-      [key]: value, // okay
+      [key]: value, // error: overwriting
     };
   }
 
@@ -17,7 +17,7 @@ function Component<TMap: Map>() {
   ): TMap {
     return {
       ...map,
-      [key]: value, // okay
+      [key]: value, // error: overwriting
     };
   }
 }

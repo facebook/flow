@@ -72,7 +72,10 @@ module Make
   module ObjectExpressionAcc = struct
     type element =
       | Spread of Type.t
-      | Slice of { slice_pmap: Type.Properties.t }
+      | Slice of {
+          slice_pmap: Type.Properties.t;
+          computed_props: Type.dicttype option;
+        }
 
     module ComputedProp = struct
       type t =
@@ -82,8 +85,10 @@ module Make
           }
         | IgnoredInvalidNonLiteralKey
         | NonLiteralKey of {
+            key_loc: ALoc.t;
             key: Type.t;
             value: Type.t;
+            named_set_opt: NameUtils.Set.t option;
             reason_obj: Reason.t;
           }
         | SpreadEmpty of Reason.t
@@ -91,21 +96,28 @@ module Make
 
     type t = {
       obj_pmap: Type.Properties.t;
+      computed_props: Type.dicttype option;
       tail: element list;
       proto: Type.t option;
       obj_key_autocomplete: bool;
     }
 
     let empty _ =
-      { obj_pmap = NameUtils.Map.empty; tail = []; proto = None; obj_key_autocomplete = false }
+      {
+        obj_pmap = NameUtils.Map.empty;
+        computed_props = None;
+        tail = [];
+        proto = None;
+        obj_key_autocomplete = false;
+      }
 
-    let empty_slice = Slice { slice_pmap = NameUtils.Map.empty }
+    let empty_slice = Slice { slice_pmap = NameUtils.Map.empty; computed_props = None }
 
-    let head_slice { obj_pmap; _ } =
-      if NameUtils.Map.is_empty obj_pmap then
+    let head_slice { obj_pmap; computed_props; _ } =
+      if NameUtils.Map.is_empty obj_pmap && computed_props = None then
         None
       else
-        Some (Slice { slice_pmap = obj_pmap })
+        Some (Slice { slice_pmap = obj_pmap; computed_props })
 
     let add_prop f acc = { acc with obj_pmap = f acc.obj_pmap }
 
@@ -123,9 +135,41 @@ module Make
       match computed with
       | ComputedProp.Named { name; prop } -> add_prop (NameUtils.Map.add name prop) acc
       | ComputedProp.IgnoredInvalidNonLiteralKey -> acc
-      | ComputedProp.NonLiteralKey { key = _; value = _; reason_obj } ->
-        (* No properties are added in this case. *)
-        add_spread (Obj_type.mk ~obj_kind:Exact cx reason_obj) acc
+      | ComputedProp.NonLiteralKey { key_loc; key; value; named_set_opt; reason_obj = _ } ->
+        let overlapping_name_map =
+          match named_set_opt with
+          | None -> acc.obj_pmap
+          | Some named_set ->
+            NameUtils.Map.filter (fun n _ -> not (NameUtils.Set.mem n named_set)) acc.obj_pmap
+        in
+        if NameUtils.Map.is_empty overlapping_name_map then (
+          match acc.computed_props with
+          | None ->
+            {
+              acc with
+              computed_props =
+                Some { dict_name = None; key; value; dict_polarity = Polarity.Neutral };
+            }
+          | Some { dict_name = _; key = existing_key; value = existing_value; _ } ->
+            let use_op =
+              Op (ObjectAddComputedProperty { op = mk_reason (RProperty None) key_loc })
+            in
+            Flow.flow cx (key, UseT (use_op, existing_key));
+            Flow.flow cx (value, UseT (use_op, existing_value));
+            acc
+        ) else
+          let overwritten_locs =
+            NameUtils.Map.values overlapping_name_map
+            |> Base.List.bind ~f:(fun prop ->
+                   match Type.Property.def_locs prop with
+                   | None -> []
+                   | Some (hd, tl) -> hd :: tl
+               )
+          in
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EObjectComputedPropertyPotentialOverwrite { key_loc; overwritten_locs });
+          acc
       | ComputedProp.SpreadEmpty r -> add_spread (DefT (r, EmptyT)) acc
 
     let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
@@ -144,9 +188,14 @@ module Make
 
     let mk_object_from_spread_acc cx acc reason ~as_const ~frozen ~default_proto =
       match elements_rev acc with
-      | (Slice { slice_pmap }, []) ->
+      | (Slice { slice_pmap; computed_props }, []) ->
         let proto = Base.Option.value ~default:default_proto (proto acc) in
-        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props:slice_pmap proto in
+        let obj_kind =
+          match computed_props with
+          | None -> Exact
+          | Some dict_t -> Indexed dict_t
+        in
+        let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind ~props:slice_pmap proto in
         if obj_key_autocomplete acc then
           let get_autocomplete_t () =
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tvar ->
@@ -168,24 +217,24 @@ module Make
               Base.List.map
                 ~f:(function
                   | Spread t -> Object.Spread.Type t
-                  | Slice { slice_pmap } ->
+                  | Slice { slice_pmap; computed_props } ->
                     Object.Spread.Slice
                       {
                         Object.Spread.reason;
                         prop_map = slice_pmap;
-                        dict = None;
+                        dict = computed_props;
                         generics = Generic.spread_empty;
                         reachable_targs = [];
                       })
                 ts
             in
             (t, ts, None)
-          | (Slice { slice_pmap = prop_map }, Spread t :: ts) ->
+          | (Slice { slice_pmap = prop_map; computed_props }, Spread t :: ts) ->
             let head_slice =
               {
                 Type.Object.Spread.reason;
                 prop_map;
-                dict = None;
+                dict = computed_props;
                 generics = Generic.spread_empty;
                 reachable_targs = [];
               }
@@ -194,12 +243,12 @@ module Make
               Base.List.map
                 ~f:(function
                   | Spread t -> Object.Spread.Type t
-                  | Slice { slice_pmap } ->
+                  | Slice { slice_pmap; computed_props } ->
                     Object.Spread.Slice
                       {
                         Object.Spread.reason;
                         prop_map = slice_pmap;
-                        dict = None;
+                        dict = computed_props;
                         generics = Generic.spread_empty;
                         reachable_targs = [];
                       })
@@ -2277,7 +2326,8 @@ module Make
         | DefT (_, StrGeneralT _)
         | DefT (_, StrT_UNSOUND _)
         | AnyT _ ->
-          ObjectExpressionAcc.ComputedProp.NonLiteralKey { key; value; reason_obj }
+          ObjectExpressionAcc.ComputedProp.NonLiteralKey
+            { key_loc; key; value; reason_obj; named_set_opt = None }
         | DefT (reason_key, NumGeneralT _) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
           Flow_js_utils.add_output
@@ -2314,25 +2364,28 @@ module Make
     | [] -> ObjectExpressionAcc.ComputedProp.SpreadEmpty reason_obj
     | [key] -> single_key key
     | _ ->
-      let should_ignore =
+      let computed_key_status =
         Base.List.fold_until
           concretized_keys
-          ~init:()
-          ~finish:(fun () -> false)
-          ~f:(fun _ k ->
+          ~init:(Some NameUtils.Set.empty)
+          ~finish:(fun named_set_opt -> Ok named_set_opt)
+          ~f:(fun acc k ->
             match single_key k with
-            | ObjectExpressionAcc.ComputedProp.Named _
+            | ObjectExpressionAcc.ComputedProp.Named { name; _ } ->
+              (match acc with
+              | None -> Base.Continue_or_stop.Continue None
+              | Some named -> Base.Continue_or_stop.Continue (Some (NameUtils.Set.add name named)))
             | ObjectExpressionAcc.ComputedProp.NonLiteralKey _
             | ObjectExpressionAcc.ComputedProp.SpreadEmpty _ ->
-              Base.Continue_or_stop.Continue ()
+              Base.Continue_or_stop.Continue None
             | ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey ->
-              Base.Continue_or_stop.Stop true)
+              Base.Continue_or_stop.Stop (Error ()))
       in
-      if should_ignore then
-        ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
-      else
+      (match computed_key_status with
+      | Error () -> ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+      | Ok named_set_opt ->
         ObjectExpressionAcc.ComputedProp.NonLiteralKey
-          { key = unconcretized_key; value; reason_obj }
+          { key_loc; key = unconcretized_key; value; named_set_opt; reason_obj })
 
   and object_ cx reason ~frozen ~as_const props =
     let open Ast.Expression.Object in

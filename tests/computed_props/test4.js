@@ -1,1 +1,1 @@
-module.exports = 'hello';
+module.exports = 'hello' as const;

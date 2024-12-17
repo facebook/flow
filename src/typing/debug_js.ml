@@ -1552,6 +1552,8 @@ let dump_error_message =
         (dump_reason cx reason1)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"none" reason2)
         kind
+    | EObjectComputedPropertyPotentialOverwrite { key_loc; _ } ->
+      spf "EObjectComputedPropertyPotentialOverwrite (%s)" (string_of_aloc key_loc)
     | EInvalidLHSInAssignment loc -> spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation = _ } ->
       spf
