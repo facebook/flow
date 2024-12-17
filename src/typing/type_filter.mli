@@ -11,6 +11,10 @@ type filter_result =
       changed: bool;
     }
 
+val unchanged_result : Type.t -> filter_result
+
+val empty : Type.t -> filter_result
+
 val truthy : Context.t -> Type.t -> filter_result
 
 val not_truthy : Context.t -> Type.t -> filter_result

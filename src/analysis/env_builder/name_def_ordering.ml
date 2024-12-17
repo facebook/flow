@@ -238,7 +238,8 @@ struct
             | PropNullishR _
             | PropIsExactlyNullR _
             | PropNonVoidR _
-            | PropTruthyR _ ->
+            | PropTruthyR _
+            | ImpossibleR ->
               ()
           in
           Base.List.iter ~f:writes_of_refinement refinements;

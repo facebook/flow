@@ -183,6 +183,7 @@ module type S = sig
           loc: L.t;
         }
       | EqR of L.t
+      | ImpossibleR
     [@@deriving show { with_path = false }]
 
     type refinement = {
@@ -474,6 +475,7 @@ module Make
           loc: L.t;
         }
       | EqR of L.t
+      | ImpossibleR
     [@@deriving show { with_path = false }]
 
     type refinement = {
@@ -701,6 +703,7 @@ module Make
       Printf.sprintf "LatentR (index = %i)" index
     | PropTruthyR { propname; loc = _ } -> Printf.sprintf "PropTruthyR (%s)" propname
     | EqR _ -> "EqR"
+    | ImpossibleR -> "ImpossibleR"
 end
 
 module With_Loc =
