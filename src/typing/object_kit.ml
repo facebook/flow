@@ -134,7 +134,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
     let object_spread =
       let dict_check trace cx use_op d1 d2 =
         rec_flow_t cx trace ~use_op (d2.key, d1.key);
-        rec_unify cx trace ~use_op d1.value d2.value
+        rec_flow_t cx trace ~use_op (d2.value, d1.value)
       in
       let return trace cx use_op t tout = rec_flow_t cx trace ~use_op (t, tout) in
       let recurse trace cx use_op reason resolve_tool tool t tout =

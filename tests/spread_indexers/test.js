@@ -1,15 +1,15 @@
 //@flow
 const a: {[string]: mixed} = {};
 const b: {[string]: mixed} = {};
-const c: {[string]: mixed} = {...a, ...b}; // Ok 
+const c: {[string]: mixed} = {...a, ...b}; // Ok
 
-const d: {||} = {...null}; // {} ~> {||} errors, so spreading null 
+const d: {||} = {...null}; // {} ~> {||} errors, so spreading null
 const e: {[string]: mixed} = {};
 const f: {[string]: mixed} = {...d, ...e}; // Ok
-          
+
 const g: {[string]: number} = {};
 const h: {[number]: string} = {};
-const i = {...g, ...h}; // Error. Keys and values of the indexers fail to unify 
+const i = {...g, ...h}; // Error. Keys and values of the indexers fail to subtype
 
 const j: {} = {};
 const k: {[string]: number} = {};
@@ -32,4 +32,8 @@ const z: {[string | number]: string | number} = {...x, ...y}; // ok
 
 const a2: {[string]: mixed} = {};
 const b2: {['a' | 'b']: mixed} = {};
-const c2: {[string]: mixed} = {...a2, ...b2}; // Ok 
+const c2: {[string]: mixed} = {...a2, ...b2}; // Ok
+
+const d2: {[string]: number} = {};
+const e2: {[string]: 1} = {};
+const f2: {[string]: number} = {...d2, ...e2}; // ok.
