@@ -3982,6 +3982,13 @@ let to_printable_error :
         code ": null";
         text " to disambiguate.";
       ]
+    | MessageMatchNotExhaustive reason ->
+      [
+        code "match";
+        text " is not exhaustively checked: ";
+        ref reason;
+        text " has not been fully checked against by the match patterns below.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

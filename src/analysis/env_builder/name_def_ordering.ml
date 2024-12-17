@@ -276,7 +276,9 @@ struct
           super#yield loc yield
 
         method! match_expression _ x =
-          let { Ast.Expression.Match.arg; cases; arg_internal; comments = _ } = x in
+          let { Ast.Expression.Match.arg; cases; arg_internal; match_keyword_loc; comments = _ } =
+            x
+          in
           ignore @@ this#expression arg;
           ignore
           @@ this#pattern_identifier
@@ -286,6 +288,7 @@ struct
               ignore @@ this#identifier (Flow_ast_utils.match_root_ident case_loc);
               ignore @@ super#match_expression_case (case_loc, case)
           );
+          ignore @@ this#identifier (Flow_ast_utils.match_root_ident match_keyword_loc);
           x
 
         (* In order to resolve a def containing a variable write, the

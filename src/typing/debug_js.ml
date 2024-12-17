@@ -1898,6 +1898,8 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
+    | EMatchNotExhaustive { loc; reason } ->
+      spf "EMatchNotExhaustive (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->

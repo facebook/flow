@@ -2867,7 +2867,7 @@ module Make
         );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
-    | Match { Match.arg; cases; arg_internal; comments } ->
+    | Match { Match.arg; cases; arg_internal; match_keyword_loc; comments } ->
       if not @@ Context.enable_pattern_matching_expressions cx then (
         Flow.add_output
           cx
@@ -2920,9 +2920,21 @@ module Make
               (case_ast :: cases, ts, all_throws)
           )
         in
+        let match_keyword_loc =
+          ( match_keyword_loc,
+            Type_env.var_ref
+              ~lookup_mode:ForValue
+              cx
+              (OrdinaryName Flow_ast_utils.match_root_name)
+              match_keyword_loc
+          )
+        in
         let match_t = union_of_ts reason (List.rev ts_rev) in
         let ast =
-          ((loc, match_t), Match { Match.arg; cases = List.rev cases_rev; arg_internal; comments })
+          ( (loc, match_t),
+            Match
+              { Match.arg; cases = List.rev cases_rev; arg_internal; match_keyword_loc; comments }
+          )
         in
         if (not (List.is_empty cases)) && all_throws then
           Abnormal.throw_expr_control_flow_exception loc ast

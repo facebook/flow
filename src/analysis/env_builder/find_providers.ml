@@ -987,7 +987,15 @@ end = struct
           expr
 
       method! match_expression loc x =
-        let { Ast.Expression.Match.arg_internal; arg = _; cases = _; comments = _ } = x in
+        let {
+          Ast.Expression.Match.arg_internal;
+          arg = _;
+          cases = _;
+          match_keyword_loc = _;
+          comments = _;
+        } =
+          x
+        in
         ignore
         @@ this#pattern_identifier
              ~kind:Ast.Variable.Const

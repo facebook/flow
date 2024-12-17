@@ -1270,7 +1270,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                | Some arg -> fuse [space; expression ~ctxt ~opts arg]
                | None -> Empty);
              ]
-      | E.Match { E.Match.arg; cases; comments; arg_internal = _ } ->
+      | E.Match { E.Match.arg; cases; comments; arg_internal = _; match_keyword_loc = _ } ->
         let cases =
           List.map
             (fun ((loc, _) as case) ->

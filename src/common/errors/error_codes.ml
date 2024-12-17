@@ -107,6 +107,7 @@ type error_code =
   | InvalidTempType
   | LintSetting
   | MalformedPackage
+  | MatchNotExhaustive
   | MethodUnbinding
   | MissingLocalAnnot
   | MissingThisAnnot
@@ -319,6 +320,7 @@ let string_of_code : error_code -> string = function
   | InvalidTempType -> "invalid-temp-type"
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
+  | MatchNotExhaustive -> "match-not-exhaustive"
   | MethodUnbinding -> "method-unbinding"
   | MissingLocalAnnot -> "missing-local-annot"
   | MissingThisAnnot -> "missing-this-annot"

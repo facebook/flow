@@ -108,327 +108,293 @@ References:
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:20:14
+Error ------------------------------------------------------------------------------------------------ matching.js:15:14
 
-Cannot cast `d` to empty because number literal `-2` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `-2` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:20:14
-   20|     const d: d as empty, // ERROR: not all members checked
-                    ^
+   matching.js:15:14
+   15|   const e2 = match (x) { // ERROR: not all members checked
+                    ^^^^^
 
 References:
    matching.js:3:24
     3|   declare const x: 1 | -2 | 3n | 's' | false | null;
                               ^^ [1]
-   matching.js:20:19
-   20|     const d: d as empty, // ERROR: not all members checked
-                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:20:14
+Error ------------------------------------------------------------------------------------------------ matching.js:15:14
 
-Cannot cast `d` to empty because string literal `s` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: string literal `s` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:20:14
-   20|     const d: d as empty, // ERROR: not all members checked
-                    ^
+   matching.js:15:14
+   15|   const e2 = match (x) { // ERROR: not all members checked
+                    ^^^^^
 
 References:
    matching.js:3:34
     3|   declare const x: 1 | -2 | 3n | 's' | false | null;
                                         ^^^ [1]
-   matching.js:20:19
-   20|     const d: d as empty, // ERROR: not all members checked
-                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:39:14
+Error ------------------------------------------------------------------------------------------------ matching.js:36:14
 
-Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:39:14
-   39|     const d: d as empty, // ERROR: `2` not checked
-                    ^
+   matching.js:36:14
+   36|   const e2 = match (x) { // ERROR: `2` not checked
+                    ^^^^^
 
 References:
-   matching.js:26:24
-   26|   declare const x: 1 | 2;
+   matching.js:25:24
+   25|   declare const x: 1 | 2;
                               ^ [1]
-   matching.js:39:19
-   39|     const d: d as empty, // ERROR: `2` not checked
-                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:55:14
+Error ------------------------------------------------------------------------------------------------ matching.js:51:14
 
-Cannot cast `d` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: undefined [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:55:14
-   55|     const d: d as empty, // ERROR: `undefined` not checked
-                    ^
+   matching.js:51:14
+   51|   const e2 = match (x) { // ERROR: `undefined` not checked
+                    ^^^^^
 
 References:
-   matching.js:45:24
-   45|   declare const x: 1 | void;
+   matching.js:43:24
+   43|   declare const x: 1 | void;
                               ^^^^ [1]
-   matching.js:55:19
-   55|     const d: d as empty, // ERROR: `undefined` not checked
-                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:72:14
+Error ------------------------------------------------------------------------------------------------ matching.js:67:14
 
-Cannot cast `d` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: null or undefined [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:72:14
-   72|     const d: d as empty, // ERROR: `null` and `undefined` not checked
-                    ^
+   matching.js:67:14
+   67|   const e2 = match (x) { // ERROR: `null` and `undefined` not checked
+                    ^^^^^
 
 References:
-   matching.js:61:20
-   61|   declare const x: ?1;
+   matching.js:58:20
+   58|   declare const x: ?1;
                           ^^ [1]
-   matching.js:72:19
-   72|     const d: d as empty, // ERROR: `null` and `undefined` not checked
-                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:93:14
+Error ------------------------------------------------------------------------------------------------ matching.js:87:14
 
-Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:93:14
-   93|     const d: d as empty, // ERROR: `2` not checked
-                    ^
+   matching.js:87:14
+   87|   const e2 = match (x) { // ERROR: `2` not checked
+                    ^^^^^
 
 References:
-   matching.js:78:24
-   78|   declare const x: 1 | 2;
+   matching.js:74:24
+   74|   declare const x: 1 | 2;
                               ^ [1]
-   matching.js:93:19
-   93|     const d: d as empty, // ERROR: `2` not checked
-                         ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:138:14
+Error ----------------------------------------------------------------------------------------------- matching.js:131:14
 
-Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:138:14
-   138|     const d: d as empty, // ERROR: `2` not checked
-                     ^
+   matching.js:131:14
+   131|   const e2 = match (f()) { // ERROR: `2` not checked
+                     ^^^^^
 
 References:
-   matching.js:128:30
-   128|   declare const f: () => 1 | 2;
+   matching.js:123:30
+   123|   declare const f: () => 1 | 2;
                                      ^ [1]
-   matching.js:138:19
-   138|     const d: d as empty, // ERROR: `2` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:153:14
+Error ----------------------------------------------------------------------------------------------- matching.js:145:14
 
-Cannot cast `d` to empty because number literal `3` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `3` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:153:14
-   153|     const d: d as empty, // ERROR: `3` not checked
-                     ^
+   matching.js:145:14
+   145|   const e2 = match (x) { // ERROR: `3` not checked
+                     ^^^^^
 
 References:
-   matching.js:144:28
-   144|   declare const x: 1 | 2 | 3;
+   matching.js:138:28
+   138|   declare const x: 1 | 2 | 3;
                                    ^ [1]
-   matching.js:153:19
-   153|     const d: d as empty, // ERROR: `3` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:166:14
+Error ----------------------------------------------------------------------------------------------- matching.js:156:14
 
-Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
+below. [match-not-exhaustive]
 
-   matching.js:166:14
-   166|     const d: d as empty, // ERROR: `2` not checked
-                     ^
+   matching.js:156:14
+   156|   const e1 = match (x) { // ERROR: `2` not checked
+                     ^^^^^
 
 References:
-   matching.js:159:24
-   159|   declare const x: 1 | 2;
+   matching.js:152:24
+   152|   declare const x: 1 | 2;
                                ^ [1]
-   matching.js:166:19
-   166|     const d: d as empty, // ERROR: `2` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:204:14
+Error ----------------------------------------------------------------------------------------------- matching.js:193:14
 
-Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:204:14
-   204|     const d: d as empty, // ERROR: `type: 'baz'` not checked
-                     ^
+   matching.js:193:14
+   193|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
+                     ^^^^^
 
 References:
-   matching.js:192:20
-   192|                  | {type: 'baz', val: boolean};
+   matching.js:184:20
+   184|                  | {type: 'baz', val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:204:19
-   204|     const d: d as empty, // ERROR: `type: 'baz'` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:254:14
+Error ----------------------------------------------------------------------------------------------- matching.js:242:14
 
-Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:254:14
-   254|     const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
-                     ^
+   matching.js:242:14
+   242|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
+                     ^^^^^
 
 References:
-   matching.js:236:20
-   236|                  | {type: 'bar', n: 2, val: boolean};
+   matching.js:227:20
+   227|                  | {type: 'bar', n: 2, val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:254:19
-   254|     const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:282:14
+Error ----------------------------------------------------------------------------------------------- matching.js:270:14
 
-Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:282:14
-   282|     const d: d as empty, // ERROR: `type: 'bar'` not checked
-                     ^
+   matching.js:270:14
+   270|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
+                     ^^^^^
 
 References:
-   matching.js:272:20
-   272|                  | {type: 'bar', val: string}
+   matching.js:262:20
+   262|                  | {type: 'bar', val: string}
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:282:19
-   282|     const d: d as empty, // ERROR: `type: 'bar'` not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:302:14
+Error ----------------------------------------------------------------------------------------------- matching.js:288:14
 
-Cannot cast `d` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:302:14
-   302|     const d: d as empty, // ERROR: `'baz'` element not checked
-                     ^
+   matching.js:288:14
+   288|   const e2 = match (x) { // ERROR: `'baz'` element not checked
+                     ^^^^^
 
 References:
-   matching.js:290:20
-   290|                  | ['baz', boolean];
+   matching.js:279:20
+   279|                  | ['baz', boolean];
                            ^^^^^^^^^^^^^^^^ [1]
-   matching.js:302:19
-   302|     const d: d as empty, // ERROR: `'baz'` element not checked
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:338:22
+Error ----------------------------------------------------------------------------------------------- matching.js:326:22
 
 Cannot cast `a` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   matching.js:338:22
-   338|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:326:22
+   326|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
                              ^
 
 References:
-   matching.js:333:21
-   333|                  | [boolean, boolean, boolean];
+   matching.js:321:21
+   321|                  | [boolean, boolean, boolean];
                             ^^^^^^^ [1]
-   matching.js:338:27
-   338|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:326:27
+   326|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:358:16
+Error ----------------------------------------------------------------------------------------------- matching.js:346:16
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   matching.js:358:16
-   358|     [const a]: a as string, // ERROR: `number` is not `string`
+   matching.js:346:16
+   346|     [const a]: a as string, // ERROR: `number` is not `string`
                        ^
 
 References:
-   matching.js:354:21
-   354|   declare const x: [number] | Array<string>;
+   matching.js:342:21
+   342|   declare const x: [number] | Array<string>;
                             ^^^^^^ [1]
-   matching.js:358:21
-   358|     [const a]: a as string, // ERROR: `number` is not `string`
+   matching.js:346:21
+   346|     [const a]: a as string, // ERROR: `number` is not `string`
                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:380:14
+Error ----------------------------------------------------------------------------------------------- matching.js:366:14
 
-Cannot cast `d` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:380:14
-   380|     const d: d as empty, // ERROR: does not match all possibilities
-                     ^
+   matching.js:366:14
+   366|   const e2 = match (x) { // ERROR: does not match all possibilities
+                     ^^^^^
 
 References:
-   matching.js:371:20
-   371|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:380:19
-   380|     const d: d as empty, // ERROR: does not match all possibilities
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:385:14
+Error ----------------------------------------------------------------------------------------------- matching.js:370:14
 
-Cannot cast `d` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:385:14
-   385|     const d: d as empty, // ERROR: does not match all possibilities
-                     ^
+   matching.js:370:14
+   370|   const e3 = match (x) { // ERROR: does not match all possibilities
+                     ^^^^^
 
 References:
-   matching.js:371:20
-   371|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:385:19
-   385|     const d: d as empty, // ERROR: does not match all possibilities
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:390:14
+Error ----------------------------------------------------------------------------------------------- matching.js:374:14
 
-Cannot cast `d` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:390:14
-   390|     const d: d as empty, // ERROR: does not match all possibilities
-                     ^
+   matching.js:374:14
+   374|   const e4 = match (x) { // ERROR: does not match all possibilities
+                     ^^^^^
 
 References:
-   matching.js:371:20
-   371|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
-   matching.js:390:19
-   390|     const d: d as empty, // ERROR: does not match all possibilities
-                          ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:405:14
+Error ----------------------------------------------------------------------------------------------- matching.js:388:14
 
-Cannot cast `d` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
 
-   matching.js:405:14
-   405|     const d: d as empty, // ERROR: does not match all elements
-                     ^
+   matching.js:388:14
+   388|   const e2 = match (x) { // ERROR: does not match all elements
+                     ^^^^^
 
 References:
-   matching.js:396:20
-   396|   declare const x: [a: 0, ...];
+   matching.js:381:20
+   381|   declare const x: [a: 0, ...];
                            ^^^^^^^^^^^ [1]
-   matching.js:405:19
-   405|     const d: d as empty, // ERROR: does not match all elements
-                          ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
@@ -555,21 +521,21 @@ References:
                      ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ patterns.js:99:23
+Error ----------------------------------------------------------------------------------------------- patterns.js:100:23
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:99:23
-   99|     {foo: const n} if n as empty: n, // ERROR
-                             ^
+   patterns.js:100:23
+   100|     {foo: const n} if n as empty: n, // ERROR
+                              ^
 
 References:
-   patterns.js:93:26
-   93|   declare const x: {foo: number};
-                                ^^^^^^ [1]
-   patterns.js:99:28
-   99|     {foo: const n} if n as empty: n, // ERROR
-                                  ^^^^^ [2]
+   patterns.js:94:26
+    94|   declare const x: {foo: number};
+                                 ^^^^^^ [1]
+   patterns.js:100:28
+   100|     {foo: const n} if n as empty: n, // ERROR
+                                   ^^^^^ [2]
 
 
 

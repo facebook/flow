@@ -618,6 +618,35 @@ let check_spread_prop_keys cx tast =
     let (_ : _ Ast.Program.t) = checker#program tast in
     ()
 
+let check_match_exhaustiveness cx tast =
+  let checker =
+    object
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_type_annot x = x
+
+      method on_loc_annot x = x
+
+      method! match_expression x =
+        let { Ast.Expression.Match.match_keyword_loc = (loc, t); _ } = x in
+        (match Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
+        | [] -> ()
+        | remaining_ts ->
+          Base.List.iter remaining_ts ~f:(fun remaining_t ->
+              Flow_js.add_output
+                cx
+                (Error_message.EMatchNotExhaustive
+                   { loc; reason = TypeUtil.reason_of_t remaining_t }
+                )
+          ));
+        super#match_expression x
+    end
+  in
+  if Context.enable_pattern_matching_expressions cx then
+    let (_ : _ Ast.Program.t) = checker#program tast in
+    ()
+
 let emit_refinement_information_as_errors =
   let open Loc_collections in
   let emit_refined_locations_info cx =
@@ -680,6 +709,7 @@ let post_merge_checks cx ast tast metadata =
   detect_unused_promises cx;
   check_union_opt cx;
   check_spread_prop_keys cx tast;
+  check_match_exhaustiveness cx tast;
   emit_refinement_information_as_errors cx
 
 (* Check will lazily create types for the checked file's dependencies. These

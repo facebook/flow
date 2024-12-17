@@ -12,12 +12,11 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: not all members checked
     1: 0,
     false: 0,
     3n: 0,
     null: 0,
-    const d: d as empty, // ERROR: not all members checked
   };
 }
 
@@ -34,9 +33,8 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `2` not checked
     one: 0,
-    const d: d as empty, // ERROR: `2` not checked
   };
 }
 
@@ -50,9 +48,8 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `undefined` not checked
     1: 0,
-    const d: d as empty, // ERROR: `undefined` not checked
   };
 }
 
@@ -67,9 +64,8 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `null` and `undefined` not checked
     1: 0,
-    const d: d as empty, // ERROR: `null` and `undefined` not checked
   };
 }
 
@@ -88,9 +84,8 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `2` not checked
     o.one: 0,
-    const d: d as empty, // ERROR: `2` not checked
   };
 }
 
@@ -133,9 +128,8 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (f()) {
+  const e2 = match (f()) { // ERROR: `2` not checked
     1: 0,
-    const d: d as empty, // ERROR: `2` not checked
   };
 }
 
@@ -148,9 +142,8 @@
     const d: d as empty, // OK
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `3` not checked
     1 | 2: true,
-    const d: d as empty, // ERROR: `3` not checked
   };
 }
 
@@ -160,10 +153,9 @@
 
   declare function f(): boolean;
 
-  const e1 = match (x) {
+  const e1 = match (x) { // ERROR: `2` not checked
     1: 0,
     2 if f(): 0,
-    const d: d as empty, // ERROR: `2` not checked
   };
 
   const e2 = match (x) {
@@ -198,10 +190,9 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `type: 'baz'` not checked
     {type: 'foo', val: const a}: a as number, // OK
     {type: 'bar', val: const a}: a as string, // OK
-    const d: d as empty, // ERROR: `type: 'baz'` not checked
   };
 
   // Using idents as pattern
@@ -248,10 +239,9 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e3 = match (x) {
+  const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
     {type: 'foo', val: const a}: a as number, // OK
     {type: 'bar', n: 1, val: const a}: a as string, // OK
-    const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
   };
 }
 
@@ -277,9 +267,8 @@
     const d: d as empty, // OK
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `type: 'bar'` not checked
     {type: 'foo'} | {type: 'baz'}: 0,
-    const d: d as empty, // ERROR: `type: 'bar'` not checked
   };
 }
 
@@ -296,10 +285,9 @@
     const d: d as empty, // OK: all members checked
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: `'baz'` element not checked
     ['foo', const a]: a as number, // OK
     ['bar', const a]: a as string, // OK
-    const d: d as empty, // ERROR: `'baz'` element not checked
   };
 
   // Using idents as pattern
@@ -375,19 +363,16 @@
     const d: d as empty, // OK: all elements matched
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: does not match all possibilities
     [_, _, ...]: 0,
-    const d: d as empty, // ERROR: does not match all possibilities
   };
 
-  const e3 = match (x) {
+  const e3 = match (x) { // ERROR: does not match all possibilities
     [_]: 0,
-    const d: d as empty, // ERROR: does not match all possibilities
   };
 
-  const e4 = match (x) {
+  const e4 = match (x) { // ERROR: does not match all possibilities
     [_, _, _]: 0,
-    const d: d as empty, // ERROR: does not match all possibilities
   };
 }
 
@@ -400,8 +385,7 @@
     const d: d as empty, // OK: all elements matched
   };
 
-  const e2 = match (x) {
+  const e2 = match (x) { // ERROR: does not match all elements
     [_]: 0,
-    const d: d as empty, // ERROR: does not match all elements
   };
 }

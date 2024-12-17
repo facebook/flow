@@ -1758,6 +1758,9 @@ and Expression : sig
       arg: ('M, 'T) Expression.t;
       cases: ('M, 'T) Case.t list;
       arg_internal: 'M;
+      (* The type here is used to store the resulting type after the patterns
+         refine the arg type. *)
+      match_keyword_loc: 'T;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
