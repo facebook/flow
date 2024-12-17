@@ -108,6 +108,159 @@ References:
                 ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ matching.js:20:14
+
+Cannot cast `d` to empty because number literal `-2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:20:14
+   20|     const d: d as empty, // ERROR: not all members checked
+                    ^
+
+References:
+   matching.js:3:24
+    3|   declare const x: 1 | -2 | 3n | 's' | false | null;
+                              ^^ [1]
+   matching.js:20:19
+   20|     const d: d as empty, // ERROR: not all members checked
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ matching.js:20:14
+
+Cannot cast `d` to empty because string literal `s` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:20:14
+   20|     const d: d as empty, // ERROR: not all members checked
+                    ^
+
+References:
+   matching.js:3:34
+    3|   declare const x: 1 | -2 | 3n | 's' | false | null;
+                                        ^^^ [1]
+   matching.js:20:19
+   20|     const d: d as empty, // ERROR: not all members checked
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ matching.js:39:14
+
+Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:39:14
+   39|     const d: d as empty, // ERROR: `2` not checked
+                    ^
+
+References:
+   matching.js:26:24
+   26|   declare const x: 1 | 2;
+                              ^ [1]
+   matching.js:39:19
+   39|     const d: d as empty, // ERROR: `2` not checked
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ matching.js:55:14
+
+Cannot cast `d` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:55:14
+   55|     const d: d as empty, // ERROR: `undefined` not checked
+                    ^
+
+References:
+   matching.js:45:24
+   45|   declare const x: 1 | void;
+                              ^^^^ [1]
+   matching.js:55:19
+   55|     const d: d as empty, // ERROR: `undefined` not checked
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ matching.js:72:14
+
+Cannot cast `d` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:72:14
+   72|     const d: d as empty, // ERROR: `null` and `undefined` not checked
+                    ^
+
+References:
+   matching.js:61:20
+   61|   declare const x: ?1;
+                          ^^ [1]
+   matching.js:72:19
+   72|     const d: d as empty, // ERROR: `null` and `undefined` not checked
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ matching.js:93:14
+
+Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:93:14
+   93|     const d: d as empty, // ERROR: `2` not checked
+                    ^
+
+References:
+   matching.js:78:24
+   78|   declare const x: 1 | 2;
+                              ^ [1]
+   matching.js:93:19
+   93|     const d: d as empty, // ERROR: `2` not checked
+                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:138:14
+
+Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:138:14
+   138|     const d: d as empty, // ERROR: `2` not checked
+                     ^
+
+References:
+   matching.js:128:30
+   128|   declare const f: () => 1 | 2;
+                                     ^ [1]
+   matching.js:138:19
+   138|     const d: d as empty, // ERROR: `2` not checked
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:153:14
+
+Cannot cast `d` to empty because number literal `3` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:153:14
+   153|     const d: d as empty, // ERROR: `3` not checked
+                     ^
+
+References:
+   matching.js:144:28
+   144|   declare const x: 1 | 2 | 3;
+                                   ^ [1]
+   matching.js:153:19
+   153|     const d: d as empty, // ERROR: `3` not checked
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:166:14
+
+Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:166:14
+   166|     const d: d as empty, // ERROR: `2` not checked
+                     ^
+
+References:
+   matching.js:159:24
+   159|   declare const x: 1 | 2;
+                               ^ [1]
+   matching.js:166:19
+   166|     const d: d as empty, // ERROR: `2` not checked
+                          ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -250,4 +403,4 @@ References:
 
 
 
-Found 16 errors
+Found 25 errors
