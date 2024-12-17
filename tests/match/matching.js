@@ -173,3 +173,112 @@
     const d: d as empty, // OK
   };
 }
+
+// Property exists
+{
+  declare const x: {foo: void, a: 0} | {bar: void, a: 1};
+
+  const e1 = match (x) {
+    {foo: _, const a}: a as 0, // OK
+    {bar: _, const a}: a as 1, // OK
+    const d: d as empty, // OK: all members checked
+  };
+}
+
+// Disjoint object union
+{
+  declare const x: {type: 'foo', val: number}
+                 | {type: 'bar', val: string}
+                 | {type: 'baz', val: boolean};
+
+  const e1 = match (x) {
+    {type: 'foo', val: const a}: a as number, // OK
+    {type: 'bar', val: const a}: a as string, // OK
+    {type: 'baz', val: const a}: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+
+  const e2 = match (x) {
+    {type: 'foo', val: const a}: a as number, // OK
+    {type: 'bar', val: const a}: a as string, // OK
+    const d: d as empty, // ERROR: `type: 'baz'` not checked
+  };
+
+  // Using idents as pattern
+  declare const foo: 'foo';
+  declare const bar: 'bar';
+  declare const baz: 'baz';
+  const e3 = match (x) {
+    {type: foo, val: const a}: a as number, // OK
+    {type: bar, val: const a}: a as string, // OK
+    {type: baz, val: const a}: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+
+  // Using members as pattern
+  declare const o: {
+    foo: 'foo',
+    bar: 'bar',
+    baz: 'baz',
+  };
+  const e4 = match (x) {
+    {type: o.foo, val: const a}: a as number, // OK
+    {type: o.bar, val: const a}: a as string, // OK
+    {type: o.baz, val: const a}: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+}
+
+// Disjoint object union with multiple pivot props
+{
+  declare const x: {type: 'foo', val: number}
+                 | {type: 'bar', n: 1, val: string}
+                 | {type: 'bar', n: 2, val: boolean};
+
+  const e1 = match (x) {
+    {type: 'foo', val: const a}: a as number, // OK
+    {type: 'bar', val: const a}: a as string | boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+
+  const e2 = match (x) {
+    {type: 'foo', val: const a}: a as number, // OK
+    {type: 'bar', n: 1, val: const a}: a as string, // OK
+    {type: 'bar', n: 2, val: const a}: a as boolean, // OK
+    const d: d as empty, // OK: all members checked
+  };
+
+  const e3 = match (x) {
+    {type: 'foo', val: const a}: a as number, // OK
+    {type: 'bar', n: 1, val: const a}: a as string, // OK
+    const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
+  };
+}
+
+// Combo union of object with sentinel property and primitive value
+{
+  declare const x: null | {type: 'bar', val: number};
+
+  const e1 = match (x) {
+    {type: 'bar', val: const a}: a as number, // OK
+    null: 0,
+    const d: d as empty, // OK: all members checked
+  };
+}
+
+// Or pattern: objects
+{
+  declare const x: {type: 'foo', val: number}
+                 | {type: 'bar', val: string}
+                 | {type: 'baz', val: boolean};
+
+  const e1 = match (x) {
+    {type: 'foo'} | {type: 'bar'} | {type: 'baz'}: 0,
+    const d: d as empty, // OK
+  };
+
+  const e2 = match (x) {
+    {type: 'foo'} | {type: 'baz'}: 0,
+    const d: d as empty, // ERROR: `type: 'bar'` not checked
+  };
+}

@@ -261,6 +261,57 @@ References:
                           ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- matching.js:204:14
+
+Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:204:14
+   204|     const d: d as empty, // ERROR: `type: 'baz'` not checked
+                     ^
+
+References:
+   matching.js:192:20
+   192|                  | {type: 'baz', val: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   matching.js:204:19
+   204|     const d: d as empty, // ERROR: `type: 'baz'` not checked
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:254:14
+
+Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:254:14
+   254|     const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
+                     ^
+
+References:
+   matching.js:236:20
+   236|                  | {type: 'bar', n: 2, val: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   matching.js:254:19
+   254|     const d: d as empty, // ERROR: `type: 'bar', n: 2` not checked
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:282:14
+
+Cannot cast `d` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+
+   matching.js:282:14
+   282|     const d: d as empty, // ERROR: `type: 'bar'` not checked
+                     ^
+
+References:
+   matching.js:272:20
+   272|                  | {type: 'bar', val: string}
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   matching.js:282:19
+   282|     const d: d as empty, // ERROR: `type: 'bar'` not checked
+                          ^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -403,4 +454,4 @@ References:
 
 
 
-Found 25 errors
+Found 28 errors
