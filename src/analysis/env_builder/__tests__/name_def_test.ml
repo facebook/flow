@@ -1633,7 +1633,8 @@ let%expect_test "match_pattern_binding" =
   |};
   [%expect {|
     [
-      (3, 8) to (3, 9) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 8) to (3, 9) => val (3, 2) to (3, 13)
     ] |}]
 
 let%expect_test "match_pattern_tuple" =
@@ -1644,8 +1645,9 @@ let%expect_test "match_pattern_tuple" =
   |};
   [%expect {|
     [
-      (3, 9) to (3, 10) => (val (2, 8) to (2, 9))[0];
-      (3, 2) to (3, 11) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 9) to (3, 10) => (val (3, 2) to (3, 15))[0];
+      (3, 2) to (3, 11) => val (3, 2) to (3, 15)
     ] |}]
 
 let%expect_test "match_pattern_tuple_rest" =
@@ -1656,8 +1658,9 @@ let%expect_test "match_pattern_tuple_rest" =
   |};
   [%expect {|
     [
-      (3, 15) to (3, 16) => (val (2, 8) to (2, 9))[...];
-      (3, 2) to (3, 17) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 15) to (3, 16) => (val (3, 2) to (3, 21))[...];
+      (3, 2) to (3, 17) => val (3, 2) to (3, 21)
     ] |}]
 
 let%expect_test "match_pattern_object" =
@@ -1668,8 +1671,9 @@ let%expect_test "match_pattern_object" =
   |};
   [%expect {|
     [
-      (3, 14) to (3, 15) => (val (2, 8) to (2, 9)).foo;
-      (3, 2) to (3, 16) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 14) to (3, 15) => (val (3, 2) to (3, 20)).foo;
+      (3, 2) to (3, 16) => val (3, 2) to (3, 20)
     ] |}]
 
 let%expect_test "match_pattern_object_shorthand" =
@@ -1680,8 +1684,9 @@ let%expect_test "match_pattern_object_shorthand" =
   |};
   [%expect {|
     [
-      (3, 9) to (3, 12) => (val (2, 8) to (2, 9)).foo;
-      (3, 2) to (3, 13) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 9) to (3, 12) => (val (3, 2) to (3, 19)).foo;
+      (3, 2) to (3, 13) => val (3, 2) to (3, 19)
     ] |}]
 
 let%expect_test "match_pattern_object_rest" =
@@ -1692,8 +1697,9 @@ let%expect_test "match_pattern_object_rest" =
   |};
   [%expect {|
     [
-      (3, 20) to (3, 24) => (val (2, 8) to (2, 9)){ ... };
-      (3, 2) to (3, 25) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 20) to (3, 24) => (val (3, 2) to (3, 32)){ ... };
+      (3, 2) to (3, 25) => val (3, 2) to (3, 32)
     ] |}]
 
 let%expect_test "match_pattern_as" =
@@ -1704,8 +1710,9 @@ let%expect_test "match_pattern_as" =
   |};
   [%expect {|
     [
-      (3, 13) to (3, 14) => (val (2, 8) to (2, 9)).foo;
-      (3, 2) to (3, 15) => val (2, 8) to (2, 9)
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 13) to (3, 14) => (val (3, 2) to (3, 19)).foo;
+      (3, 2) to (3, 15) => val (3, 2) to (3, 19)
     ] |}]
 
 let%expect_test "match_pattern_nested" =
@@ -1716,8 +1723,9 @@ let%expect_test "match_pattern_nested" =
   |};
   [%expect {|
     [
-      (3, 27) to (3, 28) => (((val (2, 8) to (2, 9)).foo)[2]).bar;
-      (3, 2) to (3, 31) => val (2, 8) to (2, 9);
-      (3, 8) to (3, 30) => (val (2, 8) to (2, 9)).foo;
-      (3, 15) to (3, 29) => ((val (2, 8) to (2, 9)).foo)[2]
+      (2, 1) to (2, 6) => val (2, 8) to (2, 9);
+      (3, 27) to (3, 28) => (((val (3, 2) to (3, 35)).foo)[2]).bar;
+      (3, 2) to (3, 31) => val (3, 2) to (3, 35);
+      (3, 8) to (3, 30) => (val (3, 2) to (3, 35)).foo;
+      (3, 15) to (3, 29) => ((val (3, 2) to (3, 35)).foo)[2]
     ] |}]

@@ -2875,15 +2875,16 @@ module Make
         Tast_utils.error_mapper#expression ex
       ) else
         let reason = mk_reason RMatchExpression loc in
-        let arg_orig = arg in
         let arg = expression cx arg in
+        let ((_, arg_t), _) = arg in
+        Type_env.init_const cx ~use_op:unknown_use arg_t arg_internal;
         let (cases_rev, ts_rev, all_throws) =
           Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
               let (case_loc, { Match.Case.pattern; body; guard; comments }) = case in
               let pattern =
                 Match_pattern.pattern
                   cx
-                  arg_orig
+                  (case_loc, Identifier (Flow_ast_utils.match_root_ident case_loc))
                   pattern
                   ~on_identifier:identifier
                   ~on_expression:expression
@@ -2893,8 +2894,7 @@ module Make
                       ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
                       cx
                       name
-                      name_loc
-                )
+                      name_loc)
               in
               let (guard, guard_throws) =
                 match guard with

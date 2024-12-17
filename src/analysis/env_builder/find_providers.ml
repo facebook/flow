@@ -986,6 +986,14 @@ end = struct
           loc
           expr
 
+      method! match_expression loc x =
+        let { Ast.Expression.Match.arg_internal; arg = _; cases = _; comments = _ } = x in
+        ignore
+        @@ this#pattern_identifier
+             ~kind:Ast.Variable.Const
+             (Flow_ast_utils.match_root_ident arg_internal);
+        super#match_expression loc x
+
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin
           match kind with

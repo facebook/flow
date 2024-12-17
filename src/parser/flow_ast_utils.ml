@@ -674,3 +674,8 @@ let hook_call { E.Call.callee; _ } =
     | _ -> false
   in
   hook_callee true callee
+
+(* Match *)
+let match_root_name = "<match_root>"
+
+let match_root_ident loc = (loc, { Identifier.name = match_root_name; comments = None })

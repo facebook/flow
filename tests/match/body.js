@@ -55,3 +55,15 @@ function f2() {
   out as string; // OK
   out as empty; // ERROR
 }
+
+// Nested matches
+{
+  const out = match (x) {
+    1: 1,
+    const a: match (a) {
+      const a: a,
+    },
+  };
+
+  out as number; // OK
+}

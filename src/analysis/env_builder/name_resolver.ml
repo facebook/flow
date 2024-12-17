@@ -2911,31 +2911,54 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#merge_completion_states conditional_completion_states;
         expr
 
-      method! match_expression _ x =
+      method! match_expression match_loc x =
         let open Flow_ast.Expression.Match in
-        let { arg; cases; arg_internal = _; comments = _ } = x in
+        let { arg; cases; arg_internal; comments = _ } = x in
+        let match_root_ident = Flow_ast_utils.match_root_ident in
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
+        let bindings = Bindings.singleton (match_root_ident arg_internal, Bindings.Internal) in
         let completion_states = ref [] in
-        Base.List.iter cases ~f:(fun case ->
-            let (case_loc, { Case.pattern; body; guard; comments = _ }) = case in
-            let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
-            let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-            this#with_bindings
-              ~lexical:true
-              case_loc
-              bindings
-              (fun () ->
-                ignore @@ this#match_pattern pattern;
-                let completion_state =
-                  this#run_to_completion (fun () ->
-                      Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
-                      ignore @@ this#expression body
-                  )
-                in
-                completion_states := completion_state :: !completion_states)
-              ()
-        );
+        ignore
+        @@ this#with_bindings
+             ~lexical:true
+             match_loc
+             bindings
+             (fun () ->
+               this#pattern_identifier_with_annot_check
+                 ~kind:Flow_ast.Variable.Const
+                 arg_internal
+                 (match_root_ident arg_internal)
+                 (Ast.Type.Missing ALoc.none);
+               ignore @@ this#identifier (match_root_ident arg_internal);
+               Base.List.iter cases ~f:(fun case ->
+                   let (case_loc, { Case.pattern; body; guard; comments = _ }) = case in
+                   let lexical_hoist =
+                     new lexical_hoister ~flowmin_compatibility:false ~enable_enums
+                   in
+                   let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
+                   this#with_bindings
+                     ~lexical:true
+                     case_loc
+                     bindings
+                     (fun () ->
+                       let arg =
+                         ( case_loc,
+                           Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
+                         )
+                       in
+                       ignore @@ this#match_pattern pattern;
+                       ignore @@ this#expression arg;
+                       let completion_state =
+                         this#run_to_completion (fun () ->
+                             Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+                             ignore @@ this#expression body
+                         )
+                       in
+                       completion_states := completion_state :: !completion_states)
+                     ()
+               ))
+             ();
         let completion_states = !completion_states |> List.rev in
         this#reset_env env0;
         (match completion_states with
