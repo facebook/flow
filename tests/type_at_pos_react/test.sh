@@ -4,6 +4,11 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+
+# dro.js
+printf "dro.js:2:9 = "
+assert_ok "$FLOW" type-at-pos dro.js 2 9 --strip-root
+
 # lazy_ref.js
 printf "lazy_ref.js:14:9 = "
 assert_ok "$FLOW" type-at-pos lazy_ref.js 14 9 --strip-root

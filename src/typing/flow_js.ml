@@ -5097,7 +5097,8 @@ struct
         (**********************)
         (* Array library call *)
         (**********************)
-        | ( DefT (reason, ArrT (ArrayAT { elem_t; react_dro = Some (dro_loc, dro_type); _ })),
+        | ( DefT
+              (reason, ArrT (ArrayAT { elem_t; react_dro = Some (dro_loc, dro_type); tuple_view })),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _)
           ) -> begin
           match u with
@@ -5122,7 +5123,11 @@ struct
                    prop_name = Some (OrdinaryName name);
                    use_op = Frame (ReactDeepReadOnly (dro_loc, dro_type), use_op);
                  }
-              )
+              );
+            rec_flow
+              cx
+              trace
+              (DefT (reason, ArrT (ArrayAT { elem_t; react_dro = None; tuple_view })), u)
           | _ ->
             let l =
               get_builtin_typeapp

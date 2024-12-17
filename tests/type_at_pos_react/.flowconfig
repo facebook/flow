@@ -9,5 +9,6 @@
 [options]
 all=true
 no_flowlib=false
+component_syntax=true
 
 [strict]

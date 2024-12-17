@@ -412,6 +412,23 @@ References:
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- dro.js:84:13
+
+Cannot call `droarr.push` because number [1] is incompatible with unknown element of empty array [2] in array element of
+array element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-call]
+
+   dro.js:84:13
+   84| droarr.push([]); // error
+                   ^^ [2]
+
+References:
+   dro.js:83:51
+   83| declare const droarr: React$Immutable<Array<Array<number>>>;
+                                                         ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ dro.js:85:1
 
 Cannot call `droarr[0].push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
@@ -829,4 +846,4 @@ Cannot read `current` from `otherRef` [1] because `ref` values may not be read d
 
 
 
-Found 63 errors
+Found 64 errors
