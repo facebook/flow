@@ -176,3 +176,8 @@ val hook_name : string -> bool
 val match_root_name : string
 
 val match_root_ident : 'loc -> ('loc, 'loc) Flow_ast.Identifier.t
+
+val expression_of_match_member_pattern :
+  visit_expression:(('loc, 'loc) Flow_ast.Expression.t -> unit) ->
+  ('loc, 'loc) Flow_ast.MatchPattern.MemberPattern.t ->
+  ('loc, 'loc) Flow_ast.Expression.t
