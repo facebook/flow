@@ -140,3 +140,10 @@ component WriteToComponentProperty(x: {}) {
   declare const obj: React$Immutable<O>;
   ({ n: obj.n }) as React$Immutable<O>; // ok
 }
+
+component NonInterferenceWithInference(arr: Array<number>) {
+  arr.sort((a, b) => { // only dro error
+      return 1;
+  });
+  return null;
+}
