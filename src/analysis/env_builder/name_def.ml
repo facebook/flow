@@ -338,27 +338,7 @@ end = struct
       visit_expression
         (loc, Ast.Expression.Unary { Ast.Expression.Unary.operator; argument; comments })
     | MemberPattern mem ->
-      let rec member (loc, { MemberPattern.base; property; comments }) =
-        let _object =
-          match base with
-          | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, Ast.Expression.Identifier id)
-          | MemberPattern.BaseMember mem -> member mem
-        in
-        let property =
-          match property with
-          | MemberPattern.PropertyIdentifier id -> Ast.Expression.Member.PropertyIdentifier id
-          | MemberPattern.PropertyString (loc, lit) ->
-            Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.StringLiteral lit)
-          | MemberPattern.PropertyNumber (loc, lit) ->
-            Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.NumberLiteral lit)
-        in
-        let exp =
-          (loc, Ast.Expression.Member { Ast.Expression.Member._object; property; comments })
-        in
-        visit_expression exp;
-        exp
-      in
-      ignore @@ member mem
+      ignore @@ Flow_ast_utils.expression_of_match_member_pattern ~visit_expression mem
     | ArrayPattern { ArrayPattern.elements; rest; comments = _ } ->
       visit_intermediate loc acc;
       let used_elements =

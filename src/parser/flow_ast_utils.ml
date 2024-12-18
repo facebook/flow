@@ -679,3 +679,25 @@ let hook_call { E.Call.callee; _ } =
 let match_root_name = "<match_root>"
 
 let match_root_ident loc = (loc, { Identifier.name = match_root_name; comments = None })
+
+let expression_of_match_member_pattern ~visit_expression pattern =
+  let open MatchPattern in
+  let rec f (loc, { MemberPattern.base; property; comments }) =
+    let _object =
+      match base with
+      | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, Expression.Identifier id)
+      | MemberPattern.BaseMember mem -> f mem
+    in
+    let property =
+      match property with
+      | MemberPattern.PropertyIdentifier id -> Expression.Member.PropertyIdentifier id
+      | MemberPattern.PropertyString (loc, lit) ->
+        Expression.Member.PropertyExpression (loc, Expression.StringLiteral lit)
+      | MemberPattern.PropertyNumber (loc, lit) ->
+        Expression.Member.PropertyExpression (loc, Expression.NumberLiteral lit)
+    in
+    let exp = (loc, Expression.Member { Expression.Member._object; property; comments }) in
+    visit_expression exp;
+    exp
+  in
+  f pattern
