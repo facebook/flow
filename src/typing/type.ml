@@ -3361,6 +3361,7 @@ module AConstraint = struct
         reason: Reason.t;
         namespace_symbol: FlowSymbol.symbol;
         is_strict: bool;
+        standard_cjs_esm_interop: bool;
         legacy_interop: bool;
       }
     (* Exports *)

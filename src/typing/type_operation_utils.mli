@@ -77,7 +77,13 @@ module Import_export : sig
     ALoc.t option * Type.t
 
   val cjs_require_type :
-    Context.t -> reason -> namespace_symbol:symbol -> legacy_interop:bool -> Type.t -> Type.t
+    Context.t ->
+    reason ->
+    namespace_symbol:symbol ->
+    standard_cjs_esm_interop:bool ->
+    legacy_interop:bool ->
+    Type.t ->
+    Type.t
 end
 
 module Operators : sig

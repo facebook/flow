@@ -97,6 +97,7 @@ type metadata = {
   facebook_fbt: string option;
   facebook_module_interop: bool;
   file_options: Files.options;
+  haste_module_ref_prefix_standard_cjs_esm_interop: bool;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
   max_workers: int;
@@ -296,6 +297,8 @@ val inferred_component_return : t -> Type.t Nel.t ALocFuzzyMap.t
 val verbose : t -> Verbose.t option
 
 val slow_to_check_logging : t -> Slow_to_check_logging.t
+
+val haste_module_ref_prefix_standard_cjs_esm_interop : t -> bool
 
 val max_workers : t -> int
 

@@ -82,6 +82,7 @@ module Opts = struct
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     haste_module_ref_prefix: string option;
+    haste_module_ref_prefix_standard_cjs_esm_interop: bool;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_namespaces: string list;
@@ -218,6 +219,7 @@ module Opts = struct
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
       haste_module_ref_prefix = None;
+      haste_module_ref_prefix_standard_cjs_esm_interop = false;
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -1056,6 +1058,9 @@ module Opts = struct
       ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
+      ( "module.system.haste.module_ref_prefix.standard_cjs_esm_interop",
+        boolean (fun opts v -> Ok { opts with haste_module_ref_prefix_standard_cjs_esm_interop = v })
+      );
       ( "module.system.haste.module_ref_prefix_LEGACY_INTEROP",
         haste_module_ref_prefix_LEGACY_INTEROP_parser
       );
@@ -1735,6 +1740,9 @@ let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
+
+let haste_module_ref_prefix_standard_cjs_esm_interop c =
+  c.options.Opts.haste_module_ref_prefix_standard_cjs_esm_interop
 
 let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_prefix_LEGACY_INTEROP
 

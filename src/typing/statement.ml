@@ -829,6 +829,7 @@ module Make
         cx
         (mk_reason (RModule mref) loc)
         ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
+        ~standard_cjs_esm_interop:(Context.haste_module_ref_prefix_standard_cjs_esm_interop cx)
         ~legacy_interop
         module_t
     in
@@ -3279,6 +3280,7 @@ module Make
               cx
               (mk_reason (RModule module_name) loc)
               ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
+              ~standard_cjs_esm_interop:false
               ~legacy_interop:false
               module_t
         | Error err ->
@@ -3651,6 +3653,7 @@ module Make
                    cx
                    (mk_reason (RModule module_name) loc)
                    ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
+                   ~standard_cjs_esm_interop:false
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
@@ -3693,6 +3696,7 @@ module Make
                    cx
                    (mk_reason (RModule module_name) loc)
                    ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
+                   ~standard_cjs_esm_interop:false
                    ~legacy_interop:false
             in
             (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))

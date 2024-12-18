@@ -268,7 +268,8 @@ module Import_export = struct
       ~remote_name:"default"
       ~local_name
 
-  let cjs_require_type cx reason ~namespace_symbol ~legacy_interop source_module_t =
+  let cjs_require_type
+      cx reason ~namespace_symbol ~standard_cjs_esm_interop ~legacy_interop source_module_t =
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m ->
@@ -278,6 +279,7 @@ module Import_export = struct
         ~reason
         ~module_symbol:namespace_symbol
         ~is_strict
+        ~standard_cjs_esm_interop
         ~legacy_interop
         m
     | Error (lreason, any_source) -> AnyT (lreason, any_source)

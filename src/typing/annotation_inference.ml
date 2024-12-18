@@ -105,6 +105,7 @@ module type S = sig
     Reason.t ->
     FlowSymbol.symbol ->
     is_strict:bool ->
+    standard_cjs_esm_interop:bool ->
     legacy_interop:bool ->
     Type.t
 
@@ -672,13 +673,17 @@ module rec ConsGen : S = struct
     (******************)
     (* Module imports *)
     (******************)
-    | (ModuleT m, Annot_CJSRequireT { reason; namespace_symbol; is_strict; legacy_interop }) ->
+    | ( ModuleT m,
+        Annot_CJSRequireT
+          { reason; namespace_symbol; is_strict; standard_cjs_esm_interop; legacy_interop }
+      ) ->
       CJSRequireTKit.on_ModuleT
         cx
         ~reposition:(fun _ _ t -> t)
         ~reason
         ~module_symbol:namespace_symbol
         ~is_strict
+        ~standard_cjs_esm_interop
         ~legacy_interop
         m
     | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
@@ -1390,8 +1395,14 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason namespace_symbol ~is_strict ~legacy_interop =
-    elab_t cx t (Annot_CJSRequireT { reason; namespace_symbol; is_strict; legacy_interop })
+  and cjs_require cx t reason namespace_symbol ~is_strict ~standard_cjs_esm_interop ~legacy_interop
+      =
+    elab_t
+      cx
+      t
+      (Annot_CJSRequireT
+         { reason; namespace_symbol; is_strict; standard_cjs_esm_interop; legacy_interop }
+      )
 
   and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
     elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })

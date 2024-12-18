@@ -44,6 +44,7 @@ let metadata =
     facebook_fbt = None;
     facebook_module_interop = false;
     file_options = Files.default_options;
+    haste_module_ref_prefix_standard_cjs_esm_interop = false;
     ignore_non_literal_requires = false;
     max_literal_length = 100;
     max_workers = 0;
