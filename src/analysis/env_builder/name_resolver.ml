@@ -2942,11 +2942,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                      case_loc
                      bindings
                      (fun () ->
+                       this#push_refinement_scope empty_refinements;
                        let arg =
                          ( case_loc,
                            Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
                          )
                        in
+                       this#match_pattern_refinements ~arg pattern;
+                       let test_refinements = this#peek_new_refinements () in
+                       let env_prev = this#env_snapshot_without_latest_refinements in
                        ignore @@ this#match_pattern pattern;
                        ignore @@ this#expression arg;
                        let completion_state =
@@ -2955,7 +2959,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                              ignore @@ this#expression body
                          )
                        in
-                       completion_states := completion_state :: !completion_states)
+                       completion_states := completion_state :: !completion_states;
+                       this#pop_refinement_scope ();
+                       this#reset_env env_prev;
+                       if Option.is_none guard then (
+                         (* If there is a guard, it's possible the case didn't match
+                            because of it, not because the pattern didn't match. *)
+                         this#push_refinement_scope test_refinements;
+                         this#negate_new_refinements ()
+                       ))
                      ()
                ))
              ();
@@ -2979,6 +2991,147 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           env_state <- { env_state with write_entries }
         );
         super#match_pattern pattern
+
+      method private match_pattern_refinements ~arg root_pattern =
+        let open Ast.MatchPattern in
+        let eq_refinement ~acc ~loc refis =
+          match RefinementKey.of_expression acc with
+          | Some key ->
+            let reason = mk_reason (RefinementKey.reason_desc key) loc in
+            let write_entries =
+              EnvMap.add
+                (Env_api.ExpressionLoc, loc)
+                (Env_api.AssigningWrite reason)
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries };
+            this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) (EqR loc) refis
+          | None -> refis
+        in
+        let rec recurse acc pattern =
+          match pattern with
+          | (loc, NumberPattern ({ Ast.NumberLiteral.value; raw; _ } as x)) ->
+            let lit = (value, raw) in
+            let refi = SingletonNumR { loc; sense = true; lit } in
+            this#literal_test
+              ~strict:true
+              ~sense:true
+              loc
+              acc
+              refi
+              (loc, Ast.Expression.NumberLiteral x)
+          | (loc, BigIntPattern ({ Ast.BigIntLiteral.value; raw; _ } as x)) ->
+            let lit = (value, raw) in
+            let refi = SingletonBigIntR { loc; sense = true; lit } in
+            this#literal_test
+              ~strict:true
+              ~sense:true
+              loc
+              acc
+              refi
+              (loc, Ast.Expression.BigIntLiteral x)
+          | (loc, StringPattern ({ Ast.StringLiteral.value = lit; _ } as x)) ->
+            let refi = SingletonStrR { loc; sense = true; lit } in
+            this#literal_test
+              ~strict:true
+              ~sense:true
+              loc
+              acc
+              refi
+              (loc, Ast.Expression.StringLiteral x)
+          | (loc, BooleanPattern ({ Ast.BooleanLiteral.value = lit; _ } as x)) ->
+            let refi = SingletonBoolR { loc; sense = true; lit } in
+            this#literal_test
+              ~strict:true
+              ~sense:true
+              loc
+              acc
+              refi
+              (loc, Ast.Expression.BooleanLiteral x)
+          | (loc, NullPattern x) ->
+            this#null_test ~strict:true ~sense:true loc acc (loc, Ast.Expression.NullLiteral x)
+          | (loc, IdentifierPattern x) ->
+            let id_expr = (loc, Ast.Expression.Identifier x) in
+            ignore @@ this#expression id_expr;
+            let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc id_expr in
+            let refis = eq_refinement ~acc ~loc refis in
+            this#commit_refinement refis
+          | (loc, MemberPattern x) ->
+            let mem_expr =
+              Flow_ast_utils.expression_of_match_member_pattern
+                ~visit_expression:(fun e -> ignore @@ this#expression e)
+                x
+            in
+            let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc mem_expr in
+            let refis = eq_refinement ~acc ~loc refis in
+            this#commit_refinement refis
+          | (loc, UnaryPattern { UnaryPattern.operator; argument; _ }) ->
+            (match argument with
+            | (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value; raw; comments }) ->
+              let (value, raw) =
+                match operator with
+                | UnaryPattern.Plus -> (value, raw)
+                | UnaryPattern.Minus -> Flow_ast_utils.negate_number_literal (value, raw)
+              in
+              let refi = SingletonNumR { loc; sense = true; lit = (value, raw) } in
+              this#literal_test
+                ~strict:true
+                ~sense:true
+                loc
+                acc
+                refi
+                (loc, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw; comments })
+            | (_, UnaryPattern.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }) ->
+              let (value, raw) =
+                match operator with
+                | UnaryPattern.Plus -> (value, raw)
+                | UnaryPattern.Minus -> Flow_ast_utils.negate_bigint_literal (value, raw)
+              in
+              let refi = SingletonBigIntR { loc; sense = true; lit = (value, raw) } in
+              this#literal_test
+                ~strict:true
+                ~sense:true
+                loc
+                acc
+                refi
+                (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }))
+          | (_, AsPattern { AsPattern.pattern; _ }) -> recurse arg pattern
+          | (loc, BindingPattern _)
+          | (loc, WildcardPattern _) ->
+            (match RefinementKey.of_expression acc with
+            | Some (RefinementKey.{ lookup = { projections = []; _ }; _ } as key) ->
+              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) (NotR ImpossibleR)
+            | _ -> ())
+          | (_, OrPattern { OrPattern.patterns; _ }) ->
+            let rec check_or patterns =
+              match patterns with
+              | [] -> ()
+              | [pattern] -> recurse acc pattern
+              | rhs :: rest ->
+                this#push_refinement_scope empty_refinements;
+                check_or rest;
+                let lhs_latest_refinements = this#peek_new_refinements () in
+                let env1 = this#env_snapshot_without_latest_refinements in
+                this#negate_new_refinements ();
+                this#push_refinement_scope empty_refinements;
+                recurse acc rhs;
+                let rhs_latest_refinements = this#peek_new_refinements () in
+                this#pop_refinement_scope ();
+                (* Pop LHS refinement scope *)
+                this#pop_refinement_scope ();
+                this#merge_self_env env1;
+                this#merge_refinement_scopes
+                  ~conjunction:false
+                  lhs_latest_refinements
+                  rhs_latest_refinements
+            in
+            check_or (List.rev patterns)
+          | (_, ObjectPattern _)
+          | (_, ArrayPattern _) ->
+            (* TODO:match *)
+            ()
+        in
+        recurse arg root_pattern
 
       method merge_conditional_branches_with_refinements
           (env1, refined_env1, completion_state1) (env2, refined_env2, completion_state2) : unit =
