@@ -85,6 +85,7 @@
 
   const out = match (x) {
     [a, const a]: a, // ERROR: reference before declaration
+    _: 0,
   };
 }
 

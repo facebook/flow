@@ -7492,7 +7492,7 @@ let%expect_test "match_object_pattern" =
   [%expect {|
     [
       (2, 1) to (2, 6) => {
-        (2, 1) to (2, 6): (`<match_root>`)
+        {refinement = Or (Not (And (object, Not (Null))), Not (SentinelR type)); writes = {refinement = Or (Or (Not (And (object, Not (Null))), Not (SentinelR type)), Not (PropExistsR (value))); writes = (2, 1) to (2, 6): (`<match_root>`)}}
       };
       (2, 8) to (2, 9) => {
         Global x
@@ -7519,7 +7519,7 @@ let%expect_test "match_array_pattern" =
   [%expect {|
     [
       (2, 1) to (2, 6) => {
-        (2, 1) to (2, 6): (`<match_root>`)
+        {refinement = Or (Not (And (isArray, array length === 1)), Not (SentinelR 0)); writes = {refinement = Or (Not (And (isArray, array length === 2)), Not (SentinelR 0)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
       };
       (2, 8) to (2, 9) => {
         Global x

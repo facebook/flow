@@ -2913,7 +2913,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! match_expression match_loc x =
         let open Flow_ast.Expression.Match in
-        let { arg; cases; arg_internal; comments = _ } = x in
+        let { arg; cases; arg_internal; match_keyword_loc; comments = _ } = x in
         let match_root_ident = Flow_ast_utils.match_root_ident in
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
@@ -2969,7 +2969,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                          this#negate_new_refinements ()
                        ))
                      ()
-               ))
+               );
+               let arg_out =
+                 ( match_keyword_loc,
+                   Ast.Expression.Identifier (Flow_ast_utils.match_root_ident match_keyword_loc)
+                 )
+               in
+               ignore @@ this#expression arg_out)
              ();
         let completion_states = !completion_states |> List.rev in
         this#reset_env env0;

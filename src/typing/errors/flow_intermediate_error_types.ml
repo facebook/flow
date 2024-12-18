@@ -897,6 +897,7 @@ type 'loc message =
       reason: 'loc virtual_reason;
       null_loc: 'loc option;
     }
+  | MessageMatchNotExhaustive of 'loc virtual_reason
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;

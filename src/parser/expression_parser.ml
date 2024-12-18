@@ -1337,16 +1337,16 @@ module Expression
       let leading = Peek.comments env in
       let start_loc = Peek.loc env in
       (* Consume `match` as an identifier, in case it's a call expression. *)
-      let id = Parse.identifier env in
+      let ((id_loc, _) as id) = Parse.identifier env in
       (* Allows trailing comma. *)
       let args = arguments env in
       (* `match (<expr>) {` *)
       if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then
         let arg = Parser_common.reparse_arguments_as_match_argument env args in
-        Cover_expr (match_expression ~start_loc ~leading ~arg env)
+        Cover_expr (match_expression ~start_loc ~id_loc ~leading ~arg env)
       else
         (* It's actually a call expression of the form `match(...)` *)
-        let callee = (fst id, Expression.Identifier id) in
+        let callee = (id_loc, Expression.Identifier id) in
         let (args_loc, _) = args in
         let loc = Loc.btwn start_loc args_loc in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -1382,7 +1382,7 @@ module Expression
 
   and primary env = as_expression env (primary_cover env)
 
-  and match_expression env ~start_loc ~leading ~arg =
+  and match_expression env ~start_loc ~id_loc ~leading ~arg =
     let case env =
       let leading = Peek.comments env in
       let pattern = Parse.match_pattern env in
@@ -1422,6 +1422,7 @@ module Expression
             Expression.Match.arg;
             cases;
             arg_internal = start_loc;
+            match_keyword_loc = id_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
       env

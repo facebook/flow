@@ -613,6 +613,12 @@ and 'loc t' =
       arg: 'loc virtual_reason;
     }
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
+  (* Match *)
+  | EMatchNotExhaustive of {
+      loc: 'loc;
+      reason: 'loc virtual_reason;
+    }
+  (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
       refining_locs: 'loc list;
@@ -1413,6 +1419,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
+  | EMatchNotExhaustive { loc; reason } ->
+    EMatchNotExhaustive { loc = f loc; reason = map_reason reason }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1709,7 +1717,8 @@ let util_use_op_of_msg nope util = function
   | EUnionPartialOptimizationNonUniqueKey _
   | EUnionOptimization _
   | EUnionOptimizationOnNonUnion _
-  | ECannotCallReactComponent _ ->
+  | ECannotCallReactComponent _
+  | EMatchNotExhaustive _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1910,6 +1919,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
+  | EMatchNotExhaustive { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2857,6 +2867,7 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
+  | EMatchNotExhaustive { loc = _; reason } -> Normal (MessageMatchNotExhaustive reason)
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3193,3 +3204,4 @@ let error_code_of_message err : error_code option =
   | EUnionOptimization _ -> Some UnionUnoptimizable
   | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
+  | EMatchNotExhaustive _ -> Some MatchNotExhaustive
