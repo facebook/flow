@@ -106,6 +106,11 @@ let map_poly ~f t =
   end
   | _ -> unchanged_result t
 
+let empty t =
+  match t with
+  | DefT (_, EmptyT) -> unchanged_result t
+  | _ -> changed_result (DefT (reason_of_t t, EmptyT))
+
 let rec truthy cx t =
   if TypeUtil.is_falsy t then
     changed_result (DefT (reason_of_t t, EmptyT))

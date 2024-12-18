@@ -336,6 +336,13 @@ and predicate_no_concretization cx trace result_collector l ~p =
       ~idx
       l
       result_collector
+  (**************)
+  (* Impossible *)
+  (**************)
+  | NotP ImpossibleP ->
+    report_filtering_result_to_predicate_result (Type_filter.unchanged_result l) result_collector
+  | ImpossibleP ->
+    report_filtering_result_to_predicate_result (Type_filter.empty l) result_collector
 
 (* call_latent_pred connects a predicate function with information available
  * at a call-site appearing in a conditional position (e.g. `if (pred(x))`).

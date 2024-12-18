@@ -745,7 +745,8 @@ let rec eq_predicate (p1, p2) =
   | (StrP _, StrP _)
   | (SymbolP _, SymbolP _)
   | (VoidP, VoidP)
-  | (ArrP, ArrP) ->
+  | (ArrP, ArrP)
+  | (ImpossibleP, ImpossibleP) ->
     true
   (* Recursive *)
   | (AndP (p1a, p1b), AndP (p2a, p2b)) -> eq_predicate (p1a, p2a) && eq_predicate (p1b, p2b)

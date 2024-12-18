@@ -355,6 +355,7 @@ let predicate_of_refinement cx =
     | PropExistsR { propname; loc } ->
       let reason = mk_reason (RProperty (Some (OrdinaryName propname))) loc in
       Some (PropExistsP { propname; reason })
+    | ImpossibleR -> Some ImpossibleP
   in
   pred
 
