@@ -1,0 +1,5 @@
+[options]
+all=true
+module.system=haste
+module.system.haste.module_ref_prefix=m#
+module.system.haste.module_ref_prefix.standard_cjs_esm_interop=true

@@ -535,7 +535,8 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let op = merge_op env file op in
     let t = eval file loc t op in
     make_hooklike file hooklike t
-  | Pack.Require { loc; index } -> require file loc index ~legacy_interop:false
+  | Pack.Require { loc; index } ->
+    require file loc index ~standard_cjs_esm_interop:false ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
@@ -544,7 +545,14 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index; legacy_interop } ->
-    let t = require file loc index ~legacy_interop in
+    let t =
+      require
+        file
+        loc
+        index
+        ~standard_cjs_esm_interop:(Context.haste_module_ref_prefix_standard_cjs_esm_interop file.cx)
+        ~legacy_interop
+    in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
@@ -804,7 +812,14 @@ and merge_annot env file = function
     let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
-    ConsGen.cjs_require file.cx module_t reason symbol ~is_strict:false ~legacy_interop:false
+    ConsGen.cjs_require
+      file.cx
+      module_t
+      reason
+      symbol
+      ~is_strict:false
+      ~standard_cjs_esm_interop:false
+      ~legacy_interop:false
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
     ->

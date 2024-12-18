@@ -1061,6 +1061,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                      cx
                      (mk_annot_reason (RModule value) loc)
                      ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:value ~def_loc:loc)
+                     ~standard_cjs_esm_interop:false
                      ~legacy_interop:false
                      remote_module_t
                   )

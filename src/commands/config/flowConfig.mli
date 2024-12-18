@@ -142,6 +142,8 @@ val gc_worker_window_size : config -> int option
 
 val haste_module_ref_prefix : config -> string option
 
+val haste_module_ref_prefix_standard_cjs_esm_interop : config -> bool
+
 val haste_module_ref_prefix_LEGACY_INTEROP : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list

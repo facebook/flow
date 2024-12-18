@@ -84,7 +84,7 @@ type AsyncIterator<+T> = $AsyncIterator<T,void,void>;
 type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
 
 declare opaque type $Flow$ModuleRef<+T>;
-
+declare opaque type $Flow$EsmModuleMarkerWrapperInModuleRef<+T>: T;
 declare opaque type React$CreateElement;
 
 declare var module: {

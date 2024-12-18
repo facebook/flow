@@ -1518,7 +1518,15 @@ end
 
 module CJSRequireTKit = struct
   (* require('SomeModule') *)
-  let on_ModuleT cx ~reposition ~reason ~module_symbol ~is_strict ~legacy_interop module_ =
+  let on_ModuleT
+      cx
+      ~reposition
+      ~reason
+      ~module_symbol
+      ~is_strict
+      ~standard_cjs_esm_interop
+      ~legacy_interop
+      module_ =
     let {
       module_reason;
       module_export_types = exports;
@@ -1534,11 +1542,6 @@ module CJSRequireTKit = struct
          we create below for non-CommonJS exports *)
       reposition cx (loc_of_reason reason) t
     | None ->
-      (* Use default export if option is enabled and module is not lib *)
-      let automatic_require_default =
-        (legacy_interop || Context.automatic_require_default cx)
-        && not (is_lib_reason_def module_reason)
-      in
       let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
       let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
       (* Convert ES module's named exports to an object *)
@@ -1555,12 +1558,24 @@ module CJSRequireTKit = struct
         let types_tmap = Context.generate_property_map cx type_props in
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
-      if automatic_require_default then
-        match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
-        | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
-        | _ -> mk_exports_namespace ()
+      if standard_cjs_esm_interop then
+        lookup_builtin_typeapp
+          cx
+          reason
+          "$Flow$EsmModuleMarkerWrapperInModuleRef"
+          [mk_exports_namespace ()]
       else
-        mk_exports_namespace ()
+        (* Use default export if option is enabled and module is not lib *)
+        let automatic_require_default =
+          (legacy_interop || Context.automatic_require_default cx)
+          && not (is_lib_reason_def module_reason)
+        in
+        if automatic_require_default then
+          match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
+          | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
+          | _ -> mk_exports_namespace ()
+        else
+          mk_exports_namespace ()
 end
 
 (* import * as X from 'SomeModule'; *)

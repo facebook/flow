@@ -53,6 +53,7 @@ type metadata = {
   facebook_fbt: string option;
   facebook_module_interop: bool;
   file_options: Files.options;
+  haste_module_ref_prefix_standard_cjs_esm_interop: bool;
   ignore_non_literal_requires: bool;
   max_literal_length: int;
   max_workers: int;
@@ -280,6 +281,8 @@ let metadata_of_options options =
     facebook_fbt = Options.facebook_fbt options;
     facebook_module_interop = Options.facebook_module_interop options;
     file_options = Options.file_options options;
+    haste_module_ref_prefix_standard_cjs_esm_interop =
+      Options.haste_module_ref_prefix_standard_cjs_esm_interop options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
@@ -633,6 +636,9 @@ let ban_spread_key_props cx = cx.metadata.ban_spread_key_props
 let verbose cx = cx.metadata.verbose
 
 let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
+
+let haste_module_ref_prefix_standard_cjs_esm_interop cx =
+  cx.metadata.haste_module_ref_prefix_standard_cjs_esm_interop
 
 let max_workers cx = cx.metadata.max_workers
 
