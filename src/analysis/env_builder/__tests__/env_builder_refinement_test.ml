@@ -7507,3 +7507,30 @@ let%expect_test "match_object_pattern" =
         {refinement = And (And (object, Not (Null)), SentinelR type); writes = {refinement = Or (Or (Not (And (object, Not (Null))), Not (SentinelR type)), Not (PropExistsR (value))); writes = (2, 1) to (2, 6): (`<match_root>`)}}
       }]
   |}]
+
+let%expect_test "match_array_pattern" =
+  (* Test case aligned with object pattern test case above. *)
+  print_ssa_test {|
+(match (x) {
+  [      'foo',        const a]: a as number,
+  [      'bar']: 1,
+});
+|};
+  [%expect {|
+    [
+      (2, 1) to (2, 6) => {
+        (2, 1) to (2, 6): (`<match_root>`)
+      };
+      (2, 8) to (2, 9) => {
+        Global x
+      };
+      (3, 2) to (3, 45) => {
+        {refinement = And (And (isArray, array length === 2), SentinelR 0); writes = (2, 1) to (2, 6): (`<match_root>`)}
+      };
+      (3, 33) to (3, 34) => {
+        (3, 29) to (3, 30): (`a`)
+      };
+      (4, 2) to (4, 19) => {
+        {refinement = And (And (isArray, array length === 1), SentinelR 0); writes = {refinement = Or (Not (And (isArray, array length === 2)), Not (SentinelR 0)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+      }]
+  |}]

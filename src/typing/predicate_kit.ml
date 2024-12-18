@@ -233,6 +233,17 @@ and predicate_no_concretization cx trace result_collector l ~p =
   | ArrP -> report_filtering_result_to_predicate_result (Type_filter.array l) result_collector
   | NotP ArrP ->
     report_filtering_result_to_predicate_result (Type_filter.not_array l) result_collector
+  (*******************)
+  (* array length *)
+  (*******************)
+  | ArrLenP { op; n } ->
+    report_filtering_result_to_predicate_result
+      (Type_filter.array_length ~sense:true ~op ~n l)
+      result_collector
+  | NotP (ArrLenP { op; n }) ->
+    report_filtering_result_to_predicate_result
+      (Type_filter.array_length ~sense:false ~op ~n l)
+      result_collector
   (***********************)
   (* typeof _ ~ "undefined" *)
   (***********************)

@@ -912,6 +912,7 @@ class virtual ['a] t =
       | SymbolP _
       | VoidP
       | ArrP
+      | ArrLenP _
       | PropNonMaybeP _
       | PropNonVoidP _
       | PropIsExactlyNullP _

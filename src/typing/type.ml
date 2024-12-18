@@ -1014,6 +1014,10 @@ module rec TypeTerm : sig
     | SymbolP of ALoc.t (* symbol *)
     | VoidP (* undefined *)
     | ArrP (* Array.isArray *)
+    | ArrLenP of {
+        op: array_length_op;
+        n: int;
+      }
     (* `if ('b' in a)` yields `flow (a, PredicateT(PropExistsP ("b"), tout))` *)
     | PropExistsP of {
         propname: string;
@@ -1048,6 +1052,10 @@ module rec TypeTerm : sig
     | SentinelProp of string
     (* e1 === e2 *)
     | EqTest
+
+  and array_length_op =
+    | ArrLenEqual
+    | ArrLenGreaterThanEqual
 
   and literal =
     | Truthy
@@ -4292,6 +4300,13 @@ let rec string_of_predicate = function
   | SymbolP _ -> "symbol"
   (* Array.isArray *)
   | ArrP -> "array"
+  | ArrLenP { op; n } ->
+    let op =
+      match op with
+      | ArrLenEqual -> "==="
+      | ArrLenGreaterThanEqual -> ">="
+    in
+    spf "array length %s %i" op n
   | PropExistsP { propname; _ } -> spf "prop `%s` exists" propname
   | PropTruthyP (key, _) -> spf "prop `%s` is truthy" key
   | PropIsExactlyNullP (key, _) -> spf "prop `%s` is exactly null" key

@@ -189,6 +189,7 @@ class ['a] t =
       | SymbolP _ -> acc
       | VoidP -> acc
       | ArrP -> acc
+      | ArrLenP _ -> acc
       | PropTruthyP _ -> acc
       | PropExistsP _ -> acc
       | PropNonVoidP _ -> acc

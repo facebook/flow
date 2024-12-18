@@ -83,6 +83,8 @@ val array : Type.t -> filter_result
 
 val not_array : Type.t -> filter_result
 
+val array_length : sense:bool -> op:Type.array_length_op -> n:int -> Type.t -> filter_result
+
 val sentinel_refinement :
   Type.t -> Reason.t -> Type.t -> bool -> Type.UnionEnum.star -> filter_result
 

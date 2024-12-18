@@ -759,6 +759,7 @@ let rec eq_predicate (p1, p2) =
   | (PropExistsP { propname = s1; _ }, PropExistsP { propname = s2; _ }) -> s1 = s2
   | (PropTruthyP (s1, _), PropTruthyP (s2, _)) -> s1 = s2
   | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
+  | (ArrLenP { op = op1; n = n1 }, ArrLenP { op = op2; n = n2 }) -> op1 = op2 && n1 = n2
   (* Complex *)
   | (BinaryP (b1, OpenT (_, id1)), BinaryP (b2, OpenT (_, id2))) -> b1 = b2 && id1 = id2
   | (BinaryP _, BinaryP _) -> p1 = p2

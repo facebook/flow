@@ -597,6 +597,44 @@ let not_array t =
   | DefT (_, ArrT _) -> DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
+let array_length ~sense ~op ~n t =
+  match t with
+  | DefT (_, ArrT (TupleAT { arity = (num_req, num_total); inexact; _ })) ->
+    (* `None` represents "maybe" a match *)
+    let matches =
+      match op with
+      | ArrLenEqual ->
+        if n = num_req && n = num_total && not inexact then
+          Some true
+        else if n >= num_req && (n <= num_total || inexact) then
+          None
+        else
+          Some false
+      | ArrLenGreaterThanEqual ->
+        if n <= num_req then
+          Some true
+        else if n <= num_total || inexact then
+          None
+        else
+          Some false
+    in
+    (match (matches, sense) with
+    | (Some true, true)
+    | (Some false, false)
+    | (None, _) ->
+      unchanged_result t
+    | (Some false, true)
+    | (Some true, false) ->
+      DefT (reason_of_t t, EmptyT) |> changed_result)
+  | DefT (_, ArrT (ArrayAT _ | ROArrayAT _)) ->
+    (* `[...]` matches every length, so arrays are matched. *)
+    let matches = n = 0 && op = ArrLenGreaterThanEqual in
+    if matches = sense then
+      unchanged_result t
+    else
+      DefT (reason_of_t t, EmptyT) |> changed_result
+  | _ -> unchanged_result t
+
 let sentinel_refinement =
   let open UnionEnum in
   let enum_match sense = function
