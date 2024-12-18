@@ -1,3 +1,41 @@
+### 0.257.0
+
+Likely to cause new Flow errors:
+* We have improved inference for exported primitive literal values.
+  * Before this change the inferred type for `export const obj = {f: "foo"};` was `{f: str<"foo">}`, where `str<"foo">` was a type that opportunistically and unsoundly behaved either as `string` or as the singleton type `"foo"`.
+  * Flow will now infer the type `{f: string}` for `obj`.
+  * For const like exports, e.g. `export const x = "foo";` Flow will export the type `"foo"`.
+  * To fix errors that arise due to this change, you can provide annotations around exported literals or use the [`as const` modifier](https://flow.org/en/docs/types/const-expression/).
+* We fixed a major unsoundness with regards to dictionary object creation. Previously, the computed property will just be ignored for `string` or `any` keys. Now, if the computed property is added to some existing objects (e.g. `{foo: string, [stringTypedKey]: v}`), then we will error on the property. Otherwise, the `{[key]: value}` will be `{[typeof key}: typeof value}`
+* We fixed a bug that causes opaque type's underlying representation to leak beyond the file it's defined. You might see more errors as a result.
+* Flow will now perform a complete function call check even when `[react-rule-unsafe-mutation]` errors are raised.
+* Previously we incorrectly distribute-over-union for maybe or optional input types of conditional type. (e.g. `(?string) extends string ? true : false` is evaluated to `true | false` instead of `false`). This is now fixed, and code that depends on the bug might have new errors.
+* If you have refiend a value based on `typeof x === 'function'`, and then do `typeof x === 'object'`, the result is now `empty` as that is impossible.
+* Singleton types are now also considered in conditional equality checks on member expressions. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQA9KyAAQAARgRAA7gAdKBC2z2DkAQWQHIA5OLpRyALwyuUAbhF0DFACEpdLNfKlbrpWrHhqJByAMI6836mXW41CjRPKjYDmAjnRODQKXAIUcv0clbGHVy3i+-0YHUYaWhqD0jkAHw5Pqg-oDqx1epjqbQOrQ0aF9PtsAeyk9KYW9gAjAAKACUSbDfpIfLge1qHOrHugw2M9eTqdT1TIEuQjYHaCiW2NA-9Q5dlo57I5AHU4McOVAIHyOSZKBBKLwOSQKpCLRzaRuIGaT7ghBo2OeU7L5YnDWPs5Pp-76QWhUKYCW8Llu0EgAEx1g2Kb+nAMAdl2UA9i6CrIRafZxkuq7rpu267vuh7Ho887niQl7Xo8t73o+yovjKeq-lAuQgA0JjHtASQNAADFYoEAKw8VYHEgPSQA))
+* `React.Config` type, deprecated in v0.254, is now removed.
+
+New Features:
+* `'key' in x` now refines the type of `x` to objects which have the property `key`.
+  - `in` checks for both own and non-own properties.
+  - If we find that a key does not exist in an inexact object or instance/interface, then the negation is not refined since the property may or may not exist.
+  - An optional property is also considered as if it may or may not exist.
+  - If a proto/super is a union, every member of the union must have it
+  - If the input to the refinement is an intersection, one member of that intersection must have it
+  - We don't refine arrays since it's not useful (check for `.length` instead), and also because Flow doesn't handle array holes.
+* Flow now supports `no_unchecked_indexed_access=true` in flowconfig, which is equivalent to [noUncheckedIndexedAccess](https://www.typescriptlang.org/tsconfig/#noUncheckedIndexedAccess) from TS. It will add `| void` to every indexed access with general string key on dictionary objects or number key on arrays.
+* Support for React 19's ref-as-prop model is now available via `react.ref_as_prop=partial_support`, and this is now the default. (To disable it, use `react.ref_as_prop=disabled`.) Under this mode, ref prop in jsx will be treated as a regular prop for function components, but utility types like `React.ElementConfig<...>` still won't include the regular ref prop yet.
+* Flow now allows using union of strings as the type of computed property keys.
+* You can now destructure object properties using number literal keys (which are int-like).
+
+Notable bug fixes:
+* Refining type guards with opaque types will now refine the general type (example of code that used to fail before, but now passes: [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhJWT5VgACACCAB4ACoAPm5AF5ucBuQBqAAkspWxmQ3IAjLxuU1cDJlYLufTuQAfSUy+WK7DKgBM6s12u5uvpAG5OWbuQAhIWiiUCkVOqAaJ5UbDc2EYACOMm5LoA8h7fS6AMIe8VupNGmM+zmc-24QPcmAPZRwaDc2nukUACkgIkYqXN3MTIoAlMqqzWFiWSCmM1BOfnHvCoJH2hIVeWbXXE0USmxhc2NRA4GxJZzuSWYNzy6Wx9wZI3G8vB6vubZ7Nz8Crk+PuRhO+6p6VhQ7VwB6Z-cylLtLcnDBrZ0FdHieEhnhayp3sUD6Xju2BPtyr7clAEDAcC3ImJQECUNeUC0NyIgYdgAH0pyRE9rABYDkO9gWuW+7AABq4ugAylIFQIPGyaJvYphQAgj70ZGPLMdxCCusm7pcaxfGHqufaFsWaDblqdZCax8a0fxR5rhuW7jnuB6aQZgHQKe55QUp16dipPGurB8GIchg5oRhWE4XhLAaYZx7GcB+CgdyVkiWZMi2W+9lYah1DOcCrn4R5q4kZpJH0rkIANCYJBFlASQNAADFYFoAKwAGxWDlID0kAA))
+* Allow more flexibility in checks involving super type of opaque type (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhJWT5VgACACCAB4ACoAPm5AF5ucBuQBqAAkspWxmQ3IAjLxuU1cDJlYLufTuQAfSUy+WK7DKgBM6s12u5uvpAG5ORonlRsNzYRgAI4yblm7kAeWVAvspigCGFTqgzrmuDdGqoHuVAajEG5GBIfP5oYqEYd3IA9AXuQB3ODHblQCASbk4dNQbkmSgQSj12jckQt7Cc3IgBomEhwaBJBoABisFoArAA2KyjkD0oA))
+* Fixed a bug when using opaque types in type guards in files other than the one where the type guard function was defined.
+* We now allow a union of generic or opaque string typed values to be used as a key of computed property, if it's bounded by a string type.
+
+Library Definitions:
+* Add libdef types for `getNotifications` and `showNotification` API for `ServiceWorkerRegistration`
+
 ### 0.256.0
 
 Notable bug fixes:
