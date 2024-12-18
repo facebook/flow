@@ -3126,7 +3126,50 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   rhs_latest_refinements
             in
             check_or (List.rev patterns)
-          | (_, ObjectPattern _)
+          | (loc, ObjectPattern { ObjectPattern.properties; rest = _; comments = _ }) ->
+            (match RefinementKey.of_expression acc with
+            | Some key ->
+              (* typeof x === 'object' && x !== null *)
+              let refi = AndR (ObjectR, NotR NullR) in
+              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+            | None -> ());
+            Base.List.iter properties ~f:(fun prop ->
+                let (loc, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) =
+                  prop
+                in
+                let (property, propname) =
+                  match key with
+                  | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
+                    (Ast.Expression.Member.PropertyIdentifier id, name)
+                  | ObjectPattern.Property.StringLiteral
+                      (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
+                    ( Ast.Expression.Member.PropertyExpression
+                        (loc, Ast.Expression.StringLiteral lit),
+                      value
+                    )
+                  | ObjectPattern.Property.NumberLiteral
+                      (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
+                    let name = Dtoa.ecma_string_of_float value in
+                    ( Ast.Expression.Member.PropertyExpression
+                        (loc, Ast.Expression.NumberLiteral lit),
+                      name
+                    )
+                in
+                let member =
+                  let open Ast.Expression in
+                  (loc, Member { Member._object = acc; property; comments = None })
+                in
+                (match pattern with
+                | (loc, WildcardPattern _)
+                | (loc, BindingPattern _) ->
+                  (match RefinementKey.of_expression acc with
+                  | Some key ->
+                    let refi = PropExistsR { propname; loc } in
+                    this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+                  | None -> ())
+                | _ -> ());
+                recurse member pattern
+            )
           | (_, ArrayPattern _) ->
             (* TODO:match *)
             ()

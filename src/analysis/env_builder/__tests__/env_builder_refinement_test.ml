@@ -7481,3 +7481,29 @@ let%expect_test "strict_eq_member" =
         {refinement = Not (EqR); writes = Global x}
       }]
   |}]
+
+let%expect_test "match_object_pattern" =
+  print_ssa_test {|
+(match (x) {
+  {type: 'foo', value: const a}: a as number,
+  {type: 'bar'}: 1,
+});
+|};
+  [%expect {|
+    [
+      (2, 1) to (2, 6) => {
+        (2, 1) to (2, 6): (`<match_root>`)
+      };
+      (2, 8) to (2, 9) => {
+        Global x
+      };
+      (3, 2) to (3, 45) => {
+        {refinement = And (And (And (object, Not (Null)), SentinelR type), PropExistsR (value)); writes = (2, 1) to (2, 6): (`<match_root>`)}
+      };
+      (3, 33) to (3, 34) => {
+        (3, 29) to (3, 30): (`a`)
+      };
+      (4, 2) to (4, 19) => {
+        {refinement = And (And (object, Not (Null)), SentinelR type); writes = {refinement = Or (Or (Not (And (object, Not (Null))), Not (SentinelR type)), Not (PropExistsR (value))); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+      }]
+  |}]
