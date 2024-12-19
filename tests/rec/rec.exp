@@ -393,8 +393,8 @@ defined. [method-unbinding]
 
 References:
    <BUILTINS>/core.js:716:5
-   716|     concat<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>): Array<T | S>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   716|     concat<S = T>(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53

@@ -24,6 +24,9 @@ var k: Array<number> = h.concat(h);
 var l: Array<number> = h.concat(1, 2, 3);
 var m: Array<number | string> = h.concat('a', 'b', 'c');
 var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+var o = h.concat();
+o as Array<number>; // OK
+var p: Array<number> = h.concat(); // OK
 
 function reduce_test() {
   /* Adapted from the following source:

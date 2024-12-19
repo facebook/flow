@@ -2345,7 +2345,7 @@ Flags: --pretty
     {"name":"?.at","type":"void | ((index: number) => T | void)"},
     {
       "name":"?.concat",
-      "type":"void | (<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>) => Array<T | S>)"
+      "type":"void | (<S = T>(...items: Array<$ReadOnlyArray<S> | S>) => Array<T | S>)"
     },
     {
       "name":"?.copyWithin",
@@ -2457,7 +2457,7 @@ Flags: --pretty
     {"name":"at","type":"(index: number) => T | void"},
     {
       "name":"concat",
-      "type":"<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>) => Array<T | S>"
+      "type":"<S = T>(...items: Array<$ReadOnlyArray<S> | S>) => Array<T | S>"
     },
     {
       "name":"copyWithin",
