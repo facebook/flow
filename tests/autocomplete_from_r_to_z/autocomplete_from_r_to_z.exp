@@ -1,0 +1,2461 @@
+rank_intersection.js:8:3
+Flags: --lsp
+{
+  "label":"toString",
+  "labelDetails":{"detail":": (() => string) & number"},
+  "kind":6,
+  "detail":"(() => string) & number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+rank.js:7:11
+Flags: --lsp
+{
+  "label":"toString",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+rank_union.js:8:3
+Flags: --lsp
+{
+  "label":"toString",
+  "labelDetails":{"detail":": (() => string) | number"},
+  "kind":13,
+  "detail":"(() => string) | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"toString",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+recursive.js:11:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"ab","type":"number"},
+    {"name":"ac","type":"React$ComponentType<Props>"}
+  ]
+}
+
+string_literal.js:5:16
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"async",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"async"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"async",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"await",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"await"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"await",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"class",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"class",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"delete",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"delete"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"delete",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"function",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"function"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"function",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"import",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"import"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"import",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"new",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"new"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"new",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"typeof",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"typeof"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"typeof",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"void",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"yield",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"yield"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"yield",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"a",
+  "labelDetails":{"detail":": Foo"},
+  "kind":6,
+  "detail":"Foo",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":15},"end":{"line":4,"character":15}},
+    "newText":"a"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"a",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+string_literal.js:7:17
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":15},"end":{"line":6,"character":17}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:9:17
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":15},"end":{"line":8,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:11:17
+Flags: --lsp
+{
+  "label":"function",
+  "kind":14,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
+    "newText":"function"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "keyword",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"function",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":15},"end":{"line":10,"character":16}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+string_literal.js:13:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":12,"character":15},"end":{"line":12,"character":18}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:15:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":15},"end":{"line":14,"character":15}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:17:17
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":16,"character":15},"end":{"line":16,"character":17}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:19:17
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":18,"character":15},"end":{"line":18,"character":15}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:21:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":20,"character":15},"end":{"line":20,"character":18}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:23:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":22,"character":15},"end":{"line":22,"character":15}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:25:18
+Flags: --lsp
+{
+  "label":"'foo'",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":24,"character":15},"end":{"line":24,"character":20}},
+    "newText":"'foo'"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"'foo'",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+string_literal.js:27:18
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"detail":": \"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":26,"character":15},"end":{"line":26,"character":20}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"\"foo\"",
+        "ac_type":"Acliteral"
+      }
+    ]
+  }
+}
+
+str.js:3:9
+Flags: --pretty
+{
+  "result":[
+    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
+    {"name":"anchor","type":"(name: string) => string"},
+    {"name":"at","type":"(index: number) => string | void"},
+    {"name":"charAt","type":"(pos: number) => string"},
+    {"name":"charCodeAt","type":"(index: number) => number"},
+    {"name":"codePointAt","type":"(index: number) => number | void"},
+    {"name":"concat","type":"(...strings: Array<string>) => string"},
+    {
+      "name":"endsWith",
+      "type":"(searchString: string, position?: number) => boolean"
+    },
+    {
+      "name":"includes",
+      "type":"(searchString: string, position?: number) => boolean"
+    },
+    {"name":"indexOf","type":"(searchString: string, position?: number) => number"},
+    {
+      "name":"lastIndexOf",
+      "type":"(searchString: string, position?: number) => number"
+    },
+    {"name":"length","type":"number"},
+    {"name":"link","type":"(href: string) => string"},
+    {
+      "name":"localeCompare",
+      "type":"(that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
+    },
+    {
+      "name":"match",
+      "type":"(regexp: string | RegExp) => RegExp$matchResult | null"
+    },
+    {
+      "name":"matchAll",
+      "type":"(regexp: string | RegExp) => Iterator<RegExp$matchResult>"
+    },
+    {"name":"normalize","type":"(format?: string) => string"},
+    {"name":"padEnd","type":"(targetLength: number, padString?: string) => string"},
+    {
+      "name":"padStart",
+      "type":"(targetLength: number, padString?: string) => string"
+    },
+    {"name":"repeat","type":"(count: number) => string"},
+    {
+      "name":"replace",
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+    },
+    {
+      "name":"replaceAll",
+      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+    },
+    {"name":"search","type":"(regexp: string | RegExp) => number"},
+    {"name":"slice","type":"(start?: number, end?: number) => string"},
+    {
+      "name":"split",
+      "type":"(separator?: string | RegExp, limit?: number) => Array<string>"
+    },
+    {
+      "name":"startsWith",
+      "type":"(searchString: string, position?: number) => boolean"
+    },
+    {"name":"substr","type":"(from: number, length?: number) => string"},
+    {"name":"substring","type":"(start: number, end?: number) => string"},
+    {
+      "name":"toLocaleLowerCase",
+      "type":"(locale?: string | Array<string>) => string"
+    },
+    {
+      "name":"toLocaleUpperCase",
+      "type":"(locale?: string | Array<string>) => string"
+    },
+    {"name":"toLowerCase","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"toUpperCase","type":"() => string"},
+    {"name":"trim","type":"() => string"},
+    {"name":"trimEnd","type":"() => string"},
+    {"name":"trimLeft","type":"() => string"},
+    {"name":"trimRight","type":"() => string"},
+    {"name":"trimStart","type":"() => string"},
+    {"name":"valueOf","type":"() => string"}
+  ]
+}
+
+suggest_optional_chaining_1.js:4:3
+Flags: --lsp
+{
+  "label":"?.foo",
+  "labelDetails":{"detail":": void | string"},
+  "kind":13,
+  "detail":"void | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+suggest_optional_chaining_2.js:4:3
+Flags: --lsp
+{
+  "label":"?.bar",
+  "labelDetails":{"detail":": void | number"},
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.bar",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+suggest_optional_chaining_3.js:4:3
+Flags: --lsp
+{
+  "label":"?.foo",
+  "labelDetails":{"detail":": void | number | string"},
+  "kind":13,
+  "detail":"void | number | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
+    "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"?.foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+super.js:4:13
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"Foo","type":"class Foo"},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"super","type":"super"},
+    {"name":"this","type":"this"},
+    {"name":"this.bar","type":"any"},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""}
+  ]
+}
+
+super_member.js:9:11
+Flags: --pretty
+{"result":[{"name":"foo","type":"() => void"}]}
+
+switch.js:6:8
+Flags: --pretty
+{
+  "result":[
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"x","type":"\"foo\" | \"bar\" | \"baz\""}
+  ]
+}
+
+this-2.js:5:10
+Flags: --pretty
+{"result":[{"name":"typeof","type":""}]}
+
+this-2.js:9:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"break","type":""},
+    {"name":"case","type":""},
+    {"name":"catch","type":""},
+    {"name":"class","type":""},
+    {"name":"component","type":""},
+    {"name":"const","type":""},
+    {"name":"continue","type":""},
+    {"name":"debugger","type":""},
+    {"name":"declare","type":""},
+    {"name":"default","type":""},
+    {"name":"delete","type":""},
+    {"name":"do","type":""},
+    {"name":"else","type":""},
+    {"name":"enum","type":""},
+    {"name":"export","type":""},
+    {"name":"extends","type":""},
+    {"name":"finally","type":""},
+    {"name":"foo","type":"() => void"},
+    {"name":"for","type":""},
+    {"name":"function","type":""},
+    {"name":"hook","type":""},
+    {"name":"if","type":""},
+    {"name":"implements","type":""},
+    {"name":"import","type":""},
+    {"name":"interface","type":""},
+    {"name":"let","type":""},
+    {"name":"new","type":""},
+    {"name":"opaque","type":""},
+    {"name":"return","type":""},
+    {"name":"static","type":""},
+    {"name":"switch","type":""},
+    {"name":"this","type":"this"},
+    {"name":"throw","type":""},
+    {"name":"try","type":""},
+    {"name":"type","type":""},
+    {"name":"typeof","type":""},
+    {"name":"var","type":""},
+    {"name":"void","type":""},
+    {"name":"while","type":""},
+    {"name":"x","type":"any"},
+    {"name":"y","type":"(z: empty) => any"},
+    {"name":"yield","type":""}
+  ]
+}
+
+this-2.js:13:24
+Flags: --pretty
+{"result":[{"name":"typeof","type":""}]}
+
+this-2.js:17:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"Bar","type":"class Bar"},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"foo","type":"() => void"},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"new","type":""},
+    {"name":"super","type":"super"},
+    {"name":"this","type":"this"},
+    {"name":"this.baz","type":"any"},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"x","type":"any"},
+    {"name":"y","type":"(z: empty) => any"},
+    {"name":"yield","type":""}
+  ]
+}
+
+this2.js:5:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"this","type":"this"},
+    {"name":"throw","type":""},
+    {"name":"try","type":""},
+    {"name":"type","type":""},
+    {"name":"typeof","type":""}
+  ]
+}
+
+this.js:8:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"() => void"},
+    {"name":"baz","type":"string"},
+    {"name":"hello","type":"() => void"}
+  ]
+}
+
+type-alias.js:7:3
+Flags: --pretty
+{"result":[{"name":"a","type":"number"},{"name":"b","type":"string"}]}
+
+type_binding_id.js:5:7
+Flags: --pretty
+{"result":[]}
+
+type_binding_id.js:8:14
+Flags: --pretty
+{"result":[]}
+
+type_binding_id.js:11:15
+Flags: --pretty
+{"result":[]}
+
+typeof_2.js:4:19
+Flags: --lsp
+{
+  "label":"b",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"b"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"b",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+typeof.js:4:18
+Flags: --lsp
+{
+  "label":"abb",
+  "labelDetails":{"detail":": {b: string, ...}"},
+  "kind":6,
+  "detail":"{b: string, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
+    "newText":"abb"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"abb",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+typeparams_function.js:3:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"break","type":""},
+    {"name":"case","type":""},
+    {"name":"catch","type":""},
+    {"name":"class","type":""},
+    {"name":"component","type":""},
+    {"name":"const","type":""},
+    {"name":"continue","type":""},
+    {"name":"debugger","type":""},
+    {"name":"declare","type":""},
+    {"name":"default","type":""},
+    {"name":"delete","type":""},
+    {"name":"do","type":""},
+    {"name":"else","type":""},
+    {"name":"enum","type":""},
+    {"name":"export","type":""},
+    {"name":"extends","type":""},
+    {"name":"finally","type":""},
+    {"name":"for","type":""},
+    {"name":"function","type":""},
+    {"name":"hook","type":""},
+    {"name":"if","type":""},
+    {"name":"implements","type":""},
+    {"name":"import","type":""},
+    {"name":"interface","type":""},
+    {"name":"let","type":""},
+    {"name":"new","type":""},
+    {"name":"opaque","type":""},
+    {"name":"return","type":""},
+    {"name":"static","type":""},
+    {"name":"switch","type":""},
+    {"name":"test","type":"<T>() => void"},
+    {"name":"this","type":"this"},
+    {"name":"throw","type":""},
+    {"name":"try","type":""},
+    {"name":"type","type":""},
+    {"name":"typeof","type":""},
+    {"name":"var","type":""},
+    {"name":"void","type":""},
+    {"name":"while","type":""},
+    {"name":"yield","type":""}
+  ]
+}
+
+typeparams.js:6:16
+Flags: --pretty
+{
+  "result":[
+    {"name":"toExponential","type":"(fractionDigits?: number) => string"},
+    {"name":"toFixed","type":"(fractionDigits?: number) => string"},
+    {
+      "name":"toLocaleString",
+      "type":"(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
+    },
+    {"name":"toPrecision","type":"(precision?: number) => string"},
+    {"name":"toString","type":"(radix?: number) => string"},
+    {"name":"valueOf","type":"() => number"}
+  ]
+}
+
+type_string_literal.js:3:13
+Flags: --pretty
+{"result":[]}
+
+union-2.js:4:3
+Flags: --pretty
+{
+  "result":[{"name":"bar","type":"\"D\" | \"B\""},{"name":"foo","type":"\"A\""}]
+}
+
+union.js:10:5
+Flags: --pretty
+{"result":[{"name":"bar","type":"any | string"}]}
+
+unqualified-type-annotation.js:28:18
+Flags: --lsp
+{
+  "label":"Tympanic",
+  "kind":6,
+  "detail":"type Tympanic = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Tympanic"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Tympanic",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typaram",
+  "kind":25,
+  "detail":"Typaram",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typaram"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type parameter",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typaram",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Types",
+  "kind":9,
+  "detail":"module \"./type-exports.js\"",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Types."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Types",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typesafe",
+  "kind":8,
+  "detail":"interface Typesafe",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typesafe"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typesafe",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typeset",
+  "kind":8,
+  "detail":"interface Typeset",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typeset"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typeset",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typewriter",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typewriter"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typewriter",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typhoon",
+  "kind":12,
+  "detail":"type Typhoon = \"not a type\"",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typhoon"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":6,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typhoon",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typnotism",
+  "kind":6,
+  "detail":"type Typnotism = number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typnotism"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":7,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typnotism",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typography",
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typography"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {
+        "token":null,
+        "index":8,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typography",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Typologies",
+  "kind":9,
+  "detail":"module \"./type-exports.js\"",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typologies."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {
+        "token":null,
+        "index":9,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Typologies",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Tyrant",
+  "kind":6,
+  "detail":"type Tyrant = string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Tyrant"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {
+        "token":null,
+        "index":10,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Tyrant",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"component",
+  "kind":14,
+  "detail":"component",
+  "documentation":{
+    "kind":"markdown",
+    "value":"[component type](https://flow.org/en/docs/react/component-types/)"
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"component($1)"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":11,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"component",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"hook",
+  "kind":14,
+  "detail":"hook",
+  "documentation":{
+    "kind":"markdown",
+    "value":"[hook type](https://flow.org/en/docs/react/hook-syntax/#hook-type-annotations)"
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"hook "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":12,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"hook",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders",
+  "kind":14,
+  "detail":"renders",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders A` means that it will eventually render exactly one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"renders "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":13,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders*",
+  "kind":14,
+  "detail":"renders*",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders* A` means that it will eventually render any amount of `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"renders* "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":14,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders*",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"renders?",
+  "kind":14,
+  "detail":"renders?",
+  "documentation":{
+    "kind":"markdown",
+    "value":"`renders? A` means that it will eventually render zero or one React element `A`. See https://flow.org/en/docs/react/render-types/ for more details."
+  },
+  "sortText":"00000000000000000100",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"renders? "
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type operators",
+      {
+        "token":null,
+        "index":15,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"renders?",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":16,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"any",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":17,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"bigint",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":18,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"boolean",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":19,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"empty",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":20,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"false",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":21,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"mixed",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":22,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"null",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":23,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"number",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":24,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"string",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":25,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"symbol",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":26,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"true",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"void",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":28,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Diff",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":29,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exact",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":30,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Exports",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":31,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$KeyMirror",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":32,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Keys",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":33,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$NonMaybeType",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":34,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$ReadOnly",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":35,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Rest",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":36,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$Values",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Class",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Partial",
+  "kind":3,
+  "detail":"Partial",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Partial"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Partial",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Required",
+  "kind":3,
+  "detail":"Required",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Required"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":39,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Required",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"StringPrefix",
+  "kind":3,
+  "detail":"StringPrefix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"StringPrefix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringPrefix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"StringSuffix",
+  "kind":3,
+  "detail":"StringSuffix",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"StringSuffix"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":41,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"StringSuffix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+

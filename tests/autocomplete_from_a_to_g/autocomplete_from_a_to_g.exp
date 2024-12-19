@@ -1,0 +1,515 @@
+bar.js:4:5
+Flags: --pretty
+{"error":"not enough type information to extract members","result":[]}
+
+bool.js:3:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => boolean"}
+  ]
+}
+
+class_declaration_name.js:5:8
+Flags: --pretty
+{"result":[]}
+
+class_extends.js:5:20
+Flags: --pretty
+{"result":[{"name":"Foo","type":"class Foo"},{"name":"function","type":""}]}
+
+class_members.js:16:18
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"break","type":""},
+    {"name":"this.been","type":"() => void"},
+    {"name":"this.bye","type":"string"}
+  ]
+}
+
+class_members.js:23:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"break","type":""},
+    {"name":"this.baz","type":"() => void"},
+    {"name":"this.boo","type":"string"}
+  ]
+}
+
+class_members.js:36:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"break","type":""},
+    {"name":"this.baz","type":"() => void"},
+    {"name":"this.boo","type":"string"}
+  ]
+}
+
+comments.js:3:8
+Flags: --pretty
+{"result":[]}
+
+comments.js:6:8
+Flags: --pretty
+{"result":[]}
+
+enum-id.js:9:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"Fab","type":"enum Fab"},
+    {"name":"Foo","type":"enum Foo"},
+    {"name":"function","type":""},
+    {"name":"for","type":""},
+    {"name":"finally","type":""}
+  ]
+}
+
+enum-key.js:4:4
+Flags: --lsp
+
+enums.js:11:3
+Flags: --lsp
+{
+  "label":"Bar",
+  "labelDetails":{"detail":": E"},
+  "kind":6,
+  "detail":"E",
+  "documentation":{"kind":"markdown","value":"**@deprecated**"},
+  "tags":[1],
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Bar",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"Foo",
+  "labelDetails":{"detail":": E"},
+  "kind":6,
+  "detail":"E",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"Foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Foo",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"cast",
+  "labelDetails":{"detail":": (input: ?string) => void | E"},
+  "kind":3,
+  "detail":"(input: ?string) => void | E",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"cast",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"getName",
+  "labelDetails":{"detail":": (input: E) => string"},
+  "kind":3,
+  "detail":"(input: E) => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"getName"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":3,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"getName",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"isValid",
+  "labelDetails":{"detail":": (input: ?string | E) => boolean"},
+  "kind":3,
+  "detail":"(input: ?string | E) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"isValid",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+{
+  "label":"members",
+  "labelDetails":{"detail":": () => Iterator<E>"},
+  "kind":3,
+  "detail":"() => Iterator<E>",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":10,"character":2},"end":{"line":10,"character":2}},
+    "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {
+        "token":null,
+        "index":5,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"members",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
+eval_destructor.js:5:3
+Flags: --pretty
+{"result":[{"name":"a","type":"number"}]}
+
+exact.js:7:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"break","type":""},
+    {"name":"case","type":""},
+    {"name":"catch","type":""},
+    {"name":"class","type":""},
+    {"name":"component","type":""},
+    {"name":"const","type":""},
+    {"name":"continue","type":""},
+    {"name":"debugger","type":""},
+    {"name":"declare","type":""},
+    {"name":"default","type":""},
+    {"name":"delete","type":""},
+    {"name":"do","type":""},
+    {"name":"else","type":""},
+    {"name":"enum","type":""},
+    {"name":"export","type":""},
+    {"name":"extends","type":""},
+    {"name":"finally","type":""},
+    {"name":"for","type":""},
+    {"name":"function","type":""},
+    {"name":"hook","type":""},
+    {"name":"if","type":""},
+    {"name":"implements","type":""},
+    {"name":"import","type":""},
+    {"name":"interface","type":""},
+    {"name":"let","type":""},
+    {"name":"new","type":""},
+    {"name":"obj","type":"{|num: number, str: string|}"},
+    {"name":"opaque","type":""},
+    {"name":"return","type":""},
+    {"name":"static","type":""},
+    {"name":"switch","type":""},
+    {"name":"throw","type":""},
+    {"name":"try","type":""},
+    {"name":"type","type":""},
+    {"name":"typeof","type":""},
+    {"name":"var","type":""},
+    {"name":"void","type":""},
+    {"name":"while","type":""},
+    {"name":"yield","type":""}
+  ]
+}
+
+exact.js:10:5
+Flags: --pretty
+{"result":[{"name":"num","type":"number"},{"name":"str","type":"string"}]}
+
+fixme.js:14:8
+Flags: --lsp
+{
+  "label":"$FlowFixMe[unused-promise]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":13,"character":7},"end":{"line":13,"character":7}},
+    "newText":"\\$FlowFixMe[unused-promise] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[unused-promise]",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+fixme.js:18:12
+Flags: --pretty
+{"result":[]}
+
+fixme.js:21:10
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":20,"character":3},"end":{"line":20,"character":9}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+fixme.js:5:4
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+fixme.js:8:5
+Flags: --lsp
+{
+  "label":"$FlowFixMe[incompatible-call]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[incompatible-call]",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+{
+  "label":"$FlowFixMe[unsafe-addition]",
+  "kind":1,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":2,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"\\$FlowFixMe[unsafe-addition] ${1:reason for suppression}"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "fixme comment",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"$FlowFixMe[unsafe-addition]",
+        "ac_type":"Ac_comment"
+      }
+    ]
+  }
+}
+
+foo.js:10:5
+Flags: --pretty
+{"result":[{"name":"num","type":"number"},{"name":"str","type":"string"}]}
+
+foo_parse_fail.js:10:17
+Flags: --pretty
+{"result":[{"name":"num","type":"number"},{"name":"str","type":"string"}]}
+
+function-added-properties.js:6:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"string"},
+    {
+      "name":"apply",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    },
+    {"name":"arguments","type":"any"},
+    {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"call",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    },
+    {"name":"caller","type":"any | null"},
+    {"name":"length","type":"number"},
+    {"name":"name","type":"string"},
+    {"name":"toString","type":"() => string"}
+  ]
+}
+
+function_builtins.js:4:5
+Flags: --pretty
+{"error":"not enough type information to extract members","result":[]}
+
+fun.js:4:5
+Flags: --pretty
+{
+  "result":[
+    {
+      "name":"apply",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    },
+    {"name":"arguments","type":"any"},
+    {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
+    {
+      "name":"call",
+      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    },
+    {"name":"caller","type":"any | null"},
+    {"name":"length","type":"number"},
+    {"name":"name","type":"string"},
+    {"name":"toString","type":"() => string"}
+  ]
+}
+
+generic_alias.js:7:5
+Flags: --pretty
+{"result":[{"name":"name","type":"string"}]}
+
+generics.js:6:5
+Flags: --pretty
+{"result":[{"name":"cn","type":"C<number>"}]}
+

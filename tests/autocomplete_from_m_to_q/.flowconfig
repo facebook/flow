@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+all=false
+exact_by_default=false
+no_flowlib=false
+enums=true
+format.single_quotes=true
+autoimports_ranked_by_usage=true
+component_syntax=true
