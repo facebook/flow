@@ -28,7 +28,7 @@ import React from 'react';
 
 type Props = {}
 
-export default (): React$MixedElement => {
+export default (): React.MixedElement => {
   class Abc extends React.Component<Props> { }
   return <Abc/>;
 }
@@ -151,7 +151,7 @@ import React from 'react';
 
 type Props = {}
 
-export default (): React$MixedElement => {
+export default (): React.MixedElement => {
   class Abc extends React.Component<Props> { }
   return <Abc/>;
 }

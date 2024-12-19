@@ -1212,13 +1212,8 @@ class type_normalization_hardcoded_fixes_mapper
             kind,
             Some [(Ty.Str _ | Ty.StrLit _)]
           )
-        when is_react_loc sym_def_loc && imports_react ->
-        let name =
-          if imports_react then
-            "React.MixedElement"
-          else
-            "React$MixedElement"
-        in
+        when is_react_loc sym_def_loc ->
+        let name = "React.MixedElement" in
         let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
         this#on_t env Ty.(Generic (symbol, kind, None))
       (* E.g. React$Element<typeof A> will become React.MixedElement or React.Node.
@@ -1238,14 +1233,9 @@ class type_normalization_hardcoded_fixes_mapper
         when is_react_loc sym_def_loc ->
         let name =
           if generalize_react_mixed_element then
-            if imports_react then
-              "React.MixedElement"
-            else
-              "React$MixedElement"
-          else if imports_react then
-            "React.Node"
+            "React.MixedElement"
           else
-            "React$Node"
+            "React.Node"
         in
         let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
         this#on_t env Ty.(Generic (symbol, kind, None))
