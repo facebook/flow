@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.0.0 (2024-12-19)
+
+* Bumped bundled flow-bin version.
+* Unbreak extension for Windows machines. ([#9242](https://github.com/facebook/flow/pull/9242))
+* Rewritten the extension in TypeScript to better keep up with upstream changes, because the upstream VSCode API typings are in TypeScript.
+
 ### [2.2.1](https://github.com/flowtype/flow-for-vscode/compare/2.2.0...2.2.1) (2023-01-06)
 
 * Fix a security vulnerability.
