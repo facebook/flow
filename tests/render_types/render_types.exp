@@ -963,7 +963,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. Only elemen
 appear in renders but string [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:60:25
-    60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+    60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                 ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -978,7 +978,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and undefined [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -993,7 +993,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and null [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1008,7 +1008,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and boolean [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1023,7 +1023,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and number [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1038,7 +1038,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and string [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1053,7 +1053,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and `React.Element` [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1068,7 +1068,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and `React.Portal` [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1083,7 +1083,7 @@ Cannot use `React.Element` [1] as the type argument of renders type. You can onl
 when the third type argument is a render type and `$Iterable` [2] is not a render type. [invalid-render]
 
    renders_to_renders.js:60:25
-   60|   rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+   60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1290,7 +1290,7 @@ Cannot cast `mixedElement` to renders union type because `React.Element` [1] doe
 
 References:
    renders_to_renders.js:105:31
-   105|   declare const mixedElement: React$MixedElement;
+   105|   declare const mixedElement: React.MixedElement;
                                       ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:107:19
                           v--------

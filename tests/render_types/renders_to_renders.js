@@ -57,7 +57,7 @@ declare const rendersBazOrBaz: renders (
     | null  // invalid-render
     | Bar
   ); // OK
-  rendersFoo as renders React$MixedElement; // type checks, but invalid-render
+  rendersFoo as renders React.MixedElement; // type checks, but invalid-render
   rendersQux as renders (Foo | Bar); // OK
   rendersQux as renders (Foo | Baz); // ERROR
   component A0() renders null { // invalid-render
@@ -102,7 +102,7 @@ declare const rendersBazOrBaz: renders (
   3 as renders (null | number); // type checks, but invalid-render
   declare const x: ExactReactElement_DEPRECATED<() => React$Node>;
   x as renders typeof x; // type checks, but invalid-render
-  declare const mixedElement: React$MixedElement;
+  declare const mixedElement: React.MixedElement;
   // The test below ensures repositioning does not hit unsoundness in speculation
   mixedElement as renders (
     | Foo
@@ -114,11 +114,11 @@ declare const rendersBazOrBaz: renders (
 
 /* Exit Structural Render Types */
 {
-  rendersFooOrBar as React$MixedElement; // OK
+  rendersFooOrBar as React.MixedElement; // OK
   rendersFooOrBar as empty; // ERROR
   rendersFooOrBar as React$Node; // OK
   rendersFooOrBar as React$Node; // OK
-  rendersNode as React$MixedElement; // invalid-render of rendersNode makes LHS any
+  rendersNode as React.MixedElement; // invalid-render of rendersNode makes LHS any
   rendersNode as React$Node; // OK
   declare const rendersNullOrNull: renders (null | null); // invalid-render
   rendersNullOrNull as null; // invalid-render of rendersNullOrNull makes LHS any
@@ -128,7 +128,7 @@ declare const rendersBazOrBaz: renders (
 
 /* Exit Nominal Render Types */
 {
-  rendersBaz as React$MixedElement; // OK
+  rendersBaz as React.MixedElement; // OK
   rendersBaz as empty; // ERROR
   rendersBaz.props; // ERROR
 }

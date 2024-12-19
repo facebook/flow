@@ -950,7 +950,7 @@ const EnhancedClass_DefaultProps = hoc(Class_DefaultProps);
   foo={1}
 />;
 
-class ThisInJsxTag extends React.Component<{tag: () => React$MixedElement}> {
+class ThisInJsxTag extends React.Component<{tag: () => React.MixedElement}> {
   render(): React.Node {
     return <this.props.tag />; // OK
   }
