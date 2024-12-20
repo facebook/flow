@@ -903,6 +903,7 @@ type 'loc message =
   | MessageMatchInvalidUnaryZero
   | MessageMatchInvalidUnaryPlusBigInt
   | MessageMatchDuplicateObjectProperty of { name: string }
+  | MessageMatchBindingInOrPattern
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;

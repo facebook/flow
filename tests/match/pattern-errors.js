@@ -81,3 +81,22 @@
     _: 0,
   };
 }
+
+// Bindings in 'or' patterns are not yet supported
+{
+  declare const x: [boolean];
+
+  const e1 = match (x) {
+    _ | [true as a]: 0, // ERROR
+    _ | [true as const a]: 0, // ERROR
+    _ | [const a]: 0, // ERROR
+    _ | [...const a]: 0, // ERROR
+  };
+
+  declare const y: {a: boolean};
+
+  const e2 = match (y) {
+    _ | {const a}: 0, // ERROR
+    _ | {...const a}: 0, // ERROR
+  };
+}
