@@ -24,6 +24,8 @@ val pattern_has_binding : ('m, 't) Flow_ast.Pattern.t -> bool
 
 val match_pattern_has_binding : ('m, 't) Flow_ast.MatchPattern.t -> bool
 
+val string_of_variable_kind : Flow_ast.Variable.kind -> string
+
 val partition_directives :
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->
   (Loc.t, Loc.t) Flow_ast.Statement.t list * (Loc.t, Loc.t) Flow_ast.Statement.t list

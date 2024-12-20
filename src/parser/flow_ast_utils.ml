@@ -113,6 +113,11 @@ let rec match_pattern_has_binding =
   | (_, OrPattern { OrPattern.patterns; _ }) -> List.exists match_pattern_has_binding patterns
   | (_, AsPattern _) -> true
 
+let string_of_variable_kind = function
+  | Variable.Var -> "var"
+  | Variable.Let -> "let"
+  | Variable.Const -> "const"
+
 let partition_directives statements =
   let open Statement in
   let rec helper directives = function
