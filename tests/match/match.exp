@@ -652,6 +652,22 @@ New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
                           ^
 
 
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:109:5
+
+Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
+
+   109|     const a as b: 0, // ERROR
+            ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:110:5
+
+Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
+
+   110|     const a as const b: 0, // ERROR
+            ^^^^^^^^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -777,4 +793,4 @@ References:
 
 
 
-Found 62 errors
+Found 64 errors
