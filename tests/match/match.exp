@@ -477,6 +477,31 @@ Cannot use `var` for match pattern binding. Only `const` is allowed. [match-inva
             ^^^^^
 
 
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:25:6
+
+Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
+[match-invalid-pattern]
+
+   25|     {1.1: _}: 0, // ERROR
+            ^^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:35:5
+
+Unary pattern on `0` is not supported. [match-invalid-pattern]
+
+   35|     -0: true, // ERROR
+           ^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:36:5
+
+Unary pattern on `0` is not supported. [match-invalid-pattern]
+
+   36|     +0: true, // ERROR
+           ^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -602,4 +627,4 @@ References:
 
 
 
-Found 44 errors
+Found 47 errors

@@ -4002,6 +4002,8 @@ let to_printable_error :
         text "Unsupported object property literal in match pattern. ";
         text "String literals and int-like number literals are supported.";
       ]
+    | MessageMatchInvalidUnaryZero ->
+      [text "Unary pattern on "; code "0"; text " is not supported."]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =
