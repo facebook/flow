@@ -898,6 +898,7 @@ type 'loc message =
       null_loc: 'loc option;
     }
   | MessageMatchNotExhaustive of 'loc virtual_reason
+  | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;

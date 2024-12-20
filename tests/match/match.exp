@@ -397,6 +397,86 @@ References:
                            ^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:6:10
+
+Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   6|      [...let a]: 0, // ERROR
+               ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- pattern-errors.js:7:7
+
+Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   7|      {let a, ...let b}: 0, // ERROR
+            ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:7:17
+
+Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   7|      {let a, ...let b}: 0, // ERROR
+                      ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:8:11
+
+Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   8|      0 as let a: 0, // ERROR
+                ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- pattern-errors.js:9:6
+
+Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   9|      let a: 0, // ERROR
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:13:10
+
+Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   13|      [...var a]: 0, // ERROR
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:14:7
+
+Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   14|      {var a, ...var b}: 0, // ERROR
+             ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:14:17
+
+Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   14|      {var a, ...var b}: 0, // ERROR
+                       ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:15:11
+
+Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   15|      0 as var a: 0, // ERROR
+                 ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:16:6
+
+Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
+
+   16|      var a: 0, // ERROR
+            ^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -416,127 +496,110 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- patterns.js:20:3
 
-Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot resolve name `a`. [cannot-resolve-name]
 
-   patterns.js:20:3
-   20|   out as empty; // ERROR
-         ^^^
-
-References:
-   patterns.js:14:20
-   14|   declare const x: number;
-                          ^^^^^^ [1]
-   patterns.js:20:10
-   20|   out as empty; // ERROR
-                ^^^^^ [2]
+   20|   a; // ERROR: cannot resolve name
+         ^
 
 
 Error ------------------------------------------------------------------------------------------------- patterns.js:31:3
 
-Cannot resolve name `a`. [cannot-resolve-name]
-
-   31|   a; // ERROR: cannot resolve name
-         ^
-
-
-Error ------------------------------------------------------------------------------------------------- patterns.js:42:3
-
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:42:3
-   42|   out as empty; // ERROR
+   patterns.js:31:3
+   31|   out as empty; // ERROR
          ^^^
 
 References:
-   patterns.js:36:21
-   36|   declare const x: [number];
+   patterns.js:25:21
+   25|   declare const x: [number];
                            ^^^^^^ [1]
-   patterns.js:42:10
-   42|   out as empty; // ERROR
+   patterns.js:31:10
+   31|   out as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- patterns.js:54:3
+Error ------------------------------------------------------------------------------------------------- patterns.js:43:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:54:3
-   54|   out as empty; // ERROR
+   patterns.js:43:3
+   43|   out as empty; // ERROR
          ^^^
 
 References:
-   patterns.js:47:26
-   47|   declare const x: {foo: number};
+   patterns.js:36:26
+   36|   declare const x: {foo: number};
                                 ^^^^^^ [1]
-   patterns.js:54:10
-   54|   out as empty; // ERROR
+   patterns.js:43:10
+   43|   out as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- patterns.js:66:3
+Error ------------------------------------------------------------------------------------------------- patterns.js:55:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:66:3
-   66|   out as empty; // ERROR
+   patterns.js:55:3
+   55|   out as empty; // ERROR
          ^^^
 
 References:
-   patterns.js:59:26
-   59|   declare const x: {foo: number};
+   patterns.js:48:26
+   48|   declare const x: {foo: number};
                                 ^^^^^^ [1]
-   patterns.js:66:10
-   66|   out as empty; // ERROR
+   patterns.js:55:10
+   55|   out as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- patterns.js:79:3
+Error ------------------------------------------------------------------------------------------------- patterns.js:68:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:79:3
-   79|   out as empty; // ERROR
+   patterns.js:68:3
+   68|   out as empty; // ERROR
          ^^^
 
 References:
-   patterns.js:71:33
-   71|   declare const x: {foo: [{bar: number}]};
+   patterns.js:60:33
+   60|   declare const x: {foo: [{bar: number}]};
                                        ^^^^^^ [1]
-   patterns.js:79:10
-   79|   out as empty; // ERROR
+   patterns.js:68:10
+   68|   out as empty; // ERROR
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- patterns.js:87:6
+Error ------------------------------------------------------------------------------------------------- patterns.js:76:6
 
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   patterns.js:87:6
-   87|     [a, const a]: a, // ERROR: reference before declaration
+   patterns.js:76:6
+   76|     [a, const a]: a, // ERROR: reference before declaration
             ^
 
 References:
-   patterns.js:87:15
-   87|     [a, const a]: a, // ERROR: reference before declaration
+   patterns.js:76:15
+   76|     [a, const a]: a, // ERROR: reference before declaration
                      ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- patterns.js:100:23
+Error ------------------------------------------------------------------------------------------------ patterns.js:89:23
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:100:23
-   100|     {foo: const n} if n as empty: n, // ERROR
-                              ^
+   patterns.js:89:23
+   89|     {foo: const n} if n as empty: n, // ERROR
+                             ^
 
 References:
-   patterns.js:94:26
-    94|   declare const x: {foo: number};
-                                 ^^^^^^ [1]
-   patterns.js:100:28
-   100|     {foo: const n} if n as empty: n, // ERROR
-                                   ^^^^^ [2]
+   patterns.js:83:26
+   83|   declare const x: {foo: number};
+                                ^^^^^^ [1]
+   patterns.js:89:28
+   89|     {foo: const n} if n as empty: n, // ERROR
+                                  ^^^^^ [2]
 
 
 
-Found 35 errors
+Found 44 errors

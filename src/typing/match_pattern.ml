@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module Tast_utils = Typed_ast_utils
 open Reason
 open Type
 
@@ -67,10 +68,17 @@ let binding_identifier cx ~on_binding ~kind acc (loc, { Ast.Identifier.name; com
   let t = binding cx ~on_binding ~kind acc loc name in
   ((loc, t), { Ast.Identifier.name; comments })
 
-let binding_pattern cx ~on_binding acc binding =
+let binding_pattern cx ~on_binding ~loc acc binding =
   let open Ast.MatchPattern.BindingPattern in
   let { kind; id; comments } = binding in
-  let id = binding_identifier cx ~on_binding ~kind acc id in
+  let id =
+    match kind with
+    | Ast.Variable.Var
+    | Ast.Variable.Let ->
+      Flow_js.add_output cx (Error_message.EMatchInvalidBindingKind { loc; kind });
+      Tast_utils.error_mapper#t_identifier id
+    | Ast.Variable.Const -> binding_identifier cx ~on_binding ~kind acc id
+  in
   { kind; id; comments }
 
 let rec member cx ~on_identifier ~on_expression mem =
@@ -113,7 +121,7 @@ let rest_pattern cx ~on_binding acc rest =
         {
           argument =
             Base.Option.map argument ~f:(fun (arg_loc, arg) ->
-                (arg_loc, binding_pattern cx ~on_binding acc arg)
+                (arg_loc, binding_pattern cx ~on_binding ~loc:arg_loc acc arg)
             );
           comments;
         }
@@ -144,7 +152,7 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
       let target =
         match target with
         | AsPattern.Binding (loc, binding) ->
-          AsPattern.Binding (loc, binding_pattern cx ~on_binding acc binding)
+          AsPattern.Binding (loc, binding_pattern cx ~on_binding ~loc acc binding)
         | AsPattern.Identifier id ->
           AsPattern.Identifier (binding_identifier cx ~on_binding ~kind:Ast.Variable.Const acc id)
       in
@@ -152,7 +160,7 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
     | IdentifierPattern (loc, x) ->
       let t = on_identifier cx x loc in
       IdentifierPattern ((loc, t), x)
-    | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding acc x)
+    | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~loc acc x)
     | WildcardPattern x -> WildcardPattern x
     | ArrayPattern { ArrayPattern.elements; rest; comments } ->
       let rest = rest_pattern cx ~on_binding acc rest in

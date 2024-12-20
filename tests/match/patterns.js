@@ -9,17 +9,6 @@
   out as empty; // ERROR
 }
 
-// Top level binding with `let`
-{
-  declare const x: number;
-
-  const out = match (x) {
-    let a: a,
-  };
-  out as number; // OK
-  out as empty; // ERROR
-}
-
 // Binding doesn't leak to outer scope
 {
   declare const x: number;
