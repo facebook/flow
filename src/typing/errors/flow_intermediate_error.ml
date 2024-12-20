@@ -3989,6 +3989,14 @@ let to_printable_error :
         ref reason;
         text " has not been fully checked against by the match patterns below.";
       ]
+    | MessageMatchInvalidBindingKind { kind } ->
+      [
+        text "Cannot use ";
+        code (Flow_ast_utils.string_of_variable_kind kind);
+        text " for match pattern binding. Only ";
+        code "const";
+        text " is allowed.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

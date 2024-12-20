@@ -618,6 +618,10 @@ and 'loc t' =
       loc: 'loc;
       reason: 'loc virtual_reason;
     }
+  | EMatchInvalidBindingKind of {
+      loc: 'loc;
+      kind: Flow_ast.Variable.kind;
+    }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1421,6 +1425,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
   | EMatchNotExhaustive { loc; reason } ->
     EMatchNotExhaustive { loc = f loc; reason = map_reason reason }
+  | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1718,7 +1723,8 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimization _
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
-  | EMatchNotExhaustive _ ->
+  | EMatchNotExhaustive _
+  | EMatchInvalidBindingKind _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1920,6 +1926,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
   | EMatchNotExhaustive { loc; _ } -> Some loc
+  | EMatchInvalidBindingKind { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2868,6 +2875,7 @@ let friendly_message_of_msg = function
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
   | EMatchNotExhaustive { loc = _; reason } -> Normal (MessageMatchNotExhaustive reason)
+  | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3207,3 +3215,4 @@ let error_code_of_message err : error_code option =
   | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
+  | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern

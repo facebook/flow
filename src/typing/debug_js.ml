@@ -1900,6 +1900,11 @@ let dump_error_message =
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
     | EMatchNotExhaustive { loc; reason } ->
       spf "EMatchNotExhaustive (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
+    | EMatchInvalidBindingKind { loc; kind } ->
+      spf
+        "EMatchInvalidBindingKind (%s) (%s)"
+        (string_of_aloc loc)
+        (Flow_ast_utils.string_of_variable_kind kind)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->
