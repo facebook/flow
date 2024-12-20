@@ -432,7 +432,16 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
         codeAction: {
           codeActionLiteralSupport: {
             codeActionKind: {
-              valueSet: ['quickfix', 'refactor.extract'],
+              valueSet: [
+                '',
+                'quickfix',
+                'refactor',
+                'refactor.extract',
+                'refactor.inline',
+                'refactor.rewrite',
+                'source',
+                'source.organizeImports',
+              ],
             },
           },
         },
