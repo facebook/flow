@@ -604,6 +604,54 @@ References:
                   ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:90:18
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   90|     _ | [true as a]: 0, // ERROR
+                        ^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:91:24
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   91|     _ | [true as const a]: 0, // ERROR
+                              ^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:92:16
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   92|     _ | [const a]: 0, // ERROR
+                      ^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:93:19
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   93|     _ | [...const a]: 0, // ERROR
+                         ^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:99:16
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   99|     _ | {const a}: 0, // ERROR
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:100:19
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   100|     _ | {...const a}: 0, // ERROR
+                          ^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -729,4 +777,4 @@ References:
 
 
 
-Found 56 errors
+Found 62 errors

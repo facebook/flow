@@ -629,6 +629,7 @@ and 'loc t' =
       loc: 'loc;
       name: string;
     }
+  | EMatchBindingInOrPattern of { loc: 'loc }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1438,6 +1439,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidUnaryPlusBigInt { loc } -> EMatchInvalidUnaryPlusBigInt { loc = f loc }
   | EMatchDuplicateObjectProperty { loc; name } ->
     EMatchDuplicateObjectProperty { loc = f loc; name }
+  | EMatchBindingInOrPattern { loc } -> EMatchBindingInOrPattern { loc = f loc }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1740,7 +1742,8 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidObjectPropertyLiteral _
   | EMatchInvalidUnaryZero _
   | EMatchInvalidUnaryPlusBigInt _
-  | EMatchDuplicateObjectProperty _ ->
+  | EMatchDuplicateObjectProperty _
+  | EMatchBindingInOrPattern _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1947,6 +1950,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidUnaryZero { loc } -> Some loc
   | EMatchInvalidUnaryPlusBigInt { loc } -> Some loc
   | EMatchDuplicateObjectProperty { loc; _ } -> Some loc
+  | EMatchBindingInOrPattern { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2902,6 +2906,7 @@ let friendly_message_of_msg = function
   | EMatchInvalidUnaryPlusBigInt { loc = _ } -> Normal MessageMatchInvalidUnaryPlusBigInt
   | EMatchDuplicateObjectProperty { loc = _; name } ->
     Normal (MessageMatchDuplicateObjectProperty { name })
+  | EMatchBindingInOrPattern { loc = _ } -> Normal MessageMatchBindingInOrPattern
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3246,3 +3251,4 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidUnaryZero _ -> Some MatchInvalidPattern
   | EMatchInvalidUnaryPlusBigInt _ -> Some MatchInvalidPattern
   | EMatchDuplicateObjectProperty _ -> Some MatchInvalidPattern
+  | EMatchBindingInOrPattern _ -> Some MatchInvalidPattern

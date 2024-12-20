@@ -66,11 +66,16 @@ let binding cx ~on_binding ~kind acc name_loc name =
   let use_op = Op (AssignVar { var = Some reason; init = mk_expression_reason acc }) in
   on_binding ~use_op ~name_loc ~kind name current
 
-let binding_identifier cx ~on_binding ~kind acc (loc, { Ast.Identifier.name; comments }) =
-  let t = binding cx ~on_binding ~kind acc loc name in
-  ((loc, t), { Ast.Identifier.name; comments })
+let binding_identifier cx ~on_binding ~in_or_pattern ~kind acc id =
+  let (loc, { Ast.Identifier.name; comments }) = id in
+  if in_or_pattern then (
+    Flow_js.add_output cx (Error_message.EMatchBindingInOrPattern { loc });
+    Tast_utils.error_mapper#t_identifier id
+  ) else
+    let t = binding cx ~on_binding ~kind acc loc name in
+    ((loc, t), { Ast.Identifier.name; comments })
 
-let binding_pattern cx ~on_binding ~loc acc binding =
+let binding_pattern cx ~on_binding ~in_or_pattern ~loc acc binding =
   let open Ast.MatchPattern.BindingPattern in
   let { kind; id; comments } = binding in
   let id =
@@ -79,7 +84,7 @@ let binding_pattern cx ~on_binding ~loc acc binding =
     | Ast.Variable.Let ->
       Flow_js.add_output cx (Error_message.EMatchInvalidBindingKind { loc; kind });
       Tast_utils.error_mapper#t_identifier id
-    | Ast.Variable.Const -> binding_identifier cx ~on_binding ~kind acc id
+    | Ast.Variable.Const -> binding_identifier cx ~on_binding ~in_or_pattern ~kind acc id
   in
   { kind; id; comments }
 
@@ -116,21 +121,21 @@ let rec member cx ~on_identifier ~on_expression mem =
   let ((_, t), _) = on_expression cx exp in
   (exp, ((loc, t), { base; property = get_property t; comments }))
 
-let rest_pattern cx ~on_binding acc rest =
+let rest_pattern cx ~on_binding ~in_or_pattern acc rest =
   let open Ast.MatchPattern.RestPattern in
   Base.Option.map rest ~f:(fun (rest_loc, { argument; comments }) ->
       ( rest_loc,
         {
           argument =
             Base.Option.map argument ~f:(fun (arg_loc, arg) ->
-                (arg_loc, binding_pattern cx ~on_binding ~loc:arg_loc acc arg)
+                (arg_loc, binding_pattern cx ~on_binding ~in_or_pattern ~loc:arg_loc acc arg)
             );
           comments;
         }
       )
   )
 
-let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
+let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc (loc, p) :
     (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t =
   let open Ast.MatchPattern in
   let p =
@@ -154,47 +159,52 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
       MemberPattern mem
     | OrPattern { OrPattern.patterns; comments } ->
       let patterns =
-        Base.List.map patterns ~f:(pattern cx ~on_identifier ~on_expression ~on_binding acc)
+        Base.List.map
+          patterns
+          ~f:(pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern:true acc)
       in
       OrPattern { OrPattern.patterns; comments }
     | AsPattern { AsPattern.pattern = p; target; comments } ->
-      let p = pattern cx ~on_identifier ~on_expression ~on_binding acc p in
+      let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let target =
         match target with
         | AsPattern.Binding (loc, binding) ->
-          AsPattern.Binding (loc, binding_pattern cx ~on_binding ~loc acc binding)
+          AsPattern.Binding (loc, binding_pattern cx ~on_binding ~in_or_pattern ~loc acc binding)
         | AsPattern.Identifier id ->
-          AsPattern.Identifier (binding_identifier cx ~on_binding ~kind:Ast.Variable.Const acc id)
+          AsPattern.Identifier
+            (binding_identifier cx ~on_binding ~in_or_pattern ~kind:Ast.Variable.Const acc id)
       in
       AsPattern { AsPattern.pattern = p; target; comments }
     | IdentifierPattern (loc, x) ->
       let t = on_identifier cx x loc in
       IdentifierPattern ((loc, t), x)
-    | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~loc acc x)
+    | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~in_or_pattern ~loc acc x)
     | WildcardPattern x -> WildcardPattern x
     | ArrayPattern { ArrayPattern.elements; rest; comments } ->
-      let rest = rest_pattern cx ~on_binding acc rest in
-      let elements = array_elements cx ~on_identifier ~on_expression ~on_binding acc elements in
+      let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
+      let elements =
+        array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc elements
+      in
       ArrayPattern { ArrayPattern.elements; rest; comments }
     | ObjectPattern { ObjectPattern.properties; rest; comments } ->
-      let rest = rest_pattern cx ~on_binding acc rest in
+      let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
       let properties =
-        object_properties cx ~on_identifier ~on_expression ~on_binding acc properties
+        object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc properties
       in
       ObjectPattern { ObjectPattern.properties; rest; comments }
   in
   (loc, p)
 
-and array_elements cx ~on_identifier ~on_expression ~on_binding acc elements =
+and array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc elements =
   let open Ast.MatchPattern.ArrayPattern in
   Base.List.mapi
     ~f:(fun i { Element.pattern = (loc, p); index } ->
       let acc = array_element acc i loc in
-      let p = pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) in
+      let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc (loc, p) in
       { Element.pattern = p; index })
     elements
 
-and object_properties cx ~on_identifier ~on_expression ~on_binding acc props =
+and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc props =
   let open Ast.MatchPattern.ObjectPattern in
   let rec loop acc seen rev_props = function
     | [] -> List.rev rev_props
@@ -202,8 +212,11 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding acc props =
       let (acc, key, name) = object_property_key cx acc key in
       if SSet.mem name seen then
         Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc; name });
-      let p = pattern cx ~on_identifier ~on_expression ~on_binding acc p in
+      let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let prop = (loc, { Property.key; pattern = p; shorthand; comments }) in
       loop acc (SSet.add name seen) (prop :: rev_props) props
   in
   loop acc SSet.empty [] props
+
+let pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) =
+  pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern:false acc (loc, p)
