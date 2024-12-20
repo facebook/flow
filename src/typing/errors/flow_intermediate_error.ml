@@ -4004,6 +4004,8 @@ let to_printable_error :
       ]
     | MessageMatchInvalidUnaryZero ->
       [text "Unary pattern on "; code "0"; text " is not supported."]
+    | MessageMatchInvalidUnaryPlusBigInt ->
+      [text "Unary pattern "; code "+"; text " on bigint literal is not supported."]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

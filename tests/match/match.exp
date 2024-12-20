@@ -502,6 +502,14 @@ Unary pattern on `0` is not supported. [match-invalid-pattern]
            ^^
 
 
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:46:5
+
+Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
+
+   46|     +1n: true, // ERROR
+           ^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -627,4 +635,4 @@ References:
 
 
 
-Found 47 errors
+Found 48 errors

@@ -1908,6 +1908,8 @@ let dump_error_message =
     | EMatchInvalidObjectPropertyLiteral { loc } ->
       spf "EMatchInvalidObjectPropertyLiteral (%s)" (string_of_aloc loc)
     | EMatchInvalidUnaryZero { loc } -> spf "EMatchInvalidUnaryZero (%s)" (string_of_aloc loc)
+    | EMatchInvalidUnaryPlusBigInt { loc } ->
+      spf "EMatchInvalidUnaryBigInt (%s)" (string_of_aloc loc)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->
