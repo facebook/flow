@@ -67,3 +67,17 @@
     _: 0,
   };
 }
+
+// Duplicate binding names
+{
+  declare const x: [boolean, boolean] | {a: boolean, b: boolean};
+
+  const e1 = match (x) {
+    [const a, true as a]: 0, // ERROR
+    [const a, true as const a]: 0, // ERROR
+    [const a, const a]: 0, // ERROR
+    [const a, ...const a]: 0, // ERROR
+    {const a, ...const a}: 0, // ERROR
+    _: 0,
+  };
+}
