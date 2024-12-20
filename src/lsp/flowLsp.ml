@@ -757,8 +757,7 @@ let do_initialize params : Initialize.result =
     in
     let supported_code_action_kinds =
       if supports_source_actions then
-        CodeActionKind.source
-        :: CodeActionKind.kind_of_string "source.addMissingImports.flow"
+        CodeActionKind.kind_of_string "source.addMissingImports.flow"
         :: CodeActionKind.kind_of_string "source.organizeImports.flow"
         :: supported_code_action_kinds
       else
