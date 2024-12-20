@@ -139,7 +139,13 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
     | StringPattern x -> StringPattern x
     | BooleanPattern x -> BooleanPattern x
     | NullPattern x -> NullPattern x
-    | UnaryPattern x -> UnaryPattern x
+    | UnaryPattern x ->
+      let { UnaryPattern.argument; _ } = x in
+      (match argument with
+      | (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value = 0.0; _ }) ->
+        Flow_js.add_output cx (Error_message.EMatchInvalidUnaryZero { loc })
+      | _ -> ());
+      UnaryPattern x
     | MemberPattern mem ->
       let (_, mem) = member cx ~on_identifier ~on_expression mem in
       MemberPattern mem
