@@ -165,6 +165,9 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       in
       OrPattern { OrPattern.patterns; comments }
     | AsPattern { AsPattern.pattern = p; target; comments } ->
+      (match p with
+      | (_, BindingPattern _) -> Flow_js.add_output cx (Error_message.EMatchInvalidAsPattern { loc })
+      | _ -> ());
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let target =
         match target with

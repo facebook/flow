@@ -4010,6 +4010,8 @@ let to_printable_error :
       [text "Duplicate property "; code name; text " in object pattern."]
     | MessageMatchBindingInOrPattern ->
       [text "New bindings in 'or' patterns are not yet supported."]
+    | MessageMatchInvalidAsPattern ->
+      [text "Invalid "; code "as"; text " pattern. Direct use on a binding pattern is not allowed."]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

@@ -100,3 +100,13 @@
     _ | {...const a}: 0, // ERROR
   };
 }
+
+// As pattern on binding pattern
+{
+  declare const x: [boolean];
+
+  const e1 = match (x) {
+    const a as b: 0, // ERROR
+    const a as const b: 0, // ERROR
+  }
+}
