@@ -772,7 +772,7 @@ with type t = Impl.t = struct
       let (loc, _) = id in
       node "MatchIdentifierPattern" loc [("id", identifier id)]
     and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
-      let kind = variable_kind kind in
+      let kind = Flow_ast_utils.string_of_variable_kind kind in
       node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]
     and match_rest_pattern (loc, { MatchPattern.RestPattern.argument; comments }) =
       node ?comments "MatchRestPattern" loc [("argument", option match_binding_pattern argument)]
@@ -915,7 +915,7 @@ with type t = Impl.t = struct
         [("body", statement_list body)]
     and declare_variable (loc, { Statement.DeclareVariable.id; annot; kind; comments }) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
-      let kind = variable_kind kind in
+      let kind = Flow_ast_utils.string_of_variable_kind kind in
       node
         ?comments
         "DeclareVariable"
@@ -1687,13 +1687,8 @@ with type t = Impl.t = struct
         "TaggedTemplateExpression"
         loc
         [("tag", expression tag); ("quasi", template_literal quasi)]
-    and variable_kind kind =
-      match kind with
-      | Variable.Var -> "var"
-      | Variable.Let -> "let"
-      | Variable.Const -> "const"
     and variable_declaration (loc, { Statement.VariableDeclaration.kind; declarations; comments }) =
-      let kind = variable_kind kind in
+      let kind = Flow_ast_utils.string_of_variable_kind kind in
       node
         ?comments
         "VariableDeclaration"

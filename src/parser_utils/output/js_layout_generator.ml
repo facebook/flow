@@ -1735,11 +1735,7 @@ and template_literal ~opts { Ast.Expression.TemplateLiteral.quasis; expressions;
   in
   fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
 
-and variable_kind kind =
-  match kind with
-  | Ast.Variable.Var -> Atom "var"
-  | Ast.Variable.Let -> Atom "let"
-  | Ast.Variable.Const -> Atom "const"
+and variable_kind kind = Atom (Flow_ast_utils.string_of_variable_kind kind)
 
 and variable_declaration
     ?(ctxt = normal_context)
