@@ -47,5 +47,13 @@ Error --------------------------------------------------------------------------
                      ^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:17:15
 
-Found 6 errors
+`React$MixedElement` is an internal Flow type. Use `React.MixedElement` instead. [internal-type]
+
+   17| type T7_bad = React$MixedElement; // error
+                     ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 7 errors
