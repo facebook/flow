@@ -37,3 +37,13 @@
     0: true, // OK
   };
 }
+
+// Unary `+` on bigint banned
+{
+  declare const x: 1n;
+
+  const e1 = match (x) {
+    +1n: true, // ERROR
+    1n: true, // OK
+  };
+}

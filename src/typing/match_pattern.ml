@@ -140,10 +140,12 @@ let rec pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) :
     | BooleanPattern x -> BooleanPattern x
     | NullPattern x -> NullPattern x
     | UnaryPattern x ->
-      let { UnaryPattern.argument; _ } = x in
-      (match argument with
-      | (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value = 0.0; _ }) ->
+      let { UnaryPattern.operator; argument; _ } = x in
+      (match (operator, argument) with
+      | (_, (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value = 0.0; _ })) ->
         Flow_js.add_output cx (Error_message.EMatchInvalidUnaryZero { loc })
+      | (UnaryPattern.Plus, (_, UnaryPattern.BigIntLiteral _)) ->
+        Flow_js.add_output cx (Error_message.EMatchInvalidUnaryPlusBigInt { loc })
       | _ -> ());
       UnaryPattern x
     | MemberPattern mem ->

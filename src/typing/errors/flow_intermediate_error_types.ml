@@ -901,6 +901,7 @@ type 'loc message =
   | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }
   | MessageMatchInvalidObjectPropertyLiteral
   | MessageMatchInvalidUnaryZero
+  | MessageMatchInvalidUnaryPlusBigInt
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;
