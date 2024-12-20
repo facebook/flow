@@ -39,24 +39,25 @@ let object_named_property acc loc name =
 
 let object_property_key cx acc key :
     (ALoc.t, ALoc.t) Flow_ast.Expression.t
-    * (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.ObjectPattern.Property.key =
+    * (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.ObjectPattern.Property.key
+    * string =
   let open Ast.MatchPattern.ObjectPattern in
   match key with
   | Property.Identifier (loc, { Ast.Identifier.name; comments }) ->
     let acc = object_named_property acc loc name in
     let current = Unsoundness.at Type.NonBindingPattern loc in
-    (acc, Property.Identifier ((loc, current), { Ast.Identifier.name; comments }))
+    (acc, Property.Identifier ((loc, current), { Ast.Identifier.name; comments }), name)
   | Property.StringLiteral (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
     let acc = object_named_property acc loc value in
-    (acc, Property.StringLiteral (loc, lit))
+    (acc, Property.StringLiteral (loc, lit), value)
   | Property.NumberLiteral (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
+    let prop = Dtoa.ecma_string_of_float value in
     if Js_number.is_float_safe_integer value then
-      let prop = Dtoa.ecma_string_of_float value in
       let acc = object_named_property acc loc prop in
-      (acc, Property.NumberLiteral (loc, lit))
+      (acc, Property.NumberLiteral (loc, lit), prop)
     else (
       Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
-      (acc, Property.NumberLiteral (loc, lit))
+      (acc, Property.NumberLiteral (loc, lit), prop)
     )
 
 let binding cx ~on_binding ~kind acc name_loc name =
@@ -195,12 +196,14 @@ and array_elements cx ~on_identifier ~on_expression ~on_binding acc elements =
 
 and object_properties cx ~on_identifier ~on_expression ~on_binding acc props =
   let open Ast.MatchPattern.ObjectPattern in
-  let rec loop acc rev_props = function
+  let rec loop acc seen rev_props = function
     | [] -> List.rev rev_props
     | (loc, { Property.key; pattern = p; shorthand; comments }) :: props ->
-      let (acc, key) = object_property_key cx acc key in
+      let (acc, key, name) = object_property_key cx acc key in
+      if SSet.mem name seen then
+        Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc; name });
       let p = pattern cx ~on_identifier ~on_expression ~on_binding acc p in
       let prop = (loc, { Property.key; pattern = p; shorthand; comments }) in
-      loop acc (prop :: rev_props) props
+      loop acc (SSet.add name seen) (prop :: rev_props) props
   in
-  loop acc [] props
+  loop acc SSet.empty [] props

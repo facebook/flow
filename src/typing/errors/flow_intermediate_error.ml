@@ -4006,6 +4006,8 @@ let to_printable_error :
       [text "Unary pattern on "; code "0"; text " is not supported."]
     | MessageMatchInvalidUnaryPlusBigInt ->
       [text "Unary pattern "; code "+"; text " on bigint literal is not supported."]
+    | MessageMatchDuplicateObjectProperty { name } ->
+      [text "Duplicate property "; code name; text " in object pattern."]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =
