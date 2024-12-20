@@ -1,3 +1,8 @@
+### 0.257.1
+
+Misc:
+* Flow language server will stop advertising that we can handle all code actions kinds prefixed with `"source"`. It can help to prevent VSCode sending flow irrelevant code actions to handle during save.
+
 ### 0.257.0
 
 Likely to cause new Flow errors:
