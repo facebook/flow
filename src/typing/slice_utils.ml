@@ -690,8 +690,6 @@ let object_spread
 (* Component prop extraction *)
 (*****************************)
 
-exception InvalidConfig of Error_message.t
-
 let check_config2
     cx pmap { Object.reason; props; flags; frozen = _; generics; interface = _; reachable_targs } =
   let dict = Obj_type.get_dict_opt flags.obj_kind in
