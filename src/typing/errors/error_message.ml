@@ -2891,6 +2891,8 @@ let defered_in_speculation = function
   | EValueUsedAsType _
   | EUnusedPromise _
   | EImplicitInstantiationUnderconstrainedError _
+  | EDuplicateComponentProp _
+  | ERefComponentProp _
   | EPropNotReadable { use_op = Frame (ReactDeepReadOnly _, _); _ } ->
     true
   | _ -> false
