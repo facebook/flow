@@ -3997,6 +3997,11 @@ let to_printable_error :
         code "const";
         text " is allowed.";
       ]
+    | MessageMatchInvalidObjectPropertyLiteral ->
+      [
+        text "Unsupported object property literal in match pattern. ";
+        text "String literals and int-like number literals are supported.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

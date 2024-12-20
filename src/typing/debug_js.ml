@@ -1905,6 +1905,8 @@ let dump_error_message =
         "EMatchInvalidBindingKind (%s) (%s)"
         (string_of_aloc loc)
         (Flow_ast_utils.string_of_variable_kind kind)
+    | EMatchInvalidObjectPropertyLiteral { loc } ->
+      spf "EMatchInvalidObjectPropertyLiteral (%s)" (string_of_aloc loc)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->

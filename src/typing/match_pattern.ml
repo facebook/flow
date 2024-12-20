@@ -37,7 +37,7 @@ let object_named_property acc loc name =
       }
   )
 
-let object_property_key acc key :
+let object_property_key cx acc key :
     (ALoc.t, ALoc.t) Flow_ast.Expression.t
     * (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.ObjectPattern.Property.key =
   let open Ast.MatchPattern.ObjectPattern in
@@ -54,9 +54,10 @@ let object_property_key acc key :
       let prop = Dtoa.ecma_string_of_float value in
       let acc = object_named_property acc loc prop in
       (acc, Property.NumberLiteral (loc, lit))
-    else
-      (* TODO:match custom error *)
+    else (
+      Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
       (acc, Property.NumberLiteral (loc, lit))
+    )
 
 let binding cx ~on_binding ~kind acc name_loc name =
   let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
@@ -189,7 +190,7 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding acc props =
   let rec loop acc rev_props = function
     | [] -> List.rev rev_props
     | (loc, { Property.key; pattern = p; shorthand; comments }) :: props ->
-      let (acc, key) = object_property_key acc key in
+      let (acc, key) = object_property_key cx acc key in
       let p = pattern cx ~on_identifier ~on_expression ~on_binding acc p in
       let prop = (loc, { Property.key; pattern = p; shorthand; comments }) in
       loop acc (prop :: rev_props) props
