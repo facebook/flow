@@ -47,3 +47,23 @@
     1n: true, // OK
   };
 }
+
+// Duplicate object keys banned
+{
+  declare const x: {foo: boolean};
+
+  const e1 = match (x) {
+    {foo: true, foo: false}: 0, // ERROR
+    _: 0,
+  };
+
+  const e2 = match (x) {
+    {const foo, foo: true}: 0, // ERROR
+    _: 0,
+  };
+
+  const e3 = match (x) {
+    {foo: true, 'foo': false}: 0, // ERROR
+    _: 0,
+  };
+}

@@ -510,6 +510,30 @@ Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
            ^^^
 
 
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:56:17
+
+Duplicate property `foo` in object pattern. [match-invalid-pattern]
+
+   56|     {foo: true, foo: false}: 0, // ERROR
+                       ^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:61:17
+
+Duplicate property `foo` in object pattern. [match-invalid-pattern]
+
+   61|     {const foo, foo: true}: 0, // ERROR
+                       ^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:66:17
+
+Duplicate property `foo` in object pattern. [match-invalid-pattern]
+
+   66|     {foo: true, 'foo': false}: 0, // ERROR
+                       ^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -635,4 +659,4 @@ References:
 
 
 
-Found 48 errors
+Found 51 errors

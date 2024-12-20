@@ -625,6 +625,10 @@ and 'loc t' =
   | EMatchInvalidObjectPropertyLiteral of { loc: 'loc }
   | EMatchInvalidUnaryZero of { loc: 'loc }
   | EMatchInvalidUnaryPlusBigInt of { loc: 'loc }
+  | EMatchDuplicateObjectProperty of {
+      loc: 'loc;
+      name: string;
+    }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1432,6 +1436,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidObjectPropertyLiteral { loc } -> EMatchInvalidObjectPropertyLiteral { loc = f loc }
   | EMatchInvalidUnaryZero { loc } -> EMatchInvalidUnaryZero { loc = f loc }
   | EMatchInvalidUnaryPlusBigInt { loc } -> EMatchInvalidUnaryPlusBigInt { loc = f loc }
+  | EMatchDuplicateObjectProperty { loc; name } ->
+    EMatchDuplicateObjectProperty { loc = f loc; name }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1733,7 +1739,8 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidBindingKind _
   | EMatchInvalidObjectPropertyLiteral _
   | EMatchInvalidUnaryZero _
-  | EMatchInvalidUnaryPlusBigInt _ ->
+  | EMatchInvalidUnaryPlusBigInt _
+  | EMatchDuplicateObjectProperty _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1939,6 +1946,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidObjectPropertyLiteral { loc } -> Some loc
   | EMatchInvalidUnaryZero { loc } -> Some loc
   | EMatchInvalidUnaryPlusBigInt { loc } -> Some loc
+  | EMatchDuplicateObjectProperty { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2892,6 +2900,8 @@ let friendly_message_of_msg = function
     Normal MessageMatchInvalidObjectPropertyLiteral
   | EMatchInvalidUnaryZero { loc = _ } -> Normal MessageMatchInvalidUnaryZero
   | EMatchInvalidUnaryPlusBigInt { loc = _ } -> Normal MessageMatchInvalidUnaryPlusBigInt
+  | EMatchDuplicateObjectProperty { loc = _; name } ->
+    Normal (MessageMatchDuplicateObjectProperty { name })
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3235,3 +3245,4 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern
   | EMatchInvalidUnaryZero _ -> Some MatchInvalidPattern
   | EMatchInvalidUnaryPlusBigInt _ -> Some MatchInvalidPattern
+  | EMatchDuplicateObjectProperty _ -> Some MatchInvalidPattern
