@@ -622,6 +622,7 @@ and 'loc t' =
       loc: 'loc;
       kind: Flow_ast.Variable.kind;
     }
+  | EMatchInvalidObjectPropertyLiteral of { loc: 'loc }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1426,6 +1427,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchNotExhaustive { loc; reason } ->
     EMatchNotExhaustive { loc = f loc; reason = map_reason reason }
   | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
+  | EMatchInvalidObjectPropertyLiteral { loc } -> EMatchInvalidObjectPropertyLiteral { loc = f loc }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1724,7 +1726,8 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
   | EMatchNotExhaustive _
-  | EMatchInvalidBindingKind _ ->
+  | EMatchInvalidBindingKind _
+  | EMatchInvalidObjectPropertyLiteral _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1927,6 +1930,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnusedPromise { loc; _ } -> Some loc
   | EMatchNotExhaustive { loc; _ } -> Some loc
   | EMatchInvalidBindingKind { loc; _ } -> Some loc
+  | EMatchInvalidObjectPropertyLiteral { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2876,6 +2880,8 @@ let friendly_message_of_msg = function
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
   | EMatchNotExhaustive { loc = _; reason } -> Normal (MessageMatchNotExhaustive reason)
   | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
+  | EMatchInvalidObjectPropertyLiteral { loc = _ } ->
+    Normal MessageMatchInvalidObjectPropertyLiteral
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3216,3 +3222,4 @@ let error_code_of_message err : error_code option =
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
   | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern
+  | EMatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern

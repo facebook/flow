@@ -304,7 +304,6 @@ end = struct
         let selector = Selector.Prop { prop; prop_loc = loc; has_default = false } in
         (Select { selector; parent = acc }, prop)
       else
-        (* TODO:match error condition *)
         (snd acc, "")
 
   let object_rest acc used_props =
