@@ -26,7 +26,7 @@ module.exports = (suite(
         [
           [
             'initialize',
-            '{"codeActionProvider":{"codeActionKinds":["refactor.extract","quickfix"]}}',
+            '{"codeActionProvider":{"codeActionKinds":["source","source.addMissingImports.flow","source.organizeImports.flow","refactor.extract","quickfix"]}}',
           ],
         ],
         [...lspIgnoreStatusAndCancellation],
