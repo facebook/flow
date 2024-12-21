@@ -14,7 +14,7 @@ const z = (
   </Wrapper>
 );
 
-function ComponentWithBound<T: number>(pprops: {a:T}): React$Node {}
+function ComponentWithBound<T: number>(pprops: {a:T}): React.Node {}
 <div><ComponentWithBound a={true} /></div>; // error: bool ~> number
 
 component ComponentSyntaxNoRenders() {

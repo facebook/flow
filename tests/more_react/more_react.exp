@@ -9,7 +9,7 @@ Cannot create `Component2` element because property `bar` is missing in `Props` 
 
 References:
    inexact_config.js:10:29
-   10| function Component2(props : Props) : React$Node { return null; }
+   10| function Component2(props : Props) : React.Node { return null; }
                                    ^^^^^ [1]
    inexact_config.js:12:12
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -27,7 +27,7 @@ Cannot create `Component2` element because property `foo` is missing in `Props` 
 
 References:
    inexact_config.js:10:29
-   10| function Component2(props : Props) : React$Node { return null; }
+   10| function Component2(props : Props) : React.Node { return null; }
                                    ^^^^^ [1]
    inexact_config.js:12:12
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -45,7 +45,7 @@ Cannot create `Component2` element because property `children` is missing in `Pr
 
 References:
    inexact_config.js:10:29
-   10| function Component2(props : Props) : React$Node { return null; }
+   10| function Component2(props : Props) : React.Node { return null; }
                                    ^^^^^ [1]
    inexact_config.js:13:12
    13| const _d = <Component2>{"foo"}</Component2>; //error
@@ -63,7 +63,7 @@ Cannot create `Component4` element because property `bar` is missing in object t
 
 References:
    inexact_config.js:20:29
-   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+   20| function Component4(props : {| foo : number |}) : React.Node { return null; }
                                    ^^^^^^^^^^^^^^^^^^ [1]
    inexact_config.js:22:12
    22| const _g = <Component4 foo={3} bar={3} />; //error
@@ -84,7 +84,7 @@ References:
    23| const _h = <Component4></Component4>; //error
                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inexact_config.js:20:29
-   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+   20| function Component4(props : {| foo : number |}) : React.Node { return null; }
                                    ^^^^^^^^^^^^^^^^^^ [2]
 
 

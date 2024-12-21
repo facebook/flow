@@ -4,10 +4,10 @@ var React = require("react");
 export type Recipe<T> = (draft: T, state: $ReadOnly<T>) => void;
 export type Mutate<T> = (recipe: Recipe<T>) => void;
 
-type ConsumerRender<S> = (...S) => React$Node;
+type ConsumerRender<S> = (...S) => globalThis.React.Node;
 
 type ProviderProps<T> = {|
-  children: React$Node,
+  children: globalThis.React.Node,
   initialState?: T,
 |};
 
@@ -28,7 +28,7 @@ export type Store<T> = {
   +Consumer: {
     <TSelect: $ReadOnlyArray<(T) => mixed> = $ReadOnlyArray<(T) => mixed>>(
       ConsumerProps<T, TSelect>,
-    ): React$Node,
+    ): globalThis.React.Node,
     // Need the following to fake this as a functional component
     displayName?: ?string,
     propTypes?: any,

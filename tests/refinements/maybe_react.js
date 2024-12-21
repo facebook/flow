@@ -6,7 +6,7 @@ type Node =
   | number
   | string
   | ExactReactElement_DEPRECATED<any>
-  | Iterable<?React$Node>;
+  | Iterable<?React.Node>;
 
 type Props = {|
   title?: ?number | Node,

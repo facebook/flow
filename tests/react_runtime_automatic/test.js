@@ -1,8 +1,8 @@
 //@flow
 
 type Props = {| foo: number |}
-function Component(props: Props): React$Node { return null }
-function Component2(props: {| bar: number |}): React$Node { return null }
+function Component(props: Props): React.Node { return null }
+function Component2(props: {| bar: number |}): React.Node { return null }
 
 const x: ExactReactElement_DEPRECATED<typeof Component> = <Component foo={3} />; // Ok
 const y = <Component bar={3} />; // Error missing foo, got bar

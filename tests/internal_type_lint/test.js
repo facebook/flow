@@ -16,3 +16,5 @@ type T5_good = React.ElementProps<C>; // ok
 type T6_bad = $ReactDeepReadOnly<{}>; // error
 type T7_bad = React$MixedElement; // error
 type T7_good = React.MixedElement; // ok
+type T8_bad = React$Node; // error
+type T8_good = React.Node; // ok

@@ -55,5 +55,13 @@ Error --------------------------------------------------------------------------
                      ^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:19:15
 
-Found 7 errors
+`React$Node` is an internal Flow type. Use `React.Node` instead. [internal-type]
+
+   19| type T8_bad = React$Node; // error
+                     ^^^^^^^^^^
+
+
+
+Found 8 errors

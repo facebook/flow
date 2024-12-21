@@ -45,7 +45,7 @@ Cannot create `ComponentWithBound` element because boolean [1] is incompatible w
 
 References:
    contextual_jsx.js:17:32
-   17| function ComponentWithBound<T: number>(pprops: {a:T}): React$Node {}
+   17| function ComponentWithBound<T: number>(pprops: {a:T}): React.Node {}
                                       ^^^^^^ [2]
 
 

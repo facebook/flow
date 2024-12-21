@@ -9,7 +9,7 @@ Cannot create `Component` element because property `bar` is missing in `Props` [
 
 References:
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
+   4| function Component(props: Props): React.Node { return null }
                                 ^^^^^ [1]
    test.js:8:11
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -30,7 +30,7 @@ References:
    8| const y = <Component bar={3} />; // Error missing foo, got bar
                 ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
+   4| function Component(props: Props): React.Node { return null }
                                 ^^^^^ [2]
 
 
@@ -45,10 +45,10 @@ type argument `P` [3]. [prop-missing]
 
 References:
    test.js:4:27
-     4| function Component(props: Props): React$Node { return null }
+     4| function Component(props: Props): React.Node { return null }
                                   ^^^^^ [1]
    test.js:5:28
-     5| function Component2(props: {| bar: number |}): React$Node { return null }
+     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:69
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -66,10 +66,10 @@ type argument `P` [3]. [prop-missing]
 
 References:
    test.js:5:28
-     5| function Component2(props: {| bar: number |}): React$Node { return null }
+     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-     4| function Component(props: Props): React$Node { return null }
+     4| function Component(props: Props): React.Node { return null }
                                   ^^^^^ [2]
    <BUILTINS>/react.js:150:69
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -87,10 +87,10 @@ the first parameter of type argument `ElementType` [3]. [prop-missing]
 
 References:
    test.js:4:27
-     4| function Component(props: Props): React$Node { return null }
+     4| function Component(props: Props): React.Node { return null }
                                   ^^^^^ [1]
    test.js:5:28
-     5| function Component2(props: {| bar: number |}): React$Node { return null }
+     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -108,10 +108,10 @@ the first parameter of type argument `ElementType` [3]. [prop-missing]
 
 References:
    test.js:5:28
-     5| function Component2(props: {| bar: number |}): React$Node { return null }
+     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-     4| function Component(props: Props): React$Node { return null }
+     4| function Component(props: Props): React.Node { return null }
                                   ^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -129,7 +129,7 @@ Cannot create `Component` element because property `bar` is missing in `Props` [
 
 References:
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
+   4| function Component(props: Props): React.Node { return null }
                                 ^^^^^ [1]
    test.js:9:60
    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -150,7 +150,7 @@ References:
    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
                                                                  ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:4:27
-   4| function Component(props: Props): React$Node { return null }
+   4| function Component(props: Props): React.Node { return null }
                                 ^^^^^ [2]
 
 
@@ -168,7 +168,7 @@ References:
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React$Node { return null }
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -183,7 +183,7 @@ Cannot create `Component2` element because property `foo` is missing in object t
 
 References:
    test.js:5:28
-    5| function Component2(props: {| bar: number |}): React$Node { return null }
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [1]
    test.js:14:21
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
