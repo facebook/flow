@@ -1570,32 +1570,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow
         cx
         trace
-        ( l,
-          ReactKitT
-            ( use_op,
-              reasonl,
-              React.ConfigCheck
-                {
-                  props = config;
-                  instance =
-                    (match Context.react_ref_as_prop cx with
-                    | Options.ReactRefAsProp.Disabled -> None
-                    | Options.ReactRefAsProp.PartialSupport -> Some instance);
-                }
-            )
-        );
+        (l, ReactKitT (use_op, reasonl, React.ConfigCheck { props = config; instance }));
 
       (* check rendered elements are covariant *)
-      rec_flow_t cx trace ~use_op (return_t, renders);
-
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.Disabled ->
-        flow_react_component_instance_to_instance
-          cx
-          trace
-          use_op
-          (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
-      | Options.ReactRefAsProp.PartialSupport -> ())
+      rec_flow_t cx trace ~use_op (return_t, renders)
     (* Object Component ~> AbstractComponent *)
     | ( DefT (reasonl, ObjT { call_t = Some id; _ }),
         DefT
@@ -1606,20 +1584,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow
         cx
         trace
-        ( l,
-          ReactKitT
-            ( use_op,
-              reasonl,
-              React.ConfigCheck
-                {
-                  props = config;
-                  instance =
-                    (match Context.react_ref_as_prop cx with
-                    | Options.ReactRefAsProp.Disabled -> None
-                    | Options.ReactRefAsProp.PartialSupport -> Some instance);
-                }
-            )
-        );
+        (l, ReactKitT (use_op, reasonl, React.ConfigCheck { props = config; instance }));
 
       (* Ensure the callable signature's return type is compatible with the rendered element (renders). We
        * do this by flowing it to (...empty): renders *)
@@ -1634,16 +1599,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           renders
       in
       let mixed = MixedT.why reasonu in
-      rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)));
-
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.Disabled ->
-        flow_react_component_instance_to_instance
-          cx
-          trace
-          use_op
-          (ComponentInstanceOmitted (replace_desc_new_reason RVoid reasonl), instance)
-      | Options.ReactRefAsProp.PartialSupport -> ())
+      rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)))
     (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
           ( reasonl,

@@ -1094,11 +1094,7 @@ module Opts = struct
       );
       ( "react.ref_as_prop",
         enum
-          [
-            ("disabled", Options.ReactRefAsProp.Disabled);
-            ("experimental.partial_support", Options.ReactRefAsProp.PartialSupport);
-            ("partial_support", Options.ReactRefAsProp.PartialSupport);
-          ]
+          [("partial_support", Options.ReactRefAsProp.PartialSupport)]
           (fun opts react_ref_as_prop -> Ok { opts with react_ref_as_prop })
       );
       ("react.runtime", react_runtime_parser);

@@ -27,7 +27,6 @@ type saved_state_fetcher =
 
 module ReactRefAsProp = struct
   type t =
-    | Disabled  (** Pre React 19 behavior *)
     | PartialSupport
         (** Only implement React 19 behavior for function components.
           * Utility types will still return ref and props separately. *)

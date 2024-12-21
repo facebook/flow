@@ -3079,7 +3079,7 @@ and React : sig
       }
     | ConfigCheck of {
         props: TypeTerm.t;
-        instance: TypeTerm.component_instance option;
+        instance: TypeTerm.component_instance;
       }
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out

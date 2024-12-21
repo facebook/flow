@@ -241,28 +241,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         [MixedT.why r]
       |> Option.some
     | DefT (_, FunT _)
-    | DefT (_, ObjT _) ->
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.Disabled ->
-        get_builtin_typeapp
-          cx
-          (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-          "React$RefSetter"
-          [VoidT.why reason_ref]
-        |> Option.some
-      | Options.ReactRefAsProp.PartialSupport -> None)
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ })
-      when match Context.react_ref_as_prop cx with
-           | Options.ReactRefAsProp.PartialSupport -> true
-           | Options.ReactRefAsProp.Disabled -> false ->
-      None
+    | DefT (_, ObjT _)
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
-      get_builtin_typeapp
-        cx
-        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
-        [VoidT.why reason_ref]
-      |> Option.some
+      None
     | DefT (_, StrT_UNSOUND (_, name)) ->
       let instance =
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
@@ -536,84 +517,78 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           )
       in
       let ref_manipulation =
-        match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.Disabled ->
-          (* When ref-as-prop is disabled, we keep the old behavior
-           * where the ref prop is always filtered away. *)
-          Object.ReactConfig.FilterRef
-        | Options.ReactRefAsProp.PartialSupport ->
-          (match props_of_fn_component l with
-          | None -> Object.ReactConfig.FilterRef
-          | Some props ->
-            (match instance with
-            | None -> Object.ReactConfig.KeepRef
-            | Some (ComponentInstanceOmitted _) ->
-              (* e.g. `component(foo: string)`, which doesn't have ref prop,
-               * so we just do `{foo: string} ~> function component props` *)
-              Object.ReactConfig.KeepRef
-            | Some (ComponentInstanceAvailableAsRefSetterProp ref_t) ->
-              let r = reason_of_t ref_t in
-              if definitely_has_ref_in_props cx r props then (
-                ( if Context.in_implicit_instantiation cx then
-                  (* Why do we need to do this when ref_t is added below anyways?
-                   * In implicit instantiation, we might have `fn_component ~> component(ref: infer I, ...infer Props)`
-                   * The ref type will be underconstrained in implicit instantiation,
-                   * so we need the extra flow to constrain it. *)
-                  let fn_component_ref =
-                    EvalT
-                      ( props,
-                        TypeDestructorT (use_op, r, PropertyType { name = OrdinaryName "ref" }),
-                        Eval.generate_id ()
-                      )
-                  in
-                  rec_flow_t
-                    cx
-                    trace
-                    ~use_op:(Frame (ReactConfigCheck, use_op))
-                    (ref_t, fn_component_ref)
-                );
-                (* If we see that the function component has a ref prop,
-                 * then given `component(ref: R, ...Props)`,
-                 * and `(fn_props_has_ref) => React.Node`
-                 * we will do something equivalent to
-                 * {...Props, ref: R} ~> fn_props_has_ref *)
-                Object.ReactConfig.AddRef ref_t
-              ) else
-                (* If function component doesn't have a ref prop, technically
-                 * we should do the same thing as above, but it will fail
-                 * ({}) => React.Node ~> component(ref: React.RefSetter<mixed>)
-                 * which previously passes. Therefore, during the transition phase,
-                 * we add this logic to keep the old behavior, where a function
-                 * component is treated as `component(ref: React.RefSetter<void>)` *)
+        match props_of_fn_component l with
+        | None -> Object.ReactConfig.FilterRef
+        | Some props ->
+          (match instance with
+          | None -> Object.ReactConfig.KeepRef
+          | Some (ComponentInstanceOmitted _) ->
+            (* e.g. `component(foo: string)`, which doesn't have ref prop,
+             * so we just do `{foo: string} ~> function component props` *)
+            Object.ReactConfig.KeepRef
+          | Some (ComponentInstanceAvailableAsRefSetterProp ref_t) ->
+            let r = reason_of_t ref_t in
+            if definitely_has_ref_in_props cx r props then (
+              ( if Context.in_implicit_instantiation cx then
+                (* Why do we need to do this when ref_t is added below anyways?
+                 * In implicit instantiation, we might have `fn_component ~> component(ref: infer I, ...infer Props)`
+                 * The ref type will be underconstrained in implicit instantiation,
+                 * so we need the extra flow to constrain it. *)
                 let fn_component_ref =
-                  get_builtin_typeapp
-                    cx
-                    (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                    "React$RefSetter"
-                    [VoidT.why r]
+                  EvalT
+                    ( props,
+                      TypeDestructorT (use_op, r, PropertyType { name = OrdinaryName "ref" }),
+                      Eval.generate_id ()
+                    )
                 in
                 rec_flow_t
                   cx
                   trace
                   ~use_op:(Frame (ReactConfigCheck, use_op))
-                  (ref_t, fn_component_ref);
-                Object.ReactConfig.FilterRef
-            | Some (ComponentInstanceTopType r) ->
-              (* This is mostly a special case for the above case,
-               * where ref prop has type `React.RefSetter<mixed>` *)
-              if definitely_has_ref_in_props cx r props then
-                Object.ReactConfig.AddRef
-                  (get_builtin_typeapp
-                     cx
-                     (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                     "React$RefSetter"
-                     [MixedT.why r]
-                  )
-              else
-                (* e.g. The top instance type should accept all ref props,
-                 * including the absense of one, so we can skip the check and just
-                 * filter away the ref prop. *)
-                Object.ReactConfig.FilterRef))
+                  (ref_t, fn_component_ref)
+              );
+              (* If we see that the function component has a ref prop,
+               * then given `component(ref: R, ...Props)`,
+               * and `(fn_props_has_ref) => React.Node`
+               * we will do something equivalent to
+               * {...Props, ref: R} ~> fn_props_has_ref *)
+              Object.ReactConfig.AddRef ref_t
+            ) else
+              (* If function component doesn't have a ref prop, technically
+               * we should do the same thing as above, but it will fail
+               * ({}) => React.Node ~> component(ref: React.RefSetter<mixed>)
+               * which previously passes. Therefore, during the transition phase,
+               * we add this logic to keep the old behavior, where a function
+               * component is treated as `component(ref: React.RefSetter<void>)` *)
+              let fn_component_ref =
+                get_builtin_typeapp
+                  cx
+                  (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
+                  "React$RefSetter"
+                  [VoidT.why r]
+              in
+              rec_flow_t
+                cx
+                trace
+                ~use_op:(Frame (ReactConfigCheck, use_op))
+                (ref_t, fn_component_ref);
+              Object.ReactConfig.FilterRef
+          | Some (ComponentInstanceTopType r) ->
+            (* This is mostly a special case for the above case,
+             * where ref prop has type `React.RefSetter<mixed>` *)
+            if definitely_has_ref_in_props cx r props then
+              Object.ReactConfig.AddRef
+                (get_builtin_typeapp
+                   cx
+                   (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
+                   "React$RefSetter"
+                   [MixedT.why r]
+                )
+            else
+              (* e.g. The top instance type should accept all ref props,
+               * including the absense of one, so we can skip the check and just
+               * filter away the ref prop. *)
+              Object.ReactConfig.FilterRef)
       in
       (* Use object spread to add children to config (if we have children)
        * and remove key and ref since we already checked key and ref. Finally in
@@ -934,7 +909,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         inferred_targs
         specialized_component
         tout
-    | ConfigCheck { props = jsx_props; instance } -> config_check use_op ~instance ~jsx_props
+    | ConfigCheck { props = jsx_props; instance } ->
+      config_check use_op ~instance:(Some instance) ~jsx_props
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetRef tout -> get_instance tout
