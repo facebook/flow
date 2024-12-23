@@ -212,8 +212,6 @@ val multi_platform_ambient_supports_platform_directory_overrides :
 
 val munge_underscores : config -> bool
 
-val natural_inference_exports_primitive_const : config -> bool
-
 val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool

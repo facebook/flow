@@ -58,7 +58,6 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_exports_primitive_const: bool;
   no_unchecked_indexed_access: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -287,8 +286,6 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    natural_inference_exports_primitive_const =
-      Options.natural_inference_exports_primitive_const options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
@@ -643,9 +640,6 @@ let haste_module_ref_prefix_standard_cjs_esm_interop cx =
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
-
-let natural_inference_exports_primitive_const cx =
-  cx.metadata.natural_inference_exports_primitive_const
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

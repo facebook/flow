@@ -115,7 +115,6 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_exports_primitive_const: bool;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -253,7 +252,6 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
-      natural_inference_exports_primitive_const = true;
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -1079,9 +1077,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.exports.primitive_const",
-        boolean (fun opts v -> Ok { opts with natural_inference_exports_primitive_const = v })
-      );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
@@ -1807,9 +1802,6 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let natural_inference_exports_primitive_const c =
-  c.options.Opts.natural_inference_exports_primitive_const
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

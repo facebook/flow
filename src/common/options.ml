@@ -130,7 +130,6 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_natural_inference_exports_primitive_const: bool;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
@@ -307,9 +306,6 @@ let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
-
-let natural_inference_exports_primitive_const opts =
-  opts.opt_natural_inference_exports_primitive_const
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 

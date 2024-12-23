@@ -337,14 +337,7 @@ let merge_ref :
   match ref with
   | Pack.LocalRef { ref_loc; index } ->
     let (lazy (def_loc, name, t_general, t_const)) = Local_defs.get file.local_defs index in
-    let t =
-      Lazy.force
-        ( if Context.natural_inference_exports_primitive_const file.cx && const_decl then
-          t_const
-        else
-          t_general
-        )
-    in
+    let t = Lazy.force (Utils_js.ite const_decl t_const t_general) in
     let t = reposition_sig_tvar file.cx ref_loc t in
     f t ~ref_loc ~def_loc name
   | Pack.RemoteRef { ref_loc; index } ->
@@ -1116,19 +1109,12 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
     let reason = Reason.(mk_reason RString loc) in
     Type.(DefT (reason, StrGeneralT AnyLiteral))
   | StringLit (loc, lit) ->
-    if Context.natural_inference_exports_primitive_const file.cx then
-      if as_const || const_decl then
-        let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
-        Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
-      else
-        let reason = Reason.(mk_reason RString loc) in
-        Type.(DefT (reason, StrGeneralT AnyLiteral))
-    else if as_const then
+    if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
       Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
     else
       let reason = Reason.(mk_reason RString loc) in
-      Type.(DefT (reason, StrT_UNSOUND (None, Reason.OrdinaryName lit)))
+      Type.(DefT (reason, StrGeneralT AnyLiteral))
   | LongStringLit loc ->
     let len = Context.max_literal_length file.cx in
     let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
@@ -1137,53 +1123,32 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
     let reason = Reason.(mk_reason RNumber loc) in
     Type.(DefT (reason, NumGeneralT AnyLiteral))
   | NumberLit (loc, num, raw) ->
-    if Context.natural_inference_exports_primitive_const file.cx then
-      if as_const || const_decl then
-        let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
-        Type.(DefT (reason, SingletonNumT (num, raw)))
-      else
-        let reason = Reason.(mk_reason RNumber loc) in
-        Type.(DefT (reason, NumGeneralT AnyLiteral))
-    else if as_const then
+    if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
       Type.(DefT (reason, SingletonNumT (num, raw)))
     else
       let reason = Reason.(mk_reason RNumber loc) in
-      Type.(DefT (reason, NumT_UNSOUND (None, (num, raw))))
+      Type.(DefT (reason, NumGeneralT AnyLiteral))
   | BigIntVal loc ->
     let reason = Reason.(mk_reason RBigInt loc) in
     Type.(DefT (reason, BigIntGeneralT AnyLiteral))
   | BigIntLit (loc, bigint, raw) ->
-    if Context.natural_inference_exports_primitive_const file.cx then
-      if as_const || const_decl then
-        let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-        Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
-      else
-        let reason = Reason.(mk_reason RBigInt loc) in
-        Type.(DefT (reason, BigIntGeneralT AnyLiteral))
-    else if as_const then
+    if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
       Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
     else
       let reason = Reason.(mk_reason RBigInt loc) in
-      Type.(DefT (reason, BigIntT_UNSOUND (None, (bigint, raw))))
+      Type.(DefT (reason, BigIntGeneralT AnyLiteral))
   | BooleanVal loc ->
     let reason = Reason.(mk_reason RBoolean loc) in
     Type.(DefT (reason, BoolGeneralT))
   | BooleanLit (loc, lit) ->
-    if Context.natural_inference_exports_primitive_const file.cx then
-      if as_const || const_decl then
-        let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
-        Type.(DefT (reason, SingletonBoolT lit))
-      else
-        let reason = Reason.(mk_reason RBoolean loc) in
-        Type.(DefT (reason, BoolGeneralT))
-    else if as_const then
+    if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
       Type.(DefT (reason, SingletonBoolT lit))
     else
       let reason = Reason.(mk_reason RBoolean loc) in
-      Type.(DefT (reason, BoolT_UNSOUND lit))
+      Type.(DefT (reason, BoolGeneralT))
   | NullLit loc -> Type.NullT.at loc
   | DeclareModuleImplicitlyExportedObject { loc; module_name; props } ->
     merge_declare_module_implicitly_exported_object env file (loc, module_name, props)
