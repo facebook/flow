@@ -1538,47 +1538,47 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or property `name` is missing in function [3] but exists in statics of `Boolean` [4].
+ - Or function [3] is incompatible with class `Boolean` [4].
 
    refinement.js:47:35
-    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                          ^^^^^^
+   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                         ^^^^^^
 
 References:
    refinement.js:47:59
-    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                                  ^^^^^^ [1]
+   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                                                 ^^^^^^ [1]
    refinement.js:47:21
-    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                            ^^^^^^ [2]
+   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                           ^^^^^^ [2]
    refinement.js:47:42
-    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:376:15
-   376| declare class Boolean {
-                      ^^^^^^^ [4]
+   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   refinement.js:39:24
+   39|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
 
 Cannot call `arr.filter` because: [incompatible-call]
- - Either property `name` is missing in function [1] but exists in statics of `Boolean` [2].
+ - Either function [1] is incompatible with class `Boolean` [2].
  - Or function [1], a non-type-guard function, is incompatible with function type [3], which is a type-guard function.
 
    refinement.js:48:35
-    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                          ^^^^^^
+   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+                                         ^^^^^^
 
 References:
    refinement.js:48:42
-    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:376:15
-   376| declare class Boolean {
-                      ^^^^^^^ [2]
+   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refinement.js:39:24
+   39|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                              ^^^^^^^^^^^^^^ [2]
    refinement.js:40:35
-    40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
@@ -2187,7 +2187,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+ - Or function type [3] is incompatible with class `Boolean` [4].
 
    refinement.js:249:7
    249|   arr.filter(fn) as Array<string>; // error number ~> string
@@ -2203,16 +2203,16 @@ References:
    refinement.js:231:7
    231|   fn: (x: mixed) => implies x is number,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:376:15
-   376| declare class Boolean {
-                      ^^^^^^^ [4]
+   refinement.js:242:24
+   242|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                               ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:253:10
 
 Cannot call `ro_arr.filter` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+ - Or function type [3] is incompatible with class `Boolean` [4].
 
    refinement.js:253:10
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2228,16 +2228,16 @@ References:
    refinement.js:231:7
    231|   fn: (x: mixed) => implies x is number,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:376:15
-   376| declare class Boolean {
-                      ^^^^^^^ [4]
+   <BUILTINS>/core.js:734:24
+   734|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                               ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
 
 Cannot call `rw_arr.filter` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or property `name` is missing in statics of function type [3] but exists in statics of `Boolean` [4].
+ - Or function type [3] is incompatible with class `Boolean` [4].
 
    refinement.js:257:10
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2253,9 +2253,9 @@ References:
    refinement.js:231:7
    231|   fn: (x: mixed) => implies x is number,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:376:15
-   376| declare class Boolean {
-                      ^^^^^^^ [4]
+   <BUILTINS>/core.js:734:24
+   734|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                               ^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7

@@ -75,6 +75,14 @@ class M extends N{
 (M.f(): number); // ERROR
 (M.g(): number); // ERROR
 
+function test_static_method_to_class_coercion() {
+  class A {
+    static s(): void {}
+  }
+
+  A.s as typeof Boolean; // error FunT ~> ClassT
+}
+
 // note: above classdefs are sufficiently annotated to export
 module.exports = {
   A: A, B: B, C: C, D: D, E: E

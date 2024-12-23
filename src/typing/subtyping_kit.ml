@@ -2136,9 +2136,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (********************************************************)
     | (DefT (rl, ClassT l), DefT (_, ClassT u)) ->
       rec_flow cx trace (reposition cx ~trace (loc_of_reason rl) l, UseT (use_op, u))
-    | (DefT (_, FunT (static1, _)), DefT (_, ClassT (DefT (_, InstanceT { static = static2; _ }))))
-      ->
-      rec_unify cx trace ~use_op static1 static2
     (***********************************************)
     (* You can use a function as a callable object *)
     (***********************************************)
