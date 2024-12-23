@@ -1,23 +1,16 @@
-Error -------------------------------------------------------------------------------------------- complex_types.js:12:1
+Error -------------------------------------------------------------------------------------------- complex_types.js:12:3
 
-Cannot get `a.m` because: [incompatible-use]
- - Either property `m` [1] cannot be unbound from the context [2] where it was defined.
- - Or property `m` [1] cannot be unbound from the context [3] where it was defined.
+Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
-   complex_types.js:12:1
-   12| a.m; // err
-       ^^^
-
-References:
    complex_types.js:12:3
    12| a.m; // err
          ^ [1]
+
+References:
    complex_types.js:2:5
     2|     m() : void
            ^^^^^^^^^^ [2]
-   complex_types.js:6:5
-    6|     m() : void
-           ^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- complex_types.js:13:3
@@ -52,9 +45,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- complex_types.js:14:6
 
-All branches are incompatible: [incompatible-use]
- - Either property `m` [1] cannot be unbound from the context [2] where it was defined.
- - Or property `m` [1] cannot be unbound from the context [3] where it was defined.
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
 
    complex_types.js:14:6
    14| let {m : ma} = a; // err
@@ -64,9 +55,6 @@ References:
    complex_types.js:2:5
     2|     m() : void
            ^^^^^^^^^^ [2]
-   complex_types.js:6:5
-    6|     m() : void
-           ^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- complex_types.js:15:6
@@ -94,6 +82,21 @@ property `m` [1] cannot be unbound from the context [2] where it was defined. [m
 References:
    complex_types.js:6:5
     6|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:25:3
+
+Cannot get `c.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   complex_types.js:25:3
+   25| c.m; // error -- picking I.m
+         ^ [1]
+
+References:
+   complex_types.js:2:5
+    2|     m() : void
            ^^^^^^^^^^ [2]
 
 
@@ -105,6 +108,20 @@ Cannot get `d.m` because property `m` [1] cannot be unbound from the context [2]
    complex_types.js:27:3
    27| d.m; // err
          ^ [1]
+
+References:
+   complex_types.js:2:5
+    2|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:29:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   complex_types.js:29:6
+   29| let {m : mc} = c; // err -- picking I.m
+            ^ [1]
 
 References:
    complex_types.js:2:5
@@ -447,4 +464,4 @@ Cannot assign function to `b.m` because property `m` is not writable. [cannot-wr
 
 
 
-Found 30 errors
+Found 32 errors

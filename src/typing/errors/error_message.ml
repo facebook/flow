@@ -2915,6 +2915,7 @@ let friendly_message_of_msg = function
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
+  | EMethodUnbinding _
   | EUntypedImport _
   | ENonstrictImport _
   | EUnclearType _

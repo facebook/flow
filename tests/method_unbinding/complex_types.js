@@ -22,10 +22,10 @@ declare var c : I & K;
 declare var c2 : K & I;
 declare var d : I | K;
 
-c.m; // ok
+c.m; // error -- picking I.m
 c2.m; // ok
 d.m; // err
 
-let {m : mc} = c; // ok
+let {m : mc} = c; // err -- picking I.m
 let {m : mc2} = c2; // ok
 let {m : md} = d; // err
