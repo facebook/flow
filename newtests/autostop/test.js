@@ -34,7 +34,7 @@ module.exports = (suite(
           {method: 'telemetry/connectionStatus', params: {isConnected: true}},
           ['window/showStatus', 'Flow is ready.'],
         ],
-        [],
+        ['textDocument/publishDiagnostics', '$/cancelRequest'],
       ),
     ]),
   ],
