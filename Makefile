@@ -59,7 +59,7 @@ deps-js:
 
 .PHONY: deps-test
 deps-test:
-	opam install ounit$(OUNIT_VERSION)
+	opam install ounit$(OUNIT_VERSION) --yes
 
 clean:
 	if command -v dune >/dev/null; then dune clean; fi
