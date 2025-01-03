@@ -2955,8 +2955,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                        ignore @@ this#expression arg;
                        let completion_state =
                          this#run_to_completion (fun () ->
-                             Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
-                             ignore @@ this#expression body
+                             match guard with
+                             | Some guard ->
+                               this#push_refinement_scope empty_refinements;
+                               ignore @@ this#expression_refinement guard;
+                               ignore @@ this#expression body;
+                               this#pop_refinement_scope ()
+                             | None -> ignore @@ this#expression body
                          )
                        in
                        completion_states := completion_state :: !completion_states;
