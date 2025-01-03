@@ -164,6 +164,30 @@ function func(value: ?string) {
 }
 ```
 
+### `in` checks
+
+You can use the [in](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/in)
+operator to check if a property exists on an object (either in its own properties, or up the prototype chain).
+This can be used to refine a union of objects:
+
+```js flow-check
+function func(obj: {foo: string, value: boolean} | {bar: string, value: number}) {
+  if ('foo' in obj) {
+    obj.value as boolean; // Works!
+  } else {
+    obj.value as number; // Works!
+  }
+}
+```
+
+This works best on unions of [exact objects](../../types/objects/#exact-and-inexact-object-types), since in the negation we know the property does not exist.
+We cannot say the same for [inexact objects](../../types/objects/#exact-and-inexact-object-types), [interfaces](../../types/interfaces/), and [instance types](../../types/classes/),
+since they may have other unknown properties, including the one we are checking.
+Additionally, [optional properties](../../types/objects/#toc-optional-object-type-properties) may or may not exist, so are not particularly useful to check against.
+
+If you want to refine a union of [tuple types](../../types/tuples/) based on whether an element exists,
+check the [length](../../types/tuples/#length-refinement) property instead of attempted to use `in`.
+
 ### `instanceof` checks
 
 You can use the [instanceof](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof) operator to narrow a value as well.
