@@ -1,3 +1,14 @@
+### 0.258.0
+
+Likely to cause new Flow errors:
+* method-unbinding errors will not affect choice over intersection members. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOlAKniuJCAAQAWV2tQAMnAdjzgDyRAAKACUyB5whENx59PZnJM3OwPIACpRYSKxRKRPLZTyALwAPh59lMUAQAG4Vez2RonlQtbZ7DyIGgAFbygUSYWirUAMh1esYBuw9udUB9vqsIh5GBIPNNloV1xMjoA9LmeQB3ODHBUQQs8nApyWCiBsRYPNAVNgVBA8kx6yjshNJ02prNKnPs3IgBomEhwaBJBoABisACYAKwAdisM5A9KAA))
+* We now disallow coercions between functions and class statics.
+* The ability to configure `react.ref_as_prop=disabled` is removed.
+* Use of `React$Node` and `React$MixedElement` outside of libdefs will now trigger `internal-type` errors.
+
+Library Definitions:
+* Improved definition of `Array.concat()`.
+
 ### 0.257.1
 
 Misc:
