@@ -37,6 +37,9 @@
           "include": "#component-syntax"
         },
         {
+          "include": "#match-construct"
+        },
+        {
           "include": "#expression"
         },
         {
@@ -102,6 +105,9 @@
         },
         {
           "include": "#literal-class"
+        },
+        {
+          "include": "#match-construct"
         },
         {
           "include": "#literal-method-call"
@@ -592,7 +598,7 @@
         },
         {
           "begin": "(?<!\\.)\\s*+\\b(break|continue)\\b",
-          "end": "^\\s*|\\s*(?=;|//|$|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b)",
+          "end": "^\\s*|\\s*(?=;|//|$|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b)",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.loop.js"
@@ -653,6 +659,207 @@
                   "include": "#literal-punctuation"
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    "match-rest-pattern": {
+      "begin": "(?<!\\.)\\s*(\\.\\.\\.)",
+      "end": "(?=\\W)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.rest.js"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#match-binding-pattern"
+        }
+      ]
+    },
+    "match-array-pattern": {
+      "begin": "(?<!=\\w)\\s*(\\[)",
+      "end": "\\s*(\\])",
+      "beginCaptures": {
+        "1": {
+          "name": "meta.brace.square.open"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "meta.brace.square.end"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#match-pattern"
+        },
+        {
+          "include": "#match-rest-pattern"
+        },
+        {
+          "include": "#literal-comma"
+        }
+      ]
+    },
+    "match-object-pattern": {
+      "begin": "\\s*(\\{)",
+      "end": "\\s*(\\})",
+      "beginCaptures": {
+        "1": {
+          "name": "meta.brace.curly.open"
+        }
+      },
+      "endCaptures": {
+        "1": {
+          "name": "meta.brace.curly.close"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#literal-labels"
+        },
+        {
+          "include": "#match-rest-pattern"
+        },
+        {
+          "include": "#match-binding-pattern"
+        },
+        {
+          "include": "#match-pattern"
+        },
+        {
+          "include": "#literal-comma"
+        }
+      ]
+    },
+    "match-binding-pattern": {
+      "match": "\\s*\\b(const|let|var)\\s+(\\w+)",
+      "captures": {
+        "1": {
+          "name": "storage.type.js"
+        },
+        "2": {
+          "name": "variable.other.readwrite.js"
+        }
+      }
+    },
+    "match-as-pattern": {
+      "begin": "\\s*\\b(as)\\s+",
+      "end": "(?=\\W)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.control.as.js"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#match-pattern"
+        }
+      ]
+    },
+    "match-pattern": {
+      "patterns": [
+        {
+          "match": "\\s*(?<!\\.)\\b(_)\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.other.match-pattern.wildcard.js"
+            }
+          }
+        },
+        {
+          "include": "#literal-number"
+        },
+        {
+          "include": "#literal-quasi"
+        },
+        {
+          "include": "#literal-string"
+        },
+        {
+          "include": "#match-as-pattern"
+        },
+        {
+          "include": "#match-binding-pattern"
+        },
+        {
+          "include": "#literal-language-constant"
+        },
+        {
+          "include": "#literal-variable"
+        },
+        {
+          "include": "#match-array-pattern"
+        },
+        {
+          "include": "#match-object-pattern"
+        },
+        {
+          "begin": "\\(",
+          "end": "\\)",
+          "beginCaptures": {
+            "0": {
+              "name": "meta.brace.round.js"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round.js"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#match-pattern"
+            }
+          ]
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "match-construct": {
+      "patterns": [
+        {
+          "name": "meta.match.js",
+          "begin": "(?<!\\.)\\s*\\b(match)\\s*(\\(.*\\))\\s*(\\{)\\s*$",
+          "end": "\\s*(\\})",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.match.js"
+            },
+            "2": {
+              "patterns": [{"include": "#round-brackets"}]
+            },
+            "3": {
+              "name": "meta.brace.curly.matchStart.js"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "meta.brace.curly.matchEnd.js"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#match-pattern"
+            },
+            {
+              "begin": "\\s*(:)(?!:)\\s*",
+              "end": "\\s*(,|;)",
+              "beginCaptures": {
+                "1": {
+                  "name": "punctuation.colon.js"
+                }
+              },
+              "endCaptures": [
+                {
+                  "1": {"name": "meta.delimiter.comma.js"}
+                }
+              ],
+              "patterns": [{"include": "#expression"}, {"include": "#curly-brackets"}]
             }
           ]
         }
@@ -759,10 +966,10 @@
           "begin": "\\s*+(<)(?=((?:(?>[^<>]+)|<\\g<-1>>)*)>)",
           "end": "\\s*(>)",
           "endCaptures": {
-            "1": { "name": "punctuation.flowtype" }
+            "1": {"name": "punctuation.flowtype"}
           },
           "beginCaptures": {
-            "1": { "name": "punctuation.flowtype" }
+            "1": {"name": "punctuation.flowtype"}
           },
           "patterns": [
             {
@@ -1370,7 +1577,7 @@
           "comment": "e.g. function play<T>(arg1, arg2) { }",
           "name": "meta.function.js",
           "begin": "\\s*+(?:\\b(async)\\b\\s+)?\\s*+(?:(?<=\\.\\.\\.)|(?<!\\.))(\\bfunction\\b)\\s*+(\\*?)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
-          "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|})",
+          "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
@@ -1399,7 +1606,7 @@
           "comment": "e.g. play = function(arg1, arg2) { }",
           "name": "meta.function.js",
           "begin": "\\s*+(\\#?)((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)\\s*+(=)\\s*+(?:(async)\\s+)?\\s*+((?<!\\.)\\bfunction\\b)\\s*+(\\*?)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
-          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|})",
+          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
@@ -1437,7 +1644,7 @@
           "comment": "e.g. Sound.prototype.play = function(arg1, arg2) { }",
           "name": "meta.prototype.function.js",
           "begin": "\\s*+(\\#?)((?:[_\\p{Lu}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)(?:(\\?\\.)|(\\.))(prototype)(?:(\\?\\.)|(\\.))(\\#?)((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)\\s*+(=)\\s*+(?:(async)\\s+)?\\s*+((?<!\\.)\\bfunction\\b)\\s*+(\\*?)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
-          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|})",
+          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
@@ -1496,7 +1703,7 @@
           "comment": "e.g. Sound.play = function(arg1, arg2) { }",
           "name": "meta.function.static.js",
           "begin": "\\s*+(\\#?)((?:[_\\p{Lu}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)(?:(\\?\\.)|(\\.))(\\#?)((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)\\s*+(=)\\s*+(?:(async)\\s+)?\\s*+((?<!\\.)\\bfunction\\b)\\s*+(\\*?)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
-          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|})",
+          "end": "(?<=})|\\s*(?=,|;|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
@@ -2233,16 +2440,13 @@
           "end": "(?=.)",
           "applyEndPatternLast": 1,
           "beginCaptures": {
-            "1": { "name": "keyword.operator.new.js" },
-            "2": { "name": "meta.function-call.without-arguments.js" },
-            "3": { "name": "keyword.operator.private.js" },
-            "4": { "name": "entity.name.type.instance.js" },
-            "5": { "name": "keyword.operator.existential.js" }
+            "1": {"name": "keyword.operator.new.js"},
+            "2": {"name": "meta.function-call.without-arguments.js"},
+            "3": {"name": "keyword.operator.private.js"},
+            "4": {"name": "entity.name.type.instance.js"},
+            "5": {"name": "keyword.operator.existential.js"}
           },
-          "patterns": [
-            { "include": "#type-argument-brackets" },
-            { "include": "#round-brackets" }
-          ]
+          "patterns": [{"include": "#type-argument-brackets"}, {"include": "#round-brackets"}]
         },
         {
           "comment": "A new expression with arguments and maybe type params, like new Foo<string>(123)",
@@ -2308,14 +2512,11 @@
           "end": "(?=.)",
           "applyEndPatternLast": 1,
           "beginCaptures": {
-            "1": { "name": "keyword.operator.private.js" },
-            "2": { "name": "entity.name.function.js" },
-            "3": { "name": "keyword.operator.existential.js" }
+            "1": {"name": "keyword.operator.private.js"},
+            "2": {"name": "entity.name.function.js"},
+            "3": {"name": "keyword.operator.existential.js"}
           },
-          "patterns": [
-            { "include": "#type-argument-brackets" },
-            { "include": "#round-brackets" }
-          ]
+          "patterns": [{"include": "#type-argument-brackets"}, {"include": "#round-brackets"}]
         },
         {
           "comment": "maybe in array form e.g. foo[bar]() or foo[bar]<string>()",
@@ -3737,7 +3938,7 @@
         },
         {
           "begin": "(?<!\\.)\\s*+\\b(import)(?!\\s*:)\\b",
-          "end": "\\s*(?:(?:(\\bfrom\\b)?+\\s++(('|\")([^\"']*)(\\k<-3>)))|(?=;|^\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|}))",
+          "end": "\\s*(?:(?:(\\bfrom\\b)?+\\s++(('|\")([^\"']*)(\\k<-3>)))|(?=;|^\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|}))",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.module.js"
@@ -3806,7 +4007,7 @@
         {
           "comment": "export {  or  export * or export var or export type {} from module",
           "begin": "(?<!\\.)\\s*+\\b(export)\\b\\s*(\\btype\\b)?(?=\\s++({|\\*|((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)(\\s++from\\b|\\s*,)))",
-          "end": "\\s*(?:(?:(\\bfrom\\b)?+\\s++(('|\")([^\"']*)(\\k<-3>)))|(?=;|^\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|}))",
+          "end": "\\s*(?:(?:(\\bfrom\\b)?+\\s++(('|\")([^\"']*)(\\k<-3>)))|(?=;|^\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|}))",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.module.js"
@@ -4241,7 +4442,7 @@
           },
           "patterns": [
             {
-              "match": "(?<=\\|>)\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component)\\b)(\\#?)(((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+))(?!\\?|\\.)",
+              "match": "(?<=\\|>)\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component|hook)\\b)(\\#?)(((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+))(?!\\?|\\.)",
               "captures": {
                 "2": {
                   "name": "keyword.operator.private.js"
@@ -4255,7 +4456,7 @@
               }
             },
             {
-              "match": "\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component)\\b)(\\#?)(((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+))(?!\\?|\\.)",
+              "match": "\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component|hook)\\b)(\\#?)(((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+))(?!\\?|\\.)",
               "captures": {
                 "2": {
                   "name": "keyword.operator.private.js"
@@ -4269,7 +4470,7 @@
               }
             },
             {
-              "match": "\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component)\\b)(\\#?)((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)(\\??)(\\.?)",
+              "match": "\\s*(?!\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|async|await|enum|component|hook)\\b)(\\#?)((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)(\\??)(\\.?)",
               "captures": {
                 "2": {
                   "name": "keyword.operator.private.js"
@@ -4387,7 +4588,7 @@
           "comment": "e.g. component play<T>(arg1, arg2) { }",
           "name": "meta.component.syntax.flowtype",
           "begin": "\\s*+(?:(?<=\\.\\.\\.)|(?<!\\.))(\\bcomponent\\b)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
-          "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b|\\)|})",
+          "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
@@ -4400,7 +4601,7 @@
           "patterns": [
             {
               "begin": "(?<=\\))\\s*+\\b((renders))\\b\\s*+",
-              "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
+              "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component|hook)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
               "beginCaptures": {
                 "1": {
                   "name": "meta.renders.component.syntax.flowtype"
@@ -4415,6 +4616,29 @@
                 }
               ]
             },
+            {
+              "include": "#flowtype"
+            },
+            {
+              "include": "#curly-brackets"
+            }
+          ]
+        },
+        {
+          "comment": "e.g. hook play<T>(arg1, arg2) { }",
+          "name": "meta.hook.syntax.flowtype",
+          "begin": "\\s*+(?:(?<=\\.\\.\\.)|(?<!\\.))(\\bhook\\b)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
+          "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
+          "applyEndPatternLast": 1,
+          "beginCaptures": {
+            "1": {
+              "name": "storage.type.hook.component.syntax.flowtype"
+            },
+            "2": {
+              "name": "entity.name.function.hook.component.syntax.flowtype"
+            }
+          },
+          "patterns": [
             {
               "include": "#flowtype"
             },
@@ -4897,7 +5121,7 @@
         {
           "comment": "varname of|in ",
           "begin": "(?<!let|const|var)(?<=[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}])\\s+(?=\\b(?:of|in)\\b)",
-          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
+          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component|hook)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
           "patterns": [
             {
               "include": "#expression"
@@ -4907,7 +5131,7 @@
         {
           "comment": "assignment var = or = ",
           "begin": "(?<!:)\\s*+(?=((?:(\\#?)[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?\\s*=)(?!=>|==)",
-          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
+          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component|hook)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
           "patterns": [
             {
               "include": "#expression"
@@ -4930,7 +5154,7 @@
         {
           "comment": "sometypename of|in ",
           "begin": "(?<=[>$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}])\\s+(?=\\b(?:of|in)\\b)",
-          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
+          "end": "\\s*(?=,|;|\\)|}|\\]|\\*/|\\b(?:if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|enum|component|hook)\\b|\\b(async|await)\\b\\s*+(?!=|:)|type\\s+[$\\w]+|declare\\s+[$\\w]+|interface\\s+[$\\w]+)",
           "patterns": [
             {
               "include": "#expression"
@@ -5014,7 +5238,7 @@
         },
         {
           "comment": "custom primitive/var Types e.g. abc avoid abc(",
-          "match": "(?!\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component)\\b)(?!^)\\s*(?<=\\s|:|&|\\||<)([$_\\p{L}][$.\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}]*+)(?!\\s*+\\()",
+          "match": "(?!\\s*\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b)(?!^)\\s*(?<=\\s|:|&|\\||<)([$_\\p{L}][$.\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}]*+)(?!\\s*+\\()",
           "captures": {
             "2": {
               "name": "support.type.primitive.flowtype"
@@ -5455,7 +5679,7 @@
     "flowtype-declare": {
       "patterns": [
         {
-          "match": "\\s*+(?<!\\.)\\b(declare)(?=\\s+(function|var|type|interface|opaque|export|const|let|component)\\b)",
+          "match": "\\s*+(?<!\\.)\\b(declare)(?=\\s+(function|var|type|interface|opaque|export|const|let|component|hook)\\b)",
           "captures": {
             "1": {
               "name": "keyword.other.declare.flowtype"
