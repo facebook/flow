@@ -186,7 +186,7 @@ since they may have other unknown properties, including the one we are checking.
 Additionally, [optional properties](../../types/objects/#toc-optional-object-type-properties) may or may not exist, so are not particularly useful to check against.
 
 If you want to refine a union of [tuple types](../../types/tuples/) based on whether an element exists,
-check the [length](../../types/tuples/#length-refinement) property instead of attempted to use `in`.
+check the [length](../../types/tuples/#length-refinement) property instead of attempting to use `in`.
 
 ### `instanceof` checks
 
