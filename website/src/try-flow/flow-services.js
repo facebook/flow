@@ -19,6 +19,7 @@ const PARSE_OPTIONS: FlowJsParseOptions = {
   enums: true,
   components: true,
   types: true,
+  pattern_matching: true,
 };
 
 export default class FlowJsServices {
