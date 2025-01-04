@@ -2147,7 +2147,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `process.emitWarning` because: [incompatible-call]
  - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with string [3].
+ - Or no more than 1 argument is expected by function type [3].
 
    process/emitWarning.js:13:9
      13| process.emitWarning('blah', 'blah', 42); // error
@@ -2160,9 +2160,9 @@ References:
    <BUILTINS>/node.js:3351:11
    3351|     code: string,
                    ^^^^^^ [2]
-   <BUILTINS>/node.js:3347:58
-   3347|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
-                                                                  ^^^^^^ [3]
+   <BUILTINS>/node.js:3345:3
+   3345|   emitWarning(warning: string | Error): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- process/emitWarning.js:14:1

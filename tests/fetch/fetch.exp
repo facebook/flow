@@ -67,7 +67,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Headers` with array literal bound to `init` because: [incompatible-call]
  - Either string [1] is incompatible with tuple type [2] in array element.
- - Or array literal [3] is incompatible with object type [4].
+ - Or array literal [3] is incompatible with `Headers` [4].
 
    headers.js:4:23
       4| const b = new Headers(['Content-Type', 'image/jpeg']); // not correct
@@ -80,9 +80,9 @@ References:
    <BUILTINS>/bom.js:1587:36
    1587| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
                                             ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:1587:56
+   <BUILTINS>/bom.js:1587:20
    1587| type HeadersInit = Headers | Array<[string, string]> | { [key: string]: string, ... };
-                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                            ^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- headers.js:9:3
@@ -792,7 +792,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `URLSearchParams` with array literal bound to `init` because: [incompatible-call]
  - Either string [1] is incompatible with tuple type [2] in array element.
- - Or array literal [3] is incompatible with object type [4].
+ - Or array literal [3] is incompatible with string [4].
 
    urlsearchparams.js:4:31
       4| const b = new URLSearchParams(['key1', 'value1']); // not correct
@@ -805,9 +805,9 @@ References:
    <BUILTINS>/bom.js:1611:57
    1611|     constructor(init?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
                                                                  ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:1611:77
+   <BUILTINS>/bom.js:1611:24
    1611|     constructor(init?: string | URLSearchParams | Array<[string, string]> | { [string]: string, ... } ): void;
-                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                                ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- urlsearchparams.js:9:3

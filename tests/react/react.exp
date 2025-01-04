@@ -26,30 +26,30 @@ References:
 Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:12:2
 
 Cannot cast `y` to `React.RefSetter` because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or boolean [3] is incompatible with number [4] in the first parameter.
- - Or boolean [3] is incompatible with string [5] in the first parameter.
+ - Either boolean [1] is incompatible with number [2] in the first parameter.
+ - Or boolean [1] is incompatible with string [3] in the first parameter.
+ - Or property `current` is missing in function type [4] but exists in object type [5].
 
    contravariant_refsetter.js:12:2
     12| (y: React.RefSetter<number | string | boolean>); // ERROR
          ^
 
 References:
-   contravariant_refsetter.js:7:18
-     7| declare const y: React$RefSetter<number | string>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    contravariant_refsetter.js:12:39
     12| (y: React.RefSetter<number | string | boolean>); // ERROR
-                                              ^^^^^^^ [3]
+                                              ^^^^^^^ [1]
    contravariant_refsetter.js:7:34
      7| declare const y: React$RefSetter<number | string>;
-                                         ^^^^^^ [4]
+                                         ^^^^^^ [2]
    contravariant_refsetter.js:7:43
      7| declare const y: React$RefSetter<number | string>;
-                                                  ^^^^^^ [5]
+                                                  ^^^^^^ [3]
+   contravariant_refsetter.js:7:18
+     7| declare const y: React$RefSetter<number | string>;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:12:2
@@ -1500,23 +1500,23 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either property `current` is missing in function [1] but exists in object type [2].
- - Or `FooExact` [3] is incompatible with `Bar` [4] in the first parameter.
+ - Either `FooExact` [1] is incompatible with `Bar` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
 
    ref.js:24:16
     24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
-              ^^^^^^^^ [3]
+              ^^^^^^^^ [1]
    ref.js:24:22
     24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
-                             ^^^ [4]
+                             ^^^ [2]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:5:21
@@ -1880,26 +1880,26 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:32:29
 
 Cannot call `React.useImperativeHandle` with `refSetter` bound to `ref` because: [incompatible-call]
- - Either property `current` is missing in function [1] but exists in object type [2].
- - Or property `focus` is missing in object literal [3] but exists in `Interface` [4] in the first parameter.
+ - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in the first parameter.
+ - Or property `current` is missing in function [3] but exists in object type [4].
 
    useImperativeHandle_hook.js:32:29
     32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
                                     ^^^^^^^^^
 
 References:
-   useImperativeHandle_hook.js:31:21
-    31|   const refSetter = (instance: null | Interface) => {};
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    useImperativeHandle_hook.js:32:47
     32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                                      ^^ [3]
+                                                      ^^ [1]
    useImperativeHandle_hook.js:31:39
     31|   const refSetter = (instance: null | Interface) => {};
-                                              ^^^^^^^^^ [4]
+                                              ^^^^^^^^^ [2]
+   useImperativeHandle_hook.js:31:21
+    31|   const refSetter = (instance: null | Interface) => {};
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:4:9

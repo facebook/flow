@@ -2728,26 +2728,26 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or `HTMLAnchorElement` [3] is incompatible with `HTMLMetaElement` [4] in the first parameter.
+ - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in the first parameter.
+ - Or property `current` is missing in function type [3] but exists in object type [4].
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
                              ^^^
 
 References:
-   propsof.js:26:18
-    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                                         ^^^^^^^^^^^^^^ [3]
+                                         ^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react-dom.js:427:15
    427|     instance: HTMLMetaElement,
-                      ^^^^^^^^^^^^^^^ [4]
+                      ^^^^^^^^^^^^^^^ [2]
+   propsof.js:26:18
+    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
@@ -3195,30 +3195,30 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or `HTMLElement` [3] is incompatible with nullable `HTMLInputElement` [4] in the first parameter.
- - Or `HTMLElement` [3] is incompatible with `HTMLInputElement` [5] in the first parameter.
+ - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in the first parameter.
+ - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in the first parameter.
+ - Or property `current` is missing in function type [4] but exists in object type [5].
 
    refs.js:64:53
     64|                 <MyNestedInput {...otherProps} ref={ref} />
                                                             ^^^
 
 References:
-   refs.js:60:43
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:56:66
     56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
-                                                                         ^^^^^^^^^^^ [3]
+                                                                         ^^^^^^^^^^^ [1]
    refs.js:60:59
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^^^^^ [4]
+                                                                  ^^^^^^^^^^^^^^^^^ [2]
    refs.js:60:60
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^^^^ [5]
+                                                                   ^^^^^^^^^^^^^^^^ [3]
+   refs.js:60:43
+    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53

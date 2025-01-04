@@ -74,26 +74,26 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
 Cannot call `foo` with function bound to `x` because: [incompatible-call]
- - Either boolean [1] is incompatible with string [2] in the return value.
- - Or string [3] is incompatible with boolean [4] in the return value.
+ - Either string [1] is incompatible with boolean [2] in the return value.
+ - Or boolean [3] is incompatible with string [4] in the return value.
 
    test16.js:11:5
    11| foo(() => qux());
            ^^^^^^^^^^^
 
 References:
-   test16.js:16:8
-   16| var x: boolean | string = false;
-              ^^^^^^^ [1]
-   test16.js:5:26
-    5| type T = number | (() => string);
-                                ^^^^^^ [2]
    test16.js:16:18
    16| var x: boolean | string = false;
-                        ^^^^^^ [3]
+                        ^^^^^^ [1]
    test16.js:6:23
     6| type Foo = T | (() => boolean);
-                             ^^^^^^^ [4]
+                             ^^^^^^^ [2]
+   test16.js:16:8
+   16| var x: boolean | string = false;
+              ^^^^^^^ [3]
+   test16.js:5:26
+    5| type T = number | (() => string);
+                                ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5

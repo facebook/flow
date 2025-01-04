@@ -393,9 +393,9 @@ References:
    errors_intersection.js:51:34
    51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
                                         ^^ [2]
-   errors_intersection.js:51:18
+   errors_intersection.js:51:8
    51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
-                        ^^ [3]
+              ^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- errors_intersection.js:52:1
@@ -1687,9 +1687,9 @@ References:
    errors_union.js:39:22
    39| 42 as {} | {} | {} | boolean; // Error: number ~> boolean
                             ^^^^^^^ [2]
-   errors_union.js:39:17
+   errors_union.js:39:7
    39| 42 as {} | {} | {} | boolean; // Error: number ~> boolean
-                       ^^ [3]
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:40:1
@@ -2899,7 +2899,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in array element.
- - Or tuple type [3] has 1 element but tuple type [4] has 2 elements.
+ - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    intersection-function.js:56:1
    56| f([1] as [number]);
@@ -2915,9 +2915,9 @@ References:
    intersection-function.js:56:10
    56| f([1] as [number]);
                 ^^^^^^^^ [3]
-   intersection-function.js:50:23
-   50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [4]
+   intersection-function.js:48:23
+   48| declare function f(x: interface {p: string}): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
@@ -2946,7 +2946,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-call]
  - Either number [1] is incompatible with string [2] in array element.
- - Or tuple type [3] has 3 elements but tuple type [4] has 2 elements.
+ - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    intersection-function.js:58:1
    58| f([1, 2, 3] as [number, number, number]);
@@ -2962,9 +2962,9 @@ References:
    intersection-function.js:58:16
    58| f([1, 2, 3] as [number, number, number]);
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   intersection-function.js:50:23
-   50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [4]
+   intersection-function.js:48:23
+   48| declare function f(x: interface {p: string}): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
@@ -3782,7 +3782,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in array element.
- - Or tuple type [3] has 1 element but tuple type [4] has 2 elements.
+ - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    union.js:46:8
    46| [1] as [number] as F;
@@ -3795,9 +3795,9 @@ References:
    union.js:40:49
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
                                                        ^^^^^^ [2]
-   union.js:40:59
+   union.js:40:10
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
+                ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:47:11
@@ -3826,7 +3826,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-cast]
  - Either number [1] is incompatible with string [2] in array element.
- - Or tuple type [3] has 3 elements but tuple type [4] has 2 elements.
+ - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    union.js:48:14
    48| [1, 2, 3] as [number, number, number] as F;
@@ -3839,9 +3839,9 @@ References:
    union.js:40:49
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
                                                        ^^^^^^ [2]
-   union.js:40:59
+   union.js:40:10
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [4]
+                ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- union.js:49:16

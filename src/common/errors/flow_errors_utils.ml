@@ -797,7 +797,9 @@ let mk_speculation_error
     ?(kind = InferError) ~loc ~root ~frames ~explanations ~error_code speculation_errors =
   Friendly.(
     let branches =
-      Base.List.map ~f:(fun (score, (_, error)) -> (score, error)) speculation_errors
+      speculation_errors
+      |> Base.List.map ~f:(fun (score, (_, error)) -> (score, error))
+      |> Base.List.sort ~compare:(fun (s1, _) (s2, _) -> Int.compare s1 s2)
     in
     ( kind,
       {

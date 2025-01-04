@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast function to `Value` because: [incompatible-cast]
  - Either function [1] is incompatible with indexed `Aggregate` [2].
- - Or function [1] is incompatible with string [3].
+ - Or function [1] is incompatible with boolean [3].
 
    recursive.js:8:2
    8| (() => {}) as Value;
@@ -12,9 +12,9 @@ References:
    recursive.js:2:63
    2| export type Value = void | null | boolean | number | string | Aggregate;
                                                                     ^^^^^^^^^ [2]
-   recursive.js:2:54
+   recursive.js:2:35
    2| export type Value = void | null | boolean | number | string | Aggregate;
-                                                           ^^^^^^ [3]
+                                        ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1

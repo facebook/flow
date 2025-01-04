@@ -190,26 +190,26 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
 Cannot cast `ComponentNarrower` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or `ComponentNarrower` [3] is incompatible with `Component` [4] in the first parameter.
+ - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in the first parameter.
+ - Or property `current` is missing in function type [3] but exists in object type [4].
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
         ^^^^^^^^^^^^^^^^^
 
 References:
-   classes_lower.js:19:37
-    19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes_lower.js:11:7
     11| class ComponentNarrower extends React.Component<{foo: number, bar: number, ...}> {
-              ^^^^^^^^^^^^^^^^^ [3]
+              ^^^^^^^^^^^^^^^^^ [1]
    classes_lower.js:19:53
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
-                                                            ^^^^^^^^^ [4]
+                                                            ^^^^^^^^^ [2]
+   classes_lower.js:19:37
+    19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
@@ -241,26 +241,26 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:25:1
 
 Cannot cast `Component` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or `Component` [3] is incompatible with `Subclass` [4] in the first parameter.
+ - Either `Component` [1] is incompatible with `Subclass` [2] in the first parameter.
+ - Or property `current` is missing in function type [3] but exists in object type [4].
 
    classes_lower.js:25:1
     25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
         ^^^^^^^^^
 
 References:
-   classes_lower.js:25:29
-    25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes_lower.js:5:7
      5| class Component extends React.Component<{...}> {}
-              ^^^^^^^^^ [3]
+              ^^^^^^^^^ [1]
    classes_lower.js:25:45
     25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
-                                                    ^^^^^^^^ [4]
+                                                    ^^^^^^^^ [2]
+   classes_lower.js:25:29
+    25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:25:1
@@ -619,8 +619,8 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:12:1
 
 Cannot cast `Component` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or undefined [1] is incompatible with null [3] in the first parameter.
+ - Either undefined [1] is incompatible with null [2] in the first parameter.
+ - Or property `current` is missing in function type [1] but exists in object type [3].
 
    function_lower.js:12:1
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
@@ -630,12 +630,12 @@ References:
    function_lower.js:12:29
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
                                     ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:197:11
    197|   | ((T | null) => mixed)
-                  ^^^^ [3]
+                  ^^^^ [2]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:12:1
@@ -750,8 +750,8 @@ References:
 Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1
 
 Cannot cast `Foo` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
- - Or undefined [1] is incompatible with null [3] in the first parameter.
+ - Either undefined [1] is incompatible with null [2] in the first parameter.
+ - Or property `current` is missing in function type [1] but exists in object type [3].
 
    function_to_component_type.js:8:1
      8| Foo as component( // error: void ~> string
@@ -761,12 +761,12 @@ References:
    function_to_component_type.js:10:10
     10|     ref: React.RefSetter<string>
                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:197:11
    197|   | ((T | null) => mixed)
-                  ^^^^ [3]
+                  ^^^^ [2]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1

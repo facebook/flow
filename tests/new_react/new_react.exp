@@ -350,7 +350,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with function bound to `partialState` because: [incompatible-call]
  - Either string [1] is incompatible with number [2] in property `bar` of the return value.
- - Or inexact function [3] is incompatible with exact `State` [4].
+ - Or function [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:27:19
                          v-------------------------------------------
@@ -366,9 +366,9 @@ References:
    state6.js:5:34
     5| type State = {|foo: number, bar: number|};
                                         ^^^^^^ [2]
-   state6.js:11:59
-   11| class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ [4]
+   <BUILTINS>/react.js:39:19
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -403,7 +403,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-call]
  - Either number [1] is incompatible with `State` [2] in the first parameter.
- - Or inexact `StateUpdater3` [3] is incompatible with exact `State` [2].
+ - Or `StateUpdater3` [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:39:25
    39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
@@ -416,6 +416,9 @@ References:
    state6.js:11:59
    11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                  ^^^^^ [2]
+   <BUILTINS>/react.js:39:19
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:3

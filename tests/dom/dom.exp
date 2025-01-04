@@ -801,9 +801,9 @@ References:
    <BUILTINS>/dom.js:1650:33
    1650|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
                                          ^^^^ [2]
-   <BUILTINS>/dom.js:1639:3
-   1639|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/dom.js:1554:3
+   1554|   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    traversal.js:29:5
      29|     document.createNodeIterator({}); // invalid
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -826,9 +826,9 @@ References:
    <BUILTINS>/dom.js:1651:31
    1651|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
                                        ^^^^ [2]
-   <BUILTINS>/dom.js:1646:3
-   1646|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/dom.js:1555:3
+   1555|   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    traversal.js:33:5
      33|     document.createTreeWalker({}); // invalid
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
@@ -1012,7 +1012,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `document.createNodeIterator` because: [incompatible-call]
  - Either string [1] is incompatible with union type [2] in the return value of property `acceptNode`.
- - Or number [3] is incompatible with number literal `133` [4].
+ - Or number [3] is incompatible with number literal `2` [4].
 
    traversal.js:188:14
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1031,9 +1031,9 @@ References:
    traversal.js:188:48
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                         ^^ [3]
-   <BUILTINS>/dom.js:1639:68
-   1639|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
-                                                                            ^^^ [4]
+   <BUILTINS>/dom.js:1554:68
+   1554|   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
+                                                                            ^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:189:14
@@ -1388,7 +1388,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `document.createTreeWalker` because: [incompatible-call]
  - Either string [1] is incompatible with union type [2] in the return value of property `acceptNode`.
- - Or number [3] is incompatible with number literal `133` [4].
+ - Or number [3] is incompatible with number literal `2` [4].
 
    traversal.js:195:14
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1407,9 +1407,9 @@ References:
    traversal.js:195:46
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                       ^^ [3]
-   <BUILTINS>/dom.js:1646:66
-   1646|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
-                                                                          ^^^ [4]
+   <BUILTINS>/dom.js:1555:66
+   1555|   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
+                                                                          ^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- traversal.js:196:14

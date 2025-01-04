@@ -1077,74 +1077,74 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with `React.Element` [2].
- - Or JSX text [3] is incompatible with boolean [4] in array element.
+ - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-               ^^^^^^^^^^^^^^ [1]
+               ^^^^^^^^^^^^^^ [3]
 
 References:
-   tabs.js:17:5
-   17|   | ExactReactElement_DEPRECATED<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
-               ^^ [3]
+               ^^ [1]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
+   tabs.js:17:5
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with `React.Element` [2].
- - Or JSX text [3] is incompatible with boolean [4] in array element.
+ - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:31:9
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-               ^^^^^^^^^^^^^^ [1]
+               ^^^^^^^^^^^^^^ [3]
 
 References:
-   tabs.js:17:5
-   17|   | ExactReactElement_DEPRECATED<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:31:15
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
-                     ^^ [3]
+                     ^^ [1]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
+   tabs.js:17:5
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with `React.Element` [2].
- - Or JSX text [3] is incompatible with boolean [4] in array element.
+ - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:32:9
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-               ^^^^^^^^^^^^^^ [1]
+               ^^^^^^^^^^^^^^ [3]
 
 References:
-   tabs.js:17:5
-   17|   | ExactReactElement_DEPRECATED<typeof Tab>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    tabs.js:32:21
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
-                           ^^ [3]
+                           ^^ [1]
    tabs.js:16:5
    16|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
+   tabs.js:17:5
+   17|   | ExactReactElement_DEPRECATED<typeof Tab>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3].
- - Or `React.Element` [4] is incompatible with array type [5].
+ - Or `React.Element` [4] is incompatible with boolean [5].
 
    tabs.js:67:9
     67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1160,16 +1160,16 @@ References:
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   tabs.js:18:5
-    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-            ^^^^^^^^^^^^^^^^^ [5]
+   tabs.js:16:5
+    16|   | boolean
+            ^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
- - Or `React.Element` [4] is incompatible with array type [5] in array element.
+ - Or `React.Element` [4] is incompatible with boolean [5] in array element.
 
    tabs.js:68:9
     68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1188,16 +1188,16 @@ References:
    tabs.js:68:9
     68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                 ^^^^^^^^^ [4]
-   tabs.js:18:5
-    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-            ^^^^^^^^^^^^^^^^^ [5]
+   tabs.js:16:5
+    16|   | boolean
+            ^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
- - Or `React.Element` [4] is incompatible with array type [5] in array element.
+ - Or `React.Element` [4] is incompatible with boolean [5] in array element.
 
    tabs.js:71:9
                 v
@@ -1222,9 +1222,9 @@ References:
    tabs.js:73:3
     73|   <NotTab/>
           ^^^^^^^^^ [4]
-   tabs.js:18:5
-    18|   | Array<TabBarNode>; // NOTE: This is intentionally `Array<T>` and not
-            ^^^^^^^^^^^^^^^^^ [5]
+   tabs.js:16:5
+    16|   | boolean
+            ^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2
@@ -1684,7 +1684,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
- - Or object literal [1] is incompatible with array type [3].
+ - Or object literal [1] is incompatible with boolean [3].
 
    view.js:32:4
    32|   {{a: 1, b: 2, c: 3}}
@@ -1694,9 +1694,9 @@ References:
    view.js:9:5
     9|   | ExactReactElement_DEPRECATED<any>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   view.js:10:5
-   10|   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   view.js:8:5
+    8|   | boolean
+           ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:35:7
@@ -1759,23 +1759,23 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with `React.Element` [2].
- - Or number [3] is incompatible with boolean [4] in array element.
+ - Either number [1] is incompatible with boolean [2] in array element.
+ - Or children array [3] is incompatible with `React.Element` [4].
 
    view.js:38:7
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-             ^^^^^^^^^ [1]
+             ^^^^^^^^^ [3]
 
 References:
-   view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    view.js:38:8
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
-              ^ [3]
+              ^ [1]
    view.js:8:5
     8|   | boolean
-           ^^^^^^^ [4]
+           ^^^^^^^ [2]
+   view.js:9:5
+    9|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:39:8
