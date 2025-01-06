@@ -2,3 +2,5 @@
 
 'm#./Parent';
 // ^
+'m#./ParentESM';
+// ^
