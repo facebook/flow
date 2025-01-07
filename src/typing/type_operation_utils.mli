@@ -83,7 +83,7 @@ module Import_export : sig
     standard_cjs_esm_interop:bool ->
     legacy_interop:bool ->
     Type.t ->
-    Type.t
+    ALoc.t option * Type.t
 end
 
 module Operators : sig

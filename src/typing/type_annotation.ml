@@ -1056,15 +1056,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 let { Ast.StringLiteral.value; _ } = str_lit in
                 let remote_module_t = Flow_js_utils.get_builtin_module cx value loc in
                 let str_t = mk_singleton_string str_loc value in
+                let (_def_loc_opt, require_t) =
+                  Type_operation_utils.Import_export.cjs_require_type
+                    cx
+                    (mk_annot_reason (RModule value) loc)
+                    ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:value ~def_loc:loc)
+                    ~standard_cjs_esm_interop:false
+                    ~legacy_interop:false
+                    remote_module_t
+                in
                 reconstruct_ast
-                  (Type_operation_utils.Import_export.cjs_require_type
-                     cx
-                     (mk_annot_reason (RModule value) loc)
-                     ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:value ~def_loc:loc)
-                     ~standard_cjs_esm_interop:false
-                     ~legacy_interop:false
-                     remote_module_t
-                  )
+                  require_t
                   (Some
                      ( targs_loc,
                        {
