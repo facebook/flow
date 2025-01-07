@@ -1683,12 +1683,12 @@ class ['loc] mapper =
 
     method module_ref_literal _loc (lit : ('loc, 'loc) Ast.ModuleRefLiteral.t) =
       let open Ast.ModuleRefLiteral in
-      let { value; require_out; prefix_len; legacy_interop; raw; comments } = lit in
+      let { value; require_loc; def_loc_opt; prefix_len; legacy_interop; raw; comments } = lit in
       let comments' = this#syntax_opt comments in
       if comments == comments' then
         lit
       else
-        { value; require_out; prefix_len; legacy_interop; raw; comments }
+        { value; require_loc; def_loc_opt; prefix_len; legacy_interop; raw; comments }
 
     method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
       let open Ast.Type.Nullable in

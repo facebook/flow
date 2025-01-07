@@ -19,7 +19,8 @@ type internal_error =
 (** This type is distinct from the one raised by the searcher because
   it would never make sense for the searcher to raise LocNotFound *)
 type 'loc result =
-  | OwnDef of 'loc * (* name *) string
+  | OwnNamedDef of 'loc * (* name *) string
+  | OwnUnnamedDef of 'loc
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
@@ -112,9 +113,14 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method private on_loc_annot x = x
 
-    method private own_def : 'a. ALoc.t -> string -> 'a =
+    method private own_named_def : 'a. ALoc.t -> string -> 'a =
       fun loc name ->
-        found_loc_ <- OwnDef (loc, name);
+        found_loc_ <- OwnNamedDef (loc, name);
+        raise Found
+
+    method private own_unnamed_def : 'a. ALoc.t -> 'a =
+      fun loc ->
+        found_loc_ <- OwnUnnamedDef loc;
         raise Found
 
     method private found_empty : 'a. string -> 'a =
@@ -175,14 +181,14 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       in
       ( if this#annot_covers_target remote_annot then
         match this#remote_name_def_loc_of_import_named_specifier decl with
-        | Some l -> this#own_def l name
-        | None -> this#own_def (this#loc_of_annot remote_annot) "default"
+        | Some l -> this#own_named_def l name
+        | None -> this#own_named_def (this#loc_of_annot remote_annot) "default"
       );
       Base.Option.iter local ~f:(fun (local_annot, _) ->
           if this#annot_covers_target local_annot then
             match this#remote_name_def_loc_of_import_named_specifier decl with
-            | Some l -> this#own_def l name
-            | None -> this#own_def (this#loc_of_annot local_annot) "default"
+            | Some l -> this#own_named_def l name
+            | None -> this#own_named_def (this#loc_of_annot local_annot) "default"
       );
       decl
 
@@ -192,8 +198,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       Base.Option.iter default ~f:(fun { identifier = (annot, _); _ } ->
           if this#annot_covers_target annot then
             match this#remote_default_name_def_loc_of_import_declaration (loc, decl) with
-            | Some l -> this#own_def l "default"
-            | None -> this#own_def (this#loc_of_annot annot) "default"
+            | Some l -> this#own_named_def l "default"
+            | None -> this#own_named_def (this#loc_of_annot annot) "default"
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
@@ -208,7 +214,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
                      { annot = (this#loc_of_annot source_annot, t); name = Some name }
                   )
               | Get_def_types.Purpose.FindReferences ->
-                ignore @@ this#own_def (this#loc_of_annot name_annot) name
+                ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
             )
           );
       super#import_declaration loc decl
@@ -438,7 +444,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request (Get_def_request.Type { annot; name = Some name })
         else
-          this#own_def (this#loc_of_annot annot) name;
+          this#own_named_def (this#loc_of_annot annot) name;
       super#pattern_identifier ?kind (annot, name_node)
 
     method! expression (annot, expr) =
@@ -521,28 +527,25 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! type_param_identifier id =
       let (loc, { Ast.Identifier.name; comments = _ }) = id in
-      if covers_target loc then this#own_def loc name;
+      if covers_target loc then this#own_named_def loc name;
       id
 
     method! module_ref_literal mref =
-      let { Ast.ModuleRefLiteral.require_out; _ } = mref in
-      if this#annot_covers_target require_out then
-        let require_out =
-          (this#loc_of_annot require_out, this#type_from_enclosing_node require_out)
-        in
-        this#request (Get_def_request.Type { annot = require_out; name = None })
+      let { Ast.ModuleRefLiteral.require_loc; def_loc_opt; _ } = mref in
+      if covers_target require_loc then
+        this#own_unnamed_def (Base.Option.value ~default:require_loc def_loc_opt)
       else
         super#module_ref_literal mref
 
     method! enum_member_identifier id =
       let (loc, { Ast.Identifier.name; comments = _ }) = id in
-      if covers_target loc then this#own_def loc name;
+      if covers_target loc then this#own_named_def loc name;
       super#enum_member_identifier id
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
       let (annot, { Ast.Identifier.name; comments = _ }) = id in
-      if this#annot_covers_target annot then this#own_def (this#loc_of_annot annot) name;
+      if this#annot_covers_target annot then this#own_named_def (this#loc_of_annot annot) name;
       id
 
     method! object_key_string_literal literal =
@@ -646,7 +649,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       if covers_target loc then
         match SMap.find_opt name available_private_names with
         | None -> this#found_empty "unbound private name"
-        | Some l -> this#own_def l name
+        | Some l -> this#own_named_def l name
       else
         pn
 

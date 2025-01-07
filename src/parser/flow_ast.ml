@@ -92,7 +92,8 @@ end =
 and ModuleRefLiteral : sig
   type ('M, 'T) t = {
     value: string;
-    require_out: 'T;
+    require_loc: 'M;
+    def_loc_opt: 'M option;
     prefix_len: int;
     legacy_interop: bool;
     raw: string;

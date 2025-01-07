@@ -1477,10 +1477,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method module_ref_literal (mref : ('M, 'T) Ast.ModuleRefLiteral.t)
         : ('N, 'U) Ast.ModuleRefLiteral.t =
       let open Ast.ModuleRefLiteral in
-      let { value; require_out; prefix_len; legacy_interop; raw; comments } = mref in
-      let require_out' = this#on_type_annot require_out in
+      let { value; require_loc; def_loc_opt; prefix_len; legacy_interop; raw; comments } = mref in
+      let require_loc' = this#on_loc_annot require_loc in
+      let def_loc_opt' = Base.Option.map ~f:this#on_loc_annot def_loc_opt in
       let comments' = this#syntax_opt comments in
-      { value; require_out = require_out'; prefix_len; legacy_interop; raw; comments = comments' }
+      {
+        value;
+        require_loc = require_loc';
+        def_loc_opt = def_loc_opt';
+        prefix_len;
+        legacy_interop;
+        raw;
+        comments = comments';
+      }
 
     method type_ ((annot, t) : ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
       let open Ast.Type in
