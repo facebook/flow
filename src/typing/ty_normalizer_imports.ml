@@ -91,6 +91,7 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
       ~standard_cjs_esm_interop:false
       ~legacy_interop:false
       module_t
+    |> snd
   in
   match binding with
   | BindIdent (loc, name) ->

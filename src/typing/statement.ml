@@ -824,7 +824,7 @@ module Make
         ~import_kind_for_untyped_import_validation:(Some ImportValue)
         (loc, mref)
     in
-    let require_t =
+    let (_def_loc_opt, require_t) =
       Import_export.cjs_require_type
         cx
         (mk_reason (RModule mref) loc)
@@ -3295,6 +3295,7 @@ module Make
               ~standard_cjs_esm_interop:false
               ~legacy_interop:false
               module_t
+            |> snd
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason RAnyImplicit loc in
@@ -3655,7 +3656,7 @@ module Make
                 }
               )
             ) ->
-            let t =
+            let (_def_loc_opt, t) =
               Import_export.get_module_t
                 cx
                 (source_loc, module_name)
@@ -3698,7 +3699,7 @@ module Make
                 }
               )
             ) ->
-            let t =
+            let (_def_loc_opt, t) =
               Import_export.get_module_t
                 cx
                 (source_loc, module_name)

@@ -1540,7 +1540,7 @@ module CJSRequireTKit = struct
     | Some t ->
       (* reposition the export to point at the require(), like the object
          we create below for non-CommonJS exports *)
-      reposition cx (loc_of_reason reason) t
+      (reposition cx (loc_of_reason reason) t, def_loc_of_t t)
     | None ->
       let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
       let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
@@ -1559,11 +1559,13 @@ module CJSRequireTKit = struct
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
       if standard_cjs_esm_interop then
-        lookup_builtin_typeapp
-          cx
-          reason
-          "$Flow$EsmModuleMarkerWrapperInModuleRef"
-          [mk_exports_namespace ()]
+        ( lookup_builtin_typeapp
+            cx
+            reason
+            "$Flow$EsmModuleMarkerWrapperInModuleRef"
+            [mk_exports_namespace ()],
+          def_loc_of_reason reason
+        )
       else
         (* Use default export if option is enabled and module is not lib *)
         let automatic_require_default =
@@ -1572,10 +1574,10 @@ module CJSRequireTKit = struct
         in
         if automatic_require_default then
           match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
-          | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
-          | _ -> mk_exports_namespace ()
+          | Some { preferred_def_locs = _; name_loc = _; type_ } -> (type_, def_loc_of_t type_)
+          | _ -> (mk_exports_namespace (), def_loc_of_reason reason)
         else
-          mk_exports_namespace ()
+          (mk_exports_namespace (), def_loc_of_reason reason)
 end
 
 (* import * as X from 'SomeModule'; *)

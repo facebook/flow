@@ -677,15 +677,18 @@ module rec ConsGen : S = struct
         Annot_CJSRequireT
           { reason; namespace_symbol; is_strict; standard_cjs_esm_interop; legacy_interop }
       ) ->
-      CJSRequireTKit.on_ModuleT
-        cx
-        ~reposition:(fun _ _ t -> t)
-        ~reason
-        ~module_symbol:namespace_symbol
-        ~is_strict
-        ~standard_cjs_esm_interop
-        ~legacy_interop
-        m
+      let (t, _def_loc) =
+        CJSRequireTKit.on_ModuleT
+          cx
+          ~reposition:(fun _ _ t -> t)
+          ~reason
+          ~module_symbol:namespace_symbol
+          ~is_strict
+          ~standard_cjs_esm_interop
+          ~legacy_interop
+          m
+      in
+      t
     | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
       let (values_type, types_tmap) = ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m in
       NamespaceT { namespace_symbol; values_type; types_tmap }

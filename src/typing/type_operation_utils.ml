@@ -273,16 +273,19 @@ module Import_export = struct
     let is_strict = Context.is_strict cx in
     match concretize_module_type cx reason source_module_t with
     | Ok m ->
-      Flow_js_utils.CJSRequireTKit.on_ModuleT
-        cx
-        ~reposition:Flow.reposition
-        ~reason
-        ~module_symbol:namespace_symbol
-        ~is_strict
-        ~standard_cjs_esm_interop
-        ~legacy_interop
-        m
-    | Error (lreason, any_source) -> AnyT (lreason, any_source)
+      let (t, def_loc) =
+        Flow_js_utils.CJSRequireTKit.on_ModuleT
+          cx
+          ~reposition:Flow.reposition
+          ~reason
+          ~module_symbol:namespace_symbol
+          ~is_strict
+          ~standard_cjs_esm_interop
+          ~legacy_interop
+          m
+      in
+      (Some def_loc, t)
+    | Error (lreason, any_source) -> (None, AnyT (lreason, any_source))
 end
 
 module Operators = struct
