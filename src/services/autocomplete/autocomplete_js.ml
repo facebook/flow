@@ -925,6 +925,20 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
         this#find loc name Ac_type_binding
       else
         id
+
+    (* Don't autocomplete match object pattern property keys. *)
+    method! match_object_pattern_property_key key =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      let (loc, token) =
+        match key with
+        | StringLiteral (loc, { Ast.StringLiteral.raw; _ }) -> (loc, raw)
+        | NumberLiteral (loc, { Ast.NumberLiteral.raw; _ }) -> (loc, raw)
+        | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
+      in
+      if this#covers_target loc then
+        this#find loc token Ac_ignored
+      else
+        key
   end
 
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
