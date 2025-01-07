@@ -67,3 +67,14 @@ function f2() {
 
   out as number; // OK
 }
+
+// Guards can refine values which are not the argument
+{
+  declare const y: number | string;
+
+  const out = match (x) {
+    1 if typeof y === 'number': y as number, // OK
+    const a if a === 1: a as 1,
+    _: 0,
+  };
+}
