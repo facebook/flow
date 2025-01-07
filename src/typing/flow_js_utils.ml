@@ -1559,7 +1559,7 @@ module CJSRequireTKit = struct
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
       let t =
-        if standard_cjs_esm_interop then
+        if standard_cjs_esm_interop && not legacy_interop then
           lookup_builtin_typeapp
             cx
             reason

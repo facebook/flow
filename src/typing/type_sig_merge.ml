@@ -538,14 +538,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index; legacy_interop } ->
-    let t =
-      require
-        file
-        loc
-        index
-        ~standard_cjs_esm_interop:(Context.haste_module_ref_prefix_standard_cjs_esm_interop file.cx)
-        ~legacy_interop
-    in
+    let t = require file loc index ~standard_cjs_esm_interop:true ~legacy_interop in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
