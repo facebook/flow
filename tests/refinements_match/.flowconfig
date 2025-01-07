@@ -1,0 +1,4 @@
+[options]
+all=true
+experimental.pattern_matching_expressions=true
+dev_only.refinement_info_as_errors=true
