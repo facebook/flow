@@ -1558,26 +1558,56 @@ module CJSRequireTKit = struct
         let types_tmap = Context.generate_property_map cx type_props in
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
-      if standard_cjs_esm_interop then
-        ( lookup_builtin_typeapp
+      let t =
+        if standard_cjs_esm_interop then
+          lookup_builtin_typeapp
             cx
             reason
             "$Flow$EsmModuleMarkerWrapperInModuleRef"
-            [mk_exports_namespace ()],
-          def_loc_of_reason reason
-        )
-      else
-        (* Use default export if option is enabled and module is not lib *)
-        let automatic_require_default =
-          (legacy_interop || Context.automatic_require_default cx)
-          && not (is_lib_reason_def module_reason)
-        in
-        if automatic_require_default then
-          match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
-          | Some { preferred_def_locs = _; name_loc = _; type_ } -> (type_, def_loc_of_t type_)
-          | _ -> (mk_exports_namespace (), def_loc_of_reason reason)
+            [mk_exports_namespace ()]
         else
-          (mk_exports_namespace (), def_loc_of_reason reason)
+          (* Use default export if option is enabled and module is not lib *)
+          let automatic_require_default =
+            (legacy_interop || Context.automatic_require_default cx)
+            && not (is_lib_reason_def module_reason)
+          in
+          if automatic_require_default then
+            match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
+            | Some { preferred_def_locs = _; name_loc = _; type_ } -> type_
+            | _ -> mk_exports_namespace ()
+          else
+            mk_exports_namespace ()
+      in
+      let def_loc =
+        let def_loc_of_export { preferred_def_locs; name_loc; type_ } =
+          match preferred_def_locs with
+          | Some l -> Nel.hd l
+          | None ->
+            (match name_loc with
+            | Some l -> l
+            | None -> def_loc_of_t type_)
+        in
+        match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
+        | Some e -> def_loc_of_export e
+        | None ->
+          (match
+             NameUtils.Map.fold
+               (fun _ e acc ->
+                 match acc with
+                 | None -> Some (def_loc_of_export e)
+                 | Some acc ->
+                   let def_loc = def_loc_of_export e in
+                   if ALoc.compare acc def_loc < 0 then
+                     Some acc
+                   else
+                     Some def_loc)
+               value_exports_tmap
+               None
+           with
+          | Some l -> l
+          | None -> def_loc_of_reason module_reason)
+      in
+      (t, def_loc)
 end
 
 (* import * as X from 'SomeModule'; *)

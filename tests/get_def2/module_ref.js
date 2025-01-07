@@ -4,3 +4,5 @@
 // ^
 'm#./ParentESM';
 // ^
+'m#./ParentESM2';
+// ^
