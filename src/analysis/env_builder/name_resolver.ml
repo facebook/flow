@@ -2931,56 +2931,27 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                  (match_root_ident arg_internal)
                  (Ast.Type.Missing ALoc.none);
                ignore @@ this#identifier (match_root_ident arg_internal);
-               Base.List.iter cases ~f:(fun case ->
-                   let (case_loc, { Case.pattern; body; guard; comments = _ }) = case in
-                   let lexical_hoist =
-                     new lexical_hoister ~flowmin_compatibility:false ~enable_enums
-                   in
-                   let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-                   this#with_bindings
-                     ~lexical:true
-                     case_loc
-                     bindings
-                     (fun () ->
-                       this#push_refinement_scope empty_refinements;
-                       let arg =
-                         ( case_loc,
-                           Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
-                         )
-                       in
-                       this#match_pattern_refinements ~arg pattern;
-                       let test_refinements = this#peek_new_refinements () in
-                       let env_prev = this#env_snapshot_without_latest_refinements in
-                       ignore @@ this#match_pattern pattern;
-                       ignore @@ this#expression arg;
-                       let completion_state =
-                         this#run_to_completion (fun () ->
-                             match guard with
-                             | Some guard ->
-                               this#push_refinement_scope empty_refinements;
-                               ignore @@ this#expression_refinement guard;
-                               ignore @@ this#expression body;
-                               this#pop_refinement_scope ()
-                             | None -> ignore @@ this#expression body
-                         )
-                       in
-                       completion_states := completion_state :: !completion_states;
-                       this#pop_refinement_scope ();
-                       this#reset_env env_prev;
-                       if Option.is_none guard then (
-                         (* If there is a guard, it's possible the case didn't match
-                            because of it, not because the pattern didn't match. *)
-                         this#push_refinement_scope test_refinements;
-                         this#negate_new_refinements ()
-                       ))
-                     ()
-               );
-               let arg_out =
-                 ( match_keyword_loc,
-                   Ast.Expression.Identifier (Flow_ast_utils.match_root_ident match_keyword_loc)
-                 )
-               in
-               ignore @@ this#expression arg_out)
+               Base.List.iter cases ~f:(this#visit_match_expression_case ~completion_states);
+               match
+                 this#get_val_of_expression
+                   (arg_internal, Ast.Expression.Identifier (match_root_ident arg_internal))
+               with
+               | Some refined_value ->
+                 env_state <-
+                   {
+                     env_state with
+                     values =
+                       L.LMap.add
+                         match_keyword_loc
+                         {
+                           def_loc = None;
+                           value = refined_value;
+                           val_binding_kind = Val.InternalBinding;
+                           name = None;
+                         }
+                         env_state.values;
+                   }
+               | None -> ())
              ();
         let completion_states = !completion_states |> List.rev in
         this#reset_env env0;
@@ -2989,6 +2960,61 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | hd :: tl -> this#merge_completion_states (hd, tl)
         | [] -> ());
         x
+
+      method private visit_match_expression_case ~completion_states case =
+        let open Flow_ast.Expression.Match.Case in
+        let (case_loc, { pattern; body; guard; comments = _ }) = case in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
+        this#with_bindings
+          ~lexical:true
+          case_loc
+          bindings
+          (fun () ->
+            this#push_refinement_scope empty_refinements;
+            let arg =
+              (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
+            in
+            this#match_pattern_refinements ~arg pattern;
+            let test_refinements = this#peek_new_refinements () in
+            let env_prev = this#env_snapshot_without_latest_refinements in
+            ignore @@ this#match_pattern pattern;
+            (match this#get_val_of_expression arg with
+            | Some refined_value ->
+              let values =
+                L.LMap.add
+                  case_loc
+                  {
+                    def_loc = None;
+                    value = refined_value;
+                    val_binding_kind = Val.InternalBinding;
+                    name = None;
+                  }
+                  env_state.values
+              in
+              env_state <- { env_state with values }
+            | None -> ());
+            let completion_state =
+              this#run_to_completion (fun () ->
+                  match guard with
+                  | Some guard ->
+                    this#push_refinement_scope empty_refinements;
+                    ignore @@ this#expression_refinement guard;
+                    ignore @@ this#expression body;
+                    this#pop_refinement_scope ()
+                  | None -> ignore @@ this#expression body
+              )
+            in
+            completion_states := completion_state :: !completion_states;
+            this#pop_refinement_scope ();
+            this#reset_env env_prev;
+            if Option.is_none guard then (
+              (* If there is a guard, it's possible the case didn't match
+                 because of it, not because the pattern didn't match. *)
+              this#push_refinement_scope test_refinements;
+              this#negate_new_refinements ()
+            ))
+          ()
 
       method! match_pattern pattern =
         ( if Flow_ast_utils.match_pattern_has_binding pattern then
