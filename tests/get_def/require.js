@@ -12,9 +12,6 @@ require("Untyped");
 require("Untyped_LibDeclared");
 //       ^
 
-require('test_lib');
-//        ^
-
 {
 const {foo} = require('test_lib');
 //      ^
