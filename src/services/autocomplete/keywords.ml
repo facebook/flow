@@ -16,6 +16,7 @@ type context_node =
   | ObjectKey
   | Type
   | SwitchCase
+  | MatchPattern
 
 (* TODO: include `of`, `in`, and `instanceof`. We don't currently autocomplete at positions where those are valid. *)
 (* true, false, and null are not included here, because we already suggest those when we have type info *)
@@ -103,6 +104,8 @@ let export_default_keywords ~component_syntax_enabled =
   else
     []
 
+let match_pattern_keywords = ["const"]
+
 exception Found of context_node list
 
 class mapper target =
@@ -145,6 +148,9 @@ class mapper target =
 
     method! switch_case case = this#with_context SwitchCase (fun () -> super#switch_case case)
 
+    method! match_pattern pattern =
+      this#with_context MatchPattern (fun () -> super#match_pattern pattern)
+
     method! identifier (loc, id) =
       if this#target_contained_by loc then raise (Found context);
       super#identifier (loc, id)
@@ -162,6 +168,7 @@ let keywords_of_context ~component_syntax_enabled ~pattern_matching_expressions_
   | Expression :: SwitchCase :: _ ->
     []
   | Expression :: _ -> expression_keywords ~pattern_matching_expressions_enabled
+  | MatchPattern :: _ when pattern_matching_expressions_enabled -> match_pattern_keywords
   | _ -> []
 
 let keywords_at_loc ~component_syntax_enabled ~pattern_matching_expressions_enabled ast loc =

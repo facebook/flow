@@ -17,3 +17,31 @@ Flags: --pretty
   ]
 }
 
+pattern-identifier.js:6:5
+Flags: --pretty
+{"result":[{"name":"foo","type":"1"}]}
+
+pattern-binding.js:6:14
+Flags: --pretty
+{"result":[]}
+
+pattern-binding.js:8:14
+Flags: --pretty
+{"result":[]}
+
+pattern-binding.js:10:9
+Flags: --pretty
+{"result":[]}
+
+pattern-binding.js:12:10
+Flags: --pretty
+{"result":[]}
+
+pattern-binding.js:15:4
+Flags: --pretty
+{"result":[{"name":"const","type":""}]}
+
+pattern-object.js:6:5
+Flags: --pretty
+{"result":[]}
+
