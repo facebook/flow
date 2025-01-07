@@ -71,6 +71,11 @@ module.exports = (suite(
         lspStartAndConnect(),
         snapshot('locals.js', 29, 16, 'jsx_props.json'),
       ]),
+      test('JSX Props', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        snapshot('locals.js', 29, 16, 'jsx_props.json'),
+      ]),
       test('Private Names', [
         addFiles(...fixtures),
         lspStartAndConnect(),
@@ -79,6 +84,16 @@ module.exports = (suite(
         snapshot('private-name.js', 20, 17, 'private-name-3.json'),
         snapshot('private-name.js', 23, 12, 'private-name-4.json'),
       ]),
+      test('Match', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        snapshot('match.js', 5, 10, 'match-tuple.json'),
+        snapshot('match.js', 6, 15, 'match-obj-long.json'),
+        snapshot('match.js', 7, 10, 'match-obj-shorthand.json'),
+        snapshot('match.js', 8, 14, 'match-as-const.json'),
+        snapshot('match.js', 9, 8, 'match-as.json'),
+        snapshot('match.js', 10, 9, 'match-binding-top.json'),
+      ]).flowConfig('_flowconfig_match'),
     ];
   },
 ): SuiteType);

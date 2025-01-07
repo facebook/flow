@@ -1,0 +1,31 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 7
+        },
+        "end": {
+          "line": 9,
+          "character": 8
+        }
+      }
+    },
+    {
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/match.js",
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 10
+        },
+        "end": {
+          "line": 9,
+          "character": 11
+        }
+      }
+    }
+  ]
+}

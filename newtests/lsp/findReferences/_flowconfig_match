@@ -1,0 +1,2 @@
+[options]
+experimental.pattern_matching_expressions=true
