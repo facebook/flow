@@ -599,7 +599,12 @@ let not_array t =
 
 let array_length ~sense ~op ~n t =
   match t with
-  | DefT (_, ArrT (TupleAT { arity = (num_req, num_total); inexact; _ })) ->
+  | DefT (_, ArrT (TupleAT { arity = (num_req, num_total); inexact; _ }))
+  | DefT
+      ( _,
+        ArrT
+          (ArrayAT { tuple_view = Some (TupleView { arity = (num_req, num_total); inexact; _ }); _ })
+      ) ->
     (* `None` represents "maybe" a match *)
     let matches =
       match op with

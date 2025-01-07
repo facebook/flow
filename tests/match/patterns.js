@@ -160,3 +160,12 @@
     _: 0,
   };
 }
+
+// Array pattern applied to array literal
+{
+  const x = [1, 'foo'];
+
+  const out = match (x) {
+    [_, const b]: b as string, // OK
+  };
+}
