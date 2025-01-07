@@ -229,6 +229,22 @@ module Def_kind_search = struct
           ());
         super#member loc expr
 
+      method! match_member_pattern member_pattern =
+        let open Flow_ast.MatchPattern.MemberPattern in
+        let (_, { base; property; _ }) = member_pattern in
+        (match property with
+        | PropertyIdentifier ((id_loc, _), { Flow_ast.Identifier.name; _ }) ->
+          if covers_target id_loc then
+            let base_t =
+              match base with
+              | BaseIdentifier ((_, t), _)
+              | BaseMember ((_, t), _) ->
+                t
+            in
+            raise (Found (Use (base_t, name)))
+        | _ -> ());
+        super#match_member_pattern member_pattern
+
       method! object_property prop =
         let open Flow_ast.Expression.Object.Property in
         let (_prop_loc, prop') = prop in

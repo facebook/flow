@@ -244,6 +244,32 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       end;
       super#member loc expr
 
+    method! match_member_pattern member_pattern =
+      let open Flow_ast.MatchPattern.MemberPattern in
+      let (_, { base; property; _ }) = member_pattern in
+      begin
+        match property with
+        | PropertyIdentifier (annot, { Ast.Identifier.name; _ }) when this#annot_covers_target annot
+          ->
+          let base_annot =
+            match base with
+            | BaseIdentifier (annot, _)
+            | BaseMember (annot, _) ->
+              annot
+          in
+          let base_annot =
+            (this#loc_of_annot base_annot, this#type_from_enclosing_node base_annot)
+          in
+          let result =
+            Get_def_request.(
+              Member { prop_name = name; object_type = base_annot; force_instance = false }
+            )
+          in
+          this#request result
+        | _ -> ()
+      end;
+      super#match_member_pattern member_pattern
+
     method! generic_type expr =
       let open Ast.Type.Generic in
       let { id; targs; comments = _ } = expr in
@@ -626,6 +652,21 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         | Some l -> this#own_named_def l name
       else
         pn
+
+    (* If shorthand syntax (e.g. `const foo`), don't map over the 'key' as its
+       location also covers the binding name. *)
+    method! match_object_pattern_property prop =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      let (loc, { key; pattern; shorthand; comments }) = prop in
+      let key =
+        if shorthand then
+          key
+        else
+          this#match_object_pattern_property_key key
+      in
+      let pattern = this#match_pattern pattern in
+      let comments = this#syntax_opt comments in
+      (this#on_loc_annot loc, { key; pattern; shorthand; comments })
   end
 
 class typed_ast_searcher _cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
