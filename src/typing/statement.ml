@@ -829,7 +829,7 @@ module Make
         cx
         (mk_reason (RModule mref) loc)
         ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
-        ~standard_cjs_esm_interop:(Context.haste_module_ref_prefix_standard_cjs_esm_interop cx)
+        ~standard_cjs_esm_interop:true
         ~legacy_interop
         module_t
     in
