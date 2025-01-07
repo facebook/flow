@@ -1,0 +1,19 @@
+keyword-expression.js:1:10
+Flags: --pretty
+{
+  "result":[
+    {"name":"async","type":""},
+    {"name":"await","type":""},
+    {"name":"class","type":""},
+    {"name":"delete","type":""},
+    {"name":"e","type":"empty"},
+    {"name":"function","type":""},
+    {"name":"import","type":""},
+    {"name":"match","type":""},
+    {"name":"new","type":""},
+    {"name":"typeof","type":""},
+    {"name":"void","type":""},
+    {"name":"yield","type":""}
+  ]
+}
+
