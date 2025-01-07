@@ -45,3 +45,31 @@ pattern-object.js:6:5
 Flags: --pretty
 {"result":[]}
 
+pattern-member.js:6:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"[\"zip-zap\"]","type":"3"},
+    {"name":"bar","type":"{baz: 2}"},
+    {"name":"foo","type":"1"}
+  ]
+}
+
+pattern-member.js:8:7
+Flags: --pretty
+{"result":[{"name":"foo","type":"1"}]}
+
+pattern-member.js:10:11
+Flags: --pretty
+{"result":[{"name":"baz","type":"2"}]}
+
+pattern-member.js:12:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"\"bar\"","type":"{baz: 2}"},
+    {"name":"\"foo\"","type":"1"},
+    {"name":"\"zip-zap\"","type":"3"}
+  ]
+}
+

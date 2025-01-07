@@ -223,3 +223,7 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
 
 let pattern cx ~on_identifier ~on_expression ~on_binding acc (loc, p) =
   pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern:false acc (loc, p)
+
+let type_of_member_pattern cx ~on_identifier ~on_expression mem =
+  let (_, ((_, t), _)) = member cx ~on_identifier ~on_expression mem in
+  t

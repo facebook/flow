@@ -156,6 +156,15 @@ module Inference = struct
     match Statement.statement cx (loc, ClassDeclaration cls) with
     | (_, ClassDeclaration { Flow_ast.Class.id = Some ((_, t), _); _ }) -> t
     | _ -> raise (Internal_exn "typed AST structure mismatch")
+
+  let type_of_identifier cx loc id = Statement.identifier cx id loc
+
+  let type_of_match_member_pattern cx loc mem =
+    Match_pattern.type_of_member_pattern
+      cx
+      ~on_identifier:Statement.identifier
+      ~on_expression:Statement.expression
+      (loc, mem)
 end
 
 class process_request_searcher cx ~from_trigger_character ~cursor =
@@ -939,6 +948,56 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
         this#find loc token Ac_ignored
       else
         key
+
+    method! match_member_pattern member_pattern =
+      let open Ast.MatchPattern.MemberPattern in
+      let (loc, { base; property; _ }) = member_pattern in
+      let base_loc =
+        match base with
+        | BaseIdentifier (loc, _)
+        | BaseMember (loc, _) ->
+          loc
+      in
+      let member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc:base_loc) in
+      let obj_type () =
+        match base with
+        | BaseIdentifier (loc, id) -> Inference.type_of_identifier cx loc id
+        | BaseMember (loc, mem) -> Inference.type_of_match_member_pattern cx loc mem
+      in
+      (match property with
+      | PropertyIdentifier (prop_loc, { Ast.Identifier.name; _ }) when this#covers_target prop_loc
+        ->
+        this#find
+          prop_loc
+          name
+          (Ac_member
+             {
+               obj_type = obj_type ();
+               in_optional_chain = false;
+               bracket_syntax = None;
+               member_loc;
+               is_type_annotation = false;
+               is_super = false;
+             }
+          )
+      | PropertyString (prop_loc, { Ast.StringLiteral.raw = token; _ })
+        when this#covers_target prop_loc ->
+        let obj_type = obj_type () in
+        this#find
+          prop_loc
+          token
+          (Ac_member
+             {
+               obj_type;
+               in_optional_chain = false;
+               bracket_syntax = Some (this#default_bracket_syntax obj_type);
+               member_loc;
+               is_type_annotation = false;
+               is_super = false;
+             }
+          )
+      | _ -> ());
+      super#match_member_pattern member_pattern
   end
 
 let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc

@@ -17,3 +17,11 @@ val pattern :
   (ALoc.t, ALoc.t) Ast.Expression.t ->
   (ALoc.t, ALoc.t) Ast.MatchPattern.t ->
   (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t
+
+val type_of_member_pattern :
+  Context.t ->
+  on_identifier:(Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t) ->
+  on_expression:
+    (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
+  (ALoc.t, ALoc.t) Ast.MatchPattern.MemberPattern.t ->
+  Type.t
