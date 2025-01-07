@@ -463,12 +463,18 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               Call.callee = (_, Identifier (_, { Identifier.name = "require"; _ }));
               arguments =
                 ( _,
-                  { ArgList.arguments = [Expression (source_annot, StringLiteral _)]; comments = _ }
+                  {
+                    ArgList.arguments =
+                      [Expression (source_annot, (StringLiteral _ | TemplateLiteral _))];
+                    comments = _;
+                  }
                 );
               _;
             }
           when this#is_legit_require source_annot ->
-          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
+          let annot =
+            (this#loc_of_annot source_annot, this#type_from_enclosing_node source_annot)
+          in
           this#request (Get_def_request.Type { annot; name = None })
         | _ -> super#expression (annot, expr)
       else

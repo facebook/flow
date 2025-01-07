@@ -3655,21 +3655,7 @@ module Make
                   comments;
                 }
               )
-            ) ->
-            let (_def_loc_opt, t) =
-              Import_export.get_module_t
-                cx
-                (source_loc, module_name)
-                ~perform_platform_validation:true
-                ~import_kind_for_untyped_import_validation:(Some ImportValue)
-              |> Import_export.cjs_require_type
-                   cx
-                   (mk_reason (RModule module_name) loc)
-                   ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
-                   ~standard_cjs_esm_interop:false
-                   ~legacy_interop:false
-            in
-            (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
+            )
           | ( None,
               ( args_loc,
                 {
@@ -3699,7 +3685,7 @@ module Make
                 }
               )
             ) ->
-            let (_def_loc_opt, t) =
+            let (def_loc_opt, require_t) =
               Import_export.get_module_t
                 cx
                 (source_loc, module_name)
@@ -3712,7 +3698,19 @@ module Make
                    ~standard_cjs_esm_interop:false
                    ~legacy_interop:false
             in
-            (t, (args_loc, { ArgList.arguments = [Expression (expression cx lit_exp)]; comments }))
+            let lit_exp =
+              let ((l, t), e) = expression cx lit_exp in
+              let t =
+                TypeUtil.mod_reason_of_t
+                  (fun _ ->
+                    match def_loc_opt with
+                    | Some def_loc -> mk_reason (RModule module_name) def_loc |> repos_reason loc
+                    | None -> TypeUtil.reason_of_t require_t |> repos_reason loc)
+                  t
+              in
+              ((l, t), e)
+            in
+            (require_t, (args_loc, { ArgList.arguments = [Expression lit_exp]; comments }))
           | (Some _, arguments) ->
             ignore (arg_list cx arguments);
             Flow.add_output
