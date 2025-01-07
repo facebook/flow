@@ -166,7 +166,8 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
         match
           process_location cx ~is_local_use ~is_legit_require ~available_ast ~purpose req_loc
         with
-        | OwnDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
+        | OwnNamedDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
+        | OwnUnnamedDef aloc -> Def (LocSet.singleton (loc_of_aloc aloc), None)
         | Request request -> begin
           match
             process_request

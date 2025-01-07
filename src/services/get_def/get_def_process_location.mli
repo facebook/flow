@@ -13,7 +13,8 @@ type internal_error =
 [@@deriving show]
 
 type 'loc result =
-  | OwnDef of 'loc * (* name *) string
+  | OwnNamedDef of 'loc * (* name *) string
+  | OwnUnnamedDef of 'loc
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound

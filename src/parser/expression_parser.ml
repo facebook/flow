@@ -1277,7 +1277,8 @@ module Expression
           Expression.ModuleRefLiteral
             {
               Ast.ModuleRefLiteral.value;
-              require_out = loc;
+              require_loc = loc;
+              def_loc_opt = None;
               prefix_len;
               legacy_interop = false;
               raw;
@@ -1288,7 +1289,8 @@ module Expression
           Expression.ModuleRefLiteral
             {
               Ast.ModuleRefLiteral.value;
-              require_out = loc;
+              require_loc = loc;
+              def_loc_opt = None;
               prefix_len;
               legacy_interop = true;
               raw;
