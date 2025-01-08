@@ -366,8 +366,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_freeze.js:29:38
 
-Cannot assign `baz` to `frozenObjectWithSpread.constructor` because a call signature declaring the expected parameter /
-return type is missing in object literal [1] but exists in function [2]. [prop-missing]
+Cannot assign `baz` to `frozenObjectWithSpread.constructor` because object literal [1] is incompatible with
+function [2]. Non-callable objects are not compatible with functions. [incompatible-type]
 
    object_freeze.js:29:38
    29| frozenObjectWithSpread.constructor = baz; // error baz not a function

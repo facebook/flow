@@ -37,8 +37,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:19:38
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
- - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
-   in function type [2].
+ - Either `React.RefObject` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or `React.RefObject` [1] is incompatible with null [3].
 
    forwardRef.js:19:38
@@ -82,8 +82,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:35
 
 Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
- - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
-   in function type [2].
+ - Either `React.RefObject` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or `React.RefObject` [1] is incompatible with null [3].
 
    forwardRef.js:42:35

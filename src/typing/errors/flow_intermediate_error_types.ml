@@ -180,6 +180,7 @@ type 'loc explanation =
       casting_syntax: Options.CastingSyntax.t;
     }
   | ExplanationMultiplatform
+  | ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping
   | ExplanationReactComponentPropsDeepReadOnly of 'loc
   | ExplanationReactComponentRefRequirement

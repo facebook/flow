@@ -303,8 +303,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:34:2
 
-Cannot call `test.bind.apply` because a call signature declaring the expected parameter / return type is missing in
-function type [1] but exists in function type [2]. [prop-missing]
+Cannot call `test.bind.apply` because function type [1] is incompatible with function type [2]. Non-callable objects are
+not compatible with functions. [incompatible-call]
 
    apply.js:34:2
     34| (test.bind.apply(test, [0, 123]): (b: number) => number);

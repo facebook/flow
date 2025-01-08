@@ -1924,23 +1924,31 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* You can cast an object to a function *)
     (****************************************)
     | (DefT (reason, (ObjT _ | InstanceT _)), DefT (reason_op, FunT _)) ->
-      let prop_name = Some (OrdinaryName "$call") in
-      let use_op =
-        Frame (PropertyCompatibility { prop = prop_name; lower = reason; upper = reason_op }, use_op)
-      in
       let fun_t =
         match l with
         | DefT (_, ObjT { call_t = Some id; _ })
         | DefT (_, InstanceT { inst = { inst_call_t = Some id; _ }; _ }) ->
           Context.find_call cx id
         | _ ->
-          let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
           let error_message =
-            Error_message.EPropNotFound
-              { reason_prop; reason_obj = reason; prop_name; use_op; suggestion = None }
+            Error_message.EIncompatibleWithUseOp
+              {
+                reason_lower = reason;
+                reason_upper = reason_op;
+                use_op;
+                explanation =
+                  Some Flow_intermediate_error_types.ExplanationNonCallableObjectToFunction;
+              }
           in
           add_output cx error_message;
           AnyT.error reason_op
+      in
+      let use_op =
+        Frame
+          ( PropertyCompatibility
+              { prop = Some (OrdinaryName "$call"); lower = reason; upper = reason_op },
+            use_op
+          )
       in
       rec_flow_t cx trace ~use_op (fun_t, u)
     (********************************************)

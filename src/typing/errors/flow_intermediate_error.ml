@@ -1096,6 +1096,8 @@ let to_printable_error :
         text "Read the docs on Flow's multi-platform support for more information: ";
         text "https://flow.org/en/docs/react/multiplatform";
       ]
+    | ExplanationNonCallableObjectToFunction ->
+      [text "Non-callable objects are not compatible with functions"]
     | ExplanationPropertyInvariantTyping ->
       [
         text "This property is invariantly typed. See ";

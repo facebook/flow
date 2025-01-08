@@ -281,8 +281,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:5
 
 Cannot call `dns.lookup` because: [incompatible-call]
- - Either a call signature declaring the expected parameter / return type is missing in object literal [1] but exists in
-   function type [2].
+ - Either object literal [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or function type [3] requires another argument from call of method `lookup` [4].
 
    dns/dns.js:29:5

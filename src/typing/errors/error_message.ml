@@ -789,6 +789,7 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
   | ExplanationMultiplatform -> ExplanationMultiplatform
+  | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
   | ExplanationReactComponentPropsDeepReadOnly loc ->
     ExplanationReactComponentPropsDeepReadOnly (f loc)

@@ -2754,8 +2754,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
@@ -2818,8 +2817,7 @@ Error --------------------------------------------------------------------------
 
 Cannot declare ref because: [incompatible-type]
  - Either null [1] is incompatible with component Reffed [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
@@ -3103,8 +3101,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because a call signature declaring the expected parameter / return type is missing in
-object type [1] but exists in function type [2]. [prop-missing]
+Cannot cast `Bar` to component because object type [1] is incompatible with function type [2]. Non-callable objects are
+not compatible with functions. [incompatible-cast]
 
    refs.js:15:2
    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
@@ -3169,8 +3167,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
 Cannot cast `Baz` to component because: [incompatible-cast]
- - Either a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
-   function type [2].
+ - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or component Reffed [3] is incompatible with string [4] in property `current`.
 
    refs.js:17:2
@@ -3226,8 +3224,7 @@ Error --------------------------------------------------------------------------
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
  - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in property `current`.
  - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [4] but exists in
-   function type [5].
+ - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
 
    refs.js:64:53
     64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -3280,8 +3277,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3307,8 +3303,7 @@ Error --------------------------------------------------------------------------
 Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
  - Either `HTMLElement` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
- - Or a call signature declaring the expected parameter / return type is missing in `HTMLElement` [1] but exists in
-   function type [3].
+ - Or `HTMLElement` [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
 
    refs.js:105:23
    105|     <GenericRef1 ref={new HTMLElement()} />; // error

@@ -60,8 +60,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:7:1
 
 Cannot cast `Foo` to component because: [incompatible-cast]
- - Either a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
-   function type [2].
+ - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or `Foo` [3] is incompatible with string [4] in property `current`.
 
    class_to_component_type.js:7:1
@@ -88,8 +88,8 @@ Error --------------------------------------------------------------------------
 Cannot cast `Foo` to component because: [incompatible-cast]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
- - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
-   function type [3].
+ - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
+   functions.
 
    class_to_component_type.js:11:1
     11| Foo as component( // error again due to bad ref
@@ -112,8 +112,8 @@ Error --------------------------------------------------------------------------
 Cannot declare ref because: [incompatible-type]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
- - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
-   function type [3].
+ - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
+   functions.
 
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
@@ -216,8 +216,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `ComponentNarrower` to component because: [incompatible-cast]
  - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
@@ -267,8 +266,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Component` to component because: [incompatible-cast]
  - Either `Component` [1] is incompatible with `Subclass` [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    classes_lower.js:25:1
     25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
@@ -418,8 +416,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:22:41
 
 Cannot create `C` element because in property `ref`: [incompatible-type]
- - Either a call signature declaring the expected parameter / return type is missing in `React.RefObject` [1] but exists
-   in function type [2].
+ - Either `React.RefObject` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
+   functions.
  - Or `React.RefObject` [1] is incompatible with null [3].
 
    create_element.js:22:41
@@ -642,8 +640,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Component` to component because: [incompatible-cast]
  - Either undefined [1] is incompatible with null [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
-   function type [3].
+ - Or object type [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
 
    function_lower.js:12:1
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
@@ -773,8 +770,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Foo` to component because: [incompatible-cast]
  - Either undefined [1] is incompatible with null [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
-   function type [3].
+ - Or object type [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
 
    function_to_component_type.js:8:1
      8| Foo as component( // error: void ~> string
@@ -797,8 +793,8 @@ Error --------------------------------------------------------------------------
 Cannot cast `Foo` to component because: [incompatible-cast]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
- - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
-   function type [3].
+ - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
+   functions.
 
    function_to_component_type.js:12:1
     12| Foo as component( // error again due to bad ref
@@ -821,8 +817,8 @@ Error --------------------------------------------------------------------------
 Cannot declare ref because: [incompatible-type]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
- - Or a call signature declaring the expected parameter / return type is missing in `ImNotARefSetter` [1] but exists in
-   function type [3].
+ - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
+   functions.
 
 The `ref` parameter must be a subtype of `React.RefSetter`.
 

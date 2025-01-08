@@ -57,8 +57,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to `React.RefSetter` because: [incompatible-cast]
  - Either boolean [1] is incompatible with number [2] in property `current`.
  - Or boolean [1] is incompatible with string [3] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [4] but exists in
-   function type [5].
+ - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
 
    contravariant_refsetter.js:12:2
     12| (y: React.RefSetter<number | string | boolean>); // ERROR
@@ -1793,8 +1792,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:30
 
 Cannot call `React.useEffect` with async function bound to `create` because in the return value: [incompatible-call]
- - Either a call signature declaring the expected parameter / return type is missing in `Promise` [1] but exists in
-   function type [2].
+ - Either `Promise` [1] is incompatible with function type [2]. Non-callable objects are not compatible with functions.
  - Or `Promise` [1] is incompatible with undefined [3].
 
    useEffect_hook.js:22:30
@@ -1855,8 +1853,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [incompatible-call]
  - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in property `current`.
- - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
-   function type [4].
+ - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    useImperativeHandle_hook.js:29:29
     29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1954,8 +1951,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because in the return value:
 [incompatible-call]
- - Either a call signature declaring the expected parameter / return type is missing in `Promise` [1] but exists in
-   function type [2].
+ - Either `Promise` [1] is incompatible with function type [2]. Non-callable objects are not compatible with functions.
  - Or `Promise` [1] is incompatible with undefined [3].
 
    useLayoutEffect_hook.js:22:36

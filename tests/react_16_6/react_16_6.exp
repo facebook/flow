@@ -356,8 +356,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.forwardRef` with `Demo` bound to `render` because in the second parameter: [incompatible-call]
  - Either property `current` is write-only in object type [1] but readable in object type [2].
- - Or a call signature declaring the expected parameter / return type is missing in object type [1] but exists in
-   function type [3].
+ - Or object type [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
 
    memo_ref.js:14:42
     14| const Memo = React.memo(React.forwardRef(Demo));
