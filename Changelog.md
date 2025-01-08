@@ -1,3 +1,8 @@
+### 0.258.1
+
+IDE:
+* Fixed go-to-definition for Meta-specific module references.
+
 ### 0.258.0
 
 Likely to cause new Flow errors:
