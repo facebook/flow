@@ -227,8 +227,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- E.js:2:32
 
-Cannot assign function to `a` because property `someProp` is missing in function [1] but exists in object type [2].
-[prop-missing]
+Cannot assign function to `a` because function [1] is incompatible with object type [2]. Functions without statics are
+not compatible with objects. [incompatible-type]
 
    E.js:2:32
    2| var a : { someProp: number } = function () {};

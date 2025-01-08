@@ -2729,7 +2729,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in the first parameter.
- - Or property `current` is missing in function type [3] but exists in object type [4].
+ - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
@@ -2844,7 +2844,7 @@ Error --------------------------------------------------------------------------
 
 Cannot declare ref because: [incompatible-type]
  - Either component Reffed [1] is incompatible with null [2] in the first parameter.
- - Or property `current` is missing in function type [3] but exists in object type [4].
+ - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
@@ -3142,7 +3142,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
 Cannot cast `Baz` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
+ - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
+   objects.
  - Or component Reffed [3] is incompatible with string [4] in the first parameter.
 
    refs.js:17:2
@@ -3195,7 +3196,7 @@ Error --------------------------------------------------------------------------
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
  - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in the first parameter.
  - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in the first parameter.
- - Or property `current` is missing in function type [4] but exists in object type [5].
+ - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
 
    refs.js:64:53
     64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -3252,7 +3253,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of the first parameter.
- - Or property `current` is missing in function type [3] but exists in object type [4].
+ - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3321,7 +3322,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
 
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
- - Either property `current` is missing in function [1] but exists in object type [2].
+ - Either function [1] is incompatible with object type [2]. Functions without statics are not compatible with objects.
  - Or array type [3] is incompatible with string [4] in the first parameter.
 
    refs.js:108:23

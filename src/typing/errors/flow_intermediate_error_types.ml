@@ -179,6 +179,7 @@ type 'loc explanation =
       representation_type: string;
       casting_syntax: Options.CastingSyntax.t;
     }
+  | ExplanationFunctionsWithStaticsToObject
   | ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping

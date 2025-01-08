@@ -35,7 +35,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:7:1
 
 Cannot cast `Foo` to component because: [incompatible-cast]
- - Either property `current` is missing in function type [1] but exists in object type [2].
+ - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
+   objects.
  - Or `Foo` [3] is incompatible with string [4] in the first parameter.
 
    class_to_component_type.js:7:1
@@ -191,7 +192,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `ComponentNarrower` to component because: [incompatible-cast]
  - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in the first parameter.
- - Or property `current` is missing in function type [3] but exists in object type [4].
+ - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
@@ -241,7 +242,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Component` to component because: [incompatible-cast]
  - Either `Component` [1] is incompatible with `Subclass` [2] in the first parameter.
- - Or property `current` is missing in function type [3] but exists in object type [4].
+ - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    classes_lower.js:25:1
     25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
@@ -618,7 +619,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Component` to component because: [incompatible-cast]
  - Either undefined [1] is incompatible with null [2] in the first parameter.
- - Or property `current` is missing in function type [1] but exists in object type [3].
+ - Or function type [1] is incompatible with object type [3]. Functions without statics are not compatible with objects.
 
    function_lower.js:12:1
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
@@ -748,7 +749,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Foo` to component because: [incompatible-cast]
  - Either undefined [1] is incompatible with null [2] in the first parameter.
- - Or property `current` is missing in function type [1] but exists in object type [3].
+ - Or function type [1] is incompatible with object type [3]. Functions without statics are not compatible with objects.
 
    function_to_component_type.js:8:1
      8| Foo as component( // error: void ~> string

@@ -788,6 +788,7 @@ let map_loc_of_explanation (f : 'a -> 'b) =
       { name; declaration = f declaration; providers = Base.List.map ~f providers }
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
+  | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
   | ExplanationMultiplatform -> ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping

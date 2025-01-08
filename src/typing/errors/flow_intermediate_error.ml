@@ -1091,6 +1091,8 @@ let to_printable_error :
         text
           "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
       ]
+    | ExplanationFunctionsWithStaticsToObject ->
+      [text "Functions without statics are not compatible with objects"]
     | ExplanationMultiplatform ->
       [
         text "Read the docs on Flow's multi-platform support for more information: ";

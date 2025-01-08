@@ -228,7 +228,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FnWithOptionalRefProp` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
- - Or property `current` is missing in function [3] but exists in object type [4].
+ - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    jsx_checking.js:10:39
     10| <FnWithOptionalRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
@@ -250,7 +250,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FnWithRequiredRefProp` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
- - Or property `current` is missing in function [3] but exists in object type [4].
+ - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    jsx_checking.js:12:39
     12| <FnWithRequiredRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
@@ -305,7 +305,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `CompWithOptionalRefProp` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
- - Or property `current` is missing in function [3] but exists in object type [4].
+ - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    jsx_checking.js:20:41
     20| <CompWithOptionalRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works
@@ -327,7 +327,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `CompWithRequiredRefProp` element because in property `ref`: [incompatible-type]
  - Either string [1] is incompatible with `HTMLElement` [2] in the first parameter.
- - Or property `current` is missing in function [3] but exists in object type [4].
+ - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    jsx_checking.js:22:41
     22| <CompWithRequiredRefProp foo="bar" ref={(_: ?string) => {}} />; // error: string ~> HTMLElement, ref checking still works

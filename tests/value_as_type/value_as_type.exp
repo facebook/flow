@@ -2,7 +2,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `HocChild` element because in property `ref`: [incompatible-type]
  - Either `React.Element` [1] is incompatible with mixed [2] in the first parameter.
- - Or property `current` is missing in property `_handleChild` [3] but exists in object type [4].
+ - Or property `_handleChild` [3] is incompatible with object type [4]. Functions without statics are not compatible
+   with objects.
 
    test1.js:13:45
     13|   render = (): React.Node => <HocChild ref={this._handleChild} />;

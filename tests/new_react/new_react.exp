@@ -42,27 +42,6 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
-Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in function type [2] but exists in
-object type [3] in the first parameter of property `setState`. [prop-missing]
-
-   classes.js:23:3
-   23|   setState(o: { y_: string }): void { }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   classes.js:7:19
-    7| class Foo extends React.Component<Props, State> {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:39:49
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   classes.js:23:15
-   23|   setState(o: { y_: string }): void { }
-                     ^^^^^^^^^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------------------- classes.js:23:3
-
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in object type [2] but exists in object
 type [3] in the first parameter of property `setState`. [prop-missing]
 
@@ -98,6 +77,24 @@ References:
    <BUILTINS>/react.js:39:19
    39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:23:15
+
+Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with function type [3] in the
+first parameter of property `setState`. Functions without statics are not compatible with objects. [incompatible-extend]
+
+   classes.js:23:15
+   23|   setState(o: { y_: string }): void { }
+                     ^^^^^^^^^^^^^^ [2]
+
+References:
+   classes.js:7:19
+    7| class Foo extends React.Component<Props, State> {
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:39:49
+   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
