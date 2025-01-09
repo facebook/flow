@@ -153,7 +153,7 @@ In either case the type of `e` is used as the type of the array element.
 Here are some examples:
 
 #### Straight-line Code
-Once the first assignemnt has been found, the type of the array element is pinned to that of the
+Once the first assignment has been found, the type of the array element is pinned to that of the
 assigned expression. Subsequent writes to array with elements of
 a different type are errors:
 
