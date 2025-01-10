@@ -943,35 +943,29 @@ module Make
     let export_ref loc local_name =
       let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match export_kind with
-      | Ast.Statement.ExportType -> Import_export.assert_export_is_type cx local_name t
-      | Ast.Statement.ExportValue -> t
+      | Ast.Statement.ExportType -> (None, Import_export.assert_export_is_type cx local_name t)
+      | Ast.Statement.ExportValue -> (None, t)
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from source_ns_t loc local_name =
+    let export_from ~module_name ~source_module_t loc local_name =
       let reason = mk_reason (RIdentifier local_name) loc in
-      Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-          let use_t =
-            match export_kind with
-            | Ast.Statement.ExportType ->
-              GetTypeFromNamespaceT
-                { use_op = unknown_use; reason; prop_ref = (reason, local_name); tout }
-            | Ast.Statement.ExportValue ->
-              GetPropT
-                {
-                  use_op = unknown_use;
-                  reason;
-                  id = None;
-                  from_annot = false;
-                  propref = mk_named_prop ~reason local_name;
-                  tout;
-                  hint = hint_unavailable;
-                }
-          in
-          Flow.flow cx (source_ns_t, use_t)
-      )
+      let import_kind =
+        match export_kind with
+        | Ast.Statement.ExportType -> Ast.Statement.ImportDeclaration.ImportType
+        | Ast.Statement.ExportValue -> Ast.Statement.ImportDeclaration.ImportValue
+      in
+      Import_export.import_named_specifier_type
+        cx
+        reason
+        import_kind
+        ~module_name
+        ~source_module_t
+        ~remote_name:(Reason.display_string_of_name local_name)
+        ~local_name:(Reason.display_string_of_name local_name)
     in
     let export_specifier
-        export (loc, { E.ExportSpecifier.local; exported; from_remote; imported_name_def_loc }) =
+        export (loc, { E.ExportSpecifier.local; exported; from_remote; imported_name_def_loc = _ })
+        =
       let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
       let local_name = OrdinaryName local_name in
       let reconstruct_remote =
@@ -979,7 +973,7 @@ module Make
         | None -> Fun.const None
         | Some (remote_loc, remote_id) -> (fun t -> Some ((remote_loc, t), remote_id))
       in
-      let t = export local_loc local_name in
+      let (imported_name_def_loc, t) = export local_loc local_name in
       ( loc,
         {
           E.ExportSpecifier.local = ((local_loc, t), local_id);
@@ -994,13 +988,8 @@ module Make
     | E.ExportSpecifiers specifiers ->
       let export =
         match source with
-        | Some ((source_loc, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
-          let source_ns_t =
-            let reason = mk_reason (RModule module_name) source_loc in
-            let namespace_symbol = mk_module_symbol ~name:module_name ~def_loc:source_loc in
-            Import_export.get_module_namespace_type cx reason ~namespace_symbol module_t
-          in
-          export_from source_ns_t
+        | Some ((_, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
+          export_from ~module_name ~source_module_t:module_t
         | None -> export_ref
       in
       let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
