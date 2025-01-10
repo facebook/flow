@@ -970,7 +970,8 @@ module Make
           Flow.flow cx (source_ns_t, use_t)
       )
     in
-    let export_specifier export (loc, { E.ExportSpecifier.local; exported }) =
+    let export_specifier
+        export (loc, { E.ExportSpecifier.local; exported; from_remote; imported_name_def_loc }) =
       let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
       let local_name = OrdinaryName local_name in
       let reconstruct_remote =
@@ -980,7 +981,12 @@ module Make
       in
       let t = export local_loc local_name in
       ( loc,
-        { E.ExportSpecifier.local = ((local_loc, t), local_id); exported = reconstruct_remote t }
+        {
+          E.ExportSpecifier.local = ((local_loc, t), local_id);
+          exported = reconstruct_remote t;
+          from_remote;
+          imported_name_def_loc;
+        }
       )
     in
     function

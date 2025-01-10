@@ -1456,7 +1456,12 @@ module Statement
                 Some (identifier_name env)
               | _ -> None
             in
-            { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported })
+            {
+              Statement.ExportNamedDeclaration.ExportSpecifier.local;
+              exported;
+              from_remote = false;
+              imported_name_def_loc = None;
+            })
           env
       in
       let preceding_comma = Eat.maybe env T_COMMA in
@@ -1465,7 +1470,14 @@ module Statement
   and assert_export_specifier_identifiers env specifiers =
     List.iter
       (function
-        | (_, { Statement.ExportNamedDeclaration.ExportSpecifier.local = id; exported = _ }) ->
+        | ( _,
+            {
+              Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
+              exported = _;
+              from_remote = _;
+              imported_name_def_loc = _;
+            }
+          ) ->
           assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id)
       specifiers
 
@@ -1711,11 +1723,22 @@ module Statement
           (fun env ->
             let specifiers = export_specifiers env [] in
             Expect.token env T_RCURLY;
-            let (source, trailing) =
+            let (source, trailing, specifiers) =
               match Peek.token env with
               | T_IDENTIFIER { raw = "from"; _ } ->
                 let (source, trailing) = export_source_and_semicolon env in
-                (Some source, trailing)
+                let specifiers =
+                  List.map
+                    (fun (loc, s) ->
+                      ( loc,
+                        {
+                          s with
+                          Statement.ExportNamedDeclaration.ExportSpecifier.from_remote = true;
+                        }
+                      ))
+                    specifiers
+                in
+                (Some source, trailing, specifiers)
               | _ ->
                 assert_export_specifier_identifiers env specifiers;
                 let trailing =
@@ -1723,7 +1746,7 @@ module Statement
                   | Explicit trailing -> trailing
                   | Implicit { trailing; _ } -> trailing
                 in
-                (None, trailing)
+                (None, trailing, specifiers)
             in
             Statement.ExportNamedDeclaration
               {

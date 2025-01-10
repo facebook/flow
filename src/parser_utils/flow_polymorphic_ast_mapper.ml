@@ -887,10 +887,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (spec : ('M, 'T) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
         : ('N, 'U) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-      let (annot, { local; exported }) = spec in
+      let (annot, { local; exported; from_remote; imported_name_def_loc }) = spec in
       let local' = this#t_identifier local in
       let exported' = Option.map ~f:this#t_identifier exported in
-      (this#on_loc_annot annot, { local = local'; exported = exported' })
+      let imported_name_def_loc' = Option.map ~f:this#on_loc_annot imported_name_def_loc in
+      ( this#on_loc_annot annot,
+        {
+          local = local';
+          exported = exported';
+          from_remote;
+          imported_name_def_loc = imported_name_def_loc';
+        }
+      )
 
     method export_batch_specifier
         (spec : ('M, 'T) Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t)

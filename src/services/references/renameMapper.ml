@@ -52,7 +52,10 @@ class rename_mapper
 
     method! export_named_declaration_specifier specifier =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-      let (specifier_loc, { local = (loc, local_id); exported }) = specifier in
+      let (specifier_loc, { local = (loc, local_id); exported; from_remote; imported_name_def_loc })
+          =
+        specifier
+      in
       match exported with
       | Some _ -> super#export_named_declaration_specifier specifier
       | None ->
@@ -61,6 +64,8 @@ class rename_mapper
             {
               local = Ast_builder.Identifiers.identifier new_name;
               exported = Some (Loc.none, local_id);
+              from_remote;
+              imported_name_def_loc;
             }
           in
           (specifier_loc, export_specifier)

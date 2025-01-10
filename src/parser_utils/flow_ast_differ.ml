@@ -730,8 +730,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (spec2 : (Loc.t, Loc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) :
       node change list option =
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-    let (_, { local = local1; exported = exported1 }) = spec1 in
-    let (_, { local = local2; exported = exported2 }) = spec2 in
+    let (_, { local = local1; exported = exported1; from_remote = _; imported_name_def_loc = _ }) =
+      spec1
+    in
+    let (_, { local = local2; exported = exported2; from_remote = _; imported_name_def_loc = _ }) =
+      spec2
+    in
     let locals = diff_if_changed identifier local1 local2 |> Base.Option.return in
     let exporteds = diff_if_changed_nonopt_fn identifier exported1 exported2 in
     join_diff_list [locals; exporteds]

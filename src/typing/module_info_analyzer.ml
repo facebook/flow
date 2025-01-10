@@ -109,7 +109,9 @@ let export_specifiers info loc source export_kind =
     | Ast.Statement.ExportValue ->
       Module_info.export_value info remote_name ~name_loc:loc local_type
   in
-  let export_specifier export (_, { E.ExportSpecifier.local; exported }) =
+  let export_specifier
+      export (_, { E.ExportSpecifier.local; exported; from_remote = _; imported_name_def_loc = _ })
+      =
     let ((local_loc, local_type), { Ast.Identifier.name = local_name; comments = _ }) = local in
     let remote_name =
       match exported with

@@ -348,7 +348,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! export_named_declaration_specifier
           (spec : (L.t, L.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
         let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-        let (_, { local; exported = _ }) = spec in
+        let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
         ignore (this#identifier local);
         spec
 

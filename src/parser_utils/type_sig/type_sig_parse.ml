@@ -4431,7 +4431,7 @@ let export_specifiers scope tbls kind source =
     Scope.export_star scope tbls kind loc mref
   | E.ExportSpecifiers specifiers ->
     List.iter
-      (fun (_, { E.ExportSpecifier.local; exported }) ->
+      (fun (_, { E.ExportSpecifier.local; exported; from_remote = _; imported_name_def_loc = _ }) ->
         match source with
         | None -> Scope.export_ref scope tbls kind ~local ~exported
         | Some mref -> Scope.export_from scope tbls kind mref ~local ~exported)

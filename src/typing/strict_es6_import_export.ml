@@ -427,7 +427,12 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         | Some (ExportSpecifiers specifiers) ->
           List.iter
             (fun ( spec_loc,
-                   { ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ }); exported }
+                   {
+                     ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ });
+                     exported;
+                     from_remote = _;
+                     imported_name_def_loc = _;
+                   }
                  ) ->
               (* Check for renaming export to be default export *)
               begin

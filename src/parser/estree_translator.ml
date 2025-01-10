@@ -2351,8 +2351,15 @@ with type t = Impl.t = struct
         [("namespace", jsx_identifier namespace); ("name", jsx_identifier name)]
     and jsx_identifier (loc, { JSX.Identifier.name; comments }) =
       node ?comments "JSXIdentifier" loc [("name", string name)]
-    and export_specifier (loc, { Statement.ExportNamedDeclaration.ExportSpecifier.exported; local })
-        =
+    and export_specifier
+        ( loc,
+          {
+            Statement.ExportNamedDeclaration.ExportSpecifier.exported;
+            local;
+            from_remote = _;
+            imported_name_def_loc = _;
+          }
+        ) =
       let exported =
         match exported with
         | Some exported -> identifier exported

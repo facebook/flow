@@ -92,7 +92,15 @@ let check_for_duplicate_exports =
       (match specifiers with
       | ExportSpecifiers specifiers ->
         List.fold_left
-          (fun seen (_, { Statement.ExportNamedDeclaration.ExportSpecifier.local; exported }) ->
+          (fun seen
+               ( _,
+                 {
+                   Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                   exported;
+                   from_remote = _;
+                   imported_name_def_loc = _;
+                 }
+               ) ->
             match exported with
             | Some exported -> record_export env seen exported
             | None -> record_export env seen local)

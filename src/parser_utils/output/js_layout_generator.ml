@@ -3220,7 +3220,14 @@ and export_specifier ~opts source =
               ~sep:(Atom ",")
               ~wrap_spaces:opts.bracket_spacing
               (List.map
-                 (fun (loc, { ExportSpecifier.local; exported }) ->
+                 (fun ( loc,
+                        {
+                          ExportSpecifier.local;
+                          exported;
+                          from_remote = _;
+                          imported_name_def_loc = _;
+                        }
+                      ) ->
                    source_location_with_comments
                      ( loc,
                        fuse
