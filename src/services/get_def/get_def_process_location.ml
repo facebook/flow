@@ -569,6 +569,16 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       if this#annot_covers_target annot then this#found_empty "object key (literal)";
       literal
 
+    method! match_object_pattern_property_key key =
+      let open Ast.MatchPattern.ObjectPattern.Property in
+      (match key with
+      | StringLiteral (loc, _)
+      | NumberLiteral (loc, _) ->
+        if covers_target loc then this#found_empty "match pattern object key (literal)"
+      | Identifier (annot, { Ast.Identifier.name; comments = _ }) ->
+        if this#annot_covers_target annot then this#own_named_def (this#loc_of_annot annot) name);
+      super#match_object_pattern_property_key key
+
     (* for object properties using the shorthand {variableName} syntax,
      * process the value before the key so that the explicit-non-find in this#object_key_identifier
      * doesn't make us miss the variable *)
