@@ -195,6 +195,28 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       );
       decl
 
+    method! export_named_declaration loc decl =
+      let open Ast.Statement.ExportNamedDeclaration in
+      let { export_kind = _; source; specifiers; declaration = _; comments = _ } = decl in
+      (match (source, specifiers) with
+      | ( Some (source_annot, _),
+          Some (ExportBatchSpecifier (_, Some (name_annot, { Ast.Identifier.name; _ })))
+        ) ->
+        if this#annot_covers_target name_annot then (
+          match purpose with
+          | Get_def_types.Purpose.GoToDefinition
+          | Get_def_types.Purpose.JSDoc ->
+            let t = this#type_from_enclosing_node source_annot in
+            this#request
+              (Get_def_request.Type
+                 { annot = (this#loc_of_annot source_annot, t); name = Some name }
+              )
+          | Get_def_types.Purpose.FindReferences ->
+            ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
+        )
+      | _ -> ());
+      super#export_named_declaration loc decl
+
     method! export_named_declaration_specifier spec =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
       let (_, { local; exported; from_remote; imported_name_def_loc = _ }) = spec in
