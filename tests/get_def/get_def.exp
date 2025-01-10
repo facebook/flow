@@ -98,7 +98,7 @@ annot.js:19:7,19:7
 
 exports.js:3:9
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
+{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
 
 exports.js:5:4
 Flags: --pretty
@@ -106,7 +106,7 @@ Flags: --pretty
 
 exports.js:7:10
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
+{"path":"helpers/exports_named.js","line":3,"endline":3,"start":14,"end":16}
 
 exports.js:9:13
 Flags: --pretty
@@ -114,7 +114,7 @@ Flags: --pretty
 
 exports.js:11:16
 Flags: --pretty
-{"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
+{"path":"exports.js","line":11,"endline":11,"start":16,"end":19}
 
 exports.js:13:23
 Flags: --pretty
@@ -126,11 +126,11 @@ Flags: --pretty
 
 exports.js:17:9
 Flags: --pretty
-{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":27,"end":32}
+{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":22,"end":24}
 
 exports.js:19:16
 Flags: --pretty
-{"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":27,"end":32}
+{"path":"exports.js","line":19,"endline":19,"start":16,"end":23}
 
 exports.js:21:33
 Flags: --pretty
@@ -150,7 +150,7 @@ Flags: --pretty
 
 exports.js:31:16
 Flags: --pretty
-{"path":"exports.js","line":24,"endline":24,"start":13,"end":13}
+{"path":"exports.js","line":31,"endline":31,"start":16,"end":19}
 
 identifier.js:5:4
 Flags:

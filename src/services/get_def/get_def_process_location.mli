@@ -48,6 +48,9 @@ class virtual ['T] searcher :
        method virtual private remote_name_def_loc_of_import_named_specifier :
          (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
 
+       method virtual private imported_name_def_loc_of_export_named_declaration_specifier :
+         (ALoc.t, 'T) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t -> ALoc.t option
+
        method virtual private remote_default_name_def_loc_of_import_declaration :
          ALoc.t * (ALoc.t, 'T) Ast.Statement.ImportDeclaration.t -> ALoc.t option
 

@@ -140,6 +140,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
     method virtual private remote_name_def_loc_of_import_named_specifier
         : (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
 
+    method virtual private imported_name_def_loc_of_export_named_declaration_specifier
+        : (ALoc.t, 'T) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t -> ALoc.t option
+
     method virtual private remote_default_name_def_loc_of_import_declaration
         : ALoc.t * (ALoc.t, 'T) Ast.Statement.ImportDeclaration.t -> ALoc.t option
 
@@ -191,6 +194,41 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
             | None -> this#own_named_def (this#loc_of_annot local_annot) "default"
       );
       decl
+
+    method! export_named_declaration_specifier spec =
+      let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+      let (_, { local; exported; from_remote; imported_name_def_loc = _ }) = spec in
+      Base.Option.iter exported ~f:(fun (annot, { Ast.Identifier.name; _ }) ->
+          if this#annot_covers_target annot then
+            (* Either `export {foo as bar}` or `export {foo as bar} from '...'`
+             * In both case, get-def on bar should jump to itself *)
+            this#own_named_def (this#loc_of_annot annot) name
+      );
+      let (local_annot, { Ast.Identifier.name = local_name; _ }) = local in
+      if this#annot_covers_target local_annot then
+        if from_remote then
+          match this#imported_name_def_loc_of_export_named_declaration_specifier spec with
+          | Some l ->
+            (* When we have imported_name_def_loc, we must be in the case of
+             * `export {foo [as bar]?} from '...'.
+             * In this case we should jump to the remote def loc stored in typed AST *)
+            this#own_named_def l local_name
+          | None ->
+            (* When we don't have have imported_name_def_loc, then there is a type error.
+             * Similar to how we handle imported names with type error, we make it jump to itself. *)
+            this#own_named_def (this#loc_of_annot local_annot) local_name
+        else
+          (* Given `export {foo}`, we should use the usual
+           * use-def analysis result from scope builder. *)
+          ignore
+          @@ this#request
+               (Get_def_request.Identifier
+                  {
+                    name = local_name;
+                    loc = (this#loc_of_annot local_annot, this#type_from_enclosing_node local_annot);
+                  }
+               );
+      spec
 
     method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
@@ -701,6 +739,10 @@ class typed_ast_searcher _cx ~typed_ast:_ ~is_local_use ~is_legit_require ~cover
       | None -> None
       | Some { remote_default_name_def_loc = loc; _ } -> loc
 
+    method private imported_name_def_loc_of_export_named_declaration_specifier
+        (_, { Ast.Statement.ExportNamedDeclaration.ExportSpecifier.imported_name_def_loc; _ }) =
+      imported_name_def_loc
+
     method private get_module_t (_, t) _ = t
 
     method private component_name_of_jsx_element _ expr =
@@ -729,6 +771,39 @@ let find_remote_name_def_loc_in_node loc node =
         let { remote = ((loc', _), _); remote_name_def_loc; _ } = specifier in
         if loc' = loc then raise (Found remote_name_def_loc);
         super#import_named_specifier ~import_kind specifier
+    end
+  in
+  try
+    begin
+      match node with
+      | EnclosingProgram prog -> ignore (visitor#program prog)
+      | EnclosingStatement stmt -> ignore (visitor#statement stmt)
+      | EnclosingExpression expr -> ignore (visitor#expression expr)
+    end;
+    None
+  with
+  | Found t -> Some t
+
+let find_imported_name_def_loc_in_node local_loc node =
+  let exception Found of ALoc.t option in
+  let visitor =
+    object (_this)
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_loc_annot loc = loc
+
+      method on_type_annot loc = loc
+
+      method! export_named_declaration_specifier spec =
+        let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+        let ( _,
+              { local = ((local_loc', _), _); exported = _; from_remote = _; imported_name_def_loc }
+            ) =
+          spec
+        in
+        if local_loc = local_loc' then raise (Found imported_name_def_loc);
+        super#export_named_declaration_specifier spec
     end
   in
   try
@@ -772,6 +847,16 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
         ) ->
         Some l
       | _ -> None
+
+    method private imported_name_def_loc_of_export_named_declaration_specifier spec =
+      let (_, { Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (local_loc, _); _ }) =
+        spec
+      in
+      let node = this#enclosing_node in
+      let typed_node = Typed_ast_finder.infer_node cx node in
+      match find_imported_name_def_loc_in_node local_loc typed_node with
+      | None -> raise (Internal_error_exn Enclosing_node_error)
+      | Some t -> t
 
     method private get_module_t loc source =
       let { Flow_ast.StringLiteral.value = module_name; _ } = source in
