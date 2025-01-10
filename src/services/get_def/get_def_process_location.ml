@@ -352,8 +352,11 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! jsx_element_name_identifier ((annot, { Ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#annot_covers_target annot then begin
-        let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-        this#request (Get_def_request.Identifier { name; loc = annot })
+        if name = String.capitalize_ascii name then
+          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
+          this#request (Get_def_request.Identifier { name; loc = annot })
+        else
+          this#found_empty "jsx intrinsic element"
       end;
       super#jsx_element_name_identifier id
 
