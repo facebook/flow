@@ -124,33 +124,41 @@ exports.js:15:31
 Flags: --pretty
 {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
 
-exports.js:17:9
+exports.js:17:14
+Flags: --pretty
+{"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
+
+exports.js:19:9
 Flags: --pretty
 {"path":"[LIB] libs/lib.js","line":2,"endline":2,"start":22,"end":24}
 
-exports.js:19:16
+exports.js:21:16
 Flags: --pretty
-{"path":"exports.js","line":19,"endline":19,"start":16,"end":23}
+{"path":"exports.js","line":21,"endline":21,"start":16,"end":23}
 
-exports.js:21:33
+exports.js:23:33
 Flags: --pretty
 {"path":"[LIB] libs/lib.js","line":1,"endline":1,"start":16,"end":25}
 
-exports.js:25:9
+exports.js:25:18
 Flags: --pretty
-{"path":"exports.js","line":24,"endline":24,"start":7,"end":9}
+{"path":"[LIB] libs/lib.js","line":1,"endline":1,"start":16,"end":25}
 
-exports.js:27:9
+exports.js:29:9
 Flags: --pretty
-{"path":"exports.js","line":24,"endline":24,"start":7,"end":9}
+{"path":"exports.js","line":28,"endline":28,"start":7,"end":9}
 
-exports.js:29:13
+exports.js:31:9
+Flags: --pretty
+{"path":"exports.js","line":28,"endline":28,"start":7,"end":9}
+
+exports.js:33:13
 Flags: --pretty
 []
 
-exports.js:31:16
+exports.js:35:16
 Flags: --pretty
-{"path":"exports.js","line":31,"endline":31,"start":16,"end":19}
+{"path":"exports.js","line":35,"endline":35,"start":16,"end":19}
 
 identifier.js:5:4
 Flags:
