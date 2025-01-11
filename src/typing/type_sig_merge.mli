@@ -65,4 +65,4 @@ val merge_builtins :
   File_key.t ->
   Loc.t Locs.t ->
   Locs.index Packed_type_sig.Builtins.t ->
-  Type.t lazy_t SMap.t * Type.t lazy_t SMap.t * Type.t lazy_t SMap.t
+  (ALoc.t * Type.t) lazy_t SMap.t * (ALoc.t * Type.t) lazy_t SMap.t * Type.t lazy_t SMap.t

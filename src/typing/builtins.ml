@@ -6,12 +6,12 @@
  *)
 
 type t = {
-  original_global_values: Type.t lazy_t SMap.t;
-  original_global_types: Type.t lazy_t SMap.t;
+  original_global_values: (ALoc.t * Type.t) lazy_t SMap.t;
+  original_global_types: (ALoc.t * Type.t) lazy_t SMap.t;
   original_global_modules: Type.t lazy_t SMap.t;
   mapper: Type.t -> Type.t;
-  mapped_global_names: (string, Type.t) Hashtbl.t;
-  mapped_global_types: (string, Type.t) Hashtbl.t;
+  mapped_global_names: (string, ALoc.t * Type.t) Hashtbl.t;
+  mapped_global_types: (string, ALoc.t * Type.t) Hashtbl.t;
   mapped_global_modules: (string, Type.t) Hashtbl.t;
 }
 
@@ -25,10 +25,10 @@ let get_builtin_value_opt { original_global_values; mapper; mapped_global_names;
   | None ->
     (match SMap.find_opt name original_global_values with
     | None -> None
-    | Some (lazy v) ->
+    | Some (lazy (l, v)) ->
       let v = mapper v in
-      Hashtbl.add mapped_global_names name v;
-      Some v)
+      Hashtbl.add mapped_global_names name (l, v);
+      Some (l, v))
 
 let get_builtin_type_opt { original_global_types; mapper; mapped_global_types; _ } name =
   match Hashtbl.find_opt mapped_global_types name with
@@ -36,10 +36,10 @@ let get_builtin_type_opt { original_global_types; mapper; mapped_global_types; _
   | None ->
     (match SMap.find_opt name original_global_types with
     | None -> None
-    | Some (lazy v) ->
+    | Some (lazy (l, v)) ->
       let v = mapper v in
-      Hashtbl.add mapped_global_types name v;
-      Some v)
+      Hashtbl.add mapped_global_types name (l, v);
+      Some (l, v))
 
 let get_builtin_type_opt builtins name =
   match get_builtin_type_opt builtins name with

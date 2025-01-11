@@ -90,35 +90,51 @@ let dummy_context () =
   (* Add builtins that will be used by tests. *)
   let builtins_values =
     SMap.empty
-    |> SMap.add "console" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "Object" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "Generator" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "console"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "Object"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "Generator"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "AsyncGenerator"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "Promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "promise" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "Promise"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "promise"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "$IterableOrAsyncIterableInternal"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let builtin_types =
     SMap.empty
     |> SMap.add
          "$AsyncIterable"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "$Iterable" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "$Iterable"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "$JSXIntrinsics"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "React$CreateElement"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "React$Element" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-    |> SMap.add "React$Key" (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "React$Element"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+    |> SMap.add
+         "React$Key"
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "React$RefSetter"
-         (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+         (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   let ccx = Context.make_ccx () in
   let metadata = stub_metadata ~root ~checked:true in

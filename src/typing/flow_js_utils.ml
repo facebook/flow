@@ -884,13 +884,13 @@ let lookup_builtin_name_error name loc =
 let lookup_builtin_value_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_value_opt builtins x with
-  | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
+  | Some (_, t) -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_name_error x (loc_of_reason reason)
 
 let lookup_builtin_type_result cx x reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_type_opt builtins x with
-  | Some t -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
+  | Some (_, t) -> Ok (TypeUtil.mod_reason_of_t (Base.Fn.const reason) t)
   | None -> lookup_builtin_name_error x (loc_of_reason reason)
 
 let (lookup_builtin_value, lookup_builtin_type) =
@@ -927,9 +927,8 @@ let get_builtin_module cx module_name reason =
   | None -> lookup_builtin_module_error cx module_name reason
 
 let builtin_promise_class_id cx =
-  let promise_t = lookup_builtin_value_opt cx "Promise" in
-  match promise_t with
-  | Some (OpenT (_, id)) ->
+  match lookup_builtin_value_opt cx "Promise" with
+  | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     begin
       match constraints with
@@ -950,9 +949,8 @@ let builtin_promise_class_id cx =
   | _ -> None
 
 let is_builtin_class_id class_ref class_id cx =
-  let t = lookup_builtin_type_opt cx class_ref in
-  match t with
-  | Some (OpenT (_, id)) ->
+  match lookup_builtin_type_opt cx class_ref with
+  | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     (match constraints with
     | Constraint.FullyResolved s ->
@@ -982,9 +980,8 @@ let is_builtin_class_id class_ref class_id cx =
 let is_builtin_iterable_class_id class_id cx = is_builtin_class_id "$Iterable" class_id cx
 
 let builtin_react_element_opaque_id cx =
-  let t_opt = lookup_builtin_type_opt cx "React$Element" in
-  match t_opt with
-  | Some (OpenT (_, id)) ->
+  match lookup_builtin_type_opt cx "React$Element" with
+  | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     begin
       match constraints with
@@ -999,9 +996,8 @@ let builtin_react_element_opaque_id cx =
   | _ -> None
 
 let builtin_react_renders_exactly_opaque_id cx =
-  let t_opt = lookup_builtin_type_opt cx "React$RendersExactly" in
-  match t_opt with
-  | Some (OpenT (_, id)) ->
+  match lookup_builtin_type_opt cx "React$RendersExactly" with
+  | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     begin
       match constraints with

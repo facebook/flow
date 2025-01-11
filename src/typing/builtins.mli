@@ -9,17 +9,17 @@ type t
 
 val builtin_ordinary_name_set : t -> SSet.t
 
-val get_builtin_value_opt : t -> string -> Type.t option
+val get_builtin_value_opt : t -> string -> (ALoc.t * Type.t) option
 
-val get_builtin_type_opt : t -> string -> Type.t option
+val get_builtin_type_opt : t -> string -> (ALoc.t * Type.t) option
 
 val get_builtin_module_opt : t -> string -> Type.t option
 
 val of_name_map :
-  mapper:(Type.t_out -> Type.t_out) ->
-  values:Type.t_out lazy_t SMap.t ->
-  types:Type.t_out lazy_t SMap.t ->
-  modules:Type.t_out lazy_t SMap.t ->
+  mapper:(Type.t -> Type.t) ->
+  values:(ALoc.t * Type.t) lazy_t SMap.t ->
+  types:(ALoc.t * Type.t) lazy_t SMap.t ->
+  modules:Type.t lazy_t SMap.t ->
   t
 
 val empty : unit -> t

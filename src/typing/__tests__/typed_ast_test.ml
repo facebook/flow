@@ -92,7 +92,7 @@ let before_and_after_stmts file_name =
       ~values:
         (SMap.singleton
            "Object"
-           (lazy (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+           (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
         )
       ~types:SMap.empty
       ~modules:SMap.empty

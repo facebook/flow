@@ -1163,8 +1163,8 @@ let check_react_rules cx ast =
     let get_t cx =
       let no_lowers _cx r = Type.Unsoundness.merged_any r in
       function
-      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
-      | t -> t
+      | (_, OpenT (r, id)) -> Flow_js_utils.merge_tvar ~no_lowers cx r id
+      | (_, t) -> t
     in
 
     let builtins = Context.builtins cx in

@@ -2216,7 +2216,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (_, _, (lazy t), _) -> t)
+            (fun (loc, _, (lazy t), _) -> (loc, t))
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)
@@ -2228,7 +2228,7 @@ let merge_builtins
       (fun name i acc ->
         let t =
           Lazy.map
-            (fun (_, _, (lazy t), _) -> t)
+            (fun (loc, _, (lazy t), _) -> (loc, t))
             (local_def file_and_dependency_map_rec (Local_defs.get local_defs i))
         in
         SMap.add name t acc)
