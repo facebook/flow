@@ -245,10 +245,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           ignore
           @@ this#request
                (Get_def_request.Identifier
-                  {
-                    name = local_name;
-                    loc = (this#loc_of_annot local_annot, this#type_from_enclosing_node local_annot);
-                  }
+                  { name = local_name; loc = this#loc_of_annot local_annot }
                );
       spec
 
@@ -383,8 +380,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! t_identifier ((loc, { Ast.Identifier.name; _ }) as id) =
       if this#annot_covers_target loc then begin
-        let t = this#type_from_enclosing_node loc in
-        this#request (Get_def_request.Identifier { name; loc = (this#loc_of_annot loc, t) })
+        this#request (Get_def_request.Identifier { name; loc = this#loc_of_annot loc })
       end;
       super#t_identifier id
 
@@ -413,8 +409,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
     method! jsx_element_name_identifier ((annot, { Ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#annot_covers_target annot then begin
         if name = String.capitalize_ascii name then
-          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-          this#request (Get_def_request.Identifier { name; loc = annot })
+          this#request (Get_def_request.Identifier { name; loc = this#loc_of_annot annot })
         else
           this#found_empty "jsx intrinsic element"
       end;
@@ -429,8 +424,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
     method! jsx_member_expression_identifier
         ((annot, { Ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#annot_covers_target annot then begin
-        let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-        this#request (Get_def_request.Identifier { name; loc = annot })
+        this#request (Get_def_request.Identifier { name; loc = this#loc_of_annot annot })
       end;
       super#jsx_member_expression_identifier id
 

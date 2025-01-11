@@ -15,7 +15,7 @@ type ('M, 'T) member_info = {
 type ('M, 'T) t =
   | Identifier of {
       name: string;
-      loc: 'T;
+      loc: 'M;
     }
   | Type of {
       annot: 'T;

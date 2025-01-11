@@ -42,7 +42,7 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance
 let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig ~scope_info
     : (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
-  | Get_def_request.Identifier { name; loc = (aloc, _) } ->
+  | Get_def_request.Identifier { name; loc = aloc } ->
     let loc = loc_of_aloc aloc in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
     let matching_uses = Loc_collections.LocSet.filter (fun use -> Loc.contains use loc) all_uses in
