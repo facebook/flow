@@ -42,7 +42,7 @@ let extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance
 let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~file_sig ~scope_info
     : (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t Nel.t * string option, string) result =
   function
-  | Get_def_request.Identifier { name; loc = (aloc, type_) } ->
+  | Get_def_request.Identifier { name; loc = (aloc, _) } ->
     let loc = loc_of_aloc aloc in
     let all_uses = Scope_api.With_Loc.all_uses scope_info in
     let matching_uses = Loc_collections.LocSet.filter (fun use -> Loc.contains use loc) all_uses in
@@ -52,16 +52,13 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
       let def_loc = def.Scope_api.With_Loc.Def.locs in
       Ok (def_loc, Some name)
     | [] ->
-      let req = Get_def_request.Type { annot = (aloc, type_); name = Some name } in
-      process_request
-        ~loc_of_aloc
-        ~cx
-        ~is_legit_require
-        ~ast
-        ~typed_ast_opt
-        ~file_sig
-        ~scope_info
-        req
+      let builtins = Context.builtins cx in
+      (match Builtins.get_builtin_value_opt builtins name with
+      | Some (def_loc, _) -> Ok (Nel.one (loc_of_aloc def_loc), Some name)
+      | None ->
+        (match Builtins.get_builtin_type_opt builtins name with
+        | Some (def_loc, _) -> Ok (Nel.one (loc_of_aloc def_loc), Some name)
+        | None -> Error (name ^ " is an unbound variable")))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
