@@ -1319,6 +1319,96 @@ let auto_close_jsx ~options ~env ~profiling ~params ~client =
         (Ok edit, None)
     end
 
+let prepare_document_paste
+    ~options
+    ~env
+    ~profiling
+    ~params:(DocumentPaste.PrepareParams { uri; ranges })
+    ~client
+    ~loc_of_aloc =
+  let text_document = { TextDocumentIdentifier.uri } in
+  let file_input = file_input_of_text_document_identifier ~client text_document in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed _) -> ([], None)
+  | Error (Skipped reason) ->
+    let extra_data = json_of_skipped reason in
+    ([], extra_data)
+  | Ok (file_key, contents) ->
+    let (check_result, did_hit_cache) =
+      match
+        let parse_result =
+          lazy (Type_contents.parse_contents ~options ~profiling contents file_key)
+        in
+        let type_parse_artifacts_cache =
+          Some (Persistent_connection.type_parse_artifacts_cache client)
+        in
+        type_parse_artifacts_with_cache
+          ~options
+          ~profiling
+          ~type_parse_artifacts_cache
+          env.master_cx
+          file_key
+          parse_result
+      with
+      | (Ok result, did_hit_cache) -> (Ok result, did_hit_cache)
+      | (Error _parse_errors, did_hit_cache) ->
+        (Error "Couldn't parse file in parse_contents", did_hit_cache)
+    in
+    (match check_result with
+    | Error msg ->
+      let json_props = [("error", Hh_json.JSON_String msg)] in
+      let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
+      ([], Some (Hh_json.JSON_Object json_props))
+    | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
+      let import_items =
+        Document_paste.prepare_document_paste
+          cx
+          ~loc_of_aloc
+          ~ast
+          ~typed_ast
+          ~ranges:(List.map (Lsp.lsp_range_to_flow_loc ~source:file_key) ranges)
+      in
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      (import_items, Some (Hh_json.JSON_Object json_props)))
+
+let provide_document_paste ~options ~reader ~profiling ~params =
+  let DocumentPaste.(
+        ProvideParams
+          {
+            text_document = { TextDocumentItem.uri; text; _ };
+            ranges = _;
+            data_transfer = ImportMetadata { imports };
+          }) =
+    params
+  in
+  let (edits, extra_data) =
+    let file_key =
+      File_key.SourceFile
+        (Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow_path { TextDocumentIdentifier.uri })
+    in
+    match Type_contents.parse_contents ~options ~profiling text file_key |> fst with
+    | None ->
+      let json_props = [("error", Hh_json.JSON_String "Failed to parse")] in
+      ([], Some (Hh_json.JSON_Object json_props))
+    | Some (Parse_artifacts { ast; _ }) ->
+      let src_dir = Some (File_key.to_string file_key |> Filename.dirname) in
+      let edits =
+        Document_paste.provide_document_paste_edits
+          ~layout_options:(Code_action_utils.layout_options options)
+          ~module_system_info:(mk_module_system_info ~options ~reader)
+          ~src_dir
+          ast
+          imports
+      in
+      (edits, Some (Hh_json.JSON_Object []))
+  in
+  let edits =
+    Base.List.fold_right edits ~init:[] ~f:(fun (loc, newText) acc ->
+        { TextEdit.range = Lsp.loc_to_lsp_range loc; newText } :: acc
+    )
+  in
+  ({ Lsp.WorkspaceEdit.changes = Lsp.UriMap.singleton uri edits }, extra_data)
+
 let linked_editing_range ~options ~env ~profiling ~params ~client =
   let text_document = params.TextDocumentPositionParams.textDocument in
   let file_input = file_input_of_text_document_identifier ~client text_document in
@@ -3389,6 +3479,30 @@ let handle_persistent_auto_close_jsx ~options ~id ~params ~metadata ~client ~pro
     Lwt.return
       (LspProt.LspFromServer (Some (ResponseMessage (id, AutoCloseJsxResult text_opt))), metadata)
 
+let handle_persistent_prepare_document_paste
+    ~options ~id ~params ~metadata ~client ~profiling ~env ~loc_of_aloc =
+  let (imports, extra_data) =
+    prepare_document_paste ~options ~env ~profiling ~params ~client ~loc_of_aloc
+  in
+  let metadata = with_data ~extra_data metadata in
+  Lwt.return
+    ( LspProt.LspFromServer
+        (Some
+           (ResponseMessage
+              (id, PrepareDocumentPasteResult (Lsp.DocumentPaste.ImportMetadata { imports }))
+           )
+        ),
+      metadata
+    )
+
+let handle_persistent_provide_document_paste_edits
+    ~options ~reader ~id ~params ~metadata ~client:_ ~profiling =
+  let (workspace_edit, extra_data) = provide_document_paste ~options ~reader ~profiling ~params in
+  let metadata = with_data ~extra_data metadata in
+  ( LspProt.LspFromServer (Some (ResponseMessage (id, ProvideDocumentPasteResult workspace_edit))),
+    metadata
+  )
+
 let handle_persistent_linked_editing_range ~options ~id ~params ~metadata ~client ~profiling ~env =
   let (result, extra_data) = linked_editing_range ~options ~env ~profiling ~params ~client in
   let metadata = with_data ~extra_data metadata in
@@ -3849,6 +3963,13 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_auto_close_jsx ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, PrepareDocumentPasteRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_prepare_document_paste ~options ~id ~params ~metadata ~loc_of_aloc)
+  | LspToServer (RequestMessage (id, ProvideDocumentPasteRequest params)) ->
+    Handle_persistent_immediately
+      (handle_persistent_provide_document_paste_edits ~options ~reader ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, LinkedEditingRangeRequest params)) ->
     mk_parallelizable_persistent
       ~options
