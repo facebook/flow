@@ -468,6 +468,7 @@ module Initialize : sig
 
   and experimentalServerCapabilities = {
     server_snippetTextEdit: bool;
+    pasteProvider: bool;  (** Flow specific before LSP integration is available *)
     strictCompletionOrder: bool;
     autoCloseJsx: bool;
     renameFileImports: bool;

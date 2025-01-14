@@ -1529,7 +1529,13 @@ let print_initialize ~key (r : Initialize.result) : json =
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     let experimental =
-      let { server_snippetTextEdit; strictCompletionOrder; autoCloseJsx; renameFileImports } =
+      let {
+        server_snippetTextEdit;
+        pasteProvider;
+        strictCompletionOrder;
+        autoCloseJsx;
+        renameFileImports;
+      } =
         cap.server_experimental
       in
       let addCapability capability name json =
@@ -1541,6 +1547,7 @@ let print_initialize ~key (r : Initialize.result) : json =
       let props =
         []
         |> addCapability server_snippetTextEdit "snippetTextEdit"
+        |> addCapability pasteProvider "pasteProvider"
         |> addCapability strictCompletionOrder "strictCompletionOrder"
         |> addCapability autoCloseJsx "autoCloseJsx"
         |> addCapability renameFileImports "renameFileImports"

@@ -837,6 +837,7 @@ let do_initialize params : Initialize.result =
             server_snippetTextEdit;
             strictCompletionOrder = true;
             autoCloseJsx = true;
+            pasteProvider = true;
             renameFileImports = true;
           };
       };

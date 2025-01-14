@@ -623,6 +623,7 @@ module Initialize = struct
 
   and experimentalServerCapabilities = {
     server_snippetTextEdit: bool;
+    pasteProvider: bool;  (** Flow specific before LSP integration is available *)
     strictCompletionOrder: bool;
         (** true if the server strictly orders completion results. when set, the editor
             should not do its own sorting. *)
