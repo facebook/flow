@@ -33,6 +33,8 @@ type trigger =
   | ExecuteCommand of Lsp.lsp_id
   | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
+  | PrepareDocumentPaste of Lsp.lsp_id
+  | ProvideDocumentPaste of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
   | RenameFileImports of Lsp.lsp_id
   | UnknownTrigger

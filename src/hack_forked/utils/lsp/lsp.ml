@@ -1460,6 +1460,38 @@ module AutoCloseJsx = struct
   and result = string option
 end
 
+module DocumentPaste = struct
+  type import_type =
+    | ImportNamedValue
+    | ImportValueAsNamespace
+    | ImportNamedType
+    | ImportNamedTypeOf
+    | ImportTypeOfAsNamespace
+
+  type import_item = {
+    remote_name: string;
+    local_name: string option;
+    import_type: import_type;
+    import_source: string;
+    import_source_is_resolved: bool;
+  }
+
+  type data_transfer = ImportMetadata of { imports: import_item list }
+
+  type prepare_params =
+    | PrepareParams of {
+        uri: DocumentUri.t;
+        ranges: range list;
+      }
+
+  type provide_params =
+    | ProvideParams of {
+        text_document: TextDocumentItem.t;
+        ranges: range list;
+        data_transfer: data_transfer;
+      }
+end
+
 (** LinkedEditingRange request, method="textDocument/linkedEditingRange" *)
 module LinkedEditingRange = struct
   type params = TextDocumentPositionParams.t
@@ -1517,6 +1549,8 @@ type lsp_request =
   | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
   | WillRenameFilesRequest of WillRenameFiles.params
   | AutoCloseJsxRequest of AutoCloseJsx.params
+  | PrepareDocumentPasteRequest of DocumentPaste.prepare_params
+  | ProvideDocumentPasteRequest of DocumentPaste.provide_params
   | LinkedEditingRangeRequest of LinkedEditingRange.params
   | RenameFileImportsRequest of RenameFileImports.params
   | UnknownRequest of string * Hh_json.json option
@@ -1555,6 +1589,8 @@ type lsp_result =
   | WillRenameFilesResult of WillRenameFiles.result
   | RegisterCapabilityResult
   | AutoCloseJsxResult of AutoCloseJsx.result
+  | PrepareDocumentPasteResult of DocumentPaste.data_transfer
+  | ProvideDocumentPasteResult of WorkspaceEdit.t
   | LinkedEditingRangeResult of LinkedEditingRange.result
   | RenameFileImportsResult of RenameFileImports.result
   (* the string is a stacktrace *)

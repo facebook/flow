@@ -37,6 +37,8 @@ type trigger =
   | ExecuteCommand of Lsp.lsp_id
   | WillRenameFiles of Lsp.lsp_id
   | AutoCloseJsx of Lsp.lsp_id
+  | PrepareDocumentPaste of Lsp.lsp_id
+  | ProvideDocumentPaste of Lsp.lsp_id
   | LinkedEditingRange of Lsp.lsp_id
   | RenameFileImports of Lsp.lsp_id
   | UnknownTrigger
@@ -108,6 +110,8 @@ let string_of_trigger = function
   | ExecuteCommand _ -> "ExecuteCommand"
   | WillRenameFiles _ -> "willRenameFiles"
   | AutoCloseJsx _ -> "AutoCloseJsx"
+  | PrepareDocumentPaste _ -> "PrepareDocumentPaste"
+  | ProvideDocumentPaste _ -> "ProvideDocumentPaste"
   | LinkedEditingRange _ -> "LinkedEditingRange"
   | RenameFileImports _ -> "RenameFileImports"
   | UnknownTrigger -> "UnknownTrigger"
@@ -128,6 +132,8 @@ let lsp_id_of_trigger = function
   | TypeCoverage lsp_id
   | ExecuteCommand lsp_id
   | AutoCloseJsx lsp_id
+  | PrepareDocumentPaste lsp_id
+  | ProvideDocumentPaste lsp_id
   | WillRenameFiles lsp_id
   | LinkedEditingRange lsp_id
   | RenameFileImports lsp_id ->
@@ -203,6 +209,8 @@ let source_of_trigger = function
   | TypeCoverage _
   | ExecuteCommand _
   | AutoCloseJsx _
+  | PrepareDocumentPaste _
+  | ProvideDocumentPaste _
   | WillRenameFiles _
   | LinkedEditingRange _
   | RenameFileImports _ ->
@@ -369,6 +377,8 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
   | RequestMessage (lsp_id, WillRenameFilesRequest _) -> Some (WillRenameFiles lsp_id)
   | RequestMessage (lsp_id, AutoCloseJsxRequest _) -> Some (AutoCloseJsx lsp_id)
+  | RequestMessage (lsp_id, PrepareDocumentPasteRequest _) -> Some (PrepareDocumentPaste lsp_id)
+  | RequestMessage (lsp_id, ProvideDocumentPasteRequest _) -> Some (ProvideDocumentPaste lsp_id)
   | RequestMessage (lsp_id, LinkedEditingRangeRequest _) -> Some (LinkedEditingRange lsp_id)
   | RequestMessage (lsp_id, RenameFileImportsRequest _) -> Some (RenameFileImports lsp_id)
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
@@ -426,6 +436,8 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, ErrorResult _)
   | ResponseMessage (_, CodeActionResult _)
   | ResponseMessage (_, AutoCloseJsxResult _)
+  | ResponseMessage (_, PrepareDocumentPasteResult _)
+  | ResponseMessage (_, ProvideDocumentPasteResult _)
   | ResponseMessage (_, WillRenameFilesResult _)
   | ResponseMessage (_, LinkedEditingRangeResult _)
   | ResponseMessage (_, RenameFileImportsResult _) ->

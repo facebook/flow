@@ -1746,6 +1746,72 @@ module AutoCloseJsxFmt = struct
   let json_of_result = Base.Option.value_map ~default:JSON_Null ~f:(fun text -> JSON_String text)
 end
 
+module DocumentPasteFmt = struct
+  let import_mapping_of_json json =
+    let remote_name = Jget.string_exn json "remoteName" in
+    let local_name = Jget.string_opt json "localName" in
+    let import_type =
+      match Jget.string_exn json "importType" with
+      | "ImportNamedValue" -> DocumentPaste.ImportNamedValue
+      | "ImportValueAsNamespace" -> DocumentPaste.ImportValueAsNamespace
+      | "ImportNamedType" -> DocumentPaste.ImportNamedType
+      | "ImportNamedTypeOf" -> DocumentPaste.ImportNamedTypeOf
+      | "ImportTypeOfAsNamespace" -> DocumentPaste.ImportTypeOfAsNamespace
+      | s -> raise (Jget.Parse ("Unexpected importType" ^ s))
+    in
+    let import_source = Jget.string_exn json "importSource" in
+    let import_source_is_resolved = Jget.bool_exn json "importSourceIsResolved" in
+    { DocumentPaste.remote_name; local_name; import_type; import_source; import_source_is_resolved }
+
+  let json_of_import_mapping
+      {
+        DocumentPaste.remote_name;
+        local_name;
+        import_type;
+        import_source;
+        import_source_is_resolved;
+      } =
+    let import_type =
+      match import_type with
+      | DocumentPaste.ImportNamedValue -> "ImportNamedValue"
+      | DocumentPaste.ImportValueAsNamespace -> "ImportValueAsNamespace"
+      | DocumentPaste.ImportNamedType -> "ImportNamedType"
+      | DocumentPaste.ImportNamedTypeOf -> "ImportNamedTypeOf"
+      | DocumentPaste.ImportTypeOfAsNamespace -> "ImportTypeOfAsNamespace"
+    in
+    Jprint.object_opt
+      [
+        ("remoteName", Some (JSON_String remote_name));
+        ("localName", Option.map (fun n -> JSON_String n) local_name);
+        ("importType", Some (JSON_String import_type));
+        ("importSource", Some (JSON_String import_source));
+        ("importSourceIsResolved", Some (JSON_Bool import_source_is_resolved));
+      ]
+
+  let data_transfer_of_json json =
+    DocumentPaste.ImportMetadata
+      { imports = Jget.array_exn json "imports" |> Base.List.map ~f:import_mapping_of_json }
+
+  let json_of_data_transfer = function
+    | DocumentPaste.ImportMetadata { imports } ->
+      Jprint.object_opt [("imports", Some (JSON_Array (List.map json_of_import_mapping imports)))]
+
+  let prepare_params_of_json json =
+    DocumentPaste.PrepareParams
+      {
+        uri = Jget.string_exn json "uri" |> DocumentUri.of_string;
+        ranges = Jget.array_exn json "ranges" |> Base.List.map ~f:parse_range_exn;
+      }
+
+  let provide_params_of_json json =
+    DocumentPaste.ProvideParams
+      {
+        text_document = Jget.obj_exn json "textDocument" |> parse_textDocumentItem;
+        ranges = Jget.array_exn json "ranges" |> Base.List.map ~f:parse_range_exn;
+        data_transfer = Jget.obj_exn json "dataTransfer" |> data_transfer_of_json;
+      }
+end
+
 module LinkedEditingRangeFmt = struct
   let params_of_json = parse_linkedEditingRange
 
@@ -1844,6 +1910,8 @@ let request_name_to_string (request : lsp_request) : string =
   | ExecuteCommandRequest _ -> "workspace/executeCommand"
   | ApplyWorkspaceEditRequest _ -> "workspace/applyEdit"
   | AutoCloseJsxRequest _ -> "flow/autoCloseJsx"
+  | PrepareDocumentPasteRequest _ -> "flow/prepareDocumentPaste"
+  | ProvideDocumentPasteRequest _ -> "flow/provideDocumentPasteEdits"
   | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
   | WillRenameFilesRequest _ -> "workspace/willRenameFiles"
   | RenameFileImportsRequest _ -> "flow/renameFileImports"
@@ -1884,6 +1952,8 @@ let result_name_to_string (result : lsp_result) : string =
   | ApplyWorkspaceEditResult _ -> "workspace/applyEdit"
   | RegisterCapabilityResult -> "client/registerCapability"
   | AutoCloseJsxResult _ -> "flow/autoCloseJsx"
+  | PrepareDocumentPasteResult _ -> "flow/prepareDocumentPaste"
+  | ProvideDocumentPasteResult _ -> "flow/provideDocumentPasteEdits"
   | LinkedEditingRangeResult _ -> "textDocument/linkedEditingRange"
   | RenameFileImportsResult _ -> "flow/renameFileImports"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
@@ -1956,6 +2026,10 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "workspace/configuration" -> ConfigurationRequest (ConfigurationFmt.params_of_json params)
   | "workspace/willRenameFiles" -> WillRenameFilesRequest (WillRenameFilesFmt.params_of_json params)
   | "flow/autoCloseJsx" -> AutoCloseJsxRequest (AutoCloseJsxFmt.params_of_json params)
+  | "flow/prepareDocumentPaste" ->
+    PrepareDocumentPasteRequest (DocumentPasteFmt.prepare_params_of_json params)
+  | "flow/provideDocumentPasteEdits" ->
+    ProvideDocumentPasteRequest (DocumentPasteFmt.provide_params_of_json params)
   | "textDocument/linkedEditingRange" ->
     LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
   | "flow/renameFileImports" -> RenameFileImportsRequest (RenameFileImportsFmt.params_of_json params)
@@ -2025,6 +2099,8 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | DocumentCodeLensRequest _
   | ExecuteCommandRequest _
   | AutoCloseJsxRequest _
+  | PrepareDocumentPasteRequest _
+  | ProvideDocumentPasteRequest _
   | LinkedEditingRangeRequest _
   | RenameFileImportsRequest _
   | UnknownRequest _ ->
@@ -2090,7 +2166,9 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | DocumentOnTypeFormattingRequest _
     | RageRequest
     | PingRequest
+    | PrepareDocumentPasteRequest _
     | PrepareRenameRequest _
+    | ProvideDocumentPasteRequest _
     | RenameRequest _
     | WillRenameFilesRequest _
     | DocumentCodeLensRequest _
@@ -2142,6 +2220,8 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | WillRenameFilesResult r -> WillRenameFilesFmt.json_of_result r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
+    | PrepareDocumentPasteResult r -> DocumentPasteFmt.json_of_data_transfer r
+    | ProvideDocumentPasteResult r -> print_workspaceEdit r
     | LinkedEditingRangeResult r -> LinkedEditingRangeFmt.json_of_result r
     | RenameFileImportsResult r -> RenameFileImportsFmt.json_of_result r
     | ShowMessageRequestResult _

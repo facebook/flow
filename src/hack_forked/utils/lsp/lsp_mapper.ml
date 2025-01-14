@@ -51,6 +51,10 @@ type t = {
     t -> DocumentOnTypeFormatting.params -> DocumentOnTypeFormatting.params;
   of_document_on_type_formatting_result:
     t -> DocumentOnTypeFormatting.result -> DocumentOnTypeFormatting.result;
+  of_document_paste_prepare_params:
+    t -> DocumentPaste.prepare_params -> DocumentPaste.prepare_params;
+  of_document_paste_provide_params:
+    t -> DocumentPaste.provide_params -> DocumentPaste.provide_params;
   of_document_range_formatting_params:
     t -> DocumentRangeFormatting.params -> DocumentRangeFormatting.params;
   of_document_range_formatting_result:
@@ -328,6 +332,21 @@ let default_mapper =
         { DocumentOnTypeFormatting.textDocument; position; ch; options });
     of_document_on_type_formatting_result =
       (fun mapper result -> Base.List.map ~f:(mapper.of_text_edit mapper) result);
+    of_document_paste_prepare_params =
+      (fun mapper (DocumentPaste.PrepareParams { uri; ranges }) ->
+        DocumentPaste.PrepareParams
+          {
+            uri = mapper.of_document_uri mapper uri;
+            ranges = Base.List.map ranges ~f:(mapper.of_range mapper);
+          });
+    of_document_paste_provide_params =
+      (fun mapper (DocumentPaste.ProvideParams { text_document; ranges; data_transfer }) ->
+        DocumentPaste.ProvideParams
+          {
+            text_document = mapper.of_text_document_item mapper text_document;
+            ranges = Base.List.map ranges ~f:(mapper.of_range mapper);
+            data_transfer;
+          });
     of_document_range_formatting_params =
       (fun mapper { DocumentRangeFormatting.textDocument; range; options } ->
         let textDocument = mapper.of_text_document_identifier mapper textDocument in
@@ -519,6 +538,9 @@ let default_mapper =
           WillRenameFilesResult (mapper.of_will_rename_files_result mapper result)
         | AutoCloseJsxResult result ->
           AutoCloseJsxResult (mapper.of_auto_close_jsx_result mapper result)
+        | PrepareDocumentPasteResult r -> PrepareDocumentPasteResult r
+        | ProvideDocumentPasteResult r ->
+          ProvideDocumentPasteResult (mapper.of_workspace_edit mapper r)
         | LinkedEditingRangeResult result ->
           LinkedEditingRangeResult (mapper.of_linked_editing_range_result mapper result)
         | RenameFileImportsResult result ->
@@ -583,6 +605,10 @@ let default_mapper =
           WillRenameFilesRequest (mapper.of_will_rename_files_params mapper params)
         | AutoCloseJsxRequest params ->
           AutoCloseJsxRequest (mapper.of_auto_close_jsx_params mapper params)
+        | PrepareDocumentPasteRequest params ->
+          PrepareDocumentPasteRequest (mapper.of_document_paste_prepare_params mapper params)
+        | ProvideDocumentPasteRequest params ->
+          ProvideDocumentPasteRequest (mapper.of_document_paste_provide_params mapper params)
         | LinkedEditingRangeRequest params ->
           LinkedEditingRangeRequest (mapper.of_linked_editing_range_params mapper params)
         | RenameFileImportsRequest params ->
