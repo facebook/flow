@@ -21,6 +21,7 @@ type internal_error =
 type 'loc result =
   | OwnNamedDef of 'loc * (* name *) string
   | OwnUnnamedDef of 'loc
+  | ModuleDef of (Type.t[@opaque])
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
@@ -123,6 +124,11 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         found_loc_ <- OwnUnnamedDef loc;
         raise Found
 
+    method private module_def : 'a. Type.t -> 'a =
+      fun t ->
+        found_loc_ <- ModuleDef t;
+        raise Found
+
     method private found_empty : 'a. string -> 'a =
       fun x ->
         found_loc_ <- Empty x;
@@ -167,8 +173,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! import_source source_annot lit =
       if this#annot_covers_target source_annot then begin
-        let source_annot = (this#loc_of_annot source_annot, this#get_module_t source_annot lit) in
-        this#request (Get_def_request.Type { annot = source_annot; name = None })
+        this#module_def (this#get_module_t source_annot lit)
       end;
       super#import_source source_annot lit
 
@@ -207,10 +212,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           | Get_def_types.Purpose.GoToDefinition
           | Get_def_types.Purpose.JSDoc ->
             let t = this#type_from_enclosing_node source_annot in
-            this#request
-              (Get_def_request.Type
-                 { annot = (this#loc_of_annot source_annot, t); name = Some name }
-              )
+            this#module_def t
           | Get_def_types.Purpose.FindReferences ->
             ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
         )
@@ -266,10 +268,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               | Get_def_types.Purpose.GoToDefinition
               | Get_def_types.Purpose.JSDoc ->
                 let t = this#type_from_enclosing_node source_annot in
-                this#request
-                  (Get_def_request.Type
-                     { annot = (this#loc_of_annot source_annot, t); name = Some name }
-                  )
+                this#module_def t
               | Get_def_types.Purpose.FindReferences ->
                 ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
             )
@@ -278,8 +277,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! export_source source_annot lit =
       if this#annot_covers_target source_annot then begin
-        let source_annot = (this#loc_of_annot source_annot, this#get_module_t source_annot lit) in
-        this#request (Get_def_request.Type { annot = source_annot; name = None })
+        this#module_def (this#get_module_t source_annot lit)
       end;
       super#export_source source_annot lit
 
@@ -525,8 +523,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               _;
             }
           when this#is_legit_require source_annot ->
-          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-          this#request (Get_def_request.Type { annot; name = None })
+          this#module_def (this#type_from_enclosing_node annot)
         | _ -> super#expression (annot, expr)
       else
         (* it is tempting to not recurse here, but comments are not included in

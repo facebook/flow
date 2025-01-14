@@ -15,6 +15,7 @@ type internal_error =
 type 'loc result =
   | OwnNamedDef of 'loc * (* name *) string
   | OwnUnnamedDef of 'loc
+  | ModuleDef of Type.t
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
