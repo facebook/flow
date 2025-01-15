@@ -14,10 +14,13 @@ type named_binding = {
 
 type bindings =
   | DefaultType of string
+  | DefaultTypeof of string
   | Default of string
   | Named of named_binding list
   | NamedType of named_binding list
+  | NamedTypeof of named_binding list
   | Namespace of string
+  | TypeofNamespace of string
 
 type placement =
   | Above of { skip_line: bool }
@@ -122,7 +125,7 @@ let mk_named_import ?loc ?comments ~import_kind ~from names =
   in
   Statements.import_declaration ?loc ?comments import_kind source default specifiers
 
-let mk_namespace_import ?loc ?comments ~from name =
+let mk_namespace_import ?loc ?comments ~import_kind ~from name =
   let open Ast_builder in
   let source = (Loc.none, string_literal from) in
   let default = None in
@@ -130,25 +133,26 @@ let mk_namespace_import ?loc ?comments ~from name =
     let id = Identifiers.identifier name in
     Some (Statement.ImportDeclaration.ImportNamespaceSpecifier (Loc.none, id))
   in
-  Statements.import_declaration
-    ?loc
-    ?comments
-    Statement.ImportDeclaration.ImportValue
-    source
-    default
-    specifiers
+  Statements.import_declaration ?loc ?comments import_kind source default specifiers
 
 let mk_import ~bindings ~from =
   match bindings with
   | DefaultType id_name ->
     mk_default_import ~import_kind:Statement.ImportDeclaration.ImportType ~from id_name
+  | DefaultTypeof id_name ->
+    mk_default_import ~import_kind:Statement.ImportDeclaration.ImportTypeof ~from id_name
   | Default id_name ->
     mk_default_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_name
   | Named id_names ->
     mk_named_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_names
   | NamedType id_names ->
     mk_named_import ~import_kind:Statement.ImportDeclaration.ImportType ~from id_names
-  | Namespace id_name -> mk_namespace_import ~from id_name
+  | NamedTypeof id_names ->
+    mk_named_import ~import_kind:Statement.ImportDeclaration.ImportTypeof ~from id_names
+  | Namespace id_name ->
+    mk_namespace_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_name
+  | TypeofNamespace id_name ->
+    mk_namespace_import ~import_kind:Statement.ImportDeclaration.ImportTypeof ~from id_name
 
 (* TODO: support inserting requires
     let require_call =
@@ -214,8 +218,9 @@ let update_import ~bindings stmt =
     let edit =
       match (bindings, default, specifiers) with
       | (DefaultType bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
+      | (DefaultTypeof bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
       | (Default bound_name, Some { identifier = (_, { Identifier.name; _ }); _ }, _)
-      | ( Namespace bound_name,
+      | ( (Namespace bound_name | TypeofNamespace bound_name),
           None,
           Some (ImportNamespaceSpecifier (_, (_, { Identifier.name; _ })))
         ) ->
@@ -233,17 +238,20 @@ let update_import ~bindings stmt =
           in
           (placement, mk_import ~bindings ~from)
       | (DefaultType _, None, Some _)
+      | (DefaultTypeof _, None, Some _)
       | (Default _, None, Some _) ->
         (* a `import {bar} from 'foo'` or `import * as Foo from 'foo'` already exists.
            rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
            a separate import. TODO: maybe make this a config option? *)
         (Above { skip_line = false }, mk_import ~bindings ~from)
       | (Named bound_names, _, Some (ImportNamedSpecifiers specifiers))
-      | (NamedType bound_names, _, Some (ImportNamedSpecifiers specifiers)) ->
+      | (NamedType bound_names, _, Some (ImportNamedSpecifiers specifiers))
+      | (NamedTypeof bound_names, _, Some (ImportNamedSpecifiers specifiers)) ->
         let open ImportDeclaration in
         let kind =
           match (import_kind, bindings) with
           | (ImportValue, NamedType _) -> Some ImportType
+          | (ImportValue, NamedTypeof _) -> Some ImportTypeof
           | _ -> None
         in
         let new_specifiers =
@@ -275,19 +283,21 @@ let update_import ~bindings stmt =
       | (Named _, Some _, _)
       | (Named _, None, Some (ImportNamespaceSpecifier _))
       | (NamedType _, Some _, _)
-      | (NamedType _, None, Some (ImportNamespaceSpecifier _)) ->
+      | (NamedType _, None, Some (ImportNamespaceSpecifier _))
+      | (NamedTypeof _, Some _, _)
+      | (NamedTypeof _, None, Some (ImportNamespaceSpecifier _)) ->
         (* trying to insert a named specifier, but a default or namespace import already
            exists. rather than change it to `import Foo, {bar} from 'foo'`, we choose to
            insert a separate import `import {bar} from 'foo'` below the namespace/default
            import. TODO: maybe make this a config option? *)
         (Below { skip_line = false }, mk_import ~bindings ~from)
-      | (Namespace _, Some _, _) ->
+      | ((Namespace _ | TypeofNamespace _), Some _, _) ->
         (* trying to insert a namespace specifier, but a default import already exists.
            rather than change it to `import * as Foo, Bar from 'foo'`, we choose to
            insert a separate import `import * as Foo from 'foo'` below the default.
            TODO: maybe make this a config option? *)
         (Below { skip_line = false }, mk_import ~bindings ~from)
-      | (Namespace _, None, Some (ImportNamedSpecifiers _)) ->
+      | ((Namespace _ | TypeofNamespace _), None, Some (ImportNamedSpecifiers _)) ->
         (* trying to insert a namespace specifier, but a named import already exists.
            rather than change it to `import * as Foo, {bar} from 'foo'`, we choose to
            insert a separate import `import * as Foo from 'foo'` above the named import.
@@ -425,11 +435,20 @@ let section_matches_bindings bindings section =
   let open Section in
   (* TODO: confirm CJS/ESM interop, depends on flowconfig *)
   match (section, bindings) with
-  | (ImportType, (DefaultType _ | NamedType _)) -> true
+  | (ImportType, (DefaultType _ | DefaultTypeof _ | NamedType _ | NamedTypeof _ | TypeofNamespace _))
+    ->
+    true
   | (ImportType, (Default _ | Named _ | Namespace _)) -> false
   | (Require, Default _) -> true
-  | (Require, (DefaultType _ | Named _ | NamedType _ | Namespace _)) -> false
-  | ((ImportValueFromRelative | ImportValueFromModule), (DefaultType _ | NamedType _)) -> false
+  | ( Require,
+      ( DefaultType _ | DefaultTypeof _ | Named _ | NamedType _ | NamedTypeof _ | Namespace _
+      | TypeofNamespace _ )
+    ) ->
+    false
+  | ( (ImportValueFromRelative | ImportValueFromModule),
+      (DefaultType _ | DefaultTypeof _ | NamedType _ | NamedTypeof _ | TypeofNamespace _)
+    ) ->
+    false
   | ((ImportValueFromRelative | ImportValueFromModule), (Default _ | Named _ | Namespace _)) -> true
 
 let existing_import ~bindings ~from imports =

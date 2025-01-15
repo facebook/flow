@@ -12,10 +12,13 @@ type named_binding = {
 
 type bindings =
   | DefaultType of string
+  | DefaultTypeof of string
   | Default of string
   | Named of named_binding list
   | NamedType of named_binding list
+  | NamedTypeof of named_binding list
   | Namespace of string
+  | TypeofNamespace of string
 
 val mk_import : bindings:bindings -> from:string -> (Loc.t, Loc.t) Flow_ast.Statement.t
 

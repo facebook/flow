@@ -14,6 +14,45 @@
               "character": 0
             }
           },
+          "newText": "import typeof fooType from \"./import_source\";\n"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 0
+            }
+          },
+          "newText": "import typeof * as NST from \"./import_source\";\n"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 0
+            }
+          },
+          "newText": "import typeof { bar as barType } from \"./import_source\";\n"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 0
+            }
+          },
           "newText": "import type { A as B } from \"./import_source\";\n"
         },
         {
