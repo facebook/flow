@@ -185,14 +185,17 @@ let provide_document_paste_edits ~layout_options ~module_system_info ~src_dir as
               else
                 Some (from, Autofix_imports.(NamedType [{ remote_name; local_name }]))
             | Lsp.DocumentPaste.ImportNamedTypeOf ->
-              None (* TODO: make Autofix_imports support this kind *)
+              if remote_name = "default" then
+                Some (from, Autofix_imports.DefaultTypeof (Base.Option.value_exn local_name))
+              else
+                Some (from, Autofix_imports.(NamedTypeof [{ remote_name; local_name }]))
             | Lsp.DocumentPaste.ImportNamedValue ->
               if remote_name = "default" then
                 Some (from, Autofix_imports.Default (Base.Option.value_exn local_name))
               else
                 Some (from, Autofix_imports.(Named [{ remote_name; local_name }]))
             | Lsp.DocumentPaste.ImportTypeOfAsNamespace ->
-              None (* TODO: make Autofix_imports support this kind *)
+              Some (from, Autofix_imports.TypeofNamespace remote_name)
             | Lsp.DocumentPaste.ImportValueAsNamespace ->
               Some (from, Autofix_imports.Namespace remote_name))
     )
