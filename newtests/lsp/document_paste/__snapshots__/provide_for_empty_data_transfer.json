@@ -1,0 +1,8 @@
+{
+  "method": "flow/provideDocumentPasteEdits",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/test.js": []
+    }
+  }
+}

@@ -1761,6 +1761,12 @@ module DocumentPasteFmt = struct
     in
     let import_source = Jget.string_exn json "importSource" in
     let import_source_is_resolved = Jget.bool_exn json "importSourceIsResolved" in
+    let import_source =
+      if import_source_is_resolved && String.starts_with ~prefix:"file://" import_source then
+        Base.String.chop_prefix_exn ~prefix:"file://" import_source
+      else
+        import_source
+    in
     { DocumentPaste.remote_name; local_name; import_type; import_source; import_source_is_resolved }
 
   let json_of_import_mapping
@@ -1778,6 +1784,12 @@ module DocumentPasteFmt = struct
       | DocumentPaste.ImportNamedType -> "ImportNamedType"
       | DocumentPaste.ImportNamedTypeOf -> "ImportNamedTypeOf"
       | DocumentPaste.ImportTypeOfAsNamespace -> "ImportTypeOfAsNamespace"
+    in
+    let import_source =
+      if import_source_is_resolved then
+        "file://" ^ import_source
+      else
+        import_source
     in
     Jprint.object_opt
       [
