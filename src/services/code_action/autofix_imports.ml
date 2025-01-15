@@ -417,12 +417,12 @@ let rec last_loc = function
   | [(loc, _)] -> loc
   | _ :: rest -> last_loc rest
 
-let insertion_point ~imports ~body import =
+let insertion_point ~program_loc ~imports ~body import =
   match sorted_insertion_point import imports with
   | Some edit -> edit
   | None ->
     (match (imports, body) with
-    | ([], []) -> failwith "trying to fix a missing import in an empty file"
+    | ([], []) -> (program_loc, Below { skip_line = false })
     | (_ :: _, _) ->
       (* below last import *)
       let loc = last_loc imports in
@@ -479,7 +479,7 @@ let existing_import ~bindings ~from imports =
   in
   closest potentials
 
-let get_change ~imports ~body (from, bindings) =
+let get_change ~program_loc ~imports ~body (from, bindings) =
   let (loc, placement, stmt) =
     match existing_import ~bindings ~from imports with
     | Some stmt ->
@@ -487,7 +487,7 @@ let get_change ~imports ~body (from, bindings) =
       (loc, placement, stmt)
     | None ->
       let new_import = mk_import ~bindings ~from in
-      let (loc, placement) = insertion_point ~imports ~body new_import in
+      let (loc, placement) = insertion_point ~program_loc ~imports ~body new_import in
       (loc, placement, new_import)
   in
   let loc =
@@ -602,12 +602,12 @@ let adjust_placements =
   | hd :: tl -> loop hd [] tl
 
 let add_imports ~options ~added_imports ast : (Loc.t * string) list =
-  let (Flow_ast_differ.Partitioned { directives = _; imports; body }) =
-    let (_, { Program.statements; _ }) = ast in
-    Flow_ast_differ.partition_imports statements
+  let (program_loc, Flow_ast_differ.Partitioned { directives = _; imports; body }) =
+    let (program_loc, { Program.statements; _ }) = ast in
+    (program_loc, Flow_ast_differ.partition_imports statements)
   in
   added_imports
-  |> Base.List.map ~f:(get_change ~imports ~body)
+  |> Base.List.map ~f:(get_change ~program_loc ~imports ~body)
   |> Base.List.sort ~compare:compare_changes
   |> adjust_placements
   |> Base.List.map ~f:(string_of_change ~options)

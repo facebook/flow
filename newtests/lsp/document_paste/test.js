@@ -107,6 +107,12 @@ module.exports = (suite(
           readDataTransferFromSnapshot('prepare_on_all_non_imports.json'),
         ),
         snapshotForProvide(
+          'test.js',
+          '// @flow',
+          'provide_for_full_data_transfer_for_empty_program.json',
+          readDataTransferFromSnapshot('prepare_on_all_non_imports.json'),
+        ),
+        snapshotForProvide(
           'bar/test.js',
           '// @flow\nconst _ = 3',
           'provide_for_full_data_transfer_with_deeper_path.json',
