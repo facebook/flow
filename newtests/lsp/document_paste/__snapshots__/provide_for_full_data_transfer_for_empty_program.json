@@ -1,0 +1,139 @@
+{
+  "method": "flow/provideDocumentPasteEdits",
+  "result": {
+    "changes": {
+      "<PLACEHOLDER_PROJECT_URL>/__fixtures__/test.js": [
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport typeof fooType from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport typeof * as NST from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport typeof { bar as barType } from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport type { A as B } from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport type { A } from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport foo from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport * as NS from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport { bar } from \"./import_source\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport bad from \"bad\";"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 0,
+              "character": 8
+            },
+            "end": {
+              "line": 0,
+              "character": 8
+            }
+          },
+          "newText": "\nimport React from \"react\";"
+        }
+      ]
+    }
+  }
+}
