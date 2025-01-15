@@ -267,8 +267,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
-          | ImportNamespaceSpecifier (l, (name_annot, { Ast.Identifier.name; _ })) ->
-            if covers_target l then (
+          | ImportNamespaceSpecifier (_, (name_annot, { Ast.Identifier.name; _ })) ->
+            if this#annot_covers_target name_annot then (
               match purpose with
               | Get_def_types.Purpose.GoToDefinition
               | Get_def_types.Purpose.JSDoc ->
