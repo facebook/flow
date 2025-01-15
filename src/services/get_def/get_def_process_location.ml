@@ -495,13 +495,10 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               | _ -> ()
             )
             properties
-        | Identifier { Identifier.name = (annot, { Ast.Identifier.name; comments = _ }); _ }
-          when this#annot_covers_target annot ->
+        | Identifier { Identifier.name = (annot, _); _ } when this#annot_covers_target annot ->
           (match require_declarator_info with
-          | Some { toplevel_pattern_annot; require_t = _ } when toplevel_pattern_annot = pat_annot
-            ->
-            let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-            this#request (Get_def_request.Type { annot; name = Some name })
+          | Some { toplevel_pattern_annot; require_t } when toplevel_pattern_annot = pat_annot ->
+            this#module_def (this#type_from_enclosing_node require_t)
           | _ -> ())
         | _ -> ()
       in
