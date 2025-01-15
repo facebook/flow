@@ -181,7 +181,12 @@ let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
         Parse_skip Skip_non_flow_file
       else
         let (ast, parse_errors) = parse_source_file ~options content file in
-        let file_sig = parse_file_sig options file docblock ast in
+        let file_sig =
+          if File_key.is_lib_file file then
+            File_sig.empty
+          else
+            parse_file_sig options file docblock ast
+        in
         let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) =
