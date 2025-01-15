@@ -160,6 +160,16 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
     method virtual private component_name_of_jsx_element
         : 'T -> (ALoc.t, 'T) Ast.JSX.element -> ALoc.t * Type.t
 
+    method private module_def_for_entire_module_related_id ~module_t ~id =
+      let (name_annot, { Ast.Identifier.name; _ }) = id in
+      if this#annot_covers_target name_annot then
+        match purpose with
+        | Get_def_types.Purpose.GoToDefinition
+        | Get_def_types.Purpose.JSDoc ->
+          this#module_def module_t
+        | Get_def_types.Purpose.FindReferences ->
+          this#own_named_def (this#loc_of_annot name_annot) name
+
     method! variable_declarator
         ~kind ((_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) as x) =
       (* If a variable declarator's initializer contains `require()`, then we want to jump
@@ -209,18 +219,10 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind = _; source; specifiers; declaration = _; comments = _ } = decl in
       (match (source, specifiers) with
-      | ( Some (source_annot, _),
-          Some (ExportBatchSpecifier (_, Some (name_annot, { Ast.Identifier.name; _ })))
-        ) ->
-        if this#annot_covers_target name_annot then (
-          match purpose with
-          | Get_def_types.Purpose.GoToDefinition
-          | Get_def_types.Purpose.JSDoc ->
-            let t = this#type_from_enclosing_node source_annot in
-            this#module_def t
-          | Get_def_types.Purpose.FindReferences ->
-            ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
-        )
+      | (Some (source_annot, _), Some (ExportBatchSpecifier (_, Some id))) ->
+        this#module_def_for_entire_module_related_id
+          ~module_t:(this#type_from_enclosing_node source_annot)
+          ~id
       | _ -> ());
       super#export_named_declaration loc decl
 
@@ -267,16 +269,10 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       );
       Base.Option.iter specifiers ~f:(function
           | ImportNamedSpecifiers _ -> ()
-          | ImportNamespaceSpecifier (_, (name_annot, { Ast.Identifier.name; _ })) ->
-            if this#annot_covers_target name_annot then (
-              match purpose with
-              | Get_def_types.Purpose.GoToDefinition
-              | Get_def_types.Purpose.JSDoc ->
-                let t = this#type_from_enclosing_node source_annot in
-                this#module_def t
-              | Get_def_types.Purpose.FindReferences ->
-                ignore @@ this#own_named_def (this#loc_of_annot name_annot) name
-            )
+          | ImportNamespaceSpecifier (_, id) ->
+            this#module_def_for_entire_module_related_id
+              ~module_t:(this#type_from_enclosing_node source_annot)
+              ~id
           );
       super#import_declaration loc decl
 
@@ -495,10 +491,12 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               | _ -> ()
             )
             properties
-        | Identifier { Identifier.name = (annot, _); _ } when this#annot_covers_target annot ->
+        | Identifier { Identifier.name = id; _ } ->
           (match require_declarator_info with
           | Some { toplevel_pattern_annot; require_t } when toplevel_pattern_annot = pat_annot ->
-            this#module_def (this#type_from_enclosing_node require_t)
+            this#module_def_for_entire_module_related_id
+              ~module_t:(this#type_from_enclosing_node require_t)
+              ~id
           | _ -> ())
         | _ -> ()
       in
