@@ -1,6 +1,9 @@
 declare module 'test_lib' {
   declare export var foo: string;
   declare export var bar: {baz: string};
+  declare export const array: Array<string>;
+  declare export const tuple: [string];
+  declare export const dict: {[string]: string};
 }
 
 declare module 'test_lib_cjs' {

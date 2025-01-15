@@ -13,6 +13,8 @@ require("Untyped_LibDeclared");
 //       ^
 
 {
+const Foo = require('test_lib');
+//     ^
 const {foo} = require('test_lib');
 //      ^
 const {foo: fooo} = require('test_lib');
@@ -29,6 +31,12 @@ const {bar: {baz}} = require('test_lib');
 //            ^
 const {bar: {baz: boz}} = require('test_lib');
 //                 ^
+const {array: [arr_e]} = require('test_lib');
+//              ^ ^
+const {tuple: [tuple_e]} = require('test_lib');
+//              ^
+const {dict: {dynamic}} = require('test_lib');
+//             ^
 }
 
 {
