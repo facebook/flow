@@ -509,11 +509,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! pattern_identifier ?kind (annot, ({ Ast.Identifier.name; comments = _ } as name_node)) =
       if kind != None && this#annot_covers_target annot then
-        if Option.is_some require_declarator_info then
-          let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
-          this#request (Get_def_request.Type { annot; name = Some name })
-        else
-          this#own_named_def (this#loc_of_annot annot) name;
+        this#own_named_def (this#loc_of_annot annot) name;
       super#pattern_identifier ?kind (annot, name_node)
 
     method! expression (annot, expr) =
