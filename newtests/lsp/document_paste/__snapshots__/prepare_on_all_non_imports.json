@@ -1,0 +1,73 @@
+{
+  "method": "flow/prepareDocumentPaste",
+  "result": {
+    "imports": [
+      {
+        "remoteName": "default",
+        "localName": "bad",
+        "importType": "ImportNamedValue",
+        "importSource": "bad",
+        "importSourceIsResolved": false
+      },
+      {
+        "remoteName": "default",
+        "localName": "React",
+        "importType": "ImportNamedValue",
+        "importSource": "react",
+        "importSourceIsResolved": false
+      },
+      {
+        "remoteName": "bar",
+        "localName": "barType",
+        "importType": "ImportNamedTypeOf",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "default",
+        "localName": "fooType",
+        "importType": "ImportNamedTypeOf",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "NST",
+        "importType": "ImportTypeOfAsNamespace",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "NS",
+        "importType": "ImportValueAsNamespace",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "bar",
+        "importType": "ImportNamedValue",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "default",
+        "localName": "foo",
+        "importType": "ImportNamedValue",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "A",
+        "localName": "B",
+        "importType": "ImportNamedType",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "A",
+        "importType": "ImportNamedType",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
+      }
+    ]
+  }
+}
