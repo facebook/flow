@@ -3382,7 +3382,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 let {
                   PartialEnvSnapshot.env_val = post_env_val;
                   heap_refinements = post_env_heap_refinements;
-                  def_loc = _;
+                  def_loc;
                 } =
                   match post_env_v with
                   | Some v -> v
@@ -3418,7 +3418,22 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     post_env_heap_refinements
                     acc
                 in
-                if Val.id_of_val pre_env_val = Val.id_of_val post_env_val then
+                let is_definitely_const_like =
+                  match def_loc with
+                  | None -> false
+                  | Some loc ->
+                    not
+                      (Invalidation_api.should_invalidate
+                         ~all:true
+                         invalidation_caches
+                         prepass_info
+                         prepass_values
+                         loc
+                      )
+                in
+                if
+                  is_definitely_const_like || Val.id_of_val pre_env_val = Val.id_of_val post_env_val
+                then
                   (acc, None)
                 else
                   (RefinementKey.lookup_of_name name :: acc, None)

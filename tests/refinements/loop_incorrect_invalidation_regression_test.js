@@ -6,7 +6,7 @@
       return;
     }
     while (true) {
-      if (f(v)) { // spurious error
+      if (f(v)) { // ok: non-null refinement is kept
         return;
       }
     }
