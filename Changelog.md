@@ -1,3 +1,23 @@
+### 0.259.0
+
+Likely to cause new Flow errors:
+* When a function without statics is passed to a place that expects inexact objects, the error will just say "function without statics is incompatible with object", instead of listing all the missing props in statics in errors. Error code might change.
+* When a non-callable object is passed to a place expecting functions, we will have a clearer message saying "non-callable object is incompatible with function" instead of the current error talking about the callable property. Some error code might change, which requires new suppressions.
+
+Notable bug fixes:
+* For errors involving unions and intersections, we will now show a list of possible causes in a sorted order: the ones that are mostly likely to be the cause will be shown first.
+
+IDE:
+* We slightly changed the go-to-definition behavior for export from statements:
+  - For `bar` in `export {foo as bar} from '...'`, we will always jump to itself
+  - For `foo` in `export {foo} from '...'` or `export {foo as bar} from '...'`, we will always jump to the name at the export, if this statement is well typed.
+  - For `foo` in `export {foo} from '...'` or `export {foo as bar} from '...'`, we will jump to itself if the statement is not well-typed.
+* Go-to-definition on intrinsic jsx elements will jump to nowhere instead of jump to itself.
+* Go-to-definition for `require('...')` expression will now jump to the default export of an ESM module if available, or the first export of an ESM module.
+
+Library Definitions:
+* Type for `React.Context` has been updated to support [React 19's context as provider model](https://react.dev/blog/2024/12/05/react-19#context-as-a-provider). Given this change, you might need additional annotations on exports. e.g.
+
 ### 0.258.1
 
 IDE:
