@@ -523,12 +523,16 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               Call.callee = (_, Identifier (_, { Identifier.name = "require"; _ }));
               arguments =
                 ( _,
-                  { ArgList.arguments = [Expression (source_annot, StringLiteral _)]; comments = _ }
+                  {
+                    ArgList.arguments =
+                      [Expression (source_annot, (StringLiteral _ | TemplateLiteral _))];
+                    comments = _;
+                  }
                 );
               _;
             }
           when this#is_legit_require source_annot ->
-          this#module_def (this#type_from_enclosing_node annot)
+          this#module_def (this#type_from_enclosing_node source_annot)
         | _ -> super#expression (annot, expr)
       else
         (* it is tempting to not recurse here, but comments are not included in
