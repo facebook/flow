@@ -40,8 +40,6 @@ class virtual ['T] searcher :
 
        val mutable found_loc_ : ALoc.t result
 
-       val mutable in_require_declarator : bool
-
        method virtual private type_from_enclosing_node : 'T -> Type.t
 
        method virtual private get_module_t : 'T -> ALoc.t Ast.StringLiteral.t -> Type.t

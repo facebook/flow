@@ -87,6 +87,11 @@ let annot_of_jsx_name =
   | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
     annot
 
+type 't require_declarator_info = {
+  toplevel_pattern_annot: 't;
+  require_t: 't;
+}
+
 class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~purpose =
   object (this)
     inherit [ALoc.t, 'T, ALoc.t, 'T] enclosing_node_mapper as super
@@ -97,7 +102,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method private is_legit_require annot = is_legit_require (this#loc_of_annot annot)
 
-    val mutable in_require_declarator = false
+    val mutable require_declarator_info = None
 
     val mutable available_private_names : ALoc.t SMap.t = SMap.empty
 
@@ -105,11 +110,11 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method found_loc = found_loc_
 
-    method private with_in_require_declarator value f =
-      let was_in_require_declarator = in_require_declarator in
-      in_require_declarator <- value;
+    method private with_require_toplevel_pattern_info ~info f =
+      let saved_require_declarator_info = require_declarator_info in
+      require_declarator_info <- info;
       let result = f () in
-      in_require_declarator <- was_in_require_declarator;
+      require_declarator_info <- saved_require_declarator_info;
       result
 
     method private on_loc_annot x = x
@@ -161,15 +166,15 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
          through it into the imported module. To do this, we set the `in_require_declarator`
          flag, which we use when we visit the id, in lieu of parent pointers. *)
       let (id_annot, _) = id in
-      let has_require =
+      let info =
         match init with
         | Some init
           when is_require ~is_legit_require:this#is_legit_require init
                && this#annot_covers_target id_annot ->
-          true
-        | _ -> false
+          Some { toplevel_pattern_annot = id_annot; require_t = fst init }
+        | _ -> None
       in
-      this#with_in_require_declarator has_require (fun () -> super#variable_declarator ~kind x)
+      this#with_require_toplevel_pattern_info ~info (fun () -> super#variable_declarator ~kind x)
 
     method! import_source source_annot lit =
       if this#annot_covers_target source_annot then begin
@@ -453,7 +458,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       (* In const {foo: bar} = require('some_module'); foo and bar should jump to prop def of foo,
          while in other cases, bar should be its own definition. *)
       let is_id_pattern_of_obj_key_in_require_declarator = function
-        | (id_annot, Identifier _) -> in_require_declarator && this#annot_covers_target id_annot
+        | (id_annot, Identifier _) ->
+          Base.Option.is_some require_declarator_info && this#annot_covers_target id_annot
         | _ -> false
       in
       let () =
@@ -489,13 +495,21 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               | _ -> ()
             )
             properties
+        | Identifier { Identifier.name = (annot, { Ast.Identifier.name; comments = _ }); _ }
+          when this#annot_covers_target annot ->
+          (match require_declarator_info with
+          | Some { toplevel_pattern_annot; require_t = _ } when toplevel_pattern_annot = pat_annot
+            ->
+            let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
+            this#request (Get_def_request.Type { annot; name = Some name })
+          | _ -> ())
         | _ -> ()
       in
       super#pattern ?kind pat
 
     method! pattern_identifier ?kind (annot, ({ Ast.Identifier.name; comments = _ } as name_node)) =
       if kind != None && this#annot_covers_target annot then
-        if in_require_declarator then
+        if Option.is_some require_declarator_info then
           let annot = (this#loc_of_annot annot, this#type_from_enclosing_node annot) in
           this#request (Get_def_request.Type { annot; name = Some name })
         else
