@@ -7699,6 +7699,23 @@ References:
             ^ [3]
 
 
+Error -------------------------------------------------------------- loop_incorrect_invalidation_regression_test.js:9:13
+
+Cannot call `f` with `v` bound to `v` because null [1] is incompatible with string [2]. [incompatible-call]
+
+   loop_incorrect_invalidation_regression_test.js:9:13
+   9|       if (f(v)) { // spurious error
+                  ^
+
+References:
+   loop_incorrect_invalidation_regression_test.js:4:29
+   4|   function test(v: string | null) {
+                                  ^^^^ [1]
+   loop_incorrect_invalidation_regression_test.js:2:25
+   2|   declare function f(v: string): boolean;
+                              ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- maybe_react.js:18:19
 
 Refined at [1]
@@ -17032,7 +17049,7 @@ References:
 
 
 
-Found 1157 errors
+Found 1158 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
