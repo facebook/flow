@@ -1,7 +1,7 @@
 component Comp() {} // error: unsupported
 
 // But fragments are still using component syntax and are not any:
-(3: React$FragmentType); // ERROR
+(3: $Exports<'react'>['Fragment']); // ERROR
 module.exports = { Comp };
 
 declare component Foo() renders Foo; // ok

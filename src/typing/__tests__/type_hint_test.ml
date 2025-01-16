@@ -233,7 +233,6 @@ let fun_t ~params ~return_t =
 
 let mk_cx ~verbose () =
   let aloc_table = lazy (ALoc.empty_table dummy_filename) in
-  let resolve_require mref = Context.MissingModule mref in
   let ccx = Context.make_ccx () in
   let metadata =
     if verbose then
@@ -241,13 +240,17 @@ let mk_cx ~verbose () =
     else
       { metadata with Context.verbose = None }
   in
-  Context.make
-    ccx
-    metadata
-    dummy_filename
-    aloc_table
-    resolve_require
-    (Merge_js.mk_builtins metadata (TypeLoader.get_master_cx ()))
+  let builtins_ref = ref (Builtins.empty ()) in
+  let resolve_require mref =
+    match Builtins.get_builtin_module_opt !builtins_ref mref with
+    | Some t -> Context.TypedModule t
+    | None -> Context.MissingModule mref
+  in
+  let cx =
+    Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ -> !builtins_ref)
+  in
+  builtins_ref := Merge_js.mk_builtins metadata (TypeLoader.get_master_cx ()) cx;
+  cx
 
 let mk_hint base_t ops =
   ops
@@ -617,7 +620,7 @@ let eval_hint_tests =
     "jsx_fragment_ref"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"void"
-          "declare var Fragment: React$FragmentType; Fragment"
+          "import {Fragment} from 'react'; Fragment"
           [Decomp_ObjProp "children"; Decomp_JsxProps];
   ]
 
