@@ -11,7 +11,6 @@
 
 open Loc_collections
 module EnvMap = Env_api.EnvMap
-module EnvSet = Env_api.EnvSet
 
 type type_entry =
   | TypeEntry of {
