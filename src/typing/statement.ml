@@ -2321,15 +2321,10 @@ module Make
         (match key with
         | DefT (_, StrGeneralT _)
         | DefT (_, StrT_UNSOUND _)
+        | DefT (_, NumGeneralT _)
         | AnyT _ ->
           ObjectExpressionAcc.ComputedProp.NonLiteralKey
             { key_loc; key; value; reason_obj; named_set_opt = None }
-        | DefT (reason_key, NumGeneralT _) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
-          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
         | DefT (reason_key, NumT_UNSOUND (_, (value, _))) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           Flow_js_utils.add_output

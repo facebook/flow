@@ -146,7 +146,6 @@ end
 module InvalidObjKey = struct
   type t =
     | Other
-    | NumberNonLit
     | NumberNonInt
     | NumberTooLarge
     | NumberTooSmall
@@ -163,7 +162,6 @@ module InvalidObjKey = struct
 
   let str_of_kind = function
     | Other -> "other"
-    | NumberNonLit -> "number not literal"
     | NumberNonInt -> "number non-int"
     | NumberTooLarge -> "number too large"
     | NumberTooSmall -> "number too small"

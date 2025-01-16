@@ -68,8 +68,7 @@ Unsupported key in object type. Number literals must not be larger than `Number.
 
 Error ---------------------------------------------------------------------------------------- non_literal_number.js:5:5
 
-Cannot access object with computed property using number [1]. Only number literals are allowed, not `number` in general.
-[invalid-computed-prop]
+Cannot access object with computed property using number [1]. [invalid-computed-prop]
 
    non_literal_number.js:5:5
    5|   o[n]; // ERROR
@@ -79,21 +78,6 @@ References:
    non_literal_number.js:4:20
    4|   declare const n: number;
                          ^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------- non_literal_number.js:12:6
-
-Cannot use number [1] to assign a computed property. Only number literals are allowed, not `number` in general.
-[invalid-computed-prop]
-
-   non_literal_number.js:12:6
-   12|     [n]: 1, // ERROR
-            ^
-
-References:
-   non_literal_number.js:10:20
-   10|   declare const n: number;
-                          ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
@@ -702,4 +686,4 @@ References:
 
 
 
-Found 45 errors
+Found 44 errors

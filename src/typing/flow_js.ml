@@ -5312,9 +5312,6 @@ struct
                  suggestion = None;
                }
             )
-        | (DefT (reason, NumGeneralT _), WriteComputedObjPropCheckT { reason_key; _ }) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
-          add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
         | (DefT (reason, NumT_UNSOUND (_, (value, _))), WriteComputedObjPropCheckT { reason_key; _ })
           ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in

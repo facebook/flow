@@ -2451,19 +2451,13 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
-        | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
-        | GenericT { bound = DefT (_, NumGeneralT _); _ }
-        | DefT (_, NumGeneralT _) ->
-          let reason_prop = reason_of_t elem_t in
-          let kind = Flow_intermediate_error_types.InvalidObjKey.NumberNonLit in
-          add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
-          F.error_type cx trace reason_op
         | GenericT { bound = DefT (_, NumT_UNSOUND (_, (value, _))); _ }
         | DefT (_, NumT_UNSOUND (_, (value, _))) ->
           let reason_prop = reason_of_t elem_t in
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
           F.error_type cx trace reason_op
+        | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
         | _ ->
           let reason_prop = reason_of_t elem_t in
           add_output

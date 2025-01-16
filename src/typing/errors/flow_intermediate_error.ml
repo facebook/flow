@@ -1057,8 +1057,6 @@ let to_printable_error :
   let msg_of_invalid_obj_key_kind kind =
     match kind with
     | InvalidObjKey.Other -> None
-    | InvalidObjKey.NumberNonLit ->
-      Some [text " Only number literals are allowed, not "; code "number"; text " in general."]
     | InvalidObjKey.NumberNonInt -> Some [text " Only integer-like number literals are allowed."]
     | InvalidObjKey.NumberTooLarge ->
       Some
