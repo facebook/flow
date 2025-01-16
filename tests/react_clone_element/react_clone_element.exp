@@ -11,41 +11,41 @@ Cannot call `React.cloneElement` because: [incompatible-call]
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:266:6
+   <BUILTINS>/react.js:264:6
              v-----------------------------------------------
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-   267|     element: E,
-   268|     props?: ?Partial<$JSXIntrinsics[C]['props']>,
-   269|     ...children: $ReadOnlyArray<React$Node>
-   270|   ) => E)
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   265|     element: E,
+   266|     props?: ?Partial<$JSXIntrinsics[C]['props']>,
+   267|     ...children: $ReadOnlyArray<React$Node>
+   268|   ) => E)
           -----^ [1]
    test.js:19:1
     19| React.cloneElement(); // Error: Needs a minimum of two arguments.
         ^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:271:6
+   <BUILTINS>/react.js:269:6
              v------------------------------------------------------------------
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   272|     element: E,
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   274|   ) => E)
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   270|     element: E,
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   272|   ) => E)
           -----^ [3]
-   <BUILTINS>/react.js:275:6
+   <BUILTINS>/react.js:273:6
              v------------------------------------------------------------------
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   276|     element: E,
-   277|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   278|     children: NoInfer<Props>['children']
-   279|   ) => E)
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   274|     element: E,
+   275|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   276|     children: NoInfer<Props>['children']
+   277|   ) => E)
           -----^ [4]
-   <BUILTINS>/react.js:280:6
+   <BUILTINS>/react.js:278:6
              v------------------------------------------------------------------
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   281|     element: E,
-   282|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   283|     firstChild: NoInfer<Props>['children'][0],
-   284|     secondChild: NoInfer<Props>['children'][1],
-   285|     ...restChildren: NoInfer<Props>['children'] extends [+first: mixed, +second: mixed, ...infer Rest] ? Rest : NoInfer<Props>['children']
-   286|   ) => E);
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   279|     element: E,
+   280|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   281|     firstChild: NoInfer<Props>['children'][0],
+   282|     secondChild: NoInfer<Props>['children'][1],
+   283|     ...restChildren: NoInfer<Props>['children'] extends [+first: mixed, +second: mixed, ...infer Rest] ? Rest : NoInfer<Props>['children']
+   284|   ) => E);
           -----^ [5]
 
 
@@ -65,17 +65,17 @@ References:
    test.js:20:20
     20| React.cloneElement('nope'); // Error: Not a valid element type.
                            ^^^^^^ [1]
-   <BUILTINS>/react.js:266:36
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:36
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:271:48
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:48
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:275:48
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:48
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:280:48
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:48
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -95,17 +95,17 @@ References:
    test.js:21:20
     21| React.cloneElement({ type: any }); // Error: Not a valid element type.
                            ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:36
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:36
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:271:48
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:48
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:275:48
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:48
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:280:48
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:48
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -150,8 +150,8 @@ References:
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:273:32
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   <BUILTINS>/react.js:271:32
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:31:23
     31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
@@ -262,12 +262,12 @@ References:
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:271:6
+   <BUILTINS>/react.js:269:6
              v------------------------------------------------------------------
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   272|     element: E,
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   274|   ) => E)
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   270|     element: E,
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   272|   ) => E)
           -----^ [4]
 
 
@@ -285,18 +285,18 @@ References:
    test.js:15:45
     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                     ^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:10
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:10
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:271:6
+   <BUILTINS>/react.js:269:6
              v------------------------------------------------------------------
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   272|     element: E,
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   274|   ) => E)
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   270|     element: E,
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   272|   ) => E)
           -----^ [4]
 
 
@@ -314,18 +314,18 @@ References:
    test.js:15:45
     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                     ^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:10
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:10
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:271:6
+   <BUILTINS>/react.js:269:6
              v------------------------------------------------------------------
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-   272|     element: E,
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-   274|   ) => E)
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   270|     element: E,
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   272|   ) => E)
           -----^ [4]
 
 
@@ -399,8 +399,8 @@ References:
    test.js:16:45
     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                     ^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:10
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:10
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -427,8 +427,8 @@ References:
    test.js:16:45
     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                     ^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:10
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:10
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -489,8 +489,8 @@ References:
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:273:32
-   273|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+   <BUILTINS>/react.js:271:32
+   271|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:76:27
     76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
@@ -513,20 +513,20 @@ References:
    <BUILTINS>/react.js:181:49
    181| declare type React$MixedElement = React$Element<React$ElementType>;
                                                         ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:10
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:10
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:271:17
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:17
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:275:17
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:17
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/react.js:280:17
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:17
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
@@ -552,14 +552,14 @@ References:
    <BUILTINS>/react.js:150:36
    150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:271:17
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:17
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:275:17
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:17
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/react.js:280:17
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:17
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
@@ -579,17 +579,17 @@ References:
    test.js:98:21
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:36
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:36
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:271:48
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:48
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:275:48
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:48
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:280:48
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:48
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -609,17 +609,17 @@ References:
    test.js:98:21
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:266:36
-   266|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   <BUILTINS>/react.js:264:36
+   264|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:271:48
-   271|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:269:48
+   269|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:275:48
-   275|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:273:48
+   273|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:280:48
-   280|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+   <BUILTINS>/react.js:278:48
+   278|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
                                                        ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
