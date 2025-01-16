@@ -32,6 +32,10 @@ class imported_def_collector ~scope ~ranges =
     method! identifier ((loc, _) as id) =
       this#collect_relevant_def_loc_of_imported_identifier loc;
       id
+
+    method! jsx_identifier ((loc, _) as id) =
+      this#collect_relevant_def_loc_of_imported_identifier loc;
+      id
   end
 
 class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =

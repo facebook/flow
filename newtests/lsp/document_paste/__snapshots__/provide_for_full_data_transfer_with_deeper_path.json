@@ -105,6 +105,19 @@
               "character": 0
             }
           },
+          "newText": "import { Foo } from \"../import_source\";\n"
+        },
+        {
+          "range": {
+            "start": {
+              "line": 1,
+              "character": 0
+            },
+            "end": {
+              "line": 1,
+              "character": 0
+            }
+          },
           "newText": "import { bar } from \"../import_source\";\n\n"
         },
         {
