@@ -1,3 +1,8 @@
+### 0.259.1
+
+Notable bug fixes:
+* Fixed a bug that causes experimental auto-import-on-paste to miss imports for component names used in jsx.
+
 ### 0.259.0
 
 Likely to cause new Flow errors:
