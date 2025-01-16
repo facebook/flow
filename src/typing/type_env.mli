@@ -92,6 +92,8 @@ val is_global_var : Context.t -> ALoc.t -> bool
 
 val get_class_entries : Context.t -> Type.class_binding list
 
+val with_class_stack : Context.t -> ALoc.t list -> f:(unit -> 'a) -> 'a
+
 val has_hint : Context.t -> ALoc.t -> bool
 
 val get_hint : Context.t -> ALoc.t -> Type.lazy_hint_t

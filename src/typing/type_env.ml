@@ -29,6 +29,11 @@ let get_class_entries cx =
     ~init:[]
     class_stack
 
+let with_class_stack cx class_stack ~f =
+  let env = Context.environment cx in
+  Context.set_environment cx { env with Loc_env.class_stack };
+  Exception.protect ~f ~finally:(fun () -> Context.set_environment cx env)
+
 let has_hint cx loc =
   if Context.typing_mode cx <> Context.CheckingMode then
     false

@@ -205,3 +205,24 @@ function havoc_ok_new_var(x: mixed): x is B {
   y();
   return x instanceof B; // okay local (to 'y') 'x' is written to
 }
+
+class Private_property_1 {
+  #prop: (value: mixed) => implies value is number;
+
+  test1(value: mixed): implies value is string { // error number ~> string on predicate
+    return this.#prop(value); // no prop-missing error
+  }
+
+  test2(value: mixed): implies value is number { // okay
+    return this.#prop(value); // no prop-missing error
+  }
+}
+
+class Private_property_2 {
+  remote: Private_property_1;
+  #prop: (value: mixed) => implies value is number; // required to prevent parse error below
+
+  test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+    return remote.#prop(value); // error prop-missing
+  }
+}

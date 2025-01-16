@@ -228,7 +228,8 @@ module type S = sig
     (Loc_collections.ALocSet.t option * type_guard_consistency_entry list) L.LMap.t
 
   type pred_func_info =
-    (L.t, L.t) Ast.Expression.t (* Call exp *)
+    L.t list (* class stack *)
+    * (L.t, L.t) Ast.Expression.t (* Call exp *)
     * (L.t, L.t) Ast.Expression.t (* Callee *)
     * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
     * (L.t, L.t) Ast.Expression.ArgList.t
@@ -543,7 +544,8 @@ module Make
     (Loc_collections.ALocSet.t option * type_guard_consistency_entry list) L.LMap.t
 
   type pred_func_info =
-    (L.t, L.t) Ast.Expression.t (* Call exp *)
+    L.t list (* class stack *)
+    * (L.t, L.t) Ast.Expression.t (* Call exp *)
     * (L.t, L.t) Ast.Expression.t (* Callee *)
     * (L.t, L.t) Ast.Expression.CallTypeArgs.t option
     * (L.t, L.t) Ast.Expression.ArgList.t

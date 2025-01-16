@@ -1106,6 +1106,86 @@ References:
           ^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- consistency.js:212:24
+
+Inconsistent type guard declaration because number [1] is incompatible with string [2]. The type of `value` [3] refined
+with the predicate encoded in return expression `this.#prop(...)` [4] needs to be compatible with the guard type
+string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-type-guard]
+
+   consistency.js:212:24
+   212|   test1(value: mixed): implies value is string { // error number ~> string on predicate
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:210:45
+   210|   #prop: (value: mixed) => implies value is number;
+                                                    ^^^^^^ [1]
+   consistency.js:212:41
+   212|   test1(value: mixed): implies value is string { // error number ~> string on predicate
+                                                ^^^^^^ [2]
+   consistency.js:212:9
+   212|   test1(value: mixed): implies value is string { // error number ~> string on predicate
+                ^^^^^ [3]
+   consistency.js:213:12
+   213|     return this.#prop(value); // no prop-missing error
+                   ^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:225:51
+
+Inconsistent type guard declaration because mixed [1] is incompatible with string [2]. The type of `value` [3] refined
+with the predicate encoded in return expression `remote.#prop(...)` [4] needs to be compatible with the guard type
+string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-type-guard]
+
+   consistency.js:225:51
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   consistency.js:225:15
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                      ^^^^^ [1]
+   consistency.js:225:68
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                                                           ^^^^^^ [2]
+   consistency.js:225:8
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+               ^^^^^ [3]
+   consistency.js:226:12
+   226|     return remote.#prop(value); // error prop-missing
+                   ^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:226:12
+
+Cannot get `remote.#prop` because property `#prop` is missing in `Private_property_1` [1]. [prop-missing]
+
+   consistency.js:226:12
+   226|     return remote.#prop(value); // error prop-missing
+                   ^^^^^^^^^^^^
+
+References:
+   consistency.js:225:30
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                     ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- consistency.js:226:19
+
+Cannot call `remote.#prop` because property `#prop` is missing in `Private_property_1` [1]. [prop-missing]
+
+   consistency.js:226:19
+   226|     return remote.#prop(value); // error prop-missing
+                          ^^^^^
+
+References:
+   consistency.js:225:30
+   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                     ^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
 
 Cannot return boolean because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
@@ -2833,7 +2913,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 158 errors
+Found 162 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

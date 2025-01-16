@@ -1070,6 +1070,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
+      val mutable class_stack = []
+
       val mutable env_state : name_resolver_state =
         let (env, jsx_base_name) = initial_env cx ~is_lib exclude_syms unbound_names program_loc in
         {
@@ -1448,7 +1450,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | Some key ->
               let pred = LatentR { func; targs; arguments; index } in
               this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) pred;
-              this#add_pred_func_info callee_loc (call_exp, func, targs, arguments))
+              this#add_pred_func_info callee_loc (class_stack, call_exp, func, targs, arguments))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -4346,9 +4348,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~add_output:(FlowAPIUtils.add_output cx)
           loc
           cls;
+        let class_stack_old = class_stack in
+        class_stack <- loc :: class_stack;
         (* Give class body the location of the entire class,
            so class body visitor can use it as the def loc of super. *)
         ignore @@ super#class_ loc { cls with body = (loc, snd cls.body) };
+        class_stack <- class_stack_old;
         cls
 
       method! class_identifier_opt ~class_loc:loc id =
