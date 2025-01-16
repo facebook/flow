@@ -2,7 +2,7 @@
 
 import type {A} from './import_source';
 import foo, {type A as B} from './import_source';
-import {bar} from './import_source';
+import {bar, Foo} from './import_source';
 import * as NS from './import_source';
 import typeof * as NST from './import_source';
 import typeof fooType from './import_source';
@@ -21,4 +21,5 @@ bad;
 
 function nested(b: barType) {
   b as barType;
+  <Foo />;
 }

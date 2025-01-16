@@ -8,6 +8,12 @@
         "importType": "ImportNamedTypeOf",
         "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
         "importSourceIsResolved": true
+      },
+      {
+        "remoteName": "Foo",
+        "importType": "ImportNamedValue",
+        "importSource": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/import_source.js",
+        "importSourceIsResolved": true
       }
     ]
   }
