@@ -5625,8 +5625,7 @@ module Make
     let fragment_t =
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
-        let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) expr_loc in
-        Flow.get_builtin_type cx reason "React$FragmentType"
+        Import_export.get_implicitly_imported_react_fragment_type cx expr_loc
       | Options.ReactRuntimeClassic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in

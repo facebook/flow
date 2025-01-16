@@ -113,6 +113,11 @@ and 'loc t' =
       name: string;
       potential_generator: string option;
     }
+  | EExpectedModuleLookupFailed of {
+      loc: 'loc;
+      name: string;
+      expected_module_purpose: expected_module_purpose;
+    }
   | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
   | EPlatformSpecificImplementationModuleLookupFailed of {
       loc: 'loc;
@@ -916,6 +921,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBuiltinNameLookupFailed { loc; name } -> EBuiltinNameLookupFailed { loc = f loc; name }
   | EBuiltinModuleLookupFailed { loc; name; potential_generator } ->
     EBuiltinModuleLookupFailed { loc = f loc; name; potential_generator }
+  | EExpectedModuleLookupFailed { loc; name; expected_module_purpose } ->
+    EExpectedModuleLookupFailed { loc = f loc; name; expected_module_purpose }
   | EPrivateLookupFailed ((r1, r2), x, op) ->
     EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; name } ->
@@ -1594,6 +1601,7 @@ let util_use_op_of_msg nope util = function
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
   | EBuiltinNameLookupFailed _
   | EBuiltinModuleLookupFailed _
+  | EExpectedModuleLookupFailed _
   | EPlatformSpecificImplementationModuleLookupFailed _
   | EComparison (_, _)
   | ENonStrictEqualityComparison _
@@ -1944,6 +1952,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | EBuiltinNameLookupFailed { loc; _ } -> Some loc
   | EBuiltinModuleLookupFailed { loc; _ } -> Some loc
+  | EExpectedModuleLookupFailed { loc; _ } -> Some loc
   | ECannotCallReactComponent { reason } -> Some (loc_of_reason reason)
   | EPlatformSpecificImplementationModuleLookupFailed { loc; _ } -> Some loc
   | EDuplicateClassMember { loc; _ } -> Some loc
@@ -2313,6 +2322,8 @@ let friendly_message_of_msg = function
   | EBuiltinNameLookupFailed { loc = _; name } -> Normal (MessageCannotResolveBuiltinName name)
   | EBuiltinModuleLookupFailed { loc = _; name; potential_generator } ->
     Normal (MessageCannotResolveBuiltinModule { name; potential_generator })
+  | EExpectedModuleLookupFailed { loc = _; name; expected_module_purpose } ->
+    Normal (MessageCannotResolveExpectedModule { name; expected_module_purpose })
   | EPrivateLookupFailed (reasons, x, use_op) ->
     PropMissing
       {
@@ -3025,6 +3036,7 @@ let error_code_of_message err : error_code option =
   end
   | EBuiltinNameLookupFailed _ -> Some CannotResolveName
   | EBuiltinModuleLookupFailed _ -> Some CannotResolveModule
+  | EExpectedModuleLookupFailed _ -> Some CannotResolveModule
   | EPlatformSpecificImplementationModuleLookupFailed _ -> Some CannotResolveModule
   | ECallTypeArity _ -> Some NonpolymorphicTypeArg
   | ECannotDelete _ -> Some CannotDelete

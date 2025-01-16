@@ -84,6 +84,8 @@ module Import_export : sig
     legacy_interop:bool ->
     Type.t ->
     ALoc.t option * Type.t
+
+  val get_implicitly_imported_react_fragment_type : Context.t -> ALoc.t -> Type.t
 end
 
 module Operators : sig

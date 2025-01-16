@@ -231,6 +231,12 @@ class requires_calculator ~file_key ~ast ~opts =
       this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix });
       super#module_ref_literal loc lit
 
+    method! jsx_fragment loc expr =
+      (* Currently in statement.ml, we unconditionally use the React typing for jsx fragment without
+       * any customization ability. *)
+      this#add_require (ImportSynthetic { source = "react" });
+      super#jsx_fragment loc expr
+
     method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
       let { tag; quasi; comments = _ } = expr in

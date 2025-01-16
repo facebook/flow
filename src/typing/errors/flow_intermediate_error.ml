@@ -1893,6 +1893,13 @@ let to_printable_error :
         | None -> []
       in
       [text "Cannot resolve module "; code name; text "."] @ potential_generator_features
+    | MessageCannotResolveExpectedModule { name; expected_module_purpose } ->
+      let explanation =
+        match expected_module_purpose with
+        | ReactModuleForJSXFragment ->
+          [text "The "; code "react"; text " module must exist to type check JSX fragments."]
+      in
+      [text "Cannot resolve module "; code name; text ". "] @ explanation
     | MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason } ->
       [
         text "Flow cannot determine a type for ";

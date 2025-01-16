@@ -2723,7 +2723,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           (Decomp_ObjProp "children")
           (decompose_hints
              (Decomp_FuncParam ([None], 0, None))
-             [Hint_t (BuiltinType "React$FragmentType", ExpectedTypeHint)]
+             [Hint_t (ReactFragmentType, ExpectedTypeHint)]
           )
       in
       this#visit_jsx_children ~hints frag_children;

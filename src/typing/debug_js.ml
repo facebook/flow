@@ -1280,6 +1280,8 @@ let dump_error_message =
         (match potential_generator with
         | Some generator -> spf "Some(%s)" generator
         | None -> "None")
+    | EExpectedModuleLookupFailed { loc; name; expected_module_purpose = _ } ->
+      spf "EExpectedModuleLookupFailed { loc = %s; name = %S }" (string_of_aloc loc) name
     | EPrivateLookupFailed ((reason1, reason2), x, use_op) ->
       spf
         "EPrivateLookupFailed ((%s, %s), %s, %s)"

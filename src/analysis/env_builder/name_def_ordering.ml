@@ -786,6 +786,7 @@ struct
         | WriteLocHint (kind, loc) ->
           depends_of_node (fun visitor -> visitor#add ~why:loc (kind, loc)) state
         | StringLiteralType _ -> state
+        | ReactFragmentType -> state
         | BuiltinType _ -> state
         | AnyErrorHint _ -> state
         | ComposedArrayPatternHint (_, elements) ->

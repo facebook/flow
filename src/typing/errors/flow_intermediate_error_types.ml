@@ -33,6 +33,8 @@ type exactness_error_kind =
   | UnexpectedIndexer
   | UnexpectedInexact
 
+type expected_module_purpose = ReactModuleForJSXFragment
+
 type 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
   second_reason: 'loc virtual_reason option;
@@ -447,6 +449,10 @@ type 'loc message =
   | MessageCannotResolveBuiltinModule of {
       name: string;
       potential_generator: string option;
+    }
+  | MessageCannotResolveExpectedModule of {
+      name: string;
+      expected_module_purpose: expected_module_purpose;
     }
   | MessageCannotSpreadDueToPotentialOverwrite of {
       spread_reason: 'loc virtual_reason;

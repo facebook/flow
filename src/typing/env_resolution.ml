@@ -207,6 +207,7 @@ let resolve_hint cx loc hint =
     | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
       DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
+    | ReactFragmentType -> Import_export.get_implicitly_imported_react_fragment_type cx loc
     | BuiltinType name ->
       let reason = mk_reason (RType (OrdinaryName name)) loc in
       Flow_js.get_builtin_type cx reason name

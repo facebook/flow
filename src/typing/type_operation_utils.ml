@@ -286,6 +286,25 @@ module Import_export = struct
       in
       (Some def_loc, t)
     | Error (lreason, any_source) -> (None, AnyT (lreason, any_source))
+
+  let get_implicitly_imported_react_fragment_type cx loc =
+    let source_module_t =
+      Flow_js_utils.get_implicitly_imported_module
+        cx
+        "react"
+        ~expected_module_purpose:Flow_intermediate_error_types.ReactModuleForJSXFragment
+        (mk_reason (RModule "react") loc)
+    in
+    let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) loc in
+    get_imported_t
+      cx
+      ~import_reason:reason
+      ~module_name:"react"
+      ~source_module_t
+      ~import_kind:ImportValue
+      ~remote_name:"Fragment"
+      ~local_name:"Fragment"
+    |> snd
 end
 
 module Operators = struct
