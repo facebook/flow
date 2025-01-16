@@ -8144,7 +8144,7 @@ module Make
           let () =
             if Context.typing_mode cx = Context.CheckingMode then
               match kind with
-              | Func.TypeGuard p -> Type_guard.predicate_checks cx p params
+              | Func.TypeGuard tg -> Type_guard.check_type_guard cx params tg
               | _ -> ()
           in
           {

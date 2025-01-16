@@ -104,7 +104,7 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
             )
     )
 
-let predicate_checks cx pred params =
+let check_type_guard cx params (TypeGuard { reason; one_sided; param_name; type_guard }) =
   let err_with_desc desc type_guard_reason binding_loc =
     let binding_reason = mk_reason desc binding_loc in
     Flow_js.add_output
@@ -118,18 +118,10 @@ let predicate_checks cx pred params =
     | (loc, Rest) -> err_with_desc (RRestParameter (Some name)) expr_reason loc
     | (loc, Select _) -> err_with_desc (RPatternParameter name) expr_reason loc
   in
-  let type_guard_based_checks reason one_sided tg_param type_guard binding_opt =
-    let (name_loc, name) = tg_param in
-    let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
-    let open Pattern_helper in
-    match binding_opt with
-    | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
-    | Some (param_loc, Root) ->
-      check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reason type_guard
-    | Some binding -> error_on_non_root_binding name tg_reason binding
-  in
-  match pred with
-  | TypeGuard { reason; one_sided; param_name; type_guard } ->
-    let bindings = Pattern_helper.bindings_of_params params in
-    let matching_binding = SMap.find_opt (snd param_name) bindings in
-    type_guard_based_checks reason one_sided param_name type_guard matching_binding
+  let (name_loc, name) = param_name in
+  let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
+  match SMap.find_opt name (Pattern_helper.bindings_of_params params) with
+  | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
+  | Some (param_loc, Pattern_helper.Root) ->
+    check_type_guard_consistency cx reason one_sided param_loc param_name tg_reason type_guard
+  | Some binding -> error_on_non_root_binding name tg_reason binding

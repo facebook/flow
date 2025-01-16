@@ -5,5 +5,5 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val predicate_checks :
-  Context.t -> Type.type_guard -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> unit
+val check_type_guard :
+  Context.t -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> Type.type_guard -> unit
