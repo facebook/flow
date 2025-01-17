@@ -675,7 +675,6 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
-    | CJSExtractNamedExportsT _ -> p t
     | ConstructorT _ -> p t
     | CopyNamedExportsT _ -> p t
     | CopyTypeExportsT _ -> p t

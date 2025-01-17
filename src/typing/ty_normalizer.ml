@@ -540,7 +540,6 @@ module Make (I : INPUT) : S = struct
           uses_t_aux (t :: acc) rest
         | T.ReposLowerT { use_t = u; _ } :: rest -> uses_t_aux acc (u :: rest)
         (* skip these *)
-        | T.CJSExtractNamedExportsT _ :: rest -> uses_t_aux acc rest
         | u :: _ -> return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
       in
       (fun uses -> uses_t_aux [] uses)

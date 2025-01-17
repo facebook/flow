@@ -47,7 +47,6 @@ and reason_of_use_t = function
   | BindT (_, reason, _) -> reason
   | CallElemT (_, reason, _, _, _) -> reason
   | CallT { reason; _ } -> reason
-  | CJSExtractNamedExportsT (reason, _, _) -> reason
   | ConstructorT { reason; _ } -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
@@ -254,7 +253,6 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
-  | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
   | ExportNamedT

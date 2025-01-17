@@ -399,7 +399,9 @@ let mk_commonjs_module_t cx module_reason module_is_strict module_available_plat
   let local_module =
     { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
-  ConsGen.cjs_extract_named_exports cx module_reason local_module t
+  ConsGen.lazy_cjs_extract_named_exports cx module_reason local_module t
+  |> Lazy.map (fun module_type -> ModuleT module_type)
+  |> ConsGen.mk_sig_tvar cx module_reason
 
 let merge_exports =
   let merge_star file (loc, index) =

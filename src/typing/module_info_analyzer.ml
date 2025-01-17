@@ -465,22 +465,21 @@ let mk_module_t =
         has_every_named_export = false;
       }
     in
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
-        Flow_js.flow
-          cx
-          ( export_t,
-            CJSExtractNamedExportsT
-              ( reason,
-                {
-                  module_reason = reason_exports_module;
-                  module_export_types;
-                  module_is_strict = Context.is_strict cx;
-                  module_available_platforms = Context.available_platforms cx;
-                },
-                t
-              )
-          )
-    )
+    ModuleT
+      (let concretize = Flow_js.singleton_concrete_type_for_cjs_extract_named_exports cx reason in
+       Flow_js_utils.CJSExtractNamedExportsTKit.on_type
+         cx
+         ~concretize
+         ( reason,
+           {
+             module_reason = reason_exports_module;
+             module_export_types;
+             module_is_strict = Context.is_strict cx;
+             module_available_platforms = Context.available_platforms cx;
+           }
+         )
+         export_t
+      )
   in
   let copy_star_exports cx reason exports module_t =
     let copy_named_exports module_t (loc, from_ns) =

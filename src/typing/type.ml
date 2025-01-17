@@ -734,13 +734,6 @@ module rec TypeTerm : sig
     (* Element access *)
     | ElemT of use_op * reason * t * elem_action
     (* Module export handling *)
-    | CJSExtractNamedExportsT of
-        reason
-        * (* local ModuleT *)
-          moduletype
-        * (* is_strict *)
-          (* 't_out' to receive the resolved ModuleT *)
-          t_out
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
     | ExportNamedT of {
@@ -1665,6 +1658,7 @@ module rec TypeTerm : sig
 
   and concretization_kind =
     | ConcretizeForImportsExports
+    | ConcretizeForCJSExtractNamedExports
     (* The purpose of this utility is to concretize a resolved type for the purpose
      * of type inspection. The goal here is to simplify types like EvalT, OpenT,
      * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
@@ -3353,6 +3347,7 @@ end
 module AConstraint = struct
   type op =
     | Annot_ConcretizeForImportsExports of Reason.t * (TypeTerm.t -> TypeTerm.t)
+    | Annot_ConcretizeForCJSExtractNamedExports of Reason.t
     | Annot_ConcretizeForInspection of Reason.t * TypeCollector.t
     (* Imports *)
     | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
@@ -3374,7 +3369,6 @@ module AConstraint = struct
         legacy_interop: bool;
       }
     (* Exports *)
-    | Annot_CJSExtractNamedExportsT of Reason.t * TypeTerm.moduletype
     | Annot_ExportNamedT of {
         reason: Reason.t;
         value_exports_tmap: TypeTerm.named_symbol NameUtils.Map.t;
@@ -3497,13 +3491,13 @@ module AConstraint = struct
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
     | Annot_ConcretizeForImportsExports _ -> "Annot_ConcretizeForImportsExports"
+    | Annot_ConcretizeForCJSExtractNamedExports _ -> "Annot_ConcretizeForCJSExtractNamedExports"
     | Annot_ConcretizeForInspection _ -> "Annot_ConcretizeForInspection"
     | Annot_CJSRequireT _ -> "Annot_CJSRequireT"
     | Annot_ImportTypeofT _ -> "Annot_ImportTypeofT"
     | Annot_ImportNamedT _ -> "Annot_ImportNamedT"
     | Annot_ImportDefaultT _ -> "Annot_ImportDefaultT"
     | Annot_ImportModuleNsT _ -> "Annot_ImportModuleNsT"
-    | Annot_CJSExtractNamedExportsT _ -> "Annot_CJSExtractNamedExportsT"
     | Annot_ExportNamedT _ -> "Annot_ExportNamedT"
     | Annot_ExportTypeT _ -> "Annot_ExportTypeT"
     | Annot_AssertExportIsTypeT _ -> "Annot_AssertExportIsTypeT"
@@ -3530,6 +3524,7 @@ module AConstraint = struct
 
   let reason_of_op = function
     | Annot_ConcretizeForImportsExports (r, _)
+    | Annot_ConcretizeForCJSExtractNamedExports r
     | Annot_ConcretizeForInspection (r, _)
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
@@ -3539,7 +3534,6 @@ module AConstraint = struct
     | Annot_ImportNamedT (r, _, _, _, _)
     | Annot_ImportDefaultT (r, _, _, _)
     | Annot_ImportModuleNsT (r, _, _)
-    | Annot_CJSExtractNamedExportsT (r, _)
     | Annot_ExportNamedT { reason = r; _ }
     | Annot_ExportTypeT { reason = r; _ }
     | Annot_AssertExportIsTypeT (r, _)
@@ -3578,13 +3572,13 @@ module AConstraint = struct
     | Annot_ThisSpecializeT _
     | Annot_UseT_TypeT _
     | Annot_ConcretizeForImportsExports _
+    | Annot_ConcretizeForCJSExtractNamedExports _
     | Annot_ConcretizeForInspection _
     | Annot_CJSRequireT _
     | Annot_ImportTypeofT _
     | Annot_ImportNamedT _
     | Annot_ImportDefaultT _
     | Annot_ImportModuleNsT _
-    | Annot_CJSExtractNamedExportsT _
     | Annot_ExportNamedT _
     | Annot_ExportTypeT _
     | Annot_AssertExportIsTypeT _
@@ -4178,7 +4172,6 @@ let string_of_use_ctor = function
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"
   | CallT _ -> "CallT"
-  | CJSExtractNamedExportsT _ -> "CJSExtractNamedExportsT"
   | ConstructorT _ -> "ConstructorT"
   | CopyNamedExportsT _ -> "CopyNamedExportsT"
   | CopyTypeExportsT _ -> "CopyTypeExportsT"
@@ -4206,6 +4199,7 @@ let string_of_use_ctor = function
       "ConcretizeT %s"
       (match kind with
       | ConcretizeForImportsExports -> "ConcretizeForImportsExports"
+      | ConcretizeForCJSExtractNamedExports -> "ConcretizeForCJSExtractNamedExports"
       | ConcretizeForInspection -> "ConcretizeForInspection"
       | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"

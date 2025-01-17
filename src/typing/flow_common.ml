@@ -315,6 +315,9 @@ module type S = sig
   val possible_concrete_types_for_sentinel_prop_test :
     Context.t -> Reason.reason -> Type.t -> Type.t list
 
+  val singleton_concrete_type_for_cjs_extract_named_exports :
+    Context.t -> Reason.reason -> Type.t -> Type.t
+
   val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t
 
   val possible_concrete_types_for_computed_props :

@@ -144,7 +144,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | HasOwnPropT _ -> ()
   | GetValuesT (_, t) -> resolve t
   | ElemT (_, _, _, action) -> resolve_elem_action action
-  | CJSExtractNamedExportsT (_, _, t)
   | CopyNamedExportsT (_, _, t)
   | CopyTypeExportsT (_, _, t) ->
     resolve t

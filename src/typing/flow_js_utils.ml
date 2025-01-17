@@ -1417,8 +1417,6 @@ module type Import_export_helper_sig = sig
     Type.t ->
     Type.t
 
-  val cjs_extract_named_exports : Context.t -> Reason.t * Type.moduletype -> Type.t -> Type.t
-
   val return : Context.t -> Type.t -> r
 end
 
@@ -2048,34 +2046,35 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
       F.return cx target_module_t
 end
 
-module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx (reason, local_module) = function
+module CJSExtractNamedExportsTKit = struct
+  let rec on_type cx ~concretize (reason, local_module) t =
+    match concretize t with
     | NamespaceT { namespace_symbol = _; values_type; types_tmap } ->
       (* Copy props from the values part *)
-      let module_t = F.cjs_extract_named_exports cx (reason, local_module) values_type in
+      let module_type = on_type cx ~concretize (reason, local_module) values_type in
       (* Copy type exports *)
-      F.export_named
+      ExportNamedTKit.mod_ModuleT
         cx
-        ( reason,
-          NameUtils.Map.empty,
+        ( NameUtils.Map.empty,
           Properties.extract_named_exports (Context.find_props cx types_tmap),
           DirectExport
         )
-        module_t
+        module_type;
+      module_type
     (* ObjT CommonJS export values have their properties turned into named exports. *)
     | DefT (_, ObjT o) ->
       let { props_tmap; proto_t; _ } = o in
       (* Copy props from the prototype *)
-      let module_t = F.cjs_extract_named_exports cx (reason, local_module) proto_t in
+      let module_type = on_type cx ~concretize (reason, local_module) proto_t in
       (* Copy own props *)
-      F.export_named
+      ExportNamedTKit.mod_ModuleT
         cx
-        ( reason,
-          Properties.extract_named_exports (Context.find_props cx props_tmap),
+        ( Properties.extract_named_exports (Context.find_props cx props_tmap),
           NameUtils.Map.empty,
           DirectExport
         )
-        module_t
+        module_type;
+      module_type
     (* InstanceT CommonJS export values have their properties turned into named exports. *)
     | DefT (_, InstanceT { inst = { own_props; proto_props; _ }; _ }) ->
       let extract_named_exports id =
@@ -2088,12 +2087,14 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
         cx
         (extract_named_exports own_props, NameUtils.Map.empty, DirectExport)
         local_module;
+
       (* Copy proto props *)
       (* TODO: own props should take precedence *)
-      F.export_named
+      ExportNamedTKit.mod_ModuleT
         cx
-        (reason, extract_named_exports proto_props, NameUtils.Map.empty, DirectExport)
-        (ModuleT local_module)
+        (extract_named_exports proto_props, NameUtils.Map.empty, DirectExport)
+        local_module;
+      local_module
     (* If the module is exporting any or Object, then we allow any named import. *)
     | AnyT _ ->
       let {
@@ -2104,19 +2105,15 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
       } =
         local_module
       in
-      let module_t =
-        ModuleT
-          {
-            module_reason;
-            module_export_types = { exporttypes with has_every_named_export = true };
-            module_is_strict;
-            module_available_platforms;
-          }
-      in
-      F.return cx module_t
+      {
+        module_reason;
+        module_export_types = { exporttypes with has_every_named_export = true };
+        module_is_strict;
+        module_available_platforms;
+      }
     (* All other CommonJS export value types do not get merged into the named
      * exports tmap in any special way. *)
-    | _ -> F.return cx (ModuleT local_module)
+    | _ -> local_module
 end
 
 (*******************)

@@ -200,20 +200,11 @@ struct
                 { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
             )
       )
-
-    let cjs_extract_named_exports cx (reason, local_module) proto_t =
-      Tvar.mk_where cx reason (fun t ->
-          FlowJs.rec_flow
-            cx
-            DepthTrace.dummy_trace
-            (proto_t, CJSExtractNamedExportsT (reason, local_module, t))
-      )
   end
 
   module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
   module ExportTypeTKit = ExportTypeT_kit (Import_export_helper)
-  module CJSExtractNamedExportsTKit = CJSExtractNamedExportsT_kit (Import_export_helper)
   include InstantiationKit
 
   (* get prop *)
@@ -719,8 +710,11 @@ struct
           CopyNamedExportsTKit.on_AnyT cx target_module t
         | (AnyT (_, _), CopyTypeExportsT (_, target_module, t)) ->
           CopyTypeExportsTKit.on_AnyT cx target_module t
-        | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
-          CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) l t_out
+        | ( t,
+            ConcretizeT
+              { reason = _; kind = ConcretizeForCJSExtractNamedExports; seen = _; collector }
+          ) ->
+          TypeCollector.add collector t
         (******************************)
         (* optional chaining - part A *)
         (******************************)
@@ -5896,7 +5890,6 @@ struct
     | BindT _
     | CallT _
     | CallElemT _
-    | CJSExtractNamedExportsT _
     | CondT _
     | ConstructorT _
     | CopyNamedExportsT _
@@ -9324,6 +9317,9 @@ struct
 
   and possible_concrete_types_for_inspection cx reason t =
     possible_concrete_types ConcretizeForInspection cx reason t
+
+  and singleton_concrete_type_for_cjs_extract_named_exports cx reason t =
+    singleton_concrete_type ConcretizeForCJSExtractNamedExports cx reason t
 
   and singleton_concrete_type_for_inspection cx reason t =
     singleton_concrete_type ConcretizeForInspection cx reason t

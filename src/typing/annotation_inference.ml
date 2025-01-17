@@ -16,13 +16,13 @@ let object_like_op = function
   | Annot_ThisSpecializeT _
   | Annot_UseT_TypeT _
   | Annot_ConcretizeForImportsExports _
+  | Annot_ConcretizeForCJSExtractNamedExports _
   | Annot_ConcretizeForInspection _
   | Annot_CJSRequireT _
   | Annot_ImportTypeofT _
   | Annot_ImportNamedT _
   | Annot_ImportDefaultT _
   | Annot_ImportModuleNsT _
-  | Annot_CJSExtractNamedExportsT _
   | Annot_ExportNamedT _
   | Annot_ExportTypeT _
   | Annot_AssertExportIsTypeT _
@@ -118,7 +118,8 @@ module type S = sig
     Type.t ->
     Type.t
 
-  val cjs_extract_named_exports : Context.t -> Reason.reason -> Type.moduletype -> Type.t -> Type.t
+  val lazy_cjs_extract_named_exports :
+    Context.t -> Reason.reason -> Type.moduletype -> Type.t -> Type.moduletype Lazy.t
 
   val import_default :
     Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
@@ -274,9 +275,6 @@ module rec ConsGen : S = struct
         cx
         export_t
         (Annot_ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t })
-
-    let cjs_extract_named_exports cx (reason, local_module) t =
-      ConsGen.cjs_extract_named_exports cx reason local_module t
   end
 
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
@@ -291,8 +289,7 @@ module rec ConsGen : S = struct
   module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
   module CopyTypeExportsTKit = Flow_js_utils.CopyTypeExportsT_kit (Import_export_helper)
   module ExportTypeTKit = Flow_js_utils.ExportTypeT_kit (Import_export_helper)
-  module CJSExtractNamedExportsTKit =
-    Flow_js_utils.CJSExtractNamedExportsT_kit (Import_export_helper)
+  module CJSExtractNamedExportsTKit = Flow_js_utils.CJSExtractNamedExportsTKit
 
   (***********)
   (* GetProp *)
@@ -666,8 +663,7 @@ module rec ConsGen : S = struct
       CopyNamedExportsTKit.on_AnyT cx target_module
     | (AnyT (_, _), Annot_CopyTypeExportsT (_, target_module)) ->
       CopyTypeExportsTKit.on_AnyT cx target_module
-    | (_, Annot_CJSExtractNamedExportsT (reason, local_module)) ->
-      CJSExtractNamedExportsTKit.on_concrete_type cx (reason, local_module) t
+    | (l, Annot_ConcretizeForCJSExtractNamedExports _) -> l
     (******************)
     (* Module imports *)
     (******************)
@@ -1408,8 +1404,15 @@ module rec ConsGen : S = struct
   and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
     elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })
 
-  and cjs_extract_named_exports cx reason local_module t =
-    elab_t cx t (Annot_CJSExtractNamedExportsT (reason, local_module))
+  and lazy_cjs_extract_named_exports cx reason local_module t =
+    lazy
+      (let concretize t =
+         match elab_t cx t (Annot_ConcretizeForCJSExtractNamedExports reason) with
+         | OpenT (_, id) -> get_fully_resolved_type cx id
+         | t -> t
+       in
+       CJSExtractNamedExportsTKit.on_type cx ~concretize (reason, local_module) t
+      )
 
   and import_typeof cx reason export_name t = elab_t cx t (Annot_ImportTypeofT (reason, export_name))
 
