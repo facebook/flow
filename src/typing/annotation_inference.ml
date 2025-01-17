@@ -268,8 +268,6 @@ module rec ConsGen : S = struct
     let export_named cx (reason, values, types, kind) t =
       ConsGen.export_named cx reason kind values types t
 
-    let export_named_fresh_var = export_named
-
     let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
         =
       ConsGen.elab_t

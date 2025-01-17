@@ -189,17 +189,6 @@ struct
           Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
         )
 
-    let export_named_fresh_var
-        cx (reason, value_exports_tmap, type_exports_tmap, export_kind) module_t =
-      Tvar.mk_where cx reason (fun tout ->
-          FlowJs.rec_flow
-            cx
-            DepthTrace.dummy_trace
-            ( module_t,
-              Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
-            )
-      )
-
     let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
         =
       Tvar.mk_where cx reason (fun tout ->

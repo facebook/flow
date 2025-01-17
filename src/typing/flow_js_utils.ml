@@ -1405,12 +1405,6 @@ module type Import_export_helper_sig = sig
     Type.t ->
     r
 
-  val export_named_fresh_var :
-    Context.t ->
-    Reason.t * Type.named_symbol NameUtils.Map.t * Type.named_symbol NameUtils.Map.t * export_kind ->
-    Type.t ->
-    Type.t
-
   val export_type :
     Context.t ->
     reason
@@ -2084,25 +2078,22 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
         module_t
     (* InstanceT CommonJS export values have their properties turned into named exports. *)
     | DefT (_, InstanceT { inst = { own_props; proto_props; _ }; _ }) ->
-      let module_t = ModuleT local_module in
       let extract_named_exports id =
         Context.find_props cx id
         |> NameUtils.Map.filter (fun x _ -> not (is_munged_prop_name cx x))
         |> Properties.extract_named_exports
       in
       (* Copy own props *)
-      let module_t =
-        F.export_named_fresh_var
-          cx
-          (reason, extract_named_exports own_props, NameUtils.Map.empty, DirectExport)
-          module_t
-      in
+      ExportNamedTKit.mod_ModuleT
+        cx
+        (extract_named_exports own_props, NameUtils.Map.empty, DirectExport)
+        local_module;
       (* Copy proto props *)
       (* TODO: own props should take precedence *)
       F.export_named
         cx
         (reason, extract_named_exports proto_props, NameUtils.Map.empty, DirectExport)
-        module_t
+        (ModuleT local_module)
     (* If the module is exporting any or Object, then we allow any named import. *)
     | AnyT _ ->
       let {
