@@ -1286,13 +1286,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************)
     (* literals *)
     (************)
-    | (DefT (reason, SingletonStrT key), _) ->
+    | (DefT (reason, SingletonStrT key), _) when Context.allow_unsound_literal_coercsion cx ->
       rec_flow_t cx trace ~use_op (DefT (reason, StrT_UNSOUND (None, key)), u)
-    | (DefT (reason, SingletonNumT lit), _) ->
+    | (DefT (reason, SingletonNumT lit), _) when Context.allow_unsound_literal_coercsion cx ->
       rec_flow_t cx trace ~use_op (DefT (reason, NumT_UNSOUND (None, lit)), u)
-    | (DefT (reason, SingletonBoolT b), _) ->
+    | (DefT (reason, SingletonBoolT b), _) when Context.allow_unsound_literal_coercsion cx ->
       rec_flow_t cx trace ~use_op (DefT (reason, BoolT_UNSOUND b), u)
-    | (DefT (reason, SingletonBigIntT lit), _) ->
+    | (DefT (reason, SingletonBigIntT lit), _) when Context.allow_unsound_literal_coercsion cx ->
       rec_flow_t cx trace ~use_op (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, NullT), u)
     (************)

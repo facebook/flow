@@ -544,6 +544,10 @@ val get_ctor_callee : t -> ALoc.t -> Type.t option
 
 val iter_union_opt : t -> f:(ALocMap.key -> Type.t -> unit) -> unit
 
+val allow_unsound_literal_coercsion : t -> bool
+
+val with_disallowed_unsound_literal_coercsion : t -> f:(unit -> 'a) -> 'a
+
 val remove_avar : t -> int -> unit
 
 val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit

@@ -211,6 +211,8 @@ type component_t = {
   mutable ctor_callee: Type.t ALocMap.t;
   (* Union optimization checks *)
   mutable union_opt: Type.t ALocMap.t;
+  (* Natural inference (enables SingletonStrT ~> StrT_UNSOUND coercions) *)
+  mutable allow_unsound_literal_coercsion: bool;
 }
 [@@warning "-69"]
 
@@ -411,6 +413,7 @@ let make_ccx () =
     signature_help_callee = ALocMap.empty;
     ctor_callee = ALocMap.empty;
     union_opt = ALocMap.empty;
+    allow_unsound_literal_coercsion = true;
   }
 
 let make ccx metadata file aloc_table resolve_require mk_builtins =
@@ -800,6 +803,15 @@ let get_ctor_callee cx loc = ALocMap.find_opt loc cx.ccx.ctor_callee
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
 
 let iter_union_opt cx ~f = ALocMap.iter f cx.ccx.union_opt
+
+let allow_unsound_literal_coercsion cx = cx.ccx.allow_unsound_literal_coercsion
+
+let with_disallowed_unsound_literal_coercsion cx ~f =
+  let old_allow_unsound_literal_coercsion = cx.ccx.allow_unsound_literal_coercsion in
+  cx.ccx.allow_unsound_literal_coercsion <- false;
+  Exception.protect ~f ~finally:(fun () ->
+      cx.ccx.allow_unsound_literal_coercsion <- old_allow_unsound_literal_coercsion
+  )
 
 let add_exists_check cx loc t =
   let tset =

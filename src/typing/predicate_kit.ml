@@ -157,7 +157,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (* typeof _ ~ "boolean" *)
   (***********************)
   | BoolP loc ->
-    report_filtering_result_to_predicate_result (Type_filter.boolean loc l) result_collector
+    report_filtering_result_to_predicate_result (Type_filter.boolean cx loc l) result_collector
   | NotP (BoolP _) ->
     report_filtering_result_to_predicate_result (Type_filter.not_boolean l) result_collector
   (***********************)
@@ -178,7 +178,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (* _ ~ "some string" *)
   (*********************)
   | SingletonStrP (expected_loc, sense, lit) ->
-    let filtered_str = Type_filter.string_literal expected_loc sense (OrdinaryName lit) l in
+    let filtered_str = Type_filter.string_literal cx expected_loc sense (OrdinaryName lit) l in
     report_filtering_result_to_predicate_result filtered_str result_collector
   | NotP (SingletonStrP (_, _, lit)) ->
     let filtered_str = Type_filter.not_string_literal (OrdinaryName lit) l in
@@ -187,7 +187,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (* _ ~ some number n *)
   (*********************)
   | SingletonNumP (expected_loc, sense, lit) ->
-    let filtered_num = Type_filter.number_literal expected_loc sense lit l in
+    let filtered_num = Type_filter.number_literal cx expected_loc sense lit l in
     report_filtering_result_to_predicate_result filtered_num result_collector
   | NotP (SingletonNumP (_, _, lit)) ->
     let filtered_num = Type_filter.not_number_literal lit l in
@@ -203,7 +203,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (* _ ~ some bigint n *)
   (*********************)
   | SingletonBigIntP (expected_loc, sense, lit) ->
-    let filtered_bigint = Type_filter.bigint_literal expected_loc sense lit l in
+    let filtered_bigint = Type_filter.bigint_literal cx expected_loc sense lit l in
     report_filtering_result_to_predicate_result filtered_bigint result_collector
   | NotP (SingletonBigIntP (_, _, lit)) ->
     let filtered_bigint = Type_filter.not_bigint_literal lit l in
@@ -275,19 +275,19 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (* true *)
   (********)
   | SingletonBoolP (_, true) ->
-    let filtered = Type_filter.true_ l in
+    let filtered = Type_filter.true_ cx l in
     report_filtering_result_to_predicate_result filtered result_collector
   | NotP (SingletonBoolP (_, true)) ->
-    let filtered = Type_filter.not_true l in
+    let filtered = Type_filter.not_true cx l in
     report_filtering_result_to_predicate_result filtered result_collector
   (*********)
   (* false *)
   (*********)
   | SingletonBoolP (_, false) ->
-    let filtered = Type_filter.false_ l in
+    let filtered = Type_filter.false_ cx l in
     report_filtering_result_to_predicate_result filtered result_collector
   | NotP (SingletonBoolP (_, false)) ->
-    let filtered = Type_filter.not_false l in
+    let filtered = Type_filter.not_false cx l in
     report_filtering_result_to_predicate_result filtered result_collector
   (************************)
   (* truthyness *)
@@ -1172,7 +1172,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
   | DefT (_, SingletonStrT value) ->
     let filtered =
       if sense then
-        Type_filter.string_literal expected_loc sense value left
+        Type_filter.string_literal cx expected_loc sense value left
       else
         Type_filter.not_string_literal value left
     in
@@ -1181,7 +1181,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
   | DefT (_, SingletonNumT value) ->
     let filtered =
       if sense then
-        Type_filter.number_literal expected_loc sense value left
+        Type_filter.number_literal cx expected_loc sense value left
       else
         Type_filter.not_number_literal value left
     in
@@ -1190,25 +1190,25 @@ and eq_test cx _trace result_collector (sense, left, right) =
   | DefT (_, SingletonBoolT true) ->
     let filtered =
       if sense then
-        Type_filter.true_ left
+        Type_filter.true_ cx left
       else
-        Type_filter.not_true left
+        Type_filter.not_true cx left
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, BoolT_UNSOUND false)
   | DefT (_, SingletonBoolT false) ->
     let filtered =
       if sense then
-        Type_filter.false_ left
+        Type_filter.false_ cx left
       else
-        Type_filter.not_false left
+        Type_filter.not_false cx left
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, BigIntT_UNSOUND (_, value))
   | DefT (_, SingletonBigIntT value) ->
     let filtered =
       if sense then
-        Type_filter.bigint_literal expected_loc sense value left
+        Type_filter.bigint_literal cx expected_loc sense value left
       else
         Type_filter.not_bigint_literal value left
     in
