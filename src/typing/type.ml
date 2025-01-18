@@ -3210,45 +3210,50 @@ module Constraint = struct
   module UseTypeMap = Flow_map.Make (UseTypeKey)
 
   module ForcingState : sig
-    type t
+    type ('a, 'b) state
+
+    type t = (TypeTerm.t, Reason.t) state
 
     val of_lazy_t : error_reason:Reason.t -> TypeTerm.t Lazy.t -> t
 
     val of_non_lazy_t : TypeTerm.t -> t
 
-    val force : on_error:(Reason.t -> TypeTerm.t) -> t -> TypeTerm.t
+    val force : on_error:('b -> 'a) -> ('a, 'b) state -> 'a
 
-    val already_forced_with_cyclic_error : t -> bool
+    val already_forced_with_cyclic_error : ('a, 'b) state -> bool
 
-    val get_forced_for_debugging : t -> TypeTerm.t option
+    val get_forced_for_debugging : ('a, 'b) state -> 'a option
 
-    val copy : on_error:(Reason.t -> TypeTerm.t) -> visit_for_copier:(TypeTerm.t -> unit) -> t -> t
+    val copy :
+      on_error:('b -> 'a) -> visit_for_copier:('a -> unit) -> ('a, 'b) state -> ('a, 'b) state
   end = struct
-    type state =
+    type 'a status =
       | Unforced
       | Forcing
       | Forced
-      | ForcedWithCyclicError of TypeTerm.t
+      | ForcedWithCyclicError of 'a
 
-    type t = {
-      valid: TypeTerm.t Lazy.t;
-      error_reason: Reason.t option;
-      mutable state: state;
+    type ('a, 'b) state = {
+      valid: 'a Lazy.t;
+      error_reason: 'b option;
+      mutable status: 'a status;
     }
 
-    let of_lazy_t ~error_reason valid =
-      { valid; error_reason = Some error_reason; state = Unforced }
+    type t = (TypeTerm.t, Reason.t) state
 
-    let of_non_lazy_t t = { valid = lazy t; error_reason = None; state = Forced }
+    let of_lazy_t ~error_reason valid =
+      { valid; error_reason = Some error_reason; status = Unforced }
+
+    let of_non_lazy_t t = { valid = lazy t; error_reason = None; status = Forced }
 
     let force ~on_error s =
-      match s.state with
+      match s.status with
       | Unforced ->
-        s.state <- Forcing;
+        s.status <- Forcing;
         let t = Lazy.force_val s.valid in
-        (match s.state with
+        (match s.status with
         | Forcing ->
-          s.state <- Forced;
+          s.status <- Forced;
           t
         | ForcedWithCyclicError t -> t
         | Unforced -> failwith "Invalid state Unforced"
@@ -3257,11 +3262,11 @@ module Constraint = struct
       | ForcedWithCyclicError t -> t
       | Forcing ->
         let t = on_error (Base.Option.value_exn s.error_reason) in
-        s.state <- ForcedWithCyclicError t;
+        s.status <- ForcedWithCyclicError t;
         t
 
     let already_forced_with_cyclic_error s =
-      match s.state with
+      match s.status with
       | Unforced
       | Forcing
       | Forced ->
@@ -3269,7 +3274,7 @@ module Constraint = struct
       | ForcedWithCyclicError _ -> true
 
     let get_forced_for_debugging s =
-      match s.state with
+      match s.status with
       | Unforced
       | Forcing ->
         None
@@ -3285,7 +3290,7 @@ module Constraint = struct
              t
             );
         error_reason = s.error_reason;
-        state = Unforced;
+        status = Unforced;
       }
   end
 
