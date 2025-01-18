@@ -2787,11 +2787,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#raise_abrupt_completion (AbruptCompletion.continue label)
 
       method! body_expression expr =
-        Base.Option.iter env_state.type_guard_name ~f:(fun name ->
-            let return = mk_expression_reason expr in
-            this#record_type_guard_maps None name return expr
-        );
-        super#body_expression expr
+        match env_state.type_guard_name with
+        | Some name ->
+          let return = mk_expression_reason expr in
+          this#record_type_guard_maps None name return expr;
+          expr
+        | None -> super#body_expression expr
 
       method! return _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
