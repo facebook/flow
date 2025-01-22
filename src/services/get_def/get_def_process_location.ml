@@ -21,12 +21,22 @@ type internal_error =
 type 'loc result =
   | OwnNamedDef of 'loc * (* name *) string
   | OwnUnnamedDef of 'loc
-  | ModuleDef of (Type.t[@opaque])
+  | ModuleDef of 'loc
+  | ModuleTypeDef of (Type.t[@opaque])
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
   | InternalError of internal_error
 [@@deriving show]
+
+let def_loc_of_reason r =
+  match Reason.annot_loc_of_reason r with
+  | Some aloc -> aloc
+  | None -> Reason.def_loc_of_reason r
+
+let def_loc_of_t t =
+  let r = TypeUtil.reason_of_t t in
+  def_loc_of_reason r
 
 (* here lies the difference between "Go to Definition" and "Go to Type Definition":
    the former should stop on annot_loc (where the value was annotated), while the
@@ -35,29 +45,20 @@ type 'loc result =
    for now, we only implement Go to Definition; if we want to do Go to Type
    Definition, it would ignore the annot loc. *)
 let process_type_request =
-  let def_loc_of_t t =
-    let r = TypeUtil.reason_of_t t in
-    let aloc =
-      match Reason.annot_loc_of_reason r with
-      | Some aloc -> aloc
-      | None -> Reason.def_loc_of_reason r
-    in
-    Ok aloc
-  in
   let rec loop cx seen =
     let open Type in
     function
     | OpenT (_, id) as t ->
       let root = Context.find_root_id cx id in
       if ISet.mem root seen then
-        def_loc_of_t t
+        Ok (def_loc_of_t t)
       else (
         match Flow_js_utils.possible_types_of_type cx t with
         | [t'] -> loop cx (ISet.add root seen) t'
         | [] -> Error "No possible types"
         | _ :: _ -> Error "More than one possible type"
       )
-    | t -> def_loc_of_t t
+    | t -> Ok (def_loc_of_t t)
   in
   (fun cx t -> loop cx ISet.empty t)
 
@@ -129,9 +130,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         found_loc_ <- OwnUnnamedDef loc;
         raise Found
 
-    method private module_def : 'a. Type.t -> 'a =
-      fun t ->
-        found_loc_ <- ModuleDef t;
+    method private module_def : 'a. ALoc.t -> 'a =
+      fun l ->
+        found_loc_ <- ModuleDef l;
         raise Found
 
     method private found_empty : 'a. string -> 'a =
@@ -146,7 +147,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method virtual private type_from_enclosing_node : 'T -> Type.t
 
-    method virtual private get_module_t : 'T -> ALoc.t Ast.StringLiteral.t -> Type.t
+    method virtual private get_module_def_loc : 'T -> string -> ALoc.t
 
     method virtual private remote_name_def_loc_of_import_named_specifier
         : (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
@@ -160,13 +161,13 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
     method virtual private component_name_of_jsx_element
         : 'T -> (ALoc.t, 'T) Ast.JSX.element -> ALoc.t * Type.t
 
-    method private module_def_for_entire_module_related_id ~module_t ~id =
+    method private module_def_for_entire_module_related_id ~module_def_f ~id =
       let (name_annot, { Ast.Identifier.name; _ }) = id in
       if this#annot_covers_target name_annot then
         match purpose with
         | Get_def_types.Purpose.GoToDefinition
         | Get_def_types.Purpose.JSDoc ->
-          this#module_def module_t
+          module_def_f ()
         | Get_def_types.Purpose.FindReferences ->
           this#own_named_def (this#loc_of_annot name_annot) name
 
@@ -186,9 +187,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       in
       this#with_require_toplevel_pattern_info ~info (fun () -> super#variable_declarator ~kind x)
 
-    method! import_source source_annot lit =
+    method! import_source source_annot ({ Ast.StringLiteral.value = module_name; _ } as lit) =
       if this#annot_covers_target source_annot then begin
-        this#module_def (this#get_module_t source_annot lit)
+        this#module_def (this#get_module_def_loc source_annot module_name)
       end;
       super#import_source source_annot lit
 
@@ -219,9 +220,12 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind = _; source; specifiers; declaration = _; comments = _ } = decl in
       (match (source, specifiers) with
-      | (Some (source_annot, lit), Some (ExportBatchSpecifier (_, Some id))) ->
+      | ( Some (source_annot, { Ast.StringLiteral.value = module_name; _ }),
+          Some (ExportBatchSpecifier (_, Some id))
+        ) ->
         this#module_def_for_entire_module_related_id
-          ~module_t:(this#get_module_t source_annot lit)
+          ~module_def_f:(fun () ->
+            this#module_def (this#get_module_def_loc source_annot module_name))
           ~id
       | _ -> ());
       super#export_named_declaration loc decl
@@ -260,7 +264,14 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
-      let { default; specifiers; source = (source_annot, lit); _ } = decl in
+      let {
+        default;
+        specifiers;
+        source = (source_annot, { Ast.StringLiteral.value = module_name; _ });
+        _;
+      } =
+        decl
+      in
       Base.Option.iter default ~f:(fun { identifier = (annot, _); _ } ->
           if this#annot_covers_target annot then
             match this#remote_default_name_def_loc_of_import_declaration (loc, decl) with
@@ -271,14 +282,15 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           | ImportNamedSpecifiers _ -> ()
           | ImportNamespaceSpecifier (_, id) ->
             this#module_def_for_entire_module_related_id
-              ~module_t:(this#get_module_t source_annot lit)
+              ~module_def_f:(fun () ->
+                this#module_def (this#get_module_def_loc source_annot module_name))
               ~id
           );
       super#import_declaration loc decl
 
-    method! export_source source_annot lit =
+    method! export_source source_annot ({ Ast.StringLiteral.value = module_name; _ } as lit) =
       if this#annot_covers_target source_annot then begin
-        this#module_def (this#get_module_t source_annot lit)
+        this#module_def (this#get_module_def_loc source_annot module_name)
       end;
       super#export_source source_annot lit
 
@@ -495,7 +507,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           (match require_declarator_info with
           | Some { toplevel_pattern_annot; require_t } when toplevel_pattern_annot = pat_annot ->
             this#module_def_for_entire_module_related_id
-              ~module_t:(this#type_from_enclosing_node require_t)
+              ~module_def_f:(fun () ->
+                found_loc_ <- ModuleTypeDef (this#type_from_enclosing_node require_t);
+                raise Found)
               ~id
           | _ -> ())
         | _ -> ()
@@ -532,7 +546,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
               _;
             }
           when this#is_legit_require source_annot ->
-          this#module_def (this#type_from_enclosing_node source_annot)
+          found_loc_ <- ModuleTypeDef (this#type_from_enclosing_node source_annot);
+          raise Found
         | _ -> super#expression (annot, expr)
       else
         (* it is tempting to not recurse here, but comments are not included in
@@ -765,8 +780,7 @@ class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers
         (_, { Ast.Statement.ExportNamedDeclaration.ExportSpecifier.imported_name_def_loc; _ }) =
       imported_name_def_loc
 
-    method private get_module_t (loc, _) source =
-      let { Flow_ast.StringLiteral.value = module_name; _ } = source in
+    method private get_module_def_loc (loc, _) module_name =
       match
         Type_operation_utils.Import_export.get_module_type_or_any
           cx
@@ -774,8 +788,8 @@ class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers
           ~perform_platform_validation:false
           ~import_kind_for_untyped_import_validation:None
       with
-      | Ok m -> Type.ModuleT m
-      | Error t -> t
+      | Ok m -> def_loc_of_reason m.Type.module_reason
+      | Error t -> def_loc_of_t t
 
     method private component_name_of_jsx_element _ expr =
       let open Ast.JSX in
@@ -890,8 +904,7 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
       | None -> raise (Internal_error_exn Enclosing_node_error)
       | Some t -> t
 
-    method private get_module_t loc source =
-      let { Flow_ast.StringLiteral.value = module_name; _ } = source in
+    method private get_module_def_loc loc module_name =
       match
         Type_operation_utils.Import_export.get_module_type_or_any
           cx
@@ -899,8 +912,8 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
           ~perform_platform_validation:false
           ~import_kind_for_untyped_import_validation:None
       with
-      | Ok m -> Type.ModuleT m
-      | Error t -> t
+      | Ok m -> def_loc_of_reason m.Type.module_reason
+      | Error t -> def_loc_of_t t
 
     method private component_name_of_jsx_element loc expr =
       let open Ast.JSX in

@@ -162,7 +162,8 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
         with
         | OwnNamedDef (aloc, name) -> Def (LocSet.singleton (loc_of_aloc aloc), Some name)
         | OwnUnnamedDef aloc -> Def (LocSet.singleton (loc_of_aloc aloc), None)
-        | ModuleDef t ->
+        | ModuleDef aloc -> Def (LocSet.singleton (loc_of_aloc aloc), None)
+        | ModuleTypeDef t ->
           (match Get_def_process_location.process_type_request cx t with
           | Ok res_loc -> Def (LocSet.singleton (loc_of_aloc res_loc), None)
           | Error e -> Def_error e)

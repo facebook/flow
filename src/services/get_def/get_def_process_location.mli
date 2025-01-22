@@ -15,7 +15,8 @@ type internal_error =
 type 'loc result =
   | OwnNamedDef of 'loc * (* name *) string
   | OwnUnnamedDef of 'loc
-  | ModuleDef of Type.t
+  | ModuleDef of 'loc
+  | ModuleTypeDef of Type.t
   | Request of ('loc, 'loc * (Type.t[@opaque])) Get_def_request.t
   | Empty of string
   | LocNotFound
@@ -42,7 +43,7 @@ class virtual ['T] searcher :
 
        method virtual private type_from_enclosing_node : 'T -> Type.t
 
-       method virtual private get_module_t : 'T -> ALoc.t Ast.StringLiteral.t -> Type.t
+       method virtual private get_module_def_loc : 'T -> string -> ALoc.t
 
        method virtual private remote_name_def_loc_of_import_named_specifier :
          (ALoc.t, 'T) Ast.Statement.ImportDeclaration.named_specifier -> ALoc.t option
