@@ -1021,7 +1021,6 @@ and tag_of_t cx t =
   | OptionalT _
   | KeysT (_, _)
   | OpaqueT (_, _)
-  | ModuleT _
   | AnyT (_, _) ->
     None
 

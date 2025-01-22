@@ -135,7 +135,6 @@ end = struct
         | DefT (_, SingletonBoolT _)
         | DefT (_, SingletonBigIntT _)
         | GenericT _
-        | ModuleT _
         | AnyT _
         | FunProtoT _
         | ObjProtoT _

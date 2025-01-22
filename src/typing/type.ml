@@ -173,8 +173,6 @@ module rec TypeTerm : sig
      * type is defined in a libdef. We also keep track of the name of the opaque type in
      * opaquetype.name for pretty printing. *)
     | OpaqueT of reason * opaquetype
-    (* Stores exports (and potentially other metadata) for a module *)
-    | ModuleT of moduletype
     (* Stores both values and types in the same namespace*)
     | NamespaceT of namespace_type
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
@@ -4018,7 +4016,6 @@ let string_of_ctor = function
   | GenericT _ -> "GenericT"
   | KeysT _ -> "KeysT"
   | StrUtilT _ -> "StrUtilT"
-  | ModuleT _ -> "ModuleT"
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"

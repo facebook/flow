@@ -436,7 +436,7 @@ and extract_def_loc_resolved ~loc_of_aloc cx ty name : (def_loc, string) result 
       | Success (DefT (_, InstanceT { super; _ }) | ThisInstanceT (_, { super; _ }, _, _)) as
         extracted_type ->
         extract_def_locs_from_instancet ~loc_of_aloc cx extracted_type super name
-      | (Success (DefT (_, ObjT _)) | SuccessModule _ | SuccessNamespace _) as extracted_type ->
+      | (Success (DefT (_, ObjT _)) | SuccessNamespace _) as extracted_type ->
         get_def_locs_from_extracted_type cx extracted_type name >>| ( function
         | None -> NoDefFound
         | Some (loc, []) -> FoundObject (loc_of_aloc loc)

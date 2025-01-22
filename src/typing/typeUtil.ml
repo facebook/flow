@@ -24,7 +24,6 @@ let rec reason_of_t = function
   | FunProtoBindT reason -> reason
   | KeysT (reason, _) -> reason
   | StrUtilT { reason; _ } -> reason
-  | ModuleT { module_reason = reason; _ } -> reason
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
@@ -133,14 +132,6 @@ let rec mod_reason_of_t f = function
   | FunProtoBindT reason -> FunProtoBindT (f reason)
   | KeysT (reason, t) -> KeysT (f reason, t)
   | StrUtilT { reason; op; remainder } -> StrUtilT { reason = f reason; op; remainder }
-  | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms } ->
-    ModuleT
-      {
-        module_reason = f module_reason;
-        module_export_types;
-        module_is_strict;
-        module_available_platforms;
-      }
   | NamespaceT { namespace_symbol; values_type; types_tmap } ->
     NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)

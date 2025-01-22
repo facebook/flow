@@ -235,7 +235,7 @@ end = struct
     (* TODO *)
     | EvalT _ -> ()
     (* We only expect types which can appear in annotations. *)
-    | (DefT (_, TypeT _) | OpaqueT _ | ThisInstanceT _ | ModuleT _) as t ->
+    | (DefT (_, TypeT _) | OpaqueT _ | ThisInstanceT _) as t ->
       raise (UnexpectedType (Debug_js.dump_t cx t))
 
   and check_polarity_propmap cx ?trace ?(skip_ctor = false) seen tparams polarity id =

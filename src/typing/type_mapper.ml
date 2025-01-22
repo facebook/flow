@@ -143,19 +143,6 @@ class virtual ['a] t =
           t
         else
           OpaqueT (r, { opaquetype with underlying_t; super_t; opaque_type_args })
-      | ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms }
-        ->
-        let module_export_types' = self#export_types cx map_cx module_export_types in
-        if module_export_types == module_export_types' then
-          t
-        else
-          ModuleT
-            {
-              module_reason;
-              module_export_types = module_export_types';
-              module_is_strict;
-              module_available_platforms;
-            }
       | NamespaceT namespace_t ->
         let namespace_t' = self#namespace_type cx map_cx namespace_t in
         if namespace_t' == namespace_t then

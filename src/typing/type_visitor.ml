@@ -56,14 +56,6 @@ class ['a] t =
         let acc = self#opt (self#type_ cx pole) acc underlying_t in
         let acc = self#opt (self#type_ cx pole) acc super_t in
         acc
-      | ModuleT
-          {
-            module_reason = _;
-            module_export_types = exporttypes;
-            module_is_strict = _;
-            module_available_platforms = _;
-          } ->
-        self#export_types cx pole acc exporttypes
       | NamespaceT namespace_t -> self#namespace_type cx pole acc namespace_t
       | ThisInstanceT (_, t, _, _) -> self#instance_type cx pole acc t
       | ThisTypeAppT (_, t, this, ts_opt) ->

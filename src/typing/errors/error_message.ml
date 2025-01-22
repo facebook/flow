@@ -694,7 +694,6 @@ and internal_error =
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
   | MissingPredicateParam of int
-  | UnexpectedModuleT of string
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
   | ForcedReadOfUnderResolutionTvar of Env_api.def_loc_type
@@ -2094,7 +2093,6 @@ let enum_name_of_reason reason =
   | _ -> None
 
 let string_of_internal_error = function
-  | UnexpectedModuleT s -> spf "unexpected module type: %s" s
   | ReadOfUnreachedTvar k ->
     spf "read of %s entry which has not been prepared for typechecking" (Env_api.show_def_loc_type k)
   | ReadOfUnresolvedTvar k ->

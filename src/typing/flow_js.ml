@@ -5897,8 +5897,6 @@ struct
     | UseT (_, TypeAppT _)
     | UseT (_, DefT (_, TypeT _))
     | ValueToTypeReferenceT _
-    (* Should never occur, so we just defer to __flow to handle errors *)
-    | UseT (_, ModuleT _)
     (* Ideally, any would pollute every member of the union. However, it should be safe to only
        taint the type in the branch that flow picks when generating constraints for this, so
        this can be handled by the pre-existing rules *)
@@ -6016,9 +6014,7 @@ struct
     | ThisTypeAppT _ ->
       false
     (* Should never occur as the lower bound of any *)
-    | ModuleT _
-    | NamespaceT _ ->
-      false
+    | NamespaceT _ -> false
     | StrUtilT _
     | DefT _
     | AnyT _ ->

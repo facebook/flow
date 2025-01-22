@@ -153,7 +153,6 @@ let visitor =
       | KeysT _
       | StrUtilT _
       | MaybeT _
-      | ModuleT _
       | NamespaceT _
       | NullProtoT _
       | OpaqueT _

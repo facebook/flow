@@ -5,9 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type ('success, 'success_module, 'success_namespace) generic_t =
+type ('success, 'success_namespace) generic_t =
   | Success of 'success
-  | SuccessModule of 'success_module
   | SuccessNamespace of 'success_namespace
   | FailureNullishType
   | FailureAnyType
@@ -17,23 +16,20 @@ type ('success, 'success_module, 'success_namespace) generic_t =
 type t =
   ( (* Success *)
   (ALoc.t Nel.t option * Type.t) SMap.t,
-    (* SuccessModule *)
-  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option,
     (* SuccessNamespace *)
   (ALoc.t Nel.t option * Type.t) SMap.t
   )
   generic_t
 
 (* For debugging purposes *)
-val string_of_extracted_type : (Type.t, Type.t, Type.t) generic_t -> string
+val string_of_extracted_type : (Type.t, Type.t) generic_t -> string
 
 val to_command_result : t -> ((ALoc.t Nel.t option * Type.t) SMap.t, string) result
 
 val extract : ?exclude_proto_members:bool -> Context.t -> Type.t -> t
 
-val extract_type : Context.t -> Type.t -> (Type.t, Type.t, Type.t) generic_t
+val extract_type : Context.t -> Type.t -> (Type.t, Type.t) generic_t
 
-val extract_members :
-  ?exclude_proto_members:bool -> Context.t -> (Type.t, Type.t, Type.t) generic_t -> t
+val extract_members : ?exclude_proto_members:bool -> Context.t -> (Type.t, Type.t) generic_t -> t
 
 val resolve_type : Context.t -> Type.t -> Type.t

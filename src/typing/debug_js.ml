@@ -346,29 +346,6 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
     | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
     | DefT (_, SingletonBigIntT (_, s)) -> p ~extra:s t
-    | ModuleT
-        {
-          module_reason = _;
-          module_export_types = { value_exports_tmap; type_exports_tmap; _ };
-          module_is_strict = _;
-          module_available_platforms = _;
-        } ->
-      let exports_tmap_to_string exports_tmap =
-        Context.find_exports cx exports_tmap
-        |> NameUtils.Map.bindings
-        |> Base.List.map ~f:(fun (name, { preferred_def_locs = _; name_loc = _; type_ }) ->
-               kid type_ |> spf "%s: %s" (display_string_of_name name)
-           )
-        |> String.concat ", "
-      in
-      p
-        t
-        ~extra:
-          (spf
-             "[%s] [%s]"
-             (exports_tmap_to_string value_exports_tmap)
-             (exports_tmap_to_string type_exports_tmap)
-          )
     | NamespaceT { namespace_symbol; values_type; types_tmap } ->
       p
         t
@@ -1074,7 +1051,6 @@ let dump_error_message =
   let open Error_message in
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
-    | UnexpectedModuleT _ -> "UnexpectedModuleT"
     | ReadOfUnreachedTvar _ -> "ReadOfUnreachedTvar"
     | ReadOfUnresolvedTvar _ -> "ReadOfUnresolvedTvar"
     | ForcedReadOfUnderResolutionTvar _ -> "ForcedReadOfUnderResolutionTvar"

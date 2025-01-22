@@ -11,9 +11,8 @@ open TypeUtil
 open Reason
 open Flow_js
 
-type ('success, 'success_module, 'success_namespace) generic_t =
+type ('success, 'success_namespace) generic_t =
   | Success of 'success
-  | SuccessModule of 'success_module
   | SuccessNamespace of 'success_namespace
   | FailureNullishType
   | FailureAnyType
@@ -23,8 +22,6 @@ type ('success, 'success_module, 'success_namespace) generic_t =
 type t =
   ( (* Success *)
   (ALoc.t Nel.t option * Type.t) SMap.t,
-    (* SuccessModule *)
-  (ALoc.t Nel.t option * Type.t) SMap.t * Type.t option,
     (* SuccessNamespace *)
   (ALoc.t Nel.t option * Type.t) SMap.t
   )
@@ -474,7 +471,6 @@ and instantiate_type = function
 
 let string_of_extracted_type = function
   | Success t -> Printf.sprintf "Success (%s)" (Type.string_of_ctor t)
-  | SuccessModule t -> Printf.sprintf "SuccessModule (%s)" (Type.string_of_ctor t)
   | SuccessNamespace t -> Printf.sprintf "SuccessNamespace (%s)" (Type.string_of_ctor t)
   | FailureNullishType -> "FailureNullishType"
   | FailureAnyType -> "FailureAnyType"
@@ -484,11 +480,8 @@ let string_of_extracted_type = function
 
 let to_command_result = function
   | Success map
-  | SuccessNamespace map
-  | SuccessModule (map, None) ->
+  | SuccessNamespace map ->
     Ok map
-  | SuccessModule (named_exports, Some cjs_export) ->
-    Ok (SMap.add "default" (None, cjs_export) named_exports)
   | FailureNullishType -> Error "autocomplete on possibly null or undefined value"
   | FailureAnyType -> Error "not enough type information to autocomplete"
   | FailureUnhandledType t ->
@@ -550,7 +543,6 @@ let rec extract_type cx this_t =
   | DefT (_, ObjT _) as t -> Success t
   | DefT (_, EnumObjectT _) as t -> Success t
   | GenericT { bound; _ } -> extract_type cx bound
-  | ModuleT _ as t -> SuccessModule t
   | NamespaceT _ as t -> SuccessNamespace t
   | ThisTypeAppT (_, c, _, ts_opt) ->
     let c = resolve_type cx c in
@@ -690,38 +682,6 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
         SMap.empty
     in
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-  | SuccessModule
-      (ModuleT
-        {
-          module_reason = _;
-          module_export_types =
-            { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ };
-          module_is_strict = _;
-          module_available_platforms = _;
-        }
-        ) ->
-    let named_exports =
-      NameUtils.Map.union
-        (Context.find_exports cx value_exports_tmap)
-        (Context.find_exports cx type_exports_tmap)
-    in
-    let cjs_export =
-      match cjs_export with
-      | Some t -> Some (resolve_type cx t)
-      | None -> None
-    in
-    let named_exports =
-      NameUtils.display_smap_of_namemap named_exports
-      |> SMap.map (fun { name_loc; preferred_def_locs; type_ } ->
-             let def_locs =
-               match preferred_def_locs with
-               | Some _ -> preferred_def_locs
-               | None -> Base.Option.map ~f:Nel.one name_loc
-             in
-             (def_locs, type_)
-         )
-    in
-    SuccessModule (named_exports, cjs_export)
   | SuccessNamespace (NamespaceT { namespace_symbol = _; values_type; types_tmap }) ->
     let members =
       SMap.fold
@@ -781,7 +741,6 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     in
     Success members
   | Success t
-  | SuccessModule t
   | SuccessNamespace t ->
     FailureUnhandledMembers t
 

@@ -936,9 +936,7 @@ module Make (I : INPUT) : S = struct
         let%map symbol = Reason_utils.local_type_alias_symbol env reason in
         Ty.Generic (symbol, Ty.EnumKind, None)
       (* Top-level only *)
-      | DefT (_, TypeT _)
-      | ModuleT _ ->
-        terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
+      | DefT (_, TypeT _) -> terr ~kind:(UnexpectedTypeCtor (string_of_ctor t)) (Some t)
 
     and any_t reason kind =
       match kind with
@@ -1982,16 +1980,7 @@ module Make (I : INPUT) : S = struct
         match t with
         (* Polymorphic variants - see singleton_poly *)
         | DefT (_, PolyT { tparams; t_out; _ }) -> singleton_poly ~env ~orig_t tparams t_out
-        (* Modules *)
-        | ModuleT
-            {
-              module_reason = reason;
-              module_export_types = exports;
-              module_is_strict = _;
-              module_available_platforms = _;
-            } ->
-          let%map m = module_t ~env reason exports in
-          Ty.Decl m
+        (* Namespaces *)
         | NamespaceT { namespace_symbol; values_type = DefT (_, ObjT o); types_tmap } ->
           (match FlowSymbol.kind_of_symbol namespace_symbol with
           | FlowSymbol.SymbolModule when not env.Env.keep_only_namespace_name ->
