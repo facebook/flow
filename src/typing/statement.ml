@@ -1622,7 +1622,7 @@ module Make
       let (_, decl_ast) = interface cx loc decl in
       (loc, InterfaceDeclaration decl_ast)
     | (loc, DeclareModule module_) ->
-      let (_, decl_ast) = declare_module cx module_ in
+      let decl_ast = declare_module cx module_ in
       (loc, DeclareModule decl_ast)
     | (loc, DeclareNamespace namespace) ->
       let (_, decl_ast) = declare_namespace cx loc namespace in
@@ -2103,8 +2103,7 @@ module Make
       }
     in
     ignore @@ Type_env.set_scope_kind cx prev_scope_kind;
-
-    (module_t, ast)
+    ast
 
   and declare_namespace
       cx
