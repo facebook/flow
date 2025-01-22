@@ -127,20 +127,20 @@ module Import_export = struct
         in
         Flow_js_utils.add_output cx message
 
-  let get_module_t
+  let get_module_type_or_any
       cx
       ?(perform_platform_validation = false)
       ~import_kind_for_untyped_import_validation
       (loc, mref) =
     if Context.in_declare_module cx then
-      Flow_js_utils.get_builtin_module cx mref loc
+      let builtins = Context.builtins cx in
+      match Builtins.get_builtin_module_opt builtins mref with
+      | Some (_, (lazy m)) -> Ok m
+      | None -> Error (Flow_js_utils.lookup_builtin_module_error cx mref loc)
     else
-      let module_t =
+      let module_type_or_any =
         match Context.find_require cx mref with
-        | Context.TypedModule f ->
-          (match f () with
-          | Error t -> t
-          | Ok m -> ModuleT m)
+        | Context.TypedModule f -> f ()
         | Context.UncheckedModule (module_def_loc, mref) ->
           Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
               match import_kind with
@@ -152,21 +152,37 @@ module Import_export = struct
                 let message = Error_message.EUntypedImport (loc, mref) in
                 Flow_js_utils.add_output cx message
           );
-          AnyT.why Untyped (mk_reason (RModule mref) module_def_loc)
-        | Context.MissingModule m_name -> Flow_js_utils.lookup_builtin_module_error cx m_name loc
+          Error (AnyT.why Untyped (mk_reason (RModule mref) module_def_loc))
+        | Context.MissingModule m_name ->
+          Error (Flow_js_utils.lookup_builtin_module_error cx m_name loc)
       in
       let reason = Reason.(mk_reason (RCustom mref) loc) in
       let need_platform_validation =
         perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       in
       ( if need_platform_validation then
-        match concretize_module_type cx reason module_t with
+        match module_type_or_any with
         | Ok m ->
           if need_platform_validation then
             check_platform_availability cx reason m.module_available_platforms
         | Error _ -> ()
       );
-      module_t
+      module_type_or_any
+
+  let get_module_t
+      cx
+      ?(perform_platform_validation = false)
+      ~import_kind_for_untyped_import_validation
+      (loc, mref) =
+    match
+      get_module_type_or_any
+        cx
+        ~perform_platform_validation
+        ~import_kind_for_untyped_import_validation
+        (loc, mref)
+    with
+    | Ok m -> ModuleT m
+    | Error t -> t
 
   let singleton_concretize_type_for_imports_exports cx r t =
     match Flow.possible_concrete_types_for_imports_exports cx r t with
