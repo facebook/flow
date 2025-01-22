@@ -244,7 +244,14 @@ let find_exact_match_annotation = ExactMatchQuery.find
 
 (* Find identifier under location *)
 module Type_at_pos = struct
-  exception Found of ALoc.t * bool * Type.t
+  type result =
+    | TypeResult of Loc.t * bool * Type.t
+    | HardcodedModuleResult of Loc.t * string
+    | NoResult
+
+  exception FoundType of ALoc.t * bool * Type.t
+
+  exception FoundHardcodedModule of ALoc.t * string
 
   (* Kinds of nodes that "type-at-pos" is interested in:
    * - identifiers              (handled in t_identifier)
@@ -264,7 +271,8 @@ module Type_at_pos = struct
       method find_loc
           : 'a. ALoc.t -> Type.t -> is_type_identifier:bool -> tparams_rev:Type.typeparam list -> 'a
           =
-        (fun loc t ~is_type_identifier ~tparams_rev:_ -> raise (Found (loc, is_type_identifier, t)))
+        fun loc t ~is_type_identifier ~tparams_rev:_ ->
+          raise (FoundType (loc, is_type_identifier, t))
 
       method! t_identifier (((loc, t), _) as id) =
         if self#covers_target loc then
@@ -356,15 +364,27 @@ module Type_at_pos = struct
                ~error:(fun () -> super#jsx_attribute_name_identifier id)
         else
           super#jsx_attribute_name_identifier id
+
+      method! declare_module annot m =
+        let open Ast.Statement.DeclareModule in
+        let { id; body = _; comments = _ } = m in
+        let () =
+          match id with
+          | Identifier ((loc, _), { Ast.Identifier.name; _ }) ->
+            if self#covers_target loc then raise (FoundHardcodedModule (loc, name))
+          | Literal _ -> ()
+        in
+        super#declare_module annot m
     end
 
   let find cx typed_ast loc =
     let searcher = new type_at_pos_searcher cx loc in
     try
       ignore (searcher#program typed_ast);
-      None
+      NoResult
     with
-    | Found (loc, is_type_id, scheme) -> Some (ALoc.to_loc_exn loc, is_type_id, scheme)
+    | FoundType (loc, is_type_id, scheme) -> TypeResult (ALoc.to_loc_exn loc, is_type_id, scheme)
+    | FoundHardcodedModule (loc, name) -> HardcodedModuleResult (ALoc.to_loc_exn loc, name)
 end
 
 let find_type_at_pos_annotation = Type_at_pos.find

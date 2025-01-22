@@ -1,25 +1,16 @@
 a.js:3:16
 Flags:
 module "a"
-
-'a' defined at a.js:3:15
-
 a.js:3:16,3:16
 
 b.js:3:16
 Flags:
 module "b"
-
-'b' defined at b.js:3:15
-
 b.js:3:16,3:16
 
 c.js:3:16
 Flags:
 module "c"
-
-'c' defined at c.js:3:15
-
 c.js:3:16,3:16
 
 cjs.js:7:4

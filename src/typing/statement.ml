@@ -2020,11 +2020,11 @@ module Make
 
   and declare_module cx { Ast.Statement.DeclareModule.id; body; comments } =
     let open Ast.Statement in
-    let (id_loc, name) =
+    let id_loc =
       match id with
-      | DeclareModule.Identifier (id_loc, { Ast.Identifier.name = value; comments = _ })
-      | DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
-        (id_loc, value)
+      | DeclareModule.Identifier (id_loc, _)
+      | DeclareModule.Literal (id_loc, _) ->
+        id_loc
     in
     if not (File_key.is_lib_file (Context.file cx) && Type_env.in_global_scope cx) then
       Flow_js_utils.add_output
@@ -2058,30 +2058,15 @@ module Make
                )
             )
     );
-    let reason = mk_reason (RModule name) id_loc in
-    let module_t =
-      ModuleT
-        {
-          module_reason = reason;
-          module_export_types =
-            {
-              value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-              type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-              cjs_export = None;
-              has_every_named_export = false;
-            };
-          module_is_strict = Context.is_strict cx;
-          module_available_platforms = Context.available_platforms cx;
-        }
-    in
     let ast =
       {
         DeclareModule.id =
           begin
             match id with
             | DeclareModule.Identifier (id_loc, id) ->
-              DeclareModule.Identifier ((id_loc, module_t), id)
-            | DeclareModule.Literal (id_loc, lit) -> DeclareModule.Literal ((id_loc, module_t), lit)
+              DeclareModule.Identifier ((id_loc, MixedT.at id_loc), id)
+            | DeclareModule.Literal (id_loc, lit) ->
+              DeclareModule.Literal ((id_loc, StrModuleT.at id_loc), lit)
           end;
         body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
         comments;

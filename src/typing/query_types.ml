@@ -26,8 +26,9 @@ let max_size_of_evaluated_type = 100
 
 let dump_type_at_pos ~cx ~typed_ast loc =
   match find_type_at_pos_annotation cx typed_ast loc with
-  | None -> None
-  | Some (loc, _, t) -> Some (loc, Debug_js.dump_t cx ~depth:10 t)
+  | Type_at_pos.NoResult -> None
+  | Type_at_pos.HardcodedModuleResult (loc, _) -> Some (loc, "ModuleT")
+  | Type_at_pos.TypeResult (loc, _, t) -> Some (loc, Debug_js.dump_t cx ~depth:10 t)
 
 let type_at_pos_type
     ~cx
@@ -40,8 +41,22 @@ let type_at_pos_type
     ~include_refs
     loc : Ty.type_at_pos_result result =
   match find_type_at_pos_annotation cx typed_ast loc with
-  | None -> FailureNoMatch
-  | Some (loc, toplevel_is_type_identifier_reference, t) ->
+  | Type_at_pos.NoResult -> FailureNoMatch
+  | Type_at_pos.HardcodedModuleResult (loc, name) ->
+    let module_symbol =
+      Ty_symbol.
+        {
+          sym_provenance = Local;
+          sym_name = Reason.OrdinaryName name;
+          sym_anonymous = false;
+          sym_def_loc = ALoc.of_loc loc;
+        }
+    in
+    let unevaluated =
+      Ty.(Decl (ModuleDecl { name = Some module_symbol; exports = []; default = None }))
+    in
+    Success (loc, { Ty.unevaluated; evaluated = None; refs = None })
+  | Type_at_pos.TypeResult (loc, toplevel_is_type_identifier_reference, t) ->
     let typed_ast_opt =
       if no_typed_ast_for_imports then
         None
