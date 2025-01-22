@@ -219,9 +219,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind = _; source; specifiers; declaration = _; comments = _ } = decl in
       (match (source, specifiers) with
-      | (Some (source_annot, _), Some (ExportBatchSpecifier (_, Some id))) ->
+      | (Some (source_annot, lit), Some (ExportBatchSpecifier (_, Some id))) ->
         this#module_def_for_entire_module_related_id
-          ~module_t:(this#type_from_enclosing_node source_annot)
+          ~module_t:(this#get_module_t source_annot lit)
           ~id
       | _ -> ());
       super#export_named_declaration loc decl
@@ -260,7 +260,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
-      let { default; specifiers; source = (source_annot, _); _ } = decl in
+      let { default; specifiers; source = (source_annot, lit); _ } = decl in
       Base.Option.iter default ~f:(fun { identifier = (annot, _); _ } ->
           if this#annot_covers_target annot then
             match this#remote_default_name_def_loc_of_import_declaration (loc, decl) with
@@ -271,7 +271,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           | ImportNamedSpecifiers _ -> ()
           | ImportNamespaceSpecifier (_, id) ->
             this#module_def_for_entire_module_related_id
-              ~module_t:(this#type_from_enclosing_node source_annot)
+              ~module_t:(this#get_module_t source_annot lit)
               ~id
           );
       super#import_declaration loc decl
@@ -742,9 +742,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       (this#on_loc_annot loc, { key; pattern; shorthand; comments })
   end
 
-class typed_ast_searcher _cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
+class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
   object
-    inherit [ALoc.t * Type.t] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~purpose
+    inherit [ALoc.t * Type.t] searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose
 
     method private loc_of_annot (loc, _) = loc
 
@@ -765,7 +765,17 @@ class typed_ast_searcher _cx ~typed_ast:_ ~is_local_use ~is_legit_require ~cover
         (_, { Ast.Statement.ExportNamedDeclaration.ExportSpecifier.imported_name_def_loc; _ }) =
       imported_name_def_loc
 
-    method private get_module_t (_, t) _ = t
+    method private get_module_t (loc, _) source =
+      let { Flow_ast.StringLiteral.value = module_name; _ } = source in
+      match
+        Type_operation_utils.Import_export.get_module_type_or_any
+          cx
+          (loc, module_name)
+          ~perform_platform_validation:false
+          ~import_kind_for_untyped_import_validation:None
+      with
+      | Ok m -> Type.ModuleT m
+      | Error t -> t
 
     method private component_name_of_jsx_element _ expr =
       let open Ast.JSX in
@@ -920,7 +930,7 @@ let process_location cx ~available_ast ~is_local_use ~is_legit_require ~purpose 
   | Typed_ast_utils.Typed_ast typed_ast ->
     let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
     let searcher =
-      new typed_ast_searcher () ~typed_ast ~is_local_use ~is_legit_require ~covers_target ~purpose
+      new typed_ast_searcher cx ~typed_ast ~is_local_use ~is_legit_require ~covers_target ~purpose
     in
     search ~searcher typed_ast
   | Typed_ast_utils.ALoc_ast aloc_ast ->
