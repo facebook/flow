@@ -47,6 +47,9 @@ module type S = sig
 
   val run_type : genv:Env.genv -> State.t -> Type.t -> (Ty.elt, error) result * State.t
 
+  val run_module_type :
+    genv:Env.genv -> State.t -> Type.moduletype -> (Ty.decl, error) result * State.t
+
   val normalize_imports :
     Context.t ->
     File_sig.t ->

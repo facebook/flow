@@ -9,6 +9,8 @@ open Ty_normalizer_env
 
 val from_type : genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result
 
+val from_module_type : genv -> Type.moduletype -> (Ty.decl, Ty_normalizer.error) result
+
 val mk_genv :
   options:options ->
   cx:Context.t ->

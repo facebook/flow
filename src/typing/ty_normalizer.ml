@@ -112,6 +112,9 @@ module type S = sig
 
   val run_type : genv:Env.genv -> State.t -> Type.t -> (Ty.elt, error) result * State.t
 
+  val run_module_type :
+    genv:Env.genv -> State.t -> Type.moduletype -> (Ty.decl, error) result * State.t
+
   val normalize_imports :
     Context.t ->
     File_sig.t ->
@@ -1798,6 +1801,8 @@ module Make (I : INPUT) : S = struct
   end
 
   module ElementConverter : sig
+    val module_t : env:Env.t -> reason -> T.exporttypes -> (Ty.decl, error) t
+
     val convert_toplevel : env:Env.t -> Type.t -> (Ty.elt, error) t
   end = struct
     (* We are being a bit lax here with opaque types so that we don't have to
@@ -2149,6 +2154,20 @@ module Make (I : INPUT) : S = struct
     (result, state)
 
   let run_type = run_type_aux ~f:ElementConverter.convert_toplevel ~simpl:Ty_utils.simplify_elt
+
+  let run_module_type ~genv state { T.module_reason; module_export_types; _ } :
+      (Ty.decl, error) result * State.t =
+    let env = Env.init ~genv in
+    let (result, state) =
+      run state (ElementConverter.module_t ~env module_reason module_export_types)
+    in
+    let result =
+      match result with
+      | Ok decl when Env.optimize_types env ->
+        Ok (Ty_utils.simplify_decl ~merge_kinds:(Env.merge_bot_and_any_kinds env) ~sort:false decl)
+      | result -> result
+    in
+    (result, state)
 
   (* Before we start normalizing the input type we populate our environment with
    * aliases that are in scope due to typed imports. These appear inside

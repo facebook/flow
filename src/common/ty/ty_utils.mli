@@ -13,6 +13,8 @@ val size_of_elt : ?max:int -> Ty.elt -> int option
 
 val simplify_type : merge_kinds:bool -> ?sort:bool -> Ty.t -> Ty.t
 
+val simplify_decl : merge_kinds:bool -> ?sort:bool -> Ty.decl -> Ty.decl
+
 val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt
 
 val elt_equal : Ty.elt -> Ty.elt -> bool

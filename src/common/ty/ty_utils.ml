@@ -237,12 +237,18 @@ module Simplify = struct
     let config = mk_config ~merge_kinds ~sort in
     mapper#on_t config
 
+  let run_decl ~merge_kinds ~sort =
+    let config = mk_config ~merge_kinds ~sort in
+    mapper#on_decl config
+
   let run_elt ~merge_kinds ~sort =
     let config = mk_config ~merge_kinds ~sort in
     mapper#on_elt config
 end
 
 let simplify_type ~merge_kinds ?(sort = false) = Simplify.run_type ~merge_kinds ~sort
+
+let simplify_decl ~merge_kinds ?(sort = false) = Simplify.run_decl ~merge_kinds ~sort
 
 let simplify_elt ~merge_kinds ?(sort = false) = Simplify.run_elt ~merge_kinds ~sort
 

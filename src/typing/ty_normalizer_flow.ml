@@ -96,6 +96,11 @@ let from_type genv t =
   let (result, _) = run_type ~genv State.empty t in
   result
 
+let from_module_type genv t =
+  print_normalizer_banner genv;
+  let (result, _) = run_module_type ~genv State.empty t in
+  result
+
 let expand_members ~force_instance ?allowed_prop_names genv t =
   print_normalizer_banner genv;
   let (result, _) = run_expand_members ~genv ~force_instance ?allowed_prop_names State.empty t in
