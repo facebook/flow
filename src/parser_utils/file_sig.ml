@@ -167,7 +167,7 @@ class requires_calculator ~file_key ~ast ~opts =
 
     method private update_file_sig f = this#update_acc f
 
-    method private add_require require = this#update_file_sig (add_require require)
+    method add_require require = this#update_file_sig (add_require require)
 
     method private add_exports kind source =
       let open Ast.Statement in
@@ -230,12 +230,6 @@ class requires_calculator ~file_key ~ast ~opts =
       in
       this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix });
       super#module_ref_literal loc lit
-
-    method! jsx_fragment loc expr =
-      (* Currently in statement.ml, we unconditionally use the React typing for jsx fragment without
-       * any customization ability. *)
-      this#add_require (ImportSynthetic { source = "react" });
-      super#jsx_fragment loc expr
 
     method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
@@ -545,6 +539,7 @@ class requires_calculator ~file_key ~ast ~opts =
 
 let program ~file_key ~ast ~opts =
   let walk = new requires_calculator ~file_key ~ast ~opts in
+  walk#add_require (ImportSynthetic { source = "react" });
   (match file_key with
   | File_key.LibFile _ -> ()
   | _ -> walk#add_multiplatform_synthetic_imports);
