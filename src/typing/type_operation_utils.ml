@@ -169,21 +169,6 @@ module Import_export = struct
       );
       module_type_or_any
 
-  let get_module_t
-      cx
-      ?(perform_platform_validation = false)
-      ~import_kind_for_untyped_import_validation
-      (loc, mref) =
-    match
-      get_module_type_or_any
-        cx
-        ~perform_platform_validation
-        ~import_kind_for_untyped_import_validation
-        (loc, mref)
-    with
-    | Ok m -> ModuleT m
-    | Error t -> t
-
   let singleton_concretize_type_for_imports_exports cx r t =
     match Flow.possible_concrete_types_for_imports_exports cx r t with
     | [] -> EmptyT.why r
@@ -202,14 +187,14 @@ module Import_export = struct
     )
 
   let get_imported_t
-      cx ~import_reason ~module_name ~source_module_t ~import_kind ~remote_name ~local_name =
+      cx ~import_reason ~module_name ~source_module ~import_kind ~remote_name ~local_name =
     let is_strict = Context.is_strict cx in
     let name_def_loc_ref = ref None in
     let t =
       let with_concretized_type cx r f t =
         f (singleton_concretize_type_for_imports_exports cx r t)
       in
-      match concretize_module_type cx import_reason source_module_t with
+      match source_module with
       | Ok m ->
         let (name_loc_opt, t) =
           if remote_name = "default" then
@@ -227,7 +212,7 @@ module Import_export = struct
         in
         name_def_loc_ref := name_loc_opt;
         t
-      | Error (lreason, any_source) -> AnyT (lreason, any_source)
+      | Error t -> t
     in
     let name_def_loc = !name_def_loc_ref in
     (name_def_loc, t)
@@ -238,59 +223,59 @@ module Import_export = struct
     | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
 
   let import_named_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~remote_name ~local_name =
+      cx import_reason import_kind ~module_name ~source_module ~remote_name ~local_name =
     let import_kind = type_kind_of_kind import_kind in
     get_imported_t
       cx
       ~import_reason
       ~module_name
-      ~source_module_t
+      ~source_module
       ~import_kind
       ~remote_name
       ~local_name
 
-  let get_module_namespace_type cx reason ~namespace_symbol source_module_t =
+  let get_module_namespace_type cx reason ~namespace_symbol source_module =
     let is_strict = Context.is_strict cx in
-    match concretize_module_type cx reason source_module_t with
+    match source_module with
     | Ok m ->
       let (values_type, types_tmap) =
         Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
       in
       NamespaceT { namespace_symbol; values_type; types_tmap }
-    | Error (lreason, any_source) -> AnyT (lreason, any_source)
+    | Error t -> t
 
   let import_namespace_specifier_type
-      cx import_reason import_kind ~module_name ~namespace_symbol ~source_module_t ~local_loc =
+      cx import_reason import_kind ~module_name ~namespace_symbol ~source_module ~local_loc =
     let open Ast.Statement in
     match import_kind with
     | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
     | ImportDeclaration.ImportTypeof ->
       let module_ns_t =
-        get_module_namespace_type cx import_reason ~namespace_symbol source_module_t
+        get_module_namespace_type cx import_reason ~namespace_symbol source_module
       in
       let bind_reason = repos_reason local_loc import_reason in
       Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
     | ImportDeclaration.ImportValue ->
       let reason = mk_reason (RModule module_name) local_loc in
       let namespace_symbol = FlowSymbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
-      get_module_namespace_type cx reason ~namespace_symbol source_module_t
+      get_module_namespace_type cx reason ~namespace_symbol source_module
 
   let import_default_specifier_type
-      cx import_reason import_kind ~module_name ~source_module_t ~local_name =
+      cx import_reason import_kind ~module_name ~source_module ~local_name =
     let import_kind = type_kind_of_kind import_kind in
     get_imported_t
       cx
       ~import_reason
       ~module_name
-      ~source_module_t
+      ~source_module
       ~import_kind
       ~remote_name:"default"
       ~local_name
 
   let cjs_require_type
-      cx reason ~namespace_symbol ~standard_cjs_esm_interop ~legacy_interop source_module_t =
+      cx reason ~namespace_symbol ~standard_cjs_esm_interop ~legacy_interop source_module =
     let is_strict = Context.is_strict cx in
-    match concretize_module_type cx reason source_module_t with
+    match source_module with
     | Ok m ->
       let (t, def_loc) =
         Flow_js_utils.CJSRequireTKit.on_ModuleT
@@ -304,10 +289,10 @@ module Import_export = struct
           m
       in
       (Some def_loc, t)
-    | Error (lreason, any_source) -> (None, AnyT (lreason, any_source))
+    | Error t -> (None, t)
 
   let get_implicitly_imported_react_fragment_type cx loc =
-    let source_module_t =
+    let source_module =
       Flow_js_utils.get_implicitly_imported_module
         cx
         "react"
@@ -319,7 +304,7 @@ module Import_export = struct
       cx
       ~import_reason:reason
       ~module_name:"react"
-      ~source_module_t
+      ~source_module
       ~import_kind:ImportValue
       ~remote_name:"Fragment"
       ~local_name:"Fragment"

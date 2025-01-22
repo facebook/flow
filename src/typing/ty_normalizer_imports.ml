@@ -21,7 +21,7 @@ let add_bind_ident_from_typed_ast typed_ast name import_mode loc acc =
   | None -> acc
 
 let add_bind_ident_from_imports cx local_name import_mode local_loc source remote_name acc =
-  let (source_loc, module_name, source_module_t) = source in
+  let (source_loc, module_name, source_module) = source in
   let import_reason =
     Reason.mk_reason (Reason.RNamedImportedType (module_name, local_name)) source_loc
   in
@@ -31,7 +31,7 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
       import_reason
       (import_mode_to_import_kind import_mode)
       ~module_name
-      ~source_module_t
+      ~source_module
       ~remote_name
       ~local_name
   in
@@ -40,9 +40,9 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
 let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
   let (source_loc, module_name) = source in
   let source_loc = ALoc.of_loc source_loc in
-  let source_module_t =
+  let source_module =
     lazy
-      (Import_export.get_module_t
+      (Import_export.get_module_type_or_any
          cx
          ~import_kind_for_untyped_import_validation:None
          (source_loc, module_name)
@@ -62,7 +62,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
                   local_name
                   import_mode
                   local_loc
-                  (source_loc, module_name, Lazy.force source_module_t)
+                  (source_loc, module_name, Lazy.force source_module)
                   remote_name
                   acc
               | Some typed_ast ->
@@ -76,8 +76,8 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
 
 let add_require_bindings_from_exports_map cx loc source_name binding acc =
   let reason = Reason.(mk_reason (RModule source_name) loc) in
-  let module_t =
-    Import_export.get_module_t
+  let source_module =
+    Import_export.get_module_type_or_any
       cx
       ~perform_platform_validation:false
       ~import_kind_for_untyped_import_validation:None
@@ -90,7 +90,7 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
       ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:source_name ~def_loc:loc)
       ~standard_cjs_esm_interop:false
       ~legacy_interop:false
-      module_t
+      source_module
     |> snd
   in
   match binding with
@@ -99,7 +99,7 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
     (name, loc, Ty.ValueMode, t) :: acc
   | BindNamed map -> begin
     let open Type in
-    match Import_export.concretize_module_type cx reason module_t with
+    match source_module with
     | Ok { module_export_types = exports; _ } ->
       let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
       List.fold_left

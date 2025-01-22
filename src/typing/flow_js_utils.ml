@@ -928,18 +928,15 @@ let get_builtin_module cx module_name reason =
 
 let get_implicitly_imported_module cx module_name ~expected_module_purpose reason =
   match Context.find_require cx module_name with
-  | Context.UncheckedModule _ -> AnyT.untyped reason
-  | Context.TypedModule f ->
-    (match f () with
-    | Error t -> t
-    | Ok m -> ModuleT m)
+  | Context.UncheckedModule _ -> Error (AnyT.untyped reason)
+  | Context.TypedModule f -> f ()
   | Context.MissingModule _ ->
     add_output
       cx
       (Error_message.EExpectedModuleLookupFailed
          { loc = loc_of_reason reason; name = module_name; expected_module_purpose }
       );
-    AnyT.error reason
+    Error (AnyT.error reason)
 
 let builtin_promise_class_id cx =
   match lookup_builtin_value_opt cx "Promise" with

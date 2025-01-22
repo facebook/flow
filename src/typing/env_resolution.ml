@@ -904,14 +904,14 @@ let resolve_opaque_type cx loc opaque =
   t
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
-  let source_module_t =
+  let source_module =
     let import_kind_for_untyped_import_validation =
       match import_kind with
       | Ast.Statement.ImportDeclaration.ImportType -> Some Type.ImportType
       | Ast.Statement.ImportDeclaration.ImportTypeof -> Some Type.ImportTypeof
       | Ast.Statement.ImportDeclaration.ImportValue -> Some Type.ImportValue
     in
-    Import_export.get_module_t
+    Import_export.get_module_type_or_any
       cx
       ~import_kind_for_untyped_import_validation
       (source_loc, module_name)
@@ -925,7 +925,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         import_reason
         import_kind
         ~module_name
-        ~source_module_t
+        ~source_module
         ~remote_name:remote
         ~local_name:local
     in
@@ -941,7 +941,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         import_kind
         ~module_name
         ~namespace_symbol:(mk_namespace_symbol ~name ~def_loc:id_loc)
-        ~source_module_t
+        ~source_module
         ~local_loc:id_loc
     in
     if Flow_ast_utils.hook_name name then
@@ -955,7 +955,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
         import_reason
         import_kind
         ~module_name
-        ~source_module_t
+        ~source_module
         ~local_name
     in
     if Flow_ast_utils.hook_name local_name then

@@ -882,11 +882,15 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
 
     method private get_module_t loc source =
       let { Flow_ast.StringLiteral.value = module_name; _ } = source in
-      Type_operation_utils.Import_export.get_module_t
-        cx
-        (loc, module_name)
-        ~perform_platform_validation:false
-        ~import_kind_for_untyped_import_validation:None
+      match
+        Type_operation_utils.Import_export.get_module_type_or_any
+          cx
+          (loc, module_name)
+          ~perform_platform_validation:false
+          ~import_kind_for_untyped_import_validation:None
+      with
+      | Ok m -> Type.ModuleT m
+      | Error t -> t
 
     method private component_name_of_jsx_element loc expr =
       let open Ast.JSX in

@@ -1054,7 +1054,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
-                let remote_module_t = Flow_js_utils.get_builtin_module cx value loc in
+                let remote_module =
+                  let builtins = Context.builtins cx in
+                  match Builtins.get_builtin_module_opt builtins value with
+                  | Some (_, (lazy m)) -> Ok m
+                  | None -> Error (Flow_js_utils.lookup_builtin_module_error cx value loc)
+                in
                 let str_t = mk_singleton_string str_loc value in
                 let (_def_loc_opt, require_t) =
                   Type_operation_utils.Import_export.cjs_require_type
@@ -1063,7 +1068,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:value ~def_loc:loc)
                     ~standard_cjs_esm_interop:false
                     ~legacy_interop:false
-                    remote_module_t
+                    remote_module
                 in
                 reconstruct_ast
                   require_t

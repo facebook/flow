@@ -818,8 +818,8 @@ module Make
   let module_ref_literal cx loc lit =
     let { Ast.ModuleRefLiteral.value; def_loc_opt = _; prefix_len; legacy_interop; _ } = lit in
     let mref = Base.String.drop_prefix value prefix_len in
-    let module_t =
-      Import_export.get_module_t
+    let module_type_or_any =
+      Import_export.get_module_type_or_any
         cx
         ~import_kind_for_untyped_import_validation:(Some ImportValue)
         (loc, mref)
@@ -831,7 +831,7 @@ module Make
         ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
         ~standard_cjs_esm_interop:true
         ~legacy_interop
-        module_t
+        module_type_or_any
     in
     let reason = mk_reason (RCustom "module reference") loc in
     let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
@@ -947,7 +947,7 @@ module Make
       | Ast.Statement.ExportValue -> (None, t)
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from ~module_name ~source_module_t loc local_name =
+    let export_from ~module_name ~source_module loc local_name =
       let reason = mk_reason (RIdentifier local_name) loc in
       let import_kind =
         match export_kind with
@@ -959,7 +959,7 @@ module Make
         reason
         import_kind
         ~module_name
-        ~source_module_t
+        ~source_module
         ~remote_name:(Reason.display_string_of_name local_name)
         ~local_name:(Reason.display_string_of_name local_name)
     in
@@ -988,22 +988,22 @@ module Make
     | E.ExportSpecifiers specifiers ->
       let export =
         match source with
-        | Some ((_, module_t), { Ast.StringLiteral.value = module_name; _ }) ->
-          export_from ~module_name ~source_module_t:module_t
+        | Some (source_module, _, { Ast.StringLiteral.value = module_name; _ }) ->
+          export_from ~module_name ~source_module
         | None -> export_ref
       in
       let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
       E.ExportSpecifiers specifiers
     (* [declare] export [type] * as id from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
-      let ((_, module_t), _) = Base.Option.value_exn source in
+      let (source_module, _, _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let ns_t =
         Import_export.get_module_namespace_type
           cx
           reason
           ~namespace_symbol:(mk_constant_symbol ~name ~def_loc:id_loc)
-          module_t
+          source_module
       in
       E.ExportBatchSpecifier (specifier_loc, Some ((id_loc, ns_t), id))
     (* [declare] export [type] * from "source"; *)
@@ -1670,18 +1670,24 @@ module Make
         match source with
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let source_module_t =
-            Import_export.get_module_t
+          let source_module =
+            Import_export.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
               (source_loc, module_name)
           in
-          Some ((source_loc, source_module_t), source_literal)
+          let source_module_t =
+            match source_module with
+            | Ok m -> ModuleT m
+            | Error t -> t
+          in
+          Some (source_module, (source_loc, source_module_t), source_literal)
       in
       let specifiers =
         let export_kind = Ast.Statement.ExportValue in
         Option.map (export_specifiers cx source export_kind) specifiers
       in
+      let source = Option.map (fun (_, t, ast) -> (t, ast)) source in
       (loc, DeclareExportDeclaration { decl with D.declaration; specifiers; source })
     | (loc, DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t); comments })
       ->
@@ -1718,16 +1724,22 @@ module Make
             | Ast.Statement.ExportType -> (false, Some ImportType)
             | Ast.Statement.ExportValue -> (true, Some ImportValue)
           in
-          let source_module_t =
-            Import_export.get_module_t
+          let source_module =
+            Import_export.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation
               (source_loc, module_name)
               ~perform_platform_validation
           in
-          Some ((source_loc, source_module_t), source_literal)
+          let source_module_t =
+            match source_module with
+            | Ok m -> ModuleT m
+            | Error t -> t
+          in
+          Some (source_module, (source_loc, source_module_t), source_literal)
       in
       let specifiers = Option.map (export_specifiers cx source export_kind) specifiers in
+      let source = Option.map (fun (_, t, ast) -> (t, ast)) source in
       ( loc,
         ExportNamedDeclaration
           { export_decl with ExportNamedDeclaration.declaration; specifiers; source }
@@ -1776,12 +1788,17 @@ module Make
         | ImportDeclaration.ImportTypeof -> (false, Some ImportTypeof)
         | ImportDeclaration.ImportValue -> (true, Some ImportValue)
       in
-      let source_module_t =
-        Import_export.get_module_t
+      let source_module =
+        Import_export.get_module_type_or_any
           cx
           ~import_kind_for_untyped_import_validation
           (source_loc, module_name)
           ~perform_platform_validation
+      in
+      let source_module_t =
+        match source_module with
+        | Ok m -> ModuleT m
+        | Error t -> t
       in
       let source_ast = ((source_loc, source_module_t), source_literal) in
 
@@ -1816,7 +1833,7 @@ module Make
                        import_reason
                        import_kind
                        ~module_name
-                       ~source_module_t
+                       ~source_module
                        ~remote_name
                        ~local_name
                    in
@@ -1859,7 +1876,7 @@ module Make
                 import_kind
                 ~module_name
                 ~namespace_symbol:(mk_namespace_symbol ~name:local_name ~def_loc:local_loc)
-                ~source_module_t
+                ~source_module
                 ~local_loc
             in
             ((local_loc, t), local_id)
@@ -1882,7 +1899,7 @@ module Make
               import_reason
               import_kind
               ~module_name
-              ~source_module_t
+              ~source_module
               ~local_name
           in
           Some
@@ -3261,8 +3278,8 @@ module Make
       let t =
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
-          let module_t =
-            Import_export.get_module_t
+          let source_module =
+            Import_export.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
               (loc, module_name)
@@ -3274,7 +3291,7 @@ module Make
               import_reason
               Ast.Statement.ImportDeclaration.ImportValue
               ~module_name
-              ~source_module_t:module_t
+              ~source_module
               ~local_name:module_name
             |> snd
           else
@@ -3284,7 +3301,7 @@ module Make
               ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
               ~standard_cjs_esm_interop:false
               ~legacy_interop:false
-              module_t
+              source_module
             |> snd
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
@@ -3507,7 +3524,7 @@ module Make
       let t module_name =
         let ns_t =
           let reason = mk_reason (RModule module_name) loc in
-          Import_export.get_module_t
+          Import_export.get_module_type_or_any
             cx
             (source_loc, module_name)
             ~perform_platform_validation:true
@@ -3676,7 +3693,7 @@ module Make
               )
             ) ->
             let (def_loc_opt, require_t) =
-              Import_export.get_module_t
+              Import_export.get_module_type_or_any
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
@@ -4162,7 +4179,7 @@ module Make
         | Some (jest_loc, source_loc, module_name)
           when not (Type_env.local_scope_entry_exists cx jest_loc) ->
           ignore
-          @@ Import_export.get_module_t
+          @@ Import_export.get_module_type_or_any
                cx
                (source_loc, module_name)
                ~perform_platform_validation:false
