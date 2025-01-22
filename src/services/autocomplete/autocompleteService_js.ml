@@ -1010,8 +1010,8 @@ let exports_of_module_ty
   in
   let is_ok export_kind name = is_kind export_kind && filter_name name in
   function
-  | Decl (ModuleDecl { exports; _ })
-  | Decl (NamespaceDecl { exports; _ }) ->
+  | ModuleDecl { exports; _ }
+  | NamespaceDecl { exports; _ } ->
     Base.List.filter_map
       ~f:(function
         | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; _ } as d when is_ok `Type sym_name
@@ -1416,14 +1416,14 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                  t
              in
              (result :: items_rev, errors_to_log)
-           | Ok elt
+           | Ok (Ty.Decl decl)
              when exports_of_module_ty
                     ~edit_locs
                     ~exact_by_default
                     ~documentation_and_tags_of_module_member:(fun _ ->
                       AcCompletion.empty_documentation_and_tags)
                     ~kind:`Type
-                    elt
+                    decl
                   <> [] ->
              let result =
                autocomplete_create_result_elt
@@ -1431,7 +1431,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                  ~exact_by_default
                  ~log_info:"unqualified type -> qualified type"
                  (name, edit_locs)
-                 elt
+                 (Ty.Decl decl)
                  ~insert_text:(name ^ ".")
              in
              (result :: items_rev, errors_to_log)
@@ -1900,10 +1900,24 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
   let (items, errors_to_log) =
     match module_type_opt with
     | None -> ([], [])
-    | Some module_type ->
-      (match Ty_normalizer_flow.from_type genv module_type with
+    | Some (`Module module_type) ->
+      (match Ty_normalizer_flow.from_module_type genv module_type with
       | Error err -> ([], [Ty_normalizer.error_to_string err])
       | Ok module_ty ->
+        ( exports_of_module_ty
+            ~edit_locs
+            ~exact_by_default
+            ~documentation_and_tags_of_module_member
+            ~kind
+            ?filter_name
+            module_ty,
+          []
+        ))
+    | Some (`Type t) ->
+      (match Ty_normalizer_flow.from_type genv t with
+      | Error err -> ([], [Ty_normalizer.error_to_string err])
+      | Ok (Ty.Type _) -> ([], [])
+      | Ok (Ty.Decl module_ty) ->
         ( exports_of_module_ty
             ~edit_locs
             ~exact_by_default
@@ -2256,7 +2270,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
             `Either
         in
         let filter_name name = not (SSet.mem name used_keys) in
-        let module_type_opt = Option.map (fun m -> Type.ModuleT m) module_type_opt in
+        let module_type_opt = Option.map (fun m -> `Module m) module_type_opt in
         autocomplete_module_exports ~typing ~edit_locs ~token ~kind ~filter_name module_type_opt
       | Ac_enum -> AcEmpty "Enum"
       | Ac_key { obj_type; used_keys; spreads } ->
@@ -2363,7 +2377,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         AcResult
           (autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token)
       | Ac_qualified_type qtype ->
-        autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type (Some qtype)
+        autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type (Some (`Type qtype))
     in
     let result =
       match result with
