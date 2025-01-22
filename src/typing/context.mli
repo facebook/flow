@@ -126,7 +126,7 @@ type typing_mode =
   | HintEvaluationMode
 
 type resolved_require =
-  | TypedModule of Type.t
+  | TypedModule of (unit -> (Type.moduletype, Type.t) result)
   | UncheckedModule of ALoc.t * string
   | MissingModule of string
 

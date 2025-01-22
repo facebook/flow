@@ -340,11 +340,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | GetKeysT _
     | GetValuesT _
     | GetDictValuesT _
-    (* Import-export related upper bounds won't appear during implicit instantiation. *)
-    | CopyNamedExportsT _
-    | CopyTypeExportsT _
-    | ExportNamedT _
-    | ExportTypeT _
     (* Class/interface related upper bounds won't occur during implicit instantiation *)
     | SuperT _
     | ImplementsT _

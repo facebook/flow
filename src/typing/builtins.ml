@@ -8,11 +8,11 @@
 type t = {
   original_global_values: (ALoc.t * Type.t) lazy_t SMap.t;
   original_global_types: (ALoc.t * Type.t) lazy_t SMap.t;
-  original_global_modules: Type.t lazy_t SMap.t;
+  original_global_modules: (Reason.t * Type.moduletype Lazy.t) Lazy.t SMap.t;
   mapper: Type.t -> Type.t;
   mapped_global_names: (string, ALoc.t * Type.t) Hashtbl.t;
   mapped_global_types: (string, ALoc.t * Type.t) Hashtbl.t;
-  mapped_global_modules: (string, Type.t) Hashtbl.t;
+  mapped_global_modules: (string, Reason.t * Type.moduletype Lazy.t) Hashtbl.t;
 }
 
 let builtin_ordinary_name_set { original_global_values; original_global_types; _ } =
@@ -52,8 +52,8 @@ let get_builtin_module_opt { original_global_modules; mapper; mapped_global_modu
   | None ->
     (match SMap.find_opt name original_global_modules with
     | None -> None
-    | Some (lazy v) ->
-      let v = mapper v in
+    | Some (lazy ((_, lazy_module) as v)) ->
+      ignore (mapper (Type.ModuleT (Lazy.force lazy_module)));
       Hashtbl.add mapped_global_modules name v;
       Some v)
 

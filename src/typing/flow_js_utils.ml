@@ -923,13 +923,16 @@ let lookup_builtin_typeapp cx reason x targs =
 let get_builtin_module cx module_name reason =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_module_opt builtins module_name with
-  | Some t -> t
+  | Some (_, (lazy m)) -> ModuleT m
   | None -> lookup_builtin_module_error cx module_name reason
 
 let get_implicitly_imported_module cx module_name ~expected_module_purpose reason =
   match Context.find_require cx module_name with
   | Context.UncheckedModule _ -> AnyT.untyped reason
-  | Context.TypedModule t -> t
+  | Context.TypedModule f ->
+    (match f () with
+    | Error t -> t
+    | Ok m -> ModuleT m)
   | Context.MissingModule _ ->
     add_output
       cx
@@ -1404,18 +1407,6 @@ module type Import_export_helper_sig = sig
     Reason.t * Type.named_symbol NameUtils.Map.t * Type.named_symbol NameUtils.Map.t * export_kind ->
     Type.t ->
     r
-
-  val export_type :
-    Context.t ->
-    reason
-    * (* name_loc *)
-    ALoc.t option
-    * (* preferred_def_locs *)
-    ALoc.t Nel.t option
-    * name (* export_name *)
-    * t (* target_module_t *) ->
-    Type.t ->
-    Type.t
 
   val return : Context.t -> Type.t -> r
 end
@@ -1970,8 +1961,8 @@ end
 (* Copy the named exports from a source module into a target module. Used
    to implement `export * from 'SomeModule'`, with the current module as
    the target and the imported module as the source. *)
-module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx (reason, target_module_t) module_ : F.r =
+module CopyNamedExportsTKit = struct
+  let mod_ModuleT cx ~target_module_type module_ =
     let {
       module_reason = _;
       module_export_types = source_exports;
@@ -1980,49 +1971,13 @@ module CopyNamedExportsT_kit (F : Import_export_helper_sig) = struct
     } =
       module_
     in
-    F.export_named
+    ExportNamedTKit.mod_ModuleT
       cx
-      ( reason,
-        Context.find_exports cx source_exports.value_exports_tmap,
+      ( Context.find_exports cx source_exports.value_exports_tmap,
         Context.find_exports cx source_exports.type_exports_tmap,
         ReExport
       )
-      target_module_t
-
-  (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx target_module = F.return cx target_module
-end
-
-(* Copy only the type exports from a source module into a target module.
- * Used to implement `export type * from ...`. *)
-module CopyTypeExportsT_kit (F : Import_export_helper_sig) = struct
-  let on_ModuleT cx (reason, target_module_t) module_ =
-    let {
-      module_reason = _;
-      module_export_types = source_exports;
-      module_is_strict = _;
-      module_available_platforms = _;
-    } =
-      module_
-    in
-    let export_all exports_tmap =
-      NameUtils.Map.fold
-        (fun export_name { name_loc; preferred_def_locs; type_ } target_module_t ->
-          F.export_type
-            cx
-            (reason, name_loc, preferred_def_locs, export_name, target_module_t)
-            type_)
-        (Context.find_exports cx exports_tmap)
-    in
-    let target_module_t =
-      target_module_t
-      |> export_all source_exports.value_exports_tmap
-      |> export_all source_exports.type_exports_tmap
-    in
-    F.return cx target_module_t
-
-  (* There is nothing to copy from a module exporting `any` or `Object`. *)
-  let on_AnyT cx target_module = F.return cx target_module
+      target_module_type
 end
 
 (* Export a type from a given ModuleT, but only if the type is compatible
@@ -2032,8 +1987,9 @@ end
  * Note that this is very similar to `ExportNamedT` except that it only
  * exports one type at a time and it takes the type to be exported as a
  * lower (so that the type can be filtered post-resolution). *)
-module ExportTypeT_kit (F : Import_export_helper_sig) = struct
-  let on_concrete_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) l =
+module ExportTypeTKit = struct
+  let on_concrete_type
+      cx reason { preferred_def_locs; name_loc; type_ = l } (export_name, target_module_type) =
     let is_type_export =
       match l with
       | DefT (_, ObjT _) when export_name = OrdinaryName "default" -> true
@@ -2041,9 +1997,34 @@ module ExportTypeT_kit (F : Import_export_helper_sig) = struct
     in
     if is_type_export then
       let named = NameUtils.Map.singleton export_name { preferred_def_locs; name_loc; type_ = l } in
-      F.export_named cx (reason, NameUtils.Map.empty, named, ReExport) target_module_t
-    else
-      F.return cx target_module_t
+      ExportNamedTKit.mod_ModuleT cx (NameUtils.Map.empty, named, ReExport) target_module_type
+end
+
+(* Copy only the type exports from a source module into a target module.
+ * Used to implement `export type * from ...`. *)
+module CopyTypeExportsTKit = struct
+  let mod_ModuleT cx ~concretize_export_type (reason, target_module_type) module_ =
+    let {
+      module_reason = _;
+      module_export_types = source_exports;
+      module_is_strict = _;
+      module_available_platforms = _;
+    } =
+      module_
+    in
+    let export_all exports_tmap =
+      NameUtils.Map.iter
+        (fun export_name { name_loc; preferred_def_locs; type_ } ->
+          let type_ = concretize_export_type cx reason type_ in
+          ExportTypeTKit.on_concrete_type
+            cx
+            reason
+            { name_loc; preferred_def_locs; type_ }
+            (export_name, target_module_type))
+        (Context.find_exports cx exports_tmap)
+    in
+    export_all source_exports.value_exports_tmap;
+    export_all source_exports.type_exports_tmap
 end
 
 module CJSExtractNamedExportsTKit = struct

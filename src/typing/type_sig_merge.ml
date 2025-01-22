@@ -39,7 +39,7 @@ type exports =
 type file = {
   cx: Context.t;
   dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
-  exports: Type.t;
+  exports: unit -> (Type.moduletype, Type.t) result;
   local_defs:
     (ALoc.t * string * Type.t Lazy.t (* general *) * Type.t Lazy.t (* const *)) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
@@ -200,41 +200,35 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let get_module_t loc = function
-  | Context.TypedModule t -> t
-  | Context.UncheckedModule (loc, mref) ->
-    let reason = Reason.(mk_reason (RModule mref) loc) in
-    Type.(AnyT.why Untyped reason)
-  | Context.MissingModule _ ->
-    let reason = Reason.(mk_reason RAnyImplicit loc) in
-    Type.(AnyT.error_of_kind UnresolvedName reason)
-
-let require file loc index ~legacy_interop =
+let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t loc resolved_require in
   let reason = Reason.(mk_reason (RModule mref) loc) in
   let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
-  ConsGen.cjs_require file.cx module_t reason symbol ~is_strict:false ~legacy_interop
+  ConsGen.cjs_require
+    file.cx
+    reason
+    symbol
+    ~is_strict:false
+    ~legacy_interop
+    ~standard_cjs_esm_interop
+    resolved_require
 
-let import file reason id_loc index kind ~remote ~local =
+let import file reason index kind ~remote ~local =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t id_loc resolved_require in
   if remote = "default" then
-    ConsGen.import_default file.cx reason kind local mref false module_t
+    ConsGen.import_default file.cx reason kind local mref false resolved_require
   else
-    ConsGen.import_named file.cx reason kind remote mref false module_t
+    ConsGen.import_named file.cx reason kind remote mref false resolved_require
 
 let import_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t id_loc resolved_require in
   let namespace_symbol = FlowSymbol.mk_module_symbol ~name ~def_loc:id_loc in
-  ConsGen.import_ns file.cx reason namespace_symbol false module_t
+  ConsGen.import_ns file.cx reason namespace_symbol false resolved_require
 
 let import_typeof_ns file reason name id_loc index =
   let (_, (lazy resolved_require)) = Module_refs.get file.dependencies index in
-  let module_t = get_module_t id_loc resolved_require in
   let namespace_symbol = FlowSymbol.mk_namespace_symbol ~name ~def_loc:id_loc in
-  let ns_t = ConsGen.import_ns file.cx reason namespace_symbol false module_t in
+  let ns_t = ConsGen.import_ns file.cx reason namespace_symbol false resolved_require in
   ConsGen.import_typeof file.cx reason "*" ns_t
 
 let merge_enum file reason id_loc enum_name rep members has_unknown_members =
@@ -317,12 +311,12 @@ let merge_pattern file = function
     ConsGen.arr_rest file.cx use_op reason i t
 
 let merge_remote_ref file reason = function
-  | Pack.Import { id_loc; name; index; remote } ->
-    import file reason id_loc index Type.ImportValue ~remote ~local:name
-  | Pack.ImportType { id_loc; name; index; remote } ->
-    import file reason id_loc index Type.ImportType ~remote ~local:name
-  | Pack.ImportTypeof { id_loc; name; index; remote } ->
-    import file reason id_loc index Type.ImportTypeof ~remote ~local:name
+  | Pack.Import { id_loc = _; name; index; remote } ->
+    import file reason index Type.ImportValue ~remote ~local:name
+  | Pack.ImportType { id_loc = _; name; index; remote } ->
+    import file reason index Type.ImportType ~remote ~local:name
+  | Pack.ImportTypeof { id_loc = _; name; index; remote } ->
+    import file reason index Type.ImportTypeof ~remote ~local:name
   | Pack.ImportNs { id_loc; name; index } -> import_ns file reason name id_loc index
   | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
 
@@ -400,13 +394,17 @@ let mk_commonjs_module_t cx module_reason module_is_strict module_available_plat
     { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
   ConsGen.lazy_cjs_extract_named_exports cx module_reason local_module t
-  |> Lazy.map (fun module_type -> ModuleT module_type)
-  |> ConsGen.mk_sig_tvar cx module_reason
 
 let merge_exports =
   let merge_star file (loc, index) =
     let (_, (lazy resolved_module)) = Module_refs.get file.dependencies index in
-    (loc, get_module_t loc resolved_module)
+    let f =
+      match resolved_module with
+      | Context.TypedModule f -> Some f
+      | Context.UncheckedModule _ -> None
+      | Context.MissingModule _ -> None
+    in
+    (loc, f)
   in
   let mk_es_module_t file module_reason module_is_strict module_available_platforms =
     let open Type in
@@ -418,27 +416,34 @@ let merge_exports =
         has_every_named_export = false;
       }
     in
-    ModuleT { module_reason; module_export_types; module_is_strict; module_available_platforms }
+    { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
 
-  let copy_named_exports file reason module_t (loc, from_ns) =
-    let reason = Reason.repos_reason loc reason in
-    ConsGen.copy_named_exports file.cx ~from_ns reason ~module_t
+  let copy_named_exports file target_module_type (_, from_ns) =
+    match from_ns with
+    | None -> ()
+    | Some f -> ConsGen.copy_named_exports file.cx ~source_module:(f ()) ~target_module_type
   in
-  let copy_type_exports file reason module_t (loc, from_ns) =
-    let reason = Reason.repos_reason loc reason in
-    ConsGen.copy_type_exports file.cx ~from_ns reason ~module_t
+  let copy_type_exports file reason target_module_type (loc, from_ns) =
+    match from_ns with
+    | None -> ()
+    | Some f ->
+      let reason = Reason.repos_reason loc reason in
+      ConsGen.copy_type_exports file.cx ~source_module:(f ()) reason ~target_module_type
   in
   let copy_star_exports =
-    let rec loop file reason acc = function
-      | ([], []) -> acc
-      | (xs, []) -> List.fold_left (copy_named_exports file reason) acc xs
-      | ([], ys) -> List.fold_left (copy_type_exports file reason) acc ys
+    let rec loop file reason target_module_type = function
+      | ([], []) -> ()
+      | (xs, []) -> List.iter (copy_named_exports file target_module_type) xs
+      | ([], ys) -> List.iter (copy_type_exports file reason target_module_type) ys
       | ((x :: xs' as xs), (y :: ys' as ys)) ->
-        if ALoc.compare (fst x) (fst y) > 0 then
-          loop file reason (copy_named_exports file reason acc x) (xs', ys)
-        else
-          loop file reason (copy_type_exports file reason acc y) (xs, ys')
+        if ALoc.compare (fst x) (fst y) > 0 then (
+          copy_named_exports file target_module_type x;
+          loop file reason target_module_type (xs', ys)
+        ) else (
+          copy_type_exports file reason target_module_type y;
+          loop file reason target_module_type (xs, ys')
+        )
     in
     (fun file reason stars acc -> loop file reason acc stars)
   in
@@ -451,17 +456,38 @@ let merge_exports =
       in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
-      mk_commonjs_module_t file.cx reason strict platform_availability_set exports
-      |> ConsGen.export_named file.cx reason Type.DirectExport NameUtils.Map.empty type_exports
-      |> copy_star_exports file reason ([], type_stars)
+      let lazy_module =
+        lazy
+          (let module_type =
+             Lazy.force
+               (mk_commonjs_module_t file.cx reason strict platform_availability_set exports)
+           in
+           Flow_js_utils.ExportNamedTKit.mod_ModuleT
+             file.cx
+             (NameUtils.Map.empty, type_exports, Type.DirectExport)
+             module_type;
+           copy_star_exports file reason ([], type_stars) module_type;
+           module_type
+          )
+      in
+      lazy_module
     | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
-      mk_es_module_t file reason strict platform_availability_set
-      |> ConsGen.export_named file.cx reason Type.DirectExport exports type_exports
-      |> copy_star_exports file reason (stars, type_stars)
+      let lazy_module =
+        lazy
+          (let module_type = mk_es_module_t file reason strict platform_availability_set in
+           Flow_js_utils.ExportNamedTKit.mod_ModuleT
+             file.cx
+             (exports, type_exports, Type.DirectExport)
+             module_type;
+           copy_star_exports file reason (stars, type_stars) module_type;
+           module_type
+          )
+      in
+      lazy_module
 
 let make_hooklike file hooklike t =
   if hooklike && Context.hook_compatibility file.cx then
@@ -797,17 +823,26 @@ and merge_annot env file = function
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
-    let module_t = Flow_js_utils.get_builtin_module file.cx ref loc in
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
+    let cx = file.cx in
+    let f =
+      match Builtins.get_builtin_module_opt (Context.builtins cx) ref with
+      | Some lazy_m ->
+        Type.Constraint.ForcingState.of_lazy_module lazy_m |> ConsGen.force_module_type_thunk cx
+      | None ->
+        Type.Constraint.ForcingState.of_error_module
+          (Flow_js_utils.lookup_builtin_module_error cx ref loc)
+        |> ConsGen.force_module_type_thunk cx
+    in
     ConsGen.cjs_require
-      file.cx
-      module_t
+      cx
       reason
       symbol
       ~is_strict:false
       ~standard_cjs_esm_interop:false
       ~legacy_interop:false
+      (Context.TypedModule f)
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }
     ->
@@ -2023,7 +2058,7 @@ let merge_resource_module_t cx file_key filename =
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
   let reason = Reason.(mk_reason RExports file_loc) in
-  mk_commonjs_module_t cx reason (Context.is_strict cx) None exports_t
+  (reason, mk_commonjs_module_t cx reason (Context.is_strict cx) None exports_t)
 
 let merge tps = merge (mk_merge_env tps)
 
@@ -2164,17 +2199,14 @@ let merge_builtins
       in
       ESExports { type_exports; exports; type_stars; stars; strict; platform_availability_set }
     in
-    let resolved =
-      lazy
-        (let info =
-           match module_kind with
-           | Pack.CJSModule { type_exports; exports; info } -> cjs_module type_exports exports info
-           | Pack.ESModule { type_exports; exports; info } -> es_module type_exports exports info
-         in
-         merge_exports (Lazy.force file_and_dependency_map_rec |> fst) reason info
-        )
-    in
-    ConsGen.mk_sig_tvar cx reason resolved
+    lazy
+      (let info =
+         match module_kind with
+         | Pack.CJSModule { type_exports; exports; info } -> cjs_module type_exports exports info
+         | Pack.ESModule { type_exports; exports; info } -> es_module type_exports exports info
+       in
+       (reason, merge_exports (Lazy.force file_and_dependency_map_rec |> fst) reason info)
+      )
   in
 
   let rec file_and_dependency_map_rec =
@@ -2182,27 +2214,33 @@ let merge_builtins
       (let dependencies_map =
          SMap.fold
            (fun module_name { Packed_type_sig.Builtins.loc; module_kind } acc ->
-             let lazy_t =
-               lazy
-                 (map_module
-                    file_and_dependency_map_rec
-                    (loc |> Locs.get builtin_locs |> ALoc.of_loc)
-                    module_kind
-                 )
+             let lazy_module =
+               map_module
+                 file_and_dependency_map_rec
+                 (loc |> Locs.get builtin_locs |> ALoc.of_loc)
+                 module_kind
              in
-             SMap.add module_name lazy_t acc)
+             SMap.add module_name lazy_module acc)
            global_modules
            SMap.empty
        in
        let map_module_ref s : Context.resolved_require Lazy.t =
          match SMap.find_opt s dependencies_map with
          | None -> lazy (Context.MissingModule s)
-         | Some lazy_t -> Lazy.map (fun t -> Context.TypedModule t) lazy_t
+         | Some lazy_module ->
+           Lazy.map
+             (fun (r, lazy_module) ->
+               Context.TypedModule
+                 (Type.Constraint.ForcingState.of_lazy_module (r, lazy_module)
+                 |> ConsGen.force_module_type_thunk cx
+                 ))
+             lazy_module
        in
+       let exports () = Error (Type.AnyT.annot Reason.(locationless_reason RExports)) in
        ( {
            cx;
            dependencies = Module_refs.map (fun s -> (s, map_module_ref s)) module_refs;
-           exports = Type.AnyT.annot Reason.(locationless_reason RExports);
+           exports;
            local_defs = Local_defs.map (local_def file_and_dependency_map_rec) local_defs;
            remote_refs = Remote_refs.map (remote_ref file_and_dependency_map_rec) remote_refs;
            pattern_defs = Pattern_defs.map (pattern_def file_and_dependency_map_rec) pattern_defs;
@@ -2240,8 +2278,8 @@ let merge_builtins
   let builtin_modules =
     SMap.fold
       (fun name _ acc ->
-        let t = SMap.find name (Lazy.force file_and_dependency_map_rec |> snd) in
-        SMap.add name t acc)
+        let (_, dep_map) = Lazy.force file_and_dependency_map_rec in
+        SMap.add name (SMap.find name dep_map) acc)
       global_modules
       SMap.empty
   in

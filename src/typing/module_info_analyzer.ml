@@ -12,7 +12,7 @@ module Module_info = struct
   type t = {
     mutable kind: kind;
     mutable type_named: Type.Exports.t;
-    mutable type_star: (ALoc.t * Type.t) list;
+    mutable type_star: (ALoc.t * Type.moduletype option) list;
   }
 
   and cjs_exports_state =
@@ -24,7 +24,7 @@ module Module_info = struct
     | CJS of cjs_exports_state
     | ES of {
         named: Type.Exports.t;
-        star: (ALoc.t * Type.t) list;
+        star: (ALoc.t * Type.moduletype option) list;
       }
 
   let export_value info name ~name_loc type_ =
@@ -54,10 +54,10 @@ module Module_info = struct
       (* Indeterminate module. We already errored in module_exports_checker. *)
       ()
 
-  let export_star info loc module_t =
+  let export_star info loc module_type_opt =
     match info.kind with
-    | Unknown -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_t)] }
-    | ES { named; star } -> info.kind <- ES { named; star = (loc, module_t) :: star }
+    | Unknown -> info.kind <- ES { named = NameUtils.Map.empty; star = [(loc, module_type_opt)] }
+    | ES { named; star } -> info.kind <- ES { named; star = (loc, module_type_opt) :: star }
     | CJS _ ->
       (* Indeterminate module. We already errored in module_exports_checker. *)
       ()
@@ -69,7 +69,8 @@ module Module_info = struct
         { Type.preferred_def_locs = None; name_loc = Some name_loc; type_ }
         info.type_named
 
-  let export_type_star info loc module_t = info.type_star <- (loc, module_t) :: info.type_star
+  let export_type_star info loc module_type_opt =
+    info.type_star <- (loc, module_type_opt) :: info.type_star
 
   let cjs_mod_export info f =
     match info.kind with
@@ -92,7 +93,7 @@ module Module_info = struct
         fold_star2 f g (g acc y) (xs, ys')
 end
 
-let export_specifiers info loc source export_kind =
+let export_specifiers cx info loc source export_kind =
   let open Ast.Statement in
   let module E = ExportNamedDeclaration in
   (* [declare] export [type] {foo [as bar]}; *)
@@ -136,10 +137,15 @@ let export_specifiers info loc source export_kind =
     | Ast.Statement.ExportType -> Module_info.export_type info (OrdinaryName name) ~name_loc:loc t)
   (* [declare] export [type] * from "source"; *)
   | E.ExportBatchSpecifier (_, None) ->
-    let ((_, module_t), _) = Base.Option.value_exn source in
+    let (_, { Ast.StringLiteral.value; _ }) = Base.Option.value_exn source in
+    let module_type_opt =
+      match Context.find_require cx value with
+      | Context.TypedModule f -> Base.Result.ok (f ())
+      | _ -> None
+    in
     (match export_kind with
-    | Ast.Statement.ExportValue -> Module_info.export_star info loc module_t
-    | Ast.Statement.ExportType -> Module_info.export_type_star info loc module_t)
+    | Ast.Statement.ExportValue -> Module_info.export_star info loc module_type_opt
+    | Ast.Statement.ExportType -> Module_info.export_type_star info loc module_type_opt)
 
 let visit_toplevel_statement cx info ~in_declare_namespace :
     (ALoc.t, ALoc.t * Type.t) Ast.Statement.t -> unit =
@@ -300,7 +306,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     in
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in
-    Option.iter (export_specifiers info loc source export_kind) specifiers
+    Option.iter (export_specifiers cx info loc source export_kind) specifiers
   | ( _,
       DeclareModuleExports
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
@@ -336,7 +342,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
         | _ -> (* Parser Error: Invalid export-declaration type! *) ()
       end
     in
-    Option.iter (export_specifiers info loc source export_kind) specifiers
+    Option.iter (export_specifiers cx info loc source export_kind) specifiers
   | ( _,
       ExportDefaultDeclaration
         { ExportDefaultDeclaration.default = (_, t); declaration; comments = _ }
@@ -409,20 +415,19 @@ let module_exports_sig_loc { Module_info.kind; type_named; _ } =
 let mk_module_t =
   let open Module_info in
   let open Type in
-  let mk_esm_module_t cx module_reason =
-    ModuleT
-      {
-        module_reason;
-        module_export_types =
-          {
-            value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-            type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-            cjs_export = None;
-            has_every_named_export = false;
-          };
-        module_is_strict = Context.is_strict cx;
-        module_available_platforms = Context.available_platforms cx;
-      }
+  let mk_esm_module_type cx module_reason =
+    {
+      module_reason;
+      module_export_types =
+        {
+          value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+          type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+          cjs_export = None;
+          has_every_named_export = false;
+        };
+      module_is_strict = Context.is_strict cx;
+      module_available_platforms = Context.available_platforms cx;
+    }
   in
   (*
    * When CommonJS modules set their export type, we do two things:
@@ -465,60 +470,70 @@ let mk_module_t =
         has_every_named_export = false;
       }
     in
-    ModuleT
-      (let concretize = Flow_js.singleton_concrete_type_for_cjs_extract_named_exports cx reason in
-       Flow_js_utils.CJSExtractNamedExportsTKit.on_type
-         cx
-         ~concretize
-         ( reason,
-           {
-             module_reason = reason_exports_module;
-             module_export_types;
-             module_is_strict = Context.is_strict cx;
-             module_available_platforms = Context.available_platforms cx;
-           }
-         )
-         export_t
+    let concretize =
+      Flow_js.singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports cx reason
+    in
+    Flow_js_utils.CJSExtractNamedExportsTKit.on_type
+      cx
+      ~concretize
+      ( reason,
+        {
+          module_reason = reason_exports_module;
+          module_export_types;
+          module_is_strict = Context.is_strict cx;
+          module_available_platforms = Context.available_platforms cx;
+        }
       )
+      export_t
   in
   let copy_star_exports cx reason exports module_t =
-    let copy_named_exports module_t (loc, from_ns) =
-      let reason = repos_reason loc reason in
-      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-          Flow_js.flow cx (from_ns, CopyNamedExportsT (reason, module_t, tout))
-      )
+    let copy_named_exports target_module_type (_, from_ns) =
+      match from_ns with
+      | Some src_module_type ->
+        Flow_js_utils.CopyNamedExportsTKit.mod_ModuleT cx ~target_module_type src_module_type;
+        target_module_type
+      | None -> target_module_type
     in
-    let copy_type_exports module_t (loc, from_ns) =
+    let copy_type_exports target_module_type (loc, from_ns) =
       let reason = repos_reason loc reason in
-      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-          Flow_js.flow cx (from_ns, CopyTypeExportsT (reason, module_t, tout))
-      )
+      match from_ns with
+      | Some src_module_type ->
+        Flow_js_utils.CopyTypeExportsTKit.mod_ModuleT
+          cx
+          ~concretize_export_type:
+            Flow_js.singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports
+          (reason, target_module_type)
+          src_module_type;
+        target_module_type
+      | None -> target_module_type
     in
     Module_info.fold_star2 copy_named_exports copy_type_exports module_t exports
-  in
-  let export_named cx reason export_kind value_exports_tmap type_exports_tmap module_t =
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-        Flow_js.flow
-          cx
-          ( module_t,
-            ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
-          )
-    )
   in
   fun cx info self_reason exports_reason ->
     match info.kind with
     | Unknown ->
-      mk_commonjs_module_t cx self_reason exports_reason (CJSExportNames SMap.empty)
-      |> export_named cx self_reason DirectExport NameUtils.Map.empty info.type_named
-      |> copy_star_exports cx self_reason ([], info.type_star)
+      let module_type =
+        mk_commonjs_module_t cx self_reason exports_reason (CJSExportNames SMap.empty)
+      in
+      Flow_js_utils.ExportNamedTKit.mod_ModuleT
+        cx
+        (NameUtils.Map.empty, info.type_named, Type.DirectExport)
+        module_type;
+      ModuleT (copy_star_exports cx self_reason ([], info.type_star) module_type)
     | CJS cjs_exports_state ->
-      mk_commonjs_module_t cx self_reason exports_reason cjs_exports_state
-      |> export_named cx self_reason DirectExport NameUtils.Map.empty info.type_named
-      |> copy_star_exports cx self_reason ([], info.type_star)
+      let module_type = mk_commonjs_module_t cx self_reason exports_reason cjs_exports_state in
+      Flow_js_utils.ExportNamedTKit.mod_ModuleT
+        cx
+        (NameUtils.Map.empty, info.type_named, Type.DirectExport)
+        module_type;
+      ModuleT (copy_star_exports cx self_reason ([], info.type_star) module_type)
     | ES { named; star } ->
-      mk_esm_module_t cx self_reason
-      |> export_named cx self_reason DirectExport named info.type_named
-      |> copy_star_exports cx self_reason (star, info.type_star)
+      let module_type = mk_esm_module_type cx self_reason in
+      Flow_js_utils.ExportNamedTKit.mod_ModuleT
+        cx
+        (named, info.type_named, Type.DirectExport)
+        module_type;
+      ModuleT (copy_star_exports cx self_reason (star, info.type_star) module_type)
 
 let mk_namespace_t cx info namespace_symbol reason =
   let open Module_info in

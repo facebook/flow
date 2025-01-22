@@ -479,7 +479,7 @@ let check_multiplatform_conformance cx ast tast =
       (* It's ok if a platform speicific implementation file doesn't have an interface.
        * It just makes the module non-importable without platform extension. *)
       ()
-    | Context.TypedModule interface_module_t ->
+    | Context.TypedModule interface_module_f ->
       let get_exports_t ~is_common_interface_module reason module_t =
         match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
         | [ModuleT m] ->
@@ -507,6 +507,11 @@ let check_multiplatform_conformance cx ast tast =
       in
       let interface_t =
         let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
+        let interface_module_t =
+          match interface_module_f () with
+          | Error t -> t
+          | Ok m -> ModuleT m
+        in
         get_exports_t ~is_common_interface_module:true reason interface_module_t
       in
       let (self_sig_loc, self_module_t) = Module_info_analyzer.analyze_program cx tast in
@@ -810,9 +815,14 @@ let copier =
         )
   end
 
-let copy_into dst_cx src_cx t =
-  let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
-  ()
+let copy_into dst_cx src_cx f () =
+  let m = f () in
+  (match m with
+  | Ok m ->
+    let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx (Type.ModuleT m) in
+    ()
+  | Error _ -> ());
+  m
 
 let copied dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in

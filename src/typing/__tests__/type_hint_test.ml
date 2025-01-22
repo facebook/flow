@@ -243,7 +243,11 @@ let mk_cx ~verbose () =
   let builtins_ref = ref (Builtins.empty ()) in
   let resolve_require mref =
     match Builtins.get_builtin_module_opt !builtins_ref mref with
-    | Some t -> Context.TypedModule t
+    | Some m ->
+      Context.TypedModule
+        (fun () ->
+          Type.Constraint.ForcingState.of_lazy_module m
+          |> Type.Constraint.ForcingState.force ~on_error:(fun r -> Error (Type.AnyT.error r)))
     | None -> Context.MissingModule mref
   in
   let cx =

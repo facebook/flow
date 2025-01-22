@@ -137,7 +137,10 @@ module Import_export = struct
     else
       let module_t =
         match Context.find_require cx mref with
-        | Context.TypedModule t -> t
+        | Context.TypedModule f ->
+          (match f () with
+          | Error t -> t
+          | Ok m -> ModuleT m)
         | Context.UncheckedModule (module_def_loc, mref) ->
           Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
               match import_kind with

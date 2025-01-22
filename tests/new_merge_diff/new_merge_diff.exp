@@ -73,20 +73,14 @@ Invalid trivially recursive definition of `p`.  [recursive-definition]
               ^
 
 
-Error ---------------------------------------------------------------------------------- recursive_module_cycle_A.js:1:7
+Error ---------------------------------------------------------------------------------- recursive_module_cycle_A.js:0:1
 
-Invalid trivially recursive definition of `b`.  [recursive-definition]
-
-   1| const b = require('./recursive_module_cycle_B');
-            ^
+Invalid trivially recursive definition of exports.  [recursive-definition]
 
 
-Error ---------------------------------------------------------------------------------- recursive_module_cycle_B.js:1:7
+Error ---------------------------------------------------------------------------------- recursive_module_cycle_B.js:0:1
 
-Invalid trivially recursive definition of `a`.  [recursive-definition]
-
-   1| const a = require('./recursive_module_cycle_A');
-            ^
+Invalid trivially recursive definition of exports.  [recursive-definition]
 
 
 Error ------------------------------------------------------------------------------------------ recursive_types.js:1:14

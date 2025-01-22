@@ -18,7 +18,12 @@ val get_lint_severities :
   Severity.severity LintSettings.t ->
   Severity.severity LintSettings.t
 
-val copy_into : Context.t -> Context.t -> Type.t -> unit
+val copy_into :
+  Context.t ->
+  Context.t ->
+  (unit -> (Type.moduletype, Type.t) result) ->
+  unit ->
+  (Type.moduletype, Type.t) result
 
 val merge_lib_files :
   sig_opts:Type_sig_options.t ->

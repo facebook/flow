@@ -676,8 +676,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | ConstructorT _ -> p t
-    | CopyNamedExportsT _ -> p t
-    | CopyTypeExportsT _ -> p t
     | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
     | ConditionalT
         {
@@ -707,23 +705,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (tvar tout_id)
           )
         t
-    | ExportNamedT
-        { reason = _; value_exports_tmap; type_exports_tmap; export_kind = _; tout = arg } ->
-      let tmap_to_string tmap =
-        String.concat
-          "; "
-          (Base.List.map ~f:(fun (x, _) -> display_string_of_name x) (NameUtils.Map.bindings tmap))
-      in
-      p
-        t
-        ~extra:
-          (spf
-             "%s, {%s}, {%s}"
-             (kid arg)
-             (tmap_to_string value_exports_tmap)
-             (tmap_to_string type_exports_tmap)
-          )
-    | ExportTypeT _ -> p t
     | GetElemT
         {
           use_op = _;

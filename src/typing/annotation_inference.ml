@@ -16,18 +16,10 @@ let object_like_op = function
   | Annot_ThisSpecializeT _
   | Annot_UseT_TypeT _
   | Annot_ConcretizeForImportsExports _
-  | Annot_ConcretizeForCJSExtractNamedExports _
+  | Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports _
   | Annot_ConcretizeForInspection _
-  | Annot_CJSRequireT _
   | Annot_ImportTypeofT _
-  | Annot_ImportNamedT _
-  | Annot_ImportDefaultT _
-  | Annot_ImportModuleNsT _
-  | Annot_ExportNamedT _
-  | Annot_ExportTypeT _
   | Annot_AssertExportIsTypeT _
-  | Annot_CopyNamedExportsT _
-  | Annot_CopyTypeExportsT _
   | Annot_ElemT _
   | Annot_GetStaticsT _
   | Annot_MixinT _
@@ -78,6 +70,9 @@ let get_builtin_typeapp cx reason x targs =
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
+  val force_module_type_thunk :
+    Context.t -> Constraint.ForcingState.module_type -> unit -> (Type.moduletype, Type.t) result
+
   val mk_type_reference : Context.t -> type_t_kind:Type.type_t_kind -> Reason.t -> Type.t -> Type.t
 
   val mk_instance :
@@ -101,33 +96,39 @@ module type S = sig
 
   val cjs_require :
     Context.t ->
-    Type.t ->
     Reason.t ->
     FlowSymbol.symbol ->
     is_strict:bool ->
     standard_cjs_esm_interop:bool ->
     legacy_interop:bool ->
-    Type.t
-
-  val export_named :
-    Context.t ->
-    Reason.reason ->
-    Type.export_kind ->
-    Type.named_symbol NameUtils.Map.t ->
-    Type.named_symbol NameUtils.Map.t ->
-    Type.t ->
+    Context.resolved_require ->
     Type.t
 
   val lazy_cjs_extract_named_exports :
     Context.t -> Reason.reason -> Type.moduletype -> Type.t -> Type.moduletype Lazy.t
 
   val import_default :
-    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+    Context.t ->
+    Reason.t ->
+    Type.import_kind ->
+    string ->
+    string ->
+    bool ->
+    Context.resolved_require ->
+    Type.t
 
   val import_named :
-    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+    Context.t ->
+    Reason.t ->
+    Type.import_kind ->
+    string ->
+    string ->
+    bool ->
+    Context.resolved_require ->
+    Type.t
 
-  val import_ns : Context.t -> Reason.t -> FlowSymbol.symbol -> bool -> Type.t -> Type.t
+  val import_ns :
+    Context.t -> Reason.t -> FlowSymbol.symbol -> bool -> Context.resolved_require -> Type.t
 
   val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
@@ -140,9 +141,18 @@ module type S = sig
     Type.t list Base.Option.t ->
     Type.t
 
-  val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+  val copy_named_exports :
+    Context.t ->
+    source_module:(Type.moduletype, Type.t) result ->
+    target_module_type:Type.moduletype ->
+    unit
 
-  val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+  val copy_type_exports :
+    Context.t ->
+    source_module:(Type.moduletype, Type.t) result ->
+    Reason.t ->
+    target_module_type:Type.moduletype ->
+    unit
 
   val mk_non_generic_render_type :
     Context.t -> Reason.t -> renders_variant:renders_variant -> Type.t -> Type.t
@@ -214,6 +224,18 @@ module rec ConsGen : S = struct
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason
 
+  let force_module_type_thunk cx s () =
+    Type.Constraint.ForcingState.force ~on_error:(fun r -> Error (error_recursive cx r)) s
+
+  let get_lazy_module_type_or_any_src = function
+    | Context.TypedModule f ->
+      lazy
+        (match f () with
+        | Error _ -> Error (Type.AnyError None)
+        | Ok module_type -> Ok module_type)
+    | Context.UncheckedModule _ -> lazy (Error Type.Untyped)
+    | Context.MissingModule _ -> lazy (Error Type.(AnyError (Some UnresolvedName)))
+
   let error_internal_reason cx msg reason_op =
     let loc = Reason.loc_of_reason reason_op in
     let msg = Error_message.(EInternal (loc, UnexpectedAnnotationInference msg)) in
@@ -256,39 +278,10 @@ module rec ConsGen : S = struct
 
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
 
-  (***********)
-  (* Imports *)
-  (***********)
-  module Import_export_helper : Flow_js_utils.Import_export_helper_sig with type r = Type.t = struct
-    type r = Type.t
-
-    let reposition cx loc t = reposition cx loc t
-
-    let return _cx t = t
-
-    let export_named cx (reason, values, types, kind) t =
-      ConsGen.export_named cx reason kind values types t
-
-    let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
-        =
-      ConsGen.elab_t
-        cx
-        export_t
-        (Annot_ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t })
-  end
-
   let with_concretized_type cx r f t = ConsGen.elab_t cx t (Annot_ConcretizeForImportsExports (r, f))
 
-  module CJSRequireTKit = Flow_js_utils.CJSRequireTKit
-  module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsTKit
-  module ImportDefaultTKit = Flow_js_utils.ImportDefaultTKit
-  module ImportNamedTKit = Flow_js_utils.ImportNamedTKit
   module ImportTypeofTKit = Flow_js_utils.ImportTypeofTKit
-  module ExportNamedTKit = Flow_js_utils.ExportNamedTKit
   module AssertExportIsTypeTKit = Flow_js_utils.AssertExportIsTypeTKit
-  module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
-  module CopyTypeExportsTKit = Flow_js_utils.CopyTypeExportsT_kit (Import_export_helper)
-  module ExportTypeTKit = Flow_js_utils.ExportTypeT_kit (Import_export_helper)
   module CJSExtractNamedExportsTKit = Flow_js_utils.CJSExtractNamedExportsTKit
 
   (***********)
@@ -643,71 +636,8 @@ module rec ConsGen : S = struct
     (******************)
     (* Module exports *)
     (******************)
-    | ( ModuleT m,
-        Annot_ExportNamedT { reason = _; value_exports_tmap; type_exports_tmap; export_kind }
-      ) ->
-      ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
-      ModuleT m
     | (_, Annot_AssertExportIsTypeT (_, name)) -> AssertExportIsTypeTKit.on_concrete_type cx name t
-    | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
-      CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m
-    | (ModuleT m, Annot_CopyTypeExportsT (reason, target_module_t)) ->
-      CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m
-    | (_, Annot_ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t })
-      ->
-      ExportTypeTKit.on_concrete_type
-        cx
-        (reason, name_loc, preferred_def_locs, export_name, target_module_t)
-        t
-    | (AnyT (_, _), Annot_CopyNamedExportsT (_, target_module)) ->
-      CopyNamedExportsTKit.on_AnyT cx target_module
-    | (AnyT (_, _), Annot_CopyTypeExportsT (_, target_module)) ->
-      CopyTypeExportsTKit.on_AnyT cx target_module
-    | (l, Annot_ConcretizeForCJSExtractNamedExports _) -> l
-    (******************)
-    (* Module imports *)
-    (******************)
-    | ( ModuleT m,
-        Annot_CJSRequireT
-          { reason; namespace_symbol; is_strict; standard_cjs_esm_interop; legacy_interop }
-      ) ->
-      let (t, _def_loc) =
-        CJSRequireTKit.on_ModuleT
-          cx
-          ~reposition:(fun _ _ t -> t)
-          ~reason
-          ~module_symbol:namespace_symbol
-          ~is_strict
-          ~standard_cjs_esm_interop
-          ~legacy_interop
-          m
-      in
-      t
-    | (ModuleT m, Annot_ImportModuleNsT (reason, namespace_symbol, is_strict)) ->
-      let (values_type, types_tmap) = ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m in
-      NamespaceT { namespace_symbol; values_type; types_tmap }
-    | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
-      let (_name_loc_opt, t) =
-        ImportDefaultTKit.on_ModuleT
-          cx
-          ~with_concretized_type
-          (reason, import_kind, local, is_strict)
-          m
-      in
-      t
-    | (ModuleT m, Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict)) ->
-      let (_name_loc_opt, t) =
-        ImportNamedTKit.on_ModuleT
-          cx
-          ~with_concretized_type
-          (reason, import_kind, export_name, module_name, is_strict)
-          m
-      in
-      t
-    | (AnyT (_, src), (Annot_CJSRequireT { reason; _ } | Annot_ImportModuleNsT (reason, _, _))) ->
-      AnyT.why src reason
-    | (AnyT (_, src), Annot_ImportDefaultT (reason, _, _, _)) -> AnyT.why src reason
-    | (AnyT (_, src), Annot_ImportNamedT (reason, _, _, _, _)) -> AnyT.why src reason
+    | (l, Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports _) -> l
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
@@ -1392,22 +1322,38 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require cx t reason namespace_symbol ~is_strict ~standard_cjs_esm_interop ~legacy_interop
-      =
-    elab_t
+  and cjs_require
       cx
-      t
-      (Annot_CJSRequireT
-         { reason; namespace_symbol; is_strict; standard_cjs_esm_interop; legacy_interop }
+      reason
+      namespace_symbol
+      ~is_strict
+      ~standard_cjs_esm_interop
+      ~legacy_interop
+      resolved_require =
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok module_type ->
+               Flow_js_utils.CJSRequireTKit.on_ModuleT
+                 cx
+                 ~reposition:(fun _ _ t -> t)
+                 ~reason
+                 ~module_symbol:namespace_symbol
+                 ~is_strict
+                 ~standard_cjs_esm_interop
+                 ~legacy_interop
+                 module_type
+               |> fst
+             | Error src -> Type.AnyT.why src reason
+             )
       )
-
-  and export_named cx reason export_kind value_exports_tmap type_exports_tmap t =
-    elab_t cx t (Annot_ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind })
 
   and lazy_cjs_extract_named_exports cx reason local_module t =
     lazy
       (let concretize t =
-         match elab_t cx t (Annot_ConcretizeForCJSExtractNamedExports reason) with
+         match elab_t cx t (Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports reason) with
          | OpenT (_, id) -> get_fully_resolved_type cx id
          | t -> t
        in
@@ -1416,20 +1362,82 @@ module rec ConsGen : S = struct
 
   and import_typeof cx reason export_name t = elab_t cx t (Annot_ImportTypeofT (reason, export_name))
 
-  and import_default cx reason import_kind export_name module_name is_strict t =
-    elab_t cx t (Annot_ImportDefaultT (reason, import_kind, (export_name, module_name), is_strict))
+  and import_default cx reason import_kind export_name module_name is_strict resolved_require =
+    let on_module m =
+      let (_name_loc_opt, t) =
+        Flow_js_utils.ImportDefaultTKit.on_ModuleT
+          cx
+          ~with_concretized_type
+          (reason, import_kind, (export_name, module_name), is_strict)
+          m
+      in
+      t
+    in
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok m -> on_module m
+             | Error src -> Type.AnyT.why src reason
+             )
+      )
 
-  and import_named cx reason import_kind export_name module_name is_strict t =
-    elab_t cx t (Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict))
+  and import_named cx reason import_kind export_name module_name is_strict resolved_require =
+    let on_module m =
+      let (_name_loc_opt, t) =
+        Flow_js_utils.ImportNamedTKit.on_ModuleT
+          cx
+          ~with_concretized_type
+          (reason, import_kind, export_name, module_name, is_strict)
+          m
+      in
+      t
+    in
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok m -> on_module m
+             | Error src -> Type.AnyT.why src reason
+             )
+      )
 
-  and import_ns cx reason namespace_symbol is_strict t =
-    elab_t cx t (Annot_ImportModuleNsT (reason, namespace_symbol, is_strict))
+  and import_ns cx reason namespace_symbol is_strict resolved_require =
+    mk_sig_tvar
+      cx
+      reason
+      (get_lazy_module_type_or_any_src resolved_require
+      |> Lazy.map (function
+             | Ok m ->
+               let (values_type, types_tmap) =
+                 Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
+               in
+               Type.NamespaceT { namespace_symbol; values_type; types_tmap }
+             | Error src -> Type.AnyT.why src reason
+             )
+      )
 
-  and copy_named_exports cx ~from_ns reason ~module_t =
-    elab_t cx from_ns (Annot_CopyNamedExportsT (reason, module_t))
+  and copy_named_exports cx ~source_module ~target_module_type =
+    match source_module with
+    | Ok m -> Flow_js_utils.CopyNamedExportsTKit.mod_ModuleT cx ~target_module_type m
+    | Error _ -> ()
 
-  and copy_type_exports cx ~from_ns reason ~module_t =
-    elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
+  and copy_type_exports cx ~source_module reason ~target_module_type =
+    let concretize_export_type cx _ t =
+      match elab_t cx t (Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports reason) with
+      | OpenT (_, id) -> get_fully_resolved_type cx id
+      | t -> t
+    in
+    match source_module with
+    | Ok m ->
+      Flow_js_utils.CopyTypeExportsTKit.mod_ModuleT
+        cx
+        ~concretize_export_type
+        (reason, target_module_type)
+        m
+    | Error _ -> ()
 
   and mk_non_generic_render_type cx reason ~renders_variant t =
     let concretize cx t =

@@ -28,7 +28,7 @@ type exports =
 type file = {
   cx: Context.t;
   dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
-  exports: Type.t;
+  exports: unit -> (Type.moduletype, Type.t) result;
   local_defs: (ALoc.t * string * Type.t Lazy.t * Type.t Lazy.t) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
@@ -49,12 +49,12 @@ val merge_export : file -> ALoc.t Pack.export -> Type.named_symbol
 
 val merge_type_export : file -> Reason.t -> ALoc.t Pack.type_export -> Type.named_symbol
 
-val merge_exports : file -> Reason.t -> exports -> Type.t
+val merge_exports : file -> Reason.t -> exports -> Type.moduletype Lazy.t
 
 val merge_def :
   const_decl:bool -> file -> Reason.t -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
 
-val merge_resource_module_t : Context.t -> File_key.t -> string -> Type.t
+val merge_resource_module_t : Context.t -> File_key.t -> string -> Reason.t * Type.moduletype Lazy.t
 
 val merge : tparams_map -> file -> ALoc.t Pack.packed -> Type.t
 
@@ -65,4 +65,6 @@ val merge_builtins :
   File_key.t ->
   Loc.t Locs.t ->
   Locs.index Packed_type_sig.Builtins.t ->
-  (ALoc.t * Type.t) lazy_t SMap.t * (ALoc.t * Type.t) lazy_t SMap.t * Type.t lazy_t SMap.t
+  (ALoc.t * Type.t) lazy_t SMap.t
+  * (ALoc.t * Type.t) lazy_t SMap.t
+  * (Reason.t * Type.moduletype Lazy.t) Lazy.t SMap.t

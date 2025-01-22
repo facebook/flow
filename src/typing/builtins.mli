@@ -13,13 +13,13 @@ val get_builtin_value_opt : t -> string -> (ALoc.t * Type.t) option
 
 val get_builtin_type_opt : t -> string -> (ALoc.t * Type.t) option
 
-val get_builtin_module_opt : t -> string -> Type.t option
+val get_builtin_module_opt : t -> string -> (Reason.t * Type.moduletype Lazy.t) option
 
 val of_name_map :
   mapper:(Type.t -> Type.t) ->
   values:(ALoc.t * Type.t) lazy_t SMap.t ->
   types:(ALoc.t * Type.t) lazy_t SMap.t ->
-  modules:Type.t lazy_t SMap.t ->
+  modules:(Reason.t * Type.moduletype Lazy.t) Lazy.t SMap.t ->
   t
 
 val empty : unit -> t

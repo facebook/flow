@@ -243,7 +243,11 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
       (fun mref _locs ->
         let builtins = Context.builtins cx in
         match Builtins.get_builtin_module_opt builtins mref with
-        | Some t -> Context.TypedModule t
+        | Some m ->
+          Context.TypedModule
+            (Type.Constraint.ForcingState.of_lazy_module m
+            |> Annotation_inference.ConsGen.force_module_type_thunk cx
+            )
         | None -> Context.MissingModule mref)
       (File_sig.require_loc_map file_sig);
   (* infer ast *)

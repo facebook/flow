@@ -48,15 +48,11 @@ and reason_of_use_t = function
   | CallElemT (_, reason, _, _, _) -> reason
   | CallT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
-  | CopyNamedExportsT (reason, _, _) -> reason
-  | CopyTypeExportsT (reason, _, _) -> reason
   | ElemT (_, reason, _, _) -> reason
   | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | GetEnumT { reason; _ } -> reason
   | ConditionalT { reason; _ } -> reason
-  | ExportNamedT { reason; _ } -> reason
-  | ExportTypeT { reason; _ } -> reason
   | ExtendsUseT (_, reason, _, _, _) -> reason
   | GetElemT { reason; _ } -> reason
   | GetKeysT (reason, _) -> reason
@@ -253,19 +249,6 @@ let rec util_use_op_of_use_t :
   | ObjTestProtoT (_, _)
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
-  | CopyNamedExportsT (_, _, _)
-  | CopyTypeExportsT (_, _, _)
-  | ExportNamedT
-      { reason = _; value_exports_tmap = _; type_exports_tmap = _; export_kind = _; tout = _ }
-  | ExportTypeT
-      {
-        reason = _;
-        name_loc = _;
-        preferred_def_locs = _;
-        export_name = _;
-        target_module_t = _;
-        tout = _;
-      }
   | ConcretizeT _
   | ExtractReactRefT _
   | OptionalChainT _

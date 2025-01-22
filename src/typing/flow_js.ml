@@ -172,39 +172,6 @@ struct
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
-
-  module Import_export_helper :
-    Flow_js_utils.Import_export_helper_sig with type r = Type.t -> unit = struct
-    type r = Type.t -> unit
-
-    let reposition = FlowJs.reposition ~trace:DepthTrace.dummy_trace ?desc:None ?annot_loc:None
-
-    let return cx t tout = FlowJs.rec_flow_t cx ~use_op:unknown_use DepthTrace.dummy_trace (t, tout)
-
-    let export_named cx (reason, value_exports_tmap, type_exports_tmap, export_kind) module_t tout =
-      FlowJs.rec_flow
-        cx
-        DepthTrace.dummy_trace
-        ( module_t,
-          Type.ExportNamedT { reason; value_exports_tmap; type_exports_tmap; export_kind; tout }
-        )
-
-    let export_type cx (reason, name_loc, preferred_def_locs, export_name, target_module_t) export_t
-        =
-      Tvar.mk_where cx reason (fun tout ->
-          FlowJs.rec_flow
-            cx
-            DepthTrace.dummy_trace
-            ( export_t,
-              ExportTypeT
-                { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
-            )
-      )
-  end
-
-  module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
-  module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
-  module ExportTypeTKit = ExportTypeT_kit (Import_export_helper)
   include InstantiationKit
 
   (* get prop *)
@@ -689,30 +656,14 @@ struct
         (******************)
         (* Module exports *)
         (******************)
-        | ( ModuleT m,
-            ExportNamedT { reason = _; value_exports_tmap; type_exports_tmap; export_kind; tout }
-          ) ->
-          ExportNamedTKit.mod_ModuleT cx (value_exports_tmap, type_exports_tmap, export_kind) m;
-          rec_flow_t cx ~use_op:unknown_use trace (l, tout)
-        | (ModuleT m, CopyNamedExportsT (reason, target_module_t, t_out)) ->
-          CopyNamedExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
-        | (ModuleT m, CopyTypeExportsT (reason, target_module_t, t_out)) ->
-          CopyTypeExportsTKit.on_ModuleT cx (reason, target_module_t) m t_out
-        | ( _,
-            ExportTypeT { reason; name_loc; preferred_def_locs; export_name; target_module_t; tout }
-          ) ->
-          ExportTypeTKit.on_concrete_type
-            cx
-            (reason, name_loc, preferred_def_locs, export_name, target_module_t)
-            l
-            tout
-        | (AnyT (_, _), CopyNamedExportsT (_, target_module, t)) ->
-          CopyNamedExportsTKit.on_AnyT cx target_module t
-        | (AnyT (_, _), CopyTypeExportsT (_, target_module, t)) ->
-          CopyTypeExportsTKit.on_AnyT cx target_module t
         | ( t,
             ConcretizeT
-              { reason = _; kind = ConcretizeForCJSExtractNamedExports; seen = _; collector }
+              {
+                reason = _;
+                kind = ConcretizeForCJSExtractNamedExportsAndTypeExports;
+                seen = _;
+                collector;
+              }
           ) ->
           TypeCollector.add collector t
         (******************************)
@@ -5893,15 +5844,11 @@ struct
     | CallElemT _
     | CondT _
     | ConstructorT _
-    | CopyNamedExportsT _
-    | CopyTypeExportsT _
     | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _
     | ExtendsUseT _
     | ConditionalT _
-    | ExportNamedT _
-    | ExportTypeT _
     | GetElemT _
     | GetEnumT _
     | GetKeysT _
@@ -9319,8 +9266,8 @@ struct
   and possible_concrete_types_for_inspection cx reason t =
     possible_concrete_types ConcretizeForInspection cx reason t
 
-  and singleton_concrete_type_for_cjs_extract_named_exports cx reason t =
-    singleton_concrete_type ConcretizeForCJSExtractNamedExports cx reason t
+  and singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports cx reason t =
+    singleton_concrete_type ConcretizeForCJSExtractNamedExportsAndTypeExports cx reason t
 
   and singleton_concrete_type_for_inspection cx reason t =
     singleton_concrete_type ConcretizeForInspection cx reason t

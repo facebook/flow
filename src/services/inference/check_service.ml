@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module ConsGen = Annotation_inference.ConsGen
+
 type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 type check_file =
@@ -35,14 +37,22 @@ type check_file_and_comp_env = {
 let unknown_module_t cx _mref module_name =
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_module_opt builtins module_name with
-  | Some t -> Context.TypedModule t
+  | Some (reason, lazy_module) ->
+    Context.TypedModule
+      (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
+      |> ConsGen.force_module_type_thunk cx
+      )
   | None -> Context.MissingModule module_name
 
 let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
   let builtins = Context.builtins cx in
   match Builtins.get_builtin_module_opt builtins mref with
-  | Some t -> Context.TypedModule t
+  | Some (reason, lazy_module) ->
+    Context.TypedModule
+      (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
+      |> ConsGen.force_module_type_thunk cx
+      )
   | None -> Context.UncheckedModule (loc, mref)
 
 let get_lint_severities metadata options =
@@ -64,7 +74,6 @@ module Flow_js = struct end
  * files. *)
 let mk_check_file ~reader ~options ~master_cx ~cache () =
   let open Type_sig_collections in
-  let module ConsGen = Annotation_inference.ConsGen in
   let module Merge = Type_sig_merge in
   let module Heap = SharedMem.NewAPI in
   let module Pack = Type_sig_pack in
@@ -86,7 +95,11 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
         | File_key.ResourceFile f as file_key ->
-          Context.TypedModule (Merge.merge_resource_module_t cx file_key f)
+          let (reason, lazy_module) = Merge.merge_resource_module_t cx file_key f in
+          Context.TypedModule
+            (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
+            |> ConsGen.force_module_type_thunk cx
+            )
         | dep_file ->
           (match Parsing_heaps.Reader_dispatcher.get_typed_parse ~reader dep_addr with
           | Some parse -> Context.TypedModule (sig_module_t cx dep_file parse)
@@ -101,9 +114,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         )
     in
     let file = Check_cache.find_or_create cache ~leader ~create_file file_key in
-    let t = file.Type_sig_merge.exports in
-    Merge_js.copy_into cx file.Type_sig_merge.cx t;
-    t
+    Merge_js.copy_into cx file.Type_sig_merge.cx file.Type_sig_merge.exports
   (* Create a Type_sig_merge.file record for a dependency, which we use to
    * convert signatures into types. This function reads the signature for a file
    * from shared memory and creates thunks (either lazy tvars or lazy types)
@@ -208,14 +219,16 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         Type_sig_merge.ESExports
           { type_exports; exports; type_stars; stars; strict; platform_availability_set }
       in
-      let resolved =
-        lazy
-          (Bin.module_kind buf
-          |> Bin.read_module_kind cjs_module es_module buf
-          |> Merge.merge_exports (Lazy.force file_rec) reason
-          )
-      in
-      ConsGen.mk_sig_tvar cx reason resolved
+      Type.Constraint.ForcingState.of_lazy_module
+        ( reason,
+          lazy
+            (Bin.module_kind buf
+            |> Bin.read_module_kind cjs_module es_module buf
+            |> Merge.merge_exports (Lazy.force file_rec) reason
+            |> Lazy.force
+            )
+        )
+      |> ConsGen.force_module_type_thunk cx
     in
 
     let local_def file_rec buf pos =

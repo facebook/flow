@@ -144,11 +144,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | HasOwnPropT _ -> ()
   | GetValuesT (_, t) -> resolve t
   | ElemT (_, _, _, action) -> resolve_elem_action action
-  | CopyNamedExportsT (_, _, t)
-  | CopyTypeExportsT (_, _, t) ->
-    resolve t
-  | ExportNamedT { tout = t; _ }
-  | ExportTypeT { tout = t; _ }
   | MapTypeT (_, _, _, t)
   | ObjKitT (_, _, _, _, t) ->
     resolve t
