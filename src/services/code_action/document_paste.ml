@@ -55,14 +55,23 @@ class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =
       let { import_kind; source; specifiers; default; comments = _ } = decl in
       let lazy_import_source_info =
         lazy
-          (let ((_, source_t), { Ast.StringLiteral.value; _ }) = source in
-           match TypeUtil.def_loc_of_t source_t |> ALoc.source with
-           | Some f ->
-             if Context.file cx = f || File_key.is_lib_file f then
-               (value, false)
-             else
-               (File_key.to_string f, true)
-           | None -> (value, false)
+          (let ((source_loc, _), { Ast.StringLiteral.value; _ }) = source in
+           match
+             Type_operation_utils.Import_export.get_module_type_or_any
+               cx
+               (source_loc, value)
+               ~perform_platform_validation:false
+               ~import_kind_for_untyped_import_validation:None
+           with
+           | Error _ -> (value, false)
+           | Ok m ->
+             (match m.Type.module_reason |> Reason.def_loc_of_reason |> ALoc.source with
+             | Some f ->
+               if Context.file cx = f || File_key.is_lib_file f then
+                 (value, false)
+               else
+                 (File_key.to_string f, true)
+             | None -> (value, false))
           )
       in
       let collect ~import_type ~remote ~local_opt =
