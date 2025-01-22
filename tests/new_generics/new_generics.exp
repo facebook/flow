@@ -1031,8 +1031,8 @@ References:
    react.js:13:28
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:351:38
-   351|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:345:38
+   345|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 

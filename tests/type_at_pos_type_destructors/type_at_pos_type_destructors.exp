@@ -198,7 +198,7 @@ react-component.js:12:6
 Flags:
 type ReactA = ElementProps<typeof MyComponent>
 
-'ElementProps' defined at (lib) react.js:387:22
+'ElementProps' defined at (lib) react.js:381:22
 'MyComponent' defined at react-component.js:5:6
 'ReactA' defined at react-component.js:12:5
 
@@ -208,7 +208,7 @@ react-component.js:14:6
 Flags:
 type ReactAP<X> = ElementProps<X>
 
-'ElementProps' defined at (lib) react.js:387:22
+'ElementProps' defined at (lib) react.js:381:22
 'ReactAP' defined at react-component.js:14:5
 
 react-component.js:14:6,14:12
