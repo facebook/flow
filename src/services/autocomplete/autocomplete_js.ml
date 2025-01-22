@@ -29,7 +29,7 @@ type autocomplete_type =
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_import_specifier of {
-      module_type: Type.t;
+      module_type_opt: Type.moduletype option;
       used_keys: SSet.t;
       is_type: bool;
     }  (** Import named specifiers *)
@@ -803,15 +803,20 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
           (match found with
           | None -> decl
           | Some (loc, token, is_type) ->
-            let module_type =
+            let module_type_opt =
               match Statement.statement cx (decl_loc, Ast.Statement.ImportDeclaration decl) with
-              | (_, Ast.Statement.ImportDeclaration { source = ((_, module_type), _); _ }) ->
-                module_type
-              | (loc, _) ->
-                (* impossible *)
-                Type.(AnyT.at Untyped loc)
+              | ( _,
+                  Ast.Statement.ImportDeclaration
+                    { source = ((loc, _), { Ast.StringLiteral.value; _ }); _ }
+                ) ->
+                Type_operation_utils.Import_export.get_module_type_or_any
+                  cx
+                  ~import_kind_for_untyped_import_validation:None
+                  (loc, value)
+                |> Base.Result.ok
+              | _ -> (* impossible *) None
             in
-            this#find loc token (Ac_import_specifier { module_type; used_keys; is_type }))
+            this#find loc token (Ac_import_specifier { module_type_opt; used_keys; is_type }))
         | Some (ImportNamespaceSpecifier _)
         | None ->
           super#import_declaration decl_loc decl

@@ -27,7 +27,7 @@ type autocomplete_type =
   | Ac_class_key of { enclosing_class_t: Type.t option }  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_import_specifier of {
-      module_type: Type.t;
+      module_type_opt: Type.moduletype option;
       used_keys: SSet.t;
       is_type: bool;
     }  (** Import named specifiers *)

@@ -1893,24 +1893,26 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
     let result = { AcCompletion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
 
-let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name module_type =
+let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name module_type_opt =
   let { cx; norm_genv = genv; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
-  let module_ty_res = Ty_normalizer_flow.from_type genv module_type in
   let documentation_and_tags_of_module_member = documentation_and_tags_of_def_loc typing in
   let (items, errors_to_log) =
-    match module_ty_res with
-    | Error err -> ([], [Ty_normalizer.error_to_string err])
-    | Ok module_ty ->
-      ( exports_of_module_ty
-          ~edit_locs
-          ~exact_by_default
-          ~documentation_and_tags_of_module_member
-          ~kind
-          ?filter_name
-          module_ty,
-        []
-      )
+    match module_type_opt with
+    | None -> ([], [])
+    | Some module_type ->
+      (match Ty_normalizer_flow.from_type genv module_type with
+      | Error err -> ([], [Ty_normalizer.error_to_string err])
+      | Ok module_ty ->
+        ( exports_of_module_ty
+            ~edit_locs
+            ~exact_by_default
+            ~documentation_and_tags_of_module_member
+            ~kind
+            ?filter_name
+            module_ty,
+          []
+        ))
   in
   let items = filter_by_token_and_sort token items in
   AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
@@ -2242,7 +2244,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_module ->
         (* TODO: complete module names *)
         AcEmpty "Module"
-      | Ac_import_specifier { module_type; used_keys; is_type } ->
+      | Ac_import_specifier { module_type_opt; used_keys; is_type } ->
         (* TODO: is_type should be an import_kind:
            ImportType = `Type
            ImportTypeof = `Value
@@ -2254,7 +2256,8 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
             `Either
         in
         let filter_name name = not (SSet.mem name used_keys) in
-        autocomplete_module_exports ~typing ~edit_locs ~token ~kind ~filter_name module_type
+        let module_type_opt = Option.map (fun m -> Type.ModuleT m) module_type_opt in
+        autocomplete_module_exports ~typing ~edit_locs ~token ~kind ~filter_name module_type_opt
       | Ac_enum -> AcEmpty "Enum"
       | Ac_key { obj_type; used_keys; spreads } ->
         autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_type
@@ -2360,7 +2363,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         AcResult
           (autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token)
       | Ac_qualified_type qtype ->
-        autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type qtype
+        autocomplete_module_exports ~typing ~edit_locs ~token ~kind:`Type (Some qtype)
     in
     let result =
       match result with
