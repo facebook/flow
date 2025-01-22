@@ -1676,12 +1676,7 @@ module Make
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
               (source_loc, module_name)
           in
-          let source_module_t =
-            match source_module with
-            | Ok m -> ModuleT m
-            | Error t -> t
-          in
-          Some (source_module, (source_loc, source_module_t), source_literal)
+          Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
       in
       let specifiers =
         let export_kind = Ast.Statement.ExportValue in
@@ -1731,12 +1726,7 @@ module Make
               (source_loc, module_name)
               ~perform_platform_validation
           in
-          let source_module_t =
-            match source_module with
-            | Ok m -> ModuleT m
-            | Error t -> t
-          in
-          Some (source_module, (source_loc, source_module_t), source_literal)
+          Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
       in
       let specifiers = Option.map (export_specifiers cx source export_kind) specifiers in
       let source = Option.map (fun (_, t, ast) -> (t, ast)) source in
@@ -1795,12 +1785,7 @@ module Make
           (source_loc, module_name)
           ~perform_platform_validation
       in
-      let source_module_t =
-        match source_module with
-        | Ok m -> ModuleT m
-        | Error t -> t
-      in
-      let source_ast = ((source_loc, source_module_t), source_literal) in
+      let source_ast = ((source_loc, StrModuleT.at source_loc), source_literal) in
 
       let specifiers_ast =
         match specifiers with
