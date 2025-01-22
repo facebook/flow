@@ -33,9 +33,6 @@ module DistributeUnionIntersection : sig
 end
 
 module Import_export : sig
-  val concretize_module_type :
-    Context.t -> Reason.t -> Type.t -> (Type.moduletype, Reason.reason * Type.any_source) result
-
   val get_module_type_or_any :
     Context.t ->
     ?perform_platform_validation:bool ->

@@ -91,19 +91,6 @@ module DistributeUnionIntersection = struct
 end
 
 module Import_export = struct
-  let concretize_module_type cx get_reason module_t =
-    match Flow.possible_concrete_types_for_inspection cx get_reason module_t with
-    | [ModuleT m] -> Ok m
-    | [AnyT (lreason, any_source)] -> Error (lreason, any_source)
-    | _ ->
-      Flow_js_utils.add_output
-        cx
-        Error_message.(
-          EInternal
-            (loc_of_reason get_reason, UnexpectedModuleT (Debug_js.dump_t cx ~depth:3 module_t))
-        );
-      Error (get_reason, AnyError None)
-
   let check_platform_availability cx reason imported_module_available_platforms =
     let current_module_available_platforms = Context.available_platforms cx in
     match (current_module_available_platforms, imported_module_available_platforms) with
