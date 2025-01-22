@@ -412,7 +412,7 @@ let module_exports_sig_loc { Module_info.kind; type_named; _ } =
  * Finally, both CJS and ES modules can export types, which also has a star
  * export variant. Conflicts are handled in the same way.
  *)
-let mk_module_t =
+let mk_module_type =
   let open Module_info in
   let open Type in
   let mk_esm_module_type cx module_reason =
@@ -519,21 +519,21 @@ let mk_module_t =
         cx
         (NameUtils.Map.empty, info.type_named, Type.DirectExport)
         module_type;
-      ModuleT (copy_star_exports cx self_reason ([], info.type_star) module_type)
+      copy_star_exports cx self_reason ([], info.type_star) module_type
     | CJS cjs_exports_state ->
       let module_type = mk_commonjs_module_t cx self_reason exports_reason cjs_exports_state in
       Flow_js_utils.ExportNamedTKit.mod_ModuleT
         cx
         (NameUtils.Map.empty, info.type_named, Type.DirectExport)
         module_type;
-      ModuleT (copy_star_exports cx self_reason ([], info.type_star) module_type)
+      copy_star_exports cx self_reason ([], info.type_star) module_type
     | ES { named; star } ->
       let module_type = mk_esm_module_type cx self_reason in
       Flow_js_utils.ExportNamedTKit.mod_ModuleT
         cx
         (named, info.type_named, Type.DirectExport)
         module_type;
-      ModuleT (copy_star_exports cx self_reason (star, info.type_star) module_type)
+      copy_star_exports cx self_reason (star, info.type_star) module_type
 
 let mk_namespace_t cx info namespace_symbol reason =
   let open Module_info in
@@ -557,7 +557,7 @@ let analyze_program cx (prog_aloc, { Flow_ast.Program.statements; _ }) =
     let self_reason = Reason.(mk_reason (RCustom "self") prog_aloc) in
     let file_loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
     let exports_reason = Reason.(mk_reason RExports file_loc) in
-    mk_module_t cx info self_reason exports_reason
+    mk_module_type cx info self_reason exports_reason
   in
   (module_sig_loc, module_t)
 

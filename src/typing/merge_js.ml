@@ -480,9 +480,8 @@ let check_multiplatform_conformance cx ast tast =
        * It just makes the module non-importable without platform extension. *)
       ()
     | Context.TypedModule interface_module_f ->
-      let get_exports_t ~is_common_interface_module reason module_t =
-        match Flow_js.possible_concrete_types_for_inspection cx reason module_t with
-        | [ModuleT m] ->
+      let get_exports_t ~is_common_interface_module reason = function
+        | Some m ->
           if
             is_common_interface_module
             && Platform_set.no_overlap
@@ -503,23 +502,21 @@ let check_multiplatform_conformance cx ast tast =
                 m
             in
             values_t
-        | _ -> AnyT.make Untyped reason
+        | None -> AnyT.make Untyped reason
       in
       let interface_t =
         let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
-        let interface_module_t =
-          match interface_module_f () with
-          | Error t -> t
-          | Ok m -> ModuleT m
-        in
-        get_exports_t ~is_common_interface_module:true reason interface_module_t
+        get_exports_t
+          ~is_common_interface_module:true
+          reason
+          (interface_module_f () |> Base.Result.ok)
       in
-      let (self_sig_loc, self_module_t) = Module_info_analyzer.analyze_program cx tast in
+      let (self_sig_loc, self_module_type) = Module_info_analyzer.analyze_program cx tast in
       let self_t =
         get_exports_t
           ~is_common_interface_module:false
-          (TypeUtil.reason_of_t self_module_t)
-          self_module_t
+          self_module_type.Type.module_reason
+          (Some self_module_type)
       in
       (* We need to fully resolve the type to prevent tvar widening. *)
       Tvar_resolver.resolve cx interface_t;
