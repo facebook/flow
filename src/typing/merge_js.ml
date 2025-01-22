@@ -815,8 +815,8 @@ let copier =
 let copy_into dst_cx src_cx f () =
   let m = f () in
   (match m with
-  | Ok m ->
-    let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx (Type.ModuleT m) in
+  | Ok { Type.module_export_types; _ } ->
+    let (_ : Context.t) = copier#export_types src_cx Polarity.Positive dst_cx module_export_types in
     ()
   | Error _ -> ());
   m
@@ -824,6 +824,12 @@ let copy_into dst_cx src_cx f () =
 let copied dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   t
+
+let module_type_copied dst_cx src_cx m =
+  let (_ : Context.t) =
+    copier#export_types src_cx Polarity.Positive dst_cx m.Type.module_export_types
+  in
+  m
 
 let merge_lib_files ~sig_opts ordered_asts =
   let (_builtin_errors, builtin_locs, builtins) =
@@ -852,5 +858,17 @@ let mk_builtins metadata master_cx =
     let (values, types, modules) =
       Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
     in
-    builtins_ref := Builtins.of_name_map ~mapper:Base.Fn.id ~values ~types ~modules;
-    (fun dst_cx -> Builtins.of_name_map ~mapper:(copied dst_cx cx) ~values ~types ~modules)
+    builtins_ref :=
+      Builtins.of_name_map
+        ~type_mapper:Base.Fn.id
+        ~module_type_mapper:Base.Fn.id
+        ~values
+        ~types
+        ~modules;
+    fun dst_cx ->
+      Builtins.of_name_map
+        ~type_mapper:(copied dst_cx cx)
+        ~module_type_mapper:(module_type_copied dst_cx cx)
+        ~values
+        ~types
+        ~modules

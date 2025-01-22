@@ -88,7 +88,8 @@ let before_and_after_stmts file_name =
       Reason.mk_reason desc loc
     in
     Builtins.of_name_map
-      ~mapper:Base.Fn.id
+      ~type_mapper:Base.Fn.id
+      ~module_type_mapper:Base.Fn.id
       ~values:
         (SMap.singleton
            "Object"

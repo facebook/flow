@@ -145,7 +145,8 @@ let dummy_context () =
   in
   Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ ->
       Builtins.of_name_map
-        ~mapper:Base.Fn.id
+        ~type_mapper:Base.Fn.id
+        ~module_type_mapper:Base.Fn.id
         ~values:builtins_values
         ~types:builtin_types
         ~modules:SMap.empty

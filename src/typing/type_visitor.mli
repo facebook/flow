@@ -34,5 +34,7 @@ class ['a] t :
 
     method destructor : Context.t -> 'a -> Type.destructor -> 'a
 
+    method export_types : Context.t -> Polarity.t -> 'a -> Type.exporttypes -> 'a
+
     method type_param : Context.t -> Polarity.t -> 'a -> Type.typeparam -> 'a
   end

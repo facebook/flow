@@ -428,7 +428,7 @@ class ['a] t =
       let acc = self#inst_type cx pole acc inst in
       acc
 
-    method private export_types cx pole acc e =
+    method export_types cx pole acc e =
       let { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ } = e in
       let acc = self#exports cx pole acc value_exports_tmap in
       let acc = self#exports cx pole acc type_exports_tmap in
