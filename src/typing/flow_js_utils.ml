@@ -920,12 +920,6 @@ let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_type cx x reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
-let get_builtin_module cx module_name reason =
-  let builtins = Context.builtins cx in
-  match Builtins.get_builtin_module_opt builtins module_name with
-  | Some (_, (lazy m)) -> ModuleT m
-  | None -> lookup_builtin_module_error cx module_name reason
-
 let get_implicitly_imported_module cx module_name ~expected_module_purpose reason =
   match Context.find_require cx module_name with
   | Context.UncheckedModule _ -> Error (AnyT.untyped reason)
