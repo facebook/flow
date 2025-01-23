@@ -110,6 +110,7 @@ let detect_sketchy_null_checks cx tast =
             | DefT (_, BoolT_UNSOUND _) ->
               { exists_check with bool_loc = t_loc }
             | DefT (_, StrGeneralT _)
+            | DefT (_, SingletonStrT _)
             | DefT (_, StrT_UNSOUND _) ->
               { exists_check with string_loc = t_loc }
             | DefT (_, NumGeneralT _)
@@ -137,14 +138,22 @@ let detect_sketchy_null_checks cx tast =
                 ( _,
                   EnumValueT
                     (ConcreteEnum
-                      { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+                      {
+                        representation_t =
+                          DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _));
+                        _;
+                      }
                       )
                 )
             | DefT
                 ( _,
                   EnumValueT
                     (AbstractEnum
-                      { representation_t = DefT (_, (StrGeneralT _ | StrT_UNSOUND _)); _ }
+                      {
+                        representation_t =
+                          DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _));
+                        _;
+                      }
                       )
                 ) ->
               { exists_check with enum_string_loc = t_loc }

@@ -976,7 +976,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * necessity we allow all string types to flow to StrT_UNSOUND (whereas only
      * exactly matching string literal types may flow to SingletonStrT).
      * *)
-    | (DefT (rl, StrT_UNSOUND (_, actual)), DefT (ru, SingletonStrT expected)) ->
+    | ( DefT (rl, (StrT_UNSOUND (_, actual) | SingletonStrT actual)),
+        DefT (ru, SingletonStrT expected)
+      ) ->
       if expected = actual then
         ()
       else
@@ -1039,8 +1041,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
-    | ( ( DefT (reason_s, StrT_UNSOUND (_, x))
-        | GenericT { reason = reason_s; bound = DefT (_, StrT_UNSOUND (_, x)); _ } ),
+    | ( ( DefT (reason_s, (StrT_UNSOUND (_, x) | SingletonStrT x))
+        | GenericT
+            { reason = reason_s; bound = DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT x)); _ } ),
         KeysT (reason_op, o)
       ) ->
       let reason_next = replace_desc_new_reason (RProperty (Some x)) reason_s in
@@ -1310,7 +1313,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when prefix1 = prefix2 ->
       let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, StrT_UNSOUND (None, OrdinaryName s)),
+    | ( DefT (reason, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
         StrUtilT { reason = _; op = StrPrefix prefix; remainder }
       )
       when String.starts_with ~prefix s ->
@@ -1332,7 +1335,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when suffix1 = suffix2 ->
       let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT (reason, StrT_UNSOUND (None, OrdinaryName s)),
+    | ( DefT (reason, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
         StrUtilT { reason = _; op = StrSuffix suffix; remainder }
       )
       when String.ends_with ~suffix s ->
@@ -2268,7 +2271,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
-    | ( DefT (reason, (StrGeneralT _ | StrT_UNSOUND _)),
+    | ( DefT (reason, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2446,6 +2449,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT (_, NumT_UNSOUND _) ->
           Some "number"
         | DefT (_, StrGeneralT _)
+        | DefT (_, SingletonStrT _)
         | DefT (_, StrT_UNSOUND _) ->
           Some "string"
         | DefT (_, SymbolT) -> Some "symbol"

@@ -288,7 +288,7 @@ let ground_subtype = function
   | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
       UseT (_, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
     )
-  | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _)),
+  | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
       UseT (_, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
     )
   | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _)),
@@ -306,7 +306,7 @@ let ground_subtype = function
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
+  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
       UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
     )
     when String.starts_with ~prefix s ->
@@ -316,7 +316,7 @@ let ground_subtype = function
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
     true
-  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
+  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
       UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
     )
     when String.ends_with ~suffix s ->
@@ -2405,8 +2405,8 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedOpen));
           F.error_type cx trace reason_op
-        | GenericT { bound = DefT (_, StrT_UNSOUND _); _ }
-        | DefT (_, StrT_UNSOUND _) ->
+        | GenericT { bound = DefT (_, (StrT_UNSOUND _ | SingletonStrT _)); _ }
+        | DefT (_, (StrT_UNSOUND _ | SingletonStrT _)) ->
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
@@ -2554,8 +2554,8 @@ let array_elem_check
 
 let propref_for_elem_t = function
   | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT name)); _ })
-  | GenericT { bound = DefT (_, StrT_UNSOUND (_, name)); reason; _ }
-  | DefT (reason, StrT_UNSOUND (_, name)) ->
+  | GenericT { bound = DefT (_, (SingletonStrT name | StrT_UNSOUND (_, name))); reason; _ }
+  | DefT (reason, (SingletonStrT name | StrT_UNSOUND (_, name))) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
   | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT (value, raw))); _ })

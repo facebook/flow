@@ -707,7 +707,8 @@ module TypeAssertions = struct
       (* the left-hand side of a `(x in y)` expression is a string or number
          TODO: also, symbols *)
       | DefT (_, StrGeneralT _)
-      | DefT (_, StrT_UNSOUND _) ->
+      | DefT (_, StrT_UNSOUND _)
+      | DefT (_, SingletonStrT _) ->
         ()
       | DefT (_, NumGeneralT _)
       | DefT (_, NumT_UNSOUND _) ->
