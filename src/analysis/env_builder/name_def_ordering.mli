@@ -33,6 +33,13 @@ val string_of_component :
 module type S = sig
   type cx
 
+  val build_graph :
+    cx ->
+    autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
+    Env_api.env_info ->
+    (Name_def.def * 'a * ALoc.t list * ALoc.t Reason.virtual_reason) EnvMap.t ->
+    ALoc.t Nel.t EnvMap.t EnvMap.t
+
   val build_ordering :
     cx ->
     autocomplete_hooks:Env_api.With_ALoc.autocomplete_hooks ->
