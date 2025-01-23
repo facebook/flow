@@ -78,8 +78,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":8}},
-                      "range":[25,30],
+                      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},
+                      "range":[25,32],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":10}},

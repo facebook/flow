@@ -44,8 +44,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":6}},
-                      "range":[25,28],
+                      "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":9}},
+                      "range":[25,31],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":6}},
@@ -70,8 +70,8 @@
                     },
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":14}},
-                      "range":[33,36],
+                      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
+                      "range":[33,39],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":14}},
@@ -117,8 +117,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":8}},
-                      "range":[48,53],
+                      "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":11}},
+                      "range":[48,56],
                       "key":{
                         "type":"Literal",
                         "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":8}},
@@ -163,8 +163,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":6}},
-                      "range":[65,68],
+                      "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":12}},
+                      "range":[65,74],
                       "key":{
                         "type":"Literal",
                         "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":6}},
@@ -209,8 +209,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":6}},
-                      "range":[83,86],
+                      "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":15}},
+                      "range":[83,95],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":6}},
@@ -259,8 +259,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":8}},
-                      "range":[104,109],
+                      "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":10}},
+                      "range":[104,111],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":10}},
@@ -287,8 +287,8 @@
                     },
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":6,"column":12},"end":{"line":6,"column":15}},
-                      "range":[113,116],
+                      "loc":{"source":null,"start":{"line":6,"column":12},"end":{"line":6,"column":17}},
+                      "range":[113,118],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":6,"column":12},"end":{"line":6,"column":17}},
@@ -315,8 +315,8 @@
                     },
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":6,"column":19},"end":{"line":6,"column":22}},
-                      "range":[120,123],
+                      "loc":{"source":null,"start":{"line":6,"column":19},"end":{"line":6,"column":24}},
+                      "range":[120,125],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":6,"column":19},"end":{"line":6,"column":24}},
@@ -365,8 +365,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":8}},
-                      "range":[134,139],
+                      "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":10}},
+                      "range":[134,141],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":10}},
@@ -433,8 +433,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":8,"column":3},"end":{"line":8,"column":8}},
-                      "range":[162,167],
+                      "loc":{"source":null,"start":{"line":8,"column":3},"end":{"line":8,"column":10}},
+                      "range":[162,169],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":8,"column":3},"end":{"line":8,"column":10}},
@@ -501,8 +501,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":9,"column":3},"end":{"line":9,"column":8}},
-                      "range":[188,193],
+                      "loc":{"source":null,"start":{"line":9,"column":3},"end":{"line":9,"column":10}},
+                      "range":[188,195],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":9,"column":3},"end":{"line":9,"column":10}},
@@ -569,8 +569,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":8}},
-                      "range":[214,219],
+                      "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":10}},
+                      "range":[214,221],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":10,"column":3},"end":{"line":10,"column":10}},

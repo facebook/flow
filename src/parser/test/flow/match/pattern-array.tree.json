@@ -310,8 +310,8 @@
                       "properties":[
                         {
                           "type":"MatchObjectPatternProperty",
-                          "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":10}},
-                          "range":[148,154],
+                          "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":24}},
+                          "range":[148,168],
                           "key":{
                             "type":"Identifier",
                             "loc":{"source":null,"start":{"line":8,"column":4},"end":{"line":8,"column":10}},

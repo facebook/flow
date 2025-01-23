@@ -100,8 +100,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":6}},
-                      "range":[49,52],
+                      "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":13}},
+                      "range":[49,59],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":6}},
@@ -166,8 +166,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":6}},
-                      "range":[68,71],
+                      "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":16}},
+                      "range":[68,81],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":6}},
@@ -235,8 +235,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":6}},
-                      "range":[90,93],
+                      "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":22}},
+                      "range":[90,109],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":5,"column":3},"end":{"line":5,"column":6}},
@@ -327,8 +327,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":6}},
-                      "range":[118,121],
+                      "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":24}},
+                      "range":[118,139],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":6,"column":3},"end":{"line":6,"column":6}},
@@ -419,8 +419,8 @@
                   "properties":[
                     {
                       "type":"MatchObjectPatternProperty",
-                      "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":6}},
-                      "range":[148,151],
+                      "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":22}},
+                      "range":[148,167],
                       "key":{
                         "type":"Identifier",
                         "loc":{"source":null,"start":{"line":7,"column":3},"end":{"line":7,"column":6}},
