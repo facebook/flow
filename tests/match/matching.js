@@ -99,7 +99,16 @@
     const d: d as empty, // OK: all members checked
   };
 }
+{
+  declare const x: {type: 'foo', value: 1}
+                 | {type: 'bar', value: 2};
 
+  // Nested `as` pattern
+  const e1 = match (x) {
+    {type: 'foo' as a, const value}: (a as 'foo', value as 1), // OK
+    {type: 'bar' as a, const value}: (a as 'bar', value as 2), // OK
+  };
+}
 
 // Top level binding and wildcard
 {

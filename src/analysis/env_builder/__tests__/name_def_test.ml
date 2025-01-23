@@ -1712,7 +1712,8 @@ let%expect_test "match_pattern_as" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 13) to (3, 14) => (val (3, 2) to (3, 19)).foo;
-      (3, 2) to (3, 15) => val (3, 2) to (3, 19)
+      (3, 2) to (3, 15) => val (3, 2) to (3, 19);
+      (3, 8) to (3, 9) => exp (3, 8) to (3, 9) (hint = [])
     ] |}]
 
 let%expect_test "match_pattern_nested" =

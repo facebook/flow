@@ -3135,7 +3135,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 acc
                 refi
                 (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }))
-          | (_, AsPattern { AsPattern.pattern; _ }) -> recurse arg pattern
+          | (_, AsPattern { AsPattern.pattern; _ }) -> recurse acc pattern
           | (loc, BindingPattern _)
           | (loc, WildcardPattern _) ->
             (match RefinementKey.of_expression acc with

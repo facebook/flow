@@ -110,6 +110,17 @@
     _: 0,
   };
 }
+{
+  declare const x: {foo: {bar: number}};
+
+  const out = match (x) {
+    {foo: {bar: _} as const a}: 0, // OK
+    {foo: {bar: 1}}: 0, // OK
+    {foo: {bar: const a}}: 0, // OK
+    {foo: {bar: 1 as const a}}: 0, // OK
+    _: 0,
+  };
+}
 
 // Array rest
 {
