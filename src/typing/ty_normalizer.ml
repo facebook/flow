@@ -986,7 +986,10 @@ module Make (I : INPUT) : S = struct
       let%bind fun_rest_param = fun_rest_param_t ~env rest_param in
       let%bind fun_return =
         match type_guard with
-        | Some (T.TypeGuard { reason = _; one_sided; param_name = (_, x); type_guard = t }) ->
+        | Some
+            (T.TypeGuard
+              { reason = _; one_sided; inferred = _; param_name = (_, x); type_guard = t }
+              ) ->
           let%map t = type__ ~env t in
           Ty.TypeGuard (one_sided, x, t)
         | None ->

@@ -1097,6 +1097,7 @@ module rec TypeTerm : sig
 
   and type_guard =
     | TypeGuard of {
+        inferred: bool;
         reason: reason;
         param_name: ALoc.t * string;
         type_guard: t;

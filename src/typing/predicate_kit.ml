@@ -399,7 +399,8 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           add_output cx msg;
           report_unchanged_filtering_result_to_predicate_result tin result_collector
         | ( Some (Some name, _),
-            TypeGuard { reason = _; one_sided; param_name = (_, param_name); type_guard }
+            TypeGuard
+              { reason = _; one_sided; param_name = (_, param_name); type_guard; inferred = _ }
           ) ->
           let filter_result =
             if param_name <> name then

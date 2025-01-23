@@ -1713,7 +1713,10 @@ and merge_fun
       | None -> None
       | Some (TypeGuard { loc; param_name; type_guard = t; one_sided }) ->
         let reason = Reason.mk_reason Reason.RTypeGuard loc in
-        Some (Type.TypeGuard { reason; one_sided; param_name; type_guard = merge env file t })
+        Some
+          (Type.TypeGuard
+             { reason; one_sided; inferred = false; param_name; type_guard = merge env file t }
+          )
     in
     let this_status =
       if is_method then

@@ -166,7 +166,10 @@ let rec dump_t_ (depth, tvars) cx t =
              (Base.Option.value_map rest_param ~default:"" ~f:(fun (_, _, t) -> "..." ^ kid t))
              (kid return_t)
              (match type_guard with
-             | Some (TypeGuard { reason = _; one_sided; param_name = (_, name); type_guard }) ->
+             | Some
+                 (TypeGuard
+                   { reason = _; one_sided; inferred = _; param_name = (_, name); type_guard }
+                   ) ->
                let implies =
                  if one_sided then
                    "implies "

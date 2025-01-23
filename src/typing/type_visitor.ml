@@ -331,7 +331,7 @@ class ['a] t =
 
     method private fun_type_guard cx pole acc type_guard =
       match type_guard with
-      | TypeGuard { reason = _; one_sided = _; param_name = _; type_guard = t } ->
+      | TypeGuard { reason = _; one_sided = _; inferred = _; param_name = _; type_guard = t } ->
         self#type_ cx pole acc t
 
     method private obj_flags cx pole acc flags =

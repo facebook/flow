@@ -2365,7 +2365,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let reason = Reason.mk_reason RTypeGuard gloc in
     check_guard_type env.cx fparams (name, type_guard);
     let type_guard =
-      Some (TypeGuard { reason; one_sided; param_name = (name_loc, name); type_guard })
+      Some
+        (TypeGuard
+           { reason; one_sided; inferred = false; param_name = (name_loc, name); type_guard }
+        )
     in
     (bool_t, guard', type_guard)
 

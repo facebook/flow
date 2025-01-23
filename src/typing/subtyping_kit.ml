@@ -1788,8 +1788,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output
             cx
             (Error_message.ETypeGuardFuncIncompatibility { use_op; reasons = (lreason, ureason) })
-        | ( Some (TypeGuard { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1 }),
-            Some (TypeGuard { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2 })
+        | ( Some
+              (TypeGuard
+                { reason = r1; one_sided = impl1; param_name = x1; type_guard = t1; inferred = _ }
+                ),
+            Some
+              (TypeGuard
+                { reason = r2; one_sided = impl2; param_name = x2; type_guard = t2; inferred = _ }
+                )
           ) ->
           func_type_guard_compat
             cx

@@ -731,12 +731,12 @@ class virtual ['a] t =
 
     method private func_type_guard cx map_cx type_guard =
       match type_guard with
-      | TypeGuard { reason; one_sided; param_name; type_guard = t } ->
+      | TypeGuard { reason; one_sided; inferred; param_name; type_guard = t } ->
         let t' = self#type_ cx map_cx t in
         if t' == t then
           type_guard
         else
-          TypeGuard { reason; one_sided; param_name; type_guard = t' }
+          TypeGuard { reason; one_sided; inferred; param_name; type_guard = t' }
 
     method private predicate_maps cx map_cx predicate =
       let (reason, (lazy (pmap, nmap))) = predicate in

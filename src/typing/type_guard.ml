@@ -104,7 +104,8 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
             )
     )
 
-let check_type_guard cx params (TypeGuard { reason; one_sided; param_name; type_guard }) =
+let check_type_guard
+    cx params (TypeGuard { reason; inferred = _; one_sided; param_name; type_guard }) =
   let err_with_desc desc type_guard_reason binding_loc =
     let binding_reason = mk_reason desc binding_loc in
     Flow_js.add_output

@@ -286,6 +286,7 @@ and type_of_hint_decomposition cx op reason t =
             {
               reason;
               one_sided = false;
+              inferred = false;
               param_name = (param_loc, param_name);
               type_guard = Unsoundness.unresolved_any reason;
             }
