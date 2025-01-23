@@ -213,8 +213,23 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
     | [] -> List.rev rev_props
     | (loc, { Property.key; pattern = p; shorthand; comments }) :: props ->
       let (acc, key, name) = object_property_key cx acc key in
-      if SSet.mem name seen then
-        Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc; name });
+      ( if SSet.mem name seen then
+        let key_loc =
+          match key with
+          | Property.StringLiteral (loc, _)
+          | Property.NumberLiteral (loc, _) ->
+            loc
+          | Property.Identifier ((loc, _), _) ->
+            (match p with
+            | ( _,
+                Ast.MatchPattern.BindingPattern { Ast.MatchPattern.BindingPattern.id = (loc, _); _ }
+              )
+              when shorthand ->
+              loc
+            | _ -> loc)
+        in
+        Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc = key_loc; name })
+      );
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let prop = (loc, { Property.key; pattern = p; shorthand; comments }) in
       loop acc (SSet.add name seen) (prop :: rev_props) props

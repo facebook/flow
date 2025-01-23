@@ -518,12 +518,12 @@ Duplicate property `foo` in object pattern. [match-invalid-pattern]
                        ^^^
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:61:17
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:61:23
 
 Duplicate property `foo` in object pattern. [match-invalid-pattern]
 
-   61|     {const foo, foo: true}: 0, // ERROR
-                       ^^^
+   61|     {foo: true, const foo}: 0, // ERROR
+                             ^^^
 
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:66:17

@@ -58,7 +58,7 @@
   };
 
   const e2 = match (x) {
-    {const foo, foo: true}: 0, // ERROR
+    {foo: true, const foo}: 0, // ERROR
     _: 0,
   };
 
