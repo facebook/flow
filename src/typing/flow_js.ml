@@ -3748,7 +3748,7 @@ struct
           rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
         (* If we are accessing `Iterable<T>` with a number, and have `access_iterables = true`,
            then output `T`. *)
-        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
             ElemT
               ( use_op,
                 _,
@@ -3799,7 +3799,7 @@ struct
             | None -> value
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
-        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+        | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
             ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action)
           ) ->
           let (write_action, read_action, never_union_void_on_computed_prop_access) =
@@ -5143,7 +5143,8 @@ struct
         (***********************)
         (* Number library call *)
         (***********************)
-        | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)), u)
+          when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Number", u)
         (***********************)
         (* Boolean library call *)
@@ -5255,8 +5256,9 @@ struct
                  suggestion = None;
                }
             )
-        | (DefT (reason, NumT_UNSOUND (_, (value, _))), WriteComputedObjPropCheckT { reason_key; _ })
-          ->
+        | ( DefT (reason, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))),
+            WriteComputedObjPropCheckT { reason_key; _ }
+          ) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAssign (reason, reason_key, kind))
         | (_, WriteComputedObjPropCheckT { reason = _; reason_key; _ }) ->

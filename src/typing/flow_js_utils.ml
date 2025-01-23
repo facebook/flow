@@ -285,7 +285,7 @@ let ground_subtype = function
   | (_, UseT (_, OpenT _)) ->
     false
   | (UnionT _, _) -> false
-  | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+  | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
       UseT (_, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
     )
   | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
@@ -2410,8 +2410,9 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           let loc = loc_of_t elem_t in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
-        | GenericT { bound = DefT (_, NumT_UNSOUND (_, (value, _))); _ }
-        | DefT (_, NumT_UNSOUND (_, (value, _))) ->
+        | GenericT
+            { bound = DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))); _ }
+        | DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))) ->
           let reason_prop = reason_of_t elem_t in
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
@@ -2460,7 +2461,8 @@ let array_elem_check
   in
   let (can_write_tuple, value, use_op) =
     match l with
-    | DefT (index_reason, NumT_UNSOUND (_, (float_value, _))) -> begin
+    | DefT (index_reason, (NumT_UNSOUND (_, (float_value, _)) | SingletonNumT (float_value, _))) ->
+    begin
       match elements with
       | None -> (false, elem_t, use_op)
       | Some elements ->
@@ -2559,8 +2561,13 @@ let propref_for_elem_t = function
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
   | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT (value, raw))); _ })
-  | GenericT { bound = DefT (_, NumT_UNSOUND (_, (value, raw))); reason = reason_num; _ }
-  | DefT (reason_num, NumT_UNSOUND (_, (value, raw)))
+  | GenericT
+      {
+        bound = DefT (_, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT (value, raw)));
+        reason = reason_num;
+        _;
+      }
+  | DefT (reason_num, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT (value, raw)))
     when Js_number.is_float_safe_integer value ->
     let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
@@ -2701,9 +2708,9 @@ let flow_unary_arith cx l reason kind =
     add_output cx (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
   | (Plus, _) -> NumModuleT.why reason
-  | (BitNot, DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) -> NumModuleT.why reason
+  | (BitNot, DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))) -> NumModuleT.why reason
   | (BitNot, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
-  | (Update, DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) -> NumModuleT.why reason
+  | (Update, DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))) -> NumModuleT.why reason
   | (Update, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
   | (_, AnyT (_, src)) ->
     let src = any_mod_src_keep_placeholder Untyped src in
@@ -2727,7 +2734,10 @@ let flow_arith cx reason l r kind =
   | (_, _, DefT (_, EmptyT)) ->
     EmptyT.why reason
   (* num <> num *)
-  | (_, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _))) ->
+  | ( _,
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
+    ) ->
     NumModuleT.why reason
   | (RShift3, DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _)), _) ->
     add_output cx (Error_message.EBigIntRShift3 reason);
@@ -2742,9 +2752,14 @@ let flow_arith cx reason l r kind =
   (* str + num *)
   (* num + str *)
   | (Plus, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
-  | (Plus, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
-  | (Plus, DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
-    ->
+  | ( Plus,
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _)),
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
+    )
+  | ( Plus,
+      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _))
+    ) ->
     StrModuleT.why reason
   | _ ->
     add_output

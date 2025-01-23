@@ -711,7 +711,8 @@ module TypeAssertions = struct
       | DefT (_, SingletonStrT _) ->
         ()
       | DefT (_, NumGeneralT _)
-      | DefT (_, NumT_UNSOUND _) ->
+      | DefT (_, NumT_UNSOUND _)
+      | DefT (_, SingletonNumT _) ->
         ()
       | l -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))
     )
