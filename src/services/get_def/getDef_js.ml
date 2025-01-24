@@ -52,11 +52,10 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
       let def_loc = def.Scope_api.With_Loc.Def.locs in
       Ok (def_loc, Some name)
     | [] ->
-      let builtins = Context.builtins cx in
-      (match Builtins.get_builtin_value_opt builtins name with
+      (match Context.builtin_value_opt cx name with
       | Some (def_loc, _) -> Ok (Nel.one (loc_of_aloc def_loc), Some name)
       | None ->
-        (match Builtins.get_builtin_type_opt builtins name with
+        (match Context.builtin_type_opt cx name with
         | Some (def_loc, _) -> Ok (Nel.one (loc_of_aloc def_loc), Some name)
         | None -> Error (name ^ " is an unbound variable")))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")

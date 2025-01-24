@@ -241,8 +241,7 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
   resolved_requires :=
     SMap.mapi
       (fun mref _locs ->
-        let builtins = Context.builtins cx in
-        match Builtins.get_builtin_module_opt builtins mref with
+        match Context.builtin_module_opt cx mref with
         | Some m ->
           Context.TypedModule
             (Type.Constraint.ForcingState.of_lazy_module m

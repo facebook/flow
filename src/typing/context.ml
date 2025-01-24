@@ -457,6 +457,12 @@ let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 
 let builtins cx = Lazy.force cx.ccx.builtins
 
+let builtin_value_opt cx = Builtins.get_builtin_value_opt (builtins cx)
+
+let builtin_type_opt cx = Builtins.get_builtin_type_opt (builtins cx)
+
+let builtin_module_opt cx = Builtins.get_builtin_module_opt (builtins cx)
+
 let file cx = cx.file
 
 let is_lib_file cx = File_key.is_lib_file cx.file

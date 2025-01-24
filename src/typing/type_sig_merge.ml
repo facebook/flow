@@ -827,7 +827,7 @@ and merge_annot env file = function
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
     let cx = file.cx in
     let f =
-      match Builtins.get_builtin_module_opt (Context.builtins cx) ref with
+      match Context.builtin_module_opt cx ref with
       | Some lazy_m ->
         Type.Constraint.ForcingState.of_lazy_module lazy_m |> ConsGen.force_module_type_thunk cx
       | None ->

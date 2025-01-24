@@ -120,8 +120,7 @@ module Import_export = struct
       ~import_kind_for_untyped_import_validation
       (loc, mref) =
     if Context.in_declare_module cx then
-      let builtins = Context.builtins cx in
-      match Builtins.get_builtin_module_opt builtins mref with
+      match Context.builtin_module_opt cx mref with
       | Some (_, (lazy m)) -> Ok m
       | None -> Error (Flow_js_utils.lookup_builtin_module_error cx mref loc)
     else

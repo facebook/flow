@@ -1055,8 +1055,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
                 let remote_module =
-                  let builtins = Context.builtins cx in
-                  match Builtins.get_builtin_module_opt builtins value with
+                  match Context.builtin_module_opt cx value with
                   | Some (_, (lazy m)) -> Ok m
                   | None -> Error (Flow_js_utils.lookup_builtin_module_error cx value loc)
                 in

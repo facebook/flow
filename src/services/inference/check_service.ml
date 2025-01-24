@@ -35,8 +35,7 @@ type check_file_and_comp_env = {
 }
 
 let unknown_module_t cx _mref module_name =
-  let builtins = Context.builtins cx in
-  match Builtins.get_builtin_module_opt builtins module_name with
+  match Context.builtin_module_opt cx module_name with
   | Some (reason, lazy_module) ->
     Context.TypedModule
       (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
@@ -46,8 +45,7 @@ let unknown_module_t cx _mref module_name =
 
 let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
-  let builtins = Context.builtins cx in
-  match Builtins.get_builtin_module_opt builtins mref with
+  match Context.builtin_module_opt cx mref with
   | Some (reason, lazy_module) ->
     Context.TypedModule
       (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
