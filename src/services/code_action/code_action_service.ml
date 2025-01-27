@@ -1510,10 +1510,9 @@ module ExportKindMap = WrappedMap.Make (struct
 end)
 
 (** insert imports for all undefined-variable errors that have only one suggestion *)
-let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri =
+let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir =
   let errors = Context.errors cx in
   let { ServerEnv.exports; _ } = env in
-  let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
   (* collect imports for all of the undefined variables in the file *)
   let imports =
     Flow_error.ErrorSet.fold
@@ -1588,11 +1587,13 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri
       imports
       []
   in
-  let edits =
-    let opts = layout_options options in
-    Autofix_imports.add_imports ~options:opts ~added_imports ast |> flow_loc_patch_to_lsp_edits
-  in
-  edits
+  let opts = layout_options options in
+  Autofix_imports.add_imports ~options:opts ~added_imports ast
+
+let autofix_imports_lsp ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri =
+  let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
+  let edits = autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir in
+  flow_loc_patch_to_lsp_edits edits
 
 let autofix_exports
     ~options

@@ -54,7 +54,7 @@ val code_actions_at_loc :
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result
 
-val autofix_imports :
+val autofix_imports_lsp :
   options:Options.t ->
   env:ServerEnv.env ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->

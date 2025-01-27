@@ -1825,7 +1825,7 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
       let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
       Lwt.return
         (Ok
-           (Code_action_service.autofix_imports
+           (Code_action_service.autofix_imports_lsp
               ~options
               ~env
               ~loc_of_aloc
