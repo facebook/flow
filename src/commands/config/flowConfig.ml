@@ -50,13 +50,10 @@ module Opts = struct
     autoimports_ranked_by_usage_boost_exact_match_min_length: int;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    ban_spread_key_props: bool option;
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
-    hook_compatibility: bool;
-    hook_compatibility_includes: string list;
-    hook_compatibility_excludes: string list;
-    react_rules: Options.react_rules list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -89,6 +86,9 @@ module Opts = struct
     haste_namespaces_path_mapping: (string * string list) list;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
+    hook_compatibility: bool;
+    hook_compatibility_includes: string list;
+    hook_compatibility_excludes: string list;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     jest_integration: bool;
@@ -123,6 +123,7 @@ module Opts = struct
     pattern_matching_expressions: bool option;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
+    react_rules: Options.react_rules list;
     react_runtime: Options.react_runtime;
     recursion_limit: int;
     relay_integration: bool;
@@ -139,7 +140,6 @@ module Opts = struct
     ts_syntax: bool;
     type_expansion_recursion_limit: int;
     use_mixed_in_catch_variables: bool option;
-    ban_spread_key_props: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
     watchman_sync_timeout: int option;
@@ -185,13 +185,10 @@ module Opts = struct
       autoimports_ranked_by_usage_boost_exact_match_min_length = 5;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      ban_spread_key_props = None;
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
-      hook_compatibility = true;
-      hook_compatibility_includes = [];
-      hook_compatibility_excludes = [];
-      react_rules = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -225,6 +222,9 @@ module Opts = struct
       haste_namespaces_path_mapping = [];
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
+      hook_compatibility = true;
+      hook_compatibility_includes = [];
+      hook_compatibility_excludes = [];
       ignore_non_literal_requires = false;
       include_warnings = false;
       jest_integration = false;
@@ -259,6 +259,7 @@ module Opts = struct
       pattern_matching_expressions = None;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
+      react_rules = [];
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
       relay_integration = false;
@@ -275,7 +276,6 @@ module Opts = struct
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
       use_mixed_in_catch_variables = None;
-      ban_spread_key_props = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
       watchman_sync_timeout = None;
@@ -617,6 +617,9 @@ module Opts = struct
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = Some v })
 
+  let ban_spread_key_props_parser =
+    boolean (fun opts v -> Ok { opts with ban_spread_key_props = Some v })
+
   let estimate_recheck_time_parser =
     boolean (fun opts v -> Ok { opts with estimate_recheck_time = Some v })
 
@@ -936,9 +939,6 @@ module Opts = struct
   let use_mixed_in_catch_variables_parser =
     boolean (fun opts v -> Ok { opts with use_mixed_in_catch_variables = Some v })
 
-  let ban_spread_key_props_parser =
-    boolean (fun opts v -> Ok { opts with ban_spread_key_props = Some v })
-
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
@@ -971,6 +971,7 @@ module Opts = struct
         )
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
+      ("ban_spread_key_props", ban_spread_key_props_parser);
       ("casting_syntax", casting_syntax_parser);
       ("component_syntax", component_syntax_parser);
       ( "dev_only.refinement_info_as_errors",
@@ -998,12 +999,14 @@ module Opts = struct
         hook_compatibility_excludes_parser
       );
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
-      ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
+      ( "experimental.libdef_recheck_partial_fix",
+        boolean (fun opts v -> Ok { opts with libdef_recheck_partial_fix = v })
+      );
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
       ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
+      ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ( "experimental.multi_platform",
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
       );
@@ -1014,7 +1017,14 @@ module Opts = struct
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
       );
+      ( "experimental.pattern_matching_expressions",
+        boolean (fun opts v -> Ok { opts with pattern_matching_expressions = Some v })
+      );
+      ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ( "experimental.type_expansion_recursion_limit",
+        uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
+      );
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
@@ -1039,9 +1049,6 @@ module Opts = struct
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("jest_integration", boolean (fun opts v -> Ok { opts with jest_integration = v }));
       ("lazy_mode", lazy_mode_parser);
-      ( "experimental.libdef_recheck_partial_fix",
-        boolean (fun opts v -> Ok { opts with libdef_recheck_partial_fix = v })
-      );
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
@@ -1085,9 +1092,6 @@ module Opts = struct
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
       );
-      ( "experimental.pattern_matching_expressions",
-        boolean (fun opts v -> Ok { opts with pattern_matching_expressions = Some v })
-      );
       ( "react.custom_jsx_typing",
         boolean (fun opts v -> Ok { opts with react_custom_jsx_typing = v })
       );
@@ -1113,13 +1117,9 @@ module Opts = struct
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("suppress_type", suppress_types_parser);
-      ( "experimental.type_expansion_recursion_limit",
-        uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
-      );
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
-      ("ban_spread_key_props", ban_spread_key_props_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
 
@@ -1672,19 +1672,13 @@ let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
+let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
+
 let casting_syntax c = c.options.Opts.casting_syntax
 
 let channel_mode c = c.options.Opts.channel_mode
 
 let component_syntax c = c.options.Opts.component_syntax
-
-let hook_compatibility_includes c = c.options.Opts.hook_compatibility_includes
-
-let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
-
-let hook_compatibility c = c.options.Opts.hook_compatibility
-
-let react_rules c = c.options.Opts.react_rules
 
 let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 
@@ -1749,6 +1743,12 @@ let haste_namespaces_path_mapping c = c.options.Opts.haste_namespaces_path_mappi
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
 let haste_paths_includes c = c.options.Opts.haste_paths_includes
+
+let hook_compatibility_includes c = c.options.Opts.hook_compatibility_includes
+
+let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
+
+let hook_compatibility c = c.options.Opts.hook_compatibility
 
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
@@ -1822,6 +1822,8 @@ let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 
 let react_ref_as_prop c = c.options.Opts.react_ref_as_prop
 
+let react_rules c = c.options.Opts.react_rules
+
 let react_runtime c = c.options.Opts.react_runtime
 
 let recursion_limit c = c.options.Opts.recursion_limit
@@ -1858,8 +1860,6 @@ let ts_syntax c = c.options.Opts.ts_syntax
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
-
-let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 

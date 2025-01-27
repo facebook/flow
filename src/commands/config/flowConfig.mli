@@ -78,19 +78,13 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val ban_spread_key_props : config -> bool option
+
 val casting_syntax : config -> Options.CastingSyntax.t option
 
 val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
-
-val hook_compatibility_excludes : config -> string list
-
-val hook_compatibility_includes : config -> string list
-
-val hook_compatibility : config -> bool
-
-val react_rules : config -> Options.react_rules list
 
 val dev_only_refinement_info_as_errors : config -> bool
 
@@ -155,6 +149,12 @@ val haste_namespaces_path_mapping : config -> (string * string list) list
 val haste_paths_excludes : config -> string list
 
 val haste_paths_includes : config -> string list
+
+val hook_compatibility_excludes : config -> string list
+
+val hook_compatibility_includes : config -> string list
+
+val hook_compatibility : config -> bool
 
 val ignore_non_literal_requires : config -> bool
 
@@ -228,6 +228,8 @@ val react_custom_jsx_typing : config -> bool
 
 val react_ref_as_prop : config -> Options.ReactRefAsProp.t
 
+val react_rules : config -> Options.react_rules list
+
 val react_runtime : config -> Options.react_runtime
 
 val recursion_limit : config -> int
@@ -263,8 +265,6 @@ val ts_syntax : config -> bool
 val type_expansion_recursion_limit : config -> int
 
 val use_mixed_in_catch_variables : config -> bool option
-
-val ban_spread_key_props : config -> bool option
 
 val wait_for_recheck : config -> bool
 
