@@ -29,3 +29,5 @@ val mk_patch_ast_differ_unsafe :
 val print : patch -> string -> string
 
 val print_unsafe : patch -> File_input.t -> string
+
+val loc_patch_to_patch : string -> loc_patch -> patch

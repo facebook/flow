@@ -69,3 +69,10 @@ let print (patch : patch) (content : string) : string =
   result_string
 
 let print_unsafe patch file = with_content_of_file_input file @@ print patch
+
+let loc_patch_to_patch file_content loc_patch : patch =
+  let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 file_content in
+  let offset loc = Offset_utils.offset offset_table loc in
+  List.map
+    (fun (loc, replacement) -> Loc.(offset loc.start, offset loc._end, replacement))
+    loc_patch
