@@ -57,7 +57,7 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
       | None ->
         (match Context.builtin_type_opt cx name with
         | Some (def_loc, _) -> Ok (Nel.one (loc_of_aloc def_loc), Some name)
-        | None -> Error (name ^ " is an unbound variable")))
+        | None -> Ok (Nel.one loc, Some name)))
     | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers")
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
