@@ -35,8 +35,20 @@ module Inlay_hint_options = struct
   }
 end
 
+module Code_action = struct
+  type t = SourceAddMissingImports
+
+  let to_string = function
+    | SourceAddMissingImports -> "source.addMissingImports"
+end
+
 module Request = struct
   type command =
+    | APPLY_CODE_ACTION of {
+        input: File_input.t;
+        action: Code_action.t;
+        wait_for_recheck: bool option;
+      }
     | AUTOCOMPLETE of {
         input: File_input.t;
         cursor: int * int;
@@ -120,6 +132,11 @@ module Request = struct
     | STATUS of { include_warnings: bool }
 
   let to_string = function
+    | APPLY_CODE_ACTION { input; action; wait_for_recheck = _ } ->
+      Printf.sprintf
+        "apply-code-action source.addMissingImports %s %s"
+        (File_input.filename_of_file_input input)
+        (Code_action.to_string action)
     | AUTOCOMPLETE
         {
           input;
@@ -257,6 +274,8 @@ module Response = struct
 
   type autocomplete_response = (Completion.t * ac_type, string) result
 
+  type apply_code_action_response = (Replacement_printer.patch, string) result
+
   type autofix_exports_response = (Replacement_printer.patch * string list, string) result
 
   type autofix_missing_local_annot_response = (Replacement_printer.patch, string) result
@@ -325,6 +344,7 @@ module Response = struct
   type find_module_response = File_key.t option
 
   type response =
+    | APPLY_CODE_ACTION of apply_code_action_response
     | AUTOCOMPLETE of autocomplete_response
     | AUTOFIX_EXPORTS of autofix_exports_response
     | AUTOFIX_MISSING_LOCAL_ANNOT of autofix_missing_local_annot_response
@@ -348,6 +368,7 @@ module Response = struct
     | SAVE_STATE of (string, string) result
 
   let to_string = function
+    | APPLY_CODE_ACTION _ -> "apply-code-action response"
     | AUTOCOMPLETE _ -> "autocomplete response"
     | AUTOFIX_EXPORTS _ -> "autofix exports response"
     | AUTOFIX_MISSING_LOCAL_ANNOT _ -> "autofix missing-local-annot response"

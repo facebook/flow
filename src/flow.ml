@@ -15,6 +15,7 @@ end = struct
   (* normal commands *)
   let commands =
     [
+      ApplyCodeActionCommand.command;
       AstCommand.command;
       AutocompleteCommand.command;
       AutofixCommand.command;

@@ -1478,6 +1478,9 @@ let rank_autoimports_by_usage ~options client =
   | Persistent_connection.Client_config.True -> true
   | Persistent_connection.Client_config.False -> false
 
+let handle_apply_code_action ~options:_ ~reader:_ ~profiling:_ ~env:_ =
+  Lwt.return (ServerProt.Response.APPLY_CODE_ACTION (Error "Not yet implemented"), None)
+
 let handle_autocomplete
     ~trigger_character
     ~reader
@@ -1884,6 +1887,8 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
+  | ServerProt.Request.APPLY_CODE_ACTION { input = _; action = _; wait_for_recheck } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_apply_code_action ~options ~reader)
   | ServerProt.Request.AUTOCOMPLETE
       {
         input;
