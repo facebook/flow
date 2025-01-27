@@ -530,6 +530,18 @@ let autocomplete_on_parsed
   Autocomplete_js.autocomplete_unset_hooks ();
   (initial_json_props, ac_result)
 
+let autofix_imports_cli ~options ~env ~profiling ~loc_of_aloc ~module_system_info ~input =
+  let file_key = file_key_of_file_input ~options ~env input in
+  File_input.content_of_file_input input >>= fun file_content ->
+  Code_action_service.autofix_imports_cli
+    ~options
+    ~profiling
+    ~env
+    ~loc_of_aloc
+    ~module_system_info
+    ~file_key
+    ~file_content
+
 let autocomplete
     ~trigger_character
     ~reader
@@ -1478,8 +1490,23 @@ let rank_autoimports_by_usage ~options client =
   | Persistent_connection.Client_config.True -> true
   | Persistent_connection.Client_config.False -> false
 
-let handle_apply_code_action ~options:_ ~reader:_ ~profiling:_ ~env:_ =
-  Lwt.return (ServerProt.Response.APPLY_CODE_ACTION (Error "Not yet implemented"), None)
+let handle_apply_code_action ~options ~reader ~profiling ~env action file_input =
+  ServerProt.Code_action.(
+    match action with
+    | SourceAddMissingImports ->
+      let result =
+        try_with (fun () ->
+            autofix_imports_cli
+              ~options
+              ~profiling
+              ~env
+              ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+              ~module_system_info:(mk_module_system_info ~options ~reader)
+              ~input:file_input
+        )
+      in
+      Lwt.return (ServerProt.Response.APPLY_CODE_ACTION result, None)
+  )
 
 let handle_autocomplete
     ~trigger_character
@@ -1887,8 +1914,11 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.APPLY_CODE_ACTION { input = _; action = _; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_apply_code_action ~options ~reader)
+  | ServerProt.Request.APPLY_CODE_ACTION { input; action; wait_for_recheck } ->
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_apply_code_action ~options ~reader action input)
   | ServerProt.Request.AUTOCOMPLETE
       {
         input;

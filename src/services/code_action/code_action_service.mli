@@ -64,6 +64,16 @@ val autofix_imports_lsp :
   uri:Lsp.DocumentUri.t ->
   Lsp.TextEdit.t list
 
+val autofix_imports_cli :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  env:ServerEnv.env ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  module_system_info:Lsp_module_system_info.t ->
+  file_key:File_key.t ->
+  file_content:string ->
+  (Replacement_printer.patch, string) result
+
 val autofix_exports :
   options:Options.t ->
   master_cx:Context.master_context ->

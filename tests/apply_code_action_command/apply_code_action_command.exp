@@ -1,1 +1,7 @@
-Not yet implemented
+> apply-code-action 'source.addMissingImports' tmp/a.js
+// @flow
+
+import OtherModule from "./OtherModule";
+
+OtherModule;
+> Confirm no errors

@@ -1590,6 +1590,29 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src
   let opts = layout_options options in
   Autofix_imports.add_imports ~options:opts ~added_imports ast
 
+let autofix_imports_cli
+    ~options ~profiling ~env ~loc_of_aloc ~module_system_info ~file_key ~file_content =
+  let src_dir = File_key.to_string file_key |> Filename.dirname |> Base.Option.return in
+  let file_artifacts =
+    let ((_, parse_errs) as intermediate_result) =
+      Type_contents.parse_contents ~options ~profiling file_content file_key
+    in
+    if not (Flow_error.ErrorSet.is_empty parse_errs) then
+      Error parse_errs
+    else
+      Type_contents.type_parse_artifacts
+        ~options
+        ~profiling
+        env.ServerEnv.master_cx
+        file_key
+        intermediate_result
+  in
+  match file_artifacts with
+  | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; _ }) ->
+    let edits = autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir in
+    Ok (Replacement_printer.loc_patch_to_patch file_content edits)
+  | _ -> Error "Failed to parse or check file"
+
 let autofix_imports_lsp ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~uri =
   let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
   let edits = autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir in

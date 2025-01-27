@@ -6,8 +6,12 @@
 
 mkdir tmp || rm tmp/*
 cp .flowconfig tmp/.flowconfig
-cp a.js tmp/a.js
+cp ./*.js tmp/
 
 start_flow tmp
 
+echo '> apply-code-action '\''source.addMissingImports'\'' tmp/a.js'
 assert_ok "$FLOW" apply-code-action 'source.addMissingImports' tmp/a.js
+assert_ok "$FLOW" apply-code-action 'source.addMissingImports' --in-place tmp/a.js
+echo '> Confirm no errors'
+assert_ok "$FLOW" force-recheck tmp/a.js
