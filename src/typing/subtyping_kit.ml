@@ -109,7 +109,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let upper = Reason.mk_reason (RTypeGuardParam x2) loc2 in
       add_output cx (Error_message.ETypeGuardIndexMismatch { use_op; reasons = (lower, upper) })
     );
-    rec_flow_t cx trace ~use_op (t1, t2)
+    if impl2 then
+      rec_flow_t cx trace ~use_op (t1, t2)
+    else
+      rec_unify cx trace ~use_op t1 t2
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
