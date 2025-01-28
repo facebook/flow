@@ -915,7 +915,11 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                         | S.ForOf.LeftPattern patt -> pattern ~opts patt
                       end;
                       Atom "of";
-                      expression ~opts right;
+                      expression_with_parens
+                        ~ctxt:normal_context
+                        ~precedence:min_precedence
+                        ~opts
+                        right;
                     ]
                  );
                statement_after_test ~opts ~pretty_semicolon body;

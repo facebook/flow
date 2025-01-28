@@ -1812,6 +1812,13 @@ let tests =
            assert_statement_string ~ctxt "for(let{x,y}of z);";
            assert_statement_string ~ctxt ~pretty:true "for (let {x, y} of z);"
          );
+         ( "forof_sequence" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "for (var a of ([1], [2]));";
+           assert_statement_string ~ctxt "for(var a of([1],[2]));";
+           assert_statement_string ~ctxt ~pretty:true "for (var a of ([1], [2], [3]));";
+           assert_statement_string ~ctxt ~pretty:true "for (var a of ([1], ([2], [3])));";
+           assert_statement_string ~ctxt ~pretty:true "for (var a of (([1], [2]), [3]));"
+         );
          ( "forof_async" >:: fun ctxt ->
            (* the parens are required *)
            assert_statement_string ~ctxt "for((async)of y);";
