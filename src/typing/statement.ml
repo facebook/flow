@@ -8009,7 +8009,7 @@ module Make
               else
                 Tvar.mk cx ret_reason
             in
-            let type_guard_opt = Type_guard.infer_type_guard cx params in
+            let type_guard_opt = Type_guard.infer_type_guard ~infer_expr:expression cx params in
             (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), type_guard_opt)
           | (Ast.Function.ReturnAnnot.Available annot, _) ->
             let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in

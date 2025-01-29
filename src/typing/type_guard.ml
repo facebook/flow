@@ -159,7 +159,7 @@ let is_inferable_type_guard_read cx read =
   | Some p -> is_inferable_type_guard_predicate cx p
   | None -> false
 
-let infer_type_guard_from_read cx name return_reason read =
+let infer_type_guard_from_read ~infer_expr cx name return_expr return_reason read =
   let { Env_api.write_locs; _ } = read in
   let (param_loc, { Ast.Identifier.name = pname; _ }) = name in
   let param_reason = mk_reason (RParameter (Some pname)) param_loc in
@@ -173,6 +173,10 @@ let infer_type_guard_from_read cx name return_reason read =
         one_sided = true;
       }
   in
+  let returns_bool () =
+    let ((_, body_t), _) = infer_expr cx return_expr in
+    Flow_js.FlowJs.speculative_subtyping_succeeds cx body_t (DefT (reason_of_t body_t, BoolGeneralT))
+  in
   if Context.typing_mode cx <> Context.CheckingMode then
     None
   else if is_inferable_type_guard_read cx read then
@@ -183,15 +187,17 @@ let infer_type_guard_from_read cx name return_reason read =
           Type_env.inferred_type_guard_at_return cx param_reason ~return_loc ~write_locs
       )
     in
-    (* Only keep the type guard if the function is actually refining the input. *)
-    if Flow_js.FlowJs.speculative_subtyping_succeeds cx param_t guard_t then
+    (* Only keep the type guard if the function is actually refining the input
+     * and is returning a boolean expression. *)
+    if Flow_js.FlowJs.speculative_subtyping_succeeds cx param_t guard_t || not (returns_bool ())
+    then
       None
     else
       Some (mk_guard guard_t)
   else
     None
 
-let infer_type_guard cx params =
+let infer_type_guard cx ~infer_expr params =
   let env = Context.environment cx in
   let { Loc_env.var_info; _ } = env in
   let { Env_api.type_guard_consistency_maps; _ } = var_info in
@@ -217,8 +223,8 @@ let infer_type_guard cx params =
       match Loc_collections.ALocMap.find_opt param_loc type_guard_consistency_maps with
       | None -> None
       | Some (Some _havoced_loc_set, _) -> None
-      | Some (None, [(_, return_reason, read, _)]) ->
-        infer_type_guard_from_read cx name return_reason read
+      | Some (None, [(ret_expr, return_reason, read, _)]) ->
+        infer_type_guard_from_read ~infer_expr cx name ret_expr return_reason read
       | Some (None, _) -> None
     end
   | _ -> None

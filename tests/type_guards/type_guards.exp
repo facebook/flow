@@ -1583,6 +1583,42 @@ References:
                           ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
+
+Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
+type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:186:3
+   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+          ^^
+
+References:
+   inferred.js:185:14
+   185|   const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inferred.js:186:9
+   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
+
+Cannot cast `fn` to function type because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with boolean [2] in the return value. [incompatible-cast]
+
+   inferred.js:186:3
+   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+          ^^
+
+References:
+   inferred.js:185:18
+   185|   const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
+                         ^^^^^ [1]
+   inferred.js:186:23
+   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+                              ^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
 
 Cannot return boolean because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
@@ -3343,7 +3379,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 189 errors
+Found 191 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

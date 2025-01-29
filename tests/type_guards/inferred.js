@@ -180,3 +180,8 @@ function test17() {
   declare const values: Array<string>;
   foo(values.filter(v => v), x => {}); // okay
 }
+
+function test18() {
+  const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
+  fn as (x: mixed) => implies x is mixed; // error non-type guard function
+}

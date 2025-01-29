@@ -9,4 +9,11 @@ val check_type_guard :
   Context.t -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> Type.type_guard -> unit
 
 val infer_type_guard :
-  Context.t -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> Type.type_guard option
+  Context.t ->
+  infer_expr:
+    (Context.t ->
+    (ALoc.t, ALoc.t) Env_api.Ast.Expression.t ->
+    (ALoc.t, ALoc.t * Type.t) Env_api.Ast.Expression.t
+    ) ->
+  (ALoc.t, ALoc.t) Flow_ast.Function.Params.t ->
+  Type.type_guard option
