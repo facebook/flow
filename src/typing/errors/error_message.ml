@@ -1824,7 +1824,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeGuardInvalidParameter { type_guard_reason = reason; _ }
   | ETypeGuardParamUnbound reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
-  | ENegativeTypeGuardConsistency { reason; _ }
+  | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread

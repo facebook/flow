@@ -588,7 +588,7 @@ let rec make_intermediate_error :
       | Op
           (PositiveTypeGuardConsistency
             {
-              reason;
+              reason = _;
               return_reason = return;
               param_reason = param;
               guard_type_reason = guard_type;
@@ -603,7 +603,7 @@ let rec make_intermediate_error :
             :: explanations
           )
         in
-        root loc frames reason RootPositiveTypeGuardConsistency
+        root loc frames return (RootCannotReturn (desc return))
       | Frame (ReactDeepReadOnly (props_loc, Props), use_op) ->
         explanation loc frames use_op (ExplanationReactComponentPropsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (props_loc, HookArg), use_op) ->
@@ -1120,7 +1120,7 @@ let to_printable_error :
       [
         text "The type of ";
         ref param;
-        text " refined with the predicate encoded in return expression ";
+        text " at the return expression ";
         ref return;
         text " needs to be compatible with the guard type ";
         ref guard_type;
@@ -3719,9 +3719,9 @@ let to_printable_error :
       [text "one-sided "; ref lower; text " is incompatible with default "; ref upper]
     | MessageNegativeTypeGuardConsistency { reason = _; return_reason; type_reason } ->
       [
-        text "Inconsistent type guard declaration.";
-        text " The negation of the predicate encoded in return expression ";
-        ref return_reason;
+        text "Cannot return ";
+        desc (Reason.desc_of_reason return_reason);
+        text " because the negation of the predicate encoded in this expression";
         text " needs to completely refine away the guard type ";
         ref type_reason;
         text ". ";
