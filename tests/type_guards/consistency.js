@@ -7,7 +7,7 @@ class M {}
 function no_return(x: mixed): x is number {} // error no return
 
 function return_true(x: mixed): x is number {
-    return true; // error x: mixed ~> number and (negation) number ~> empty
+    return true; // error x: mixed ~> number
 }
 
 function return_true_in_branch(x: mixed): x is number {
@@ -23,16 +23,16 @@ function negation_on_union(x: number | string | boolean): x is boolean {
 }
 
 function always_false_error(x: mixed): x is A {
-  return false; // error (negation) A ~> empty, TODO: positive side should not error
+  return false; // error (negation) A ~> empty
 }
 
 function return_false_under_condition(x: number | string | boolean): x is boolean {
   if (typeof x === 'number') {
-    return false; // error (for the same reason as above)
+    return false; // okay (in else branch we'll get number|string which includes number)
   } else if (typeof x ==='string') {
-    return false; // error (for the same reason as above)
+    return false; // okay (in else branch we'll get number|string which includes string)
   } else {
-    return true; // TODO okay (no negation error)
+    return true; // okay (x is boolean and we never hit the else branch through here)
   }
 }
 

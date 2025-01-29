@@ -111,12 +111,12 @@ function declare_class_test() {
 
   class D2 extends C {
     m(x: mixed): x is mixed { // error mixed ~> number
-      return true; // error (negation) mixed ~> empty
+      return true; // okay
     }
   }
   class D3 extends C {
     m(x: mixed): x is number {
-      return true; // error mixed ~> number and (negation) number ~> empty
+      return true; // error mixed ~> number
     }
   }
 }

@@ -44,6 +44,11 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
           | (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ }) -> true
           | _ -> false
         in
+        let is_return_true_statement =
+          match ret_expr with
+          | (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = true; _ }) -> true
+          | _ -> false
+        in
         let return_loc = Reason.loc_of_reason return_reason in
         match
           Type_env.checked_type_guard_at_return
@@ -56,22 +61,24 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
         with
         | Ok (t, neg_pred) ->
           (* Positive *)
-          let guard_type_reason = reason_of_t type_guard in
-          let use_op =
-            Op
-              (PositiveTypeGuardConsistency
-                 {
-                   reason;
-                   param_reason;
-                   guard_type_reason;
-                   return_reason;
-                   is_return_false_statement;
-                 }
-              )
-          in
-          Flow.flow cx (t, UseT (use_op, type_guard));
+          ( if not is_return_false_statement then
+            let guard_type_reason = reason_of_t type_guard in
+            let use_op =
+              Op
+                (PositiveTypeGuardConsistency
+                   {
+                     reason;
+                     param_reason;
+                     guard_type_reason;
+                     return_reason;
+                     is_return_false_statement;
+                   }
+                )
+            in
+            Flow.flow cx (t, UseT (use_op, type_guard))
+          );
           (* Negative *)
-          if not one_sided then
+          if (not one_sided) && not is_return_true_statement then
             let type_guard_with_neg_pred =
               match neg_pred with
               | None -> type_guard
