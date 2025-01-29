@@ -34,3 +34,5 @@ declare class Invalid_type_guard_in_declare_class {
   set p(x: mixed): x is number;
   constructor(x: mixed): x is number;
 }
+
+type Error_in_type_guard_type = (x: mixed) => x is Missing; // error missing name

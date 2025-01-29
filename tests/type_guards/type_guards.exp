@@ -1507,6 +1507,14 @@ Cannot declare a type guard on a(n) constructor function. [function-predicate]
                                 ^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- invalid.js:38:52
+
+Cannot resolve name `Missing`. [cannot-resolve-name]
+
+   38| type Error_in_type_guard_type = (x: mixed) => x is Missing; // error missing name
+                                                          ^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -3094,7 +3102,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 181 errors
+Found 182 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

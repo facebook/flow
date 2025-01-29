@@ -1711,12 +1711,20 @@ and merge_fun
     let type_guard =
       match type_guard with
       | None -> None
-      | Some (TypeGuard { loc; param_name; type_guard = t; one_sided }) ->
-        let reason = Reason.mk_reason Reason.RTypeGuard loc in
-        Some
-          (Type.TypeGuard
-             { reason; one_sided; inferred = false; param_name; type_guard = merge env file t }
-          )
+      | Some (TypeGuard { loc; param_name = (_, name) as param_name; type_guard = t; one_sided }) ->
+      begin
+        match rest_param with
+        | Some (Some rest_name, _, _) when rest_name = name -> None
+        | _ ->
+          if Base.List.for_all params ~f:(fun (pname, _) -> pname <> Some name) then
+            None
+          else
+            let reason = Reason.mk_reason Reason.RTypeGuard loc in
+            Some
+              (Type.TypeGuard
+                 { reason; one_sided; inferred = false; param_name; type_guard = merge env file t }
+              )
+      end
     in
     let this_status =
       if is_method then

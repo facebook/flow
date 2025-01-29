@@ -2304,42 +2304,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       (UnresolvedSpreadArg t, element_ast)
 
-  and check_guard_is_not_rest_param cx params (param_name, name_loc) =
-    let open T.Function in
-    let module I = Ast.Identifier in
-    let (_, { T.Function.Params.rest; _ }) = params in
-
-    Base.Option.iter rest ~f:(fun rest ->
-        let (_, { RestParam.argument = (_, { Param.name = rest_name; _ }); _ }) = rest in
-        match rest_name with
-        | Some ((rloc, _), { I.name = rest_name; _ }) when rest_name = param_name ->
-          let type_guard_reason = mk_reason (RTypeGuardParam param_name) name_loc in
-          let binding_reason = mk_reason (RRestParameter (Some rest_name)) rloc in
-          Flow_js_utils.add_output
-            cx
-            Error_message.(ETypeGuardInvalidParameter { type_guard_reason; binding_reason })
-        | _ -> ()
-    )
-
-  and check_guard_appears_in_param_list cx params (param_name, name_loc) =
-    let open T.Function in
-    let module I = Ast.Identifier in
-    let (_, { T.Function.Params.params; rest; _ }) = params in
-    if
-      Base.List.for_all params ~f:(fun (_, { Param.name; _ }) ->
-          match name with
-          | Some (_, { I.name; _ }) -> name <> param_name
-          | None -> true
-      )
-      && Base.Option.for_all rest ~f:(function
-             | (_, { RestParam.argument = (_, { Param.name = Some (_, { I.name; _ }); _ }); _ }) ->
-               name <> param_name
-             | _ -> true
-             )
-    then
-      let param_reason = mk_reason (RTypeGuardParam param_name) name_loc in
-      Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound param_reason)
-
   and check_guard_type cx fparams (guard_name, guard_t) =
     Base.List.find_map fparams ~f:(function
         | (Some name, t) when name = guard_name -> Some t
@@ -2371,43 +2335,82 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     in
     (bool_t, guard', type_guard)
 
+  and error_type_guard env (loc, x, t, kind, comments) msg =
+    Flow_js_utils.add_output env.cx msg;
+    let guard' = (loc, { T.TypeGuard.guard = (x, Some (convert env t)); kind; comments }) in
+    (BoolModuleT.at loc, T.Function.TypeGuard guard', None)
+
   and convert_return_annotation ~meth_kind env params fparams return =
     let open T in
     match return with
     | Function.TypeAnnotation t_ast ->
       let (((_, t'), _) as t_ast') = convert env t_ast in
       (t', Function.TypeAnnotation t_ast', None)
-    | Function.TypeGuard
-        ( gloc,
-          {
-            T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name; _ }) as x), Some t);
-            kind;
-            comments;
-          }
-        ) ->
-      if meth_kind <> MethodKind then (
-        let bool_t = BoolModuleT.at gloc in
-        let return = Tast_utils.error_mapper#function_type_return_annotation return in
-        let kind = method_kind_to_string meth_kind in
-        Flow_js_utils.add_output
-          env.cx
-          Error_message.(ETypeGuardIncompatibleWithFunctionKind { loc = gloc; kind });
-        (bool_t, return, None)
-      ) else (
-        check_guard_is_not_rest_param env.cx params (name, name_loc);
-        check_guard_appears_in_param_list env.cx params (name, name_loc);
-        let (bool_t, guard', predicate) = convert_type_guard env fparams gloc kind x t comments in
-        (bool_t, Function.TypeGuard guard', predicate)
-      )
-    | Function.TypeGuard (loc, guard) ->
-      let { Ast.Type.TypeGuard.kind; _ } = guard in
+    | Function.TypeGuard (gloc, { T.TypeGuard.guard = (x, Some t); kind; comments })
+      when meth_kind = MethodKind ->
+      (* Check that type guard variable is not a rest param *)
+      let (name_loc, { Ast.Identifier.name; _ }) = x in
+      let (_, { T.Function.Params.params; rest; _ }) = params in
+      begin
+        match rest with
+        | Some
+            ( _,
+              {
+                T.Function.RestParam.argument =
+                  ( _,
+                    {
+                      T.Function.Param.name =
+                        Some ((rloc, _), { Ast.Identifier.name = rest_name; _ });
+                      _;
+                    }
+                  );
+                _;
+              }
+            )
+          when rest_name = name ->
+          let msg =
+            Error_message.ETypeGuardInvalidParameter
+              {
+                type_guard_reason = mk_reason (RTypeGuardParam name) name_loc;
+                binding_reason = mk_reason (RRestParameter (Some rest_name)) rloc;
+              }
+          in
+          error_type_guard env (gloc, x, t, kind, comments) msg
+        | _ ->
+          (* Check that type guard variable appears in parameter list *)
+          if
+            Base.List.for_all params ~f:(fun (_, { T.Function.Param.name = pname; _ }) ->
+                match pname with
+                | Some (_, { Ast.Identifier.name = pname; _ }) -> pname <> name
+                | None -> true
+            )
+          then
+            let msg =
+              Error_message.ETypeGuardParamUnbound (mk_reason (RTypeGuardParam name) name_loc)
+            in
+            error_type_guard env (gloc, x, t, kind, comments) msg
+          else
+            let (bool_t, guard', predicate) =
+              convert_type_guard env fparams gloc kind x t comments
+            in
+            (bool_t, Function.TypeGuard guard', predicate)
+      end
+    | Function.TypeGuard (gloc, { T.TypeGuard.guard = (x, Some t); kind; comments; _ }) ->
+      let msg =
+        Error_message.ETypeGuardIncompatibleWithFunctionKind
+          { loc = gloc; kind = method_kind_to_string meth_kind }
+      in
+      error_type_guard env (gloc, x, t, kind, comments) msg
+    | Function.TypeGuard (loc, { Ast.Type.TypeGuard.guard = (_, None); kind; _ }) ->
       Flow_js_utils.add_output
         env.cx
         (Error_message.EUnsupportedSyntax
            (loc, Flow_intermediate_error_types.UserDefinedTypeGuards { kind })
         );
-      let guard' = Tast_utils.error_mapper#type_guard (loc, guard) in
-      (AnyT.at (AnyError None) loc, Function.TypeGuard guard', None)
+      ( AnyT.at (AnyError None) loc,
+        Tast_utils.error_mapper#function_type_return_annotation return,
+        None
+      )
 
   and mk_method_func_sig =
     let add_param env x param =
