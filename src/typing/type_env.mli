@@ -168,11 +168,16 @@ val ref_entry_exn :
 
 val t_option_value_exn : Context.t -> ALoc.t -> Type.t option -> Type.t
 
-val type_guard_at_return :
+val read_to_predicate : Context.t -> Env_api.read -> Type.predicate option
+
+val checked_type_guard_at_return :
   Context.t ->
   Reason.reason ->
   param_loc:ALoc.t ->
   return_loc:ALoc.t ->
   pos_write_locs:Env_api.write_locs ->
-  neg_refi:Env_api.predicate_refinement ->
+  neg_refi:Env_api.read ->
   (Type.t * Type.predicate option, ALoc.t list) result
+
+val inferred_type_guard_at_return :
+  Context.t -> Reason.reason -> return_loc:ALoc.t -> write_locs:Env_api.write_locs -> Type.t

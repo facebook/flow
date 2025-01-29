@@ -183,3 +183,9 @@ val expression_of_match_member_pattern :
   visit_expression:(('loc, 'loc) Flow_ast.Expression.t -> unit) ->
   ('loc, 'loc) Flow_ast.MatchPattern.MemberPattern.t ->
   ('loc, 'loc) Flow_ast.Expression.t
+
+val get_inferred_type_guard_candidate :
+  ('l, 't) Flow_ast.Function.Params.t ->
+  ('l, 't) Flow_ast.Function.body ->
+  ('l, 't) Flow_ast.Function.ReturnAnnot.t ->
+  ('t * string) option

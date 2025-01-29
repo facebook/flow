@@ -6,3 +6,4 @@
 
 queries_in_file "type-at-pos" "decls.js"
 queries_in_file "type-at-pos" "test.js"
+queries_in_file "type-at-pos" "inferred.js"

@@ -1790,7 +1790,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
       begin
         match (ft1.type_guard, ft2.type_guard) with
-        | (None, Some _) ->
+        | (None, Some (TypeGuard _)) ->
           (* Non-predicate functions are incompatible with predicate ones
              TODO: somehow the original flow needs to be propagated as well *)
           add_output

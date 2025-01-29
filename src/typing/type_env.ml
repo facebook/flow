@@ -397,7 +397,8 @@ let refine cx reason loc refi res =
     refi
 
 let possibly_refined_write_state_of_state
-    ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
+    ~lookup_mode ~val_kind cx loc reason write_locs val_id refi =
+  let env = Context.environment cx in
   let { Loc_env.var_info; _ } = env in
   let find_write_exn kind reason =
     let loc = Reason.loc_of_reason reason in
@@ -573,13 +574,12 @@ let possibly_refined_write_state_of_state
   );
   state
 
-let type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id refi =
+let type_of_state ~lookup_mode ~val_kind cx loc reason write_locs val_id refi =
   let (Context.PossiblyRefinedWriteState { t; errors; actually_refined_refining_locs = _ }) =
     possibly_refined_write_state_of_state
       ~lookup_mode
       ~val_kind
       cx
-      env
       loc
       reason
       write_locs
@@ -590,7 +590,7 @@ let type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs val_id ref
   t
 
 let read_entry ~lookup_mode cx loc reason =
-  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+  let { Loc_env.var_info; _ } = Context.environment cx in
   match find_var_opt var_info loc with
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
@@ -611,7 +611,7 @@ let read_entry ~lookup_mode cx loc reason =
         );
       Ok (AnyT.at (AnyError None) loc)
     | _ ->
-      let t = type_of_state ~lookup_mode ~val_kind cx env loc reason write_locs id None in
+      let t = type_of_state ~lookup_mode ~val_kind cx loc reason write_locs id None in
       Ok t)
 
 let read_entry_exn ~lookup_mode cx loc reason =
@@ -621,7 +621,8 @@ let read_entry_exn ~lookup_mode cx loc reason =
       | Ok x -> x
   )
 
-let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
+let read_to_predicate cx { Env_api.write_locs; _ } =
+  let { Loc_env.var_info; _ } = Context.environment cx in
   let predicates =
     Base.List.filter_map write_locs ~f:(function
         | Env_api.With_ALoc.Refinement { refinement_id; _ } ->
@@ -634,8 +635,7 @@ let read_to_predicate cx var_info ({ Env_api.write_locs; _ }, _, _) =
   |> Nel.of_list
   |> Base.Option.map ~f:(fun (p, rest) -> Base.List.fold rest ~init:p ~f:(fun acc p -> OrP (acc, p)))
 
-let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_refi =
-  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+let checked_type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_refi =
   let rec is_invalid (acc_result, acc_locs) write_loc =
     match write_loc with
     | Env_api.Write reason when ALoc.equal (Reason.loc_of_reason reason) param_loc ->
@@ -656,10 +656,13 @@ let type_guard_at_return cx reason ~param_loc ~return_loc ~pos_write_locs ~neg_r
   else
     let lookup_mode = LookupMode.ForValue in
     let val_kind = Env_api.Internal in
-    let t =
-      type_of_state ~lookup_mode ~val_kind cx env return_loc reason pos_write_locs None None
-    in
-    Ok (t, read_to_predicate cx var_info neg_refi)
+    let t = type_of_state ~lookup_mode ~val_kind cx return_loc reason pos_write_locs None None in
+    Ok (t, read_to_predicate cx neg_refi)
+
+let inferred_type_guard_at_return cx reason ~return_loc ~write_locs =
+  let lookup_mode = LookupMode.ForValue in
+  let val_kind = Env_api.Internal in
+  type_of_state ~lookup_mode ~val_kind cx return_loc reason write_locs None None
 
 let ref_entry_exn ~lookup_mode cx loc reason =
   let t = read_entry_exn ~lookup_mode cx loc reason in
@@ -704,7 +707,7 @@ let intrinsic_ref cx ?desc name loc =
   in
   let reason = mk_reason desc loc in
   let read =
-    let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+    let { Loc_env.var_info; _ } = Context.environment cx in
     match find_var_opt var_info loc with
     | Error loc -> Error loc
     | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
@@ -718,7 +721,6 @@ let intrinsic_ref cx ?desc name loc =
             ~lookup_mode:ForValue
             ~val_kind
             cx
-            env
             loc
             reason
             write_locs

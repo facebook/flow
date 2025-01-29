@@ -159,7 +159,7 @@ class ['a] t =
       | ArrRest _ -> acc
       | Default -> acc
 
-    method private predicate cx acc =
+    method predicate cx acc =
       function
       | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1; p2]
       | OrP (p1, p2) -> self#list (self#predicate cx) acc [p1; p2]

@@ -7,3 +7,6 @@
 
 val check_type_guard :
   Context.t -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> Type.type_guard -> unit
+
+val infer_type_guard :
+  Context.t -> (ALoc.t, ALoc.t) Flow_ast.Function.Params.t -> Type.type_guard option

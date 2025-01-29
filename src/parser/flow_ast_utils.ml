@@ -706,3 +706,32 @@ let expression_of_match_member_pattern ~visit_expression pattern =
     exp
   in
   f pattern
+
+(* Type Guards *)
+let get_inferred_type_guard_candidate params body return =
+  match (body, return) with
+  | (Function.BodyExpression _, Function.ReturnAnnot.Missing _) -> begin
+    match params with
+    | ( _,
+        {
+          Function.Params.params =
+            [
+              ( _,
+                {
+                  Function.Param.argument =
+                    ( _,
+                      Pattern.Identifier
+                        { Pattern.Identifier.name = (loc, { Identifier.name; _ }); _ }
+                    );
+                  _;
+                }
+              );
+            ];
+          rest = None;
+          _;
+        }
+      ) ->
+      Some (loc, name)
+    | _ -> None
+  end
+  | _ -> None

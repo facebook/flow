@@ -1186,6 +1186,403 @@ References:
                                      ^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ inferred.js:18:23
+
+Cannot call `takesGuard` with function bound to `fn` because string [1] is incompatible with number [2] in the type
+predicate. [incompatible-call]
+
+   inferred.js:18:23
+   18|   takesGuard(value => typeof value === "string"); // error wrong guard type
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inferred.js:13:62
+   13|   declare function takesGuard(fn: (x: mixed) => implies x is number): void;
+                                                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:19:32
+
+Cannot call `takesGuard` with function bound to `fn` because string [1] is incompatible with number [2] in the type
+predicate. [incompatible-call]
+
+   inferred.js:19:32
+   19|   takesGuard((value: mixed) => typeof value === "string"); // error wrong guard type
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inferred.js:13:62
+   13|   declare function takesGuard(fn: (x: mixed) => implies x is number): void;
+                                                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:29:5
+
+Cannot call `takesGuardTwoParams` with function bound to `fn` because function [1], a non-type-guard function, is
+incompatible with function type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:29:5
+           v--------------------------------------------
+   29|     ( // error function-predicate incompatibility
+   30|       value: mixed,
+   31|       otherValue, // error missing-local-annot
+   32|     ) => typeof value === "number");
+           -----------------------------^ [1]
+
+References:
+   inferred.js:23:44
+   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:31:7
+
+An annotation on `otherValue` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   31|       otherValue, // error missing-local-annot
+             ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:34:5
+
+Cannot call `takesGuardTwoParams` with function bound to `fn` because function [1], a non-type-guard function, is
+incompatible with function type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:34:5
+   34|     (value: mixed, otherValue: mixed) => typeof value === "number" // error can only infer type guard
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inferred.js:23:44
+   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:38:32
+
+Cannot call `takesGuardTwoParams` with function bound to `fn` because string [1] is incompatible with number [2] in the
+type predicate. [incompatible-call]
+
+   inferred.js:38:32
+   38|   takesGuardTwoParams(value => typeof value === "string"); // error wrong guard type
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inferred.js:23:81
+   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
+                                                                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:39:41
+
+Cannot call `takesGuardTwoParams` with function bound to `fn` because string [1] is incompatible with number [2] in the
+type predicate. [incompatible-call]
+
+   inferred.js:39:41
+   39|   takesGuardTwoParams((value: mixed) => typeof value === "string"); // error wrong guard type
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inferred.js:23:81
+   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
+                                                                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:48:5
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   inferred.js:48:5
+   48|     x as string; // error number ~> string
+           ^
+
+References:
+   inferred.js:44:18
+   44|   declare var x: number | string;
+                        ^^^^^^ [1]
+   inferred.js:48:10
+   48|     x as string; // error number ~> string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:50:5
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   inferred.js:50:5
+   50|     x as number; // error no refinement due to one-sided type guard
+           ^
+
+References:
+   inferred.js:44:27
+   44|   declare var x: number | string;
+                                 ^^^^^^ [1]
+   inferred.js:50:10
+   50|     x as number; // error no refinement due to one-sided type guard
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:51:5
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   inferred.js:51:5
+   51|     x as string; // error no refinement due to one-sided type guard
+           ^
+
+References:
+   inferred.js:44:18
+   44|   declare var x: number | string;
+                        ^^^^^^ [1]
+   inferred.js:51:10
+   51|     x as string; // error no refinement due to one-sided type guard
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:54:3
+
+Cannot cast `fn` to function type because one-sided `value` [1] is incompatible with default type guard [2].
+[function-predicate]
+
+   inferred.js:54:3
+   54|   fn as (value: mixed) => value is number; // error one-sided incompatible with two-sided
+         ^^
+
+References:
+   inferred.js:43:15
+   43|   const fn = (value: mixed) => typeof value === "number"; // infers: (value: mixed) => implies value is number
+                     ^^^^^ [1]
+   inferred.js:54:27
+   54|   fn as (value: mixed) => value is number; // error one-sided incompatible with two-sided
+                                 ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:60:3
+
+Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
+type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:60:3
+   60|   fn as (value: mixed) => implies value is number; // error non type guard
+         ^^
+
+References:
+   inferred.js:58:14
+   58|   const fn = (value: mixed): boolean => typeof value === "number"; // infers: (value: mixed) => boolean
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inferred.js:60:9
+   60|   fn as (value: mixed) => implies value is number; // error non type guard
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:61:3
+
+Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
+type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:61:3
+   61|   fn as (value: mixed) => value is number; // error non type guard
+         ^^
+
+References:
+   inferred.js:58:14
+   58|   const fn = (value: mixed): boolean => typeof value === "number"; // infers: (value: mixed) => boolean
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inferred.js:61:9
+   61|   fn as (value: mixed) => value is number; // error non type guard
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:70:3
+
+Cannot cast `u` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   inferred.js:70:3
+   70|   u as number; // error string ~> number
+         ^
+
+References:
+   inferred.js:67:23
+   67|   declare var value: ?string;
+                             ^^^^^^ [1]
+   inferred.js:70:8
+   70|   u as number; // error string ~> number
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:79:3
+
+Cannot cast `3` to `typeof t2` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
+
+   inferred.js:79:3
+   79|   3 as typeof t2; // error: not ideal, but this is an implicit instantiation issue
+         ^ [1]
+
+References:
+   inferred.js:79:8
+   79|   3 as typeof t2; // error: not ideal, but this is an implicit instantiation issue
+              ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:81:3
+
+Cannot cast `u2` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
+[incompatible-cast]
+
+   inferred.js:81:3
+   81|   u2 as 3; // error 4 ~> 3
+         ^^
+
+References:
+   inferred.js:77:43
+   77|   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
+                                                 ^^^^^ [1]
+   inferred.js:81:9
+   81|   u2 as 3; // error 4 ~> 3
+               ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:83:3
+
+Cannot cast `3` to `typeof u2` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
+
+   inferred.js:83:3
+   83|   3 as typeof u2; // error we infer a sound singleton type for u2
+         ^ [1]
+
+References:
+   inferred.js:83:8
+   83|   3 as typeof u2; // error we infer a sound singleton type for u2
+              ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:94:3
+
+Cannot cast `u1` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
+[incompatible-cast]
+
+   inferred.js:94:3
+   94|   u1 as 3; // error 4 ~> 3
+         ^^
+
+References:
+   inferred.js:91:45
+   91|   const [t1, u1] = takesOverloadedPolyGuard(value, x => x === 4); // picks the first overload
+                                                   ^^^^^ [1]
+   inferred.js:94:9
+   94|   u1 as 3; // error 4 ~> 3
+               ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:96:3
+
+Cannot cast `3` to `typeof u1` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
+
+   inferred.js:96:3
+   96|   3 as typeof u1; // error we infer a sound singleton type for u1
+         ^ [1]
+
+References:
+   inferred.js:96:8
+   96|   3 as typeof u1; // error we infer a sound singleton type for u1
+              ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- inferred.js:99:3
+
+Cannot cast `u2` to number literal `4` because number [1] is incompatible with number literal `4` [2].
+[incompatible-cast]
+
+   inferred.js:99:3
+   99|   u2 as 4; // error number ~> 4
+         ^^
+
+References:
+   inferred.js:90:22
+   90|   declare var value: number;
+                            ^^^^^^ [1]
+   inferred.js:99:9
+   99|   u2 as 4; // error number ~> 4
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- inferred.js:108:45
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   108|   const [t1, u1] = takesOverloadedPolyGuard(x => x === 4); // error missing-local-annot
+                                                    ^
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:142:5
+
+Cannot call `takesGuard` with function bound to `guard` because function [1], a non-type-guard function, is incompatible
+with function type [2], which is a type-guard function. [function-predicate]
+
+   inferred.js:142:5
+   142|     (z) => z, // error non type guard function
+            ^^^^^^^^ [1]
+
+References:
+   inferred.js:138:48
+   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, T): [T, U];
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- inferred.js:142:12
+
+Cannot call `takesGuard` with function bound to `guard` because number [1] is incompatible with boolean [2] in the
+return value. [incompatible-call]
+
+   inferred.js:142:12
+   142|     (z) => z, // error non type guard function
+                   ^
+
+References:
+   inferred.js:140:18
+   140|   declare var x: number;
+                         ^^^^^^ [1]
+   inferred.js:138:58
+   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, T): [T, U];
+                                                                 ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:158:3
+
+Cannot cast `fn` to function type because one-sided `x` [1] is incompatible with default type guard [2].
+[function-predicate]
+
+   inferred.js:158:3
+   158|   fn as (x: ?number) => x is number; // error inferred type guard is one-sided
+          ^^
+
+References:
+   inferred.js:155:15
+   155|   const fn = (x: ?number)=> x != null;
+                      ^ [1]
+   inferred.js:158:25
+   158|   fn as (x: ?number) => x is number; // error inferred type guard is one-sided
+                                ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ inferred.js:161:3
+
+Cannot cast `fn1` to `typeof fn` because null or undefined [1] is incompatible with number [2] in the type predicate.
+[incompatible-cast]
+
+   inferred.js:161:3
+   161|   fn1 as typeof fn; // error ?number ~> number
+          ^^^
+
+References:
+   inferred.js:160:42
+   160|   declare var fn1 : (x: ?number) => x is ?number;
+                                                 ^^^^^^^ [1]
+   inferred.js:155:19
+   155|   const fn = (x: ?number)=> x != null;
+                          ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
 
 Cannot return boolean because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
@@ -2946,7 +3343,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 164 errors
+Found 189 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

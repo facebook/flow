@@ -201,3 +201,108 @@ Flags:
 
 test.js:91:11,91:13
 
+inferred.js:3:7
+Flags:
+(x: mixed) => implies x is number
+inferred.js:3:7,3:9
+
+inferred.js:5:7
+Flags:
+(x: mixed) => implies x is string
+inferred.js:5:7,5:9
+
+inferred.js:7:7
+Flags:
+(x: mixed) => implies x is number
+inferred.js:7:7,7:9
+
+inferred.js:9:7
+Flags:
+(x: mixed) => implies x is number | string
+inferred.js:9:7,9:9
+
+inferred.js:11:7
+Flags:
+(x: number | "") => implies x is number
+inferred.js:11:7,11:9
+
+inferred.js:13:7
+Flags:
+(x: number) => implies x is 42
+inferred.js:13:7,13:9
+
+inferred.js:15:7
+Flags:
+(x: 1 | 2) => implies x is 1
+inferred.js:15:7,15:9
+
+inferred.js:17:7
+Flags:
+(x: 1 | 2) => implies x is 2
+inferred.js:17:7,17:9
+
+inferred.js:19:7
+Flags:
+(x: "a" | "b") => implies x is "a"
+inferred.js:19:7,19:9
+
+inferred.js:21:7
+Flags:
+(x: "a" | "b") => implies x is "b"
+inferred.js:21:7,21:10
+
+inferred.js:23:7
+Flags:
+(x: boolean) => implies x is true
+inferred.js:23:7,23:10
+
+inferred.js:25:7
+Flags:
+(x: boolean) => implies x is true
+inferred.js:25:7,25:10
+
+inferred.js:28:7
+Flags:
+(x: number) => boolean
+inferred.js:28:7,28:9
+
+inferred.js:30:7
+Flags:
+(x: mixed) => mixed
+inferred.js:30:7,30:9
+
+inferred.js:32:7
+Flags:
+(x: boolean) => boolean
+inferred.js:32:7,32:9
+
+inferred.js:34:7
+Flags:
+(x: mixed) => boolean
+inferred.js:34:7,34:9
+
+inferred.js:36:7
+Flags:
+(x: mixed) => mixed
+inferred.js:36:7,36:9
+
+inferred.js:38:7
+Flags:
+(x: null | 1 | 2) => boolean | null
+inferred.js:38:7,38:9
+
+inferred.js:40:7
+Flags:
+(x: mixed) => mixed
+inferred.js:40:7,40:9
+
+inferred.js:42:7
+Flags:
+(x: mixed) => boolean
+inferred.js:42:7,42:9
+
+inferred.js:44:7
+Flags:
+(x: mixed) => boolean
+inferred.js:44:7,44:9
+

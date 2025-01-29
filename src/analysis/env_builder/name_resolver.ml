@@ -620,6 +620,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         name: string;
         id: int;
         havoced: ALocSet.t option ref;
+        inferred: bool;
       }
 
   type name_resolver_state = {
@@ -671,6 +672,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
     type_guard_name: type_guard_name_info option;
+    inferred_type_guard_candidate: (ALoc.t * string) option;
     visiting_hoisted_type: bool;
     in_conditional_type_extends: bool;
     jsx_base_name: string option;
@@ -1087,6 +1089,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
           type_guard_name = None;
+          inferred_type_guard_candidate = None;
           visiting_hoisted_type = false;
           in_conditional_type_extends = false;
           jsx_base_name;
@@ -2806,27 +2809,36 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#record_type_guard_maps (Some argument) name return argument);
         this#raise_abrupt_completion AbruptCompletion.return
 
+      method private is_refining_read { Env_api.write_locs; _ } =
+        List.exists
+          (function
+            | Env_api.Refinement _ -> true
+            | _ -> false)
+          write_locs
+
       method private record_type_guard_maps ret_expr tg_info return expr =
-        let (TGinfo { loc = guard_param_loc; name; havoced; _ }) = tg_info in
+        let (TGinfo { loc = guard_param_loc; name; havoced; inferred; _ }) = tg_info in
         this#push_refinement_scope empty_refinements;
         ignore @@ this#expression_refinement expr;
         let positive_read = this#synthesize_read name in
-        this#negate_new_refinements ();
-        let negative_read = this#synthesize_read name in
-        this#pop_refinement_scope ();
-        env_state <-
-          {
-            env_state with
-            type_guard_consistency_maps =
-              L.LMap.update
-                guard_param_loc
-                (function
-                  | None -> Some (!havoced, [(ret_expr, return, positive_read, negative_read)])
-                  | Some (old_havoced, xs) ->
-                    let havoced = Base.Option.merge ~f:ALocSet.union old_havoced !havoced in
-                    Some (havoced, (ret_expr, return, positive_read, negative_read) :: xs))
-                env_state.type_guard_consistency_maps;
-          }
+        if (not inferred) || this#is_refining_read positive_read then begin
+          this#negate_new_refinements ();
+          let negative_read = this#synthesize_read name in
+          env_state <-
+            {
+              env_state with
+              type_guard_consistency_maps =
+                L.LMap.update
+                  guard_param_loc
+                  (function
+                    | None -> Some (!havoced, [(ret_expr, return, positive_read, negative_read)])
+                    | Some (old_havoced, xs) ->
+                      let havoced = Base.Option.merge ~f:ALocSet.union old_havoced !havoced in
+                      Some (havoced, (ret_expr, return, positive_read, negative_read) :: xs))
+                  env_state.type_guard_consistency_maps;
+            }
+        end;
+        this#pop_refinement_scope ()
 
       method! throw _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Throw.t) =
         let open Ast.Statement.Throw in
@@ -4225,6 +4237,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               (* If this is a type guard function type_guard_name will be set in
                  type_guard_annotation. *)
               let saved_type_guard_name = env_state.type_guard_name in
+              let saved_is_inferred_type_guard_candidate =
+                env_state.inferred_type_guard_candidate
+              in
+              env_state <-
+                {
+                  env_state with
+                  inferred_type_guard_candidate =
+                    Flow_ast_utils.get_inferred_type_guard_candidate params body return_;
+                };
               let completion_state =
                 this#run_to_completion (fun () ->
                     let loc =
@@ -4324,7 +4345,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       ()
                 )
               in
-              env_state <- { env_state with type_guard_name = saved_type_guard_name };
+              env_state <-
+                {
+                  env_state with
+                  type_guard_name = saved_type_guard_name;
+                  inferred_type_guard_candidate = saved_is_inferred_type_guard_candidate;
+                };
               this#commit_abrupt_completion_matching
                 AbruptCompletion.(mem [return; throw])
                 completion_state)
@@ -4332,13 +4358,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         this#under_uninitialized_env ~f:(fun () -> this#expecting_abrupt_completions f)
 
+      method! function_params params =
+        begin
+          match env_state.inferred_type_guard_candidate with
+          | Some (loc, name) ->
+            let { val_ref; _ } = this#env_read name in
+            let id = !val_ref.Val.id in
+            let info = TGinfo { loc; name; id; havoced = ref None; inferred = true } in
+            env_state <- { env_state with type_guard_name = Some info }
+          | None -> ()
+        end;
+        super#function_params params
+
       method! type_guard_annotation tg =
         let (_, (_, { Ast.Type.TypeGuard.guard = ((loc, { Ast.Identifier.name; _ }), _); _ })) =
           tg
         in
         let { val_ref; _ } = this#env_read name in
         let id = !val_ref.Val.id in
-        let info = TGinfo { loc; name; id; havoced = ref None } in
+        let info = TGinfo { loc; name; id; havoced = ref None; inferred = false } in
         env_state <- { env_state with type_guard_name = Some info };
         super#type_guard_annotation tg
 

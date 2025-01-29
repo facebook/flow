@@ -37,4 +37,6 @@ class ['a] t :
     method export_types : Context.t -> Polarity.t -> 'a -> Type.exporttypes -> 'a
 
     method type_param : Context.t -> Polarity.t -> 'a -> Type.typeparam -> 'a
+
+    method predicate : Context.t -> 'a -> Type.predicate -> 'a
   end

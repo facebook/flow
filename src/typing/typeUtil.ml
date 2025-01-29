@@ -842,11 +842,6 @@ let reason_of_resolved_param = function
   | ResolvedArg (TupleElement { reason; _ }, _) ->
     reason
 
-let type_guard_of_funtype f =
-  match f.type_guard with
-  | Some (TypeGuard { type_guard = t; _ }) -> Some t
-  | None -> None
-
 let dro_of_type t =
   match t with
   | DefT

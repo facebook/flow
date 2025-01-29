@@ -46,13 +46,13 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
         in
         let return_loc = Reason.loc_of_reason return_reason in
         match
-          Type_env.type_guard_at_return
+          Type_env.checked_type_guard_at_return
             cx
             param_reason
             ~param_loc
             ~return_loc
             ~pos_write_locs
-            ~neg_refi:(neg_refi, param_loc, Pattern_helper.Root)
+            ~neg_refi
         with
         | Ok (t, neg_pred) ->
           (* Positive *)
@@ -104,8 +104,7 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
             )
     )
 
-let check_type_guard
-    cx params (TypeGuard { reason; inferred = _; one_sided; param_name; type_guard }) =
+let check_type_guard cx params (TypeGuard { reason; inferred; one_sided; param_name; type_guard }) =
   let err_with_desc desc type_guard_reason binding_loc =
     let binding_reason = mk_reason desc binding_loc in
     Flow_js.add_output
@@ -119,10 +118,107 @@ let check_type_guard
     | (loc, Rest) -> err_with_desc (RRestParameter (Some name)) expr_reason loc
     | (loc, Select _) -> err_with_desc (RPatternParameter name) expr_reason loc
   in
-  let (name_loc, name) = param_name in
-  let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
-  match SMap.find_opt name (Pattern_helper.bindings_of_params params) with
-  | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
-  | Some (param_loc, Pattern_helper.Root) ->
-    check_type_guard_consistency cx reason one_sided param_loc param_name tg_reason type_guard
-  | Some binding -> error_on_non_root_binding name tg_reason binding
+  if not inferred then
+    let (name_loc, name) = param_name in
+    let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
+    match SMap.find_opt name (Pattern_helper.bindings_of_params params) with
+    | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
+    | Some (param_loc, Pattern_helper.Root) ->
+      check_type_guard_consistency cx reason one_sided param_loc param_name tg_reason type_guard
+    | Some binding -> error_on_non_root_binding name tg_reason binding
+
+(* Given an function of the form `(x: T) => e`, we will infer a type guard iff
+ * 1. the body `e` encodes some refinement,
+ * 2. the refinement P encoded in `e` does not include the truthy predicate,
+ * 3. P narrows the type of `x`, ie. if T' the type of `x` after P has been
+ *    applied to T, then it has to be the case that T </: T'. Due to T' being a
+ *    refined version of T it trivially holds that T' <: T.
+ *)
+
+(* All predicates are allowed to contribute to the inferred type guard except
+ * for the trivial truthy predicate to avoid things like: `(x: mixed) => x`. *)
+let is_inferable_type_guard_predicate =
+  let exception Invalid in
+  let visitor =
+    object
+      inherit [unit] Type_visitor.t as super
+
+      method! predicate cx acc p =
+        match p with
+        | TruthyP -> raise Invalid
+        | _ -> super#predicate cx acc p
+    end
+  in
+  fun cx p ->
+    match visitor#predicate cx () p with
+    | exception Invalid -> false
+    | _ -> true
+
+let is_inferable_type_guard_read cx read =
+  match Type_env.read_to_predicate cx read with
+  | Some p -> is_inferable_type_guard_predicate cx p
+  | None -> false
+
+let infer_type_guard_from_read cx name return_reason read =
+  let { Env_api.write_locs; _ } = read in
+  let (param_loc, { Ast.Identifier.name = pname; _ }) = name in
+  let param_reason = mk_reason (RParameter (Some pname)) param_loc in
+  let mk_guard type_guard =
+    TypeGuard
+      {
+        inferred = true;
+        reason = param_reason;
+        param_name = (param_loc, pname);
+        type_guard;
+        one_sided = true;
+      }
+  in
+  if Context.typing_mode cx <> Context.CheckingMode then
+    None
+  else if is_inferable_type_guard_read cx read then
+    let return_loc = Reason.loc_of_reason return_reason in
+    let param_t = Type_env.find_write cx Env_api.OrdinaryNameLoc param_reason in
+    let guard_t =
+      Context.with_disallowed_unsound_literal_coercion cx ~f:(fun () ->
+          Type_env.inferred_type_guard_at_return cx param_reason ~return_loc ~write_locs
+      )
+    in
+    (* Only keep the type guard if the function is actually refining the input. *)
+    if Flow_js.FlowJs.speculative_subtyping_succeeds cx param_t guard_t then
+      None
+    else
+      Some (mk_guard guard_t)
+  else
+    None
+
+let infer_type_guard cx params =
+  let env = Context.environment cx in
+  let { Loc_env.var_info; _ } = env in
+  let { Env_api.type_guard_consistency_maps; _ } = var_info in
+  match params with
+  | ( _,
+      {
+        Ast.Function.Params.params =
+          [
+            ( _,
+              {
+                Ast.Function.Param.argument =
+                  (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ });
+                _;
+              }
+            );
+          ];
+        rest = None;
+        _;
+      }
+    ) ->
+    let (param_loc, _) = name in
+    begin
+      match Loc_collections.ALocMap.find_opt param_loc type_guard_consistency_maps with
+      | None -> None
+      | Some (Some _havoced_loc_set, _) -> None
+      | Some (None, [(_, return_reason, read, _)]) ->
+        infer_type_guard_from_read cx name return_reason read
+      | Some (None, _) -> None
+    end
+  | _ -> None

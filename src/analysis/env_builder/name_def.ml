@@ -1621,12 +1621,42 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
       expr
 
-    method hint_pred_kind return =
-      match return with
-      | Ast.Function.ReturnAnnot.TypeGuard
-          (_, (_, { Ast.Type.TypeGuard.guard = ((name_loc, { Ast.Identifier.name; _ }), _); _ })) ->
+    method hint_pred_kind params body return =
+      let single_param_opt =
+        match params with
+        | ( _,
+            {
+              Ast.Function.Params.params =
+                [
+                  ( _,
+                    {
+                      Ast.Function.Param.argument =
+                        ( _,
+                          Ast.Pattern.Identifier
+                            { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
+                        );
+                      _;
+                    }
+                  );
+                ];
+              rest = None;
+              _;
+            }
+          ) ->
+          Some (loc, name)
+        | _ -> None
+      in
+      match (return, body, single_param_opt) with
+      | ( Ast.Function.ReturnAnnot.TypeGuard
+            (_, (_, { Ast.Type.TypeGuard.guard = ((name_loc, { Ast.Identifier.name; _ }), _); _ })),
+          _,
+          _
+        ) ->
         Some (TypeGuardKind (name_loc, name))
-      | _ -> None
+      | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyExpression _, Some (loc, name))
+        when ALocMap.mem loc env_info.Env_api.type_guard_consistency_maps ->
+        Some (TypeGuardKind (loc, name))
+      | (_, _, _) -> None
 
     method private name_of_param param =
       let module P = Ast.Pattern in
@@ -1642,7 +1672,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         (fun () ->
           let {
             Ast.Function.id = _;
-            params = (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ });
+            params =
+              (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) as params;
             body;
             async;
             generator;
@@ -1658,7 +1689,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
           ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
           let param_str_list = this#params_list_to_str_opt params_list in
-          let pred = this#hint_pred_kind return in
+          let pred = this#hint_pred_kind params body return in
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param

@@ -812,7 +812,7 @@ let iter_union_opt cx ~f = ALocMap.iter f cx.ccx.union_opt
 
 let allow_unsound_literal_coercsion cx = cx.ccx.allow_unsound_literal_coercsion
 
-let with_disallowed_unsound_literal_coercsion cx ~f =
+let with_disallowed_unsound_literal_coercion cx ~f =
   let old_allow_unsound_literal_coercsion = cx.ccx.allow_unsound_literal_coercsion in
   cx.ccx.allow_unsound_literal_coercsion <- false;
   Exception.protect ~f ~finally:(fun () ->

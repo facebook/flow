@@ -296,7 +296,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Functional components. *)
     | DefT (r, FunT (_, fun_t)) ->
       (match fun_t with
-      | { params; rest_param = None; type_guard = None; effect = ArbitraryEffect | AnyEffect; _ } ->
+      | {
+       params;
+       rest_param = None;
+       type_guard = None | Some (TypeGuard { inferred = true; _ });
+       effect = ArbitraryEffect | AnyEffect;
+       _;
+      } ->
         (* Contravariance *)
         Base.List.hd params
         |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
@@ -306,7 +312,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     | DefT (r, ObjT { call_t = Some id; _ }) ->
       (match Context.find_call cx id with
-      | DefT (_, FunT (_, { rest_param = None; type_guard = None; _ })) as fun_t ->
+      | DefT
+          ( _,
+            FunT
+              ( _,
+                {
+                  rest_param = None;
+                  type_guard = None | Some (TypeGuard { inferred = true; _ });
+                  _;
+                }
+              )
+          ) as fun_t ->
         (* Keep the object's reason for better error reporting *)
         props_to_tout cx trace (mod_reason_of_t (Fun.const r) fun_t) ~use_op ~reason_op u tout
       | _ ->
@@ -430,7 +446,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
          params;
          return_t;
          rest_param = None;
-         type_guard = None;
+         type_guard = _;
          effect = ArbitraryEffect | AnyEffect;
          _;
         } ->
@@ -451,7 +467,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Functional components, again. This time for callable `ObjT`s. *)
       | DefT (r, ObjT { call_t = Some id; _ }) ->
         (match Context.find_call cx id with
-        | DefT (_, FunT (_, { rest_param = None; type_guard = None; _ })) as fun_t ->
+        | DefT
+            ( _,
+              FunT
+                ( _,
+                  {
+                    rest_param = None;
+                    type_guard = None | Some (TypeGuard { inferred = true; _ });
+                    _;
+                  }
+                )
+            ) as fun_t ->
           (* Keep the object's reason for better error reporting *)
           tin_to_props (mod_reason_of_t (Fun.const r) fun_t) tin
         | _ ->

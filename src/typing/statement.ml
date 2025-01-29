@@ -7946,7 +7946,6 @@ module Make
           Anno.mk_type_param_declarations cx ~tparams_map tparams
         in
         let fparams = mk_params cx tparams_map params in
-        let body = Some body in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
         let open Func_class_sig_types in
         let has_nonvoid_return =
@@ -8010,7 +8009,8 @@ module Make
               else
                 Tvar.mk cx ret_reason
             in
-            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), None)
+            let type_guard_opt = Type_guard.infer_type_guard cx params in
+            (Inferred t, Ast.Function.ReturnAnnot.Missing (loc, t), type_guard_opt)
           | (Ast.Function.ReturnAnnot.Available annot, _) ->
             let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
             (Annotated t, Ast.Function.ReturnAnnot.Available ast_annot, None)
@@ -8114,7 +8114,7 @@ module Make
             kind;
             tparams;
             fparams;
-            body;
+            body = Some body;
             return_t;
             ret_annot_loc = ret_loc;
             statics = Some statics_t;
