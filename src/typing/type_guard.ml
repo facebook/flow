@@ -41,7 +41,7 @@ let check_type_guard_consistency cx reason one_sided param_loc tg_param tg_reaso
       ~f:(fun (ret_expr, return_reason, { Env_api.write_locs = pos_write_locs; _ }, neg_refi) ->
         let is_return_false_statement =
           match ret_expr with
-          | Some (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ }) -> true
+          | (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value = false; _ }) -> true
           | _ -> false
         in
         let return_loc = Reason.loc_of_reason return_reason in

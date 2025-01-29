@@ -220,7 +220,7 @@ module type S = sig
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
   type type_guard_consistency_entry =
-    (L.t, L.t) Ast.Expression.t option * L.t Reason.virtual_reason * read * read
+    (L.t, L.t) Ast.Expression.t * L.t Reason.virtual_reason * read * read
 
   (* First element is havoc information. This value will be [Some empty] when
    * encountering a havocing event with no corresponding location. *)
@@ -538,7 +538,7 @@ module Make
   type predicate_refinement = read * L.t * Pattern_helper.binding
 
   type type_guard_consistency_entry =
-    (L.t, L.t) Ast.Expression.t option * L.t Reason.virtual_reason * read * read
+    (L.t, L.t) Ast.Expression.t * L.t Reason.virtual_reason * read * read
 
   type type_guard_consistency_maps =
     (Loc_collections.ALocSet.t option * type_guard_consistency_entry list) L.LMap.t

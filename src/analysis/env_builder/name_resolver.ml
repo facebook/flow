@@ -2793,7 +2793,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match env_state.type_guard_name with
         | Some name ->
           let return = mk_expression_reason expr in
-          this#record_type_guard_maps None name return expr;
+          this#record_type_guard_maps name return expr;
           expr
         | None -> super#body_expression expr
 
@@ -2806,7 +2806,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ Flow_ast_mapper.map_opt this#expression argument
         | (Some name, Some argument) ->
           let return = mk_expression_reason argument in
-          this#record_type_guard_maps (Some argument) name return argument);
+          this#record_type_guard_maps name return argument);
         this#raise_abrupt_completion AbruptCompletion.return
 
       method private is_refining_read { Env_api.write_locs; _ } =
@@ -2816,10 +2816,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             | _ -> false)
           write_locs
 
-      method private record_type_guard_maps ret_expr tg_info return expr =
+      method private record_type_guard_maps tg_info return ret_expr =
         let (TGinfo { loc = guard_param_loc; name; havoced; inferred; _ }) = tg_info in
         this#push_refinement_scope empty_refinements;
-        ignore @@ this#expression_refinement expr;
+        ignore @@ this#expression_refinement ret_expr;
         let positive_read = this#synthesize_read name in
         if (not inferred) || this#is_refining_read positive_read then begin
           this#negate_new_refinements ();
