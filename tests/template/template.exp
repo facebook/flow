@@ -66,9 +66,9 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1382:110
-   1382|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
-                                                                                                                      ^^^^^^ [1]
+   <BUILTINS>/core.js:1382:114
+   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+                                                                                                                          ^^^^^^ [1]
    tagged_template.js:34:7
      34|   (x: empty); // ERROR
                ^^^^^ [2]
@@ -85,9 +85,9 @@ subtype of an interface. [incompatible-type]
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1382:26
-   1382|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
-                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1382:28
+   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:45:4
@@ -99,9 +99,9 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1382:110
-   1382|     static raw(callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>): string;
-                                                                                                                      ^^^^^^ [1]
+   <BUILTINS>/core.js:1382:114
+   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+                                                                                                                          ^^^^^^ [1]
    tagged_template.js:45:7
      45|   (x: empty); // ERROR
                ^^^^^ [2]
