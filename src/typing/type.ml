@@ -1007,7 +1007,7 @@ module rec TypeTerm : sig
     (* Encondes the latent predicate associated with the [index]-th parameter
        of the function in type [t]. We also include information for all type arguments
        and argument types of the call, to enable polymorphic calls. *)
-    | LatentP of pred_funcall_info Lazy.t * index
+    | LatentP of pred_funcall_info Lazy.t * index list
     | ImpossibleP
 
   and predicate_concretizer_variant =
@@ -4250,8 +4250,10 @@ let rec string_of_predicate = function
   | PropIsExactlyNullP (key, _) -> spf "prop `%s` is exactly null" key
   | PropNonVoidP (key, _) -> spf "prop `%s` is not undefined" key
   | PropNonMaybeP (key, _) -> spf "prop `%s` is not null or undefined" key
-  | LatentP ((lazy (_, _, OpenT (_, id), _, _)), i) -> spf "LatentPred(TYPE_%d, %d)" id i
-  | LatentP ((lazy (_, _, t, _, _)), i) -> spf "LatentPred(%s, %d)" (string_of_ctor t) i
+  | LatentP ((lazy (_, _, OpenT (_, id), _, _)), is) ->
+    spf "LatentPred(TYPE_%d, %s)" id (List.map string_of_int is |> String.concat ", ")
+  | LatentP ((lazy (_, _, t, _, _)), is) ->
+    spf "LatentPred(%s, %s)" (string_of_ctor t) (List.map string_of_int is |> String.concat ", ")
   | ImpossibleP -> "impossible"
 
 let string_of_type_t_kind = function

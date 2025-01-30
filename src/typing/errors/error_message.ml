@@ -693,7 +693,6 @@ and internal_error =
   | UnexpectedAnnotationInference of string
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
-  | MissingPredicateParam of int
   | ReadOfUnreachedTvar of Env_api.def_loc_type
   | ReadOfUnresolvedTvar of Env_api.def_loc_type
   | ForcedReadOfUnderResolutionTvar of Env_api.def_loc_type
@@ -2117,7 +2116,6 @@ let string_of_internal_error = function
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
-  | MissingPredicateParam i -> spf "missing predicate param at index %d" i
   | EnvInvariant (Env_api.NameDefOrderingFailure { all; roots; missing_roots }) ->
     let all = Base.List.map ~f:ALoc.debug_to_string all |> String.concat "," in
     let roots = Base.List.map ~f:ALoc.debug_to_string roots |> String.concat "," in

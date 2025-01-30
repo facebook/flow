@@ -389,24 +389,29 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           `params`) raise errors, but also propagate the unrefined types (as if the
           refinement never took place).
       *)
-      | DefT (_, FunT (_, { params; type_guard = Some p; _ })) -> begin
+      | DefT
+          ( _,
+            FunT
+              ( _,
+                {
+                  params;
+                  type_guard =
+                    Some (TypeGuard { one_sided; param_name = (_, param_name); type_guard; _ });
+                  _;
+                }
+              )
+          ) -> begin
         (* TODO: for the moment we only support simple keys (empty projection)
            that exactly correspond to the function's parameters *)
-        match (Base.List.nth params idx, p) with
-        | (None, _)
-        | (Some (None, _), _) ->
-          let msg = Error_message.(EInternal (loc_of_reason reason, MissingPredicateParam idx)) in
-          add_output cx msg;
-          report_unchanged_filtering_result_to_predicate_result tin result_collector
-        | ( Some (Some name, _),
-            TypeGuard
-              { reason = _; one_sided; param_name = (_, param_name); type_guard; inferred = _ }
-          ) ->
+        if
+          Base.List.exists idx ~f:(fun i ->
+              match Base.List.nth params i with
+              | Some (Some name, _) -> name = param_name
+              | _ -> false
+          )
+        then
           let filter_result =
-            if param_name <> name then
-              (* This is not the refined parameter. *)
-              Type_filter.TypeFilterResult { type_ = tin; changed = false }
-            else if sense then
+            if sense then
               let type_ = intersect cx tin (reposition_reason cx ~trace reason type_guard) in
               Type_filter.TypeFilterResult { type_; changed = type_ != tin }
             else if not one_sided then
@@ -416,6 +421,9 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
               Type_filter.TypeFilterResult { type_ = tin; changed = false }
           in
           report_filtering_result_to_predicate_result filter_result result_collector
+        else
+          (* This is not the refined parameter. *)
+          report_unchanged_filtering_result_to_predicate_result tin result_collector
       end
       | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) as fun_t ->
         let tvar = (reason, Tvar.mk_no_wrap cx reason) in

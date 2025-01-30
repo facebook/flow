@@ -1073,7 +1073,6 @@ let dump_error_message =
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
-    | MissingPredicateParam _ -> "MissingPredicateParam"
     | EnvInvariant _ -> "EnvInvariant"
     | ImplicitInstantiationInvariant _ -> "ImplicitInstantiationInvariant"
   in
