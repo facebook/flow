@@ -2308,6 +2308,7 @@ module Make
         | DefT (_, StrGeneralT _)
         | DefT (_, StrT_UNSOUND _)
         | DefT (_, NumGeneralT _)
+        | DefT (_, EnumValueT _)
         | AnyT _ ->
           ObjectExpressionAcc.ComputedProp.NonLiteralKey
             { key_loc; key; value; reason_obj; named_set_opt = None }
