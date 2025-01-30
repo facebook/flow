@@ -70,3 +70,7 @@ declare export class GenericDifferentSizedTypeParametersError2<T1, T2> {
 declare export const generic1: Generic<number>;
 declare export const generic2: GenericDifferentSizedTypeParametersError1<number>;
 declare export const generic3: GenericDifferentSizedTypeParametersError2<number, number>;
+
+declare export class ClassWithMethod {
+  method(): void;
+}
