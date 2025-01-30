@@ -7,5 +7,5 @@ function test0() {
   if (isFstParamNum(x, y)) {
     return;
   }
-  x as string; // TODO okay (all LatentP refinements are negated together)
+  x as string; // okay (all LatentP refinements are negated together)
 }

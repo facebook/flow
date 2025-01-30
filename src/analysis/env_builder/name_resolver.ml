@@ -1437,25 +1437,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | Some (Error _) -> None
         | Some (Ok v) -> Some v
 
-      (* Function calls may introduce refinements if the function called is a
-       * type-guard function. The EnvBuilder has no idea if a function is a
-       * type-guard function or not. To handle that, we encode that a variable
-       * _might_ be havoced by a function call if that variable is passed
-       * as an argument. Variables not passed into the function are havoced if
-       * the invalidation api says they can be invalidated.
-       *)
-      method apply_latent_refinements refinement_keys_by_arg (loc, call) func targs arguments =
-        let (callee_loc, _) = func in
-        let call_exp = (loc, Ast.Expression.Call call) in
-        List.iteri
-          (fun index -> function
-            | None -> ()
-            | Some key ->
-              let pred = LatentR { func; targs; arguments; index = [index] } in
-              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) pred;
-              this#add_pred_func_info callee_loc (class_stack, call_exp, func, targs, arguments))
-          refinement_keys_by_arg
-
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
 
       method invalidate_heap_refinements ~invalidation_info heap_refinements =
@@ -5839,7 +5820,49 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ Base.Option.map ~f:this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc;
-          this#apply_latent_refinements refinement_keys (loc, call) callee targs arguments
+          let refis = LookupMap.empty in
+          (* Paremeter type-guard refinements *)
+          (* Function calls may introduce refinements if the function called is a
+           * type-guard function. The EnvBuilder has no idea if a function is a
+           * type-guard function or not. To handle that, we encode that a variable
+           * _might_ be havoced by a function call if that variable is passed
+           * as an argument. Variables not passed into the function are havoced if
+           * the invalidation api says they can be invalidated. *)
+          let refis =
+            let (callee_loc, _) = callee in
+            let call_exp = (loc, Ast.Expression.Call call) in
+            let map =
+              Base.List.foldi
+                refinement_keys
+                ~init:LookupMap.empty
+                ~f:(fun index seen_keys key_opt ->
+                  match key_opt with
+                  | Some ({ RefinementKey.lookup; _ } as key) ->
+                    let indices =
+                      (* Handles cases like `if (foo(x, x)) {}` *)
+                      match LookupMap.find_opt lookup seen_keys with
+                      | Some (_, indices) -> indices @ [index]
+                      | None -> [index]
+                    in
+                    LookupMap.add lookup (key, indices) seen_keys
+                  | None -> seen_keys
+              )
+            in
+            if not (LookupMap.is_empty map) then (
+              this#add_pred_func_info callee_loc (class_stack, call_exp, callee, targs, arguments);
+              LookupMap.fold
+                (fun _ (key, index) refis ->
+                  this#extend_refinement
+                    key
+                    ~refining_locs:(L.LSet.singleton loc)
+                    (LatentR { func = callee; targs; arguments; index })
+                    refis)
+                map
+                refis
+            ) else
+              refis
+          in
+          if not (LookupMap.is_empty refis) then this#commit_refinement refis
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement

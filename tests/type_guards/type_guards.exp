@@ -1515,23 +1515,6 @@ Cannot resolve name `Missing`. [cannot-resolve-name]
                                                           ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- negation.js:10:3
-
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   negation.js:10:3
-   10|   x as string; // TODO okay (all LatentP refinements are negated together)
-         ^
-
-References:
-   negation.js:4:18
-    4|   declare var x: number | string;
-                        ^^^^^^ [1]
-   negation.js:10:8
-   10|   x as string; // TODO okay (all LatentP refinements are negated together)
-              ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -3119,7 +3102,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 183 errors
+Found 182 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
