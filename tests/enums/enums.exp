@@ -587,6 +587,112 @@ References:
               ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- computed-property.js:14:1
+
+Cannot cast `o` to object type because string `A` [1] is incompatible with `E` [2] in the indexer property's key.
+[incompatible-cast]
+
+   computed-property.js:14:1
+   14| o as {A: 0, ...}; // ERROR
+       ^
+
+References:
+   computed-property.js:14:6
+   14| o as {A: 0, ...}; // ERROR
+            ^^^^^^^^^^^ [1]
+   computed-property.js:1:6
+    1| enum E {
+            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- computed-property.js:15:1
+
+Cannot cast `o[E.A]` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   computed-property.js:15:1
+   15| o[E.A] as empty; // ERROR
+       ^^^^^^
+
+References:
+   computed-property.js:7:10
+    7|   [E.A]: 0, // OK
+                ^ [1]
+   computed-property.js:15:11
+   15| o[E.A] as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- computed-property.js:16:1
+
+Cannot get `o['A']` because string `A` [1] is incompatible with `E` [2]. [incompatible-type]
+
+   computed-property.js:16:1
+   16| o['A']; // ERROR
+       ^^^^^^ [1]
+
+References:
+   computed-property.js:1:6
+    1| enum E {
+            ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- computed-property.js:21:22
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. object literal [2] cannot be
+spread because the indexer `E` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spreading object literal [2] first or remove the indexer. [cannot-spread-indexer]
+
+   computed-property.js:21:22
+   21| const err_spread_1 = {A: 1, ...o}; // ERROR
+                            ^^^^^^^^^^^^ [1]
+
+References:
+   computed-property.js:6:11
+                 v
+    6| const o = {
+    7|   [E.A]: 0, // OK
+    8| };
+       ^ [2]
+   computed-property.js:1:6
+    1| enum E {
+            ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- computed-property.js:23:30
+
+Cannot spread object literal because string [1] is incompatible with `E` [2]. [incompatible-type]
+
+   computed-property.js:23:30
+   23| const err_spread_2 = {...o, [s]: 1}; // ERROR
+                                    ^
+
+References:
+   computed-property.js:22:18
+   22| declare const s: string;
+                        ^^^^^^ [1]
+   computed-property.js:1:6
+    1| enum E {
+            ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- computed-property.js:28:1
+
+Cannot cast `k` to read-only array type because string [1] is incompatible with `E` [2] in array element.
+[incompatible-cast]
+
+   computed-property.js:28:1
+   28| k as $ReadOnlyArray<E>; // ERROR
+       ^
+
+References:
+   computed-property.js:26:11
+   26| const k = Object.keys(o);
+                 ^^^^^^^^^^^^^^ [1]
+   computed-property.js:28:21
+   28| k as $ReadOnlyArray<E>; // ERROR
+                           ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- declared.js:9:1
 
 Cannot cast `E.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-cast]
@@ -4464,7 +4570,7 @@ References:
 
 
 
-Found 264 errors
+Found 270 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
