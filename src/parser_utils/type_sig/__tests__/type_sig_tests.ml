@@ -213,6 +213,7 @@ let sig_options
     ?facebook_fbt
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
+    ?(enable_declare_global = true)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
     ?(enable_ts_syntax = true)
@@ -230,6 +231,7 @@ let sig_options
     facebook_fbt;
     max_literal_len;
     exact_by_default;
+    enable_declare_global;
     enable_enums;
     enable_component_syntax;
     component_syntax_enabled_in_config = true;

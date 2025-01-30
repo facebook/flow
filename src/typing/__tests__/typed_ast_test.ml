@@ -33,6 +33,7 @@ let metadata =
     react_rules_always = false;
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
+    enable_declare_global = true;
     enable_enums = true;
     enable_jest_integration = false;
     enable_pattern_matching_expressions = false;

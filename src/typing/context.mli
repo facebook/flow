@@ -88,6 +88,7 @@ type metadata = {
   react_rules_always: bool;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
+  enable_declare_global: bool;
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching_expressions: bool;
@@ -188,6 +189,8 @@ val react_rules_always : t -> bool
 val dev_only_refinement_info_as_errors : t -> bool
 
 val enable_const_params : t -> bool
+
+val enable_declare_global : t -> bool
 
 val enable_enums : t -> bool
 

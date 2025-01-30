@@ -92,6 +92,8 @@ val emoji : config -> bool option
 
 val enable_const_params : config -> bool option
 
+val enable_declare_global : config -> bool
+
 val enums : config -> bool
 
 val estimate_recheck_time : config -> bool option

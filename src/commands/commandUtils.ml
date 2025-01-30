@@ -1393,6 +1393,7 @@ let make_options
       FlowConfig.dev_only_refinement_info_as_errors flowconfig;
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
+    opt_enable_declare_global = FlowConfig.enable_declare_global flowconfig;
     opt_enable_jest_integration = FlowConfig.jest_integration flowconfig;
     opt_enable_pattern_matching_expressions =
       Base.Option.value ~default:false (FlowConfig.pattern_matching_expressions flowconfig);

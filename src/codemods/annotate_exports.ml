@@ -70,6 +70,7 @@ module SignatureVerification = struct
         facebook_fbt = Options.facebook_fbt options;
         max_literal_len = Options.max_literal_length options;
         exact_by_default = Options.exact_by_default options;
+        enable_declare_global = Options.enable_declare_global options;
         enable_enums = Options.enums options;
         enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
         component_syntax_enabled_in_config = Options.component_syntax options;

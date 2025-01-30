@@ -88,6 +88,7 @@ type t = {
   opt_debug: bool;
   opt_dev_only_refinement_info_as_errors: bool;
   opt_enable_const_params: bool;
+  opt_enable_declare_global: bool;
   opt_enable_jest_integration: bool;
   opt_enable_pattern_matching_expressions: bool;
   opt_enable_relay_integration: bool;
@@ -220,6 +221,8 @@ let react_rules opts = opts.opt_react_rules
 let dev_only_refinement_info_as_errors opts = opts.opt_dev_only_refinement_info_as_errors
 
 let enable_const_params opts = opts.opt_enable_const_params
+
+let enable_declare_global opts = opts.opt_enable_declare_global
 
 let enable_jest_integration opts = opts.opt_enable_jest_integration
 
