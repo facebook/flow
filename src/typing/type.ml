@@ -2064,6 +2064,8 @@ and Properties : sig
 
   val string_of_id : id -> string
 
+  val unbind_this_method : TypeTerm.t -> TypeTerm.t
+
   val extract_named_exports : t -> Exports.t
 
   val iter_t : (TypeTerm.t -> unit) -> t -> unit
@@ -2117,6 +2119,14 @@ end = struct
 
   let add_method x key_loc type_ = NameUtils.Map.add x (Method { key_loc; type_ })
 
+  let rec unbind_this_method = function
+    | DefT (r, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))) ->
+      DefT (r, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
+    | DefT (r, PolyT { tparams_loc; tparams; t_out; id }) ->
+      DefT (r, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
+    | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
+    | t -> t
+
   let extract_named_exports pmap =
     NameUtils.Map.fold
       (fun x p tmap ->
@@ -2126,6 +2136,24 @@ end = struct
             match p with
             | Field { preferred_def_locs; _ } -> preferred_def_locs
             | _ -> None
+          in
+          let type_ =
+            match p with
+            (* The following code explicitly encodes the following unsound behavior:
+
+               ```
+               // a.js
+               declare class Foo { bar(): void }
+               declare const foo: Foo;
+               module.exports = foo;
+
+               // b.js
+               import {bar} from './a'; // no method unbinding error
+               bar();
+               ```
+            *)
+            | Method _ -> unbind_this_method type_
+            | _ -> type_
           in
           NameUtils.Map.add x { name_loc = Property.read_loc p; preferred_def_locs; type_ } tmap
         | None -> tmap)

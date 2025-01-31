@@ -2081,14 +2081,6 @@ end
 (* GetPropT helper *)
 (*******************)
 
-let rec unbind_this_method = function
-  | DefT (r, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))) ->
-    DefT (r, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
-  | DefT (r, PolyT { tparams_loc; tparams; t_out; id }) ->
-    DefT (r, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
-  | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)
-  | t -> t
-
 let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p =
   match p with
   | Method { key_loc; type_ = t }
@@ -2122,7 +2114,7 @@ let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hi
       add_output
         cx
         (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t });
-      Method { key_loc; type_ = unbind_this_method t })
+      Method { key_loc; type_ = Type.Properties.unbind_this_method t })
   | _ -> p
 
 (* e.g. `0`, `-123, `234234` *)
