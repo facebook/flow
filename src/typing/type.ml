@@ -1550,6 +1550,8 @@ module rec TypeTerm : sig
   and moduletype = {
     module_reason: reason;
     module_export_types: exporttypes;
+    module_global_types_tmap: (ALoc.t * t) lazy_t SMap.t;
+        (* global types from declare global {...} in a module. *)
     module_is_strict: bool;
     module_available_platforms: Platform_set.t option;
   }

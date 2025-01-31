@@ -73,7 +73,13 @@ let sig_hash ~check_dirty_set ~root =
       let filename = Fun.const (hash_file_key file_key) in
       let info_pos = Bin.cjs_module_info buf pos in
       let (P.CJSModuleInfo
-            { type_export_keys; type_stars = _; strict = _; platform_availability_set = _ }
+            {
+              type_export_keys;
+              type_stars = _;
+              module_globals = _;
+              strict = _;
+              platform_availability_set = _;
+            }
             ) =
         Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
@@ -95,6 +101,7 @@ let sig_hash ~check_dirty_set ~root =
               export_keys;
               type_stars = _;
               stars = _;
+              module_globals = _;
               strict = _;
               platform_availability_set = _;
             }
@@ -157,7 +164,13 @@ let sig_hash ~check_dirty_set ~root =
       let info_pos = Bin.cjs_module_info buf pos in
       let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
       let (P.CJSModuleInfo
-            { type_export_keys; type_stars; strict = _; platform_availability_set = _ }
+            {
+              type_export_keys;
+              type_stars;
+              module_globals = _;
+              strict = _;
+              platform_availability_set = _;
+            }
             ) =
         Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
@@ -190,6 +203,7 @@ let sig_hash ~check_dirty_set ~root =
               export_keys;
               type_stars;
               stars;
+              module_globals = _;
               strict = _;
               platform_availability_set = _;
             }

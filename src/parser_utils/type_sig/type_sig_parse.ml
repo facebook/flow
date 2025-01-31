@@ -127,6 +127,7 @@ and 'loc exports =
       mutable kind: 'loc module_kind;
       mutable types: 'loc export_type smap;
       mutable type_stars: ('loc loc_node * module_ref_node) list;
+      mutable global_types: 'loc binding_node SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -155,6 +156,7 @@ and 'loc scope =
       mutable types: 'loc binding_node SMap.t;
       exports: 'loc exports;
     }
+  | DeclareGlobal of { parent: 'loc scope }
   | Lexical of {
       mutable values: 'loc binding_node SMap.t;
       mutable types: 'loc binding_node SMap.t;
@@ -421,6 +423,7 @@ module Exports = struct
         kind = UnknownModule;
         types = SMap.empty;
         type_stars = [];
+        global_types = SMap.empty;
         strict;
         platform_availability_set;
       }
@@ -535,7 +538,8 @@ module Scope = struct
     | DeclareModule { parent; _ }
     | Lexical { parent; _ }
     | ConditionalTypeExtends { parent; _ }
-    | DeclareNamespace { parent; _ } ->
+    | DeclareNamespace { parent; _ }
+    | DeclareGlobal { parent } ->
       Some parent
     | Global _
     | Module _ ->
@@ -544,6 +548,7 @@ module Scope = struct
   let modify_exports f = function
     | Module scope -> f scope.exports
     | DeclareModule scope -> f scope.exports
+    | DeclareGlobal _
     | DeclareNamespace _
     | Global _
     | Lexical _
@@ -554,6 +559,7 @@ module Scope = struct
     | Global { values; types; modules } -> (values, types, modules)
     | DeclareModule _
     | DeclareNamespace _
+    | DeclareGlobal _
     | Module _
     | Lexical _
     | ConditionalTypeExtends _ ->
@@ -564,6 +570,7 @@ module Scope = struct
     | Global _
     | DeclareModule _
     | DeclareNamespace _
+    | DeclareGlobal _
     | Lexical _
     | ConditionalTypeExtends _ ->
       raise Not_found
@@ -628,6 +635,11 @@ module Scope = struct
       | Global scope -> scope.types <- bind_type scope.values scope.types
       | DeclareModule scope -> scope.types <- bind_type scope.values scope.types
       | DeclareNamespace scope -> scope.types <- bind_type scope.values scope.types
+      | DeclareGlobal { parent = DeclareModule { exports; _ } | Module { exports; _ } } ->
+        let (Exports e) = exports in
+        e.global_types <- bind_type SMap.empty e.global_types
+      | DeclareGlobal { parent = _ } ->
+        failwith "DeclareGlobal can only have DeclareModule or Module as parent."
       | Module scope -> scope.types <- bind_type scope.values scope.types
       | Lexical scope -> scope.types <- bind_type scope.values scope.types
       | ConditionalTypeExtends _ -> ()
@@ -636,6 +648,8 @@ module Scope = struct
       | Global scope -> scope.values <- bind_value scope.values scope.types
       | DeclareModule scope -> scope.values <- bind_value scope.values scope.types
       | DeclareNamespace scope -> scope.values <- bind_value scope.values scope.types
+      (* Only type_only bindings are allowed in declare global *)
+      | DeclareGlobal { parent = _ } -> ()
       | Module scope -> scope.values <- bind_value scope.values scope.types
       | Lexical scope -> scope.values <- bind_value scope.values scope.types
       | ConditionalTypeExtends _ -> ()
@@ -652,6 +666,7 @@ module Scope = struct
       (match SMap.find_opt name values with
       | Some binding -> Some (binding, scope)
       | None -> lookup_value parent name)
+    | DeclareGlobal { parent } -> lookup_value parent name
 
   let rec lookup_type scope name =
     let lookup_scope name values types =
@@ -662,22 +677,40 @@ module Scope = struct
     match scope with
     | Global { values; types; _ } ->
       Base.Option.map ~f:(fun binding -> (binding, scope)) (lookup_scope name values types)
-    | Module { values; types; _ } ->
-      Base.Option.map ~f:(fun binding -> (binding, scope)) (lookup_scope name values types)
     | ConditionalTypeExtends { parent; _ } -> lookup_type parent name
-    | DeclareModule { parent; values; types; _ }
     | DeclareNamespace { parent; values; types }
     | Lexical { parent; values; types } ->
       (match lookup_scope name values types with
       | Some binding -> Some (binding, scope)
       | None -> lookup_type parent name)
+    | Module { values; types; exports = Exports { global_types; _ }; _ } ->
+      Base.Option.map
+        ~f:(fun binding -> (binding, scope))
+        (match lookup_scope name values types with
+        | Some result -> Some result
+        | None -> lookup_scope name SMap.empty global_types)
+    | DeclareModule { parent; values; types; exports = Exports { global_types; _ }; _ } ->
+      (match lookup_scope name values types with
+      | Some binding -> Some (binding, scope)
+      | None ->
+        (match lookup_scope name SMap.empty global_types with
+        | Some binding -> Some (binding, scope)
+        | None -> lookup_type parent name))
+    | DeclareGlobal { parent = (DeclareModule { exports; _ } | Module { exports; _ }) as parent } ->
+      let (Exports { global_types; _ }) = exports in
+      (match lookup_scope name SMap.empty global_types with
+      | Some binding -> Some (binding, scope)
+      | None -> lookup_type parent name)
+    | DeclareGlobal { parent = _ } ->
+      failwith "DeclareGlobal can only have DeclareModule or Module as parent."
 
   let rec find_host scope b =
     match scope with
     | Global _
     | DeclareModule _
     | DeclareNamespace _
-    | Module _ ->
+    | Module _
+    | DeclareGlobal _ ->
       scope
     | ConditionalTypeExtends { parent; _ } -> find_host parent b
     | Lexical { parent; _ } ->
@@ -691,7 +724,8 @@ module Scope = struct
     | Global _
     | DeclareModule _
     | DeclareNamespace _
-    | Module _ ->
+    | Module _
+    | DeclareGlobal _ ->
       None
     | Lexical { parent; _ } -> scope_of_infer_name parent name loc
     | ConditionalTypeExtends ({ infer_type_names; _ } as scope) ->
@@ -1017,6 +1051,7 @@ module Scope = struct
         (* is already the right kind? shouldn't happen *)
         failwith "only call finalize_declare_module_exports_exn once per DeclareModule")
     | DeclareNamespace _
+    | DeclareGlobal _
     | Global _
     | Module _
     | Lexical _
@@ -1089,6 +1124,16 @@ module Scope = struct
         name
         (NamespaceBinding { id_loc; name; values; types })
     | _ -> failwith "The scope must be lexical"
+
+  let within_declare_global scope ~f =
+    match scope with
+    | Module _ ->
+      let scope = DeclareGlobal { parent = scope } in
+      f scope
+    | DeclareModule _ ->
+      let scope = DeclareGlobal { parent = scope } in
+      f scope
+    | _ -> ()
 
   let bind_globalThis scope tbls ~global_this_loc =
     match scope with
@@ -4160,7 +4205,20 @@ let namespace_decl
       comments = _;
     } =
   match id with
-  | Ast.Statement.DeclareNamespace.Global _TODO_DECLARE_GLOBAL -> (fun _ -> ())
+  | Ast.Statement.DeclareNamespace.Global _ ->
+    if opts.enable_declare_global then
+      Scope.within_declare_global scope ~f:(fun scope ->
+          let stmts =
+            Base.List.filter stmts ~f:(fun (_, stmt) ->
+                Flow_ast_utils.acceptable_statement_in_declaration_context
+                  ~in_declare_namespace:true
+                  stmt
+                |> Base.Result.is_ok
+            )
+          in
+          List.iter (visit_statement opts scope tbls) stmts
+      );
+    ignore
   | Ast.Statement.DeclareNamespace.Local (id_loc, { Ast.Identifier.name; _ }) ->
     let id_loc = push_loc tbls id_loc in
     let stmts =

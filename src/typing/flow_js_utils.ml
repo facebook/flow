@@ -1517,6 +1517,7 @@ module CJSRequireTKit = struct
     let {
       module_reason;
       module_export_types = exports;
+      module_global_types_tmap = _;
       module_is_strict = imported_is_strict;
       module_available_platforms = _IGNORED_TODO;
     } =
@@ -1603,6 +1604,7 @@ module ImportModuleNsTKit = struct
     let {
       module_reason;
       module_export_types = exports;
+      module_global_types_tmap = _;
       module_is_strict = imported_is_strict;
       module_available_platforms = _IGNORED_TODO;
     } =
@@ -1663,6 +1665,7 @@ module ImportDefaultTKit = struct
     let {
       module_reason;
       module_export_types = exports;
+      module_global_types_tmap = _;
       module_is_strict = imported_is_strict;
       module_available_platforms = _IGNORED_TODO;
     } =
@@ -1725,6 +1728,7 @@ module ImportNamedTKit = struct
     let {
       module_reason = _;
       module_export_types = exports;
+      module_global_types_tmap = _;
       module_is_strict = imported_is_strict;
       module_available_platforms = _IGNORED_TODO;
     } =
@@ -1893,6 +1897,7 @@ module ExportNamedTKit = struct
     let {
       module_reason = _;
       module_export_types = { value_exports_tmap; type_exports_tmap; _ };
+      module_global_types_tmap = _;
       module_is_strict = _;
       module_available_platforms = _;
     } =
@@ -1946,6 +1951,7 @@ module CopyNamedExportsTKit = struct
     let {
       module_reason = _;
       module_export_types = source_exports;
+      module_global_types_tmap = _;
       module_is_strict = _;
       module_available_platforms = _;
     } =
@@ -1987,6 +1993,7 @@ module CopyTypeExportsTKit = struct
     let {
       module_reason = _;
       module_export_types = source_exports;
+      module_global_types_tmap = _;
       module_is_strict = _;
       module_available_platforms = _;
     } =
@@ -2061,6 +2068,7 @@ module CJSExtractNamedExportsTKit = struct
       let {
         module_reason;
         module_export_types = exporttypes;
+        module_global_types_tmap;
         module_is_strict;
         module_available_platforms;
       } =
@@ -2069,6 +2077,7 @@ module CJSExtractNamedExportsTKit = struct
       {
         module_reason;
         module_export_types = { exporttypes with has_every_named_export = true };
+        module_global_types_tmap;
         module_is_strict;
         module_available_platforms;
       }

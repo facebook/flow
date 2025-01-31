@@ -13,6 +13,7 @@ type exports =
       type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
+      global_types: (ALoc.t * Type.t) Lazy.t SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -21,6 +22,7 @@ type exports =
       exports: Type.named_symbol Lazy.t SMap.t;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
+      global_types: (ALoc.t * Type.t) Lazy.t SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }

@@ -322,7 +322,8 @@ let%expect_test "export_number_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_bigint_literal" =
@@ -338,7 +339,8 @@ let%expect_test "export_bigint_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_bigint_literal_neg" =
@@ -356,7 +358,8 @@ let%expect_test "export_bigint_literal_neg" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_function_literal" =
@@ -382,7 +385,8 @@ let%expect_test "export_function_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_function_literal_check1" =
@@ -408,7 +412,8 @@ let%expect_test "export_function_literal_check1" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
@@ -437,7 +442,8 @@ let%expect_test "export_function_literal_check2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError
@@ -458,7 +464,8 @@ let%expect_test "export_function_reference" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -487,7 +494,8 @@ let%expect_test "export_function_reference_check1" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -518,7 +526,8 @@ let%expect_test "export_function_reference_check2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -561,7 +570,8 @@ let%expect_test "function_param_optional" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "function_param_default" =
   print_sig {|
@@ -587,7 +597,8 @@ let%expect_test "function_param_default" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "function_param_default_check" =
   print_sig {|
@@ -612,7 +623,8 @@ let%expect_test "function_param_default_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([1:24-25], Expected_annotation_sort.Identifier)))
@@ -674,7 +686,8 @@ let%expect_test "function_param_typeof_reference" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
@@ -705,7 +718,8 @@ let%expect_test "component_param_typeof_reference" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
@@ -772,7 +786,8 @@ let%expect_test "export_object_literal_property_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_object_literal_property_reference" =
@@ -796,7 +811,8 @@ let%expect_test "export_object_literal_property_reference" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Annot (Number [1:7-13]))}
@@ -823,7 +839,8 @@ let%expect_test "export_object_literal_property_reference_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
@@ -847,7 +864,8 @@ let%expect_test "empty_object_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "export_class_reference" =
@@ -867,7 +885,8 @@ let%expect_test "export_class_reference" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -907,7 +926,8 @@ let%expect_test "export_class_reference_check1" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -948,7 +968,8 @@ let%expect_test "export_class_reference_check2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -991,7 +1012,8 @@ let%expect_test "export_class_reference_check3" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1038,7 +1060,8 @@ let%expect_test "type_alias_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-7]; name = "T1"; tparams = Mono; body = (Annot (Number [1:10-16]))}
@@ -1087,7 +1110,8 @@ let%expect_test "class_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1141,7 +1165,8 @@ let%expect_test "class_dependencies_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1197,7 +1222,8 @@ let%expect_test "export_new_typecast" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1251,7 +1277,8 @@ let%expect_test "export_new_typecast_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1306,7 +1333,8 @@ let%expect_test "recursive_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1351,7 +1379,8 @@ let%expect_test "recursive_dependencies_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -1396,7 +1425,8 @@ let%expect_test "typeof_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Annot (Number [1:7-13]))}
@@ -1433,7 +1463,8 @@ let%expect_test "typeof_dependencies_check" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "x"; def = (Err [1:4-5])}
@@ -1479,7 +1510,8 @@ let%expect_test "const_initializer" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "x"; def = (Value (NumberLit ([1:10-11], 0., "0")))}
@@ -1495,7 +1527,8 @@ let%expect_test "empty_array_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.EmptyArray [1:15-18]))
@@ -1519,7 +1552,8 @@ let%expect_test "non_empty_array_literal" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:6-7]; name = "x"; def = (Value (NumberLit ([1:10-11], 0., "0")))}
@@ -1545,7 +1579,8 @@ let%expect_test "void_function" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -1573,7 +1608,8 @@ let%expect_test "void_generator" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:10-13];
@@ -1608,7 +1644,8 @@ let%expect_test "import_default_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./import_default_dependencies_helper
@@ -1651,7 +1688,8 @@ let%expect_test "import_type_dependencies" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./import_type_dependencies_helper
@@ -1705,7 +1743,8 @@ let%expect_test "qualified_references" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./qualified_references_helper
@@ -1756,8 +1795,9 @@ let%expect_test "invalid_qualified_references" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -1792,8 +1832,9 @@ let%expect_test "hoisted_requires" =
       exports = (Some (Ref LocalRef {ref_loc = [11:17-18]; index = 2}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./hoisted_requires_helper
@@ -1844,8 +1885,9 @@ let%expect_test "hoisted_locals" =
       exports = (Some (Ref LocalRef {ref_loc = [10:17-18]; index = 2}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./hoisted_locals_helper
@@ -1881,8 +1923,9 @@ let%expect_test "dynamic_requires" =
     CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-53]; index = 0});
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./dynamic_requires_helper
@@ -1896,8 +1939,9 @@ let%expect_test "import_dynamic" =
     CJSModule {type_exports = [||]; exports = (Some ImportDynamic {loc = [1:17-30]; index = 0});
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo |}]
@@ -1910,8 +1954,9 @@ let%expect_test "enable_relay_integration" =
     CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-38]; index = 0});
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo.graphql |}]
@@ -1924,8 +1969,9 @@ let%expect_test "relay_integration_module_prefix" =
     CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-38]; index = 0});
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. ./__generated__/foo.graphql |}]
@@ -1946,8 +1992,9 @@ let%expect_test "scope_extrusion" =
       exports = (Some (Ref LocalRef {ref_loc = [8:17-18]; index = 1}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [2:8-9];
@@ -1990,8 +2037,9 @@ let%expect_test "scope_extrusion_nested" =
                       Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [2:8-9];
@@ -2042,8 +2090,9 @@ let%expect_test "report_all_errors" =
                       Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2092,7 +2141,8 @@ let%expect_test "munged_methods_ignored_if_directive" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2119,7 +2169,8 @@ let%expect_test "munged_methods_not_ignored" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2160,7 +2211,8 @@ let%expect_test "munged_fields_ignored_if_directive" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2187,7 +2239,8 @@ let%expect_test "munged_fields_not_ignored" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2233,7 +2286,8 @@ let%expect_test "propTypes_static_failure" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -2257,8 +2311,9 @@ let%expect_test "array_spread" =
     CJSModule {type_exports = [||]; exports = (Some (Err [1:17-34]));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.UnexpectedArraySpread ([1:17-34], [1:21-30])))
@@ -2272,8 +2327,9 @@ let%expect_test "array_hole" =
     CJSModule {type_exports = [||]; exports = (Some (Err [1:17-20]));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError (Signature_error.UnexpectedArrayHole [1:17-20]))
@@ -2310,8 +2366,9 @@ let%expect_test "object_spread" =
                     ])}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "reference_expression1" =
@@ -2326,8 +2383,9 @@ let%expect_test "reference_expression1" =
                (GetProp "NaN"))));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "reference_expression2" =
@@ -2338,8 +2396,9 @@ let%expect_test "reference_expression2" =
     CJSModule {type_exports = [||]; exports = (Some (Err [1:17-27]));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError
@@ -2357,8 +2416,9 @@ let%expect_test "member_expression" =
                (GetElem (Value (NumberLit ([1:19-20], 0., "0")))))));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "arith_expression1" =
   print_sig {|
@@ -2372,8 +2432,9 @@ let%expect_test "arith_expression1" =
                )));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "arith_expression2" =
@@ -2388,8 +2449,9 @@ let%expect_test "arith_expression2" =
                )));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "update_expression" =
@@ -2406,7 +2468,8 @@ let%expect_test "update_expression" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"post_decr"; "post_incr"; "pre_decr"; "pre_incr"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. bar
@@ -2439,7 +2502,8 @@ let%expect_test "sequence_expression" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}} |}]
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "named_class_expression" =
   print_sig {|
@@ -2450,8 +2514,9 @@ let%expect_test "named_class_expression" =
       exports = (Some (Ref LocalRef {ref_loc = [1:23-24]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:23-24];
@@ -2471,8 +2536,9 @@ let%expect_test "named_function_expression" =
       exports = (Some (Ref LocalRef {ref_loc = [1:26-29]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:26-29];
@@ -2498,7 +2564,8 @@ let%expect_test "interface_coverage" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Interface {id_loc = [1:18-21];
@@ -2538,8 +2605,9 @@ let%expect_test "bound_coverage" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-8]; name = "Foo"; tparams = Mono; body = (Annot (Number [1:11-17]))}
@@ -2574,8 +2642,9 @@ let%expect_test "recursive_class_coverage" =
       exports = (Some (Ref LocalRef {ref_loc = [1:23-24]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:23-24];
@@ -2600,8 +2669,9 @@ let%expect_test "shadowed_class_expression" =
       exports = (Some (Ref LocalRef {ref_loc = [2:23-24]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [2:23-24];
@@ -2631,8 +2701,9 @@ let%expect_test "frozen_object" =
                       Annot (SingletonNumber ([1:38-40], 42., "42"))), Polarity.Positive)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "frozen_object_empty" =
@@ -2644,8 +2715,9 @@ let%expect_test "frozen_object_empty" =
       exports = (Some (Value ObjLit {loc = [1:31-33]; frozen = true; proto = None; props = {}}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "fbt_empty_open_close" =
   print_sig ~facebook_fbt:"FbtElement" {|
@@ -2658,8 +2730,9 @@ let%expect_test "fbt_empty_open_close" =
                (Unqualified BuiltinRef {ref_loc = [1:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "fbt_empty_open" =
@@ -2673,8 +2746,9 @@ let%expect_test "fbt_empty_open" =
                (Unqualified BuiltinRef {ref_loc = [1:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "fbt_with_child" =
@@ -2689,8 +2763,9 @@ let%expect_test "fbt_with_child" =
                (Unqualified BuiltinRef {ref_loc = [2:18-21]; type_ref = true; name = "FbtElement"})));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "keymirror" =
@@ -2715,8 +2790,9 @@ let%expect_test "keymirror" =
                       Annot (SingletonString ([3:2-3], "b"))), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "jsx_div" =
@@ -2727,8 +2803,9 @@ let%expect_test "jsx_div" =
     CJSModule {type_exports = [||]; exports = (Some (Err [1:17-28]));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError
@@ -2745,7 +2822,8 @@ let%expect_test "function_return" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -2791,7 +2869,8 @@ let%expect_test "function_return_2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:4-5]; name = "n"; def = (Err [1:4-5])}
@@ -2847,8 +2926,9 @@ let%expect_test "function_statics" =
       exports = (Some (Ref LocalRef {ref_loc = [4:17-20]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -2876,7 +2956,8 @@ let%expect_test "function_statics_conditional" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -2902,7 +2983,8 @@ let%expect_test "function_predicates" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [2:16-19];
@@ -2926,8 +3008,9 @@ let%expect_test "async_function_1" =
       exports = (Some (Ref LocalRef {ref_loc = [2:17-20]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:15-18];
@@ -2951,8 +3034,9 @@ let%expect_test "async_function_2" =
       exports = (Some (Ref LocalRef {ref_loc = [2:17-20]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:15-18];
@@ -2990,8 +3074,9 @@ let%expect_test "async_function_3" =
                  statics = {}}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Errors:
     (SigError
@@ -3009,8 +3094,9 @@ let%expect_test "type_spread" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"C"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "A";
@@ -3057,8 +3143,9 @@ let%expect_test "inline_interface" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"B"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "A";
@@ -3091,8 +3178,9 @@ let%expect_test "object_annot_optional" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3116,8 +3204,9 @@ let%expect_test "interface_optional" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"I"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Interface {id_loc = [1:17-18];
@@ -3139,8 +3228,9 @@ let%expect_test "interface_method" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"I"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Interface {id_loc = [1:17-18];
@@ -3170,8 +3260,9 @@ let%expect_test "interface_indexer" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"I"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Interface {id_loc = [1:17-18];
@@ -3194,8 +3285,9 @@ let%expect_test "object_annot_method" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3226,8 +3318,9 @@ let%expect_test "object_annot_call_poly" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3278,8 +3371,9 @@ let%expect_test "object_annot_multiple_call" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3325,7 +3419,8 @@ let%expect_test "destruct_object_shared" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "c"; "d"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -3353,7 +3448,8 @@ let%expect_test "destruct_array_shared" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "b"; "c"; "d"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:14-15]; name = "a"; def = (Pattern 1)}
@@ -3382,8 +3478,9 @@ let%expect_test "tuple_annot" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3413,8 +3510,9 @@ let%expect_test "tuple_annot_labeled" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3446,8 +3544,9 @@ let%expect_test "tuple_annot_variance" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3479,8 +3578,9 @@ let%expect_test "tuple_annot_inexact" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3498,8 +3598,9 @@ let%expect_test "cycle" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"A"; "B"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3541,7 +3642,8 @@ let%expect_test "typeof loc" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:11-12];
@@ -3567,7 +3669,8 @@ let%expect_test "qualified_generic_typeapp_loc" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3596,7 +3699,8 @@ let%expect_test "export_ref_renaming" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"b"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:12-13]; name = "a"; def = (Annot (String [1:15-21]))} |}]
@@ -3610,7 +3714,8 @@ let%expect_test "union_annot" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3630,7 +3735,8 @@ let%expect_test "intersection_annot" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -3657,7 +3763,8 @@ let%expect_test "class_extends" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C1"; "C2"; "C3"; "C4"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:14-15];
@@ -3730,7 +3837,8 @@ let%expect_test "class_this" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -3761,7 +3869,8 @@ let%expect_test "declare_class_this" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"C"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -3804,7 +3913,8 @@ let%expect_test "existential" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:6-7];
@@ -3832,8 +3942,9 @@ let%expect_test "exact_by_default" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -3866,8 +3977,9 @@ let%expect_test "cjs_export_props" =
                       Value (NumberLit ([1:21-22], 0., "0"))), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "cjs_exports_clobber_shadowed_module_global" =
   print_sig {|
@@ -3878,8 +3990,9 @@ let%expect_test "cjs_exports_clobber_shadowed_module_global" =
     CJSModule {type_exports = [||]; exports = None;
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "cjs_exports_assign_shadowed_exports_global" =
   print_sig {|
@@ -3890,8 +4003,9 @@ let%expect_test "cjs_exports_assign_shadowed_exports_global" =
     CJSModule {type_exports = [||]; exports = None;
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "cjs_exports_assign_shadowed_module_global" =
   print_sig {|
@@ -3902,8 +4016,9 @@ let%expect_test "cjs_exports_assign_shadowed_module_global" =
     CJSModule {type_exports = [||]; exports = None;
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "cjs_export_shadowed_hoisted_TODO" =
   print_sig {|
@@ -3922,8 +4037,9 @@ let%expect_test "cjs_export_shadowed_hoisted_TODO" =
                       Value (NumberLit ([1:21-22], 0., "0"))), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
   |}]
 
 let%expect_test "cjs_export_fun_expr_props" =
@@ -3950,8 +4066,9 @@ let%expect_test "cjs_export_fun_expr_props" =
                    "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "cjs_export_fun_binding_props" =
   print_sig {|
@@ -3964,8 +4081,9 @@ let%expect_test "cjs_export_fun_binding_props" =
       exports = (Some (Ref LocalRef {ref_loc = [1:26-29]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:26-29];
@@ -3990,7 +4108,8 @@ let%expect_test "es_export_named_fun_props" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -4014,7 +4133,8 @@ let%expect_test "es_export_default_fun_props" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:24-27];
@@ -4038,8 +4158,9 @@ let%expect_test "fun_binding_assign" =
       exports = (Some (Ref LocalRef {ref_loc = [3:17-20]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:9-12];
@@ -4063,8 +4184,9 @@ let%expect_test "fun_const_assign" =
       exports = (Some (Ref LocalRef {ref_loc = [3:17-20]; index = 0}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:6-9]; name = "foo";
@@ -4090,8 +4212,9 @@ let%expect_test "ref_const_assign" =
       exports = (Some (Ref LocalRef {ref_loc = [3:17-20]; index = 1}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:21-22];
@@ -4115,7 +4238,8 @@ let%expect_test "obj_annot_proto" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"o"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-20];
@@ -4154,7 +4278,8 @@ let%expect_test "getter_setter" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"a"; "b"; "c"; "d"; "e"; "f"; "g"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:13-14];
@@ -4233,7 +4358,8 @@ let%expect_test "export_default_function_binding" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:24-25];
@@ -4256,7 +4382,8 @@ let%expect_test "export_default_class_binding" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:21-22];
@@ -4276,7 +4403,8 @@ let%expect_test "declared_export_default_function_binding" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:32-33];
@@ -4298,7 +4426,8 @@ let%expect_test "declared_export_default_class_binding" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:29-30];
@@ -4320,8 +4449,9 @@ let%expect_test "module_ref_prefix" =
       exports = (Some ModuleRef {loc = [1:17-24]; index = 0; legacy_interop = false});
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Module refs:
     0. foo |}]
@@ -4335,7 +4465,8 @@ let%expect_test "enum_export" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4353,7 +4484,8 @@ let%expect_test "enum_default_export" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
@@ -4373,7 +4505,8 @@ let%expect_test "enum_stmt" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:5-6];
@@ -4390,7 +4523,8 @@ let%expect_test "enum_bool_lit" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4407,7 +4541,8 @@ let%expect_test "enum_bool" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4424,7 +4559,8 @@ let%expect_test "enum_number_truthy" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4441,7 +4577,8 @@ let%expect_test "enum_number_any" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4458,7 +4595,8 @@ let%expect_test "enum_string_any" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4475,7 +4613,8 @@ let%expect_test "enum_symbol" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4492,7 +4631,8 @@ let%expect_test "enum_unknown_members" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
@@ -4509,7 +4649,8 @@ let%expect_test "enum_declared" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
@@ -4526,7 +4667,8 @@ let%expect_test "enum_disabled" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"E"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledEnumBinding {id_loc = [1:12-13]; name = "E"} |}]
@@ -4630,8 +4772,9 @@ let%expect_test "builtin_cjs_module" =
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info =
                 CJSModuleInfo {type_export_keys = [||];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_ignore_later" =
   print_builtins [{|
@@ -4658,8 +4801,9 @@ let%expect_test "builtin_cjs_ignore_later" =
                 exports = (Some (Annot (String [3:26-32])));
                 info =
                 CJSModuleInfo {type_export_keys = [||];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_auto_export_type" =
   (* All types in cjs modules are auto exported. *)
@@ -4689,8 +4833,9 @@ let%expect_test "builtin_cjs_module_auto_export_type" =
                 exports = (Some (Annot (String [4:26-32])));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T1"; "T2"|];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_unused_type_exported" =
   (* T is exported because it has an `export` keyword *)
@@ -4714,8 +4859,9 @@ let%expect_test "builtin_cjs_module_unused_type_exported" =
                 exports = (Some (Annot (String [3:26-32])));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"|];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_used_type" =
   (* T is included because it is reachable, but not a named export because it does not
@@ -4740,8 +4886,9 @@ let%expect_test "builtin_cjs_module_used_type" =
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"|];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_used_type_exported" =
   (* `T` is exported because it has an `export` keyword, and is also reachable via the default export *)
@@ -4765,8 +4912,83 @@ let%expect_test "builtin_cjs_module_used_type_exported" =
                 exports = (Some (TyRef (Unqualified LocalRef {ref_loc = [3:26-27]; index = 0})));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"|];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
+
+let%expect_test "declare_global_within_declare_module" =
+print_builtins [{|
+    declare module foo {
+      declare global {
+        type Foo = string;
+        type Bar = Foo;
+      }
+      type Bar = number;
+      type Baz = number;
+      declare const baz: [Foo, Bar, Baz];
+      declare global {
+        type Foo = string;
+      }
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. TypeAlias {id_loc = [3:9-12];
+         name = "Foo"; tparams = Mono;
+         body = (Annot (String [3:15-21]))}
+    1. TypeAlias {id_loc = [4:9-12];
+         name = "Bar"; tparams = Mono;
+         body = (TyRef (Unqualified LocalRef {ref_loc = [4:15-18]; index = 0}))}
+    2. TypeAlias {id_loc = [6:7-10];
+         name = "Bar"; tparams = Mono;
+         body = (Annot (Number [6:13-19]))}
+    3. TypeAlias {id_loc = [7:7-10];
+         name = "Baz"; tparams = Mono;
+         body = (Annot (Number [7:13-19]))}
+    4. Variable {id_loc = [8:16-19];
+         name = "baz";
+         def =
+         (Annot
+            Tuple {loc = [8:21-36];
+              elems_rev =
+              [TupleElement {loc = [8:32-35];
+                 name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:32-35]; index = 3}));
+                 polarity = Polarity.Neutral;
+                 optional = false};
+                TupleElement {loc = [8:27-30];
+                  name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:27-30]; index = 2}));
+                  polarity = Polarity.Neutral;
+                  optional = false};
+                TupleElement {loc = [8:22-25];
+                  name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:22-25]; index = 0}));
+                  polarity = Polarity.Neutral;
+                  optional = false}
+                ];
+              inexact = false})}
+    5. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 5})) };
+         types = {}}
+
+    Builtin global value globalThis
+    Builtin module foo:
+    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 2); (ExportTypeBinding 3)|];
+                exports =
+                (Some (Value
+                         DeclareModuleImplicitlyExportedObject {
+                           loc = [1:15-18];
+                           module_name = "foo";
+                           props =
+                           { "baz" ->
+                             (ObjValueField ([1:15-18],
+                                (Ref LocalRef {ref_loc = [1:15-18]; index = 4}), Polarity.Positive
+                                )) }}));
+                info =
+                CJSModuleInfo {type_export_keys = [|"Bar"; "Baz"|];
+                  type_stars = [];
+                  module_globals =
+                  ModuleGlobals {global_types = [|1; 0|]; global_types_keys = [|"Bar"; "Foo"|]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_with_implicit_exports" =
   (* when a `declare module` doesn't have explicit value exports via `declare export` (which
@@ -4877,8 +5099,9 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
                                 )) }}));
                 info =
                 CJSModuleInfo {type_export_keys = [|"T"; "U"|];
-                  type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  type_stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_es_module_default" =
   print_builtins [{|
@@ -4901,8 +5124,9 @@ let%expect_test "builtin_es_module_default" =
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"default"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_module_import_typeof" =
   print_builtins [{|
@@ -4937,16 +5161,18 @@ let%expect_test "builtin_module_import_typeof" =
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}}
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}}
     Builtin module foo:
     [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_toplevel_import" =
   (* this should be a parse error, but in the meantime, make sure we don't fatal.
@@ -4978,16 +5204,18 @@ let%expect_test "builtin_toplevel_import" =
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}}
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}}
     Builtin module foo:
     [1:15-18] ESModule {type_exports = [||];
                 exports = [|(ExportBinding 0)|];
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_module_export_specifiers" =
   print_builtins [{|
@@ -5015,8 +5243,9 @@ let%expect_test "builtin_module_export_specifiers" =
                 info =
                 ESModuleInfo {type_export_keys = [||];
                   type_stars = []; export_keys = [|"x"; "y"|];
-                  stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  stars = [];
+                  module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+                  strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_declare_namespace" =
   print_builtins [{|
@@ -5137,7 +5366,8 @@ let%expect_test "this_param_1" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. FunBinding {id_loc = [1:16-19];
@@ -5161,7 +5391,8 @@ let%expect_test "this_param_2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"A"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ClassBinding {id_loc = [1:13-14];
@@ -5191,7 +5422,8 @@ let%expect_test "this_param_3" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:24-27];
@@ -5214,7 +5446,8 @@ let%expect_test "this_param_4" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"A"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
@@ -5247,8 +5480,9 @@ let%expect_test "this_param_5" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"Foo"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-15];
@@ -5272,8 +5506,9 @@ let%expect_test "this_param_6" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"O"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -5308,8 +5543,9 @@ let%expect_test "optional_indexed_access" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -5344,6 +5580,7 @@ let%expect_test "cjs_export_type_star" =
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = [([2:12-13], 1); ([1:12-13], 0)];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
         strict = true; platform_availability_set = None}}
 
     Module refs:
@@ -5363,6 +5600,7 @@ let%expect_test "es_export_star" =
       ESModuleInfo {type_export_keys = [||];
         type_stars = [([2:12-13], 1); ([1:12-13], 0)];
         export_keys = [||]; stars = [([4:7-8], 3); ([3:7-8], 2)];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
         strict = true; platform_availability_set = None}}
 
     Module refs:
@@ -5380,8 +5618,9 @@ let%expect_test "duplicate_binding" =
     CJSModule {type_exports = [||]; exports = None;
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "duplicate_binding2" =
   print_sig {|
@@ -5393,7 +5632,8 @@ let%expect_test "duplicate_binding2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"bar"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [2:17-20]; name = "bar"; def = (Pattern 1)}
@@ -5420,8 +5660,9 @@ let%expect_test "duplicate_binding2" =
     CJSModule {type_exports = [||]; exports = None;
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}} |}]
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "fun_shadow_declare_fun" =
   print_sig {|
@@ -5434,7 +5675,8 @@ let%expect_test "fun_shadow_declare_fun" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"f"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DeclareFun {id_loc = [1:17-18];
@@ -5463,8 +5705,9 @@ let%expect_test "optional_tuple_elements" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -5496,8 +5739,9 @@ let%expect_test "tuple_spread" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "S";
@@ -5550,8 +5794,9 @@ let%expect_test "mapped_types" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T1"; "T2"; "T3"; "T4"; "T5"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "O";
@@ -5666,8 +5911,9 @@ let%expect_test "mapped_types_invalid" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"T"; "U"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-43]))}
@@ -5689,7 +5935,8 @@ export const {foo} = {foo: 3};
       info =
       ESModuleInfo {type_export_keys = [|"OOOOOO"|];
         type_stars = []; export_keys = [|"aaaaa"; "foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     (dirty) 0. TypeAlias {id_loc = [1:12-18];
@@ -5752,8 +5999,9 @@ let%expect_test "component" =
                       Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:10-13];
@@ -5783,8 +6031,9 @@ let%expect_test "component2" =
                       Ref LocalRef {ref_loc = [3:19-22]; index = 1}), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-9]; name = "Rest";
@@ -5829,8 +6078,9 @@ let%expect_test "component3" =
                       Ref LocalRef {ref_loc = [4:19-22]; index = 1}), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:10-17];
@@ -5878,8 +6128,9 @@ let%expect_test "component4" =
                       Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:10-13];
@@ -5916,7 +6167,8 @@ let%expect_test "component_5" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:17-20];
@@ -5951,8 +6203,9 @@ let%expect_test "component_disabled" =
                       Ref LocalRef {ref_loc = [2:19-22]; index = 0}), Polarity.Neutral)) }}));
       info =
       CJSModuleInfo {type_export_keys = [||];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledComponentBinding {id_loc = [1:10-13]; name = "Baz"}
@@ -5970,7 +6223,8 @@ let%expect_test "component_disabled2" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. DisabledComponentBinding {id_loc = [1:17-20]; name = "Baz"}
@@ -5989,7 +6243,8 @@ let%expect_test "declare_component" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. ComponentBinding {id_loc = [1:25-28];
@@ -6026,7 +6281,8 @@ let%expect_test "component_type" =
       info =
       ESModuleInfo {type_export_keys = [|"Mono"; "Poly"|];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:5-6]; name = "A"; tparams = Mono; body = (Annot (Number [1:9-15]))}
@@ -6113,7 +6369,8 @@ let%expect_test "declare_component" =
       info =
       ESModuleInfo {type_export_keys = [||];
         type_stars = []; export_keys = [|"Baz"; "default"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. Variable {id_loc = [1:19-22];
@@ -6147,8 +6404,9 @@ let%expect_test "render_types" =
       exports = None;
       info =
       CJSModuleInfo {type_export_keys = [|"X"; "Y"; "Z"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
+        type_stars = [];
+        module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
@@ -6204,7 +6462,8 @@ let%expect_test "render_maybe_types" =
       info =
       ESModuleInfo {type_export_keys = [|"C"; "X"; "Y"; "Z"|];
         type_stars = []; export_keys = [|"Bar"; "Foo"|];
-        stars = []; strict = true; platform_availability_set = None}}
+        stars = []; module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
+        strict = true; platform_availability_set = None}}
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];

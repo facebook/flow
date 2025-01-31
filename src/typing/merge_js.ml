@@ -832,22 +832,38 @@ let copier =
 
 let copy_into dst_cx src_cx f () =
   let m = f () in
-  (match m with
-  | Ok { Type.module_export_types; _ } ->
+  match m with
+  | Ok ({ Type.module_export_types; module_global_types_tmap; _ } as m) ->
     let (_ : Context.t) = copier#export_types src_cx Polarity.Positive dst_cx module_export_types in
-    ()
-  | Error _ -> ());
-  m
+    let module_global_types_tmap =
+      SMap.map
+        (Lazy.map (fun (loc, t) ->
+             let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
+             (loc, t)
+         )
+        )
+        module_global_types_tmap
+    in
+    Ok { m with Type.module_global_types_tmap }
+  | Error _ -> m
 
 let copied dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   t
 
-let module_type_copied dst_cx src_cx m =
-  let (_ : Context.t) =
-    copier#export_types src_cx Polarity.Positive dst_cx m.Type.module_export_types
+let module_type_copied dst_cx src_cx ({ Type.module_export_types; module_global_types_tmap; _ } as m)
+    =
+  let (_ : Context.t) = copier#export_types src_cx Polarity.Positive dst_cx module_export_types in
+  let module_global_types_tmap =
+    SMap.map
+      (Lazy.map (fun (loc, t) ->
+           let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
+           (loc, t)
+       )
+      )
+      module_global_types_tmap
   in
-  m
+  { m with Type.module_global_types_tmap }
 
 let merge_lib_files ~sig_opts ordered_asts =
   let (_builtin_errors, builtin_locs, builtins) =

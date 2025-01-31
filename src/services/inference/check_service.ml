@@ -173,9 +173,27 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           |> Merge.merge_export (Lazy.force file_rec)
           )
       in
+      let global_types_map =
+        let local index =
+          lazy
+            (let { Merge.local_defs; _ } = Lazy.force file_rec in
+             let (loc, _, (lazy t), _) = Local_defs.get local_defs index |> Lazy.force in
+             (loc, t)
+            )
+        in
+        let f acc name i = SMap.add name (local i) acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f
+      in
       let cjs_module buf pos =
-        let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set })
-            =
+        let (Pack.CJSModuleInfo
+              {
+                type_export_keys;
+                type_stars;
+                module_globals = Pack.ModuleGlobals { global_types; global_types_keys };
+                strict;
+                platform_availability_set;
+              }
+              ) =
           Bin.cjs_module_info buf pos
           |> Bin.read_hashed Bin.read_cjs_info buf
           |> Pack.map_cjs_module_info aloc
@@ -186,8 +204,9 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
         in
+        let global_types = global_types_map global_types_keys global_types in
         Type_sig_merge.CJSExports
-          { type_exports; exports; type_stars; strict; platform_availability_set }
+          { type_exports; exports; type_stars; global_types; strict; platform_availability_set }
       in
       let es_module buf pos =
         let (Pack.ESModuleInfo
@@ -196,6 +215,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
                 export_keys;
                 type_stars;
                 stars;
+                module_globals = Pack.ModuleGlobals { global_types; global_types_keys };
                 strict;
                 platform_availability_set;
               }
@@ -214,8 +234,17 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
         in
+        let global_types = global_types_map global_types_keys global_types in
         Type_sig_merge.ESExports
-          { type_exports; exports; type_stars; stars; strict; platform_availability_set }
+          {
+            type_exports;
+            exports;
+            type_stars;
+            stars;
+            global_types;
+            strict;
+            platform_availability_set;
+          }
       in
       Type.Constraint.ForcingState.of_lazy_module
         ( reason,
@@ -227,9 +256,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
             )
         )
       |> ConsGen.force_module_type_thunk cx
-    in
-
-    let local_def file_rec buf pos =
+    and local_def file_rec buf pos =
       lazy
         (let def = Pack.map_packed_def aloc (Bin.read_local_def buf pos) in
          let loc = Type_sig.def_id_loc def in

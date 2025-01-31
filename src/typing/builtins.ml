@@ -54,8 +54,9 @@ let get_builtin_module_opt
   | None ->
     (match SMap.find_opt name original_global_modules with
     | None -> None
-    | Some (lazy ((_, lazy_module) as v)) ->
-      ignore (module_type_mapper (Lazy.force lazy_module));
+    | Some (lazy (r, lazy_module)) ->
+      let mapped_lazy_module = lazy (module_type_mapper (Lazy.force lazy_module)) in
+      let v = (r, mapped_lazy_module) in
       Hashtbl.add mapped_global_modules name v;
       Some v)
 
