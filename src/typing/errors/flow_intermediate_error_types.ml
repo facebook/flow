@@ -88,7 +88,7 @@ type unsupported_syntax =
   | ContextDependentUnsupportedStatement of context_dependent_unsupported_statement
   | WithStatement
   | ComponentSyntax
-  | DeclareNamespace
+  | DeclareGlobal
   | ConstTypeParameter
 
 type 'loc invalid_render_type_kind =

@@ -687,7 +687,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.DeclareNamespace.t =
       let open Ast.Statement.DeclareNamespace in
       let { id; body; comments } = n in
-      let id' = this#t_identifier id in
+      let id' =
+        match id with
+        | Global id -> Global (this#identifier id)
+        | Local id -> Local (this#t_identifier id)
+      in
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = this#syntax_opt comments in
       { id = id'; body = body'; comments = comments' }

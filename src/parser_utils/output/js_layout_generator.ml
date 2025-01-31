@@ -4748,15 +4748,19 @@ and declare_namespace ~opts loc { Ast.Statement.DeclareNamespace.id; body; comme
     ?comments
     ( loc,
       fuse
-        [
-          Atom "declare";
-          space;
-          Atom "namespace";
-          space;
-          identifier id;
-          pretty_space;
-          block ~opts body;
-        ]
+        (match id with
+        | Ast.Statement.DeclareNamespace.Global id ->
+          [Atom "declare"; space; identifier id; pretty_space; block ~opts body]
+        | Ast.Statement.DeclareNamespace.Local id ->
+          [
+            Atom "declare";
+            space;
+            Atom "namespace";
+            space;
+            identifier id;
+            pretty_space;
+            block ~opts body;
+          ])
     )
 
 and declare_export_declaration

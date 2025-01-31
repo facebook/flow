@@ -174,7 +174,8 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, VariableDeclaration _)
   | (_, ClassDeclaration _)
   | (_, DeclareModule _)
-  | (_, ImportDeclaration _) ->
+  | (_, ImportDeclaration _)
+  | (_, DeclareNamespace { DeclareNamespace.id = DeclareNamespace.Global _; _ }) ->
     ()
   | (_, DeclareTypeAlias { TypeAlias.id; _ })
   | (_, TypeAlias { TypeAlias.id; _ })
@@ -192,7 +193,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, DeclareComponent { DeclareComponent.id; _ })
   | (_, DeclareEnum { EnumDeclaration.id; _ })
   | (_, EnumDeclaration { EnumDeclaration.id; _ })
-  | (_, DeclareNamespace { DeclareNamespace.id; _ }) ->
+  | (_, DeclareNamespace { DeclareNamespace.id = DeclareNamespace.Local id; _ }) ->
     (* A declared namespace will auto-export all toplevel names *)
     if in_declare_namespace then
       let ((name_loc, t), { Ast.Identifier.name; _ }) = id in

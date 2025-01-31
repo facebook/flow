@@ -5038,6 +5038,9 @@ let%expect_test "builtin_declare_namespace" =
       declare module.exports: {foo: string}; // unsupported
       import React from 'react'; // unsupported
     }
+    declare global {
+      declare const fromGlobal: number;
+    }
   |}];
   [%expect {|
     Local defs:

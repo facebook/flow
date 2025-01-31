@@ -328,8 +328,17 @@ module Print = struct
     | Interface _ -> "interface"
     | GeneratorNext _ -> "next"
     | DeclaredNamespace
-        (_, { Ast.Statement.DeclareNamespace.id = (loc, { Ast.Identifier.name; _ }); _ }) ->
+        ( _,
+          {
+            Ast.Statement.DeclareNamespace.id =
+              Ast.Statement.DeclareNamespace.Local (loc, { Ast.Identifier.name; _ });
+            _;
+          }
+        ) ->
       spf "declare namespace %s %s" name (ALoc.debug_to_string loc)
+    | DeclaredNamespace
+        (_, { Ast.Statement.DeclareNamespace.id = Ast.Statement.DeclareNamespace.Global _; _ }) ->
+      "declare global"
     | Import { import_kind; source; import; source_loc = _ } ->
       spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
     | MissingThisAnnot -> "this (missing)"

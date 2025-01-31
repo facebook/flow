@@ -1350,19 +1350,25 @@ module Statement
         with_loc ~start_loc (declare_module_ ~leading) env
 
   and declare_namespace =
-    let declare_namespace_ ~leading env =
+    let declare_namespace_ ~leading ~global env =
       let id = id_remove_trailing env (Parse.identifier env) in
+      let id =
+        if global then
+          Statement.DeclareNamespace.Global id
+        else
+          Statement.DeclareNamespace.Local id
+      in
       let body = declare_module_or_namespace_body env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments })
     in
-    fun env ->
+    fun env ~global ->
       let start_loc = Peek.loc env in
       let leading = Peek.comments env in
       Expect.token env T_DECLARE;
       let leading = leading @ Peek.comments env in
-      Expect.identifier env "namespace";
-      with_loc ~start_loc (declare_namespace_ ~leading) env
+      if not global then Expect.identifier env "namespace";
+      with_loc ~start_loc (declare_namespace_ ~global ~leading) env
 
   and declare_module_exports ~leading env =
     let leading_period = Peek.comments env in
@@ -1405,7 +1411,8 @@ module Statement
     | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
     | T_EXPORT when in_module_or_namespace -> declare_export_declaration env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
-    | T_IDENTIFIER { raw = "namespace"; _ } -> declare_namespace env
+    | T_IDENTIFIER { raw = "global"; _ } -> declare_namespace ~global:true env
+    | T_IDENTIFIER { raw = "namespace"; _ } -> declare_namespace ~global:false env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
       declare_component_statement env
     | _ when in_module_or_namespace ->

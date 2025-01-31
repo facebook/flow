@@ -1158,8 +1158,13 @@ and Statement : sig
   end
 
   module DeclareNamespace : sig
+    type ('M, 'T) id =
+      | Global of ('M, 'M) Identifier.t
+      | Local of ('M, 'T) Identifier.t
+    [@@deriving show]
+
     type ('M, 'T) t = {
-      id: ('M, 'T) Identifier.t;
+      id: ('M, 'T) id;
       body: 'M * ('M, 'T) Block.t;
       comments: ('M, unit) Syntax.t option;
     }

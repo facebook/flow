@@ -438,7 +438,6 @@ class lib_def_loc_mapper_and_validator cx =
       | DeclareInterface _
       | DeclareModule _
       | DeclareModuleExports _
-      | DeclareNamespace _
       | DeclareTypeAlias _
       | DeclareOpaqueType _
       | DeclareVariable _
@@ -465,6 +464,14 @@ class lib_def_loc_mapper_and_validator cx =
             )
         else
           None
+      | DeclareNamespace { DeclareNamespace.id; _ } ->
+        (match id with
+        | DeclareNamespace.Local _ -> None
+        | DeclareNamespace.Global _ ->
+          if in_toplevel_scope then
+            None
+          else
+            Some (error "declare global"))
       | Block _ -> Some (error "block")
       | Break _ -> Some (error "break")
       | ClassDeclaration _ -> Some (error "class declaration")

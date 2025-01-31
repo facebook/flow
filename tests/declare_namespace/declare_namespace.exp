@@ -69,6 +69,22 @@ References:
                         ^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------ declare_global_binding.js:1:9
+
+`declare global` statement is not supported yet. [unsupported-syntax]
+
+   1| declare global {
+              ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------ declare_global_binding.js:5:1
+
+Cannot resolve name `foo`. [cannot-resolve-name]
+
+   5| foo; // error: declare global doesn't affect global lookup for now
+      ^^^
+
+
 Error -------------------------------------------------------------------------------------------------- exported.js:9:3
 
 Cannot use if statements with in `declare namespace`. The statement will be ignored. [unsupported-syntax]
@@ -752,7 +768,7 @@ References:
 
 
 
-Found 53 errors
+Found 55 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

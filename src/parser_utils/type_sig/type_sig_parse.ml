@@ -4155,20 +4155,23 @@ let namespace_decl
     ~is_type_only
     ~visit_statement
     {
-      Ast.Statement.DeclareNamespace.id = (id_loc, { Ast.Identifier.name; _ });
+      Ast.Statement.DeclareNamespace.id;
       body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
       comments = _;
     } =
-  let id_loc = push_loc tbls id_loc in
-  let stmts =
-    Base.List.filter stmts ~f:(fun (_, stmt) ->
-        Flow_ast_utils.acceptable_statement_in_declaration_context ~in_declare_namespace:true stmt
-        |> Base.Result.is_ok
-    )
-  in
-  let scope = Scope.push_declare_namespace scope in
-  List.iter (visit_statement opts scope tbls) stmts;
-  Scope.finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name
+  match id with
+  | Ast.Statement.DeclareNamespace.Global _TODO_DECLARE_GLOBAL -> (fun _ -> ())
+  | Ast.Statement.DeclareNamespace.Local (id_loc, { Ast.Identifier.name; _ }) ->
+    let id_loc = push_loc tbls id_loc in
+    let stmts =
+      Base.List.filter stmts ~f:(fun (_, stmt) ->
+          Flow_ast_utils.acceptable_statement_in_declaration_context ~in_declare_namespace:true stmt
+          |> Base.Result.is_ok
+      )
+    in
+    let scope = Scope.push_declare_namespace scope in
+    List.iter (visit_statement opts scope tbls) stmts;
+    Scope.finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name
 
 let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in

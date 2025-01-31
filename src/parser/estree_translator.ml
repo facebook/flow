@@ -266,8 +266,19 @@ with type t = Impl.t = struct
         in
         node ?comments "DeclareModule" loc [("id", id); ("body", block body)]
       | (loc, DeclareNamespace { DeclareNamespace.id; body; comments }) ->
-        let id = identifier id in
-        node ?comments "DeclareNamespace" loc [("id", id); ("body", block body)]
+        let (id, global) =
+          match id with
+          | DeclareNamespace.Local id -> (identifier id, false)
+          | DeclareNamespace.Global id -> (identifier id, true)
+        in
+        let props = [("id", id); ("body", block body)] in
+        let props =
+          if global then
+            ("global", bool global) :: props
+          else
+            props
+        in
+        node ?comments "DeclareNamespace" loc props
       | ( loc,
           DeclareExportDeclaration
             { DeclareExportDeclaration.specifiers; declaration; default; source; comments }

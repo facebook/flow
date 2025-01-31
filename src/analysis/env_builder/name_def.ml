@@ -2242,16 +2242,14 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#in_scope (super#declare_module loc) DeclareModule m
 
     method! declare_namespace loc (n : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
-      let {
-        Ast.Statement.DeclareNamespace.id = (name_loc, { Ast.Identifier.name; comments = _ });
-        _;
-      } =
-        n
-      in
-      this#add_ordinary_binding
-        name_loc
-        (mk_reason (RNamespace name) name_loc)
-        (DeclaredNamespace (loc, n));
+      let { Ast.Statement.DeclareNamespace.id; _ } = n in
+      (match id with
+      | Ast.Statement.DeclareNamespace.Global _ -> ()
+      | Ast.Statement.DeclareNamespace.Local (name_loc, { Ast.Identifier.name; comments = _ }) ->
+        this#add_ordinary_binding
+          name_loc
+          (mk_reason (RNamespace name) name_loc)
+          (DeclaredNamespace (loc, n)));
       this#in_scope (super#declare_namespace loc) DeclareNamespace n
 
     method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =

@@ -940,7 +940,21 @@ class ['loc] mapper =
     method declare_namespace _loc (m : ('loc, 'loc) Ast.Statement.DeclareNamespace.t) =
       let open Ast.Statement.DeclareNamespace in
       let { id; body; comments } = m in
-      let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
+      let id' =
+        match id with
+        | Global g_id ->
+          let g_id' = this#identifier g_id in
+          if g_id == g_id' then
+            id
+          else
+            Global g_id'
+        | Local p_id ->
+          let p_id' = this#pattern_identifier ~kind:Ast.Variable.Const p_id in
+          if p_id == p_id' then
+            id
+          else
+            Local p_id'
+      in
       let body' = map_loc this#block body in
       let comments' = this#syntax_opt comments in
       if id' == id && body' == body && comments == comments' then

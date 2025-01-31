@@ -612,7 +612,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! declare_namespace _loc n =
         let open Ast.Statement.DeclareNamespace in
         let { id; body; comments = _ } = n in
-        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
+        (match id with
+        | Global _ -> ()
+        | Local id -> ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
         let (loc, body) = body in
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in

@@ -2094,13 +2094,37 @@ module Make
         (body_loc, { Ast.Statement.Block.body = body_statements; comments = body_comments })
       in
       let (t, id) =
-        let (name_loc, { Ast.Identifier.name; comments }) = id in
-        let reason = mk_reason (RNamespace name) name_loc in
-        let namespace_symbol = mk_namespace_symbol ~name ~def_loc:name_loc in
-        let t =
-          Module_info_analyzer.analyze_declare_namespace cx namespace_symbol reason body_statements
-        in
-        (t, ((name_loc, t), { Ast.Identifier.name; comments }))
+        match id with
+        | Ast.Statement.DeclareNamespace.Global id ->
+          let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+          let reason = mk_reason (RNamespace name) name_loc in
+          let namespace_symbol = mk_namespace_symbol ~name ~def_loc:name_loc in
+          let t =
+            Module_info_analyzer.analyze_declare_namespace
+              cx
+              namespace_symbol
+              reason
+              body_statements
+          in
+          Flow.add_output
+            cx
+            (Error_message.EUnsupportedSyntax (name_loc, Flow_intermediate_error_types.DeclareGlobal)
+            );
+          (t, Ast.Statement.DeclareNamespace.Global id)
+        | Ast.Statement.DeclareNamespace.Local id ->
+          let (name_loc, { Ast.Identifier.name; comments }) = id in
+          let reason = mk_reason (RNamespace name) name_loc in
+          let namespace_symbol = mk_namespace_symbol ~name ~def_loc:name_loc in
+          let t =
+            Module_info_analyzer.analyze_declare_namespace
+              cx
+              namespace_symbol
+              reason
+              body_statements
+          in
+          ( t,
+            Ast.Statement.DeclareNamespace.Local ((name_loc, t), { Ast.Identifier.name; comments })
+          )
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })
 

@@ -3865,8 +3865,8 @@ let to_printable_error :
         code "declare namespace";
         text ". The statement will be ignored.";
       ]
-    | MessageUnsupportedSyntax DeclareNamespace ->
-      [code "declare namespace"; text " statement is not supported yet."]
+    | MessageUnsupportedSyntax DeclareGlobal ->
+      [code "declare global"; text " statement is not supported yet."]
     | MessageUnsupportedSyntax DestructuringExpressionPattern ->
       [text "Unsupported expression pattern in destructuring."]
     | MessageUnsupportedSyntax DestructuringObjectPropertyInvalidLiteral ->
