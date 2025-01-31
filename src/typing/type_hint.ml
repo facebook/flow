@@ -62,7 +62,7 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
   let call_action =
     Funcalltype
       {
-        call_this_t = global_this reason;
+        call_this_t = Unsoundness.bound_fn_this_any reason;
         call_targs = targs;
         call_args_tlist = argts;
         call_tout = tout;
