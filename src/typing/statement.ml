@@ -3379,7 +3379,10 @@ module Make
                 |> Base.List.iter ~f:(function
                        | DefT (_, NumGeneralT _)
                        | DefT (_, NumT_UNSOUND _)
-                       | DefT (_, SingletonNumT _) ->
+                       | DefT (_, SingletonNumT _)
+                       | DefT (_, BigIntGeneralT _)
+                       | DefT (_, BigIntT_UNSOUND _)
+                       | DefT (_, SingletonBigIntT _) ->
                          ()
                        | t ->
                          let use_op =

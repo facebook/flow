@@ -48,3 +48,22 @@ if (b) {} // error
   x as 1n | 0n; // OK
   x as 2n | 3n; // ERROR
 }
+
+// String coercion
+{
+  1n + ''; // ERROR
+  String(1n) as string; // OK
+  `${1n}` as string; // OK
+}
+{
+  declare const b: bigint;
+  b + ''; // ERROR
+  String(b) as string; // OK
+  `${b}` as string; // OK
+}
+{
+  declare const b: 1n;
+  b + ''; // ERROR
+  String(b) as string; // OK
+  `${b}` as string; // OK
+}
