@@ -1,0 +1,12 @@
+{
+  "name": "nested-conditions",
+  "exports": {
+    "abcd": {
+      "unknown": "./not-matched.js"
+    },
+    "default": {
+      "abcd": "./matched.js",
+      "default": "./not-matched.js"
+    }
+  }
+}

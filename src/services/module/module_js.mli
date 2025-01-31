@@ -49,6 +49,7 @@ type package_incompatible_reason =
   | Name_changed of string option * string option
   | Main_changed of string option * string option
   | Haste_commonjs_changed of bool
+  | Exports_changed
   | Unknown
 
 val string_of_package_incompatible_reason : package_incompatible_reason -> string

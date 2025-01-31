@@ -107,7 +107,9 @@ let tests =
          );
          ( "removes_node_modules_in_parent" >:: fun ctxt ->
            let fn = "/path/to/root/a/node_modules/module/package.json" in
-           let pkg = Package_json.create ~name:None ~main:None ~haste_commonjs:false in
+           let pkg =
+             Package_json.create ~name:None ~main:None ~haste_commonjs:false ~exports:None
+           in
            with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
@@ -122,7 +124,9 @@ let tests =
          );
          ( "removes_node_modules_in_self" >:: fun ctxt ->
            let fn = "/path/to/root/a/node_modules/module/package.json" in
-           let pkg = Package_json.create ~name:None ~main:None ~haste_commonjs:false in
+           let pkg =
+             Package_json.create ~name:None ~main:None ~haste_commonjs:false ~exports:None
+           in
            with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
@@ -161,7 +165,13 @@ let tests =
          );
          ( "supports_package_json_main" >:: fun ctxt ->
            let fn = "/path/to/root/node_modules/pkg_with_main/package.json" in
-           let pkg = Package_json.create ~name:None ~main:(Some "main.js") ~haste_commonjs:false in
+           let pkg =
+             Package_json.create
+               ~name:None
+               ~main:(Some "main.js")
+               ~haste_commonjs:false
+               ~exports:None
+           in
            with_package fn pkg @@ fun () ->
            let path =
              path_of_modulename
@@ -177,7 +187,11 @@ let tests =
          ( "supports_package_json_relative_main" >:: fun ctxt ->
            let fn = "/path/to/root/node_modules/pkg_with_relative_main/package.json" in
            let pkg =
-             Package_json.create ~name:None ~main:(Some "./main.js") ~haste_commonjs:false
+             Package_json.create
+               ~name:None
+               ~main:(Some "./main.js")
+               ~haste_commonjs:false
+               ~exports:None
            in
            with_package fn pkg @@ fun () ->
            let path =
@@ -194,7 +208,11 @@ let tests =
          ( "supports_package_json_nested_main" >:: fun ctxt ->
            let fn = "/path/to/root/node_modules/pkg_with_nested_main/package.json" in
            let pkg =
-             Package_json.create ~name:None ~main:(Some "dist/main.js") ~haste_commonjs:false
+             Package_json.create
+               ~name:None
+               ~main:(Some "dist/main.js")
+               ~haste_commonjs:false
+               ~exports:None
            in
            with_package fn pkg @@ fun () ->
            let path =

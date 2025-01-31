@@ -1,0 +1,7 @@
+{
+  "name": "@scope/subpath-exports",
+  "exports": {
+    ".": "./main.js",
+    "./subpath": "./subpath/main.js"
+  }
+}

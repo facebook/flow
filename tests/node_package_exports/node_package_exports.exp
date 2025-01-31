@@ -1,0 +1,205 @@
+Error ------------------------------------------------------------------------------------------------------ main.js:3:1
+
+Cannot cast `mainExports` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:3:1
+   3| mainExports as empty;
+      ^^^^^^^^^^^
+
+References:
+   flow_modules/main-exports/main.js:1:16
+   1| export default 123;
+                     ^^^ [1]
+   main.js:3:16
+   3| mainExports as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ main.js:8:1
+
+Cannot cast `subpathExportsRoot` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:8:1
+   8| subpathExportsRoot as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/subpath-exports/main.js:1:16
+   1| export default 123;
+                     ^^^ [1]
+   main.js:8:23
+   8| subpathExportsRoot as empty;
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ main.js:9:1
+
+Cannot cast `subpathExports` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:9:1
+   9| subpathExports as empty;
+      ^^^^^^^^^^^^^^
+
+References:
+   flow_modules/subpath-exports/subpath/main.js:1:16
+   1| export default "foo";
+                     ^^^^^ [1]
+   main.js:9:19
+   9| subpathExports as empty;
+                        ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:13:1
+
+Cannot resolve name `conditionalExports1`. [cannot-resolve-name]
+
+   13| conditionalExports1 as empty;
+       ^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:18:1
+
+Cannot cast `scopedSubpathExportsRoot` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:18:1
+   18| scopedSubpathExportsRoot as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/@scope/subpath-exports/main.js:1:16
+    1| export default 123;
+                      ^^^ [1]
+   main.js:18:29
+   18| scopedSubpathExportsRoot as empty;
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:19:1
+
+Cannot cast `scopedSubpathExports` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:19:1
+   19| scopedSubpathExports as empty;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/@scope/subpath-exports/subpath/main.js:1:16
+    1| export default "foo";
+                      ^^^^^ [1]
+   main.js:19:25
+   19| scopedSubpathExports as empty;
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:23:1
+
+Cannot cast `specifiedExportCondition` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:23:1
+   23| specifiedExportCondition as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/specified-export-condition/abcd.js:1:16
+    1| export default "foo";
+                      ^^^^^ [1]
+   main.js:23:29
+   23| specifiedExportCondition as empty;
+                                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:27:1
+
+Cannot cast `exportConditionOrder` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:27:1
+   27| exportConditionOrder as empty;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/export-condition-order/default.js:1:16
+    1| export default 123;
+                      ^^^ [1]
+   main.js:27:25
+   27| exportConditionOrder as empty;
+                               ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:32:1
+
+Cannot cast `subpathPatternA` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:32:1
+   32| subpathPatternA as empty;
+       ^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/subpath-pattern/feature-target/a.js:1:16
+    1| export default "foo";
+                      ^^^^^ [1]
+   main.js:32:20
+   32| subpathPatternA as empty;
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:33:1
+
+Cannot cast `subpathPatternB` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:33:1
+   33| subpathPatternB as empty;
+       ^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/subpath-pattern/feature-target/b.js:1:16
+    1| export default 123;
+                      ^^^ [1]
+   main.js:33:20
+   33| subpathPatternB as empty;
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:37:1
+
+Cannot cast `innerSubpathPatternA` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:37:1
+   37| innerSubpathPatternA as empty;
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/subpath-pattern/feature-target/inner/a.js:1:16
+    1| export default true;
+                      ^^^^ [1]
+   main.js:37:25
+   37| innerSubpathPatternA as empty;
+                               ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:39:36
+
+Cannot resolve module `subpath-pattern/feature/private/a`. [cannot-resolve-module]
+
+   39| import privateSubpathPatternA from "subpath-pattern/feature/private/a";
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:43:1
+
+Cannot cast `nestedConditions` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:43:1
+   43| nestedConditions as empty;
+       ^^^^^^^^^^^^^^^^
+
+References:
+   flow_modules/nested-conditions/matched.js:1:16
+    1| export default 1234;
+                      ^^^^ [1]
+   main.js:43:21
+   43| nestedConditions as empty;
+                           ^^^^^ [2]
+
+
+
+Found 13 errors

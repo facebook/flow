@@ -1,0 +1,4 @@
+[options]
+all=true
+module.system.node.resolve_dirname=flow_modules
+module.system.node.package_export_condition=abcd

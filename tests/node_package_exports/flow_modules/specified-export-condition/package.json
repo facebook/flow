@@ -1,0 +1,7 @@
+{
+  "name": "specified-export-condition",
+  "exports": {
+    "abcd": "./abcd.js",
+    "default": "./default.js"
+  }
+}

@@ -218,6 +218,8 @@ val no_unchecked_indexed_access : config -> bool
 
 val node_main_fields : config -> string list
 
+val node_package_export_conditions : config -> string list
+
 val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list

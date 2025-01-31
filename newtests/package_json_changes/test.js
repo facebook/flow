@@ -110,7 +110,7 @@ module.exports = (suite(({addFile, removeFile, flowCmd}) => [
       .verifyServerStatus('running'),
   ]).flowConfig('haste_flowconfig').noAutoRestart(),
 
- test('node - When using main_fields, a change which resolves to '+
+  test('node - When using main_fields, a change which resolves to '+
     'the same main file should NOT kill the server', [
     addFile('start.json', 'package.json'),
     addFile('irrelevantChangeMainField.json', 'package.json')
@@ -118,4 +118,20 @@ module.exports = (suite(({addFile, removeFile, flowCmd}) => [
       .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
       .verifyServerStatus('running')
   ]).flowConfig('node_flowconfig_with_main_field').noAutoRestart(),
+
+  test('node - Changing the exports field should kill the server', [
+    addFile('start.json', 'package.json'),
+    addFile('exportsChangeShorthand.json', 'package.json')
+      .startFlowServer()
+      .waitUntilServerStatus(10000, 'stopped')
+      .verifyServerStatus('stopped'),
+  ]).flowConfig('node_flowconfig').noAutoRestart(),
+
+  test('node - Changing the exports field between equivalent shorthand and longhand values should NOT kill the server', [
+    addFile('exportsChangeShorthand.json', 'package.json'),
+    addFile('exportsChangeLonghand.json', 'package.json')
+      .startFlowServer()
+      .waitUntilServerStatus(2000, 'stopped') // only 2s not 10s so as not to waste time
+      .verifyServerStatus('running'),
+  ]).flowConfig('node_flowconfig').noAutoRestart(),
 ]): SuiteType);

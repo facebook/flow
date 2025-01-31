@@ -118,6 +118,7 @@ module Opts = struct
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
+    node_package_export_conditions: string list;
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
@@ -255,6 +256,7 @@ module Opts = struct
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
+      node_package_export_conditions = [];
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
@@ -852,6 +854,14 @@ module Opts = struct
         let node_main_fields = v :: opts.node_main_fields in
         Ok { opts with node_main_fields })
 
+  let node_package_export_condition_parser =
+    string
+      ~init:(fun opts -> { opts with node_package_export_conditions = [] })
+      ~multiple:true
+      (fun opts v ->
+        let node_package_export_conditions = v :: opts.node_package_export_conditions in
+        Ok { opts with node_package_export_conditions })
+
   let node_resolve_dirname_parser =
     string
       ~init:(fun opts -> { opts with node_resolver_dirnames = [] })
@@ -1088,6 +1098,7 @@ module Opts = struct
       ("module.system.haste.use_name_reducers", haste_use_name_reducers_parser);
       ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
       ("module.system.node.main_field", node_main_field_parser);
+      ("module.system.node.package_export_condition", node_package_export_condition_parser);
       ("module.system.node.resolve_dirname", node_resolve_dirname_parser);
       ("module.system.node.root_relative_dirname", node_resolver_root_relative_dirnames_parser);
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
@@ -1816,6 +1827,8 @@ let no_flowlib c = c.options.Opts.no_flowlib
 let no_unchecked_indexed_access c = c.options.Opts.no_unchecked_indexed_access
 
 let node_main_fields c = c.options.Opts.node_main_fields
+
+let node_package_export_conditions c = c.options.Opts.node_package_export_conditions
 
 let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_root_relative
 

@@ -1,0 +1,8 @@
+{
+  "name": "subpath-pattern",
+  "exports": {
+    "./feature/*": "./feature-target/*.js",
+    "./feature/*.js": "./feature-target/*.js",
+    "./feature/private/*": null
+  }
+}

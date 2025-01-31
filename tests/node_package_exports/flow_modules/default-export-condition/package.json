@@ -1,0 +1,7 @@
+{
+  "name": "default-export-condition",
+  "exports": {
+    "import": "./esm.js",
+    "default": "./cjs.js"
+  }
+}

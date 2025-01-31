@@ -106,6 +106,7 @@ type package_incompatible_reason =
   | Main_changed of string option * string option
       (** The `main` property changed from the former to the latter *)
   | Haste_commonjs_changed of bool  (** The `haste_commonjs` property changed to this value *)
+  | Exports_changed  (** The `exports` property changed *)
   | Unknown
 
 let string_of_package_incompatible_reason =
@@ -123,6 +124,7 @@ let string_of_package_incompatible_reason =
     Printf.sprintf "main changed from `%s` to `%s`" (string_of_option old) (string_of_option new_)
   | Haste_commonjs_changed new_ ->
     Printf.sprintf "haste_commonjs changed from `%b` to `%b`" (not new_) new_
+  | Exports_changed -> "exports changed"
   | Unknown -> "Unknown"
 
 type package_incompatible_return =
@@ -147,12 +149,16 @@ let package_incompatible ~reader filename new_package =
       let new_name = Package_json.name new_package in
       let old_haste_commonjs = Package_json.haste_commonjs old_package in
       let new_haste_commonjs = Package_json.haste_commonjs new_package in
+      let old_exports = Package_json.exports old_package in
+      let new_exports = Package_json.exports new_package in
       if old_name <> new_name then
         Incompatible (Name_changed (old_name, new_name))
       else if old_main <> new_main then
         Incompatible (Main_changed (old_main, new_main))
       else if old_haste_commonjs <> new_haste_commonjs then
         Incompatible (Haste_commonjs_changed new_haste_commonjs)
+      else if old_exports <> new_exports then
+        Incompatible Exports_changed
       else
         (* This shouldn't happen -- if it does, it probably means we need to add cases above *)
         Incompatible Unknown
@@ -233,17 +239,42 @@ module Node = struct
     let f ext = path_if_exists ~reader ~file_options ~phantom_acc (path ^ ext) in
     List.find_map f file_exts
 
-  let parse_main ~reader ~file_options phantom_acc package_filename file_exts =
+  let parse_package ~reader package_filename =
     let package_filename = resolve_symlinks package_filename in
-    let package =
-      let file_key = File_key.JsonFile package_filename in
-      match Parsing_heaps.Reader_dispatcher.get_package_info ~reader file_key with
-      | Some (Ok package) -> package
-      | Some (Error ()) ->
-        (* invalid, but we already raised an error when building PackageHeap *)
-        Package_json.empty
-      | None -> Package_json.empty
+    let file_key = File_key.JsonFile package_filename in
+    match Parsing_heaps.Reader_dispatcher.get_package_info ~reader file_key with
+    | Some (Ok package) -> package
+    | Some (Error ()) ->
+      (* invalid, but we already raised an error when building PackageHeap *)
+      Package_json.empty
+    | None -> Package_json.empty
+
+  let parse_exports ~reader ~options phantom_acc package_dir subpath file_exts =
+    let subpath =
+      match subpath with
+      | Some s -> s
+      | None -> "."
     in
+    let file_options = Options.file_options options in
+    let export_conditions = Options.node_package_export_conditions options in
+    let package = parse_package ~reader (Filename.concat package_dir "package.json") in
+    let source_path =
+      match Package_json.exports package with
+      | None -> None
+      | Some exports -> Package_exports.resolve_package exports subpath export_conditions
+    in
+    match source_path with
+    | None -> None
+    | Some file ->
+      let path = Files.normalize_path package_dir file in
+      lazy_seq
+        [
+          lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
+        ]
+
+  let parse_main ~reader ~file_options phantom_acc package_filename file_exts =
+    let package = parse_package ~reader package_filename in
     match Package_json.main package with
     | None -> None
     | Some file ->
@@ -258,17 +289,23 @@ module Node = struct
             (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path_w_index file_exts);
         ]
 
-  let resolve_package ~options ~reader ~phantom_acc package_dir =
+  let resolve_package ~options ~reader ~phantom_acc ~subpath package_dir =
     let file_options = Options.file_options options in
     let file_exts = Files.module_file_exts file_options in
+    let full_package_path =
+      match subpath with
+      | Some s -> Files.normalize_path package_dir s
+      | None -> package_dir
+    in
     lazy_seq
       [
+        lazy (parse_exports ~reader ~options phantom_acc package_dir subpath file_exts);
         lazy
           (parse_main
              ~reader
              ~file_options
              phantom_acc
-             (Filename.concat package_dir "package.json")
+             (Filename.concat full_package_path "package.json")
              file_exts
           );
         lazy
@@ -276,7 +313,7 @@ module Node = struct
              ~reader
              ~file_options
              ~phantom_acc
-             (Filename.concat package_dir "index")
+             (Filename.concat full_package_path "index")
              file_exts
           );
       ]
@@ -315,10 +352,15 @@ module Node = struct
       in
       Some (single_platform @ grouped_platform)
 
-  let resolve_relative ~options ~reader ~phantom_acc ~importing_file ~relative_to_directory rel_path
-      =
+  let resolve_relative
+      ~options ~reader ~phantom_acc ~importing_file ~relative_to_directory ?subpath rel_path =
     let file_options = Options.file_options options in
-    let path = Files.normalize_path relative_to_directory rel_path in
+    let package_path = Files.normalize_path relative_to_directory rel_path in
+    let full_path =
+      match subpath with
+      | Some s -> Files.normalize_path package_path s
+      | None -> package_path
+    in
     (* We do not try resource file extensions here. So while you can write
      * require('foo') to require foo.js, it should never resolve to foo.css
      *)
@@ -332,16 +374,16 @@ module Node = struct
       lazy_seq
         [
           (* Try <path> import directly. Needed for `import './foo.js'`  *)
-          lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+          lazy (path_if_exists ~reader ~file_options ~phantom_acc full_path);
           (* Try <path>.js import. Needed for `import './foo'`  *)
-          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
-          lazy (resolve_package ~options ~reader ~phantom_acc path);
+          lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc full_path file_exts);
+          lazy (resolve_package ~options ~reader ~phantom_acc ~subpath package_path);
         ]
     | Some ordered_platforms ->
       lazy_seq
         ([
            (* Try <path> import directly. Needed for `import './foo.js'`  *)
-           lazy (path_if_exists ~reader ~file_options ~phantom_acc path);
+           lazy (path_if_exists ~reader ~file_options ~phantom_acc full_path);
          ]
          (* Try <path>.<platform>.js import.
           * Needed so that `import './foo'` resolves to foo.android.js in android.js files *)
@@ -351,16 +393,54 @@ module Node = struct
                    ~reader
                    ~file_options
                    ~phantom_acc
-                   (path ^ "." ^ platform)
+                   (full_path ^ "." ^ platform)
                    file_exts
                 )
           )
         @ [
             (* Try <path>.js import. Needed for `import './foo'`  *)
-            lazy (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc path file_exts);
-            lazy (resolve_package ~options ~reader ~phantom_acc path);
+            lazy
+              (path_if_exists_with_file_exts ~reader ~file_options ~phantom_acc full_path file_exts);
+            lazy (resolve_package ~options ~reader ~phantom_acc ~subpath package_path);
           ]
         )
+
+  (* Parses a package import specifier into a package name and subpath,
+   * accounting for things such as scoped packages *)
+  let parse_package_name specifier =
+    match specifier with
+    | "" -> ("", ".")
+    | _ ->
+      let initial_char = String.sub specifier 0 1 in
+      let first_seperator_index =
+        try Str.search_forward (Str.regexp_string Filename.dir_sep) specifier 0 with
+        | Not_found -> -1
+      in
+      let seperator_index =
+        match initial_char with
+        | "@" ->
+          (try
+             Str.search_forward
+               (Str.regexp_string Filename.dir_sep)
+               specifier
+               (first_seperator_index + 1)
+           with
+          | Not_found -> -1)
+        | _ -> first_seperator_index
+      in
+      let package_name =
+        match seperator_index with
+        | -1 -> specifier
+        | _ -> String.sub specifier 0 seperator_index
+      in
+      let package_subpath =
+        "."
+        ^
+        match seperator_index with
+        | -1 -> ""
+        | _ -> Str.string_after specifier seperator_index
+      in
+      (package_name, package_subpath)
 
   let rec node_module
       ~options
@@ -371,6 +451,7 @@ module Node = struct
       ~possible_node_module_container_dir
       ~import_specifier =
     let file_options = Options.file_options options in
+    let (package_name, package_subpath) = parse_package_name import_specifier in
     lazy_seq
       [
         lazy
@@ -387,7 +468,8 @@ module Node = struct
                            ~phantom_acc
                            ~importing_file
                            ~relative_to_directory:possible_node_module_container_dir
-                           (spf "%s%s%s" dirname Filename.dir_sep import_specifier)
+                           ~subpath:package_subpath
+                           (spf "%s%s%s" dirname Filename.dir_sep package_name)
                        else
                          None
                        )
@@ -422,6 +504,7 @@ module Node = struct
                 ~phantom_acc
                 ~importing_file
                 ~relative_to_directory
+                ~subpath:"."
                 import_specifier
              )
        )
@@ -616,7 +699,8 @@ module Haste : MODULE_SYSTEM = struct
       match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
       | Some addr ->
         (match (package_dir_opt ~reader addr, subpath) with
-        | (Some package_dir, []) -> Node.resolve_package ~options ~reader ~phantom_acc package_dir
+        | (Some package_dir, []) ->
+          Node.resolve_package ~options ~reader ~phantom_acc ~subpath:None package_dir
         | (Some package_dir, subpath) ->
           (* add a phantom dep on the package name, so we re-resolve the subpath
              if the package gets a new provider *)

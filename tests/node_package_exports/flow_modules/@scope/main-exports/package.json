@@ -1,0 +1,4 @@
+{
+  "name": "@scope/main-exports",
+  "exports": "./main.js"
+}
