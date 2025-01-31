@@ -351,7 +351,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:36:2
 
-Cannot cast `add` to `I` because property `bar` is missing in function [1] but exists in `I` [2]. [prop-missing]
+Cannot cast `add` to `I` because function [1] is incompatible with `I` [2]. Functions without statics are not compatible
+with objects. [incompatible-cast]
 
    used_as_callable_object.js:36:2
    36| (add: I); // error prop 'bar' missing

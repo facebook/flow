@@ -9,3 +9,13 @@ var f1: F = () => {}; // ok
 function f() {}
 (f: interface {}); // OK
 (f: interface {xxx: boolean}); // ERROR
+
+class S {
+  static build(): S {
+    return new S();
+  }
+}
+
+const build = S.build;
+(build: interface {}); // OK
+(build: interface {foo: boolean}); // ERROR

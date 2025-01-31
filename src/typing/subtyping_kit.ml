@@ -2251,7 +2251,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              statics
              reason_inst
              (NameUtils.Map.filter
-                (fun x _ -> x = OrdinaryName "constructor")
+                (fun x _ -> x <> OrdinaryName "constructor")
                 (Context.find_props cx own_props)
              )
           )

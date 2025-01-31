@@ -37,8 +37,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:11:2
 
-Cannot cast `f` to interface type because property `xxx` is missing in function [1] but exists in interface type [2].
-[prop-missing]
+Cannot cast `f` to interface type because function [1] is incompatible with interface type [2]. Functions without
+statics are not compatible with objects. [incompatible-cast]
 
    fun.js:11:2
    11| (f: interface {xxx: boolean}); // ERROR
@@ -51,6 +51,27 @@ References:
    fun.js:11:5
    11| (f: interface {xxx: boolean}); // ERROR
            ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fun.js:21:2
+
+Cannot cast `build` to interface type because function [1] is incompatible with interface type [2]. Functions without
+statics are not compatible with objects. [incompatible-cast]
+
+   fun.js:21:2
+   21| (build: interface {foo: boolean}); // ERROR
+        ^^^^^
+
+References:
+   fun.js:14:3
+         v------------------
+   14|   static build(): S {
+   15|     return new S();
+   16|   }
+         ^ [1]
+   fun.js:21:9
+   21| (build: interface {foo: boolean}); // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- indexer.js:8:3
@@ -1229,7 +1250,7 @@ References:
 
 
 
-Found 78 errors
+Found 79 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
