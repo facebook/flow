@@ -22,9 +22,9 @@ class A {
 // All ok - {prop: true} is a subtype of {prop: boolean}
 let _1 = {prop : true, method : (new A()).method }.method();
 
-let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
+let _2 = {prop : 123, method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
-let _3 = {method : (new A()).method }.method(); // Error prop missing
+let _3 = {method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
 // All ok - {prop: true} is a subtype of {prop: boolean}
 let _4 = {prop : true, method : A.staticMethod }.method();

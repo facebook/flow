@@ -14,9 +14,9 @@ declare class A {
 // All ok - {prop: 123} is a subtype of {prop: number}
 let _1 = {prop : 123, method : (new A()).method }.method();
 
-let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
+let _2 = {prop : true, method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
-let _3 = {method : (new A()).method }.method(); // Error prop missing
+let _3 = {method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
 // All ok - {prop: 123} is a subtype of {prop: number}
 let _4 = {prop : 123, method : A.staticMethod }.method();

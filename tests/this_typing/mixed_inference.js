@@ -49,8 +49,7 @@ interface I {
 
 declare var i : I;
 
-//$FlowExpectedError[method-unbinding]
-(foo : typeof i.m); // mixed incompatible with number
+(foo : typeof i.m); // method-unbinding, this type becomes any, so no more this typing errors
 
 //$FlowExpectedError[method-unbinding]
 (i.m : () => void); // ok

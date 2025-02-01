@@ -2122,8 +2122,9 @@ end = struct
   let add_method x key_loc type_ = NameUtils.Map.add x (Method { key_loc; type_ })
 
   let rec unbind_this_method = function
-    | DefT (r, FunT (static, ({ this_t = (this_t, This_Method { unbound = false }); _ } as ft))) ->
-      DefT (r, FunT (static, { ft with this_t = (this_t, This_Method { unbound = true }) }))
+    | DefT (r, FunT (static, ({ this_t = (_, This_Method { unbound = false }); _ } as ft))) ->
+      let any_this_t = TypeTerm.(AnyT (r, AnyError None)) in
+      DefT (r, FunT (static, { ft with this_t = (any_this_t, This_Method { unbound = true }) }))
     | DefT (r, PolyT { tparams_loc; tparams; t_out; id }) ->
       DefT (r, PolyT { tparams_loc; tparams; t_out = unbind_this_method t_out; id })
     | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map unbind_this_method rep)

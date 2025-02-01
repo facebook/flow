@@ -3,14 +3,14 @@ class A {
     x() : number { return this.prop; }
 }
 
-let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
+let _1 = {prop : "", method : (new A()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
 class B {
     prop : number
     x() : number { return 3; }
 }
 
-let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
+let _2 = {prop : "", method : (new B()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
 
 class C {
     prop : number
@@ -18,15 +18,15 @@ class C {
 }
 
 let c = new C();
-c.x = (new A).x;
-(c.x()); // C incompatible with A
+c.x = (new A).x; // method-unbinding
+(c.x()); // method-unbinding above, this type becomes any, so no more this typing errors
 
 class D {
     x : number
     m(): number { return this.x }
     n() {
-        let m = this.m;
-        let z = m(); // global object incompatible with D
+        let m = this.m; // method-unbinding
+        let z = m(); // method-unbinding above, this type becomes any, so no more this typing errors
     }
 }
 

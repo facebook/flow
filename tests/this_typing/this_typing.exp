@@ -336,27 +336,13 @@ References:
          ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:25:18
-
-Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
-
-   class_method.js:25:18
-   25| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
-                        ^^^ [1]
-
-References:
-   class_method.js:5:33
-    5|   method(this: interface {prop: boolean}): string {
-                                       ^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- class_method.js:25:42
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    class_method.js:25:42
-   25| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - boolean ~> number
+   25| let _2 = {prop : 123, method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                                 ^^^^^^ [1]
 
 References:
@@ -368,28 +354,13 @@ References:
          ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- class_method.js:27:10
-
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[prop-missing]
-
-   class_method.js:27:10
-   27| let _3 = {method : (new A()).method }.method(); // Error prop missing
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   class_method.js:5:16
-    5|   method(this: interface {prop: boolean}): string {
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- class_method.js:27:30
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    class_method.js:27:30
-   27| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   27| let _3 = {method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                     ^^^^^^ [1]
 
 References:
@@ -855,27 +826,13 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:17:18
-
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
-
-   declare_class_method.js:17:18
-   17| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
-                        ^^^^ [1]
-
-References:
-   declare_class_method.js:5:33
-    5|   method(this: interface {prop: number}): string;
-                                       ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------ declare_class_method.js:17:43
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    declare_class_method.js:17:43
-   17| let _2 = {prop : true, method : (new A()).method }.method(); // Error - boolean ~> number
+   17| let _2 = {prop : true, method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                                  ^^^^^^ [1]
 
 References:
@@ -884,28 +841,13 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ declare_class_method.js:19:10
-
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[prop-missing]
-
-   declare_class_method.js:19:10
-   19| let _3 = {method : (new A()).method }.method(); // Error prop missing
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   declare_class_method.js:5:16
-    5|   method(this: interface {prop: number}): string;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------ declare_class_method.js:19:30
 
 Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    declare_class_method.js:19:30
-   19| let _3 = {method : (new A()).method }.method(); // Error prop missing
+   19| let _3 = {method : (new A()).method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                     ^^^^^^ [1]
 
 References:
@@ -1507,27 +1449,13 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:14:18
-
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
-
-   interface.js:14:18
-   14| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
-                        ^^^^ [1]
-
-References:
-   interface.js:4:33
-    4|   method(this: interface {prop: number}): string;
-                                       ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- interface.js:14:39
 
 Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    interface.js:14:39
-   14| let _2 = {prop : true, method : AImpl.method }.method(); // Error - boolean ~> number
+   14| let _2 = {prop : true, method : AImpl.method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                              ^^^^^^ [1]
 
 References:
@@ -1536,28 +1464,13 @@ References:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- interface.js:16:10
-
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[prop-missing]
-
-   interface.js:16:10
-   16| let _3 = {method : AImpl.method }.method(); // Error prop missing
-                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   interface.js:4:16
-    4|   method(this: interface {prop: number}): string;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- interface.js:16:26
 
 Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
 [method-unbinding]
 
    interface.js:16:26
-   16| let _3 = {method : AImpl.method }.method(); // Error prop missing
+   16| let _3 = {method : AImpl.method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
                                 ^^^^^^ [1]
 
 References:
@@ -1667,19 +1580,16 @@ References:
                                       ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ mixed_inference.js:53:2
+Error ----------------------------------------------------------------------------------------- mixed_inference.js:52:17
 
-Cannot cast `foo` to `typeof i.m` because number [1] is incompatible with implicit `this` parameter of function type [2]
-in the `this` parameter. [incompatible-cast]
+Cannot get `i.m` because typeof-annotation `i.m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
-   mixed_inference.js:53:2
-   53| (foo : typeof i.m); // mixed incompatible with number
-        ^^^
+   mixed_inference.js:52:17
+   52| (foo : typeof i.m); // method-unbinding, this type becomes any, so no more this typing errors
+                       ^ [1]
 
 References:
-   mixed_inference.js:27:21
-   27| function foo(this : number) {}
-                           ^^^^^^ [1]
    mixed_inference.js:47:5
    47|     m() : void;
            ^^^^^^^^^^ [2]
@@ -2188,4 +2098,4 @@ References:
 
 
 
-Found 129 errors
+Found 123 errors
