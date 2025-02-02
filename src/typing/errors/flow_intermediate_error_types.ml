@@ -877,6 +877,7 @@ type 'loc message =
       reason_call: 'loc virtual_reason;
       reason_tparam: 'loc virtual_reason;
     }
+  | MessageUndocumentedFeature
   | MessageUnexpectedTemporaryBaseType
   | MessageUnexpectedUseOfThisType
   | MessageUninitializedInstanceProperty of Lints.property_assignment_kind

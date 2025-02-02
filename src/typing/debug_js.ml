@@ -1874,6 +1874,7 @@ let dump_error_message =
       spf "EMatchDuplicateObjectProperty (%s) (%s)" (string_of_aloc loc) name
     | EMatchBindingInOrPattern { loc } -> spf "EMatchBindingInOrPattern (%s)" (string_of_aloc loc)
     | EMatchInvalidAsPattern { loc } -> spf "EMatchInvalidAsPattern (%s)" (string_of_aloc loc)
+    | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->

@@ -2110,6 +2110,7 @@ module Make
             cx
             (Error_message.EUnsupportedSyntax (name_loc, Flow_intermediate_error_types.DeclareGlobal)
             );
+          Flow.add_output cx (Error_message.EUndocumentedFeature { loc = name_loc });
           (t, Ast.Statement.DeclareNamespace.Global id)
         | Ast.Statement.DeclareNamespace.Local id ->
           let (name_loc, { Ast.Identifier.name; comments }) = id in

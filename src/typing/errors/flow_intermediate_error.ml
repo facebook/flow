@@ -3660,6 +3660,12 @@ let to_printable_error :
         ref reason_call;
         text ". Either add explicit type arguments or cast the expression to your expected type";
       ]
+    | MessageUndocumentedFeature ->
+      [
+        text "You are using an undocumented feature. ";
+        text "It might be removed in the future, ";
+        text "and the behavior might change at any time without warning.";
+      ]
     | MessageTupleElementNotReadable { reason; index; name } ->
       mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable"
     | MessageTupleElementNotWritable { reason; index; name } ->

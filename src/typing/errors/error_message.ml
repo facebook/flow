@@ -636,6 +636,7 @@ and 'loc t' =
     }
   | EMatchBindingInOrPattern of { loc: 'loc }
   | EMatchInvalidAsPattern of { loc: 'loc }
+  | EUndocumentedFeature of { loc: 'loc }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1449,6 +1450,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EMatchDuplicateObjectProperty { loc = f loc; name }
   | EMatchBindingInOrPattern { loc } -> EMatchBindingInOrPattern { loc = f loc }
   | EMatchInvalidAsPattern { loc } -> EMatchInvalidAsPattern { loc = f loc }
+  | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1754,7 +1756,8 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidUnaryPlusBigInt _
   | EMatchDuplicateObjectProperty _
   | EMatchBindingInOrPattern _
-  | EMatchInvalidAsPattern _ ->
+  | EMatchInvalidAsPattern _
+  | EUndocumentedFeature _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1964,6 +1967,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchDuplicateObjectProperty { loc; _ } -> Some loc
   | EMatchBindingInOrPattern { loc } -> Some loc
   | EMatchInvalidAsPattern { loc } -> Some loc
+  | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2921,6 +2925,7 @@ let friendly_message_of_msg = function
     Normal (MessageMatchDuplicateObjectProperty { name })
   | EMatchBindingInOrPattern { loc = _ } -> Normal MessageMatchBindingInOrPattern
   | EMatchInvalidAsPattern { loc = _ } -> Normal MessageMatchInvalidAsPattern
+  | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3269,3 +3274,4 @@ let error_code_of_message err : error_code option =
   | EMatchDuplicateObjectProperty _ -> Some MatchInvalidPattern
   | EMatchBindingInOrPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidAsPattern _ -> Some MatchInvalidPattern
+  | EUndocumentedFeature _ -> Some UndocumentedFeature

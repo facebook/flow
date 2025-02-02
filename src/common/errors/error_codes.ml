@@ -151,6 +151,7 @@ type error_code =
   | TypeAsValue
   | UnclearType
   | UnderconstrainedImplicitInstantiation
+  | UndocumentedFeature
   | UninitializedInstanceProperty
   | UnionUnoptimizable
   | UnionPartiallyOptimizableNonUniqueKeys
@@ -215,7 +216,8 @@ let require_specific : error_code -> bool = function
   | ReactRuleImmutableIncompatible
   | ReactRuleHook
   | ReactRuleRef
-  | ReactRuleCallComponent ->
+  | ReactRuleCallComponent
+  | UndocumentedFeature ->
     true
   | _ -> false
 
@@ -365,6 +367,7 @@ let string_of_code : error_code -> string = function
   | TypeAsValue -> "type-as-value"
   | UnclearType -> "unclear-type"
   | UnderconstrainedImplicitInstantiation -> "underconstrained-implicit-instantiation"
+  | UndocumentedFeature -> "undocumented-feature"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnionUnoptimizable -> "union-unoptimizable"
   | UnionPartiallyOptimizableNonUniqueKeys -> "union-partially-optimizable-non-unique-keys"
