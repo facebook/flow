@@ -74,6 +74,6 @@ declare export const generic1: Generic<string>; // error
 declare export const generic2: GenericDifferentSizedTypeParametersError1<string, string>; // error
 declare export const generic3: GenericDifferentSizedTypeParametersError2<string>; // error
 
-export class ClassWithMethod { // TODO: bad error on this type incompatibility
-  method(): void {}
+export class ClassWithMethod { // ok: no this typing error
+  method(): void {} // ok: no this typing error
 }

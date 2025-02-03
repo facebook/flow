@@ -7940,7 +7940,12 @@ struct
           DefT (_, FunT (_, ({ type_guard = None; _ } as funtype2)))
         )
         when List.length funtype1.params = List.length funtype2.params ->
-        rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
+        rec_unify
+          cx
+          trace
+          ~use_op
+          (subtype_this_of_function funtype1)
+          (subtype_this_of_function funtype2);
         List.iter2
           (fun (_, t1) (_, t2) -> rec_unify cx trace ~use_op t1 t2)
           funtype1.params

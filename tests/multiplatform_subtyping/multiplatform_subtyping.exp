@@ -442,25 +442,6 @@ References:
                                               ^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------- classes.ios.js:77:14
-
-Cannot implement `ClassWithMethod` [1] with `ClassWithMethod` because implicit `this` parameter of function type [2] is
-incompatible with `ClassWithMethod` [3] in property `method`. This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   classes.ios.js:77:14
-   77| export class ClassWithMethod { // TODO: bad error on this type incompatibility
-                    ^^^^^^^^^^^^^^^ [3]
-
-References:
-   classes.js.flow:74:22
-   74| declare export class ClassWithMethod {
-                            ^^^^^^^^^^^^^^^ [1]
-   classes.js.flow:75:3
-   75|   method(): void;
-         ^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- component.ios.js:1:26
 
 Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `Foo.baz`.
@@ -705,4 +686,4 @@ References:
 
 
 
-Found 39 errors
+Found 38 errors
