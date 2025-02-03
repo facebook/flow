@@ -1,1 +1,39 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- test.js:15:23
+
+Cannot assign object literal to `error1` because string `foo` [1] is incompatible with string prefixed with `data-` [2]
+in the indexer property's key. [incompatible-type]
+
+   test.js:15:23
+   15| const error1: Props = {foo: 3};
+                             ^^^^^^^^ [1]
+
+References:
+   test.js:11:4
+   11|   [StringPrefix<'data-'>]: string | void,
+          ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:29
+
+Cannot assign object literal to `error1` because in property `foo`: [incompatible-type]
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with undefined [3].
+
+   test.js:15:29
+   15| const error1: Props = {foo: 3};
+                                   ^ [1]
+
+References:
+   test.js:11:28
+   11|   [StringPrefix<'data-'>]: string | void,
+                                  ^^^^^^ [2]
+   test.js:11:37
+   11|   [StringPrefix<'data-'>]: string | void,
+                                           ^^^^ [3]
+
+
+
+Found 2 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -6,3 +6,10 @@ const y: Y = {foo: 3}; // No error
 
 type Z = $Exact<{[string]: number}>;
 const z: Z = {foo: 3}; // No error
+
+type Props = {
+  [StringPrefix<'data-'>]: string | void,
+}
+
+// TODO: Combine errors
+const error1: Props = {foo: 3};
