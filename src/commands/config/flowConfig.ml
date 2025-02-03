@@ -141,6 +141,7 @@ module Opts = struct
     suppress_types: SSet.t;
     ts_syntax: bool;
     type_expansion_recursion_limit: int;
+    this_type_guards: bool;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -279,6 +280,7 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
+      this_type_guards = false;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -1013,6 +1015,7 @@ module Opts = struct
       ( "experimental.declare_global",
         boolean (fun opts v -> Ok { opts with enable_declare_global = v })
       );
+      ("this_type_guards", boolean (fun opts v -> Ok { opts with this_type_guards = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
@@ -1878,6 +1881,8 @@ let suppress_types c = c.options.Opts.suppress_types
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
+
+let this_type_guards c = c.options.Opts.this_type_guards
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 

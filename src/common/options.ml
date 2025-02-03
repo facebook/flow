@@ -160,6 +160,7 @@ type t = {
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_type_expansion_recursion_limit: int;
+  opt_this_type_guards: bool;
   opt_use_mixed_in_catch_variables: bool;
   opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
@@ -371,6 +372,8 @@ let temp_dir opts = opts.opt_temp_dir
 let ts_syntax opts = opts.opt_ts_syntax
 
 let type_expansion_recursion_limit opts = opts.opt_type_expansion_recursion_limit
+
+let this_type_guards opts = opts.opt_this_type_guards
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

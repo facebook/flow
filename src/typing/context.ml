@@ -73,6 +73,7 @@ type metadata = {
   suppress_types: SSet.t;
   ts_syntax: bool;
   type_expansion_recursion_limit: int;
+  this_type_guards: bool;
   use_mixed_in_catch_variables: bool;
   ban_spread_key_props: bool;
 }
@@ -303,6 +304,7 @@ let metadata_of_options options =
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
+    this_type_guards = Options.this_type_guards options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
     ban_spread_key_props = Options.ban_spread_key_props options;
   }
@@ -521,6 +523,8 @@ let error_suppressions cx = cx.ccx.error_suppressions
 let evaluated cx = cx.ccx.sig_cx.evaluated
 
 let exact_by_default cx = cx.metadata.exact_by_default
+
+let this_type_guards cx = cx.metadata.this_type_guards
 
 let aloc_tables cx = cx.ccx.aloc_tables
 
