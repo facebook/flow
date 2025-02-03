@@ -39,18 +39,9 @@ let in_sandbox_cx cx t ~f =
         Context.reset_errors cx original_errors;
         Exception.reraise exn
       | t ->
-        let has_new_non_lint_errors =
-          Context.errors cx
-          |> Flow_error.ErrorSet.filter (fun e ->
-                 e |> Flow_error.msg_of_error |> Error_message.defered_in_speculation |> not
-             )
-          |> Flow_error.ErrorSet.is_empty
-        in
+        let new_errors = Context.errors cx in
         Context.reset_errors cx original_errors;
-        if has_new_non_lint_errors then
-          Some t
-        else
-          None
+        Base.Option.some_if (Flow_error.is_lint_only_errorset new_errors) t
   )
 
 let synthesis_speculation_call cx call_reason (reason, rep) targs argts =

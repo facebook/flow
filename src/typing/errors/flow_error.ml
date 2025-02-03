@@ -47,3 +47,6 @@ let ordered_reasons ((rl, ru) as reasons) =
 
 let error_of_msg ~source_file (msg : 'loc Error_message.t') : 'loc t =
   { loc = loc_of_msg msg; msg; source_file }
+
+let is_lint_only_errorset =
+  ErrorSet.for_all (fun e -> Error_message.defered_in_speculation (msg_of_error e))

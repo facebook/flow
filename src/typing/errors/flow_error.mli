@@ -26,3 +26,5 @@ module ErrorSet : Flow_set.S with type elt = ALoc.t t
 module ConcreteErrorSet : Flow_set.S with type elt = Loc.t t
 
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
+
+val is_lint_only_errorset : ErrorSet.t -> bool

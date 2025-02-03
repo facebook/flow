@@ -851,20 +851,6 @@ References:
                 ^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:226:12
-
-Cannot get `remote.#prop` because property `#prop` is missing in `Private_property_1` [1]. [prop-missing]
-
-   consistency.js:226:12
-   226|     return remote.#prop(value); // error prop-missing
-                   ^^^^^^^^^^^^
-
-References:
-   consistency.js:225:30
-   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
-                                     ^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------- consistency.js:226:19
 
 Cannot call `remote.#prop` because property `#prop` is missing in `Private_property_1` [1]. [prop-missing]
@@ -3102,7 +3088,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 182 errors
+Found 181 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
