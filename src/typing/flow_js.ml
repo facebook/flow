@@ -7203,8 +7203,7 @@ struct
           | Some p ->
             ( if not allow_method_access then
               match p with
-              | Method { type_ = t; _ }
-                when not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
+              | Method { type_ = t; _ } ->
                 add_output
                   cx
                   (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t })

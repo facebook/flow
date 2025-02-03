@@ -1717,9 +1717,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* lower bound method, upper bound function
            This is always banned, as it would allow methods to be unbound through casting *)
         | (This_Method { unbound }, This_Function) ->
-          if
-            (not unbound) && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason lreason))
-          then
+          if not unbound then
             add_output
               cx
               (Error_message.EMethodUnbinding

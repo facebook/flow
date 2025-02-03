@@ -458,10 +458,6 @@ val test_prop_miss :
 val test_prop_get_never_hit :
   t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option) list
 
-val with_allowed_method_unbinding : t -> ALoc.t -> (unit -> 'a) -> 'a
-
-val allowed_method_unbinding : t -> ALoc.t -> bool
-
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list

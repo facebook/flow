@@ -199,8 +199,6 @@ type component_t = {
   mutable inferred_component_return: Type.t Nel.t ALocFuzzyMap.t;
   mutable exhaustive_checks: (ALoc.t list * bool) ALocMap.t;
   mutable in_implicit_instantiation: bool;
-  (* Temporarily allow method unbinding in the following locs *)
-  mutable allow_method_unbinding: ALocSet.t;
   (* React$Element does not store the monomorphized version of a component to support
    * cloning polymorphic elements. We need to know the monomorphized version of a component
    * to determine the render type of an element of a polymorphic component, so we keep track
@@ -412,7 +410,6 @@ let make_ccx () =
     annot_graph = IMap.empty;
     exhaustive_checks = ALocMap.empty;
     in_implicit_instantiation = false;
-    allow_method_unbinding = ALocSet.empty;
     monomorphized_components = Type.Properties.Map.empty;
     signature_help_callee = ALocMap.empty;
     ctor_callee = ALocMap.empty;
@@ -958,13 +955,6 @@ let test_prop_get_never_hit cx =
       | Miss (name, reasons, use_op, suggestion) -> (name, reasons, use_op, suggestion) :: acc)
     []
     (IMap.bindings cx.ccx.test_prop_hits_and_misses)
-
-let with_allowed_method_unbinding cx loc f =
-  let old_set = cx.ccx.allow_method_unbinding in
-  cx.ccx.allow_method_unbinding <- ALocSet.add loc old_set;
-  Exception.protect ~f ~finally:(fun () -> cx.ccx.allow_method_unbinding <- old_set)
-
-let allowed_method_unbinding cx loc = ALocSet.mem loc cx.ccx.allow_method_unbinding
 
 let mark_optional_chain cx loc lhs_reason ~useful =
   cx.ccx.optional_chains_useful <-

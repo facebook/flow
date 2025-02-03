@@ -2092,9 +2092,7 @@ end
 
 let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p =
   match p with
-  | Method { key_loc; type_ = t }
-    when (not method_accessible)
-         && not (Context.allowed_method_unbinding cx (Reason.loc_of_reason reason_op)) ->
+  | Method { key_loc; type_ = t } when not method_accessible ->
     let hint_result = (snd hint) reason_op in
     let valid_hint_t =
       match hint_result with
