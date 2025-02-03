@@ -282,13 +282,32 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | _ -> (None, tparams_map)
 
   type method_kind =
-    | MethodKind
+    | FunctionKind
+    | MethodKind of { static: bool }
     | ConstructorKind
     | GetterKind
     | SetterKind
 
+  let allows_type_guards = function
+    | FunctionKind
+    | MethodKind _ ->
+      true
+    | ConstructorKind
+    | GetterKind
+    | SetterKind ->
+      false
+
+  let allows_this_type_guards = function
+    | MethodKind { static } -> not static
+    | FunctionKind
+    | ConstructorKind
+    | GetterKind
+    | SetterKind ->
+      false
+
   let method_kind_to_string = function
-    | MethodKind -> "method"
+    | FunctionKind -> "function"
+    | MethodKind { static = _ } -> "method"
     | ConstructorKind -> "constructor"
     | GetterKind -> "getter"
     | SetterKind -> "setter"
@@ -1434,7 +1453,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       let fparams = List.rev rev_params in
       let (return_t, return_ast, type_guard) =
-        convert_return_annotation ~meth_kind:MethodKind env params fparams return
+        convert_return_annotation ~meth_kind:FunctionKind env params fparams return
       in
       let statics_t =
         let reason = update_desc_reason (fun d -> RStatics d) reason in
@@ -2346,8 +2365,26 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | Function.TypeAnnotation t_ast ->
       let (((_, t'), _) as t_ast') = convert env t_ast in
       (t', Function.TypeAnnotation t_ast', None)
-    | Function.TypeGuard (gloc, { T.TypeGuard.guard = (x, Some t); kind; comments })
-      when meth_kind = MethodKind ->
+    | Function.TypeGuard
+        ( gloc,
+          {
+            T.TypeGuard.guard = (((name_loc, { Ast.Identifier.name = "this"; _ }) as x), Some t);
+            kind;
+            comments;
+          }
+        ) ->
+      if not (Context.this_type_guards env.cx) then
+        let msg =
+          Error_message.EUnsupportedSyntax (gloc, Flow_intermediate_error_types.ThisTypeGuards)
+        in
+        error_type_guard env (gloc, x, t, kind, comments) msg
+      else if allows_this_type_guards meth_kind then
+        let (bool_t, guard', predicate) = convert_type_guard env fparams gloc kind x t comments in
+        (bool_t, Function.TypeGuard guard', predicate)
+      else
+        let msg = Error_message.ETypeGuardThisParam (mk_reason RThis name_loc) in
+        error_type_guard env (gloc, x, t, kind, comments) msg
+    | Function.TypeGuard (gloc, { T.TypeGuard.guard = (x, Some t); kind; comments }) ->
       (* Check that type guard variable is not a rest param *)
       let (name_loc, { Ast.Identifier.name; _ }) = x in
       let (_, { T.Function.Params.params; rest; _ }) = params in
@@ -2378,7 +2415,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           error_type_guard env (gloc, x, t, kind, comments) msg
         | _ ->
           (* Check that type guard variable appears in parameter list *)
-          if
+          if not (allows_type_guards meth_kind) then
+            let msg =
+              Error_message.ETypeGuardIncompatibleWithFunctionKind
+                { loc = gloc; kind = method_kind_to_string meth_kind }
+            in
+            error_type_guard env (gloc, x, t, kind, comments) msg
+          else if
             Base.List.for_all params ~f:(fun (_, { T.Function.Param.name = pname; _ }) ->
                 match pname with
                 | Some (_, { Ast.Identifier.name = pname; _ }) -> pname <> name
@@ -2395,12 +2438,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             in
             (bool_t, Function.TypeGuard guard', predicate)
       end
-    | Function.TypeGuard (gloc, { T.TypeGuard.guard = (x, Some t); kind; comments; _ }) ->
-      let msg =
-        Error_message.ETypeGuardIncompatibleWithFunctionKind
-          { loc = gloc; kind = method_kind_to_string meth_kind }
-      in
-      error_type_guard env (gloc, x, t, kind, comments) msg
     | Function.TypeGuard (loc, { Ast.Type.TypeGuard.guard = (_, None); kind; _ }) ->
       Flow_js_utils.add_output
         env.cx
@@ -2786,7 +2823,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     let meth_kind =
                       match name with
                       | "constructor" -> ConstructorKind
-                      | _ -> MethodKind
+                      | _ -> MethodKind { static }
                     in
                     let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
                     let this_write_loc = None in

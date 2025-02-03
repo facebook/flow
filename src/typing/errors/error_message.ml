@@ -244,6 +244,7 @@ and 'loc t' =
       reasons: 'loc virtual_reason * 'loc virtual_reason;
     }
   | ETypeGuardParamUnbound of 'loc virtual_reason
+  | ETypeGuardThisParam of 'loc virtual_reason
   | ETypeGuardFunctionInvalidWrites of {
       reason: 'loc virtual_reason;
       type_guard_reason: 'loc virtual_reason;
@@ -1081,6 +1082,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ETypeGuardImpliesMismatch
       { use_op = map_use_op use_op; reasons = (map_reason r1, map_reason r2) }
   | ETypeGuardParamUnbound reason -> ETypeGuardParamUnbound (map_reason reason)
+  | ETypeGuardThisParam reason -> ETypeGuardThisParam (map_reason reason)
   | ETypeGuardFunctionInvalidWrites { reason; type_guard_reason; write_locs } ->
     ETypeGuardFunctionInvalidWrites
       {
@@ -1735,6 +1737,7 @@ let util_use_op_of_msg nope util = function
   | ETupleInvalidTypeSpread _
   | ETupleElementAfterInexactSpread _
   | ETypeGuardParamUnbound _
+  | ETypeGuardThisParam _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _
   | ETypeGuardFunctionInvalidWrites _
@@ -1825,6 +1828,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETupleElementAfterInexactSpread reason
   | ETypeGuardInvalidParameter { type_guard_reason = reason; _ }
   | ETypeGuardParamUnbound reason
+  | ETypeGuardThisParam reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ } ->
@@ -2493,6 +2497,7 @@ let friendly_message_of_msg = function
         explanation = None;
       }
   | ETypeGuardParamUnbound reason -> Normal (MessageInvalidTypeGuardParamUnbound reason)
+  | ETypeGuardThisParam reason -> Normal (MessageInvalidTypeGuardThisParam reason)
   | ETypeGuardFunctionInvalidWrites { reason = _; type_guard_reason; write_locs } ->
     Normal (MessageInvalidTypeGuardFunctionWritten { type_guard_reason; write_locs })
   | ENegativeTypeGuardConsistency { reason; return_reason; type_reason } ->
@@ -3097,6 +3102,7 @@ let error_code_of_message err : error_code option =
   | ETypeGuardIndexMismatch _
   | ETypeGuardImpliesMismatch _
   | ETypeGuardParamUnbound _
+  | ETypeGuardThisParam _
   | ETypeGuardFunctionInvalidWrites _
   | ETypeGuardFunctionParamHavoced _
   | ETypeGuardIncompatibleWithFunctionKind _ ->

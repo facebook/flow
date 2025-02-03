@@ -3172,6 +3172,14 @@ let to_printable_error :
       @ [text "."]
     | MessageInvalidTypeGuardParamUnbound reason ->
       [text "Cannot find "; ref reason; text " in the parameters of this function (type)."]
+    | MessageInvalidTypeGuardThisParam reason ->
+      [
+        text "Cannot use ";
+        ref reason;
+        text " as a type guard variable in this context. ";
+        code "this";
+        text " type guards are only supported in non-static declare class or interface methods.";
+      ]
     | MessageInvalidUseOfFlowEnforceOptimized arg ->
       [text "Invalid use of $Flow$EnforceOptimized on non-union type "; ref arg; text "."]
     | MessageMissingAnnotation d -> [text "Missing an annotation on "; desc d; text "."]
@@ -3930,6 +3938,18 @@ let to_printable_error :
       [text "Flow doesn't support "; code "with"; text " statements."]
     | MessageUnsupportedSyntax ConstTypeParameter ->
       [text "Const type parameters are not yet supported. This modifier will be ignored."]
+    | MessageUnsupportedSyntax ThisTypeGuards ->
+      [
+        code "this";
+        text " type guards are not enabled. ";
+        text "You may opt-in by putting ";
+        code "this_type_guards=true";
+        text " into the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
     | MessageUnsupportedVarianceAnnotation kind ->
       [text "Variance modifiers cannot appear on a type parameter of a "; text kind; text "."]
     | MessageUntypedImport module_name ->

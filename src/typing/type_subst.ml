@@ -349,6 +349,7 @@ let substituter =
     method! predicate cx (map, force, placeholder_no_infer, use_op) p =
       match p with
       | LatentP _ -> super#predicate cx (map, force, placeholder_no_infer, use_op) p
+      | LatentThisP _ -> super#predicate cx (map, force, placeholder_no_infer, use_op) p
       | p -> p
 
     method! obj_type cx map_cx t =

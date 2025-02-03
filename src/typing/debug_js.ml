@@ -1430,6 +1430,7 @@ let dump_error_message =
     | ETypeGuardImpliesMismatch { use_op; _ } ->
       spf "ETypeGuardImpliesMismatch (%s)" (string_of_use_op use_op)
     | ETypeGuardParamUnbound _ -> "ETypeGuardParamUnbound"
+    | ETypeGuardThisParam _ -> "ETypeGuardThisParam"
     | ETypeGuardFunctionInvalidWrites _ -> "ETypeGuardFunctionInvalidWrites"
     | ETypeGuardFunctionParamHavoced _ -> "ETypeGuardFunctionParamHavoced"
     | ETypeGuardIncompatibleWithFunctionKind _ -> "ETypeGuardIncompatibleWithFunctionKind"

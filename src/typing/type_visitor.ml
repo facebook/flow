@@ -188,7 +188,8 @@ class ['a] t =
       | PropIsExactlyNullP _ -> acc
       | PropNonMaybeP _ -> acc
       | ImpossibleP -> acc
-      | LatentP ((lazy (_, _, t, targs, argts)), _) ->
+      | LatentP ((lazy (_, _, t, targs, argts)), _)
+      | LatentThisP (lazy (_, _, t, targs, argts)) ->
         let acc = self#type_ cx P.Positive acc t in
         let acc = self#opt (self#list (self#targ cx pole_TODO)) acc targs in
         let acc = self#list (self#call_arg cx pole_TODO) acc argts in

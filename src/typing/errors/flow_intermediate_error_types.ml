@@ -90,6 +90,7 @@ type unsupported_syntax =
   | ComponentSyntax
   | DeclareGlobal
   | ConstTypeParameter
+  | ThisTypeGuards
 
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
@@ -723,6 +724,7 @@ type 'loc message =
       type_reason: 'loc virtual_reason;
     }
   | MessageInvalidTypeGuardParamUnbound of 'loc virtual_reason
+  | MessageInvalidTypeGuardThisParam of 'loc virtual_reason
   | MessageInvalidUseOfFlowEnforceOptimized of 'loc virtual_reason
   | MessageLowerIsNotArray of 'loc virtual_reason
   | MessageLowerIsNotArrayIndex of 'loc virtual_reason

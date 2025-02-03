@@ -187,6 +187,11 @@ module type S = sig
           arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int list;
         }
+      | LatentThisR of {
+          func: (L.t, L.t) Ast.Expression.t;
+          targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
+          arguments: (L.t, L.t) Ast.Expression.ArgList.t;
+        }
       | PropTruthyR of {
           propname: string;
           loc: L.t;
@@ -489,6 +494,11 @@ module Make
           arguments: (L.t, L.t) Ast.Expression.ArgList.t;
           index: int list;
         }
+      | LatentThisR of {
+          func: (L.t, L.t) Ast.Expression.t;
+          targs: (L.t, L.t) Ast.Expression.CallTypeArgs.t option;
+          arguments: (L.t, L.t) Ast.Expression.ArgList.t;
+        }
       | PropTruthyR of {
           propname: string;
           loc: L.t;
@@ -728,6 +738,7 @@ module Make
     | PropNonVoidR { propname = prop; _ } -> Printf.sprintf "PropNonVoidR %s" prop
     | LatentR { func = _; targs = _; arguments = _; index } ->
       Printf.sprintf "LatentR (index = %s)" (List.map string_of_int index |> String.concat ", ")
+    | LatentThisR { func = _; targs = _; arguments = _ } -> "LatentThisR"
     | PropTruthyR { propname; loc = _ } -> Printf.sprintf "PropTruthyR (%s)" propname
     | EqR _ -> "EqR"
     | ImpossibleR -> "ImpossibleR"

@@ -1008,6 +1008,7 @@ module rec TypeTerm : sig
        of the function in type [t]. We also include information for all type arguments
        and argument types of the call, to enable polymorphic calls. *)
     | LatentP of pred_funcall_info Lazy.t * index list
+    | LatentThisP of pred_funcall_info Lazy.t
     | ImpossibleP
 
   and predicate_concretizer_variant =
@@ -4285,6 +4286,8 @@ let rec string_of_predicate = function
     spf "LatentPred(TYPE_%d, %s)" id (List.map string_of_int is |> String.concat ", ")
   | LatentP ((lazy (_, _, t, _, _)), is) ->
     spf "LatentPred(%s, %s)" (string_of_ctor t) (List.map string_of_int is |> String.concat ", ")
+  | LatentThisP (lazy (_, _, OpenT (_, id), _, _)) -> spf "LatentThisPred(TYPE_%d)" id
+  | LatentThisP (lazy (_, _, t, _, _)) -> spf "LatentThisPred(%s)" (string_of_ctor t)
   | ImpossibleP -> "impossible"
 
 let string_of_type_t_kind = function

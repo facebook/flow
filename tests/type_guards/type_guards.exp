@@ -2858,6 +2858,527 @@ References:
                                                                        ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- this.js:19:39
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   19|     isB_prop: (this: A, x: number) => this is B; // error only on methods
+                                             ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:20:26
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   20|     static isB_static(): this is B; // error only on instance methods
+                                ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:28:5
+
+Cannot extend `A` [1] with `E` because `B` [2] is incompatible with `C` [3] in the type predicate of property `isB`.
+[incompatible-extend]
+
+   this.js:28:5
+   28|     isB(): this is C; // error type guard is in invariant position
+           ^^^^^^^^^^^^^^^^
+
+References:
+   this.js:27:27
+   27|   declare class E extends A {
+                                 ^ [1]
+   this.js:15:20
+   15|     isB(): this is B; // okay
+                          ^ [2]
+   this.js:28:20
+   28|     isB(): this is C; // error type guard is in invariant position
+                          ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:41:5
+
+Cannot cast `a` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:41:5
+   41|     a as B; // error
+           ^
+
+References:
+   this.js:36:18
+   36|   declare var a: A;
+                        ^ [1]
+   this.js:41:10
+   41|     a as B; // error
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:59:5
+
+Cannot cast `b` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   this.js:59:5
+   59|     b as empty; // error - not refining else branch
+           ^
+
+References:
+   this.js:47:18
+   47|   declare var b: B;
+                        ^ [1]
+   this.js:59:10
+   59|     b as empty; // error - not refining else branch
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:65:5
+
+Cannot cast `b` to `D` because `B` [1] is incompatible with `D` [2]. [incompatible-cast]
+
+   this.js:65:5
+   65|     b as D; // error
+           ^
+
+References:
+   this.js:47:18
+   47|   declare var b: B;
+                        ^ [1]
+   this.js:65:10
+   65|     b as D; // error
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:68:5
+
+Cannot cast `B` to `B` because class `B` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:68:5
+   68|     B as B; // error class B ~> B
+           ^
+
+References:
+   this.js:23:17
+   23|   declare class B extends A {}
+                       ^ [1]
+   this.js:68:10
+   68|     B as B; // error class B ~> B
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- this.js:86:5
+
+Cannot cast `i` to `B` because `I` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:86:5
+   86|     i as B; // error
+           ^
+
+References:
+   this.js:82:18
+   82|   declare var i: I;
+                        ^ [1]
+   this.js:86:10
+   86|     i as B; // error
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:90:19
+
+Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   this.js:90:19
+   90|     const isB = x.isB // error method-unbinding
+                         ^^^ [1]
+
+References:
+   this.js:15:5
+   15|     isB(): this is B; // okay
+           ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:98:27
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   98|   type T1 = (x: mixed) => this is C; // error only on declare classes/interfaces
+                                 ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:100:32
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   100|   type T2 = (cb: (x: mixed) => this is C) => void; // error only on declare classes/interfaces
+                                       ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:102:27
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   102|   type T3 = (x: mixed) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
+                                  ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:102:35
+
+Cannot resolve name `Unresolved`. [cannot-resolve-name]
+
+   102|   type T3 = (x: mixed) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
+                                          ^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:105:10
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   105|     m(): this is C; // error only on declare classes/interfaces
+                 ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:106:14
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   106|     f: () => this is C; // error only on declare classes/interfaces
+                     ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:111:5
+
+Cannot cast `x` to `C` because `T4` [1] is incompatible with `C` [2]. [incompatible-cast]
+
+   this.js:111:5
+   111|     x as C; // error should not refine
+            ^
+
+References:
+   this.js:109:18
+   109|   declare var x: T4;
+                         ^^ [1]
+   this.js:111:10
+   111|     x as C; // error should not refine
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:115:25
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   115|     m(cb: (x: mixed) => this is C): void; // error only on declare classes/interfaces method return
+                                ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:116:24
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   116|     n(): (x: mixed) => this is C; // error only on declare classes/interfaces method return
+                               ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:119:27
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   119|   function foo1(this: C): this is C {  // error 'this' type guard only on declare classes
+                                  ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:123:27
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on declare classes, unresolved
+                                  ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:123:35
+
+Cannot resolve name `Unresolved`. [cannot-resolve-name]
+
+   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on declare classes, unresolved
+                                          ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:143:5
+
+Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-cast]
+
+   this.js:143:5
+   143|     x as D<string>; // error number ~> string
+            ^
+
+References:
+   this.js:139:20
+   139|   declare var x: C<number>;
+                           ^^^^^^ [1]
+   this.js:143:12
+   143|     x as D<string>; // error number ~> string
+                   ^^^^^^ [2]
+   this.js:137:20
+   137|   declare class D<+X> extends C<X> {}
+                           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:152:5
+
+Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-cast]
+
+   this.js:152:5
+   152|     x as D<string>; // error number ~> string
+            ^
+
+References:
+   this.js:150:12
+   150|   if (x.m2<number>()) {
+                   ^^^^^^ [1]
+   this.js:152:12
+   152|     x as D<string>; // error number ~> string
+                   ^^^^^^ [2]
+   this.js:137:20
+   137|   declare class D<+X> extends C<X> {}
+                           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:157:5
+
+Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-cast]
+
+   this.js:157:5
+   157|     x as D<string>; // error number ~> string
+            ^
+
+References:
+   this.js:155:12
+   155|   if (x.m3(1)) {
+                   ^ [1]
+   this.js:157:12
+   157|     x as D<string>; // error number ~> string
+                   ^^^^^^ [2]
+   this.js:137:20
+   137|   declare class D<+X> extends C<X> {}
+                           ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:181:6
+
+Cannot call `fn` with `new B` bound to `cb` because function type [1], a non-type-guard function, is incompatible with
+function type [2], which is a type-guard function in property `m`. [function-predicate]
+
+   this.js:181:6
+   181|   fn(new B); // error no type-guard
+             ^^^^^
+
+References:
+   this.js:174:21
+   174|   declare class B { m(): boolean }
+                            ^^^^^^^^^^^^ [1]
+   this.js:177:39
+   177|   declare function fn(cb: interface { m(): this is D }): void;
+                                              ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:186:5
+
+Cannot extend `AImported` [1] with `E` because `B` [2] is incompatible with `C` [3] in the type predicate of property
+`isB`. [incompatible-extend]
+
+   this.js:186:5
+   186|     isB(): this is CImported; // error type guard is in invariant position
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this.js:185:27
+   185|   declare class E extends AImported {
+                                  ^^^^^^^^^ [1]
+   this_exports.js:2:18
+     2|   isB(): this is B;
+                         ^ [2]
+   this.js:186:20
+   186|     isB(): this is CImported; // error type guard is in invariant position
+                           ^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:195:5
+
+Cannot cast `a` to `BImported` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:195:5
+   195|     a as BImported; // error
+            ^
+
+References:
+   this.js:190:18
+   190|   declare var a: AImported;
+                         ^^^^^^^^^ [1]
+   this.js:195:10
+   195|     a as BImported; // error
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:213:5
+
+Cannot cast `b` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   this.js:213:5
+   213|     b as empty; // error - not refining else branch
+            ^
+
+References:
+   this.js:201:18
+   201|   declare var b: BImported;
+                         ^^^^^^^^^ [1]
+   this.js:213:10
+   213|     b as empty; // error - not refining else branch
+                 ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:219:5
+
+Cannot cast `b` to `DImported` because `B` [1] is incompatible with `D` [2]. [incompatible-cast]
+
+   this.js:219:5
+   219|     b as DImported; // error
+            ^
+
+References:
+   this.js:201:18
+   201|   declare var b: BImported;
+                         ^^^^^^^^^ [1]
+   this.js:219:10
+   219|     b as DImported; // error
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:222:5
+
+Cannot cast `BImported` to `BImported` because class `B` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:222:5
+   222|     BImported as BImported; // error class B ~> B
+            ^^^^^^^^^
+
+References:
+   this_exports.js:9:22
+     9| declare export class B extends A {}
+                             ^ [1]
+   this.js:222:18
+   222|     BImported as BImported; // error class B ~> B
+                         ^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:237:19
+
+Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   this.js:237:19
+   237|     const isB = x.isB // error method-unbinding
+                          ^^^ [1]
+
+References:
+   this_exports.js:2:3
+     2|   isB(): this is B;
+          ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:243:5
+
+Cannot cast `e` to `FImported` because `E` [1] is incompatible with `F` [2]. [incompatible-cast]
+
+   this.js:243:5
+   243|     e as FImported; // error this type guard is on a regular class
+            ^
+
+References:
+   this.js:241:18
+   241|   declare var e: EImported;
+                         ^^^^^^^^^ [1]
+   this.js:243:10
+   243|     e as FImported; // error this type guard is on a regular class
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:246:5
+
+Cannot cast `e` to `FImported` because `E` [1] is incompatible with `F` [2]. [incompatible-cast]
+
+   this.js:246:5
+   246|     e as FImported; // error
+            ^
+
+References:
+   this.js:241:18
+   241|   declare var e: EImported;
+                         ^^^^^^^^^ [1]
+   this.js:246:10
+   246|     e as FImported; // error
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:253:5
+
+Cannot cast `i` to `BImported` because `I` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:253:5
+   253|     i as BImported; // error
+            ^
+
+References:
+   this.js:249:18
+   249|   declare var i: IImported;
+                         ^^^^^^^^^ [1]
+   this.js:253:10
+   253|     i as BImported; // error
+                 ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:274:5
+
+Cannot cast `x` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
+
+   this.js:274:5
+   274|     x as B; // TODO okay (relax this limitation)
+            ^
+
+References:
+   this.js:270:18
+   270|   declare var x: A;
+                         ^ [1]
+   this.js:274:10
+   274|     x as B; // TODO okay (relax this limitation)
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- this_exports.js:6:24
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   6|   static isB_static(): this is B; // error should not export this guard
+                             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- this_exports.js:14:10
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   14|   isF(): this is F { // error
+                ^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
 Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
@@ -3088,7 +3609,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 181 errors
+Found 218 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

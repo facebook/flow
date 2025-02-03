@@ -321,7 +321,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (********************)
   | LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx) ->
     let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
-    call_latent_pred
+    call_latent_param_pred
       cx
       trace
       fun_t
@@ -335,7 +335,7 @@ and predicate_no_concretization cx trace result_collector l ~p =
       result_collector
   | NotP (LatentP ((lazy (use_op, loc, fun_t, targs, argts)), idx)) ->
     let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
-    call_latent_pred
+    call_latent_param_pred
       cx
       trace
       fun_t
@@ -345,6 +345,32 @@ and predicate_no_concretization cx trace result_collector l ~p =
       ~argts
       ~sense:false
       ~idx
+      l
+      result_collector
+  | LatentThisP (lazy (use_op, loc, fun_t, targs, argts)) ->
+    let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
+    call_latent_this_pred
+      cx
+      trace
+      fun_t
+      ~use_op
+      ~reason
+      ~targs
+      ~argts
+      ~sense:true
+      l
+      result_collector
+  | NotP (LatentThisP (lazy (use_op, loc, fun_t, targs, argts))) ->
+    let reason = mk_reason (RFunctionCall (desc_of_t fun_t)) loc in
+    call_latent_this_pred
+      cx
+      trace
+      fun_t
+      ~use_op
+      ~reason
+      ~targs
+      ~argts
+      ~sense:false
       l
       result_collector
   (**************)
@@ -361,7 +387,8 @@ and predicate_no_concretization cx trace result_collector l ~p =
  * branch. Since at the time of processing the call we do not know yet the
  * function's formal parameters, [idx] is the index of the argument that gets
  * refined. *)
-and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx tin result_collector =
+and call_latent_pred
+    cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~is_target tin result_collector =
   let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t fun_t) fun_t in
   Base.List.iter ts ~f:(function
       | IntersectionT (r, rep) ->
@@ -375,7 +402,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
               ~targs
               ~argts
               ~sense
-              ~idx
+              ~is_target
               tin
               result_collector
         )
@@ -403,13 +430,7 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           ) -> begin
         (* TODO: for the moment we only support simple keys (empty projection)
            that exactly correspond to the function's parameters *)
-        if
-          Base.List.exists idx ~f:(fun i ->
-              match Base.List.nth params i with
-              | Some (Some name, _) -> name = param_name
-              | _ -> false
-          )
-        then
+        if is_target param_name params then
           let filter_result =
             if sense then
               let type_ = intersect cx tin (reposition_reason cx ~trace reason type_guard) in
@@ -450,12 +471,24 @@ and call_latent_pred cx trace fun_t ~use_op ~reason ~targs ~argts ~sense ~idx ti
           ~targs:None
           ~argts
           ~sense
-          ~idx
+          ~is_target
           tin
           result_collector
       (* Fall through all the remaining cases *)
       | _ -> report_unchanged_filtering_result_to_predicate_result tin result_collector
       )
+
+and call_latent_param_pred ~idx =
+  call_latent_pred ~is_target:(fun type_guard_ame params ->
+      Base.List.exists idx ~f:(fun i ->
+          match Base.List.nth params i with
+          | Some (Some name, _) -> name = type_guard_ame
+          | _ -> false
+      )
+  )
+
+and call_latent_this_pred =
+  call_latent_pred ~is_target:(fun type_guard_name _params -> type_guard_name = "this")
 
 (* This utility is expected to be used when we a variable of type [t1] is refined
  * with the use of a type guard function with type `(x: mixed) => x is t2`.

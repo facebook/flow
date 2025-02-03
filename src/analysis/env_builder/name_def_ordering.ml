@@ -217,6 +217,10 @@ struct
               ignore @@ this#expression func;
               ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
               ignore @@ this#arg_list arguments
+            | LatentThisR { func; targs; arguments } ->
+              ignore @@ this#expression func;
+              ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
+              ignore @@ this#arg_list arguments
             | SentinelR { prop = _; other_loc } ->
               this#add ~why:other_loc (Env_api.ExpressionLoc, other_loc)
             | EqR loc -> this#add ~why:loc (Env_api.ExpressionLoc, loc)

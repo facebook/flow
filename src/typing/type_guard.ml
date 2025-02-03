@@ -129,7 +129,11 @@ let check_type_guard cx params (TypeGuard { reason; inferred; one_sided; param_n
     let (name_loc, name) = param_name in
     let tg_reason = mk_reason (RTypeGuardParam name) name_loc in
     match SMap.find_opt name (Pattern_helper.bindings_of_params params) with
-    | None -> Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
+    | None ->
+      if name = "this" then
+        Flow_js_utils.add_output cx Error_message.(ETypeGuardThisParam (mk_reason RThis name_loc))
+      else
+        Flow_js_utils.add_output cx Error_message.(ETypeGuardParamUnbound tg_reason)
     | Some (param_loc, Pattern_helper.Root) ->
       check_type_guard_consistency cx reason one_sided param_loc param_name tg_reason type_guard
     | Some binding -> error_on_non_root_binding name tg_reason binding

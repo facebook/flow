@@ -355,6 +355,14 @@ let predicate_of_refinement cx =
         Some (LatentP (read_pred_func_info_exn cx func_loc, index))
       else
         None
+    | LatentThisR { func = (func_loc, _); _ } ->
+      let (lazy (_, _, t, _, _)) =
+        ALocMap.find func_loc (Context.environment cx).Loc_env.pred_func_map
+      in
+      if maybe_predicate_function cx t then
+        Some (LatentThisP (read_pred_func_info_exn cx func_loc))
+      else
+        None
     | PropNullishR { propname; loc } ->
       Some
         (NotP (PropNonMaybeP (propname, mk_reason (RProperty (Some (OrdinaryName propname))) loc)))

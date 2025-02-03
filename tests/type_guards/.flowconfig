@@ -2,3 +2,4 @@
 all=true
 no_flowlib=false
 component_syntax=true
+this_type_guards=true

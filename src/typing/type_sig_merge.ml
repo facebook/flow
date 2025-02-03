@@ -1407,7 +1407,7 @@ and merge_obj_annot_prop env file = function
     let type_ = merge_fun env file reason def statics in
     Type.Method { key_loc = Some id_loc; type_ }
 
-and merge_interface_prop env file = function
+and merge_interface_prop ?(is_static = false) env file = function
   | InterfaceField (id_loc, t, polarity) ->
     let t = merge env file t in
     Type.Field { preferred_def_locs = None; key_loc = id_loc; type_ = t; polarity }
@@ -1416,7 +1416,7 @@ and merge_interface_prop env file = function
     let merge_method fn_loc def =
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
-      merge_fun ~is_method:true env file reason def statics
+      merge_fun ~is_method:true ~is_static ~is_declare_or_intf:true env file reason def statics
     in
     let finish = function
       | (t, []) -> t
@@ -1711,6 +1711,8 @@ and merge_fun_statics env file reason statics =
 
 and merge_fun
     ?(is_method = false)
+    ?(is_static = false)
+    ?(is_declare_or_intf = false)
     env
     file
     reason
@@ -1751,7 +1753,12 @@ and merge_fun
         match rest_param with
         | Some (Some rest_name, _, _) when rest_name = name -> None
         | _ ->
-          if Base.List.for_all params ~f:(fun (pname, _) -> pname <> Some name) then
+          if name <> "this" && Base.List.for_all params ~f:(fun (pname, _) -> pname <> Some name)
+          then
+            None
+          else if name = "this" && not (Context.this_type_guards file.cx) then
+            None
+          else if name = "this" && ((not is_method) || is_static || not is_declare_or_intf) then
             None
           else
             let reason = Reason.mk_reason Reason.RTypeGuard loc in
@@ -1933,7 +1940,7 @@ let merge_declare_class file reason class_name id def =
     let env = { env with tps = SMap.add "this" this env.tps } in
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
-      let props = SMap.map (merge_interface_prop env file) static_props in
+      let props = SMap.map (merge_interface_prop ~is_static:true env file) static_props in
       let props = add_name_field reason props in
       let props = NameUtils.namemap_of_smap props in
       let call =
@@ -2012,7 +2019,7 @@ let merge_declare_fun file defs =
       (fun (_, fn_loc, def) ->
         let reason = Reason.(mk_reason RFunctionType fn_loc) in
         let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason SMap.empty in
-        merge_fun (mk_merge_env SMap.empty) file reason def statics)
+        merge_fun ~is_declare_or_intf:true (mk_merge_env SMap.empty) file reason def statics)
       defs
   in
   match ts with

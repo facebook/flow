@@ -5828,10 +5828,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
            * _might_ be havoced by a function call if that variable is passed
            * as an argument. Variables not passed into the function are havoced if
            * the invalidation api says they can be invalidated. *)
-          let refis =
+          let (refis, key_map) =
             let (callee_loc, _) = callee in
             let call_exp = (loc, Ast.Expression.Call call) in
-            let map =
+            let key_map =
               Base.List.foldi
                 refinement_keys
                 ~init:LookupMap.empty
@@ -5848,19 +5848,39 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   | None -> seen_keys
               )
             in
-            if not (LookupMap.is_empty map) then (
+            if not (LookupMap.is_empty key_map) then (
               this#add_pred_func_info callee_loc (class_stack, call_exp, callee, targs, arguments);
-              LookupMap.fold
-                (fun _ (key, index) refis ->
-                  this#extend_refinement
-                    key
-                    ~refining_locs:(L.LSet.singleton loc)
-                    (LatentR { func = callee; targs; arguments; index })
-                    refis)
-                map
-                refis
+              ( LookupMap.fold
+                  (fun _ (key, index) refis ->
+                    this#extend_refinement
+                      key
+                      ~refining_locs:(L.LSet.singleton loc)
+                      (LatentR { func = callee; targs; arguments; index })
+                      refis)
+                  key_map
+                  refis,
+                key_map
+              )
             ) else
-              refis
+              (refis, key_map)
+          in
+          (* "this" type guard refinements *)
+          let refis =
+            match callee with
+            | (callee_loc, Member { Member._object; property = Member.PropertyIdentifier _; _ }) ->
+              (match RefinementKey.of_expression _object with
+              | Some key when not (LookupMap.mem key.RefinementKey.lookup key_map) ->
+                (* TODO For now in `x.f(x)` we do not consider the this-refinement on x.
+                 * This is not fundamentally impossible, but causes crashes. *)
+                let call_exp = (loc, Ast.Expression.Call call) in
+                this#add_pred_func_info callee_loc (class_stack, call_exp, callee, targs, arguments);
+                this#extend_refinement
+                  key
+                  ~refining_locs:(L.LSet.singleton loc)
+                  (LatentThisR { func = callee; targs; arguments })
+                  refis
+              | _ -> refis)
+            | _ -> refis
           in
           if not (LookupMap.is_empty refis) then this#commit_refinement refis
         | _ -> ignore @@ this#call loc call
