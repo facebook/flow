@@ -11,5 +11,4 @@ type Props = {
   [StringPrefix<'data-'>]: string | void,
 }
 
-// TODO: Combine errors
-const error1: Props = {foo: 3};
+const error1: Props = {foo: 3}; // One error

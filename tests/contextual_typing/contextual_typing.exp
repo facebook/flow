@@ -1070,21 +1070,21 @@ An annotation on `y` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:4:48
 
-Cannot assign object literal to `x` because in the indexer property's key: [incompatible-type]
- - Either property `42` [1] is incompatible with string literal `A` [2].
- - Or property `42` [1] is incompatible with string literal `B` [3].
+Cannot assign object literal to `x` because property `42` is missing in object type [1] but exists in object
+literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer union type [3].
+[incompatible-type]
 
    unions.js:4:48
    4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
-                                                     ^^^^^^^^^^^^^^ [1]
+                                                     ^^^^^^^^^^^^^^ [2]
 
 References:
+   unions.js:4:12
+   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    unions.js:4:14
    4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
-                   ^^^ [2]
-   unions.js:4:20
-   4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR
-                         ^^^ [3]
+                   ^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:4:55
@@ -1097,17 +1097,21 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:42
 
-Cannot assign object literal to `x` because property `42` [1] is incompatible with string literal `A` [2] in the indexer
-property's key. [incompatible-type]
+Cannot assign object literal to `x` because property `42` is missing in object type [1] but exists in object
+literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer string literal
+`A` [3]. [incompatible-type]
 
    unions.js:7:42
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
-                                               ^^^^^^^^^^^^^^ [1]
+                                               ^^^^^^^^^^^^^^ [2]
 
 References:
+   unions.js:7:12
+   7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    unions.js:7:14
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
-                   ^^^ [2]
+                   ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:49

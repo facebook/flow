@@ -388,58 +388,97 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (match udict with
     | None -> ()
     | Some { key; value; dict_polarity; _ } ->
-      let keys =
-        Context.fold_real_props
-          cx
-          lflds
-          (fun name lp keys ->
-            if Context.has_prop cx uflds name then
-              keys
-            else
-              let use_op =
-                Frame
-                  ( PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason },
-                    use_op
-                  )
-              in
-              let lp =
-                match lp with
-                | Field
-                    {
-                      preferred_def_locs = _;
-                      key_loc = _;
-                      type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
-                      polarity;
-                    } ->
-                  OrdinaryField { type_ = mod_t (Some name) ldro lt; polarity }
-                | _ -> Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro)
-              in
-              let up =
-                OrdinaryField { type_ = mod_t (Some name) udro value; polarity = dict_polarity }
-              in
-              begin
-                if lit then
-                  match
-                    (Property.read_t_of_property_type lp, Property.read_t_of_property_type up)
-                  with
-                  | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-                  | _ -> ()
-                else
-                  let propref =
-                    mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
-                  in
-                  rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
-              end;
-              type_of_key_name cx name lreason :: keys)
-          []
-        |> union_of_ts lreason
+      let flow_prop_to_indexer lp name =
+        let use_op =
+          Frame
+            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
+        in
+        let lp =
+          match lp with
+          | Field
+              {
+                preferred_def_locs = _;
+                key_loc = _;
+                type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
+                polarity;
+              } ->
+            OrdinaryField { type_ = mod_t (Some name) ldro lt; polarity }
+          | _ -> Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro)
+        in
+        let up = OrdinaryField { type_ = mod_t (Some name) udro value; polarity = dict_polarity } in
+        begin
+          if lit then
+            match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
+            | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
+            | _ -> ()
+          else
+            let propref =
+              mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
+            in
+            rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+        end
       in
-      rec_flow
-        cx
-        trace
-        ( keys,
-          UseT (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op), key)
-        );
+      (* If we are in implicit instantiation then we should always flow missing keys & value types to the
+       * upper dictionary because that information may be useful to infer a type. Outside of implicit instantiation,
+       * flowing both can cause redundant errors when the key is already not a valid indexer key, so we avoid the
+       * value flows when that does not pass *)
+      ( if not (Context.in_implicit_instantiation cx) then
+        Context.iter_real_props cx lflds (fun name lp ->
+            if Context.has_prop cx uflds name then
+              ()
+            else begin
+              if speculative_subtyping_succeeds cx (type_of_key_name cx name lreason) key then
+                flow_prop_to_indexer lp name
+              else
+                let use_op =
+                  Frame
+                    ( PropertyCompatibility
+                        {
+                          prop = Some name;
+                          (* Lower and upper are reversed in this case since the lower object
+                           * is the one requiring the prop. *)
+                          lower = ureason;
+                          upper = lreason;
+                        },
+                      use_op
+                    )
+                in
+                add_output
+                  cx
+                  Error_message.(
+                    EIndexerCheckFailed
+                      {
+                        prop_name = name;
+                        reason_prop = lreason;
+                        reason_obj = ureason;
+                        reason_indexer = reason_of_t key;
+                        use_op;
+                      }
+                  )
+            end
+        )
+      else
+        let keys =
+          Context.fold_real_props
+            cx
+            lflds
+            (fun name lp keys ->
+              if Context.has_prop cx uflds name then
+                keys
+              else (
+                flow_prop_to_indexer lp name;
+                type_of_key_name cx name lreason :: keys
+              ))
+            []
+          |> union_of_ts lreason
+        in
+        rec_flow
+          cx
+          trace
+          ( keys,
+            UseT (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op), key)
+          )
+      );
       (* If the left is inexact and the right is indexed, Flow mixed to the indexer
        * value. Mixed represents the possibly unknown properties on the inexact object
        *)

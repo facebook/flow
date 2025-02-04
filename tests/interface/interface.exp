@@ -683,17 +683,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:47:2
 
-Cannot cast object literal to interface type because string `x` [1] is incompatible with number [2] in the indexer
-property's key. [incompatible-cast]
+Cannot cast object literal to interface type because property `x` is missing in interface type [1] but exists in object
+literal [2]. Any property that does not exist in interface type [1] must be compatible with its indexer number [3].
+[incompatible-type]
 
    interface.js:47:2
    47| ({x : 3} : interface {[number] : number}); // error
-        ^^^^^^^ [1]
+        ^^^^^^^ [2]
 
 References:
+   interface.js:47:12
+   47| ({x : 3} : interface {[number] : number}); // error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    interface.js:47:24
    47| ({x : 3} : interface {[number] : number}); // error
-                              ^^^^^^ [2]
+                              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:51:2

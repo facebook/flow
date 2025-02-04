@@ -82,90 +82,104 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot cast `o` to object type because property `1` [1] is incompatible with symbol [2] in the indexer property's key.
-[incompatible-cast]
+Cannot cast `o` to object type because property `1` is missing in object type [1] but exists in object literal [2]. Any
+property that does not exist in object type [1] must be compatible with its indexer symbol [3]. [incompatible-type]
 
    test.js:8:3
    8|   o as {[symbol]: boolean}; // ERROR
         ^
 
 References:
+   test.js:8:8
+   8|   o as {[symbol]: boolean}; // ERROR
+             ^^^^^^^^^^^^^^^^^^^ [1]
    test.js:2:13
                   v
    2|   const o = {
    3|     '1': true,
    4|     '2': false,
    5|   };
-        ^ [1]
+        ^ [2]
    test.js:8:10
    8|   o as {[symbol]: boolean}; // ERROR
-               ^^^^^^ [2]
+               ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot cast `o` to object type because property `2` [1] is incompatible with symbol [2] in the indexer property's key.
-[incompatible-cast]
+Cannot cast `o` to object type because property `2` is missing in object type [1] but exists in object literal [2]. Any
+property that does not exist in object type [1] must be compatible with its indexer symbol [3]. [incompatible-type]
 
    test.js:8:3
    8|   o as {[symbol]: boolean}; // ERROR
         ^
 
 References:
+   test.js:8:8
+   8|   o as {[symbol]: boolean}; // ERROR
+             ^^^^^^^^^^^^^^^^^^^ [1]
    test.js:2:13
                   v
    2|   const o = {
    3|     '1': true,
    4|     '2': false,
    5|   };
-        ^ [1]
+        ^ [2]
    test.js:8:10
    8|   o as {[symbol]: boolean}; // ERROR
-               ^^^^^^ [2]
+               ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:3
 
-Cannot cast `o` to object type because property `2` [1] is incompatible with number literal `1` [2] in the indexer
-property's key. [incompatible-cast]
+Cannot cast `o` to object type because property `2` is missing in object type [1] but exists in object literal [2]. Any
+property that does not exist in object type [1] must be compatible with its indexer number literal `1` [3].
+[incompatible-type]
 
    test.js:16:3
    16|   o as {[1]: boolean}; // ERROR
          ^
 
 References:
+   test.js:16:8
+   16|   o as {[1]: boolean}; // ERROR
+              ^^^^^^^^^^^^^^ [1]
    test.js:2:13
                    v
     2|   const o = {
     3|     '1': true,
     4|     '2': false,
     5|   };
-         ^ [1]
+         ^ [2]
    test.js:16:10
    16|   o as {[1]: boolean}; // ERROR
-                ^ [2]
+                ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:3
 
-Cannot cast `o` to object type because property `2` [1] is incompatible with string literal `1` [2] in the indexer
-property's key. [incompatible-cast]
+Cannot cast `o` to object type because property `2` is missing in object type [1] but exists in object literal [2]. Any
+property that does not exist in object type [1] must be compatible with its indexer string literal `1` [3].
+[incompatible-type]
 
    test.js:17:3
    17|   o as {['1']: boolean}; // ERROR
          ^
 
 References:
+   test.js:17:8
+   17|   o as {['1']: boolean}; // ERROR
+              ^^^^^^^^^^^^^^^^ [1]
    test.js:2:13
                    v
     2|   const o = {
     3|     '1': true,
     4|     '2': false,
     5|   };
-         ^ [1]
+         ^ [2]
    test.js:17:10
    17|   o as {['1']: boolean}; // ERROR
-                ^^^ [2]
+                ^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
@@ -417,44 +431,51 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:105:3
 
-Cannot cast `o` to object type because string `1.0234` [1] is incompatible with number [2] in the indexer property's
-key. [incompatible-cast]
+Cannot cast `o` to object type because property `1.0234` is missing in object type [1] but exists in object literal [2].
+Any property that does not exist in object type [1] must be compatible with its indexer number [3]. [incompatible-type]
 
    test.js:105:3
    105|   o as {[number]: boolean}; // ERROR
           ^
 
 References:
+   test.js:105:8
+   105|   o as {[number]: boolean}; // ERROR
+               ^^^^^^^^^^^^^^^^^^^ [1]
    test.js:102:13
                     v
    102|   const o = {
    103|     '1.0234': true,
    104|   };
-          ^ [1]
+          ^ [2]
    test.js:105:10
    105|   o as {[number]: boolean}; // ERROR
-                 ^^^^^^ [2]
+                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:114:3
 
-Cannot cast `o` to object type because string `9007199254740992` [1] is incompatible with number [2] in the indexer
-property's key. [incompatible-cast]
+Cannot cast `o` to object type because property `9007199254740992` is missing in object type [1] but exists in object
+literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer number [3].
+[incompatible-type]
 
    test.js:114:3
    114|   o as {[number]: boolean}; // ERROR
           ^
 
 References:
+   test.js:114:8
+   114|   o as {[number]: boolean}; // ERROR
+               ^^^^^^^^^^^^^^^^^^^ [1]
    test.js:111:13
                     v
    111|   const o = {
    112|     '9007199254740992': true,
    113|   };
-          ^ [1]
+          ^ [2]
    test.js:114:10
    114|   o as {[number]: boolean}; // ERROR
-                 ^^^^^^ [2]
+                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:128:3
