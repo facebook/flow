@@ -83,6 +83,13 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       suggestion: string option;
     }
+  | EIndexerCheckFailed of {
+      prop_name: name;
+      reason_prop: 'loc virtual_reason;
+      reason_obj: 'loc virtual_reason;
+      reason_indexer: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropNotReadable of {
       reason_prop: 'loc virtual_reason;
       prop_name: name option;
@@ -912,6 +919,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         suggestion;
       }
+  | EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op } ->
+    EIndexerCheckFailed
+      {
+        prop_name;
+        reason_prop = map_reason reason_prop;
+        reason_obj = map_reason reason_obj;
+        reason_indexer = map_reason reason_indexer;
+        use_op = map_use_op use_op;
+      }
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
     EPropNotReadable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -1494,6 +1510,10 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op ->
         EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion }
     )
+  | EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op } ->
+    util use_op (fun use_op ->
+        EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op }
+    )
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
     util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -2001,6 +2021,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropNotReadable _
   | EPropNotWritable _
   | EPropNotFound _
+  | EIndexerCheckFailed _
   | EExpectedBooleanLit _
   | EExpectedNumberLit _
   | EExpectedStringLit _
@@ -2189,6 +2210,8 @@ type 'loc friendly_message_recipe =
       suggestion: string option;
       reason_obj: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
+      (* Adds a reference to the indexer in the error message *)
+      reason_indexer: 'loc Reason.virtual_reason option;
     }
   | Normal of 'loc message
   | UseOp of {
@@ -2231,6 +2254,7 @@ let friendly_message_of_msg = function
         reason_obj;
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
+        reason_indexer = None;
       }
   | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs } ->
     Normal (MessageDevOnlyRefinedLocInfo { refining_locs })
@@ -2291,6 +2315,17 @@ let friendly_message_of_msg = function
         reason_obj;
         use_op;
         suggestion;
+        reason_indexer = None;
+      }
+  | EIndexerCheckFailed { prop_name; reason_obj; reason_prop; reason_indexer; use_op } ->
+    PropMissing
+      {
+        loc = loc_of_reason reason_prop;
+        prop = Some (display_string_of_name prop_name);
+        reason_obj;
+        use_op;
+        suggestion = None;
+        reason_indexer = Some reason_indexer;
       }
   | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
     UseOp
@@ -2336,6 +2371,7 @@ let friendly_message_of_msg = function
         reason_obj = snd reasons;
         use_op;
         suggestion = None;
+        reason_indexer = None;
       }
   | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
     Normal (MessagePlatformSpecificImplementationModuleLookupFailed name)
@@ -3164,6 +3200,8 @@ let error_code_of_message err : error_code option =
   | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFound { use_op; _ } -> react_rule_of_use_op use_op ~default:Error_codes.PropMissing
+  | EIndexerCheckFailed { use_op; _ } ->
+    react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EPropNotReadable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotRead
   | EPropNotWritable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotWrite
   | EPropPolarityMismatch _ -> Some IncompatibleVariance

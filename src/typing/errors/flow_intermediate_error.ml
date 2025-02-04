@@ -890,7 +890,7 @@ let rec make_intermediate_error :
    * If the use_op is a PropertyCompatibility frame then we encountered this
    * error while subtyping two objects. In this case we add a bit more
    * information to the error message. *)
-  let mk_prop_missing_error prop_loc prop lower use_op suggestion =
+  let mk_prop_missing_error prop_loc prop lower use_op suggestion reason_indexer =
     let (loc, lower, upper, use_op) =
       match use_op with
       (* If we are missing a property while performing property compatibility
@@ -902,7 +902,10 @@ let rec make_intermediate_error :
       | _ -> (prop_loc, lower, None, use_op)
     in
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
-    mk_use_op_error loc use_op (MessagePropMissing { lower; upper; prop; suggestion })
+    mk_use_op_error
+      loc
+      use_op
+      (MessagePropMissing { lower; upper; prop; suggestion; reason_indexer })
   in
   (* An error that occurs when some arbitrary "use" is incompatible with the
    * "lower" type. The use_op describes the path which we followed to find this
@@ -948,10 +951,11 @@ let rec make_intermediate_error :
         lower
         use_op
         None
+        None
     | IncompatibleGetElemT prop_loc
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc ->
-      mk_prop_missing_error prop_loc None lower use_op None
+      mk_prop_missing_error prop_loc None lower use_op None None
     | IncompatibleGetStaticsT -> mk_use_op_error use_loc use_op (MessageLowerIsNotInstanceType lower)
     | IncompatibleBindT -> mk_use_op_error use_loc use_op (MessageLowerIsNotFunctionType lower)
     (* unreachable or unclassified use-types. until we have a mechanical way
@@ -988,8 +992,8 @@ let rec make_intermediate_error :
       mk_error ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
     | (None, UseOp { loc; message; use_op; explanation }) ->
       mk_use_op_error loc use_op ?explanation message
-    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion }) ->
-      mk_prop_missing_error loc prop reason_obj use_op suggestion
+    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
+      mk_prop_missing_error loc prop reason_obj use_op suggestion reason_indexer
     | ( None,
         PropPolarityMismatch
           { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
@@ -3330,10 +3334,22 @@ let to_printable_error :
         text "Read the docs on Flow's multi-platform support for more information: ";
         text "https://flow.org/en/docs/react/multiplatform";
       ]
-    | MessagePropMissing { lower; upper; prop; suggestion } ->
+    | MessagePropMissing { lower; upper; prop; suggestion; reason_indexer } ->
       (* If we were subtyping that add to the error message so our user knows what
        * object required the missing property. *)
       let prop_message = mk_prop_message prop in
+      let indexer_message =
+        match reason_indexer with
+        | None -> []
+        | Some indexer ->
+          [
+            text ". Any property that does not exist in ";
+            ref lower;
+            text " must be compatible with its indexer ";
+            ref indexer;
+          ]
+      in
+
       let suggestion =
         match suggestion with
         | Some suggestion -> [text " (did you mean "; code suggestion; text "?)"]
@@ -3343,8 +3359,10 @@ let to_printable_error :
       | Some upper ->
         prop_message
         @ suggestion
-        @ [text " is missing in "; ref lower; text " but exists in "]
+        @ [text " is missing in "; ref lower]
+        @ [text " but exists in "]
         @ [ref upper]
+        @ indexer_message
       | None ->
         (match prop with
         | None when is_nullish_reason lower -> [ref lower; text " does not have properties"]

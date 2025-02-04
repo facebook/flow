@@ -780,6 +780,7 @@ type 'loc message =
       upper: 'loc virtual_reason option;
       prop: string option;
       suggestion: string option;
+      reason_indexer: 'loc virtual_reason option;
     }
   | MessagePropPolarityMismatch of {
       lower: 'loc virtual_reason;

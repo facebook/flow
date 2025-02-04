@@ -1197,6 +1197,14 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
+    | EIndexerCheckFailed { prop_name = prop; reason_prop; reason_obj; reason_indexer; use_op } ->
+      spf
+        "EIndexerCheckFailed (%s, %s, %s, %s, %s)"
+        (display_string_of_name prop)
+        (dump_reason cx reason_prop)
+        (dump_reason cx reason_obj)
+        (dump_reason cx reason_indexer)
+        (string_of_use_op use_op)
     | EPropNotReadable { reason_prop; prop_name; use_op } ->
       spf
         "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
