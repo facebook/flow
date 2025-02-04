@@ -1,0 +1,89 @@
+Error ------------------------------------------------------------------------------------- @flowtyped/react.js.flow:9:8
+
+Cannot redeclare global `React.Node` [1] because the global is already declared in another file. [name-already-bound]
+
+   @flowtyped/react.js.flow:9:8
+    9|   type React$Node = 1; // bad-shadow
+              ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:15:14
+   15| declare type React$Node =
+                    ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:2:1
+
+Cannot cast `2` to `React.Node` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+
+   test.js:2:1
+   2| 2 as React$Node; // error: 2 ~> 1: The bad shadow wins over the real global.
+      ^ [1]
+
+References:
+   test.js:2:6
+   2| 2 as React$Node; // error: 2 ~> 1: The bad shadow wins over the real global.
+           ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast empty string to `MyReact` because string [1] is incompatible with string literal `react` [2].
+[incompatible-cast]
+
+   test.js:3:1
+   3| '' as ReactTypes.MyReact; // error: '' ~> 'react'
+      ^^ [1]
+
+References:
+   test.js:3:7
+   3| '' as ReactTypes.MyReact; // error: '' ~> 'react'
+            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Cannot resolve name `ReactValue`. [cannot-resolve-name]
+
+   4| ReactValue; // error: value-namespaces in declare global are completely ignored
+      ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot resolve name `willBeIgnored`. [cannot-resolve-name]
+
+   5| willBeIgnored; // error: values in declare global are completely ignored
+      ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+
+Cannot cast empty string to `T1` because string [1] is incompatible with string literal `react` [2]. [incompatible-cast]
+
+   test.js:8:1
+   8| '' as T1; // error: '' ~> 'react'
+      ^^ [1]
+
+References:
+   test.js:8:7
+   8| '' as T1; // error: '' ~> 'react'
+            ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot cast empty string to `T2` because string [1] is incompatible with number literal `3` [2]. [incompatible-cast]
+
+   test.js:9:1
+   9| '' as T2 // error: '' ~> 3
+      ^^ [1]
+
+References:
+   test.js:9:7
+   9| '' as T2 // error: '' ~> 3
+            ^^ [2]
+
+
+
+Found 7 errors

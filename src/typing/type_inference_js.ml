@@ -469,9 +469,9 @@ class lib_def_loc_mapper_and_validator cx =
         | DeclareNamespace.Local _ -> None
         | DeclareNamespace.Global _ ->
           if in_toplevel_scope then
-            None
+            Some (error "declare global")
           else
-            Some (error "declare global"))
+            None)
       | Block _ -> Some (error "block")
       | Break _ -> Some (error "break")
       | ClassDeclaration _ -> Some (error "class declaration")

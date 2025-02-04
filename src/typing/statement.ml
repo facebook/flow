@@ -2106,10 +2106,16 @@ module Make
               reason
               body_statements
           in
-          Flow.add_output
-            cx
-            (Error_message.EUnsupportedSyntax (name_loc, Flow_intermediate_error_types.DeclareGlobal)
-            );
+          let () =
+            match (Context.enable_declare_global cx, prev_scope_kind) with
+            | (true, (Name_def.DeclareModule | Name_def.Module)) -> ()
+            | (_, _) ->
+              Flow.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (name_loc, Flow_intermediate_error_types.DeclareGlobal)
+                )
+          in
           Flow.add_output cx (Error_message.EUndocumentedFeature { loc = name_loc });
           (t, Ast.Statement.DeclareNamespace.Global id)
         | Ast.Statement.DeclareNamespace.Local id ->
