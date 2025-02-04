@@ -32,3 +32,14 @@ function test_refine_to_nullish() {
     foo as empty; // error
   }
 }
+
+{
+  declare opaque type ME: number
+  declare let elem: ME;
+
+  if (elem !== null) {
+    elem = elem;
+  }
+
+  elem as ME;
+}

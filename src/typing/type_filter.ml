@@ -184,7 +184,7 @@ let rec not_truthy cx t =
     | t -> unchanged_result t
 
 let rec maybe cx = function
-  | OpaqueT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
+  | OpaqueT (r, opq) -> filter_opaque (maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx maybe (r, UnionRep.members rep)
   | MaybeT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
   | DefT (r, MixedT Mixed_everything) ->
@@ -217,8 +217,8 @@ let rec not_maybe cx = function
     DefT (r, MixedT Mixed_non_maybe) |> changed_result
   | t -> unchanged_result t
 
-let null = function
-  | OpaqueT (r, _)
+let rec null = function
+  | OpaqueT (r, opq) -> filter_opaque null r opq
   | OptionalT { reason = _; type_ = MaybeT (r, _); use_desc = _ }
   | MaybeT (r, _) ->
     NullT.why r |> changed_result
@@ -233,6 +233,7 @@ let null = function
     EmptyT.why reason |> changed_result
 
 let rec not_null cx = function
+  | OpaqueT (r, opq) -> filter_opaque (not_null cx) r opq
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (VoidT.why r) t []) |> changed_result
   | OptionalT { reason; type_ = t; use_desc } ->
     let (TypeFilterResult { type_ = t; changed }) = not_null cx t in
@@ -243,10 +244,9 @@ let rec not_null cx = function
   | DefT (r, MixedT Mixed_non_void) -> DefT (r, MixedT Mixed_non_maybe) |> changed_result
   | t -> unchanged_result t
 
-let undefined = function
-  | OpaqueT (r, _)
-  | MaybeT (r, _) ->
-    VoidT.why r |> changed_result
+let rec undefined = function
+  | OpaqueT (r, opq) -> filter_opaque undefined r opq
+  | MaybeT (r, _) -> VoidT.why r |> changed_result
   | DefT (_, VoidT) as t -> unchanged_result t
   | OptionalT { reason = r; type_ = _; use_desc } ->
     VoidT.why_with_use_desc ~use_desc r |> changed_result
@@ -260,6 +260,7 @@ let undefined = function
     EmptyT.why reason |> changed_result
 
 let rec not_undefined cx = function
+  | OpaqueT (r, opq) -> filter_opaque (not_undefined cx) r opq
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) t []) |> changed_result
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_undefined cx t
   | UnionT (r, rep) -> recurse_into_union cx not_undefined (r, UnionRep.members rep)

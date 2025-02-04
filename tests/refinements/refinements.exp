@@ -11149,24 +11149,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
 
-Cannot cast `foo` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
-
-   opaque_type.js:24:5
-   24|     foo as empty; // error
-           ^^^
-
-References:
-   opaque_type.js:18:23
-   18|   declare const foo: ?Foo;
-                             ^^^ [1]
-   opaque_type.js:24:12
-   24|     foo as empty; // error
-                  ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
-
-Cannot cast `foo` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
    opaque_type.js:24:5
    24|     foo as empty; // error
@@ -11228,7 +11211,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
 
-Cannot cast `foo` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
    opaque_type.js:28:5
    28|     foo as empty; // error
@@ -11290,7 +11273,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
 
-Cannot cast `foo` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-cast]
 
    opaque_type.js:32:5
    32|     foo as empty; // error
@@ -11317,6 +11300,20 @@ References:
    opaque_type.js:30:7
    30|   if (foo === null) {
              ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:44:3
+
+Refined at [1]
+
+   opaque_type.js:44:3
+   44|   elem as ME;
+         ^^^^
+
+References:
+   opaque_type.js:40:7
+   40|   if (elem !== null) {
+             ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- property.js:5:12
