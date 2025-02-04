@@ -2223,12 +2223,24 @@ let merge_builtins
         )
     in
     let global_types_map =
-      let local index =
-        Lazy.map
-          (fun (loc, _, (lazy t), _) -> (loc, t))
-          (local_def file_and_dependency_map_rec (Local_defs.get local_defs index))
+      let local n index =
+        lazy
+          (let ({ local_defs; _ }, _) = Lazy.force file_and_dependency_map_rec in
+           let (loc, _, (lazy t), _) = Local_defs.get local_defs index |> Lazy.force in
+           let error_on_bad_global_shadow global_i =
+             let (def_loc, _, _, _) = Local_defs.get local_defs global_i |> Lazy.force in
+             ConsGen.error_on_bad_global_shadow cx n ~loc ~def_loc
+           in
+           (match SMap.find_opt n global_values with
+           | Some global_i -> error_on_bad_global_shadow global_i
+           | None ->
+             (match SMap.find_opt n global_types with
+             | Some global_i -> error_on_bad_global_shadow global_i
+             | None -> ()));
+           (loc, t)
+          )
       in
-      let f acc name i = SMap.add name (local i) acc in
+      let f acc name i = SMap.add name (local name i) acc in
       Base.Array.fold2_exn ~init:SMap.empty ~f
     in
     let cjs_module type_exports exports info =

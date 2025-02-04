@@ -1629,6 +1629,12 @@ let to_printable_error :
       ]
     | MessageCannotCreateExactType lower ->
       [text "Cannot create exact type from "; ref lower; text "."]
+    | MessageCannotDeclareAlreadyBoundGlobal x ->
+      [
+        text "Cannot redeclare global ";
+        Friendly.ref x;
+        text " because the global is already declared in another file.";
+      ]
     | MessageCannotDeclareAlreadyBoundName x ->
       [text "Cannot declare "; Friendly.ref x; text " because the name is already bound."]
     | MessageCannotDelete expr ->

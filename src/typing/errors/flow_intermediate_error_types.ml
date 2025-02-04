@@ -389,6 +389,7 @@ type 'loc message =
       upper: 'loc virtual_reason;
     }
   | MessageCannotCreateExactType of 'loc virtual_reason
+  | MessageCannotDeclareAlreadyBoundGlobal of concrete_reason
   | MessageCannotDeclareAlreadyBoundName of concrete_reason
   | MessageCannotDelete of 'loc virtual_reason
   | MessageCannotDetermineEmptyArrayLiteralType

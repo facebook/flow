@@ -174,14 +174,18 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           )
       in
       let global_types_map =
-        let local index =
+        let local n index =
           lazy
-            (let { Merge.local_defs; _ } = Lazy.force file_rec in
+            (let { Merge.local_defs; cx; _ } = Lazy.force file_rec in
+             let global_builtins = Context.global_builtins cx in
              let (loc, _, (lazy t), _) = Local_defs.get local_defs index |> Lazy.force in
+             (match Builtins.get_builtin_type_opt global_builtins n with
+             | Some (def_loc, _) -> ConsGen.error_on_bad_global_shadow cx n ~loc ~def_loc
+             | None -> ());
              (loc, t)
             )
         in
-        let f acc name i = SMap.add name (local i) acc in
+        let f acc name i = SMap.add name (local name i) acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f
       in
       let cjs_module buf pos =
@@ -320,17 +324,49 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
 
     let rec file_rec =
       lazy
-        {
-          Type_sig_merge.cx;
-          dependencies;
-          exports = exports file_rec;
-          local_defs = local_defs file_rec;
-          remote_refs = remote_refs file_rec;
-          pattern_defs = pattern_defs file_rec;
-          patterns = patterns file_rec;
-        }
+        ( extend_local_globals cx ~resolved_requires:!resolved_requires;
+          {
+            Type_sig_merge.cx;
+            dependencies;
+            exports = exports file_rec;
+            local_defs = local_defs file_rec;
+            remote_refs = remote_refs file_rec;
+            pattern_defs = pattern_defs file_rec;
+            patterns = patterns file_rec;
+          }
+        )
     in
     Lazy.force file_rec
+  and extend_local_globals cx ~resolved_requires =
+    let local_builtins =
+      lazy
+        (let global_types =
+           (* For now, we limit the effect of global-modifying after import to react only,
+            * since doing it for all modules, especially cyclic ones, can trigger infinite
+            * recursion. *)
+           match SMap.find_opt "react" resolved_requires with
+           | None -> SMap.empty
+           | Some m ->
+             (match Lazy.force m with
+             | Context.UncheckedModule _ -> SMap.empty
+             | Context.MissingModule _ -> SMap.empty
+             | Context.TypedModule f ->
+               (match f () with
+               | Error _ -> SMap.empty
+               | Ok { Type.module_global_types_tmap = module_global_types; _ } ->
+                 (* Since we are only getting extra globals from one module,
+                  * we don't need to worry about globals from different modules overlap. *)
+                 module_global_types))
+         in
+         Builtins.of_name_map
+           ~type_mapper:Base.Fn.id
+           ~module_type_mapper:Base.Fn.id
+           ~values:SMap.empty
+           ~types:global_types
+           ~modules:SMap.empty
+        )
+    in
+    Context.extend_local_builtins cx local_builtins
   in
   let check_file file_key resolved_modules ast file_sig docblock aloc_table find_ref_request =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
@@ -342,6 +378,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
     resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
+    extend_local_globals cx ~resolved_requires:(SMap.map Lazy.from_val !resolved_requires);
     let (typed_ast, obj_to_obj_map) =
       Obj_to_obj_hook.with_obj_to_obj_hook
         ~enabled:
@@ -376,6 +413,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
     resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
+    extend_local_globals cx ~resolved_requires:(SMap.map Lazy.from_val !resolved_requires);
     let () = Type_inference_js.initialize_env cx aloc_ast in
     (cx, aloc_ast)
   in

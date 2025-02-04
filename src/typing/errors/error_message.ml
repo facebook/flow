@@ -672,6 +672,7 @@ and ref_in_render_kind =
   | Access
 
 and binding_error =
+  | EGlobalAlreadyDeclared
   | ENameAlreadyBound
   | EVarRedeclaration
   | EReferencedBeforeDeclaration
@@ -2570,6 +2571,7 @@ let friendly_message_of_msg = function
     let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
     let msg =
       match binding_error with
+      | EGlobalAlreadyDeclared -> MessageCannotDeclareAlreadyBoundGlobal x
       | ENameAlreadyBound -> MessageCannotDeclareAlreadyBoundName x
       | EVarRedeclaration -> MessageCannotRedeclareVar x
       | EReferencedBeforeDeclaration -> MessageCannotUseBeforeDeclaration x
@@ -3066,6 +3068,7 @@ let error_code_of_message err : error_code option =
   | EBinaryInRHS _ -> Some InvalidInRhs
   | EBindingError (binding_error, _, _, _) -> begin
     match binding_error with
+    | EGlobalAlreadyDeclared -> Some NameAlreadyBound
     | ENameAlreadyBound -> Some NameAlreadyBound
     | EVarRedeclaration -> Some NameAlreadyBound
     | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration

@@ -169,8 +169,6 @@ val max_literal_length : t -> int
 
 val babel_loose_array_spread : t -> bool
 
-val builtins : t -> Builtins.t
-
 val builtin_value_opt : t -> string -> (ALoc.t * Type.t) option
 
 val builtin_type_opt : t -> string -> (ALoc.t * Type.t) option
@@ -180,6 +178,8 @@ val builtin_module_opt : t -> string -> (Reason.t * Type.moduletype Lazy.t) opti
 val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
+
+val global_builtins : t -> Builtins.t
 
 val hook_compatibility : t -> bool
 
@@ -393,6 +393,8 @@ val add_reachable_dep : t -> File_key.t -> unit
 val add_refined_location : t -> ALoc.t -> ALocSet.t -> unit
 
 val add_aggressively_invalidated_location : t -> ALoc.t -> Refinement_invalidation.t -> unit
+
+val extend_local_builtins : t -> Builtins.t Lazy.t -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
