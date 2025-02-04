@@ -404,6 +404,24 @@ References:
                ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- prefix.js:120:74
+
+Cannot assign object literal to `objCopy` because string `bar` [1] is incompatible with string prefixed with `foo` [2]
+in the indexer property's key. [incompatible-type]
+
+   prefix.js:120:74
+   120|   const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
+                                                                                 ^^^^^^^^
+
+References:
+   prefix.js:120:18
+   120|   const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:119:16
+   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
 Cannot cast empty string to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
@@ -683,4 +701,4 @@ References:
 
 
 
-Found 46 errors
+Found 47 errors

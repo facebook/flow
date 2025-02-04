@@ -113,3 +113,10 @@ type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
   x as "2"; // OK
   x as "3"; // ERROR
 }
+
+type SpreadOverOptionalProperies = StringPrefix<'foo'>;
+{
+  const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+  const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
+  
+}
