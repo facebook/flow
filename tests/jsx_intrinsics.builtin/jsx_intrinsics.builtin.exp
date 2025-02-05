@@ -106,5 +106,58 @@ References:
                                            ^^^^^^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:23:12
 
-Found 5 errors
+Cannot create `div` element because in property `ref`: [incompatible-type]
+ - Either string [1] is incompatible with object type [2].
+ - Or string [1] is incompatible with function type [3].
+
+   main.js:23:12
+    23| const g = <div {...dataProps} />; // TODO: no errors
+                   ^^^
+
+References:
+   main.js:22:44
+    22| const dataProps: {[StringPrefix<'data-'>]: string} = {};
+                                                   ^^^^^^ [1]
+   <BUILTINS>/react.js:196:5
+   196|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:197:6
+   197|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:23:11
+
+string `key` [1] is incompatible with string prefixed with `data-` [2]. [incompatible-type]
+
+   main.js:23:11
+   23| const g = <div {...dataProps} />; // TODO: no errors
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   main.js:22:20
+   22| const dataProps: {[StringPrefix<'data-'>]: string} = {};
+                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:23:11
+
+string `ref` [1] is incompatible with string prefixed with `data-` [2]. [incompatible-type]
+
+   main.js:23:11
+   23| const g = <div {...dataProps} />; // TODO: no errors
+                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   main.js:22:20
+   22| const dataProps: {[StringPrefix<'data-'>]: string} = {};
+                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

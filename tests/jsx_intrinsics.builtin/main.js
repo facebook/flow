@@ -18,3 +18,6 @@ var d: ExactReactElement_DEPRECATED<any> = <div not_a_real_attr="asdf" />;
 var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
 // No error as long as expectations are consistent, though.
 var f: ExactReactElement_DEPRECATED<'div'> = <div not_a_real_attr="asdf" />;
+
+const dataProps: {[StringPrefix<'data-'>]: string} = {};
+const g = <div {...dataProps} />; // TODO: no errors
