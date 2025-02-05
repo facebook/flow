@@ -9,7 +9,6 @@ module Flow = Flow_js
 module Ast = Flow_ast
 open Reason
 open Type
-open Utils_js
 
 module DistributeUnionIntersection = struct
   (* For a type t, run the check defined by check_base.
@@ -91,210 +90,16 @@ module DistributeUnionIntersection = struct
 end
 
 module Import_export = struct
-  let check_platform_availability cx reason imported_module_available_platforms =
-    let current_module_available_platforms = Context.available_platforms cx in
-    match (current_module_available_platforms, imported_module_available_platforms) with
-    | (None, None)
-    | (None, Some _)
-    | (Some _, None) ->
-      ()
-    | (Some required_platforms, Some available_platforms) ->
-      let file_options = Context.((metadata cx).file_options) in
-      let required_platforms =
-        Platform_set.to_platform_string_set ~file_options required_platforms
-      in
-      let available_platforms =
-        Platform_set.to_platform_string_set ~file_options available_platforms
-      in
-      let missing_platforms = SSet.diff required_platforms available_platforms in
-      if SSet.cardinal missing_platforms > 0 then
-        let loc = Reason.loc_of_reason reason in
-        let message =
-          Error_message.EMissingPlatformSupport { loc; available_platforms; required_platforms }
-        in
-        Flow_js_utils.add_output cx message
-
-  let get_module_type_or_any
-      cx
-      ?(perform_platform_validation = false)
-      ~import_kind_for_untyped_import_validation
-      (loc, mref) =
-    if Context.in_declare_module cx then
-      match Context.builtin_module_opt cx mref with
-      | Some (_, (lazy m)) -> Ok m
-      | None -> Error (Flow_js_utils.lookup_builtin_module_error cx mref loc)
-    else
-      let module_type_or_any =
-        match Context.find_require cx mref with
-        | Context.TypedModule f -> f ()
-        | Context.UncheckedModule (module_def_loc, mref) ->
-          Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
-              match import_kind with
-              | ImportType
-              | ImportTypeof ->
-                let message = Error_message.EUntypedTypeImport (loc, mref) in
-                Flow_js_utils.add_output cx message
-              | ImportValue ->
-                let message = Error_message.EUntypedImport (loc, mref) in
-                Flow_js_utils.add_output cx message
-          );
-          Error (AnyT.why Untyped (mk_reason (RModule mref) module_def_loc))
-        | Context.MissingModule m_name ->
-          Error (Flow_js_utils.lookup_builtin_module_error cx m_name loc)
-      in
-      let reason = Reason.(mk_reason (RCustom mref) loc) in
-      let need_platform_validation =
-        perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
-      in
-      ( if need_platform_validation then
-        match module_type_or_any with
-        | Ok m ->
-          if need_platform_validation then
-            check_platform_availability cx reason m.module_available_platforms
-        | Error _ -> ()
-      );
-      module_type_or_any
-
-  let singleton_concretize_type_for_imports_exports cx r t =
-    match Flow.possible_concrete_types_for_imports_exports cx r t with
-    | [] -> EmptyT.why r
-    | [t] -> t
-    | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-
   let assert_export_is_type cx name t =
     let reason = TypeUtil.reason_of_t t in
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
         let t =
           t
-          |> singleton_concretize_type_for_imports_exports cx reason
+          |> Flow.singleton_concretize_type_for_imports_exports cx reason
           |> Flow_js_utils.AssertExportIsTypeTKit.on_concrete_type cx name
         in
         Flow.flow_t cx (t, tout)
     )
-
-  let get_imported_t
-      cx ~import_reason ~module_name ~source_module ~import_kind ~remote_name ~local_name =
-    let is_strict = Context.is_strict cx in
-    let name_def_loc_ref = ref None in
-    let t =
-      let with_concretized_type cx r f t =
-        f (singleton_concretize_type_for_imports_exports cx r t)
-      in
-      match source_module with
-      | Ok m ->
-        let (name_loc_opt, t) =
-          if remote_name = "default" then
-            Flow_js_utils.ImportDefaultTKit.on_ModuleT
-              cx
-              ~with_concretized_type
-              (import_reason, import_kind, (local_name, module_name), is_strict)
-              m
-          else
-            Flow_js_utils.ImportNamedTKit.on_ModuleT
-              cx
-              ~with_concretized_type
-              (import_reason, import_kind, remote_name, module_name, is_strict)
-              m
-        in
-        name_def_loc_ref := name_loc_opt;
-        t
-      | Error t -> t
-    in
-    let name_def_loc = !name_def_loc_ref in
-    (name_def_loc, t)
-
-  let type_kind_of_kind = function
-    | Ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
-    | Ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
-    | Ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
-
-  let import_named_specifier_type
-      cx import_reason import_kind ~module_name ~source_module ~remote_name ~local_name =
-    let import_kind = type_kind_of_kind import_kind in
-    get_imported_t
-      cx
-      ~import_reason
-      ~module_name
-      ~source_module
-      ~import_kind
-      ~remote_name
-      ~local_name
-
-  let get_module_namespace_type cx reason ~namespace_symbol source_module =
-    let is_strict = Context.is_strict cx in
-    match source_module with
-    | Ok m ->
-      let (values_type, types_tmap) =
-        Flow_js_utils.ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m
-      in
-      NamespaceT { namespace_symbol; values_type; types_tmap }
-    | Error t -> t
-
-  let import_namespace_specifier_type
-      cx import_reason import_kind ~module_name ~namespace_symbol ~source_module ~local_loc =
-    let open Ast.Statement in
-    match import_kind with
-    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
-    | ImportDeclaration.ImportTypeof ->
-      let module_ns_t =
-        get_module_namespace_type cx import_reason ~namespace_symbol source_module
-      in
-      let bind_reason = repos_reason local_loc import_reason in
-      Flow_js_utils.ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
-    | ImportDeclaration.ImportValue ->
-      let reason = mk_reason (RModule module_name) local_loc in
-      let namespace_symbol = FlowSymbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
-      get_module_namespace_type cx reason ~namespace_symbol source_module
-
-  let import_default_specifier_type
-      cx import_reason import_kind ~module_name ~source_module ~local_name =
-    let import_kind = type_kind_of_kind import_kind in
-    get_imported_t
-      cx
-      ~import_reason
-      ~module_name
-      ~source_module
-      ~import_kind
-      ~remote_name:"default"
-      ~local_name
-
-  let cjs_require_type
-      cx reason ~namespace_symbol ~standard_cjs_esm_interop ~legacy_interop source_module =
-    let is_strict = Context.is_strict cx in
-    match source_module with
-    | Ok m ->
-      let (t, def_loc) =
-        Flow_js_utils.CJSRequireTKit.on_ModuleT
-          cx
-          ~reposition:Flow.reposition
-          ~reason
-          ~module_symbol:namespace_symbol
-          ~is_strict
-          ~standard_cjs_esm_interop
-          ~legacy_interop
-          m
-      in
-      (Some def_loc, t)
-    | Error t -> (None, t)
-
-  let get_implicitly_imported_react_fragment_type cx loc =
-    let source_module =
-      Flow_js_utils.get_implicitly_imported_module
-        cx
-        "react"
-        ~expected_module_purpose:Flow_intermediate_error_types.ReactModuleForJSXFragment
-        (mk_reason (RModule "react") loc)
-    in
-    let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) loc in
-    get_imported_t
-      cx
-      ~import_reason:reason
-      ~module_name:"react"
-      ~source_module
-      ~import_kind:ImportValue
-      ~remote_name:"Fragment"
-      ~local_name:"Fragment"
-    |> snd
 end
 
 module Operators = struct

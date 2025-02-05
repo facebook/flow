@@ -94,6 +94,8 @@ val possible_concrete_types_for_imports_exports :
 val singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports :
   Context.t -> Reason.reason -> Type.t -> Type.t
 
+val singleton_concretize_type_for_imports_exports : Context.t -> Reason.reason -> Type.t -> Type.t
+
 val singleton_concrete_type_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t
 
 val possible_concrete_types_for_predicate :

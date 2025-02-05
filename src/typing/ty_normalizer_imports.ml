@@ -6,7 +6,6 @@
  *)
 
 open File_sig
-open Type_operation_utils
 
 let import_mode_to_import_kind =
   let open Flow_ast.Statement.ImportDeclaration in
@@ -26,10 +25,12 @@ let add_bind_ident_from_imports cx local_name import_mode local_loc source remot
     Reason.mk_reason (Reason.RNamedImportedType (module_name, local_name)) source_loc
   in
   let (_, t) =
-    Import_export.import_named_specifier_type
+    Flow_js_utils.ImportExportUtils.import_named_specifier_type
       cx
       import_reason
-      (import_mode_to_import_kind import_mode)
+      ~singleton_concretize_type_for_imports_exports:
+        Flow_js.singleton_concretize_type_for_imports_exports
+      ~import_kind:(import_mode_to_import_kind import_mode)
       ~module_name
       ~source_module
       ~remote_name
@@ -42,7 +43,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
   let source_loc = ALoc.of_loc source_loc in
   let source_module =
     lazy
-      (Import_export.get_module_type_or_any
+      (Flow_js_utils.ImportExportUtils.get_module_type_or_any
          cx
          ~import_kind_for_untyped_import_validation:None
          (source_loc, module_name)
@@ -77,16 +78,17 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
 let add_require_bindings_from_exports_map cx loc source_name binding acc =
   let reason = Reason.(mk_reason (RModule source_name) loc) in
   let source_module =
-    Import_export.get_module_type_or_any
+    Flow_js_utils.ImportExportUtils.get_module_type_or_any
       cx
       ~perform_platform_validation:false
       ~import_kind_for_untyped_import_validation:None
       (loc, source_name)
   in
   let t =
-    Import_export.cjs_require_type
+    Flow_js_utils.ImportExportUtils.cjs_require_type
       cx
       reason
+      ~reposition:Flow_js.reposition
       ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:source_name ~def_loc:loc)
       ~standard_cjs_esm_interop:false
       ~legacy_interop:false

@@ -809,7 +809,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
                   Ast.Statement.ImportDeclaration
                     { source = ((loc, _), { Ast.StringLiteral.value; _ }); _ }
                 ) ->
-                Type_operation_utils.Import_export.get_module_type_or_any
+                Flow_js_utils.ImportExportUtils.get_module_type_or_any
                   cx
                   ~import_kind_for_untyped_import_validation:None
                   (loc, value)

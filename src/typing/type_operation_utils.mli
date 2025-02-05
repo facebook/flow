@@ -10,7 +10,6 @@
 
 module Ast = Flow_ast
 open Reason
-open FlowSymbol
 
 module DistributeUnionIntersection : sig
   val distribute :
@@ -33,57 +32,7 @@ module DistributeUnionIntersection : sig
 end
 
 module Import_export : sig
-  val get_module_type_or_any :
-    Context.t ->
-    ?perform_platform_validation:bool ->
-    import_kind_for_untyped_import_validation:Type.import_kind option ->
-    ALoc.t * string ->
-    (Type.moduletype, Type.t) result
-
-  val import_named_specifier_type :
-    Context.t ->
-    reason ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    source_module:(Type.moduletype, Type.t) result ->
-    remote_name:string ->
-    local_name:string ->
-    ALoc.t option * Type.t
-
-  val get_module_namespace_type :
-    Context.t -> reason -> namespace_symbol:symbol -> (Type.moduletype, Type.t) result -> Type.t
-
   val assert_export_is_type : Context.t -> Reason.name -> Type.t -> Type.t
-
-  val import_namespace_specifier_type :
-    Context.t ->
-    reason ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    namespace_symbol:symbol ->
-    source_module:(Type.moduletype, Type.t) result ->
-    local_loc:ALoc.t ->
-    Type.t
-
-  val import_default_specifier_type :
-    Context.t ->
-    reason ->
-    Ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
-    source_module:(Type.moduletype, Type.t) result ->
-    local_name:string ->
-    ALoc.t option * Type.t
-
-  val cjs_require_type :
-    Context.t ->
-    reason ->
-    namespace_symbol:symbol ->
-    standard_cjs_esm_interop:bool ->
-    legacy_interop:bool ->
-    (Type.moduletype, Type.t) result ->
-    ALoc.t option * Type.t
-
-  val get_implicitly_imported_react_fragment_type : Context.t -> ALoc.t -> Type.t
 end
 
 module Operators : sig

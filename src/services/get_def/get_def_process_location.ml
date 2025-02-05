@@ -782,7 +782,7 @@ class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers
 
     method private get_module_def_loc (loc, _) module_name =
       match
-        Type_operation_utils.Import_export.get_module_type_or_any
+        Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
           (loc, module_name)
           ~perform_platform_validation:false
@@ -906,7 +906,7 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
 
     method private get_module_def_loc loc module_name =
       match
-        Type_operation_utils.Import_export.get_module_type_or_any
+        Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
           (loc, module_name)
           ~perform_platform_validation:false

@@ -57,7 +57,7 @@ class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =
         lazy
           (let ((source_loc, _), { Ast.StringLiteral.value; _ }) = source in
            match
-             Type_operation_utils.Import_export.get_module_type_or_any
+             Flow_js_utils.ImportExportUtils.get_module_type_or_any
                cx
                (source_loc, value)
                ~perform_platform_validation:false

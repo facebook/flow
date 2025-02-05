@@ -819,15 +819,16 @@ module Make
     let { Ast.ModuleRefLiteral.value; def_loc_opt = _; prefix_len; legacy_interop; _ } = lit in
     let mref = Base.String.drop_prefix value prefix_len in
     let module_type_or_any =
-      Import_export.get_module_type_or_any
+      Flow_js_utils.ImportExportUtils.get_module_type_or_any
         cx
         ~import_kind_for_untyped_import_validation:(Some ImportValue)
         (loc, mref)
     in
     let (def_loc_opt, require_t) =
-      Import_export.cjs_require_type
+      Flow_js_utils.ImportExportUtils.cjs_require_type
         cx
         (mk_reason (RModule mref) loc)
+        ~reposition:Flow.reposition
         ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
         ~standard_cjs_esm_interop:true
         ~legacy_interop
@@ -954,10 +955,12 @@ module Make
         | Ast.Statement.ExportType -> Ast.Statement.ImportDeclaration.ImportType
         | Ast.Statement.ExportValue -> Ast.Statement.ImportDeclaration.ImportValue
       in
-      Import_export.import_named_specifier_type
+      Flow_js_utils.ImportExportUtils.import_named_specifier_type
         cx
         reason
-        import_kind
+        ~singleton_concretize_type_for_imports_exports:
+          Flow.singleton_concretize_type_for_imports_exports
+        ~import_kind
         ~module_name
         ~source_module
         ~remote_name:(Reason.display_string_of_name local_name)
@@ -999,7 +1002,7 @@ module Make
       let (source_module, _, _) = Base.Option.value_exn source in
       let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let ns_t =
-        Import_export.get_module_namespace_type
+        Flow_js_utils.ImportExportUtils.get_module_namespace_type
           cx
           reason
           ~namespace_symbol:(mk_constant_symbol ~name ~def_loc:id_loc)
@@ -1671,7 +1674,7 @@ module Make
         | None -> None
         | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
           let source_module =
-            Import_export.get_module_type_or_any
+            Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
               (source_loc, module_name)
@@ -1720,7 +1723,7 @@ module Make
             | Ast.Statement.ExportValue -> (true, Some ImportValue)
           in
           let source_module =
-            Import_export.get_module_type_or_any
+            Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation
               (source_loc, module_name)
@@ -1779,7 +1782,7 @@ module Make
         | ImportDeclaration.ImportValue -> (true, Some ImportValue)
       in
       let source_module =
-        Import_export.get_module_type_or_any
+        Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
           ~import_kind_for_untyped_import_validation
           (source_loc, module_name)
@@ -1813,10 +1816,12 @@ module Make
                    in
                    let import_kind = Base.Option.value ~default:import_kind kind in
                    let (remote_name_def_loc, imported_t) =
-                     Import_export.import_named_specifier_type
+                     Flow_js_utils.ImportExportUtils.import_named_specifier_type
                        cx
                        import_reason
-                       import_kind
+                       ~singleton_concretize_type_for_imports_exports:
+                         Flow.singleton_concretize_type_for_imports_exports
+                       ~import_kind
                        ~module_name
                        ~source_module
                        ~remote_name
@@ -1855,10 +1860,10 @@ module Make
               mk_reason import_reason_desc local_loc
             in
             let t =
-              Import_export.import_namespace_specifier_type
+              Flow_js_utils.ImportExportUtils.import_namespace_specifier_type
                 cx
                 import_reason
-                import_kind
+                ~import_kind
                 ~module_name
                 ~namespace_symbol:(mk_namespace_symbol ~name:local_name ~def_loc:local_loc)
                 ~source_module
@@ -1879,10 +1884,12 @@ module Make
             } ->
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let (remote_default_name_def_loc, imported_t) =
-            Import_export.import_default_specifier_type
+            Flow_js_utils.ImportExportUtils.import_default_specifier_type
               cx
               import_reason
-              import_kind
+              ~singleton_concretize_type_for_imports_exports:
+                Flow.singleton_concretize_type_for_imports_exports
+              ~import_kind
               ~module_name
               ~source_module
               ~local_name
@@ -3280,25 +3287,28 @@ module Make
         match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name ->
           let source_module =
-            Import_export.get_module_type_or_any
+            Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
               (loc, module_name)
           in
           if Context.relay_integration_esmodules cx then
             let import_reason = mk_reason (RDefaultImportedType (module_name, module_name)) loc in
-            Import_export.import_default_specifier_type
+            Flow_js_utils.ImportExportUtils.import_default_specifier_type
               cx
               import_reason
-              Ast.Statement.ImportDeclaration.ImportValue
+              ~singleton_concretize_type_for_imports_exports:
+                Flow.singleton_concretize_type_for_imports_exports
+              ~import_kind:Ast.Statement.ImportDeclaration.ImportValue
               ~module_name
               ~source_module
               ~local_name:module_name
             |> snd
           else
-            Import_export.cjs_require_type
+            Flow_js_utils.ImportExportUtils.cjs_require_type
               cx
               (mk_reason (RModule module_name) loc)
+              ~reposition:Flow.reposition
               ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
               ~standard_cjs_esm_interop:false
               ~legacy_interop:false
@@ -3528,12 +3538,12 @@ module Make
       let t module_name =
         let ns_t =
           let reason = mk_reason (RModule module_name) loc in
-          Import_export.get_module_type_or_any
+          Flow_js_utils.ImportExportUtils.get_module_type_or_any
             cx
             (source_loc, module_name)
             ~perform_platform_validation:true
             ~import_kind_for_untyped_import_validation:(Some ImportValue)
-          |> Import_export.get_module_namespace_type
+          |> Flow_js_utils.ImportExportUtils.get_module_namespace_type
                cx
                reason
                ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
@@ -3697,14 +3707,15 @@ module Make
               )
             ) ->
             let (def_loc_opt, require_t) =
-              Import_export.get_module_type_or_any
+              Flow_js_utils.ImportExportUtils.get_module_type_or_any
                 cx
                 (source_loc, module_name)
                 ~perform_platform_validation:true
                 ~import_kind_for_untyped_import_validation:(Some ImportValue)
-              |> Import_export.cjs_require_type
+              |> Flow_js_utils.ImportExportUtils.cjs_require_type
                    cx
                    (mk_reason (RModule module_name) loc)
+                   ~reposition:Flow.reposition
                    ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
                    ~standard_cjs_esm_interop:false
                    ~legacy_interop:false
@@ -4183,7 +4194,7 @@ module Make
         | Some (jest_loc, source_loc, module_name)
           when not (Type_env.local_scope_entry_exists cx jest_loc) ->
           ignore
-          @@ Import_export.get_module_type_or_any
+          @@ Flow_js_utils.ImportExportUtils.get_module_type_or_any
                cx
                (source_loc, module_name)
                ~perform_platform_validation:false
@@ -5641,7 +5652,12 @@ module Make
     let fragment_t =
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
-        Import_export.get_implicitly_imported_react_fragment_type cx expr_loc
+        Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
+          cx
+          expr_loc
+          ~singleton_concretize_type_for_imports_exports:
+            Flow.singleton_concretize_type_for_imports_exports
+          ~purpose:Flow_intermediate_error_types.ReactModuleForJSXFragment
       | Options.ReactRuntimeClassic ->
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in

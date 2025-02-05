@@ -207,7 +207,13 @@ let resolve_hint cx loc hint =
     | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
       DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
-    | ReactFragmentType -> Import_export.get_implicitly_imported_react_fragment_type cx loc
+    | ReactFragmentType ->
+      Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
+        cx
+        loc
+        ~singleton_concretize_type_for_imports_exports:
+          Flow_js.singleton_concretize_type_for_imports_exports
+        ~purpose:Flow_intermediate_error_types.ReactModuleForJSXFragment
     | BuiltinType name ->
       let reason = mk_reason (RType (OrdinaryName name)) loc in
       Flow_js.get_builtin_type cx reason name
@@ -927,7 +933,7 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
       | Ast.Statement.ImportDeclaration.ImportTypeof -> Some Type.ImportTypeof
       | Ast.Statement.ImportDeclaration.ImportValue -> Some Type.ImportValue
     in
-    Import_export.get_module_type_or_any
+    Flow_js_utils.ImportExportUtils.get_module_type_or_any
       cx
       ~import_kind_for_untyped_import_validation
       (source_loc, module_name)
@@ -936,10 +942,12 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
   | Name_def.Named { kind; remote; local } ->
     let import_kind = Base.Option.value ~default:import_kind kind in
     let (_, t) =
-      Import_export.import_named_specifier_type
+      Flow_js_utils.ImportExportUtils.import_named_specifier_type
         cx
         import_reason
-        import_kind
+        ~singleton_concretize_type_for_imports_exports:
+          Flow_js.singleton_concretize_type_for_imports_exports
+        ~import_kind
         ~module_name
         ~source_module
         ~remote_name:remote
@@ -951,10 +959,10 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
       t
   | Namespace name ->
     let t =
-      Import_export.import_namespace_specifier_type
+      Flow_js_utils.ImportExportUtils.import_namespace_specifier_type
         cx
         import_reason
-        import_kind
+        ~import_kind
         ~module_name
         ~namespace_symbol:(mk_namespace_symbol ~name ~def_loc:id_loc)
         ~source_module
@@ -966,10 +974,12 @@ let resolve_import cx id_loc import_reason import_kind module_name source_loc im
       t
   | Default local_name ->
     let (_, t) =
-      Import_export.import_default_specifier_type
+      Flow_js_utils.ImportExportUtils.import_default_specifier_type
         cx
         import_reason
-        import_kind
+        ~singleton_concretize_type_for_imports_exports:
+          Flow_js.singleton_concretize_type_for_imports_exports
+        ~import_kind
         ~module_name
         ~source_module
         ~local_name

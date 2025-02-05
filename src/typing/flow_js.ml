@@ -9279,6 +9279,9 @@ struct
   and singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports cx reason t =
     singleton_concrete_type ConcretizeForCJSExtractNamedExportsAndTypeExports cx reason t
 
+  and singleton_concretize_type_for_imports_exports cx reason t =
+    singleton_concrete_type ConcretizeForImportsExports cx reason t
+
   and singleton_concrete_type_for_inspection cx reason t =
     singleton_concrete_type ConcretizeForInspection cx reason t
 

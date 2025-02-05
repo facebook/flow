@@ -2086,6 +2086,298 @@ module CJSExtractNamedExportsTKit = struct
     | _ -> local_module
 end
 
+module ImportExportUtils : sig
+  val get_module_type_or_any :
+    Context.t ->
+    ?perform_platform_validation:bool ->
+    import_kind_for_untyped_import_validation:Type.import_kind option ->
+    ALoc.t * string ->
+    (Type.moduletype, Type.t) result
+
+  val get_imported_type :
+    cx ->
+    singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
+    import_reason:reason ->
+    module_name:string ->
+    source_module:(Type.moduletype, Type.t) result ->
+    import_kind:Type.import_kind ->
+    remote_name:string ->
+    local_name:string ->
+    ALoc.t option * Type.t
+
+  val get_module_namespace_type :
+    Context.t ->
+    reason ->
+    namespace_symbol:FlowSymbol.symbol ->
+    (Type.moduletype, Type.t) result ->
+    Type.t
+
+  val import_namespace_specifier_type :
+    cx ->
+    reason ->
+    import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
+    module_name:string ->
+    namespace_symbol:FlowSymbol.symbol ->
+    source_module:(Type.moduletype, Type.t) result ->
+    local_loc:loc ->
+    Type.t
+
+  val import_named_specifier_type :
+    Context.t ->
+    reason ->
+    singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
+    import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
+    module_name:string ->
+    source_module:(Type.moduletype, Type.t) result ->
+    remote_name:string ->
+    local_name:string ->
+    ALoc.t option * Type.t
+
+  val import_default_specifier_type :
+    Context.t ->
+    reason ->
+    singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
+    import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
+    module_name:string ->
+    source_module:(Type.moduletype, Type.t) result ->
+    local_name:string ->
+    ALoc.t option * Type.t
+
+  val cjs_require_type :
+    cx ->
+    reason ->
+    reposition:(cx -> ALoc.t -> Type.t -> Type.t) ->
+    namespace_symbol:FlowSymbol.symbol ->
+    standard_cjs_esm_interop:bool ->
+    legacy_interop:bool ->
+    (Type.moduletype, Type.t) result ->
+    ALoc.t option * Type.t
+
+  val get_implicitly_imported_react_type :
+    cx ->
+    ALoc.t ->
+    singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
+    purpose:Flow_intermediate_error_types.expected_module_purpose ->
+    Type.t
+end = struct
+  let check_platform_availability cx reason imported_module_available_platforms =
+    let current_module_available_platforms = Context.available_platforms cx in
+    match (current_module_available_platforms, imported_module_available_platforms) with
+    | (None, None)
+    | (None, Some _)
+    | (Some _, None) ->
+      ()
+    | (Some required_platforms, Some available_platforms) ->
+      let file_options = Context.((metadata cx).file_options) in
+      let required_platforms =
+        Platform_set.to_platform_string_set ~file_options required_platforms
+      in
+      let available_platforms =
+        Platform_set.to_platform_string_set ~file_options available_platforms
+      in
+      let missing_platforms = SSet.diff required_platforms available_platforms in
+      if SSet.cardinal missing_platforms > 0 then
+        let loc = Reason.loc_of_reason reason in
+        let message =
+          Error_message.EMissingPlatformSupport { loc; available_platforms; required_platforms }
+        in
+        add_output cx message
+
+  let get_module_type_or_any
+      cx
+      ?(perform_platform_validation = false)
+      ~import_kind_for_untyped_import_validation
+      (loc, mref) =
+    if Context.in_declare_module cx then
+      match Context.builtin_module_opt cx mref with
+      | Some (_, (lazy m)) -> Ok m
+      | None -> Error (lookup_builtin_module_error cx mref loc)
+    else
+      let module_type_or_any =
+        match Context.find_require cx mref with
+        | Context.TypedModule f -> f ()
+        | Context.UncheckedModule (module_def_loc, mref) ->
+          Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
+              match import_kind with
+              | ImportType
+              | ImportTypeof ->
+                let message = Error_message.EUntypedTypeImport (loc, mref) in
+                add_output cx message
+              | ImportValue ->
+                let message = Error_message.EUntypedImport (loc, mref) in
+                add_output cx message
+          );
+          Error (AnyT.why Untyped (mk_reason (RModule mref) module_def_loc))
+        | Context.MissingModule m_name -> Error (lookup_builtin_module_error cx m_name loc)
+      in
+      let reason = Reason.(mk_reason (RCustom mref) loc) in
+      let need_platform_validation =
+        perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
+      in
+      ( if need_platform_validation then
+        match module_type_or_any with
+        | Ok m ->
+          if need_platform_validation then
+            check_platform_availability cx reason m.module_available_platforms
+        | Error _ -> ()
+      );
+      module_type_or_any
+
+  let get_imported_type
+      cx
+      ~singleton_concretize_type_for_imports_exports
+      ~import_reason
+      ~module_name
+      ~source_module
+      ~import_kind
+      ~remote_name
+      ~local_name =
+    let is_strict = Context.is_strict cx in
+    let name_def_loc_ref = ref None in
+    let with_concretized_type cx r f t = f (singleton_concretize_type_for_imports_exports cx r t) in
+    let t =
+      match source_module with
+      | Ok m ->
+        let (name_loc_opt, t) =
+          if remote_name = "default" then
+            ImportDefaultTKit.on_ModuleT
+              cx
+              ~with_concretized_type
+              (import_reason, import_kind, (local_name, module_name), is_strict)
+              m
+          else
+            ImportNamedTKit.on_ModuleT
+              cx
+              ~with_concretized_type
+              (import_reason, import_kind, remote_name, module_name, is_strict)
+              m
+        in
+        name_def_loc_ref := name_loc_opt;
+        t
+      | Error t -> t
+    in
+    let name_def_loc = !name_def_loc_ref in
+    (name_def_loc, t)
+
+  let get_module_namespace_type cx reason ~namespace_symbol source_module =
+    let is_strict = Context.is_strict cx in
+    match source_module with
+    | Ok m ->
+      let (values_type, types_tmap) = ImportModuleNsTKit.on_ModuleT cx (reason, is_strict) m in
+      NamespaceT { namespace_symbol; values_type; types_tmap }
+    | Error t -> t
+
+  let import_namespace_specifier_type
+      cx import_reason ~import_kind ~module_name ~namespace_symbol ~source_module ~local_loc =
+    let open Flow_ast.Statement in
+    match import_kind with
+    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+    | ImportDeclaration.ImportTypeof ->
+      let module_ns_t =
+        get_module_namespace_type cx import_reason ~namespace_symbol source_module
+      in
+      let bind_reason = repos_reason local_loc import_reason in
+      ImportTypeofTKit.on_concrete_type cx bind_reason "*" module_ns_t
+    | ImportDeclaration.ImportValue ->
+      let reason = mk_reason (RModule module_name) local_loc in
+      let namespace_symbol = FlowSymbol.mk_module_symbol ~name:module_name ~def_loc:local_loc in
+      get_module_namespace_type cx reason ~namespace_symbol source_module
+
+  let type_kind_of_kind = function
+    | Flow_ast.Statement.ImportDeclaration.ImportType -> Type.ImportType
+    | Flow_ast.Statement.ImportDeclaration.ImportTypeof -> Type.ImportTypeof
+    | Flow_ast.Statement.ImportDeclaration.ImportValue -> Type.ImportValue
+
+  let import_named_specifier_type
+      cx
+      import_reason
+      ~singleton_concretize_type_for_imports_exports
+      ~import_kind
+      ~module_name
+      ~source_module
+      ~remote_name
+      ~local_name =
+    let import_kind = type_kind_of_kind import_kind in
+    get_imported_type
+      cx
+      ~singleton_concretize_type_for_imports_exports
+      ~import_reason
+      ~module_name
+      ~source_module
+      ~import_kind
+      ~remote_name
+      ~local_name
+
+  let import_default_specifier_type
+      cx
+      import_reason
+      ~singleton_concretize_type_for_imports_exports
+      ~import_kind
+      ~module_name
+      ~source_module
+      ~local_name =
+    let import_kind = type_kind_of_kind import_kind in
+    get_imported_type
+      cx
+      ~singleton_concretize_type_for_imports_exports
+      ~import_reason
+      ~module_name
+      ~source_module
+      ~import_kind
+      ~remote_name:"default"
+      ~local_name
+
+  let cjs_require_type
+      cx
+      reason
+      ~reposition
+      ~namespace_symbol
+      ~standard_cjs_esm_interop
+      ~legacy_interop
+      source_module =
+    let is_strict = Context.is_strict cx in
+    match source_module with
+    | Ok m ->
+      let (t, def_loc) =
+        CJSRequireTKit.on_ModuleT
+          cx
+          ~reposition
+          ~reason
+          ~module_symbol:namespace_symbol
+          ~is_strict
+          ~standard_cjs_esm_interop
+          ~legacy_interop
+          m
+      in
+      (Some def_loc, t)
+    | Error t -> (None, t)
+
+  let get_implicitly_imported_react_type
+      cx loc ~singleton_concretize_type_for_imports_exports ~purpose =
+    let source_module =
+      get_implicitly_imported_module
+        cx
+        "react"
+        ~expected_module_purpose:purpose
+        (mk_reason (RModule "react") loc)
+    in
+    let (name, import_kind) =
+      match purpose with
+      | Flow_intermediate_error_types.ReactModuleForJSXFragment -> ("Fragment", ImportValue)
+    in
+    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+    get_imported_type
+      cx
+      ~singleton_concretize_type_for_imports_exports
+      ~import_reason:reason
+      ~module_name:"react"
+      ~source_module
+      ~import_kind
+      ~remote_name:name
+      ~local_name:name
+    |> snd
+end
+
 (*******************)
 (* GetPropT helper *)
 (*******************)
