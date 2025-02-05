@@ -84,7 +84,6 @@ component.js:22:23
 Flags:
 React$RendersExactly<typeof x>
 
-'React$Node' defined at (lib) react.js:15:13
 'x' defined at component.js:20:14
 
 component.js:22:23,22:23

@@ -1206,7 +1206,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   (fun _ -> RIdentifier (OrdinaryName "React$Node"))
                   reason
               in
-              ConsGen.get_builtin_type cx ~use_desc:true reason "React$Node"
+              DefT (reason, RendersT DefaultRenders)
             in
             reconstruct_ast
               (DefT

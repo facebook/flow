@@ -961,10 +961,7 @@ and merge_annot env file = function
           Reason.(RIdentifier (OrdinaryName "React$Node"))
           3
       in
-      ConsGen.mk_instance
-        file.cx
-        reason
-        (Flow_js_utils.lookup_builtin_type file.cx "React$Node" reason)
+      Type.(DefT (reason, RendersT DefaultRenders))
     in
     Type.(
       DefT
