@@ -31,10 +31,6 @@ module DistributeUnionIntersection : sig
     unit
 end
 
-module Import_export : sig
-  val assert_export_is_type : Context.t -> Reason.name -> Type.t -> Type.t
-end
-
 module Operators : sig
   val arith : Context.t -> reason -> Type.ArithKind.t -> Type.t -> Type.t -> Type.t
 
@@ -64,6 +60,8 @@ module TypeAssertions : sig
   val assert_binary_in_lhs : Context.t -> Type.t -> unit
 
   val assert_binary_in_rhs : Context.t -> Type.t -> unit
+
+  val assert_export_is_type : Context.t -> Reason.name -> Type.t -> Type.t
 
   val assert_for_in_rhs : Context.t -> Type.t -> unit
 

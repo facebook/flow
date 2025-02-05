@@ -89,19 +89,6 @@ module DistributeUnionIntersection = struct
            )
 end
 
-module Import_export = struct
-  let assert_export_is_type cx name t =
-    let reason = TypeUtil.reason_of_t t in
-    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
-        let t =
-          t
-          |> Flow.singleton_concretize_type_for_imports_exports cx reason
-          |> Flow_js_utils.AssertExportIsTypeTKit.on_concrete_type cx name
-        in
-        Flow.flow_t cx (t, tout)
-    )
-end
-
 module Operators = struct
   let arith cx reason kind t1 t2 =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
@@ -534,6 +521,17 @@ module TypeAssertions = struct
         ()
       | l when object_like l -> ()
       | l -> add_output cx (Error_message.EBinaryInRHS (reason_of_t l))
+    )
+
+  let assert_export_is_type cx name t =
+    let reason = TypeUtil.reason_of_t t in
+    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+        let t =
+          t
+          |> Flow.singleton_concretize_type_for_imports_exports cx reason
+          |> Flow_js_utils.AssertExportIsTypeTKit.on_concrete_type cx name
+        in
+        Flow.flow_t cx (t, tout)
     )
 
   let assert_for_in_rhs cx t =

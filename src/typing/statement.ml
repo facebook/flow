@@ -944,7 +944,7 @@ module Make
     let export_ref loc local_name =
       let t = Type_env.var_ref ~lookup_mode cx local_name loc in
       match export_kind with
-      | Ast.Statement.ExportType -> (None, Import_export.assert_export_is_type cx local_name t)
+      | Ast.Statement.ExportType -> (None, TypeAssertions.assert_export_is_type cx local_name t)
       | Ast.Statement.ExportValue -> (None, t)
     in
     (* [declare] export [type] {foo [as bar]} from 'module' *)
