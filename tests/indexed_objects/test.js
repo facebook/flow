@@ -12,3 +12,11 @@ type Props = {
 }
 
 const error1: Props = {foo: 3}; // One error
+
+type ObjWithProto = {
+  __proto__: {foo: number},
+  [StringPrefix<'bar'>]: string,
+};
+
+declare const objWithProto: ObjWithProto;
+objWithProto.foo as number; // TODO: no error
