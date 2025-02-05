@@ -85,5 +85,20 @@ References:
             ^^ [2]
 
 
+Error ----------------------------------------------------------------------------- test_no_explicit_react_import.js:1:1
 
-Found 7 errors
+Cannot cast empty string to `MyReact` because string [1] is incompatible with string literal `react` [2].
+[incompatible-cast]
+
+   test_no_explicit_react_import.js:1:1
+   1| '' as ReactTypes.MyReact; // error: '' ~> 'react'
+      ^^ [1]
+
+References:
+   test_no_explicit_react_import.js:1:7
+   1| '' as ReactTypes.MyReact; // error: '' ~> 'react'
+            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 8 errors
