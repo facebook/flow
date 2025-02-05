@@ -117,6 +117,9 @@ type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
 type SpreadOverOptionalProperies = StringPrefix<'foo'>;
 {
   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
-  const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
+  const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // OK
+  const readonlyObj: $ReadOnly<{[SpreadOverOptionalProperies]: number, bar?: number}> = obj; // OK
+  const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+  const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
   
 }

@@ -308,34 +308,55 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
               )
         | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
-          rec_flow
-            cx
-            trace
-            ( type_of_key_name cx name reason_prop,
-              UseT
-                (Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'), key)
-            );
-          let lp =
-            OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
+          let subtype_against_indexer () =
+            let lp =
+              OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
+            in
+            let up =
+              match up with
+              | Field
+                  {
+                    preferred_def_locs = _;
+                    key_loc = _;
+                    type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
+                    polarity;
+                  } ->
+                OrdinaryField { type_ = mod_t (Some name) udro ut; polarity }
+              | _ -> Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
+            in
+            if lit then
+              match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
+              | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
+              | _ -> ()
+            else
+              rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
           in
-          let up =
-            match up with
-            | Field
-                {
-                  preferred_def_locs = _;
-                  key_loc = _;
-                  type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
-                  polarity;
-                } ->
-              OrdinaryField { type_ = mod_t (Some name) udro ut; polarity }
-            | _ -> Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
-          in
-          if lit then
-            match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
-            | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-            | _ -> ()
-          else
-            rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+          (match up with
+          (* If the upper property is optional and readonly (or this is a lit check) then we only
+           * need to check the lower indexer type against the upper property type if the upper
+           * property key is covered by the lower property's indexer, otherwise we can omit the
+           * check. We already check elsewhere that the upper dictionary is compatible with the
+           * lower dictionary, so we are not risking any issues with exactness here.
+           *
+           * We only do this outside of implicit instantiation to avoid accidentally underconstraining tvars by avoiding flows *)
+          | Field { type_ = OptionalT _; polarity; _ }
+            when (lit || polarity = Polarity.Positive) && not (Context.in_implicit_instantiation cx)
+            ->
+            if speculative_subtyping_succeeds cx (type_of_key_name cx name reason_prop) key then
+              subtype_against_indexer ()
+            else
+              ()
+          | _ ->
+            rec_flow
+              cx
+              trace
+              ( type_of_key_name cx name reason_prop,
+                UseT
+                  ( Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'),
+                    key
+                  )
+              );
+            subtype_against_indexer ())
         | _ ->
           (* property doesn't exist in inflowing type *)
           (match up with

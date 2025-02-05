@@ -404,22 +404,40 @@ References:
                ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- prefix.js:120:74
+Error ------------------------------------------------------------------------------------------------- prefix.js:122:82
 
-Cannot assign object literal to `objCopy` because string `bar` [1] is incompatible with string prefixed with `foo` [2]
-in the indexer property's key. [incompatible-type]
+Cannot assign `obj` to `noCopyReadWrite` because string `bar` [1] is incompatible with string prefixed with `foo` [2] in
+the indexer property's key. [incompatible-type]
 
-   prefix.js:120:74
-   120|   const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
-                                                                                 ^^^^^^^^
+   prefix.js:122:82
+   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+                                                                                         ^^^
 
 References:
-   prefix.js:120:18
-   120|   const objCopy: {[SpreadOverOptionalProperies]: number, bar?: number} = {...obj}; // TODO: NO ERROR
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   prefix.js:122:26
+   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    prefix.js:119:16
    119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- prefix.js:123:91
+
+Cannot assign `obj` to `validKeyInvalidValue` because number [1] is incompatible with string [2] in property `foobar`.
+[incompatible-type]
+
+   prefix.js:123:91
+   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
+                                                                                                  ^^^
+
+References:
+   prefix.js:119:46
+   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+                                                     ^^^^^^ [1]
+   prefix.js:123:81
+   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
+                                                                                        ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
@@ -701,4 +719,4 @@ References:
 
 
 
-Found 47 errors
+Found 48 errors
