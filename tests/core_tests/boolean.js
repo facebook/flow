@@ -19,6 +19,7 @@ let tests = [
     let x: boolean = false;
     x.toString();
     (new Boolean(true)).toString();
+    (true as true).toString();
   },
 
   // valueOf

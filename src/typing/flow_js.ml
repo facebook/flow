@@ -5131,12 +5131,13 @@ struct
         (***********************)
         (* Boolean library call *)
         (***********************)
-        | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)), u)
+          when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean", u)
         (***********************)
         (* BigInt library call *)
         (***********************)
-        | (DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _)), u)
+        | (DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), u)
           when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "BigInt", u)
         (***********************)
