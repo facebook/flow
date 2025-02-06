@@ -1320,6 +1320,81 @@ References:
                               ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- intersect.js:7:5
+
+Cannot cast `x` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
+[incompatible-cast]
+
+   intersect.js:7:5
+   7|     x as 'b'; // error 'a' ~> 'b'
+          ^
+
+References:
+   intersect.js:4:18
+   4|   declare var x: 'a'|'c';
+                       ^^^ [1]
+   intersect.js:7:10
+   7|     x as 'b'; // error 'a' ~> 'b'
+               ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- intersect.js:8:5
+
+Cannot cast `x` to string literal `c` because string literal `a` [1] is incompatible with string literal `c` [2].
+[incompatible-cast]
+
+   intersect.js:8:5
+   8|     x as 'c'; // error 'a' ~> 'c'
+          ^
+
+References:
+   intersect.js:4:18
+   4|   declare var x: 'a'|'c';
+                       ^^^ [1]
+   intersect.js:8:10
+   8|     x as 'c'; // error 'a' ~> 'c'
+               ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ intersect.js:19:5
+
+Cannot cast `x` to string literal `b` because string literal `c` [1] is incompatible with string literal `b` [2].
+[incompatible-cast]
+
+   intersect.js:19:5
+   19|     x as 'b'; // error 'c' ~> 'b'
+           ^
+
+References:
+   intersect.js:17:26
+   17|   declare const x: 'a' | 'c';
+                                ^^^ [1]
+   intersect.js:19:10
+   19|     x as 'b'; // error 'c' ~> 'b'
+                ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ intersect.js:43:5
+
+Cannot cast `x` to `KB` because string literal `C` [1] is incompatible with string literal `B` [2] in type argument
+`X` [3]. [incompatible-cast]
+
+   intersect.js:43:5
+   43|     x as KB; // error KC ~> KB
+           ^
+
+References:
+   intersect.js:34:15
+   34|   type KC = K<'C'>;
+                     ^^^ [1]
+   intersect.js:33:15
+   33|   type KB = K<'B'>;
+                     ^^^ [2]
+   intersect.js:37:11
+   37|   class K<X: $Keys<AllTypes>>  extends S<X> {}
+                 ^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
 
 Cannot return boolean because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
@@ -3609,7 +3684,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 218 errors
+Found 222 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

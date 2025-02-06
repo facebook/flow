@@ -539,7 +539,50 @@ and intersect cx t1 t2 =
     | (Some t1_tags, Some t2_tags) -> not (Type_filter.tags_overlap t1_tags t2_tags)
     | _ -> false
   in
-  let types_differ ~depth:_ t1 t2 = C.for_all_concrete_ts cx t2 ~f:(fun t2 -> tags_differ t1 t2) in
+  (* Singleton primitive types are not captured in the tag overlap checks. We are
+   * handling a few cases here explicitly. *)
+  let ground_types_differ t1 t2 =
+    match (C.unwrap t1, C.unwrap t2) with
+    | ( DefT (_, (SingletonStrT v1 | StrT_UNSOUND (_, v1))),
+        DefT (_, (SingletonStrT v2 | StrT_UNSOUND (_, v2)))
+      ) ->
+      v1 <> v2
+    | ( DefT (_, (SingletonNumT v1 | NumT_UNSOUND (_, v1))),
+        DefT (_, (SingletonNumT v2 | NumT_UNSOUND (_, v2)))
+      ) ->
+      v1 <> v2
+    | ( DefT (_, (SingletonBoolT v1 | BoolT_UNSOUND v1)),
+        DefT (_, (SingletonBoolT v2 | BoolT_UNSOUND v2))
+      ) ->
+      v1 <> v2
+    | (_, _) -> false
+  in
+  let rec type_tags_differ ~depth = function
+    | (t1 :: rest1, t2 :: rest2) ->
+      C.for_all_concrete_ts cx t1 ~f:(fun t1 -> types_differ ~depth t1 t2)
+      || type_tags_differ ~depth (rest1, rest2)
+    | _ -> false
+  (* C<T> has no overlap with C<S> iff T and S have no overlap *)
+  and instance_tags_differ ~depth t1 t2 =
+    match (C.unwrap t1, C.unwrap t2) with
+    | ( DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts1; _ } as inst1; _ }),
+        DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts2; _ } as inst2; _ })
+      )
+      when Flow_js_utils.is_same_instance_type inst1 inst2 ->
+      let ts1 = Base.List.map ts1 ~f:(fun (_, _, t, _) -> t) in
+      let ts2 = Base.List.map ts2 ~f:(fun (_, _, t, _) -> t) in
+      type_tags_differ ~depth (ts1, ts2)
+    | _ -> false
+  and types_differ ~depth t1 t2 =
+    (* To prevent infinite recursion, we use a simple depth mechanism. *)
+    if depth > 2 then
+      false
+    else
+      let depth = depth + 1 in
+      C.for_all_concrete_ts cx t2 ~f:(fun t2 ->
+          tags_differ t1 t2 || ground_types_differ t1 t2 || instance_tags_differ ~depth t1 t2
+      )
+  in
   (* Input t1 is already concretized as input to the predicate mechanism *)
   let t1_conc = C.wrap_unsafe t1 in
   if types_differ ~depth:0 t1_conc t2 then
