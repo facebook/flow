@@ -33,7 +33,12 @@ type exactness_error_kind =
   | UnexpectedIndexer
   | UnexpectedInexact
 
-type expected_module_purpose = ReactModuleForJSXFragment
+type expected_module_purpose =
+  | ReactModuleForJSXFragment
+  | ReactModuleForReactClassComponent
+  | ReactModuleForReactMixedElementType
+  | ReactModuleForReactNodeType
+  | ReactModuleForReactRefSetterType
 
 type 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;

@@ -8852,6 +8852,16 @@ struct
     let t = Flow_js_utils.lookup_builtin_type cx x reason in
     typeapp ~from_value:false ~use_desc reason t targs
 
+  and get_builtin_react_typeapp cx reason ?(use_desc = false) purpose targs =
+    let t =
+      Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
+        cx
+        (loc_of_reason reason)
+        ~singleton_concretize_type_for_imports_exports
+        ~purpose
+    in
+    typeapp ~from_value:false ~use_desc reason t targs
+
   (* Specialize a polymorphic class, make an instance of the specialized class. *)
   and mk_typeapp_instance_annot
       cx ?trace ~use_op ~reason_op ~reason_tapp ~from_value ?(use_desc = false) c ts =
@@ -9076,6 +9086,16 @@ struct
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = Flow_js_utils.lookup_builtin_type cx x reason in
+    mk_instance cx ?trace reason ~use_desc t
+
+  and get_builtin_react_type cx ?trace reason ?(use_desc = false) purpose =
+    let t =
+      Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
+        cx
+        (loc_of_reason reason)
+        ~singleton_concretize_type_for_imports_exports
+        ~purpose
+    in
     mk_instance cx ?trace reason ~use_desc t
 
   and flow_all_in_union cx trace rep u =
@@ -9330,6 +9350,9 @@ let mk_instance cx ?type_t_kind instance_reason ?use_desc c =
   mk_instance ?type_t_kind cx instance_reason ?use_desc c
 
 let get_builtin_type cx reason ?use_desc x = get_builtin_type cx reason ?use_desc x
+
+let get_builtin_react_type cx reason ?use_desc purpose =
+  get_builtin_react_type cx reason ?use_desc purpose
 
 let reposition_reason cx reason ?use_desc t = reposition_reason cx reason ?use_desc t
 

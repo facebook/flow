@@ -1906,6 +1906,36 @@ let to_printable_error :
         match expected_module_purpose with
         | ReactModuleForJSXFragment ->
           [text "The "; code "react"; text " module must exist to type check JSX fragments."]
+        | ReactModuleForReactClassComponent ->
+          [
+            text "The ";
+            code "react";
+            text " module must exist to type check React class components.";
+          ]
+        | ReactModuleForReactMixedElementType ->
+          [
+            text "The ";
+            code "react";
+            text " module must exist to provide a type for ";
+            code "React.MixedElement";
+            text ".";
+          ]
+        | ReactModuleForReactNodeType ->
+          [
+            text "The ";
+            code "react";
+            text " module must exist to provide a type for ";
+            code "React.Node";
+            text ".";
+          ]
+        | ReactModuleForReactRefSetterType ->
+          [
+            text "The ";
+            code "react";
+            text " module must exist to provide a type for ";
+            code "React.RefSetter";
+            text ".";
+          ]
       in
       [text "Cannot resolve module "; code name; text ". "] @ explanation
     | MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason } ->

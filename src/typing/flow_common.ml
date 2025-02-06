@@ -95,7 +95,23 @@ module type BUILTINS = sig
   val get_builtin_type :
     Context.t -> ?trace:Type.DepthTrace.t -> Reason.reason -> ?use_desc:bool -> string -> Type.t
 
+  val get_builtin_react_type :
+    Context.t ->
+    ?trace:Type.DepthTrace.t ->
+    Reason.reason ->
+    ?use_desc:bool ->
+    Flow_intermediate_error_types.expected_module_purpose ->
+    Type.t
+
   val get_builtin_typeapp : Context.t -> reason -> ?use_desc:bool -> string -> Type.t list -> Type.t
+
+  val get_builtin_react_typeapp :
+    Context.t ->
+    Reason.reason ->
+    ?use_desc:bool ->
+    Flow_intermediate_error_types.expected_module_purpose ->
+    Type.t list ->
+    Type.t
 
   val perform_read_prop_action :
     Context.t ->

@@ -2364,6 +2364,11 @@ end = struct
     let (name, import_kind) =
       match purpose with
       | Flow_intermediate_error_types.ReactModuleForJSXFragment -> ("Fragment", ImportValue)
+      | Flow_intermediate_error_types.ReactModuleForReactClassComponent -> ("Component", ImportValue)
+      | Flow_intermediate_error_types.ReactModuleForReactMixedElementType ->
+        ("MixedElement", ImportType)
+      | Flow_intermediate_error_types.ReactModuleForReactNodeType -> ("Node", ImportType)
+      | Flow_intermediate_error_types.ReactModuleForReactRefSetterType -> ("RefSetter", ImportType)
     in
     let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
     get_imported_type
