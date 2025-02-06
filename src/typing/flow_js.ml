@@ -121,15 +121,6 @@ let is_concrete t =
     false
   | _ -> true
 
-let is_literal_type t =
-  match t with
-  | DefT (_, SingletonStrT _)
-  | DefT (_, SingletonNumT _)
-  | DefT (_, SingletonBoolT _)
-  | DefT (_, SingletonBigIntT _) ->
-    true
-  | _ -> false
-
 let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
@@ -5479,7 +5470,7 @@ struct
         rec_flow cx trace (reposition_reason cx reason bound, u);
         true
       | ReactKitT _ ->
-        if is_concrete bound && not (is_literal_type bound) then
+        if is_concrete bound then
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
@@ -5575,7 +5566,7 @@ struct
         let action' = update_action_meth_generic_this l action in
         let u' = MethodT (op, r1, r2, prop, action') in
         let consumed =
-          if is_concrete bound && not (is_literal_type bound) then
+          if is_concrete bound then
             distribute_union_intersection ~upper:u' ()
           else
             wait_for_concrete_bound ~upper:u' ()
@@ -5587,7 +5578,7 @@ struct
         let action' = update_action_meth_generic_this l action in
         let u' = PrivateMethodT (op, r1, r2, prop, scopes, static, action') in
         let consumed =
-          if is_concrete bound && not (is_literal_type bound) then
+          if is_concrete bound then
             distribute_union_intersection ~upper:u' ()
           else
             wait_for_concrete_bound ~upper:u' ()
