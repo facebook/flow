@@ -291,10 +291,10 @@ let ground_subtype = function
   | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
       UseT (_, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
     )
-  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _)),
+  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
       UseT (_, DefT (_, (BoolGeneralT | BoolT_UNSOUND _)))
     )
-  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
+  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
       UseT (_, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)))
     )
   | (DefT (_, SymbolT), UseT (_, DefT (_, SymbolT)))

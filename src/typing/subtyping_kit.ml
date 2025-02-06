@@ -1073,7 +1073,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
-    | (DefT (rl, BoolT_UNSOUND actual), DefT (ru, SingletonBoolT expected)) ->
+    | (DefT (rl, (BoolT_UNSOUND actual | SingletonBoolT actual)), DefT (ru, SingletonBoolT expected))
+      ->
       if expected = actual then
         ()
       else
@@ -1088,7 +1089,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
-    | (DefT (rl, BigIntT_UNSOUND (_, (actual, _))), DefT (ru, SingletonBigIntT (expected, _))) ->
+    | ( DefT (rl, (BigIntT_UNSOUND (_, (actual, _)) | SingletonBigIntT (actual, _))),
+        DefT (ru, SingletonBigIntT (expected, _))
+      ) ->
       if expected = actual then
         ()
       else
@@ -1351,17 +1354,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *)
     | (IntersectionT (r, rep), _) ->
       SpeculationKit.try_intersection cx trace (UseT (use_op, u)) r rep
-    (************)
-    (* literals *)
-    (************)
-    | (DefT (reason, SingletonStrT key), _) when Context.allow_unsound_literal_coercsion cx ->
-      rec_flow_t cx trace ~use_op (DefT (reason, StrT_UNSOUND (None, key)), u)
-    | (DefT (reason, SingletonNumT lit), _) when Context.allow_unsound_literal_coercsion cx ->
-      rec_flow_t cx trace ~use_op (DefT (reason, NumT_UNSOUND (None, lit)), u)
-    | (DefT (reason, SingletonBoolT b), _) when Context.allow_unsound_literal_coercsion cx ->
-      rec_flow_t cx trace ~use_op (DefT (reason, BoolT_UNSOUND b), u)
-    | (DefT (reason, SingletonBigIntT lit), _) when Context.allow_unsound_literal_coercsion cx ->
-      rec_flow_t cx trace ~use_op (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
     | (NullProtoT reason, _) -> rec_flow_t cx trace ~use_op (DefT (reason, NullT), u)
     (************)
     (* StrUtilT *)
@@ -2322,7 +2314,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ }) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
-    | ( DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)),
+    | ( DefT (reason, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2506,7 +2498,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let representation_type =
         match representation_t with
         | DefT (_, BoolGeneralT)
-        | DefT (_, BoolT_UNSOUND _) ->
+        | DefT (_, BoolT_UNSOUND _)
+        | DefT (_, SingletonBoolT _) ->
           Some "boolean"
         | DefT (_, NumGeneralT _)
         | DefT (_, NumT_UNSOUND _)
