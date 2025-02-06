@@ -1205,9 +1205,9 @@ Cannot cast `rendersFooOrBar` to empty because `React.Element` [1] is incompatib
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:181:35
-   181| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:349:38
+   349|   declare export type MixedElement = React$MixedElement;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:118:22
    118|   rendersFooOrBar as empty; // ERROR
                              ^^^^^ [2]
@@ -1241,9 +1241,9 @@ Cannot get `rendersFooOrBar.props` because property `props` is missing in `React
                           ^^^^^
 
 References:
-   <BUILTINS>/react.js:181:35
-   181| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:349:38
+   349|   declare export type MixedElement = React$MixedElement;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
@@ -1367,9 +1367,9 @@ Cannot cast `rendersBaz` to empty because `React.Element` [1] is incompatible wi
           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:181:35
-   181| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:349:38
+   349|   declare export type MixedElement = React$MixedElement;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
    renders_to_renders.js:132:17
    132|   rendersBaz as empty; // ERROR
                         ^^^^^ [2]
@@ -1384,9 +1384,9 @@ Cannot get `rendersBaz.props` because property `props` is missing in `React.Elem
                      ^^^^^
 
 References:
-   <BUILTINS>/react.js:181:35
-   181| declare type React$MixedElement = React$Element<React$ElementType>;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:349:38
+   349|   declare export type MixedElement = React$MixedElement;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:4:35

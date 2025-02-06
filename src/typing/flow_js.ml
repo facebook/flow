@@ -4953,7 +4953,13 @@ struct
             ExitRendersT { renders_reason; u }
           )
         | (DefT (renders_reason, RendersT (InstrinsicRenders _ | NominalRenders _)), u) ->
-          let mixed_element = get_builtin_type cx ~trace renders_reason "React$MixedElement" in
+          let mixed_element =
+            get_builtin_react_type
+              cx
+              ~trace
+              renders_reason
+              Flow_intermediate_error_types.ReactModuleForReactMixedElementType
+          in
           rec_flow cx trace (mixed_element, u)
         | ( DefT
               ( r,

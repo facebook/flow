@@ -1725,7 +1725,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       RendersKit.non_renders_to_renders cx trace ~use_op l (renders_r, upper_renders)
     (* Exiting the renders world *)
     | (DefT (r, RendersT (InstrinsicRenders _ | NominalRenders _)), u) ->
-      let mixed_element = get_builtin_type cx r "React$MixedElement" in
+      let mixed_element =
+        get_builtin_react_type
+          cx
+          r
+          Flow_intermediate_error_types.ReactModuleForReactMixedElementType
+      in
       rec_flow_t cx trace ~use_op (mixed_element, u)
     | ( DefT
           ( r,
