@@ -5733,7 +5733,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:(expression ?cond:None ?as_const:None ~frozen:NotFrozen)
+            ~check_expression:expression
             ~collapse_children
             name
             attributes
@@ -5778,7 +5778,7 @@ module Make
             jsx_mk_props
               cx
               reason
-              ~check_expression:(expression ?cond:None ?as_const:None)
+              ~check_expression:expression
               ~collapse_children
               name
               attributes
@@ -5818,7 +5818,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(expression ?cond:None ?as_const:None)
+            ~check_expression:expression
             ~collapse_children
             name
             attributes
@@ -5842,7 +5842,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(expression ?cond:None ?as_const:None)
+            ~check_expression:expression
             ~collapse_children
             el_name
             attributes
@@ -5859,7 +5859,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(expression ?cond:None ?as_const:None)
+            ~check_expression:expression
             ~collapse_children
             el_name
             attributes
@@ -5920,7 +5920,8 @@ module Make
         MemberExpression (match_member_expressions o_mexp c_mexp)
       | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
-  and jsx_mk_props cx reason ~check_expression ~collapse_children name attributes children =
+  and jsx_mk_props
+      cx reason ~(check_expression : _ -> _ -> _) ~collapse_children name attributes children =
     let open Ast.JSX in
     let is_builtin_react =
       Context.jsx cx = Options.Jsx_react && not (Context.react_custom_jsx_typing cx)
