@@ -1292,7 +1292,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
         else
           false
       in
-      let node = get_builtin_type cx ~use_desc:true renders_r "React$Node" in
+      let node =
+        get_builtin_react_type
+          cx
+          ~use_desc:true
+          renders_r
+          Flow_intermediate_error_types.ReactModuleForReactNodeType
+      in
       if union_contains_instantiable_tvars || not (speculative_subtyping_succeeds cx node u) then
         SpeculationKit.try_union cx trace use_op l r rep
     (* The following case distributes the opaque constructor over a union/maybe/optional

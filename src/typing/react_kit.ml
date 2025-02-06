@@ -460,7 +460,12 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               ~use_op:unknown_use
               cx
               trace
-              (return_t, get_builtin_type cx reason_op "React$Node")
+              ( return_t,
+                get_builtin_react_type
+                  cx
+                  reason_op
+                  Flow_intermediate_error_types.ReactModuleForReactNodeType
+              )
         | _ ->
           err_incompatible ~use_op:unknown_use r;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tin))

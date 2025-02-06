@@ -4973,7 +4973,13 @@ struct
           let u' = ExitRendersT { renders_reason = r; u } in
           rec_flow cx trace (t, u')
         | (_, ExitRendersT { renders_reason; u }) ->
-          let node = get_builtin_type cx ~trace renders_reason "React$Node" in
+          let node =
+            get_builtin_react_type
+              cx
+              ~trace
+              renders_reason
+              Flow_intermediate_error_types.ReactModuleForReactNodeType
+          in
           rec_flow cx trace (node, u)
         (***********************)
         (* Object library call *)

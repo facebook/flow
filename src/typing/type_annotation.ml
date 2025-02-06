@@ -1203,7 +1203,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             let renders =
               let reason =
                 Reason.update_desc_new_reason
-                  (fun _ -> RIdentifier (OrdinaryName "React$Node"))
+                  (fun _ -> RIdentifier (OrdinaryName "React.Node"))
                   reason
               in
               DefT (reason, RendersT DefaultRenders)
@@ -1821,7 +1821,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let reason = mk_reason reason_desc loc in
     match TypeUtil.mk_possibly_generic_render_type ~allow_generic_t ~variant reason t with
     | Some t' ->
-      let node = Flow_js.get_builtin_type env.cx reason "React$Node" in
+      let node =
+        Flow_js.get_builtin_react_type
+          env.cx
+          reason
+          Flow_intermediate_error_types.ReactModuleForReactNodeType
+      in
       let use_op = Op (RenderTypeInstantiation { render_type = reason }) in
       Context.add_post_inference_subtyping_check env.cx t use_op node;
       (t', { Ast.Type.Renders.operator_loc; comments; argument = t_ast; variant })
@@ -3089,7 +3094,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
         | Ast.Type.MissingRenders loc ->
           let reason =
-            Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc)
+            Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React.Node"))) loc)
           in
           let renders_t = DefT (reason, RendersT DefaultRenders) in
           (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))

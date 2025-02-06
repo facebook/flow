@@ -214,9 +214,12 @@ let resolve_hint cx loc hint =
         ~singleton_concretize_type_for_imports_exports:
           Flow_js.singleton_concretize_type_for_imports_exports
         ~purpose:Flow_intermediate_error_types.ReactModuleForJSXFragment
-    | BuiltinType name ->
-      let reason = mk_reason (RType (OrdinaryName name)) loc in
-      Flow_js.get_builtin_type cx reason name
+    | ReactNodeType ->
+      let reason = mk_reason (RType (OrdinaryName "React.Node")) loc in
+      Flow_js.get_builtin_react_type
+        cx
+        reason
+        Flow_intermediate_error_types.ReactModuleForReactNodeType
     | AnyErrorHint reason -> AnyT.error reason
     | ComposedArrayPatternHint (loc, elements) ->
       let reason = mk_reason RDestructuring loc in

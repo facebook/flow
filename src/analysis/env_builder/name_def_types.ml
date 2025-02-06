@@ -43,7 +43,7 @@ type hint_node =
   | WriteLocHint of Env_api.With_ALoc.def_loc_type * ALoc.t
   | StringLiteralType of string
   | ReactFragmentType
-  | BuiltinType of string
+  | ReactNodeType
   | AnyErrorHint of Reason.t
   | ComposedArrayPatternHint of ALoc.t * array_element_pattern_hint list
   | ComposedObjectPatternHint of ALoc.t * object_prop_pattern_hint list
@@ -262,7 +262,7 @@ module Print = struct
     | WriteLocHint _ -> "write loc hint"
     | StringLiteralType s -> "string literal hint: " ^ s
     | ReactFragmentType -> "react fragment hint"
-    | BuiltinType _ -> "builtin type hint"
+    | ReactNodeType -> "react node hint"
     | AnyErrorHint _ -> "any type hint"
     | ComposedArrayPatternHint (_, elements) ->
       spf

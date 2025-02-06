@@ -53,7 +53,7 @@ let insert_render_type_at_loc
     | None -> None
     | Some ts ->
       let reason =
-        Reason.(mk_reason (RRenderType (RType (OrdinaryName "React$Node"))))
+        Reason.(mk_reason (RRenderType (RType (OrdinaryName "React.Node"))))
           (ALoc.of_loc missing_renders_loc)
       in
       let t = TypeUtil.union_of_ts reason (Nel.to_list ts) in

@@ -7826,7 +7826,7 @@ module Make
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let reason =
-              Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc)
+              Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React.Node"))) loc)
             in
             let renders_t = DefT (reason, RendersT DefaultRenders) in
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))

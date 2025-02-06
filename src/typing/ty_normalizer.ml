@@ -902,7 +902,7 @@ module Make (I : INPUT) : S = struct
             ( Reason_utils.component_symbol
                 env
                 "React.Node"
-                (mk_reason (RComponent (OrdinaryName "React$Node")) (loc_of_reason r)),
+                (mk_reason (RComponent (OrdinaryName "React.Node")) (loc_of_reason r)),
               Ty.ComponentKind,
               None
             )

@@ -798,7 +798,7 @@ struct
           depends_of_node (fun visitor -> visitor#add ~why:loc (kind, loc)) state
         | StringLiteralType _ -> state
         | ReactFragmentType -> state
-        | BuiltinType _ -> state
+        | ReactNodeType -> state
         | AnyErrorHint _ -> state
         | ComposedArrayPatternHint (_, elements) ->
           Base.List.fold elements ~init:state ~f:(fun state -> function

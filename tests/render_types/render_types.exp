@@ -1248,30 +1248,16 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
 
-Cannot get `rendersNode.props` because property `props` is missing in undefined [1]. [incompatible-use]
+Cannot get `rendersNode.props` because property `props` is missing in `$Iterable` [1]. [prop-missing]
 
    renders_to_renders.js:126:15
    126|   rendersNode.props; // ERROR
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:16:5
-    16|   | void
-            ^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
-
-Cannot get `rendersNode.props` because property `props` is missing in null [1]. [incompatible-use]
-
-   renders_to_renders.js:126:15
-   126|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:17:5
-    17|   | null
-            ^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
@@ -1283,9 +1269,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `Boolean` 
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:18:5
-    18|   | boolean
-            ^^^^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
@@ -1297,23 +1283,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `Number` [
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:19:5
-    19|   | number
-            ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `String` [1]. [prop-missing]
-
-   renders_to_renders.js:126:15
-   126|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:20:5
-    20|   | string
-            ^^^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
@@ -1325,9 +1297,9 @@ Cannot get `rendersNode.props` because property `props` is missing in `React.Ele
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:21:5
-    21|   | React$Element<any>
-            ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
@@ -1339,23 +1311,51 @@ Cannot get `rendersNode.props` because property `props` is missing in `React.Por
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:22:5
-    22|   | React$Portal
-            ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
 
-Cannot get `rendersNode.props` because property `props` is missing in `$Iterable` [1]. [prop-missing]
+Cannot get `rendersNode.props` because property `props` is missing in `String` [1]. [prop-missing]
 
    renders_to_renders.js:126:15
    126|   rendersNode.props; // ERROR
                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:23:5
-    23|   | Iterable<?React$Node>;
-            ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
+
+Cannot get `rendersNode.props` because property `props` is missing in null [1]. [incompatible-use]
+
+   renders_to_renders.js:126:15
+   126|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
+
+Cannot get `rendersNode.props` because property `props` is missing in undefined [1]. [incompatible-use]
+
+   renders_to_renders.js:126:15
+   126|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:362:30
+   362|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:132:3

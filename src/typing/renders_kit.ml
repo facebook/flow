@@ -232,7 +232,12 @@ module Make (Flow : INPUT) : S = struct
         let top_abstract_component =
           let config = EmptyT.why elem_reason in
           let instance = ComponentInstanceTopType elem_reason in
-          let renders = get_builtin_type cx elem_reason "React$Node" in
+          let renders =
+            get_builtin_react_type
+              cx
+              elem_reason
+              Flow_intermediate_error_types.ReactModuleForReactNodeType
+          in
           DefT
             ( elem_reason,
               ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
@@ -318,7 +323,13 @@ module Make (Flow : INPUT) : S = struct
         cx
         trace
         ~use_op:(Frame (RendersCompatibility, use_op))
-        (l, get_builtin_type cx renders_r ~use_desc:true "React$Node")
+        ( l,
+          get_builtin_react_type
+            cx
+            renders_r
+            ~use_desc:true
+            Flow_intermediate_error_types.ReactModuleForReactNodeType
+        )
     | (AnyT _, _) -> ()
     | (l, _) ->
       Flow_js_utils.add_output

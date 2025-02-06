@@ -958,7 +958,7 @@ and merge_annot env file = function
     let renders =
       let reason =
         mk_default_type_argument_reason_at_position
-          Reason.(RIdentifier (OrdinaryName "React$Node"))
+          Reason.(RIdentifier (OrdinaryName "React.Node"))
           3
       in
       Type.(DefT (reason, RendersT DefaultRenders))
@@ -1002,7 +1002,7 @@ and merge_annot env file = function
       in
       ConsGen.mk_non_generic_render_type file.cx reason ~renders_variant t)
   | ComponentMissingRenders loc ->
-    let reason = Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React$Node"))) loc) in
+    let reason = Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React.Node"))) loc) in
     Type.(DefT (reason, RendersT DefaultRenders))
   | FunAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in

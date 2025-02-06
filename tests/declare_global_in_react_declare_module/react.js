@@ -12,6 +12,7 @@ declare module 'react' {
     declare const willBeIgnored: string;
   }
 
+  export type Node = any;
   export type T1 = ReactTypes.MyReact;
   export type T2 = ReactGlobalType;
 }

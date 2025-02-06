@@ -232,7 +232,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ReactElementConfigType ->
         merge_lower_or_upper_bounds r (OpenT tout)
         |> bind_use_t_result ~f:(fun config ->
-               let react_node = Flow.get_builtin_type cx r "React$Node" in
+               let react_node =
+                 Flow.get_builtin_react_type
+                   cx
+                   r
+                   Flow_intermediate_error_types.ReactModuleForReactNodeType
+               in
                UpperT
                  (DefT
                     ( r,
