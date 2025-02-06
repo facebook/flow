@@ -542,5 +542,7 @@ let program ~file_key ~ast ~opts =
   walk#add_require (ImportSynthetic { source = "react" });
   (match file_key with
   | File_key.LibFile _ -> ()
-  | _ -> walk#add_multiplatform_synthetic_imports);
-  walk#eval walk#program ast
+  | _ ->
+    walk#add_multiplatform_synthetic_imports;
+    ignore @@ walk#program ast);
+  walk#acc

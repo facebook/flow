@@ -338,35 +338,38 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     in
     Lazy.force file_rec
   and extend_local_globals cx ~resolved_requires =
-    let local_builtins =
-      lazy
-        (let global_types =
-           (* For now, we limit the effect of global-modifying after import to react only,
-            * since doing it for all modules, especially cyclic ones, can trigger infinite
-            * recursion. *)
-           match SMap.find_opt "react" resolved_requires with
-           | None -> SMap.empty
-           | Some m ->
-             (match Lazy.force m with
-             | Context.UncheckedModule _ -> SMap.empty
-             | Context.MissingModule _ -> SMap.empty
-             | Context.TypedModule f ->
-               (match f () with
-               | Error _ -> SMap.empty
-               | Ok { Type.module_global_types_tmap = module_global_types; _ } ->
-                 (* Since we are only getting extra globals from one module,
-                  * we don't need to worry about globals from different modules overlap. *)
-                 module_global_types))
-         in
-         Builtins.of_name_map
-           ~type_mapper:Base.Fn.id
-           ~module_type_mapper:Base.Fn.id
-           ~values:SMap.empty
-           ~types:global_types
-           ~modules:SMap.empty
-        )
-    in
-    Context.extend_local_builtins cx local_builtins
+    if File_key.is_lib_file (Context.file cx) then
+      ()
+    else
+      let local_builtins =
+        lazy
+          (let global_types =
+             (* For now, we limit the effect of global-modifying after import to react only,
+              * since doing it for all modules, especially cyclic ones, can trigger infinite
+              * recursion. *)
+             match SMap.find_opt "react" resolved_requires with
+             | None -> SMap.empty
+             | Some m ->
+               (match Lazy.force m with
+               | Context.UncheckedModule _ -> SMap.empty
+               | Context.MissingModule _ -> SMap.empty
+               | Context.TypedModule f ->
+                 (match f () with
+                 | Error _ -> SMap.empty
+                 | Ok { Type.module_global_types_tmap = module_global_types; _ } ->
+                   (* Since we are only getting extra globals from one module,
+                    * we don't need to worry about globals from different modules overlap. *)
+                   module_global_types))
+           in
+           Builtins.of_name_map
+             ~type_mapper:Base.Fn.id
+             ~module_type_mapper:Base.Fn.id
+             ~values:SMap.empty
+             ~types:global_types
+             ~modules:SMap.empty
+          )
+      in
+      Context.extend_local_builtins cx local_builtins
   in
   let check_file file_key resolved_modules ast file_sig docblock aloc_table find_ref_request =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
