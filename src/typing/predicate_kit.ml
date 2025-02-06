@@ -40,6 +40,28 @@ type predicate_result_mut =
       changed: bool ref;
     }
 
+(* Simple wrapper to protect against using non-concretized types in type-guard
+ * filtering operations (see `intersect` below). *)
+module ConcretizedType : sig
+  type t
+
+  val for_all_concrete_ts : Context.t -> f:(t -> bool) -> Type.t -> bool
+
+  val unwrap : t -> Type.t
+
+  val wrap_unsafe : Type.t -> t
+end = struct
+  type t = C of Type.t
+
+  let unwrap (C t) = t
+
+  let for_all_concrete_ts cx ~f t =
+    possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+    |> Base.List.for_all ~f:(fun t -> f (C t))
+
+  let wrap_unsafe t = C t
+end
+
 let report_changes_to_input (PredicateResultCollector { collector = _; changed }) = changed := true
 
 let report_filtering_result_to_predicate_result
@@ -496,66 +518,63 @@ and call_latent_this_pred =
  * other hand, is not, since it is coming directly from the annotation. This is why
  * we concretize it first, before attempting any comparisons. *)
 and intersect cx t1 t2 =
-  let module TSet = Type_filter.TypeTagSet in
-  let quick_subtype = TypeUtil.quick_subtype in
-  let t1_tags = Type_filter.tag_of_t cx t1 in
-  let t2_tags =
-    t2
-    |> possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t2)
-    |> Base.List.map ~f:(Type_filter.tag_of_t cx)
-    |> Base.Option.all
-    |> Base.Option.map ~f:(Base.List.fold ~init:TSet.empty ~f:TSet.union)
-  in
+  let module C = ConcretizedType in
   let is_any t =
     let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
     List.exists Type.is_any ts
   in
   let is_null t =
-    match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
-    | [DefT (_, NullT)] -> true
+    match C.unwrap t with
+    | DefT (_, NullT) -> true
     | _ -> false
   in
   let is_void t =
-    match possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
-    | [DefT (_, VoidT)] -> true
+    match C.unwrap t with
+    | DefT (_, VoidT) -> true
     | _ -> false
   in
-  match (t1_tags, t2_tags) with
-  | (Some t1_tags, Some t2_tags) when not (Type_filter.tags_overlap t1_tags t2_tags) ->
+  let tags_of_t t = Type_filter.tag_of_t cx (C.unwrap t) in
+  let tags_differ t1 t2 =
+    match (tags_of_t t1, tags_of_t t2) with
+    | (Some t1_tags, Some t2_tags) -> not (Type_filter.tags_overlap t1_tags t2_tags)
+    | _ -> false
+  in
+  let types_differ ~depth:_ t1 t2 = C.for_all_concrete_ts cx t2 ~f:(fun t2 -> tags_differ t1 t2) in
+  (* Input t1 is already concretized as input to the predicate mechanism *)
+  let t1_conc = C.wrap_unsafe t1 in
+  if types_differ ~depth:0 t1_conc t2 then
     let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
     DefT (r, EmptyT)
-  | _ ->
-    if is_any t1 then
-      t2
-    else if is_any t2 then
-      (* Filter out null and void types from the input if comparing with any *)
-      if is_null t1 || is_void t1 then
-        let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-        DefT (r, EmptyT)
-      else
-        t1
-    else if quick_subtype t1 t2 then
+  else if is_any t1 then
+    t2
+  else if is_any t2 then
+    (* Filter out null and void types from the input if comparing with any *)
+    if is_null t1_conc || is_void t1_conc then
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      DefT (r, EmptyT)
+    else
       t1
-    else if quick_subtype t2 t1 then
-      t2
-    else if speculative_subtyping_succeeds cx t1 t2 then
-      t1
-    else if speculative_subtyping_succeeds cx t2 t1 then
-      t2
-    else (
-      match t1 with
-      | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
-        (* Apply the refinement on super and underlying type of opaque type.
-         * Preserve opaque_id to retain compatibility with original type. *)
-        let super_t =
-          Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
-        in
-        let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
-        OpaqueT (r, { opaquetype with underlying_t; super_t })
-      | _ ->
-        let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-        IntersectionT (r, InterRep.make t2 t1 [])
-    )
+  else if TypeUtil.quick_subtype t1 t2 then
+    t1
+  else if TypeUtil.quick_subtype t2 t1 then
+    t2
+  else if speculative_subtyping_succeeds cx t1 t2 then
+    t1
+  else if speculative_subtyping_succeeds cx t2 t1 then
+    t2
+  else
+    match t1 with
+    | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
+      (* Apply the refinement on super and underlying type of opaque type.
+       * Preserve opaque_id to retain compatibility with original type. *)
+      let super_t =
+        Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
+      in
+      let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
+      OpaqueT (r, { opaquetype with underlying_t; super_t })
+    | _ ->
+      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      IntersectionT (r, InterRep.make t2 t1 [])
 
 (* This utility is expected to be used when negating the refinement of a type [t1]
  * with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
