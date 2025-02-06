@@ -6,7 +6,10 @@
  *)
 
 type error =
-  | RecoverableShouldReinitNonLazily of { msg: string }
+  | RecoverableShouldReinitNonLazily of {
+      msg: string;
+      updates: Utils_js.FilenameSet.t;
+    }
   | Unrecoverable of {
       msg: string;
       exit_status: Exit.t;

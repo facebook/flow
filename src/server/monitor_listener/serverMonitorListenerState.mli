@@ -71,7 +71,7 @@ type priority =
 
 type updates =
   | NormalUpdates of Utils_js.FilenameSet.t
-  | RequiredFullCheckReinit
+  | RequiredFullCheckReinit of Utils_js.FilenameSet.t
 
 (* APIs to wait *)
 val wait_for_anything :

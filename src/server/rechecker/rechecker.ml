@@ -94,9 +94,9 @@ let process_updates ~skip_incompatible ~options env updates =
     Recheck_updates.process_updates ~skip_incompatible ~options ~libs:env.ServerEnv.libs updates
   with
   | Ok updates -> ServerMonitorListenerState.NormalUpdates updates
-  | Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg }) ->
+  | Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg; updates }) ->
     Hh_logger.info "%s" msg;
-    ServerMonitorListenerState.RequiredFullCheckReinit
+    ServerMonitorListenerState.RequiredFullCheckReinit updates
   | Error (Recheck_updates.Unrecoverable { msg; exit_status }) -> Exit.exit ~msg exit_status
 
 (** Notify clients that a recheck is starting. This is used to know that

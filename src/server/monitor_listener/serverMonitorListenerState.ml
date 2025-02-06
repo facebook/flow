@@ -139,7 +139,7 @@ type priority =
 
 type updates =
   | NormalUpdates of Utils_js.FilenameSet.t
-  | RequiredFullCheckReinit
+  | RequiredFullCheckReinit of Utils_js.FilenameSet.t
 
 let empty_recheck_workload =
   {
@@ -221,9 +221,9 @@ let update
   in
   (workload, orig_workload != workload)
 
-let update_to_require_reinit workload =
+let update_to_require_reinit (workload, changed) =
   if workload.require_full_check_reinit then
-    (workload, false)
+    (workload, changed)
   else
     ( {
         files_to_prioritize = workload.files_to_prioritize;
@@ -290,20 +290,26 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
            let (workload, changed) =
              match files with
              | ChangedFiles (changed_files, urgent) ->
-               (match process_updates ~skip_incompatible:false changed_files with
-               | NormalUpdates updates ->
+               let handle_normal_updates updates workload =
                  if urgent then
                    update ~files_to_prioritize:updates workload
                  else
                    update ~files_to_recheck:updates workload
-               | RequiredFullCheckReinit -> update_to_require_reinit workload)
+               in
+               (match process_updates ~skip_incompatible:false changed_files with
+               | NormalUpdates updates -> handle_normal_updates updates workload
+               | RequiredFullCheckReinit updates ->
+                 workload |> handle_normal_updates updates |> update_to_require_reinit)
              | FilesToForceFocusedAndRecheck { files; skip_incompatible } ->
-               (match process_updates ~skip_incompatible files with
-               | NormalUpdates updates ->
+               let handle_normal_updates updates workload =
                  let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                  let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
                  update ~files_to_recheck:updates ~files_to_force workload
-               | RequiredFullCheckReinit -> update_to_require_reinit workload)
+               in
+               (match process_updates ~skip_incompatible files with
+               | NormalUpdates updates -> handle_normal_updates updates workload
+               | RequiredFullCheckReinit updates ->
+                 workload |> handle_normal_updates updates |> update_to_require_reinit)
              | GlobalFindRef { request; client; references_to_lsp_response; def_locs } ->
                let files_to_recheck = FilenameSet.of_list (List.filter_map Loc.source def_locs) in
                update

@@ -11,7 +11,10 @@ module FilenameSet = Utils_js.FilenameSet
 let spf = Printf.sprintf
 
 type error =
-  | RecoverableShouldReinitNonLazily of { msg: string }
+  | RecoverableShouldReinitNonLazily of {
+      msg: string;
+      updates: Utils_js.FilenameSet.t;
+    }
   | Unrecoverable of {
       msg: string;
       exit_status: Exit.t;
@@ -138,7 +141,8 @@ let did_content_change ~reader filename =
     let reader = Abstract_state_reader.State_reader reader in
     not (Parsing_service_js.does_content_match_file_hash ~reader file content)
 
-let check_for_lib_changes ~should_recover ~reader ~all_libs ~root ~skip_incompatible updates =
+let check_for_lib_changes
+    ~should_recover ~reader ~all_libs ~root ~skip_incompatible ~filter_wanted_updates updates =
   let flow_typed_path = File_path.to_string (Files.get_flowtyped_path root) in
   let is_changed_lib filename =
     let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
@@ -150,9 +154,10 @@ let check_for_lib_changes ~should_recover ~reader ~all_libs ~root ~skip_incompat
       SSet.elements libs |> List.rev_map (spf "Modified lib file: %s") |> String.concat "\n"
     in
     if should_recover then
+      let updates = filter_wanted_updates updates in
       Error
         (RecoverableShouldReinitNonLazily
-           { msg = spf "%s\nLib files changed in an incompatible way" messages }
+           { msg = spf "%s\nLib files changed in an incompatible way" messages; updates }
         )
     else
       Error
@@ -224,6 +229,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   let%bind () =
     check_for_package_json_changes ~is_incompatible_package_json ~skip_incompatible updates
   in
+  let filter_wanted_updates = filter_wanted_updates ~file_options ~sroot ~want in
   (* Try to recover/die if libs files have changed *)
   let%bind () =
     check_for_lib_changes
@@ -232,7 +238,8 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
       ~all_libs
       ~root
       ~skip_incompatible
+      ~filter_wanted_updates
       updates
   in
   (* Return only the updates we care about *)
-  Ok (filter_wanted_updates ~file_options ~sroot ~want updates)
+  Ok (filter_wanted_updates updates)

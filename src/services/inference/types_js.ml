@@ -2306,7 +2306,8 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          match updates with
          | Base.Result.Error (Recheck_updates.Unrecoverable { msg; _ })
-         | Base.Result.Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg }) ->
+         | Base.Result.Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg; updates = _ })
+           ->
            Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
            raise Saved_state.(Invalid_saved_state Changed_files)
          | Base.Result.Ok updates -> updates
