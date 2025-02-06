@@ -15,3 +15,10 @@ assert_ok "$FLOW" apply-code-action 'source.addMissingImports' tmp/a.js
 assert_ok "$FLOW" apply-code-action 'source.addMissingImports' --in-place tmp/a.js
 echo '> Confirm no errors'
 assert_ok "$FLOW" force-recheck tmp/a.js
+echo '> apply-code-action '\''source.addMissingImports'\'' tmp/multi.js'
+assert_ok "$FLOW" apply-code-action 'source.addMissingImports' tmp/multi.js
+assert_ok "$FLOW" apply-code-action 'source.addMissingImports' --in-place tmp/multi.js
+echo '> Confirm no errors'
+assert_ok "$FLOW" force-recheck tmp/multi.js
+echo '> TODO: No duplicate imports'
+assert_errors "$FLOW" status tmp

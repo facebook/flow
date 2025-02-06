@@ -1,0 +1,4 @@
+// @flow
+
+OtherModule;
+OtherModule;
