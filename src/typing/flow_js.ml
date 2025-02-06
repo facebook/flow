@@ -4215,18 +4215,6 @@ struct
         | (_, ConcretizeT { reason = _; kind = ConcretizeForSentinelPropTest; seen = _; collector })
           ->
           TypeCollector.add collector l
-        (***************************)
-        (* Coerce to unsound types *)
-        (***************************)
-        | (DefT (reason, SingletonStrT key), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, StrT_UNSOUND (None, key)), u)
-        | (DefT (reason, SingletonNumT lit), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, NumT_UNSOUND (None, lit)), u)
-        | (DefT (reason, SingletonBoolT b), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, BoolT_UNSOUND b), u)
-        | (DefT (reason, SingletonBigIntT lit), _) when Context.allow_unsound_literal_coercsion cx
-          ->
-          rec_flow cx trace (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
         (******************************)
         (* functions statics - part B *)
         (******************************)
@@ -5578,7 +5566,7 @@ struct
         else
           wait_for_concrete_bound ()
       | ElemT _ ->
-        if is_concrete bound && not (is_literal_type bound) then
+        if is_concrete bound then
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()

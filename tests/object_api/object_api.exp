@@ -355,17 +355,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
-Cannot cast `Object.keys(...)` to array type because string literal `x` [1] is incompatible with union type [2] in array
-element. [incompatible-cast]
+Cannot cast `Object.keys(...)` to array type because array type [1] is incompatible with union type [2] in array
+element. Type array type [1] includes members `x`, `y` that are not included in type union type [2]. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:49:36
-   49| declare var ifaceDict: interface {['x' | 'y']: boolean};
-                                          ^^^ [1]
    object_keys.js:55:32
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
                                       ^^^^^^^^^^^^^^^^^ [2]
@@ -373,20 +370,19 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
-Cannot cast `Object.keys(...)` to array type because string literal `y` [1] is incompatible with union type [2] in array
-element. [incompatible-cast]
+Cannot cast `Object.keys(...)` to array type because union type [1] is incompatible with array type [2] in array
+element. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number. Type union
+type [1] includes members `$key`, `$value` that are not included in type array type [2]. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   object_keys.js:49:42
-   49| declare var ifaceDict: interface {['x' | 'y']: boolean};
-                                                ^^^ [1]
    object_keys.js:55:32
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
-                                      ^^^^^^^^^^^^^^^^^ [2]
+                                      ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:58:8
