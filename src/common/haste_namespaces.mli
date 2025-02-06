@@ -22,6 +22,6 @@ val to_bitset : t -> Bitset.t
 
 val index_of_namespace_string : opts:options -> string -> int
 
-val namespaces_bitset_of_path : opts:options -> string -> t
+val namespaces_bitset_of_path : opts:options -> string -> t option
 
 val reachable_namespace_bitsets_from_namespace_bitset : opts:options -> t -> t list

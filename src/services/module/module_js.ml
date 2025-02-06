@@ -640,9 +640,9 @@ module Haste : MODULE_SYSTEM = struct
     let is_haste_file = is_haste_file options in
     let haste_namespaces_options = Options.haste_namespaces_options options in
     let namespace_of_path path =
-      path
-      |> Haste_namespaces.namespaces_bitset_of_path ~opts:haste_namespaces_options
-      |> Haste_namespaces.to_bitset
+      match path |> Haste_namespaces.namespaces_bitset_of_path ~opts:haste_namespaces_options with
+      | None -> failwith ("Path " ^ path ^ " doesn't match any Haste namespace.")
+      | Some bitset -> Haste_namespaces.to_bitset bitset
     in
     let is_within_node_modules = is_within_node_modules options in
     fun file ~package_info ->
@@ -727,18 +727,22 @@ module Haste : MODULE_SYSTEM = struct
         record_phantom_dependency mname dependency phantom_acc;
         None
     in
-    let candidate_haste_namespace_bitset =
+    let haste_namespace_bitset_candidates =
       let opts = Options.haste_namespaces_options options in
-      File_key.to_string importing_file
-      |> Haste_namespaces.namespaces_bitset_of_path ~opts
-      |> Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset ~opts
-      |> List.map Haste_namespaces.to_bitset
+      match
+        Haste_namespaces.namespaces_bitset_of_path ~opts (File_key.to_string importing_file)
+      with
+      | None -> []
+      | Some bitset ->
+        bitset
+        |> Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset ~opts
+        |> List.map Haste_namespaces.to_bitset
     in
     let mname_of_bitset namespace_bitset =
       Modulename.Haste (Haste_module_info.mk ~module_name:name ~namespace_bitset)
     in
     lazy_seq
-      (Base.List.map candidate_haste_namespace_bitset ~f:(fun b ->
+      (Base.List.map haste_namespace_bitset_candidates ~f:(fun b ->
            lazy (resolve (mname_of_bitset b))
        )
       )

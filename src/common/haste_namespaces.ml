@@ -51,13 +51,13 @@ let index_of_namespace_string ~opts = index_of ~haste_namespaces:opts.namespaces
 
 let namespaces_bitset_of_path ~opts path =
   match opts.namespaces with
-  | (_, []) -> Bitset.all_one 1
+  | (_, []) -> Some (Bitset.all_one 1)
   | (_, _ :: _) ->
     (match
        Base.List.find opts.namespaces_path_mapping ~f:(fun (r, _) -> Str.string_match r path 0)
      with
-    | Some (_, bitset) -> bitset
-    | None -> failwith ("Path " ^ path ^ " doesn't match any Haste namespace."))
+    | Some (_, bitset) -> Some bitset
+    | None -> None)
 
 let reachable_namespace_bitsets_from_namespace_bitset ~opts ns =
   let size = Nel.length opts.namespaces in

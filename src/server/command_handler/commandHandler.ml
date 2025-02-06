@@ -255,15 +255,17 @@ let get_haste_module_info ~reader f =
 
 let mk_module_system_info =
   let is_package_file ~options ~reader ~module_path ~module_name =
-    let namespace_bitset =
-      Haste_namespaces.namespaces_bitset_of_path
-        ~opts:(Options.haste_namespaces_options options)
-        module_path
-      |> Haste_namespaces.to_bitset
-    in
     let dependency =
-      Parsing_heaps.get_dependency
-        (Modulename.Haste (Haste_module_info.mk ~module_name ~namespace_bitset))
+      match
+        Haste_namespaces.namespaces_bitset_of_path
+          ~opts:(Options.haste_namespaces_options options)
+          module_path
+      with
+      | None -> None
+      | Some ns ->
+        let namespace_bitset = Haste_namespaces.to_bitset ns in
+        Parsing_heaps.get_dependency
+          (Modulename.Haste (Haste_module_info.mk ~module_name ~namespace_bitset))
     in
     match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
     | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr
