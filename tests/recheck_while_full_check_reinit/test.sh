@@ -38,3 +38,11 @@ touch to_be_removed.js
 assert_ok "$FLOW" force-recheck to_be_removed.js
 assert_ok "$FLOW" status .
 echo ""
+
+echo "Remove declare module and add module type def together"
+mkdir @flowtyped
+echo "declare module.exports: number" > @flowtyped/foo.js.flow
+rm lib/module_def.js
+assert_ok "$FLOW" force-recheck lib/module_def.js @flowtyped/foo.js.flow
+assert_errors "$FLOW" status .
+echo ""

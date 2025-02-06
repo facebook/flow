@@ -30,3 +30,15 @@ Found 1 error
 Updating libdef and add then addiing back the removed file should remove error:
 No errors!
 
+Remove declare module and add module type def together
+Error ------------------------------------------------------------------------------------------------------ test.js:5:9
+
+Cannot resolve module `foo`. [cannot-resolve-module]
+
+   5| require('foo') as string;
+              ^^^^^
+
+
+
+Found 1 error
+
