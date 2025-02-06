@@ -1606,6 +1606,7 @@ let resolve
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model
    * copying/spreading an object. *)
   | DefT (_, BoolGeneralT)
+  | DefT (_, SingletonBoolT _)
   | DefT (_, BoolT_UNSOUND _)
     when match tool with
          | Spread _ -> true

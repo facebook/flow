@@ -2210,15 +2210,6 @@ struct
             ReposLowerT { reason; use_desc; use_t = u }
           ) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (DefT (reason, SingletonStrT key), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, StrT_UNSOUND (None, key)), u)
-        | (DefT (reason, SingletonNumT lit), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, NumT_UNSOUND (None, lit)), u)
-        | (DefT (reason, SingletonBoolT b), _) when Context.allow_unsound_literal_coercsion cx ->
-          rec_flow cx trace (DefT (reason, BoolT_UNSOUND b), u)
-        | (DefT (reason, SingletonBigIntT lit), _) when Context.allow_unsound_literal_coercsion cx
-          ->
-          rec_flow cx trace (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
         (* NullProtoT is necessary as an upper bound, to distinguish between
            (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
            a lower bound, it's the same as DefT (_, NullT) *)
@@ -4224,6 +4215,18 @@ struct
         | (_, ConcretizeT { reason = _; kind = ConcretizeForSentinelPropTest; seen = _; collector })
           ->
           TypeCollector.add collector l
+        (***************************)
+        (* Coerce to unsound types *)
+        (***************************)
+        | (DefT (reason, SingletonStrT key), _) when Context.allow_unsound_literal_coercsion cx ->
+          rec_flow cx trace (DefT (reason, StrT_UNSOUND (None, key)), u)
+        | (DefT (reason, SingletonNumT lit), _) when Context.allow_unsound_literal_coercsion cx ->
+          rec_flow cx trace (DefT (reason, NumT_UNSOUND (None, lit)), u)
+        | (DefT (reason, SingletonBoolT b), _) when Context.allow_unsound_literal_coercsion cx ->
+          rec_flow cx trace (DefT (reason, BoolT_UNSOUND b), u)
+        | (DefT (reason, SingletonBigIntT lit), _) when Context.allow_unsound_literal_coercsion cx
+          ->
+          rec_flow cx trace (DefT (reason, BigIntT_UNSOUND (None, lit)), u)
         (******************************)
         (* functions statics - part B *)
         (******************************)

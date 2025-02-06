@@ -103,8 +103,12 @@ module Operators = struct
 
   let check_comparator =
     let check_base cx = function
-      | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
-      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _)), DefT (_, (NumGeneralT _ | NumT_UNSOUND _)))
+      | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
+          DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))
+        )
+      | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
+        )
       | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
           DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
         )

@@ -3020,26 +3020,29 @@ let flow_arith cx reason l r kind =
       DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
     ) ->
     NumModuleT.why reason
-  | (RShift3, DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _)), _) ->
+  | (RShift3, DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), _) ->
     add_output cx (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
   | ( _,
-      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
-      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
+      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))
     ) ->
     BigIntModuleT.why reason
   (* str + str *)
   (* str + num *)
   (* num + str *)
-  | (Plus, DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), DefT (_, (StrGeneralT _ | StrT_UNSOUND _)))
   | ( Plus,
-      DefT (_, (StrGeneralT _ | StrT_UNSOUND _)),
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))
+    )
+  | ( Plus,
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
       DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
     )
   | ( Plus,
       DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-      DefT (_, (StrGeneralT _ | StrT_UNSOUND _))
+      DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))
     ) ->
     StrModuleT.why reason
   | _ ->
