@@ -25,9 +25,9 @@ test.js:19:7,19:9
 
 test.js:22:7
 Flags:
-React$RefSetter<void>
+RefSetter<void>
 
-'React$RefSetter' defined at (lib) react.js:195:13
+'RefSetter' defined at (lib) react.js:361:22
 
 test.js:22:7,22:9
 

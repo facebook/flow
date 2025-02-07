@@ -1556,7 +1556,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       f ()
 
   let run_ref_extractor cx ~use_op ~reason t =
-    let lhs = Flow_js_utils.lookup_builtin_type cx "React$RefSetter" reason in
+    let lhs =
+      Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
+        cx
+        (loc_of_reason reason)
+        ~singleton_concretize_type_for_imports_exports:
+          FlowJs.singleton_concretize_type_for_imports_exports
+        ~purpose:Flow_intermediate_error_types.ReactModuleForReactRefSetterType
+    in
     match get_t cx lhs with
     | DefT (_, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
       let poly_t = (tparams_loc, ids, t_out) in

@@ -13,6 +13,7 @@ declare module 'react' {
   }
 
   export type Node = any;
+  export type RefSetter<-T> = any;
   export type T1 = ReactTypes.MyReact;
   export type T2 = ReactGlobalType;
 }

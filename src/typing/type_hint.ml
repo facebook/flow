@@ -490,10 +490,10 @@ and type_of_hint_decomposition cx op reason t =
               (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
         )
       | Decomp_JsxRef ->
-        Flow_js.get_builtin_typeapp
+        Flow_js.get_builtin_react_typeapp
           cx
           reason
-          "React$RefSetter"
+          Flow_intermediate_error_types.ReactModuleForReactRefSetterType
           [
             Tvar.mk_where cx reason (fun ref_t ->
                 SpeculationFlow.resolved_lower_flow_unsafe

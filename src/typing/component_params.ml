@@ -129,7 +129,11 @@ module Make
           let open Reason in
           let reason_op = mk_reason RReactRef key_loc in
           let u =
-            Flow_js.get_builtin_typeapp cx reason_op "React$RefSetter" [AnyT.error reason_op]
+            Flow_js.get_builtin_react_typeapp
+              cx
+              reason_op
+              Flow_intermediate_error_types.ReactModuleForReactRefSetterType
+              [AnyT.error reason_op]
           in
           Context.add_post_inference_subtyping_check
             cx

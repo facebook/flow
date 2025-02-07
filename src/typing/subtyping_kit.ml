@@ -550,16 +550,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let flow_react_component_instance_to_instance =
     let react_ref_setter_of cx t =
-      get_builtin_typeapp
+      get_builtin_react_typeapp
         cx
         ~use_desc:true
         (replace_desc_reason
            (RTypeAppImplicit
-              (RTypeAlias ("React$RefSetter", None, RType (OrdinaryName "React$RefSetter")))
+              (RTypeAlias ("React.RefSetter", None, RType (OrdinaryName "React.$RefSetter")))
            )
            (reason_of_t t)
         )
-        "React$RefSetter"
+        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [t]
     in
     (* Before we start to do React.RefSetter, we make our last attempt to generate good
@@ -1600,16 +1600,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         trace
         use_op
         ( ComponentInstanceAvailableAsRefSetterProp
-            (get_builtin_typeapp
+            (get_builtin_react_typeapp
                cx
                ~use_desc:true
                (replace_desc_reason
                   (RTypeAppImplicit
-                     (RTypeAlias ("React$RefSetter", None, RType (OrdinaryName "React$RefSetter")))
+                     (RTypeAlias ("React.RefSetter", None, RType (OrdinaryName "React.RefSetter")))
                   )
                   (reason_of_t this)
                )
-               "React$RefSetter"
+               Flow_intermediate_error_types.ReactModuleForReactRefSetterType
                [this]
             ),
           instance

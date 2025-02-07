@@ -227,17 +227,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       ->
       Some t
     | DefT (_, ClassT instance) ->
-      get_builtin_typeapp
+      get_builtin_react_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
+        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [instance]
       |> Option.some
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceTopType r; _ }) ->
-      get_builtin_typeapp
+      get_builtin_react_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
+        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [MixedT.why r]
       |> Option.some
     | DefT (_, FunT _)
@@ -258,10 +258,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               tout
         )
       in
-      get_builtin_typeapp
+      get_builtin_react_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
+        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [instance]
       |> Option.some
     | DefT (_, SingletonStrT name) ->
@@ -278,10 +278,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               tout
         )
       in
-      get_builtin_typeapp
+      get_builtin_react_typeapp
         cx
         (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        "React$RefSetter"
+        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [instance]
       |> Option.some
     | _ -> None
@@ -592,10 +592,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                * we add this logic to keep the old behavior, where a function
                * component is treated as `component(ref: React.RefSetter<void>)` *)
               let fn_component_ref =
-                get_builtin_typeapp
+                get_builtin_react_typeapp
                   cx
                   (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                  "React$RefSetter"
+                  Flow_intermediate_error_types.ReactModuleForReactRefSetterType
                   [VoidT.why r]
               in
               rec_flow_t
@@ -609,10 +609,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
              * where ref prop has type `React.RefSetter<mixed>` *)
             if definitely_has_ref_in_props cx r props then
               Object.ReactConfig.AddRef
-                (get_builtin_typeapp
+                (get_builtin_react_typeapp
                    cx
                    (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                   "React$RefSetter"
+                   Flow_intermediate_error_types.ReactModuleForReactRefSetterType
                    [MixedT.why r]
                 )
             else
