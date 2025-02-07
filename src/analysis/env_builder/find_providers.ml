@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Flow_ast_mapper
+open Flow_ast_visitor
 module Ast = Flow_ast
 
 exception ImpossibleState of string
@@ -497,15 +497,15 @@ end = struct
      is not accumulated (unlike the env) but stores contextual information using `in_context`. *)
   class ['cx] finder ~(env : env) ~(cx : 'cx) ~enter_lex_child =
     object (this)
-      inherit [env * 'cx, L.t] Flow_ast_visitor.visitor ~init:(env, cx) as super
+      inherit [env * 'cx, L.t] visitor ~init:(env, cx) as super
 
       (* Join environment information from visiting one branch with existing information *)
-      method accumulate_branch_env : 'a. env * 'cx -> (unit -> 'a) -> env -> 'a * env =
+      method accumulate_branch_env : 'a. env * 'cx -> (unit -> unit) -> env -> env =
         fun (env, cx) visit_branch acc_env ->
           this#set_acc (env, cx);
-          let branch' = visit_branch () in
+          visit_branch ();
           let (env', _) = this#acc in
-          (branch', join_envs env' acc_env)
+          join_envs env' acc_env
 
       (* Save the `cx` information and restore it after calling `f`, possibly having modified it with `mod_cx`. *)
       method in_context : 'a. ?mod_cx:('cx -> 'cx) -> (unit -> 'a) -> 'a =
@@ -516,6 +516,9 @@ end = struct
           let (env, _) = this#acc in
           this#set_acc (env, cx);
           res
+
+      method visit_in_context : 'a. ?mod_cx:('cx -> 'cx) -> (unit -> 'a) -> unit =
+        (fun ?mod_cx f -> ignore @@ this#in_context ?mod_cx f)
 
       (* Use the `enter_lex_child` parameter to push a new scope onto the environment,
          and then pop it off after calling `meth` using `exit_lex_child` (which is not a
@@ -597,28 +600,27 @@ end = struct
           id = ident;
           params;
           body;
-          async = _;
-          generator = _;
-          effect = _;
           predicate;
           return;
           tparams;
+          async = _;
+          generator = _;
+          effect = _;
           sig_loc = _;
-          comments;
+          comments = _;
         } =
           expr
         in
-        let _ident' = map_opt this#function_identifier ident in
+        run_opt this#function_identifier ident;
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            let _params' = this#function_params params in
-            let _return' = this#function_return_annotation return in
-            let _body' = this#function_body_any body in
-            let _predicate' = map_opt this#predicate predicate in
-            let _tparams' = map_opt this#type_params tparams in
-            let _comments' = this#syntax_opt comments in
+            run this#function_params params;
+            run this#function_return_annotation return;
+            run this#function_body_any body;
+            run_opt this#predicate predicate;
+            run_opt this#type_params tparams;
             expr)
           loc
           expr
@@ -626,17 +628,16 @@ end = struct
       (* As above, since components compile to function declarations *)
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; renders; comments; sig_loc = _ } = expr in
-        let _ident' = this#component_identifier ident in
+        let { id = ident; tparams; params; body; renders; comments = _; sig_loc = _ } = expr in
+        run this#component_identifier ident;
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            let _tparams' = map_opt this#type_params tparams in
-            let _params' = this#component_params params in
-            let _body' = this#component_body body in
-            let _renders' = this#component_renders_annotation renders in
-            let _comments' = this#syntax_opt comments in
+            run_opt this#type_params tparams;
+            run this#component_params params;
+            run this#component_body body;
+            run this#component_renders_annotation renders;
             expr)
           loc
           expr
@@ -656,77 +657,59 @@ end = struct
          choices can be made by the programmer in each branch. *)
       method! if_statement _loc (stmt : ('loc, 'loc) Ast.Statement.If.t) =
         let open Ast.Statement.If in
-        let { test; consequent; alternate; comments } = stmt in
-        let _test' = this#predicate_expression test in
+        let { test; consequent; alternate; comments = _ } = stmt in
+        run this#predicate_expression test;
 
         let (env0, cx) = this#acc in
-        let _consequent' = this#if_consequent_statement ~has_else:(alternate <> None) consequent in
+        run (this#if_consequent_statement ~has_else:(alternate <> None)) consequent;
         let (env1, _) = this#acc in
-        let (_alternate', env2) =
+        let env2 =
           this#accumulate_branch_env
             (env0, cx)
-            (fun () -> map_opt (map_loc this#if_alternate_statement) alternate)
+            (fun () -> run_opt_loc this#if_alternate_statement alternate)
             env1
         in
         this#set_acc (env2, cx);
-
-        let _comments' = this#syntax_opt comments in
         stmt
 
-      method! switch _loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
+      method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
         let { discriminant; cases = _; comments = _; exhaustive_out = _ } = switch in
-        let _discriminant' = this#expression discriminant in
+        run this#expression discriminant;
         this#enter_scope
           Lex
           (fun _loc switch ->
-            let { discriminant = _; cases; comments; exhaustive_out = _ } = switch in
+            let { discriminant = _; cases; comments = _; exhaustive_out = _ } = switch in
             let (env0, cx) = this#acc in
-            let (rev_cases', env') =
-              Base.List.fold cases ~init:([], env0) ~f:(fun (acc_cases, acc_env) case ->
-                  let (case', acc_env) =
-                    this#accumulate_branch_env (env0, cx) (fun () -> this#switch_case case) acc_env
-                  in
-                  (case' :: acc_cases, acc_env)
+            let env' =
+              Base.List.fold cases ~init:env0 ~f:(fun acc_env case ->
+                  this#accumulate_branch_env
+                    (env0, cx)
+                    (fun () -> run this#switch_case case)
+                    acc_env
               )
             in
-            let _cases' = List.rev rev_cases' in
             this#set_acc (env', cx);
-            let _comments' = this#syntax_opt comments in
             switch)
-          _loc
+          loc
           switch
 
       method! try_catch _loc (stmt : ('loc, 'loc) Ast.Statement.Try.t) =
         let open Ast.Statement.Try in
-        let { block; handler; finalizer; comments } = stmt in
+        let { block; handler; finalizer; comments = _ } = stmt in
         let (env0, cx) = this#acc in
-        let _block' = map_loc this#block block in
+        run_loc this#block block;
         let (env', _) = this#acc in
-        let (_handler', env') =
+        let env' =
           this#accumulate_branch_env
             (env0, cx)
-            (fun () ->
-              match handler with
-              | Some (loc, clause) ->
-                id_loc this#catch_clause loc clause handler (fun clause -> Some (loc, clause))
-              | None -> handler)
+            (fun () -> run_opt_loc this#catch_clause handler)
             env'
         in
-        let (_finalizer', env') =
-          this#accumulate_branch_env
-            (env0, cx)
-            (fun () ->
-              match finalizer with
-              | Some (finalizer_loc, block) ->
-                id_loc this#block finalizer_loc block finalizer (fun block ->
-                    Some (finalizer_loc, block)
-                )
-              | None -> finalizer)
-            env'
+        let env' =
+          this#accumulate_branch_env (env0, cx) (fun () -> run_opt_loc this#block finalizer) env'
         in
         this#set_acc (env', cx);
-        let _comments' = this#syntax_opt comments in
         stmt
 
       (* read and write (when the argument is an identifier) *)
@@ -737,11 +720,11 @@ end = struct
           match argument with
           | (_, Ast.Expression.Identifier x) ->
             (* given `x++`, read x then write x *)
-            ignore @@ this#identifier x;
-            ignore @@ this#pattern_identifier x
+            run this#identifier x;
+            run this#pattern_identifier x
           | _ ->
             (* given `o.x++`, read o *)
-            ignore @@ this#expression argument
+            run this#expression argument
         end;
         expr
 
@@ -822,16 +805,14 @@ end = struct
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
         let { Ast.Statement.DeclareVariable.id = ident; annot; kind; comments = _ } = decl in
         let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
-        let (_ : ('a, 'b) Ast.Identifier.t) =
-          this#in_context
-            ~mod_cx:(fun _cx -> { init_state = Annotation { contextual = false } })
-            (fun () -> this#pattern_identifier ~kind ident)
-        in
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { init_state = Annotation { contextual = false } })
+          (fun () -> this#pattern_identifier ~kind ident);
         decl
 
       method! variable_declarator
           ~kind (decl : ('loc, 'loc) Ast.Statement.VariableDeclaration.Declarator.t) =
-        let (loc, { Ast.Statement.VariableDeclaration.Declarator.id; init }) = decl in
+        let (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) = decl in
         let annot =
           let open Ast.Pattern in
           match id with
@@ -850,18 +831,11 @@ end = struct
           | (Some (_, Ast.Expression.NullLiteral _), _) -> Null 0
           | _ -> Value 0
         in
-
-        let id' =
-          this#in_context
-            ~mod_cx:(fun _cx -> { init_state })
-            (fun () -> this#variable_declarator_pattern ~kind id)
-        in
-
-        let init' = map_opt this#expression init in
-        if id == id' && init == init' then
-          decl
-        else
-          (loc, { Ast.Statement.VariableDeclaration.Declarator.id = id'; init = init' })
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { init_state })
+          (fun () -> this#variable_declarator_pattern ~kind id);
+        run_opt this#expression init;
+        decl
 
       method! match_expression_case case =
         let open Flow_ast.Expression.Match.Case in
@@ -869,12 +843,11 @@ end = struct
         this#enter_scope
           Lex
           (fun _ () ->
-            ignore
-            @@ this#in_context
-                 ~mod_cx:(fun _ -> { init_state = Value 0 })
-                 (fun () -> this#match_pattern pattern);
-            Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
-            ignore @@ this#expression body)
+            this#visit_in_context
+              ~mod_cx:(fun _ -> { init_state = Value 0 })
+              (fun () -> this#match_pattern pattern);
+            run_opt this#expression guard;
+            run this#expression body)
           loc
           ();
         case
@@ -885,14 +858,14 @@ end = struct
           id = ident;
           params;
           body;
-          async = _;
-          generator = _;
-          effect = _;
           predicate;
           return;
           tparams;
+          async = _;
+          generator = _;
+          effect = _;
           sig_loc = _;
-          comments;
+          comments = _;
         } =
           expr
         in
@@ -901,25 +874,20 @@ end = struct
           | Ast.Function.ReturnAnnot.Available _ -> Annotation { contextual = false }
           | _ -> Value 0
         in
-
-        let _ident' =
-          map_opt
-            (fun id ->
-              this#in_context
-                ~mod_cx:(fun _cx -> { init_state })
-                (fun () -> this#function_identifier id))
-            ident
-        in
+        Base.Option.iter ident ~f:(fun id ->
+            this#visit_in_context
+              ~mod_cx:(fun _cx -> { init_state })
+              (fun () -> this#function_identifier id)
+        );
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            let _params' = this#function_params params in
-            let _return' = this#function_return_annotation return in
-            let _body' = this#function_body_any body in
-            let _predicate' = map_opt this#predicate predicate in
-            let _tparams' = map_opt this#type_params tparams in
-            let _comments' = this#syntax_opt comments in
+            run this#function_params params;
+            run this#function_return_annotation return;
+            run this#function_body_any body;
+            run_opt this#predicate predicate;
+            run_opt this#type_params tparams;
             expr)
           loc
           expr
@@ -930,14 +898,14 @@ end = struct
           id = ident;
           params;
           body;
-          async = _;
-          generator = _;
-          effect = _;
           predicate;
           return;
           tparams;
+          async = _;
+          generator = _;
+          effect = _;
           sig_loc = _;
-          comments;
+          comments = _;
         } =
           expr
         in
@@ -946,42 +914,33 @@ end = struct
           | Ast.Function.ReturnAnnot.Available _ -> Annotation { contextual = false }
           | _ -> Value 0
         in
-
-        let _ident' =
-          map_opt
-            (fun id ->
-              this#in_context
-                ~mod_cx:(fun _cx -> { init_state })
-                (fun () -> this#function_identifier id))
-            ident
-        in
-        let _params' = this#function_params params in
-        let _return' = this#function_return_annotation return in
-        let _body' = this#function_body_any body in
-        let _predicate' = map_opt this#predicate predicate in
-        let _tparams' = map_opt this#type_params tparams in
-        let _comments' = this#syntax_opt comments in
+        Base.Option.iter ident ~f:(fun id ->
+            this#visit_in_context
+              ~mod_cx:(fun _cx -> { init_state })
+              (fun () -> this#function_identifier id)
+        );
+        run this#function_params params;
+        run this#function_return_annotation return;
+        run this#function_body_any body;
+        run_opt this#predicate predicate;
+        run_opt this#type_params tparams;
         expr
 
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; renders; comments; sig_loc = _ } = expr in
+        let { id = ident; tparams; params; body; renders; comments = _; sig_loc = _ } = expr in
         let init_state = Annotation { contextual = false } in
-        let _ident' =
-          this#in_context
-            ~mod_cx:(fun _cx -> { init_state })
-            (fun () -> this#component_identifier ident)
-        in
-
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { init_state })
+          (fun () -> this#component_identifier ident);
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            let _tparams' = map_opt this#type_params tparams in
-            let _params' = this#component_params params in
-            let _body' = this#component_body body in
-            let _renders' = this#component_renders_annotation renders in
-            let _comments' = this#syntax_opt comments in
+            run_opt this#type_params tparams;
+            run this#component_params params;
+            run this#component_body body;
+            run this#component_renders_annotation renders;
             expr)
           loc
           expr
@@ -1051,10 +1010,9 @@ end = struct
                 Annotation { contextual = false }
               | _ -> Value 0
             in
-            ignore
-            @@ this#in_context
-                 ~mod_cx:(fun _cx -> { init_state })
-                 (fun () -> this#variable_declarator_pattern ~kind id)
+            this#visit_in_context
+              ~mod_cx:(fun _cx -> { init_state })
+              (fun () -> this#variable_declarator_pattern ~kind id)
           | _ -> raise (ImpossibleState "unexpected AST node"))
         | _ ->
           raise
@@ -1080,10 +1038,9 @@ end = struct
                 Annotation { contextual = false }
               | _ -> Value 0
             in
-            ignore
-            @@ this#in_context
-                 ~mod_cx:(fun _cx -> { init_state })
-                 (fun () -> this#variable_declarator_pattern ~kind id)
+            this#visit_in_context
+              ~mod_cx:(fun _cx -> { init_state })
+              (fun () -> this#variable_declarator_pattern ~kind id)
           | _ -> raise (ImpossibleState "unexpected AST node"))
         | _ ->
           raise
@@ -1106,20 +1063,16 @@ end = struct
           | _ -> true
         in
         let init_state = Annotation { contextual } in
-        ignore
-        @@ this#in_context
-             ~mod_cx:(fun _cx -> { init_state })
-             (fun () -> super#function_param_pattern expr);
-
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { init_state })
+          (fun () -> super#function_param_pattern expr);
         expr
 
       method! component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
         let init_state = Annotation { contextual = false } in
-        ignore
-        @@ this#in_context
-             ~mod_cx:(fun _cx -> { init_state })
-             (fun () -> super#component_param_pattern expr);
-
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { init_state })
+          (fun () -> super#component_param_pattern expr);
         expr
     end
 
@@ -1211,18 +1164,17 @@ end = struct
         this#set_acc (env, cx)
 
       method! assignment
-          _loc ({ Ast.Expression.Assignment.operator = _; left; right; comments; _ } as expr) =
+          _loc ({ Ast.Expression.Assignment.operator = _; left; right; comments = _ } as expr) =
         let mk_state n =
           match right with
           | (_, Ast.Expression.NullLiteral _) -> Null n
           | (_, Ast.Expression.Array { Ast.Expression.Array.elements = _ :: _; _ }) -> ArrayValue n
           | _ -> Value n
         in
-        let _left' =
-          this#in_context ~mod_cx:(fun _cx -> { mk_state }) (fun () -> this#assignment_pattern left)
-        in
-        let _right' = this#expression right in
-        let _comments' = this#syntax_opt comments in
+        this#visit_in_context
+          ~mod_cx:(fun _cx -> { mk_state })
+          (fun () -> this#assignment_pattern left);
+        run this#expression right;
         expr
 
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
@@ -1299,7 +1251,7 @@ end = struct
               match state with
               | Some (EmptyArrInitialized | ArrInitialized _) ->
                 let mk_state n = ArrWrite n in
-                this#in_context
+                this#visit_in_context
                   ~mod_cx:(fun _cx -> { mk_state })
                   (fun () -> this#add_provider name arg_loc)
               | _ -> ()
