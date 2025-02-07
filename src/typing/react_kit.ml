@@ -57,7 +57,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
   let component_class cx reason props =
     DefT
       ( reason,
-        ClassT (Flow.get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason])
+        ClassT
+          (Flow.get_builtin_react_typeapp
+             cx
+             reason
+             Flow_intermediate_error_types.ReactModuleForReactClassComponent
+             [props; Tvar.mk cx reason]
+          )
       )
 
   let get_intrinsic cx trace ~component_reason ~reason_op ~artifact ~literal ~prop_polarity tout =
