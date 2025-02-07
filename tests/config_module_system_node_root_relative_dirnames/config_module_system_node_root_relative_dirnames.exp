@@ -158,12 +158,22 @@ Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
                                    ^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:44:9
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
 
-Cannot resolve module `js_flow`. [cannot-resolve-module]
+Cannot cast `require(...)` to number literal `4` because number [1] is incompatible with number literal `4` [2].
+[incompatible-cast]
 
-   44| require('js_flow') as 4 // todo: should be resolved to third/js_flow.js.flow
-               ^^^^^^^^^
+   test.js:44:1
+   44| require('js_flow') as 4 // resolved, but number ~> 4 error
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   third/js_flow.js.flow:1:18
+    1| module.exports = 3
+                        ^ [1]
+   test.js:44:23
+   44| require('js_flow') as 4 // resolved, but number ~> 4 error
+                             ^ [2]
 
 
 

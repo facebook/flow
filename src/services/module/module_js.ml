@@ -523,7 +523,7 @@ module Node = struct
           if dirname = "" then
             root
           else
-            Filename.concat root dirname
+            Files.normalize_path root dirname
         in
         lazy
           (resolve_relative

@@ -41,4 +41,4 @@ import sub_node_code from 'subdir/node_code';
 import nonexistent from 'nonexistent'
 import sub_nonexistent from 'subdir/nonexistent'
 
-require('js_flow') as 4 // todo: should be resolved to third/js_flow.js.flow
+require('js_flow') as 4 // resolved, but number ~> 4 error
