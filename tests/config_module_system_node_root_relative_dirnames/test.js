@@ -40,3 +40,5 @@ import sub_node_code from 'subdir/node_code';
 // These exist nowhere
 import nonexistent from 'nonexistent'
 import sub_nonexistent from 'subdir/nonexistent'
+
+require('js_flow') as 4 // todo: should be resolved to third/js_flow.js.flow

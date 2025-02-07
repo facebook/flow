@@ -158,5 +158,13 @@ Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
                                    ^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:44:9
 
-Found 10 errors
+Cannot resolve module `js_flow`. [cannot-resolve-module]
+
+   44| require('js_flow') as 4 // todo: should be resolved to third/js_flow.js.flow
+               ^^^^^^^^^
+
+
+
+Found 11 errors
