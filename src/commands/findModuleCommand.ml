@@ -29,13 +29,27 @@ let spec =
         |> strip_root_flag
         |> from_flag
         |> wait_for_recheck_flag
+        |> flag
+             "--debug-show-considered-candidates"
+             truthy
+             ~doc:"Print all the candidates considered during module resolution to stderr."
         |> anon "module" (required string)
         |> anon "file" (required string)
       );
   }
 
-let main base_flags option_values json pretty root strip_root wait_for_recheck moduleref filename ()
-    =
+let main
+    base_flags
+    option_values
+    json
+    pretty
+    root
+    strip_root
+    wait_for_recheck
+    show_considered_candidates
+    moduleref
+    filename
+    () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root
@@ -45,26 +59,32 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
       | None -> Some filename)
   in
   let request = ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } in
-  let result =
+  let (resolution_result, failed_candidates) =
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.FIND_MODULE
-        ( Some (File_key.LibFile file)
-        | Some (File_key.SourceFile file)
-        | Some (File_key.JsonFile file)
-        | Some (File_key.ResourceFile file) ) ->
+        ( ( Some (File_key.LibFile file)
+          | Some (File_key.SourceFile file)
+          | Some (File_key.JsonFile file)
+          | Some (File_key.ResourceFile file) ),
+          failed_candidates
+        ) ->
       if strip_root then
-        Files.relative_path (File_path.to_string root) file
+        (Files.relative_path (File_path.to_string root) file, failed_candidates)
       else
-        file
-    | ServerProt.Response.FIND_MODULE None -> "(unknown)"
+        (file, failed_candidates)
+    | ServerProt.Response.FIND_MODULE (None, failed_candidates) -> ("(unknown)", failed_candidates)
     | response -> failwith_bad_response ~request ~response
   in
+  if show_considered_candidates then (
+    Printf.eprintf "The following candidates are considered during module resolution:\n";
+    List.iter (Printf.eprintf " - %s\n") failed_candidates
+  );
   if json || pretty then
     Hh_json.(
-      let json = JSON_Object [("file", JSON_String result)] in
+      let json = JSON_Object [("file", JSON_String resolution_result)] in
       print_json_endline ~pretty json
     )
   else
-    Printf.printf "%s\n%!" result
+    Printf.printf "%s\n%!" resolution_result
 
 let command = CommandSpec.command spec main

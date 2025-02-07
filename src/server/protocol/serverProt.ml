@@ -341,7 +341,7 @@ module Response = struct
 
   type check_file_response = status_response
 
-  type find_module_response = File_key.t option
+  type find_module_response = File_key.t option * string list
 
   type response =
     | APPLY_CODE_ACTION of apply_code_action_response

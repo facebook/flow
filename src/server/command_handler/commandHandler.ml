@@ -1231,13 +1231,23 @@ let get_cycle ~env fn types_only =
 
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
+  let phantom_acc = ref Modulename.Map.empty in
   let resolved_module =
+    (* debug *)
     Module_js.imported_module
       ~options
       ~reader:(Abstract_state_reader.State_reader reader)
       ~node_modules_containers:!Files.node_modules_containers
       ~importing_file:file
+      ~phantom_acc
       moduleref
+  in
+  let phantom_deps =
+    Modulename.Map.keys !phantom_acc
+    |> List.map (function
+           | Modulename.Haste info -> "Haste: " ^ Haste_module_info.to_string info
+           | Modulename.Filename f -> "File: " ^ File_key.to_string f
+           )
   in
   let provider =
     match resolved_module with
@@ -1249,8 +1259,8 @@ let find_module ~options ~reader (moduleref, filename) =
       None
   in
   match provider with
-  | Some addr -> Some (Parsing_heaps.read_file_key addr)
-  | None -> None
+  | Some addr -> (Some (Parsing_heaps.read_file_key addr), phantom_deps)
+  | None -> (None, phantom_deps)
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   match of_file_input ~options ~env file_input with
