@@ -2482,6 +2482,16 @@ module type Get_prop_helper_sig = sig
     Type.t ->
     use_op * reason * Type.ident option * (Reason.t * Reason.name) ->
     r
+
+  (* When looking up a prop on an object with an indexer we can do a subtyping check to see if
+   * the prop exists instead of assuming the indexer catches all non-enumerated props. This
+   * allows us to check if e.g. the indexer on a props object may contain the key/ref props.
+   * It's not possible to do this in all contexts that GetPropTKit is used, like annotation
+   * inference, so we allow this behavior to be disabled by passing None. Note that this will
+   * likely introduce inconsistent semantics and is undesirable, but at the time of writing this
+   * comment we had no alternative for annotation inference.
+   *)
+  val prop_overlaps_with_indexer : (Context.t -> Reason.name -> Reason.t -> Type.t -> bool) option
 end
 
 module GetPropT_kit (F : Get_prop_helper_sig) = struct
@@ -2646,9 +2656,17 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
-      F.dict_read_check cx trace ~use_op (type_of_key_name cx name reason_op, key);
-      let type_ = union_void_if_instructed value in
-      Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty)
+      (match F.prop_overlaps_with_indexer with
+      | Some prop_overlaps_with_indexer when not (TvarVisitors.has_unresolved_tvars cx key) ->
+        if prop_overlaps_with_indexer cx name reason_op key then
+          let type_ = union_void_if_instructed value in
+          Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty)
+        else
+          None
+      | _ ->
+        F.dict_read_check cx trace ~use_op (type_of_key_name cx name reason_op, key);
+        let type_ = union_void_if_instructed value in
+        Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty))
     | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
       F.dict_read_check cx trace ~use_op (k, key);
       let type_ = union_void_if_instructed value in

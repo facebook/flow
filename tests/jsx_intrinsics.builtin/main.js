@@ -20,4 +20,4 @@ var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
 var f: ExactReactElement_DEPRECATED<'div'> = <div not_a_real_attr="asdf" />;
 
 const dataProps: {[StringPrefix<'data-'>]: string} = {};
-const g = <div {...dataProps} />; // TODO: no errors
+const g = <div {...dataProps} />; // OK

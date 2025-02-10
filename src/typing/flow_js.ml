@@ -165,6 +165,17 @@ struct
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
   include InstantiationKit
 
+  let speculative_subtyping_succeeds cx l u =
+    match
+      SpeculationKit.try_singleton_throw_on_failure
+        cx
+        DepthTrace.dummy_trace
+        l
+        (UseT (unknown_use, u))
+    with
+    | exception Flow_js_utils.SpeculationSingletonError -> false
+    | _ -> true
+
   (* get prop *)
 
   let perform_lookup_action cx trace propref p target_kind lreason ureason =
@@ -275,6 +286,12 @@ struct
     let mk_react_dro = mk_react_dro
 
     let mk_hooklike = mk_hooklike
+
+    let prop_overlaps_with_indexer =
+      Some
+        (fun cx name reason_name key ->
+          let name_t = type_of_key_name cx name reason_name in
+          speculative_subtyping_succeeds cx name_t key)
   end
 
   module GetPropTKit = GetPropT_kit (Get_prop_helper)
@@ -9265,17 +9282,6 @@ struct
           tparams
       in
       assert (unused_targs = [])
-
-  and speculative_subtyping_succeeds cx l u =
-    match
-      SpeculationKit.try_singleton_throw_on_failure
-        cx
-        DepthTrace.dummy_trace
-        l
-        (UseT (unknown_use, u))
-    with
-    | exception Flow_js_utils.SpeculationSingletonError -> false
-    | _ -> true
 
   and possible_concrete_types kind cx reason t =
     let collector = TypeCollector.create () in

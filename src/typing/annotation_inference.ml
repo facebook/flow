@@ -349,6 +349,8 @@ module rec ConsGen : S = struct
       ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc, dro_t))
 
     let mk_hooklike _cx _use_op t = t
+
+    let prop_overlaps_with_indexer = None
   end
 
   module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)

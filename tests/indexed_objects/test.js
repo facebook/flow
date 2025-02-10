@@ -19,4 +19,4 @@ type ObjWithProto = {
 };
 
 declare const objWithProto: ObjWithProto;
-objWithProto.foo as number; // TODO: no error
+objWithProto.foo as number; // OK

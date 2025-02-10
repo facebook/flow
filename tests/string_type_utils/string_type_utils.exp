@@ -159,19 +159,18 @@ References:
               ^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- prefix.js:32:3
+Error --------------------------------------------------------------------------------------------------- prefix.js:32:5
 
-Cannot get `d[123]` because property `123` [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-type]
+Cannot get `d[123]` because property `123` is missing in `Dict` [1]. [prop-missing]
 
-   prefix.js:32:3
+   prefix.js:32:5
    32|   d[123]; // ERROR
-         ^^^^^^ [1]
+           ^^^
 
 References:
-   prefix.js:24:16
-   24| type Dict = {+[DataProp]: mixed};
-                      ^^^^^^^^ [2]
+   prefix.js:30:18
+   30|   const d = o as Dict; // OK
+                        ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:36:3

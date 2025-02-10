@@ -13,32 +13,32 @@ References:
                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+Error ------------------------------------------------------------------------------------------------------ test.js:7:4
 
-Cannot get `o1.qux` because string `qux` [1] is incompatible with `Key1` [2]. [incompatible-type]
+Cannot get `o1.qux` because property `qux` is missing in object type [1]. [prop-missing]
 
-   test.js:7:1
+   test.js:7:4
    7| o1.qux; // error: qux not found
-      ^^^^^^ [1]
+         ^^^
 
 References:
-   test.js:2:16
+   test.js:2:9
    2| var o1: {[key: Key1]: number} = {
-                     ^^^^ [2]
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:1
+Error ----------------------------------------------------------------------------------------------------- test.js:14:4
 
-Cannot get `o2.qux` because property `qux` is missing in `R` [1]. [prop-missing]
+Cannot get `o2.qux` because property `qux` is missing in object type [1]. [prop-missing]
 
-   test.js:14:1
+   test.js:14:4
    14| o2.qux; // error: qux not found
-       ^^^^^^
+          ^^^
 
 References:
-   test.js:12:16
+   test.js:12:9
    12| var o2: {[key: Key2]: number} = { foo: 0 }; // OK to leave out bar
-                      ^^^^ [1]
+               ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
