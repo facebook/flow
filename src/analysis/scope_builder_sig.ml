@@ -34,7 +34,7 @@ module type S = sig
 
          method in_toplevel_scope : bool
 
-         method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
+         method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a
 
          method component_body_with_params :
            component_loc:L.t ->

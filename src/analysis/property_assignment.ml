@@ -293,22 +293,17 @@ let eval_property_assignment class_body =
       properties
   in
   let ssa_walk = new property_assignment property_names in
-  ignore
-  @@ ssa_walk#with_bindings
-       ALoc.none
-       bindings
-       (fun body ->
-         ssa_walk#expecting_return_or_throw (fun () ->
-             List.iter
-               (function
-                 | (property_id, Ast.Class.Property.Initialized default_initializer) ->
-                   ssa_walk#initialize_property property_id default_initializer
-                 | _ -> ())
-               property_declarations;
-             ignore @@ ssa_walk#block ALoc.none body
-         );
-         body)
-       ctor_body;
+  ssa_walk#with_bindings ALoc.none bindings (fun () ->
+      ssa_walk#expecting_return_or_throw (fun () ->
+          List.iter
+            (function
+              | (property_id, Ast.Class.Property.Initialized default_initializer) ->
+                ssa_walk#initialize_property property_id default_initializer
+              | _ -> ())
+            property_declarations;
+          ignore @@ ssa_walk#block ALoc.none ctor_body
+      )
+  );
 
   (* We make heavy use of the Base.List.rev_* functions below because they are
    * tail recursive. We can do this freely because the order in which we

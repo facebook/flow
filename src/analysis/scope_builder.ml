@@ -184,8 +184,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#update_acc (fun acc -> { acc with max_distinct = max counter acc.max_distinct });
         result
 
-      method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
-        fun ?(lexical = false) loc bindings visit node ->
+      method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a =
+        fun ?(lexical = false) loc bindings visit ->
           let save_counter = counter in
           let save_uses = uses in
           let old_env = env in
@@ -195,7 +195,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           current_scope_opt <- Some child;
           env <- Env.mk_env (fun () -> this#next) old_env bindings;
           Exception.protect
-            ~f:(fun () -> visit node)
+            ~f:(fun () -> visit ())
             ~finally:(fun () ->
               this#update_acc (fun acc ->
                   let defs = Env.defs env in
@@ -355,7 +355,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
-        this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () -> super#block loc stmt)
 
       method! function_body (body : 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
         let (loc, block) = body in
@@ -370,8 +370,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let (loc, { pattern; body = _; guard = _; comments = _ }) = case in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-        ignore @@ this#with_bindings ~lexical:true loc bindings super#match_expression_case case;
-        case
+        this#with_bindings ~lexical:true loc bindings (fun () -> super#match_expression_case case)
 
       method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
@@ -387,14 +386,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             )
             cases
         in
-        let _ =
-          this#with_bindings
-            ~lexical:true
-            loc
-            lexical_bindings
-            (this#switch_cases loc discriminant)
-            cases
-        in
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            ignore @@ this#switch_cases loc discriminant cases
+        );
         switch
 
       method private switch_cases _ _ cases = Base.List.map ~f:this#switch_case cases
@@ -412,12 +406,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
           | LeftPattern _ -> Bindings.empty
         in
-        this#with_bindings
-          ~lexical:true
-          loc
-          lexical_bindings
-          (this#scoped_for_in_statement loc)
-          stmt
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            this#scoped_for_in_statement loc stmt
+        )
 
       method private scoped_for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         super#for_of_statement loc stmt
@@ -432,12 +423,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
           | LeftPattern _ -> Bindings.empty
         in
-        this#with_bindings
-          ~lexical:true
-          loc
-          lexical_bindings
-          (this#scoped_for_of_statement loc)
-          stmt
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            this#scoped_for_of_statement loc stmt
+        )
 
       method private scoped_for_statement loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         super#for_statement loc stmt
@@ -452,7 +440,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
           | _ -> Bindings.empty
         in
-        this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_statement loc) stmt
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            this#scoped_for_statement loc stmt
+        )
 
       method! catch_clause loc (clause : (L.t, L.t) Ast.Statement.Try.CatchClause.t') =
         let open Ast.Statement.Try.CatchClause in
@@ -465,7 +455,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             lexical_hoist#eval lexical_hoist#catch_clause_pattern p
           | None -> Bindings.empty
         in
-        this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            super#catch_clause loc clause
+        )
 
       (* helper for function params and body *)
       method private lambda
@@ -489,12 +481,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           in
           (* We need to visit function param default expressions without bindings
              inside the function body. *)
-          this#with_bindings
-            ~lexical:true
-            body_loc
-            param_bindings
-            (fun () -> run this#function_params params)
-            ()
+          this#with_bindings ~lexical:true body_loc param_bindings (fun () ->
+              run this#function_params params
+          )
         end;
         (* We have already visited the defaults in their own scope. Now visit the
            parameter types, each in a separate scope that includes bindings for each
@@ -507,11 +496,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           Base.Option.map this_ ~f:(fun this_ ->
               let (_, { ThisParam.annot; _ }) = this_ in
               let (annot_loc, _) = annot in
-              this#with_bindings
-                annot_loc
-                Bindings.empty
-                (fun () -> run this#type_annotation annot)
-                ();
+              this#with_bindings annot_loc Bindings.empty (fun () -> run this#type_annotation annot);
               this_
           )
         in
@@ -525,14 +510,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               (match annot with
               | Ast.Type.Available annot ->
                 let (annot_loc, _) = annot in
-                this#with_bindings
-                  annot_loc
-                  hoist#acc
-                  (fun () ->
+                this#with_bindings annot_loc hoist#acc (fun () ->
                     (* All previous params need to be declared in the current scope *)
                     List.rev prev_params |> List.iter (run this#function_param);
-                    run this#type_annotation annot)
-                  ()
+                    run this#type_annotation annot
+                )
               | Ast.Type.Missing _ -> ());
               run hoist#function_param param;
               (param_loc, { Param.argument = argument'; default }) :: prev_params
@@ -546,14 +528,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               (match annot with
               | Ast.Type.Available annot ->
                 let (annot_loc, _) = annot in
-                this#with_bindings
-                  annot_loc
-                  hoist#acc
-                  (fun () ->
+                this#with_bindings annot_loc hoist#acc (fun () ->
                     (* All previous params need to be declared in the current scope *)
                     List.rev params_list_rev |> List.iter (run this#function_param);
-                    run this#type_annotation annot)
-                  ()
+                    run this#type_annotation annot
+                )
               | Ast.Type.Missing _ -> ());
               run hoist#function_rest_param rest;
               (rest_loc, { RestParam.argument = argument'; comments })
@@ -570,15 +549,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | ReturnAnnot.Missing _ -> ()
           | ReturnAnnot.Available (_, (loc, _))
           | ReturnAnnot.TypeGuard (loc, _) ->
-            this#with_bindings
-              loc
-              hoist#acc
-              (fun () ->
+            this#with_bindings loc hoist#acc (fun () ->
                 if with_types then (
                   run this#function_params params_without_toplevel_annots;
                   run this#function_return_annotation return
-                ))
-              ()
+                )
+            )
         in
         (* Finally, visit the body in a scope that includes bindings for all params
            and hoisted body declarations. *)
@@ -588,14 +564,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         (* We have already visited the defaults in their own scope. Now visit the
            params without the defaults in the function's scope. *)
-        this#with_bindings
-          body_loc
-          bindings
-          (fun () ->
+        this#with_bindings body_loc bindings (fun () ->
             run this#function_params params_without_toplevel_annots;
             run_opt this#predicate predicate;
-            run this#function_body_any body)
-          ()
+            run this#function_body_any body
+        )
 
       method! declare_module _loc m =
         let open Ast.Statement.DeclareModule in
@@ -622,16 +595,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
             Base.List.iter declare_global_bodies ~f:(fun (loc, body) -> run (hoist#block loc) body);
             let global_bindings = hoist#acc in
-            this#with_bindings
-              loc
-              global_bindings
-              (fun () ->
+            this#with_bindings loc global_bindings (fun () ->
                 Base.List.iter declare_global_bodies ~f:(fun (loc, body) ->
                     run (this#block loc) body
                 );
-                f ())
-              ();
-            ()
+                f ()
+            )
         in
         within_possible_declare_globals ~f:(fun () ->
             let bindings =
@@ -639,7 +608,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               run (hoist#block loc) body;
               hoist#acc
             in
-            this#with_bindings loc bindings (fun () -> run (this#block loc) body) ()
+            this#with_bindings loc bindings (fun () -> run (this#block loc) body)
         );
         m
 
@@ -655,7 +624,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           run (hoist#block loc) body;
           hoist#acc
         in
-        this#with_bindings loc bindings (fun () -> run (this#block loc) body) ();
+        this#with_bindings loc bindings (fun () -> run (this#block loc) body);
         n
 
       method private scoped_type_params ?(hoist_op = (fun f -> f ())) ~in_tparam_scope tparams =
@@ -675,13 +644,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                 singleton (name, Bindings.Type { imported = false; type_only_namespace = false })
               )
             in
-            this#with_bindings
-              loc
-              bindings
-              (fun () ->
+            this#with_bindings loc bindings (fun () ->
                 ignore @@ this#binding_type_identifier name;
-                loop next)
-              ()
+                loop next
+            )
           | [] -> in_tparam_scope ()
         in
         if with_types then
@@ -707,15 +673,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                   bindings
             )
           in
-          this#with_bindings
-            loc
-            bindings
-            (fun () ->
+          this#with_bindings loc bindings (fun () ->
               Base.List.iter tps ~f:(fun (_, { name; _ }) ->
                   ignore @@ this#binding_infer_type_identifier name
               );
-              in_tparam_scope ())
-            ()
+              in_tparam_scope ()
+          )
         ) else
           in_tparam_scope ()
 
@@ -780,14 +743,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           run hoist#component_body body;
           hoist#acc
         in
-        this#with_bindings
-          (fst body)
-          bindings
-          (fun () ->
+        this#with_bindings (fst body) bindings (fun () ->
             (* This is to ensure that params are declared *)
             run this#component_params params_without_annots_and_defaults;
-            run this#component_body body)
-          ()
+            run this#component_body body
+        )
 
       method! component_declaration loc (expr : (L.t, L.t) Ast.Statement.ComponentDeclaration.t) =
         let skip_scope =
@@ -922,11 +882,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             | (false, _) -> None
             | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
           in
-          this#with_bindings
-            loc
-            ~lexical:true
-            bindings
-            (fun () ->
+          this#with_bindings loc ~lexical:true bindings (fun () ->
               if is_arrow then
                 run_opt this#function_identifier id
               else
@@ -944,8 +900,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                     return
                     predicate
                     body
-              ))
-            ()
+              )
+          )
         );
         expr
 
@@ -1019,12 +975,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | Some name -> Bindings.(singleton (name, Bindings.Class))
           | None -> Bindings.empty
         in
-        this#with_bindings
-          loc
-          ~lexical:true
-          bindings
-          (fun () -> ignore (super#class_expression loc cls : ('a, 'b) Ast.Class.t))
-          ();
+        this#with_bindings loc ~lexical:true bindings (fun () ->
+            ignore (super#class_expression loc cls : ('a, 'b) Ast.Class.t)
+        );
         cls
 
       method! class_ loc (cls : ('loc, 'loc) Ast.Class.t) =
@@ -1126,7 +1079,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
         hoist#eval hoist#program program
     in
-    walk#eval (walk#with_bindings loc bindings walk#program) program
+    walk#eval
+      (fun program -> walk#with_bindings loc bindings (fun () -> walk#program program))
+      program
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc)

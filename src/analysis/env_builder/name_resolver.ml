@@ -22,6 +22,7 @@ let next_var_name = "<next>"
 
 open Reason
 open Hoister
+open Flow_ast_visitor
 
 module type C = Dependency_sigs.C
 
@@ -580,7 +581,9 @@ end = struct
                 |> add ((super_def_loc, { Ast.Identifier.name = "super"; comments = None }), Const)
               )
             in
-            ignore @@ checker#with_bindings loc bindings (checker#function_ loc) constructor;
+            checker#with_bindings loc bindings (fun () ->
+                ignore @@ checker#function_ loc constructor
+            );
             checker#add_errors
           | _ -> ()
           )
@@ -1828,26 +1831,30 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this_super_binding_env:this_super_binding_env ->
             ALoc.t ->
             ALoc.t Bindings.t ->
-            ('a -> 'a) ->
-            'a ->
+            (unit -> 'a) ->
             'a =
-        fun ?lexical ~this_super_binding_env loc bindings visit node ->
+        fun ?lexical ~this_super_binding_env loc bindings visit ->
           let saved_state = this#push_env ~this_super_binding_env bindings in
           this#run
-            (fun () -> ignore @@ super#with_bindings ?lexical loc bindings visit node)
-            ~finally:(fun () -> this#pop_env saved_state);
-          node
+            (fun () -> super#with_bindings ?lexical loc bindings visit)
+            ~finally:(fun () -> this#pop_env saved_state)
 
-      method! with_bindings
-          : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+      method! with_bindings : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> (unit -> 'a) -> 'a
+          =
         this#with_scoped_bindings ~this_super_binding_env:FunctionEnv
 
       (* Run some computation, catching any abrupt completions; do some final work,
          and then re-raise any abrupt completions that were caught. *)
-      method run f ~finally =
-        let completion_state = this#run_to_completion f in
-        finally ();
-        this#from_completion completion_state
+      method run : 'a. (unit -> 'a) -> finally:(unit -> unit) -> 'a =
+        fun f ~finally ->
+          let result =
+            try f () with
+            | AbruptCompletion.Exn _ as e ->
+              finally ();
+              raise e
+          in
+          finally ();
+          result
 
       method run_to_completion f =
         try
@@ -2937,40 +2944,35 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let env0 = this#env_snapshot in
         let bindings = Bindings.singleton (match_root_ident arg_internal, Bindings.Internal) in
         let completion_states = ref [] in
-        ignore
-        @@ this#with_bindings
-             ~lexical:true
-             match_loc
-             bindings
-             (fun () ->
-               this#pattern_identifier_with_annot_check
-                 ~kind:Flow_ast.Variable.Const
-                 arg_internal
-                 (match_root_ident arg_internal)
-                 (Ast.Type.Missing ALoc.none);
-               ignore @@ this#identifier (match_root_ident arg_internal);
-               Base.List.iter cases ~f:(this#visit_match_expression_case ~completion_states);
-               match
-                 this#get_val_of_expression
-                   (arg_internal, Ast.Expression.Identifier (match_root_ident arg_internal))
-               with
-               | Some refined_value ->
-                 env_state <-
-                   {
-                     env_state with
-                     values =
-                       L.LMap.add
-                         match_keyword_loc
-                         {
-                           def_loc = None;
-                           value = refined_value;
-                           val_binding_kind = Val.InternalBinding;
-                           name = None;
-                         }
-                         env_state.values;
-                   }
-               | None -> ())
-             ();
+        this#with_bindings ~lexical:true match_loc bindings (fun () ->
+            this#pattern_identifier_with_annot_check
+              ~kind:Flow_ast.Variable.Const
+              arg_internal
+              (match_root_ident arg_internal)
+              (Ast.Type.Missing ALoc.none);
+            ignore @@ this#identifier (match_root_ident arg_internal);
+            Base.List.iter cases ~f:(this#visit_match_expression_case ~completion_states);
+            match
+              this#get_val_of_expression
+                (arg_internal, Ast.Expression.Identifier (match_root_ident arg_internal))
+            with
+            | Some refined_value ->
+              env_state <-
+                {
+                  env_state with
+                  values =
+                    L.LMap.add
+                      match_keyword_loc
+                      {
+                        def_loc = None;
+                        value = refined_value;
+                        val_binding_kind = Val.InternalBinding;
+                        name = None;
+                      }
+                      env_state.values;
+                }
+            | None -> ()
+        );
         let completion_states = !completion_states |> List.rev in
         this#reset_env env0;
         (match completion_states with
@@ -2984,11 +2986,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (case_loc, { pattern; body; guard; comments = _ }) = case in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-        this#with_bindings
-          ~lexical:true
-          case_loc
-          bindings
-          (fun () ->
+        this#with_bindings ~lexical:true case_loc bindings (fun () ->
             this#push_refinement_scope empty_refinements;
             let arg =
               (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
@@ -3031,8 +3029,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                  because of it, not because the pattern didn't match. *)
               this#push_refinement_scope test_refinements;
               this#negate_new_refinements ()
-            ))
-          ()
+            )
+        )
 
       method! match_pattern pattern =
         ( if Flow_ast_utils.match_pattern_has_binding pattern then
@@ -3814,13 +3812,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         this#run
           (fun () ->
-            ignore
-            @@ this#with_bindings
-                 ~lexical:true
-                 loc
-                 lexical_hoist#acc
-                 (this#switch_cases_with_lexical_bindings loc exhaustive_out discriminant)
-                 cases_with_lexical_bindings)
+            this#with_bindings ~lexical:true loc lexical_hoist#acc (fun () ->
+                ignore
+                @@ this#switch_cases_with_lexical_bindings
+                     loc
+                     exhaustive_out
+                     discriminant
+                     cases_with_lexical_bindings
+            ))
           ~finally:(fun () ->
             let post_env = this#env_snapshot in
             (* After all refinements and potential shadowing inside switch,
@@ -4190,10 +4189,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       )
                     in
 
-                    this#with_bindings
-                      component_loc
-                      bindings
-                      (fun () ->
+                    this#with_bindings component_loc bindings (fun () ->
                         Context.add_exhaustive_check cx loc ([], false);
 
                         super#component_body_with_params ~component_loc body params;
@@ -4220,8 +4216,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                                     ))
                             write_locs
                         in
-                        Context.add_exhaustive_check cx loc (locs, undeclared))
-                      ()
+                        Context.add_exhaustive_check cx loc (locs, undeclared)
+                    )
                 )
               in
               this#commit_abrupt_completion_matching
@@ -4307,10 +4303,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                         ~default:bindings
                         generator_return_loc
                     in
-                    this#with_bindings
-                      fun_loc
-                      bindings
-                      (fun () ->
+                    this#with_bindings fun_loc bindings (fun () ->
                         Context.add_exhaustive_check cx loc ([], false);
 
                         super#lambda
@@ -4344,8 +4337,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                                     ))
                             write_locs
                         in
-                        Context.add_exhaustive_check cx loc (locs, undeclared))
-                      ()
+                        Context.add_exhaustive_check cx loc (locs, undeclared)
+                    )
                 )
               in
               env_state <-
@@ -4454,20 +4447,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           |> Bindings.add ((loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
           |> Bindings.add ((loc, { Ast.Identifier.name = "super"; comments = None }), Bindings.Const)
         in
-        ignore
-        @@ this#with_scoped_bindings
-             ~this_super_binding_env:ClassInstanceEnv
-             loc
-             this_super_bindings
-             super#class_body
-             instance_body;
-        ignore
-        @@ this#with_scoped_bindings
-             ~this_super_binding_env:ClassStaticEnv
-             loc
-             this_super_bindings
-             super#class_body
-             static_body;
+        this#with_scoped_bindings
+          ~this_super_binding_env:ClassInstanceEnv
+          loc
+          this_super_bindings
+          (fun () -> run super#class_body instance_body
+        );
+        this#with_scoped_bindings
+          ~this_super_binding_env:ClassStaticEnv
+          loc
+          this_super_bindings
+          (fun () -> run super#class_body static_body
+        );
         cls_body
 
       method private non_this_binding_function loc func = this#arrow_function loc func
@@ -4561,13 +4552,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (* Do not bind this to a function-level this as usual. We use arrow function visitor
              so that we purposely skip this binding, and instead we bind this under a special
              IllegalThisEnv. *)
-          ignore
-          @@ this#with_scoped_bindings
-               ~this_super_binding_env:IllegalThisEnv
-               loc
-               illegal_this_super_binding
-               (this#non_this_binding_function loc)
-               fn;
+          this#with_scoped_bindings
+            ~this_super_binding_env:IllegalThisEnv
+            loc
+            illegal_this_super_binding
+            (fun () -> ignore @@ this#non_this_binding_function loc fn
+          );
           prop
 
       method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
@@ -6312,15 +6302,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         super#jsx_fragment loc expr
 
       method private statements_with_bindings loc bindings statements =
-        this#with_bindings
-          loc
-          bindings
-          (fun _ ->
+        this#with_bindings loc bindings (fun () ->
             let completion_state =
               this#run_to_completion (fun () -> ignore @@ this#statement_list statements)
             in
-            completion_state)
-          None
+            completion_state
+        )
 
       method private synthesize_read name =
         let { val_ref; havoc; def_loc; kind; _ } = this#env_read name in
@@ -6358,15 +6345,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 Flow_ast_visitor.run (hoist#block loc) body
             );
             let global_bindings = hoist#acc in
-            this#with_bindings
-              loc
-              global_bindings
-              (fun () ->
+            this#with_bindings loc global_bindings (fun () ->
                 Base.List.iter declare_global_bodies ~f:(fun (loc, body) ->
                     Flow_ast_visitor.run (this#block loc) body
                 );
-                f ())
-              ();
+                f ()
+            );
             ()
         in
         within_possible_declare_globals ~f:(fun () ->

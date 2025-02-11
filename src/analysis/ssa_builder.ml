@@ -16,6 +16,7 @@
 module Ast = Flow_ast
 open Hoister
 open Reason
+open Flow_ast_visitor
 
 module Make
     (L : Loc_sig.S)
@@ -360,20 +361,25 @@ struct
         this#resolve_havocs bindings;
         ssa_env <- old_ssa_env
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
-        fun ?lexical loc bindings visit node ->
+      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a =
+        fun ?lexical loc bindings visit ->
           let saved_state = this#push_ssa_env bindings in
           this#run
-            (fun () -> ignore @@ super#with_bindings ?lexical loc bindings visit node)
-            ~finally:(fun () -> this#pop_ssa_env saved_state);
-          node
+            (fun () -> super#with_bindings ?lexical loc bindings visit)
+            ~finally:(fun () -> this#pop_ssa_env saved_state)
 
       (* Run some computation, catching any abrupt completions; do some final work,
          and then re-raise any abrupt completions that were caught. *)
-      method run f ~finally =
-        let completion_state = this#run_to_completion f in
-        finally ();
-        this#from_completion completion_state
+      method run : 'a. (unit -> 'a) -> finally:(unit -> unit) -> 'a =
+        fun f ~finally ->
+          let result =
+            try f () with
+            | AbruptCompletion.Exn _ as e ->
+              finally ();
+              raise e
+          in
+          finally ();
+          result
 
       method run_to_completion f =
         try
@@ -1266,7 +1272,7 @@ struct
     in
     let completion_state =
       ssa_walk#run_to_completion (fun () ->
-          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program
+          ssa_walk#with_bindings loc bindings (fun () -> run ssa_walk#program program)
       )
     in
     (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
