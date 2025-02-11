@@ -1518,6 +1518,8 @@ let handle_apply_code_action ~options ~reader ~profiling ~env action file_input 
         )
       in
       Lwt.return (ServerProt.Response.APPLY_CODE_ACTION result, None)
+    | SuggestImports ->
+      Lwt.return (ServerProt.Response.APPLY_CODE_ACTION (Error "Not yet implemented"), None)
   )
 
 let handle_autocomplete

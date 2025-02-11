@@ -36,10 +36,13 @@ module Inlay_hint_options = struct
 end
 
 module Code_action = struct
-  type t = SourceAddMissingImports
+  type t =
+    | SourceAddMissingImports
+    | SuggestImports
 
   let to_string = function
     | SourceAddMissingImports -> "source.addMissingImports"
+    | SuggestImports -> "suggestImports"
 end
 
 module Request = struct
