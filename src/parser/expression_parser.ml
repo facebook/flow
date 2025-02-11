@@ -1337,20 +1337,20 @@ module Expression
            && (not (Peek.ith_is_line_terminator ~i:1 env))
            && Peek.ith_token ~i:1 env = T_LPAREN ->
       let leading = Peek.comments env in
-      let start_loc = Peek.loc env in
+      let match_keyword_loc = Peek.loc env in
       (* Consume `match` as an identifier, in case it's a call expression. *)
-      let ((id_loc, _) as id) = Parse.identifier env in
+      let id = Parse.identifier env in
       (* Allows trailing comma. *)
       let args = arguments env in
       (* `match (<expr>) {` *)
       if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then
         let arg = Parser_common.reparse_arguments_as_match_argument env args in
-        Cover_expr (match_expression ~start_loc ~id_loc ~leading ~arg env)
+        Cover_expr (match_expression ~match_keyword_loc ~leading ~arg env)
       else
         (* It's actually a call expression of the form `match(...)` *)
-        let callee = (id_loc, Expression.Identifier id) in
+        let callee = (match_keyword_loc, Expression.Identifier id) in
         let (args_loc, _) = args in
-        let loc = Loc.btwn start_loc args_loc in
+        let loc = Loc.btwn match_keyword_loc args_loc in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         let call =
           Expression.Call { Expression.Call.callee; targs = None; arguments = args; comments }
@@ -1360,7 +1360,7 @@ module Expression
           ~allow_optional_chain:true
           ~in_optional_chain:false
           env
-          start_loc
+          match_keyword_loc
           (Cover_expr (loc, call))
     | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_token ~i:1 env = T_CLASS ->
       Cover_expr (Parse.class_expression env)
@@ -1384,7 +1384,7 @@ module Expression
 
   and primary env = as_expression env (primary_cover env)
 
-  and match_expression env ~start_loc ~id_loc ~leading ~arg =
+  and match_expression env ~match_keyword_loc ~leading ~arg =
     let case env =
       let leading = Peek.comments env in
       let pattern = Parse.match_pattern env in
@@ -1413,7 +1413,7 @@ module Expression
       | _ -> case_list env (with_loc case env :: acc)
     in
     with_loc
-      ~start_loc
+      ~start_loc:match_keyword_loc
       (fun env ->
         Expect.token env T_LCURLY;
         let cases = case_list env [] in
@@ -1423,8 +1423,7 @@ module Expression
           {
             Expression.Match.arg;
             cases;
-            arg_internal = start_loc;
-            match_keyword_loc = id_loc;
+            match_keyword_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           })
       env

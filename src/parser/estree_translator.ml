@@ -651,7 +651,7 @@ with type t = Impl.t = struct
       | (loc, Class c) -> class_expression (loc, c)
       | (loc, JSXElement element) -> jsx_element (loc, element)
       | (loc, JSXFragment fragment) -> jsx_fragment (loc, fragment)
-      | (loc, Match { Match.arg; cases; comments; arg_internal = _; match_keyword_loc = _ }) ->
+      | (loc, Match { Match.arg; cases; comments; match_keyword_loc = _ }) ->
         node
           ?comments
           "MatchExpression"

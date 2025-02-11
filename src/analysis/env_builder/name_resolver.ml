@@ -2938,23 +2938,23 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! match_expression match_loc x =
         let open Flow_ast.Expression.Match in
-        let { arg; cases; arg_internal; match_keyword_loc; comments = _ } = x in
+        let { arg; cases; match_keyword_loc; comments = _ } = x in
         let match_root_ident = Flow_ast_utils.match_root_ident in
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
-        let bindings = Bindings.singleton (match_root_ident arg_internal, Bindings.Internal) in
+        let bindings = Bindings.singleton (match_root_ident match_keyword_loc, Bindings.Internal) in
         let completion_states = ref [] in
         this#with_bindings ~lexical:true match_loc bindings (fun () ->
             this#pattern_identifier_with_annot_check
               ~kind:Flow_ast.Variable.Const
-              arg_internal
-              (match_root_ident arg_internal)
+              match_keyword_loc
+              (match_root_ident match_keyword_loc)
               (Ast.Type.Missing ALoc.none);
-            ignore @@ this#identifier (match_root_ident arg_internal);
+            ignore @@ this#identifier (match_root_ident match_keyword_loc);
             Base.List.iter cases ~f:(this#visit_match_expression_case ~completion_states);
             match
               this#get_val_of_expression
-                (arg_internal, Ast.Expression.Identifier (match_root_ident arg_internal))
+                (match_keyword_loc, Ast.Expression.Identifier (match_root_ident match_keyword_loc))
             with
             | Some refined_value ->
               env_state <-

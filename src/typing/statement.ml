@@ -2883,7 +2883,7 @@ module Make
         );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
-    | Match { Match.arg; cases; arg_internal; match_keyword_loc; comments } ->
+    | Match { Match.arg; cases; match_keyword_loc; comments } ->
       if not @@ Context.enable_pattern_matching_expressions cx then (
         Flow.add_output
           cx
@@ -2893,7 +2893,7 @@ module Make
         let reason = mk_reason RMatchExpression loc in
         let arg = expression cx arg in
         let ((_, arg_t), _) = arg in
-        Type_env.init_const cx ~use_op:unknown_use arg_t arg_internal;
+        Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, ts_rev, all_throws) =
           Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
               let (case_loc, { Match.Case.pattern; body; guard; comments }) = case in
@@ -2948,8 +2948,7 @@ module Make
         let match_t = union_of_ts reason (List.rev ts_rev) in
         let ast =
           ( (loc, match_t),
-            Match
-              { Match.arg; cases = List.rev cases_rev; arg_internal; match_keyword_loc; comments }
+            Match { Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments }
           )
         in
         if (not (List.is_empty cases)) && all_throws then

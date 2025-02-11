@@ -3150,10 +3150,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private visit_match_expression x =
       let open Ast.Expression.Match in
-      let { arg; cases; arg_internal; match_keyword_loc = _; comments = _ } = x in
+      let { arg; cases; match_keyword_loc; comments = _ } = x in
       this#add_ordinary_binding
-        arg_internal
-        (mk_reason RMatchExpression arg_internal)
+        match_keyword_loc
+        (mk_reason RMatchExpression match_keyword_loc)
         (Binding (Root (Value { hints = []; expr = arg })));
       Base.List.iter cases ~f:(function (case_loc, { Case.pattern; body; guard; comments = _ }) ->
           let match_root =
