@@ -1514,16 +1514,16 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src
   let errors = Context.errors cx in
   let { ServerEnv.exports; _ } = env in
   (* collect imports for all of the undefined variables in the file *)
-  let imports =
+  let (imports, _) =
     Flow_error.ErrorSet.fold
-      (fun error imports ->
+      (fun error (imports, unbound_names) ->
         match
           Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         with
         | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
           when Options.autoimports options ->
           (match preferred_import ~ast ~exports name error_loc with
-          | Some (source, export_kind) ->
+          | Some (source, export_kind) when not (SSet.mem name unbound_names) ->
             let bindings =
               match ExportSourceMap.find_opt source imports with
               | None -> ExportKindMap.empty
@@ -1534,11 +1534,13 @@ let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src
               | None -> [name]
               | Some prev -> name :: prev
             in
-            ExportSourceMap.add source (ExportKindMap.add export_kind names bindings) imports
-          | None -> imports)
-        | _ -> imports)
+            ( ExportSourceMap.add source (ExportKindMap.add export_kind names bindings) imports,
+              SSet.add name unbound_names
+            )
+          | _ -> (imports, unbound_names))
+        | _ -> (imports, unbound_names))
       errors
-      ExportSourceMap.empty
+      (ExportSourceMap.empty, SSet.empty)
   in
   let added_imports =
     ExportSourceMap.fold

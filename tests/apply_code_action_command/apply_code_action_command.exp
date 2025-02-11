@@ -9,25 +9,8 @@ OtherModule;
 // @flow
 
 import OtherModule from "./OtherModule";
-import OtherModule from "./OtherModule";
 
 OtherModule;
 OtherModule;
 > Confirm no errors
-> TODO: No duplicate imports
-Error ------------------------------------------------------------------------------------------------- tmp/multi.js:4:8
-
-Cannot declare `OtherModule` [1] because the name is already bound. [name-already-bound]
-
-   tmp/multi.js:4:8
-   4| import OtherModule from "./OtherModule";
-             ^^^^^^^^^^^
-
-References:
-   tmp/multi.js:3:8
-   3| import OtherModule from "./OtherModule";
-             ^^^^^^^^^^^ [1]
-
-
-
-Found 1 error
+No errors!
