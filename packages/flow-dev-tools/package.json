@@ -27,6 +27,6 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "esbuild": "0.18.20"
+    "esbuild": "0.25.0"
   }
 }
