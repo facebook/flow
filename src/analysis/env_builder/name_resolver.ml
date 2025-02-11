@@ -141,6 +141,25 @@ module PartialEnvSnapshot = struct
     match SMap.find_opt x env with
     | Some v -> v
     | None -> fallback x
+
+  let debug_to_string ?(filter = (fun _ -> true)) get_refi x =
+    let output =
+      SMap.fold
+        (fun key { env_val; def_loc; _ } acc ->
+          if filter key then
+            let def_loc_s =
+              Base.Option.value_map def_loc ~default:"" ~f:(fun loc ->
+                  Utils_js.spf " %s" (ALoc.debug_to_string loc)
+              )
+            in
+            let val_s = Val.debug_to_string get_refi env_val in
+            Utils_js.spf "%s\n  %s%s: %s" acc key def_loc_s val_s
+          else
+            acc)
+        x
+        "{"
+    in
+    Utils_js.spf "%s\n}" output
 end
 
 (**
@@ -1069,6 +1088,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         Scope_builder.scope_builder ~flowmin_compatibility:false ~enable_enums ~with_types:true as super
 
       method private debug_val = Val.debug_to_string this#refinement_of_id
+
+      method private debug_partial_snapshot ?filter =
+        PartialEnvSnapshot.debug_to_string ?filter this#refinement_of_id
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
