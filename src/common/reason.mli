@@ -39,7 +39,7 @@ type 'loc virtual_reason_desc =
   | RBooleanLit of bool
   | RIndexedAccess of { optional: bool }
   | RConditionalType
-  | RMatchExpression
+  | RMatch
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit

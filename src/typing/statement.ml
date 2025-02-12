@@ -1197,11 +1197,54 @@ module Make
     | (loc, OpaqueType otype) ->
       let (_, opaque_type_ast) = opaque_type cx loc otype in
       (loc, OpaqueType opaque_type_ast)
-    | (loc, Match _) as s ->
-      Flow.add_output
-        cx
-        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchStatement));
-      Tast_utils.error_mapper#statement s
+    | (loc, Match { Flow_ast.Match.arg; cases; match_keyword_loc; comments }) as s ->
+      if not @@ Context.enable_pattern_matching cx then (
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchStatement));
+        Tast_utils.error_mapper#statement s
+      ) else
+        let arg = expression cx arg in
+        let ((_, arg_t), _) = arg in
+        Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
+        let cases_rev =
+          Base.List.rev_map cases ~f:(fun case ->
+              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) = case in
+              let pattern =
+                Match_pattern.pattern
+                  cx
+                  ( case_loc,
+                    Flow_ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
+                  )
+                  pattern
+                  ~on_identifier:identifier
+                  ~on_expression:expression
+                  ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
+                    init_var kind cx ~use_op t name_loc;
+                    Type_env.constraining_type
+                      ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
+                      cx
+                      name
+                      name_loc)
+              in
+              let guard = Base.Option.map ~f:(expression cx) guard in
+              let body =
+                let (body_loc, { Block.body; comments }) = body in
+                (body_loc, { Block.body = statement_list cx body; comments })
+              in
+              (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments })
+          )
+        in
+        let match_keyword_loc =
+          ( match_keyword_loc,
+            Type_env.var_ref
+              ~lookup_mode:ForValue
+              cx
+              (OrdinaryName Flow_ast_utils.match_root_name)
+              match_keyword_loc
+          )
+        in
+        (loc, Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments })
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       let discriminant_ast = expression cx discriminant in
       let exhaustive_check_incomplete_out =
@@ -2890,7 +2933,7 @@ module Make
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchExpression));
         Tast_utils.error_mapper#expression ex
       ) else
-        let reason = mk_reason RMatchExpression loc in
+        let reason = mk_reason RMatch loc in
         let arg = expression cx arg in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
