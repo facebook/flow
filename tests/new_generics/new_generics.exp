@@ -1031,8 +1031,8 @@ References:
    react.js:13:28
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:345:38
-   345|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:341:38
+   341|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 
@@ -1067,16 +1067,16 @@ Cannot get `X.defaultProps` because property `defaultProps` is missing in `React
                                  ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:108:47
+   <BUILTINS>/react.js:104:47
                                                       v
-   108| declare type React$AbstractComponentStatics = {
-   109|   displayName?: ?string,
-   110|   // This is only on function components, but trying to access name when
-   111|   // displayName is undefined is a common pattern.
-   112|   name?: ?string,
-   113|   propTypes?: {[string] : any, ...},
-   114|   ...
-   115| };
+   104| declare type React$AbstractComponentStatics = {
+   105|   displayName?: ?string,
+   106|   // This is only on function components, but trying to access name when
+   107|   // displayName is undefined is a common pattern.
+   108|   name?: ?string,
+   109|   propTypes?: {[string] : any, ...},
+   110|   ...
+   111| };
         ^ [1]
 
 

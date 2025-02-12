@@ -13,14 +13,14 @@ References:
    test1.js:14:27
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
                                   ^^^^^^^^ [1]
-   <BUILTINS>/react.js:124:45
-   124| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
+   <BUILTINS>/react.js:120:45
+   120| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

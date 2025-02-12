@@ -140,8 +140,8 @@ References:
    <BUILTINS>/react.js:30:15
     30| declare class React$Component<Props, State = void> {
                       ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [3]
 
 
@@ -179,8 +179,8 @@ References:
    <BUILTINS>/react.js:30:15
     30| declare class React$Component<Props, State = void> {
                       ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [3]
 
 
@@ -218,8 +218,8 @@ References:
    <BUILTINS>/react.js:30:15
     30| declare class React$Component<Props, State = void> {
                       ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [3]
 
 

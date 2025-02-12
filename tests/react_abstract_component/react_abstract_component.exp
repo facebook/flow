@@ -24,8 +24,8 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:136:25
-   136|   | React$ComponentType<empty>;
+   <BUILTINS>/react.js:132:25
+   132|   | React$ComponentType<empty>;
                                 ^^^^^ [2]
 
 

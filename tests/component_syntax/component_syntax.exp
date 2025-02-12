@@ -170,11 +170,11 @@ References:
    annotation.js:48:39
     48| declare var InlineRef: component(ref: number); // error
                                               ^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -192,11 +192,11 @@ References:
    annotation.js:48:24
     48| declare var InlineRef: component(ref: number); // error
                                ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    annotation.js:48:39
     48| declare var InlineRef: component(ref: number); // error
@@ -713,8 +713,8 @@ References:
    component_in_type_position.js:12:25
     12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:150:69
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -1201,11 +1201,11 @@ References:
    declared.js:50:34
     50| declare component InlineRef(ref: number); // error
                                          ^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1223,11 +1223,11 @@ References:
    declared.js:50:1
     50| declare component InlineRef(ref: number); // error
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    declared.js:50:34
     50| declare component InlineRef(ref: number); // error
@@ -1758,8 +1758,8 @@ Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompat
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:109:17
-   109|   displayName?: ?string,
+   <BUILTINS>/react.js:105:17
+   105|   displayName?: ?string,
                         ^^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1775,8 +1775,8 @@ Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible wit
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:109:17
-   109|   displayName?: ?string,
+   <BUILTINS>/react.js:105:17
+   105|   displayName?: ?string,
                         ^^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1792,8 +1792,8 @@ Cannot cast `Foo.displayName` to empty because string [1] is incompatible with e
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:109:18
-   109|   displayName?: ?string,
+   <BUILTINS>/react.js:105:18
+   105|   displayName?: ?string,
                          ^^^^^^ [1]
    import.js:21:19
     21| (Foo.displayName: empty); // error, displayName is a string
@@ -1810,16 +1810,16 @@ Cannot get `Foo.randomProperty` because property `randomProperty` is missing in 
             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:108:47
+   <BUILTINS>/react.js:104:47
                                                       v
-   108| declare type React$AbstractComponentStatics = {
-   109|   displayName?: ?string,
-   110|   // This is only on function components, but trying to access name when
-   111|   // displayName is undefined is a common pattern.
-   112|   name?: ?string,
-   113|   propTypes?: {[string] : any, ...},
-   114|   ...
-   115| };
+   104| declare type React$AbstractComponentStatics = {
+   105|   displayName?: ?string,
+   106|   // This is only on function components, but trying to access name when
+   107|   // displayName is undefined is a common pattern.
+   108|   name?: ?string,
+   109|   propTypes?: {[string] : any, ...},
+   110|   ...
+   111| };
         ^ [1]
 
 
@@ -1915,11 +1915,11 @@ References:
    names.js:22:8
     22| export component NoRef(ref: string) { return <div /> }; // Error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
@@ -2005,8 +2005,8 @@ References:
    import_component_in_type_position.js:13:31
     13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                       ^^^^^^ [2]
-   <BUILTINS>/react.js:150:69
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [3]
 
 
@@ -2232,11 +2232,11 @@ References:
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
                                     ^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2254,11 +2254,11 @@ References:
    names.js:22:8
     22| export component NoRef(ref: string) { return <div /> }; // Error
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    names.js:22:29
     22| export component NoRef(ref: string) { return <div /> }; // Error
@@ -2745,8 +2745,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2770,8 +2770,8 @@ References:
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2826,8 +2826,8 @@ The `ref` parameter must be a subtype of `React.RefSetter`.
                       ^^^
 
 References:
-   <BUILTINS>/react.js:196:21
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:21
+   192|   | { -current: T | null, ... }
                             ^^^^ [1]
    refs.js:3:30
      3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2835,8 +2835,8 @@ References:
    refs.js:3:20
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2856,14 +2856,14 @@ References:
    refs.js:5:22
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:197:11
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:11
+   193|   | ((T | null) => mixed)
                   ^^^^ [2]
    refs.js:5:21
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                             ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -2972,8 +2972,8 @@ References:
    refs.js:12:38
     12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                              ^^^^^^ [2]
-   <BUILTINS>/react.js:196:21
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:21
+   192|   | { -current: T | null, ... }
                             ^^^^ [3]
 
 
@@ -3134,8 +3134,8 @@ References:
    refs.js:15:38
     15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
                                              ^^^^^^ [2]
-   <BUILTINS>/react.js:197:11
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:11
+   193|   | ((T | null) => mixed)
                   ^^^^ [3]
 
 
@@ -3154,8 +3154,8 @@ References:
    refs.js:17:22
     17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:8:36
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
@@ -3180,8 +3180,8 @@ References:
    refs.js:17:22
     17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:8:36
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
@@ -3215,8 +3215,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -3244,8 +3244,8 @@ References:
    refs.js:60:43
     60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -3269,8 +3269,8 @@ References:
    refs.js:90:25
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -3294,8 +3294,8 @@ References:
    refs.js:90:25
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -3311,11 +3311,11 @@ Cannot create `GenericRef1` element because in property `ref`: [incompatible-typ
                               ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -3330,8 +3330,8 @@ Cannot create `GenericRef2` element because in property `ref`: [incompatible-typ
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:101:51
    101|     component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
@@ -3770,8 +3770,8 @@ Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with s
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:109:18
-   109|   displayName?: ?string,
+   <BUILTINS>/react.js:105:18
+   105|   displayName?: ?string,
                          ^^^^^^ [2]
 
 
@@ -3785,16 +3785,16 @@ Cannot get `Foo.randomProperty` because property `randomProperty` is missing in 
             ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:108:47
+   <BUILTINS>/react.js:104:47
                                                       v
-   108| declare type React$AbstractComponentStatics = {
-   109|   displayName?: ?string,
-   110|   // This is only on function components, but trying to access name when
-   111|   // displayName is undefined is a common pattern.
-   112|   name?: ?string,
-   113|   propTypes?: {[string] : any, ...},
-   114|   ...
-   115| };
+   104| declare type React$AbstractComponentStatics = {
+   105|   displayName?: ?string,
+   106|   // This is only on function components, but trying to access name when
+   107|   // displayName is undefined is a common pattern.
+   108|   name?: ?string,
+   109|   propTypes?: {[string] : any, ...},
+   110|   ...
+   111| };
         ^ [1]
 
 
