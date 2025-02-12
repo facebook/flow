@@ -46,14 +46,14 @@ Cannot create `FancyButton` element because in property `ref`: [incompatible-typ
                                              ^^^^^^
 
 References:
-   <BUILTINS>/react.js:694:8
-   694|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:690:8
+   690|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:198:5
-   198|   | null
+   <BUILTINS>/react.js:194:5
+   194|   | null
             ^^^^ [3]
 
 
@@ -74,8 +74,8 @@ References:
    forwardRef.js:22:49
     22| const _g = <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                         ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -91,14 +91,14 @@ Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
                                           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:694:8
-   694|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:690:8
+   690|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:197:6
-   197|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:193:6
+   193|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:198:5
-   198|   | null
+   <BUILTINS>/react.js:194:5
+   194|   | null
             ^^^^ [3]
 
 

@@ -171,11 +171,11 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:135:5
-   135|   | string
+   <BUILTINS>/react.js:131:5
+   131|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:136:5
-   136|   | React$ComponentType<empty>;
+   <BUILTINS>/react.js:132:5
+   132|   | React$ComponentType<empty>;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -195,8 +195,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [2]
-   <BUILTINS>/react.js:150:36
-   150| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:146:36
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
 
 

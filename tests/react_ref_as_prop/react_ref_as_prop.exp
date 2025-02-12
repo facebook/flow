@@ -241,8 +241,8 @@ References:
    fn_components.js:2:90
      2| declare export function FnWithOptionalRefProp(props: {foo: string, ref?: React.RefSetter<HTMLElement>}): React.Node;
                                                                                                  ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -263,8 +263,8 @@ References:
    fn_components.js:3:89
      3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
                                                                                                 ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -318,8 +318,8 @@ References:
    component_syntax_components.js:2:85
      2| declare export component CompWithOptionalRefProp(foo: string, ref?: React.RefSetter<HTMLElement>);
                                                                                             ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -340,8 +340,8 @@ References:
    component_syntax_components.js:3:84
      3| declare export component CompWithRequiredRefProp(foo: string, ref: React.RefSetter<HTMLElement>);
                                                                                            ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:196:5
-   196|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:192:5
+   192|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
