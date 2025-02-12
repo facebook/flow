@@ -398,3 +398,13 @@
     [_]: 0,
   };
 }
+
+// Exhaustive checking error points to definition
+{
+  type T = {foo: 1} | {foo: 2};
+  declare const x: T;
+
+  const e1 = match (x) {
+    {foo: 1}: 0,
+  };
+}

@@ -413,6 +413,21 @@ References:
                            ^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- matching.js:407:14
+
+`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
+
+   matching.js:407:14
+   407|   const e1 = match (x) {
+                     ^^^^^
+
+References:
+   matching.js:404:23
+   404|   type T = {foo: 1} | {foo: 2};
+                              ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:6:10
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
@@ -833,4 +848,4 @@ Cannot resolve name `a`. [cannot-resolve-name]
 
 
 
-Found 69 errors
+Found 70 errors
