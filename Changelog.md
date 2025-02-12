@@ -1,3 +1,47 @@
+### 0.261.0
+
+New Features:
+* Bigint values inside of template literals now coerce to strings, e.g. ``` `${1n}` ```. Addition with string (e.g. `1n + 'blah'`) is still banned.
+* Add ability to resolve node package entrypoints/exports
+* Flow now allows inference of type guards for simple expression arrow functions with one parameter. For example, in `["a", null].filter(s => s != null)` it will automatically infer that the arrow function encodes a `x is string` type guard and will apply it on the input array resulting in a`Array<string>`. ([try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhJWY9oPYAATyHkAXh5AG1WckxbweUdcABdKzwHQmAAUJEFAD4eaqAIRC6UASgA3Jz+RhVQBBah0AA89lMUAQaoNPIA9M6eQB3ODHKUQd08nA8iBbOic3IgBomEhwaBJBoABisACYAKwATisAEYQPSgA))
+* `module.system.node.root_relative_dirname` will allow conditional mapping like `module.system.node.root_relative_dirname='<PROJECT_ROOT>/foo' -> 'bar'`. Under such config, `import 'a'` will only be resolved to `<PROJECT_ROOT>/bar/a` if `import 'a'` is in a file in the `<PROJECT_ROOT>/foo` directory. This feature will be helpful if you want to combine two flow roots with different `module.system.node.root_relative_dirname` config.
+
+Likely to cause new Flow errors:
+* When an opaque type is refined to be not null/undefined, we now refine the opaque type's upper bound rather than returning the opaque type unmodified.
+
+Notable bug fixes:
+* Flow will error more consistently on incompatible uses of refined string, number and boolean literal types (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOrAHso4NAAAQLewARgAFBlaDgAMpSZA8gD8AHIMHKAJQ84Dsnk8uAwHkiugSqQ8gCEAF4eUdcCq1VANRqFXKeRgSHzVhBtaL9ZQANw8gD0Pp5EC26ptfp57uwksoPNNwdtaHtjudxldYb1Eak3tDAHc4MczRAszyTJQIFHi6WeXL4zyAH4APkriuD9PZLag7JgnPh1v5EgATEKMNK7bweWhh-HLcG2hIefJow7ZTKx572cGhUKVcaG1abTySDm9rUdfIp9abdUyGPkLGbfPTXKwHLM-6AOq53D5wvlqMkCqQvlamwTVYGLUok2AmAK3nHM8xwRt7QAH0reNbw1NAoi2Vdzw1NtcKVTdsODedEztHlkKrZ9W1yEAGhMP9oCSBoAAYrD7ABWABOKwBRAekgA))
+* Fixed some cases of type filtering during type guard refinement (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQAOhJWVANE8qNgAAQwB7KODQPm0gCCEEoACEABTyZB8gDkGCVAB8lWh1UqwEqAJSK+RikjK1V8tXKrUAbk5nO5uF5fMBfIVpu1uptUDgMD5solUrl8j1er5wE5fJdfIwJpVSqtfIA9Am+QB1ODHPlQCAAdz5OD5EC2dHDkejlrjieTJkoUrdfIAfgA+cslo1lnUVpN86u12MN5sdzn03IgBomEgiqBJBoABisACYAKwATisAEYQPSgA))
+* Fixed a bug of missing errors when certain functions were checked against interfaces (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SSeGBIJAABABlTnAAA6UE5nPsmWynLQQjguDYAAoAJTIHl8wXC4UsCRCShCr4Adx5CoA3KrOfTBWaoILbPYJVKZZyALw8qyS6VsY1QWWumVKip4riQvn0+WGzkAejDnIA8gBpQVeu1sX0+EwB7B8mDEJVoYjPKDB0MRzkAdWluE5UAg+oAogAlWtR2u5EANEwkODQJINAAMVgATABWACcVgAjCB6UA))
+* Fixed negation of refinement of type-guard functions with multiple parameters (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQABKyNE8qNhWYDWbSAGL2AAKThEADlRMhWQAKJq4GTSoolNi8VkKKQYRrcRWs5WlACUrIAvAA+Xk6nm01nCEQ3ADcAB0oM6YA9lHBoKyYMQZfJpbabqyAD6s+ymKAINW0APXEwhsNSCoII3AZ3O9lwGCywUisWSkR+6MG1MZ9mslgSISUKBOqDs+ll+SsjAkRMRhD21kAem7rIA7nBjjaIP3WThWRAtnR01BG1BciAGiYSJ6F8glwAGKwAJgArABOKwARhA9KAA))
+* Relaxed type-guard consistency checks when the function returns with `true` or `false`. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRgD2UcGgAAIWBIhJRKmTyA8NJQqtA2HB4VAABTyZBc4QiG5cgA+XPspigCDVXLQxGeUAAlAr5FzaXqDawoFzgAAdG3mmBcmUrYwQZ1mgC8Pq5AHIlTc-UbbQ6ueGebt+TahQBuLkAegTiogEi5wK5JkoEEo6agtC5Ihz2DDXPpme6TpdbuwHq53p9fs1FQQwdDjvDvOjXLjieTUFTecz1BzeYLRZYpfLeDI7Yjkb5Aq5Uhk8aTKbTGazo+B4+LU4d9NyIAaJhInKgSQaAAYrAAmACsAE4rABGED0oA))
+
+Parser:
+* We now provide parsing support for `declare global {...}` (using it will still result in an error). The AST will have the shape of
+```
+{
+    "type":"DeclareNamespace",
+    "loc": ...,
+    "range": ...,
+    "global":true,
+    "id":{
+        "type":"Identifier",
+        "loc": ...,
+        "range":...,
+        "name":"global",
+        "typeAnnotation":null,
+        "optional":false
+    },
+    "body":{
+        "type":"BlockStatement",
+        ...
+    },
+}
+```
+
+Library Definitions:
+* The global `React$PureComponent` is removed. If you want to refer to it, it needs to be imported from `react`.
+
 ### 0.260.0
 
 New Features:
