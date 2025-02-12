@@ -1,0 +1,17 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+untyped-type-import=error
+internal-type=error
+deprecated-type-bool=error
+
+[options]
+all=true
+file_watcher=none
+lazy_mode=true
+
+[strict]
