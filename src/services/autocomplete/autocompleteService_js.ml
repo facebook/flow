@@ -939,8 +939,7 @@ let autocomplete_id
       let keywords =
         Keywords.keywords_at_loc
           ~component_syntax_enabled:(Context.component_syntax typing.cx)
-          ~pattern_matching_expressions_enabled:
-            (Context.enable_pattern_matching_expressions typing.cx)
+          ~pattern_matching_enabled:(Context.enable_pattern_matching typing.cx)
           typing.ast
           ac_loc
         |> Base.List.map ~f:(AcCompletion.of_keyword ~edit_locs)

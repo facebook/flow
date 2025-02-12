@@ -1,4 +1,4 @@
 [options]
 all=true
-experimental.pattern_matching_expressions=true
+experimental.pattern_matching=true
 no_flowlib=false

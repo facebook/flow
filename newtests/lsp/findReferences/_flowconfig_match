@@ -1,2 +1,2 @@
 [options]
-experimental.pattern_matching_expressions=true
+experimental.pattern_matching=true

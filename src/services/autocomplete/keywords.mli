@@ -7,7 +7,7 @@
 
 val keywords_at_loc :
   component_syntax_enabled:bool ->
-  pattern_matching_expressions_enabled:bool ->
+  pattern_matching_enabled:bool ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Loc.t ->
   string list

@@ -2884,7 +2884,7 @@ module Make
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
     | Match { Match.arg; cases; match_keyword_loc; comments } ->
-      if not @@ Context.enable_pattern_matching_expressions cx then (
+      if not @@ Context.enable_pattern_matching cx then (
         Flow.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchExpression));

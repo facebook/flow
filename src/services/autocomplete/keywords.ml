@@ -20,10 +20,10 @@ type context_node =
 
 (* TODO: include `of`, `in`, and `instanceof`. We don't currently autocomplete at positions where those are valid. *)
 (* true, false, and null are not included here, because we already suggest those when we have type info *)
-let expression_keywords ~pattern_matching_expressions_enabled =
+let expression_keywords ~pattern_matching_enabled =
   ["async"; "await"; "class"; "delete"; "function"; "import"; "new"; "typeof"; "void"; "yield"]
   @
-  if pattern_matching_expressions_enabled then
+  if pattern_matching_enabled then
     ["match"]
   else
     []
@@ -156,7 +156,7 @@ class mapper target =
       super#identifier (loc, id)
   end
 
-let keywords_of_context ~component_syntax_enabled ~pattern_matching_expressions_enabled context =
+let keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled context =
   match context with
   | Expression :: ExpressionStatement :: _
   | Statement :: _ ->
@@ -167,11 +167,11 @@ let keywords_of_context ~component_syntax_enabled ~pattern_matching_expressions_
   | Expression :: Member :: _
   | Expression :: SwitchCase :: _ ->
     []
-  | Expression :: _ -> expression_keywords ~pattern_matching_expressions_enabled
-  | MatchPattern :: _ when pattern_matching_expressions_enabled -> match_pattern_keywords
+  | Expression :: _ -> expression_keywords ~pattern_matching_enabled
+  | MatchPattern :: _ when pattern_matching_enabled -> match_pattern_keywords
   | _ -> []
 
-let keywords_at_loc ~component_syntax_enabled ~pattern_matching_expressions_enabled ast loc =
+let keywords_at_loc ~component_syntax_enabled ~pattern_matching_enabled ast loc =
   (* We're looking for an identifier, considering the first character is equivalent. *)
   let target = Loc.first_char loc in
   let mapper = new mapper target in
@@ -179,5 +179,4 @@ let keywords_at_loc ~component_syntax_enabled ~pattern_matching_expressions_enab
     ignore (mapper#program ast);
     []
   with
-  | Found context ->
-    keywords_of_context ~component_syntax_enabled ~pattern_matching_expressions_enabled context
+  | Found context -> keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled context

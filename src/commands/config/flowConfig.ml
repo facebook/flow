@@ -122,7 +122,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
-    pattern_matching_expressions: bool option;
+    pattern_matching: bool option;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
@@ -261,7 +261,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
-      pattern_matching_expressions = None;
+      pattern_matching = None;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
       react_rules = [];
@@ -1035,8 +1035,8 @@ module Opts = struct
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
       );
-      ( "experimental.pattern_matching_expressions",
-        boolean (fun opts v -> Ok { opts with pattern_matching_expressions = Some v })
+      ( "experimental.pattern_matching",
+        boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
@@ -1839,7 +1839,7 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
-let pattern_matching_expressions c = c.options.Opts.pattern_matching_expressions
+let pattern_matching c = c.options.Opts.pattern_matching
 
 let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 

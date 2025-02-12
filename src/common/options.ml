@@ -90,7 +90,7 @@ type t = {
   opt_enable_const_params: bool;
   opt_enable_declare_global: bool;
   opt_enable_jest_integration: bool;
-  opt_enable_pattern_matching_expressions: bool;
+  opt_enable_pattern_matching: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
@@ -228,7 +228,7 @@ let enable_declare_global opts = opts.opt_enable_declare_global
 
 let enable_jest_integration opts = opts.opt_enable_jest_integration
 
-let enable_pattern_matching_expressions opts = opts.opt_enable_pattern_matching_expressions
+let enable_pattern_matching opts = opts.opt_enable_pattern_matching
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

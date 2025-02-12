@@ -663,7 +663,7 @@ let check_match_exhaustiveness cx tast =
         super#match_expression x
     end
   in
-  if Context.enable_pattern_matching_expressions cx then
+  if Context.enable_pattern_matching cx then
     let (_ : _ Ast.Program.t) = checker#program tast in
     ()
 
