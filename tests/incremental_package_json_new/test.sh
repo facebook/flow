@@ -18,7 +18,7 @@ assert_ok "$FLOW" force-recheck --focus --no-auto-start package.json file.js
 # sleep added to ensure server has died
 sleep 2
 
-# TODO The following should succeed, since server should have died with the recheck
-assert_server_already_running "$FLOW" start --lazy-mode none
+# The following should succeed, since server should have died with the recheck
+assert_ok "$FLOW" start --file-watcher none --lazy-mode none --wait .
 
-assert_ok "$FLOW" status --no-auto-start . # TODO errors on file.js
+assert_errors "$FLOW" status --no-auto-start . # errors on file.js

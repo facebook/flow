@@ -126,7 +126,7 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
       (Unrecoverable
          {
            msg = spf "%s\nPackages changed in an incompatible way" messages;
-           exit_status = Exit.Server_out_of_date;
+           exit_status = Exit.Flowconfig_changed;
          }
       )
   else
