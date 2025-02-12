@@ -670,7 +670,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_with_test "with" (expression ~opts _object); statement_after_test ~opts body;
              ]
           )
-      | S.Match { S.Match.arg; cases; comments } ->
+      | S.Match { S.Match.arg; cases; match_keyword_loc = _; comments } ->
         let cases =
           List.map
             (fun ((loc, _) as case) ->

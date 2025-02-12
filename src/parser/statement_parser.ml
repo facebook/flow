@@ -611,6 +611,7 @@ module Statement
     with_loc
       (fun env ->
         let leading = Peek.comments env in
+        let match_keyword_loc = Peek.loc env in
         Expect.token env T_MATCH;
         if Peek.is_line_terminator env then raise Try.Rollback;
         let args = Expression.arguments env in
@@ -620,7 +621,12 @@ module Statement
         Expect.token env T_RCURLY;
         let trailing = Eat.trailing_comments env in
         Statement.Match
-          { arg; cases; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+          {
+            arg;
+            cases;
+            match_keyword_loc;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+          })
       env
 
   and throw =

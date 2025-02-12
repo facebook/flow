@@ -2102,11 +2102,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method match_statement (x : ('M, 'T) Ast.Statement.Match.t) : ('N, 'U) Ast.Statement.Match.t =
       let open Ast.Statement.Match in
-      let { arg; cases; comments } = x in
+      let { arg; cases; match_keyword_loc; comments } = x in
       let arg' = this#expression arg in
       let cases' = List.map ~f:(this#on_loc_annot * this#match_statement_case) cases in
+      let match_keyword_loc' = this#on_type_annot match_keyword_loc in
       let comments' = this#syntax_opt comments in
-      { arg = arg'; cases = cases'; comments = comments' }
+      { arg = arg'; cases = cases'; match_keyword_loc = match_keyword_loc'; comments = comments' }
 
     method match_statement_case (case : ('M, 'T) Ast.Statement.Match.Case.t') =
       let open Ast.Statement.Match.Case in

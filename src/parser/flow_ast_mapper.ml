@@ -2558,14 +2558,14 @@ class ['loc] mapper =
 
     method match_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Match.t) =
       let open Ast.Statement.Match in
-      let { arg; cases; comments } = stmt in
+      let { arg; cases; match_keyword_loc; comments } = stmt in
       let arg' = this#expression arg in
       let cases' = map_list this#match_statement_case cases in
       let comments' = this#syntax_opt comments in
       if arg == arg' && cases == cases' && comments == comments' then
         stmt
       else
-        { arg = arg'; cases = cases'; comments = comments' }
+        { arg = arg'; cases = cases'; match_keyword_loc; comments = comments' }
 
     method match_statement_case (case : ('loc, 'loc) Ast.Statement.Match.Case.t) =
       let open Ast.Statement.Match.Case in
