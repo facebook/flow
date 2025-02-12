@@ -776,29 +776,7 @@ and Statement : sig
     [@@deriving show]
   end
 
-  module Match : sig
-    module Case : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        pattern: ('M, 'T) MatchPattern.t;
-        body: 'M * ('M, 'T) Block.t;
-        guard: ('M, 'T) Expression.t option;
-        comments: ('M, unit) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
-    type ('M, 'T) t = {
-      arg: ('M, 'T) Expression.t;
-      cases: ('M, 'T) Case.t list;
-      (* The type here is used to store the resulting type after the patterns
-         refine the arg type. *)
-      match_keyword_loc: 'T;
-      comments: ('M, unit) Syntax.t option;
-    }
-    [@@deriving show]
-  end
+  type ('M, 'T) match_statement = ('M, 'T, 'M * ('M, 'T) Block.t) Match.t [@@deriving show]
 
   module Switch : sig
     module Case : sig
@@ -1338,7 +1316,7 @@ and Statement : sig
     | ImportDeclaration of ('M, 'T) ImportDeclaration.t
     | InterfaceDeclaration of ('M, 'T) Interface.t
     | Labeled of ('M, 'T) Labeled.t
-    | Match of ('M, 'T) Match.t
+    | Match of ('M, 'T) match_statement
     | Return of ('M, 'T) Return.t
     | Switch of ('M, 'T) Switch.t
     | Throw of ('M, 'T) Throw.t
@@ -1753,29 +1731,7 @@ and Expression : sig
     [@@deriving show]
   end
 
-  module Match : sig
-    module Case : sig
-      type ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
-        pattern: ('M, 'T) MatchPattern.t;
-        body: ('M, 'T) Expression.t;
-        guard: ('M, 'T) Expression.t option;
-        comments: ('M, unit) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
-    type ('M, 'T) t = {
-      arg: ('M, 'T) Expression.t;
-      cases: ('M, 'T) Case.t list;
-      (* The type here is used to store the resulting type after the patterns
-         refine the arg type. *)
-      match_keyword_loc: 'T;
-      comments: ('M, unit) Syntax.t option;
-    }
-    [@@deriving show]
-  end
+  type ('M, 'T) match_expression = ('M, 'T, ('M, 'T) Expression.t) Match.t [@@deriving show]
 
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -1802,7 +1758,7 @@ and Expression : sig
     | RegExpLiteral of 'M RegExpLiteral.t
     | ModuleRefLiteral of ('M, 'T) ModuleRefLiteral.t
     | Logical of ('M, 'T) Logical.t
-    | Match of ('M, 'T) Match.t
+    | Match of ('M, 'T) match_expression
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
     | New of ('M, 'T) New.t
@@ -1967,6 +1923,31 @@ and JSX : sig
   [@@deriving show]
 end =
   JSX
+
+and Match : sig
+  module Case : sig
+    type ('M, 'T, 'B) t = 'M * ('M, 'T, 'B) t'
+
+    and ('M, 'T, 'B) t' = {
+      pattern: ('M, 'T) MatchPattern.t;
+      body: 'B;
+      guard: ('M, 'T) Expression.t option;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
+  type ('M, 'T, 'B) t = {
+    arg: ('M, 'T) Expression.t;
+    cases: ('M, 'T, 'B) Case.t list;
+    (* The type here is used to store the resulting type after the patterns
+       refine the arg type. *)
+    match_keyword_loc: 'T;
+    comments: ('M, unit) Syntax.t option;
+  }
+  [@@deriving show]
+end =
+  Match
 
 and MatchPattern : sig
   module UnaryPattern : sig

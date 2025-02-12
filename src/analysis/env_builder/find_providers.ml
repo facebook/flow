@@ -728,8 +728,8 @@ end = struct
         end;
         expr
 
-      method! match_expression loc x =
-        let open Ast.Expression.Match in
+      method! match_ loc ~on_case_body x =
+        let open Ast.Match in
         let { arg; match_keyword_loc; cases = _; comments = _ } = x in
         run this#expression arg;
 
@@ -743,13 +743,13 @@ end = struct
             | [] -> ()
             | first_case :: rest_cases ->
               let (env0, cx) = this#acc in
-              run this#match_expression_case first_case;
+              run (this#match_case ~on_case_body) first_case;
               let (env1, _) = this#acc in
               let env2 =
                 Base.List.fold rest_cases ~init:env1 ~f:(fun env_acc case ->
                     this#accumulate_branch_env
                       (env0, cx)
-                      (fun () -> run this#match_expression_case case)
+                      (fun () -> run (this#match_case ~on_case_body) case)
                       env_acc
                 )
               in
@@ -758,8 +758,8 @@ end = struct
           loc
           x
 
-      method! match_expression_case ((loc, _) as case) =
-        this#enter_scope Lex (fun _ case -> super#match_expression_case case) loc case
+      method! match_case ~on_case_body ((loc, _) as case) =
+        this#enter_scope Lex (fun _ case -> super#match_case ~on_case_body case) loc case
 
       (* Don't call pattern_identifier on property keys--either it will have been called twice, or incorrectly.
          The example to consider is

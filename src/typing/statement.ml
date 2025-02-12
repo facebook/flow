@@ -2883,7 +2883,7 @@ module Make
         );
       let t = AnyT.at (AnyError None) loc in
       ((loc, t), TSSatisfies (Tast_utils.error_mapper#ts_satisfies cast))
-    | Match { Match.arg; cases; match_keyword_loc; comments } ->
+    | Match { Flow_ast.Match.arg; cases; match_keyword_loc; comments } ->
       if not @@ Context.enable_pattern_matching cx then (
         Flow.add_output
           cx
@@ -2896,7 +2896,7 @@ module Make
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, ts_rev, all_throws) =
           Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
-              let (case_loc, { Match.Case.pattern; body; guard; comments }) = case in
+              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) = case in
               let pattern =
                 Match_pattern.pattern
                   cx
@@ -2924,7 +2924,7 @@ module Make
               let ((((_, t), _) as body), body_throws) =
                 Abnormal.catch_expr_control_flow_exception (fun () -> expression cx body)
               in
-              let case_ast = (case_loc, { Match.Case.pattern; body; guard; comments }) in
+              let case_ast = (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) in
               let throws = guard_throws || body_throws in
               let all_throws = all_throws && throws in
               let ts =
@@ -2948,7 +2948,7 @@ module Make
         let match_t = union_of_ts reason (List.rev ts_rev) in
         let ast =
           ( (loc, match_t),
-            Match { Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments }
+            Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments }
           )
         in
         if (not (List.is_empty cases)) && all_throws then

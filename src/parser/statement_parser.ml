@@ -580,7 +580,7 @@ module Statement
     )
 
   and match_statement env =
-    let open Statement.Match in
+    let open Match in
     let case env =
       let leading = Peek.comments env in
       let pattern = Parse.match_pattern env in

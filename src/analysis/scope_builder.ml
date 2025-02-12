@@ -365,12 +365,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let (loc, block) = body in
         (loc, super#block loc block)
 
-      method! match_expression_case case =
-        let open Flow_ast.Expression.Match.Case in
+      method! match_case ~on_case_body case =
+        let open Flow_ast.Match.Case in
         let (loc, { pattern; body = _; guard = _; comments = _ }) = case in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-        this#with_bindings ~lexical:true loc bindings (fun () -> super#match_expression_case case)
+        this#with_bindings ~lexical:true loc bindings (fun () -> super#match_case ~on_case_body case)
 
       method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in

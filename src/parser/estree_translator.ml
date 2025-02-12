@@ -665,26 +665,20 @@ with type t = Impl.t = struct
           [("meta", identifier meta); ("property", identifier property)]
       | (loc, Import { Import.argument; comments }) ->
         node ?comments "ImportExpression" loc [("source", expression argument)]
-    and match_expression_case (loc, { Expression.Match.Case.pattern; body; guard; comments }) =
+    and match_expression_case case = match_case "MatchExpressionCase" ~on_case_body:expression case
+    and match_case
+          : 'B. string -> on_case_body:('B -> Impl.t) -> (Loc.t, Loc.t, 'B) Match.Case.t -> Impl.t =
+     fun kind ~on_case_body (loc, { Match.Case.pattern; body; guard; comments }) ->
       node
         ?comments
-        "MatchExpressionCase"
+        kind
         loc
         [
           ("pattern", match_pattern pattern);
-          ("body", expression body);
+          ("body", on_case_body body);
           ("guard", option expression guard);
         ]
-    and match_statement_case (loc, { Statement.Match.Case.pattern; body; guard; comments }) =
-      node
-        ?comments
-        "MatchStatementCase"
-        loc
-        [
-          ("pattern", match_pattern pattern);
-          ("body", block body);
-          ("guard", option expression guard);
-        ]
+    and match_statement_case case = match_case "MatchStatementCase" ~on_case_body:block case
     and match_pattern (loc, pattern) =
       let open MatchPattern in
       let literal x = node "MatchLiteralPattern" loc [("literal", x)] in

@@ -648,8 +648,8 @@ let check_match_exhaustiveness cx tast =
 
       method on_loc_annot x = x
 
-      method! match_expression x =
-        let { Ast.Expression.Match.match_keyword_loc = (loc, t); _ } = x in
+      method! match_ ~on_case_body x =
+        let { Ast.Match.match_keyword_loc = (loc, t); _ } = x in
         (match Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
         | [] -> ()
         | remaining_ts ->
@@ -660,7 +660,7 @@ let check_match_exhaustiveness cx tast =
                    { loc; reason = TypeUtil.reason_of_t remaining_t }
                 )
           ));
-        super#match_expression x
+        super#match_ ~on_case_body x
     end
   in
   if Context.enable_pattern_matching cx then
