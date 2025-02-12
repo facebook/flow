@@ -166,7 +166,7 @@ with type t = Impl.t = struct
           [("object", expression _object); ("body", statement body)]
       | (loc, TypeAlias alias) -> type_alias (loc, alias)
       | (loc, OpaqueType opaque_t) -> opaque_type ~declare:false (loc, opaque_t)
-      | (loc, Match { Match.arg; cases; comments }) ->
+      | (loc, Match { Match.arg; cases; match_keyword_loc = _; comments }) ->
         node
           ?comments
           "MatchStatement"
