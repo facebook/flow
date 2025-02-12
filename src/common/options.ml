@@ -134,7 +134,7 @@ type t = {
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
-  opt_node_resolver_root_relative_dirnames: string list;
+  opt_node_resolver_root_relative_dirnames: (string option * string) list;
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;

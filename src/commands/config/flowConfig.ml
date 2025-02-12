@@ -121,7 +121,7 @@ module Opts = struct
     node_package_export_conditions: string list;
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
-    node_resolver_root_relative_dirnames: string list;
+    node_resolver_root_relative_dirnames: (string option * string) list;
     pattern_matching: bool option;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -260,7 +260,7 @@ module Opts = struct
       node_package_export_conditions = [];
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
-      node_resolver_root_relative_dirnames = [""];
+      node_resolver_root_relative_dirnames = [(None, "")];
       pattern_matching = None;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
@@ -367,14 +367,23 @@ module Opts = struct
             )
     )
 
-  let optparse_mapping =
+  let mapping_regexp =
     let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
-    let regexp = Str.regexp regexp_str in
-    fun str ->
-      if Str.string_match regexp str 0 then
-        Ok (Str.matched_group 1 str, Str.matched_group 2 str)
-      else
-        Error ("Expected a mapping of form: " ^ "'single-quoted-string' -> 'single-quoted-string'")
+    Str.regexp regexp_str
+
+  let optparse_mapping str =
+    if Str.string_match mapping_regexp str 0 then
+      Ok (Str.matched_group 1 str, Str.matched_group 2 str)
+    else
+      Error ("Expected a mapping of form: " ^ "'single-quoted-string' -> 'single-quoted-string'")
+
+  let optparse_conditional_mapping str =
+    if Str.string_match mapping_regexp str 0 then
+      Ok (Str.matched_group 1 str, Some (Str.matched_group 2 str))
+    else
+      match optparse_string str with
+      | Ok s -> Ok (s, None)
+      | Error e -> Error e
 
   let boolean = enum [("true", true); ("false", false)]
 
@@ -392,6 +401,12 @@ module Opts = struct
   let mapping fn =
     opt (fun str ->
         let%bind v = optparse_mapping str in
+        fn v
+    )
+
+  let conditional_mapping fn =
+    opt (fun str ->
+        let%bind v = optparse_conditional_mapping str in
         fn v
     )
 
@@ -883,7 +898,11 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with node_resolver_allow_root_relative = v })
 
   let node_resolver_root_relative_dirnames_parser =
-    string
+    conditional_mapping
+      (function
+        | (applicable_directory, Some root_relative_dirname) ->
+          Ok (Some applicable_directory, root_relative_dirname)
+        | (root_relative_dirname, None) -> Ok (None, root_relative_dirname))
       ~init:(fun opts -> { opts with node_resolver_root_relative_dirnames = [] })
       ~multiple:true
       (fun opts v ->

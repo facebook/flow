@@ -42,3 +42,5 @@ import nonexistent from 'nonexistent'
 import sub_nonexistent from 'subdir/nonexistent'
 
 require('js_flow') as 4 // resolved, but number ~> 4 error
+
+import '4'; // error: not in only-here-can-we-use-root-relative-fourth
