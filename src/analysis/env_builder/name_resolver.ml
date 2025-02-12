@@ -1892,6 +1892,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               }
         )
 
+      method merge_completion_state_values first second =
+        match (first, second) with
+        | (Some abrupt_completion1, Some abrupt_completion2)
+          when abrupt_completion1 = abrupt_completion2 ->
+          Some abrupt_completion1
+        | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return)
+        | (Some AbruptCompletion.Return, Some AbruptCompletion.Throw) ->
+          Some AbruptCompletion.Return
+        | (Some (AbruptCompletion.Break opt_label1), Some (AbruptCompletion.Continue opt_label2))
+        | (Some (AbruptCompletion.Continue opt_label1), Some (AbruptCompletion.Break opt_label2))
+          when opt_label1 = opt_label2 ->
+          Some (AbruptCompletion.Continue opt_label1)
+        | _ -> None
+
       (* Given multiple completion states, (re)raise if all of them are the same
          abrupt completion. This function is called at merge points. *)
       method merge_completion_states (hd_completion_state, tl_completion_states) =
@@ -1902,24 +1916,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             Base.List.fold
               tl_completion_states
               ~init:(Some abrupt_completion)
-              ~f:(fun acc completion_state ->
-                match (acc, completion_state) with
-                | (Some abrupt_completion1, Some abrupt_completion2)
-                  when abrupt_completion1 = abrupt_completion2 ->
-                  Some abrupt_completion1
-                | (Some AbruptCompletion.Throw, Some AbruptCompletion.Return)
-                | (Some AbruptCompletion.Return, Some AbruptCompletion.Throw) ->
-                  Some AbruptCompletion.Return
-                | ( Some (AbruptCompletion.Break opt_label1),
-                    Some (AbruptCompletion.Continue opt_label2)
-                  )
-                | ( Some (AbruptCompletion.Continue opt_label1),
-                    Some (AbruptCompletion.Break opt_label2)
-                  )
-                  when opt_label1 = opt_label2 ->
-                  Some (AbruptCompletion.Continue opt_label1)
-                | _ -> None
-            )
+              ~f:this#merge_completion_state_values
           in
           this#from_completion merged_completion_state
 
@@ -2943,94 +2940,122 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         ignore @@ this#expression arg;
         let env0 = this#env_snapshot in
         let bindings = Bindings.singleton (match_root_ident match_keyword_loc, Bindings.Internal) in
-        let completion_states = ref [] in
-        this#with_bindings ~lexical:true match_loc bindings (fun () ->
-            this#pattern_identifier_with_annot_check
-              ~kind:Flow_ast.Variable.Const
-              match_keyword_loc
-              (match_root_ident match_keyword_loc)
-              (Ast.Type.Missing ALoc.none);
-            ignore @@ this#identifier (match_root_ident match_keyword_loc);
-            Base.List.iter cases ~f:(this#visit_match_expression_case ~completion_states);
-            match
-              this#get_val_of_expression
-                (match_keyword_loc, Ast.Expression.Identifier (match_root_ident match_keyword_loc))
-            with
-            | Some refined_value ->
-              env_state <-
-                {
-                  env_state with
-                  values =
-                    L.LMap.add
-                      match_keyword_loc
-                      {
-                        def_loc = None;
-                        value = refined_value;
-                        val_binding_kind = Val.InternalBinding;
-                        name = None;
-                      }
-                      env_state.values;
-                }
-            | None -> ()
-        );
-        let completion_states = !completion_states |> List.rev in
+        let cases_info =
+          this#with_bindings ~lexical:true match_loc bindings (fun () ->
+              this#pattern_identifier_with_annot_check
+                ~kind:Flow_ast.Variable.Const
+                match_keyword_loc
+                (match_root_ident match_keyword_loc)
+                (Ast.Type.Missing ALoc.none);
+              ignore @@ this#identifier (match_root_ident match_keyword_loc);
+              let cases_info = Base.List.map cases ~f:this#visit_match_expression_case in
+              (match
+                 this#get_val_of_expression
+                   ( match_keyword_loc,
+                     Ast.Expression.Identifier (match_root_ident match_keyword_loc)
+                   )
+               with
+              | Some refined_value ->
+                env_state <-
+                  {
+                    env_state with
+                    values =
+                      L.LMap.add
+                        match_keyword_loc
+                        {
+                          def_loc = None;
+                          value = refined_value;
+                          val_binding_kind = Val.InternalBinding;
+                          name = None;
+                        }
+                        env_state.values;
+                  }
+              | None -> ());
+              cases_info
+          )
+        in
         this#reset_env env0;
-        (match completion_states with
-        | hd :: [] -> this#from_completion hd
-        | hd :: tl -> this#merge_completion_states (hd, tl)
-        | [] -> ());
+
+        (match cases_info with
+        | [] -> ()
+        | (_, env_next, completion_state) :: [] ->
+          this#reset_env env_next;
+          this#from_completion completion_state
+        | ((_, _, first_completion_state) as first_case_info) :: rest_cases_info ->
+          let (_, rest_completion_states) =
+            Base.List.fold
+              rest_cases_info
+              ~init:(first_case_info, [])
+              ~f:(fun
+                   (((_, _, completion_state_acc) as case_info_acc), completion_states_acc)
+                   ((_, _, completion_state) as case_info)
+                 ->
+                this#reset_env env0;
+                this#merge_conditional_branches_with_refinements case_info_acc case_info;
+                let env_after = this#env_snapshot in
+                ( ( env0,
+                    env_after,
+                    this#merge_completion_state_values completion_state_acc completion_state
+                  ),
+                  completion_state :: completion_states_acc
+                )
+            )
+          in
+          this#merge_completion_states (first_completion_state, rest_completion_states));
         x
 
-      method private visit_match_expression_case ~completion_states case =
+      method private visit_match_expression_case case =
         let open Flow_ast.Expression.Match.Case in
         let (case_loc, { pattern; body; guard; comments = _ }) = case in
+        let env0 = this#env_snapshot in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-        this#with_bindings ~lexical:true case_loc bindings (fun () ->
-            this#push_refinement_scope empty_refinements;
-            let arg =
-              (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
-            in
-            this#match_pattern_refinements ~arg pattern;
-            let test_refinements = this#peek_new_refinements () in
-            let env_prev = this#env_snapshot_without_latest_refinements in
-            ignore @@ this#match_pattern pattern;
-            (match this#get_val_of_expression arg with
-            | Some refined_value ->
-              let values =
-                L.LMap.add
-                  case_loc
-                  {
-                    def_loc = None;
-                    value = refined_value;
-                    val_binding_kind = Val.InternalBinding;
-                    name = None;
-                  }
-                  env_state.values
+        let (completion_state, test_refinements) =
+          this#with_bindings ~lexical:true case_loc bindings (fun _ ->
+              this#push_refinement_scope empty_refinements;
+              let arg =
+                (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
               in
-              env_state <- { env_state with values }
-            | None -> ());
-            let completion_state =
-              this#run_to_completion (fun () ->
-                  match guard with
-                  | Some guard ->
-                    this#push_refinement_scope empty_refinements;
-                    ignore @@ this#expression_refinement guard;
-                    ignore @@ this#expression body;
-                    this#pop_refinement_scope ()
-                  | None -> ignore @@ this#expression body
-              )
-            in
-            completion_states := completion_state :: !completion_states;
-            this#pop_refinement_scope ();
-            this#reset_env env_prev;
-            if Option.is_none guard then (
-              (* If there is a guard, it's possible the case didn't match
-                 because of it, not because the pattern didn't match. *)
-              this#push_refinement_scope test_refinements;
-              this#negate_new_refinements ()
-            )
-        )
+              this#match_pattern_refinements ~arg pattern;
+              let test_refinements = this#peek_new_refinements () in
+              ignore @@ this#match_pattern pattern;
+              (match this#get_val_of_expression arg with
+              | Some refined_value ->
+                let values =
+                  L.LMap.add
+                    case_loc
+                    {
+                      def_loc = None;
+                      value = refined_value;
+                      val_binding_kind = Val.InternalBinding;
+                      name = None;
+                    }
+                    env_state.values
+                in
+                env_state <- { env_state with values }
+              | None -> ());
+              let completion_state =
+                this#run_to_completion (fun () ->
+                    Base.Option.iter guard ~f:(fun guard ->
+                        ignore @@ this#expression_refinement guard
+                    );
+                    ignore @@ this#expression body
+                )
+              in
+              (completion_state, test_refinements)
+          )
+        in
+        let body_env_no_refinements = this#env_snapshot_without_latest_refinements in
+        let body_env_with_refinements = this#env_snapshot in
+        this#pop_refinement_scope ();
+        this#reset_env env0;
+        if Option.is_none guard then (
+          (* If there is a guard, it's possible the case didn't match
+             because of it, not because the pattern didn't match. *)
+          this#push_refinement_scope test_refinements;
+          this#negate_new_refinements ()
+        );
+        (body_env_no_refinements, body_env_with_refinements, completion_state)
 
       method! match_pattern pattern =
         ( if Flow_ast_utils.match_pattern_has_binding pattern then

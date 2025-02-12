@@ -78,3 +78,60 @@ function f2() {
     _: 0,
   };
 }
+
+// Case body provider and refinement analysis
+{
+  let target;
+  const out = match (x) {
+    1: target = "foo",
+    2: target = true,
+  };
+
+  target as string | boolean; // OK
+}
+{
+  let target;
+  const out = match (x) {
+    const a: target = "foo",
+  };
+  a; // ERROR
+
+  target as "foo"; // OK
+}
+{
+  let target = null;
+  const out = match (x) {
+    const a: target = "foo",
+    const a: target = true,
+  };
+  a; // ERROR
+
+  target as string | boolean; // OK
+}
+{
+  let target;
+  const out = match (x) {
+    1: target = "foo",
+    2: invariant(false),
+  };
+
+  target as string; // OK
+}
+{
+  declare const o: {prop: number};
+  const out = match (x) {
+    1: o.prop = 1,
+    2: o.prop = 2,
+  };
+
+  o.prop as 1 | 2; // OK
+}
+{
+  const a = [];
+  const out = match (x) {
+    1: a.push(1),
+    2: a.push(2),
+  };
+
+  a as Array<number>; // OK
+}

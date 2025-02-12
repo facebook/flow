@@ -31,7 +31,9 @@ let dedent_trim str =
   String.concat "\n" lines
 
 let parse contents =
-  let parse_options = Some Parser_env.{ default_parse_options with enums = true } in
+  let parse_options =
+    Some Parser_env.{ default_parse_options with enums = true; pattern_matching = true }
+  in
   let (ast, _errors) = Parser_flow.program ~parse_options (dedent_trim contents) in
   ast
 
@@ -262,6 +264,32 @@ x = 100;
          x = 100;
          "
                "[(1, 4) to (1, 5)], [(5, 4) to (5, 5)], [(8, 4) to (8, 5)], [(11, 4) to (11, 5)], [(14, 4) to (14, 5)]";
+         "match_expression_null"
+         >:: mk_provider_test
+               "x"
+               "
+         let x = null;
+         declare const arg: 1 | 2;
+         (match (arg) {
+           1: x = 42,
+           2: x = 100,
+         });
+         x = true;
+         "
+               "[(1, 4) to (1, 5)], [(4, 5) to (4, 6)], [(5, 5) to (5, 6)]";
+         "match_expression_array"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+         let x = [];
+         declare const arg: 1 | 2;
+         (match (arg) {
+           1: x.push(42),
+           2: x.push(100),
+         });
+         x = true;
+         "
+               "[(1, 4) to (1, 5)] array providers: [(4, 12) to (4, 14)], [(5, 12) to (5, 15)]";
          "try"
          >:: mk_provider_test
                "x"

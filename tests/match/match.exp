@@ -108,6 +108,22 @@ References:
                 ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- body.js:97:3
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   97|   a; // ERROR
+         ^
+
+
+Error ---------------------------------------------------------------------------------------------------- body.js:107:3
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   107|   a; // ERROR
+          ^
+
+
 Error ------------------------------------------------------------------------------------------------ matching.js:15:14
 
 `match` is not exhaustively checked: number literal `-2` [1] has not been fully checked against by the match patterns
@@ -793,4 +809,4 @@ References:
 
 
 
-Found 64 errors
+Found 66 errors
