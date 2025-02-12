@@ -36,6 +36,7 @@ export EXIT_OK=0
 export EXIT_ONE=1
 export EXIT_ERRS=2
 export EXIT_INVALID_FLOWCONFIG=8
+export EXIT_SERVER_ALREADY_RUNNING=11
 export EXIT_COULD_NOT_FIND_FLOWCONFIG=12
 export EXIT_USAGE=64
 
@@ -50,6 +51,9 @@ assert_one() {
 }
 assert_errors() {
   assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_ERRS" "$@"
+}
+assert_server_already_running() {
+  assert_exit_on_line "${BASH_LINENO[0]}" "$EXIT_SERVER_ALREADY_RUNNING" "$@"
 }
 
 # Query utilities
