@@ -518,24 +518,35 @@ module Node = struct
     if Options.node_resolver_allow_root_relative options then
       let dirnames = Options.node_resolver_root_relative_dirnames options in
       let root = Options.root options |> File_path.to_string in
-      let f dirname =
+      let f (applicable_dirname_opt, dirname) =
         let relative_to_directory =
           if dirname = "" then
             root
           else
             Files.normalize_path root dirname
         in
-        lazy
-          (resolve_relative
-             ~options
-             ~reader
-             ~phantom_acc
-             ~importing_file
-             ~relative_to_directory
-             import_specifier
-          )
+        let applicable =
+          Base.Option.value_map
+            applicable_dirname_opt
+            ~f:(fun prefix -> Files.is_prefix prefix (File_key.to_string importing_file))
+            ~default:true
+        in
+        if applicable then
+          Some
+            ( lazy
+              (resolve_relative
+                 ~options
+                 ~reader
+                 ~phantom_acc
+                 ~importing_file
+                 ~relative_to_directory
+                 import_specifier
+              )
+              )
+        else
+          None
       in
-      lazy_seq (Base.List.map ~f dirnames)
+      lazy_seq (Base.List.filter_map ~f dirnames)
     else
       None
 

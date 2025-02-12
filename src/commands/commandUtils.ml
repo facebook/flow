@@ -1450,7 +1450,11 @@ let make_options
     opt_saved_state_verify = saved_state_options_flags.saved_state_verify;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
-      FlowConfig.node_resolver_root_relative_dirnames flowconfig;
+      Base.List.map
+        (FlowConfig.node_resolver_root_relative_dirnames flowconfig)
+        ~f:(fun (applicable_dir_opt, dirname) ->
+          (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
+      );
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
     opt_use_mixed_in_catch_variables =

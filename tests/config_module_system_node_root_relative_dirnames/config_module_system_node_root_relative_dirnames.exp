@@ -176,5 +176,13 @@ References:
                              ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:46:8
 
-Found 11 errors
+Cannot resolve module `4`. [cannot-resolve-module]
+
+   46| import '4'; // error: not in only-here-can-we-use-root-relative-fourth
+              ^^^
+
+
+
+Found 12 errors
