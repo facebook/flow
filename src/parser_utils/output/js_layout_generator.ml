@@ -670,13 +670,13 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_with_test "with" (expression ~opts _object); statement_after_test ~opts body;
              ]
           )
-      | S.Match { S.Match.arg; cases; match_keyword_loc = _; comments } ->
+      | S.Match { Ast.Match.arg; cases; match_keyword_loc = _; comments } ->
         let cases =
           List.map
             (fun ((loc, _) as case) ->
               ( loc,
                 Comment_attachment.match_statement_case_comment_bounds case,
-                match_statement_case ~opts case
+                match_case ~opts ~on_case_body:block case
               ))
             cases
         in
@@ -1274,13 +1274,13 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                | Some arg -> fuse [space; expression ~ctxt ~opts arg]
                | None -> Empty);
              ]
-      | E.Match { E.Match.arg; cases; comments; match_keyword_loc = _ } ->
+      | E.Match { Ast.Match.arg; cases; comments; match_keyword_loc = _ } ->
         let cases =
           List.map
             (fun ((loc, _) as case) ->
               ( loc,
                 Comment_attachment.match_expression_case_comment_bounds case,
-                match_expression_case ~opts case
+                match_case ~opts ~on_case_body:(expression ?ctxt:None) case
               ))
             cases
         in
@@ -3332,8 +3332,13 @@ and match_case_guard ~opts guard =
       fuse [space; Atom "if"; space; expression ~opts e]
   )
 
-and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body; guard; comments })
-    =
+and match_case :
+      'B.
+      opts:opts ->
+      on_case_body:(opts:opts -> 'B -> Layout.layout_node) ->
+      ('loc, 'loc, 'B) Ast.Match.Case.t ->
+      Layout.layout_node =
+ fun ~opts ~on_case_body (loc, { Ast.Match.Case.pattern; body; guard; comments }) ->
   layout_node_with_comments_opt
     loc
     comments
@@ -3343,21 +3348,7 @@ and match_expression_case ~opts (loc, { Ast.Expression.Match.Case.pattern; body;
          match_case_guard ~opts guard;
          Atom ":";
          pretty_space;
-         expression ~opts body;
-       ]
-    )
-
-and match_statement_case ~opts (loc, { Ast.Statement.Match.Case.pattern; body; guard; comments }) =
-  layout_node_with_comments_opt
-    loc
-    comments
-    (fuse
-       [
-         match_pattern ~opts pattern;
-         match_case_guard ~opts guard;
-         Atom ":";
-         pretty_space;
-         block ~opts body;
+         on_case_body ~opts body;
        ]
     )
 

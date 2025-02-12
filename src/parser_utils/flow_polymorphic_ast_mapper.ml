@@ -2080,43 +2080,39 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { operator; left = left'; right = right'; comments = comments' }
 
-    method match_expression (x : ('M, 'T) Ast.Expression.Match.t) : ('N, 'U) Ast.Expression.Match.t
-        =
-      let open Ast.Expression.Match in
-      let { arg; cases; match_keyword_loc; comments } = x in
-      let arg' = this#expression arg in
-      let cases' = List.map ~f:(this#on_loc_annot * this#match_expression_case) cases in
-      let match_keyword_loc' = this#on_type_annot match_keyword_loc in
-      let comments' = this#syntax_opt comments in
-      { arg = arg'; cases = cases'; match_keyword_loc = match_keyword_loc'; comments = comments' }
+    method match_
+        : 'BMT 'BNU.
+          on_case_body:('BMT -> 'BNU) -> ('M, 'T, 'BMT) Ast.Match.t -> ('N, 'U, 'BNU) Ast.Match.t =
+      fun ~on_case_body x ->
+        let open Ast.Match in
+        let { arg; cases; match_keyword_loc; comments } = x in
+        let arg' = this#expression arg in
+        let cases' = List.map ~f:(this#on_loc_annot * this#match_case ~on_case_body) cases in
+        let match_keyword_loc' = this#on_type_annot match_keyword_loc in
+        let comments' = this#syntax_opt comments in
+        { arg = arg'; cases = cases'; match_keyword_loc = match_keyword_loc'; comments = comments' }
 
-    method match_expression_case (case : ('M, 'T) Ast.Expression.Match.Case.t')
-        : ('N, 'U) Ast.Expression.Match.Case.t' =
-      let open Ast.Expression.Match.Case in
-      let { pattern; body; guard; comments } = case in
-      let pattern' = this#match_pattern pattern in
-      let guard' = Option.map ~f:this#expression guard in
-      let body' = this#expression body in
-      let comments' = this#syntax_opt comments in
-      { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
+    method match_expression (x : ('M, 'T) Ast.Expression.match_expression)
+        : ('N, 'U) Ast.Expression.match_expression =
+      this#match_ ~on_case_body:this#expression x
 
-    method match_statement (x : ('M, 'T) Ast.Statement.Match.t) : ('N, 'U) Ast.Statement.Match.t =
-      let open Ast.Statement.Match in
-      let { arg; cases; match_keyword_loc; comments } = x in
-      let arg' = this#expression arg in
-      let cases' = List.map ~f:(this#on_loc_annot * this#match_statement_case) cases in
-      let match_keyword_loc' = this#on_type_annot match_keyword_loc in
-      let comments' = this#syntax_opt comments in
-      { arg = arg'; cases = cases'; match_keyword_loc = match_keyword_loc'; comments = comments' }
+    method match_statement (x : ('M, 'T) Ast.Statement.match_statement)
+        : ('N, 'U) Ast.Statement.match_statement =
+      this#match_ ~on_case_body:(this#on_loc_annot * this#block) x
 
-    method match_statement_case (case : ('M, 'T) Ast.Statement.Match.Case.t') =
-      let open Ast.Statement.Match.Case in
-      let { pattern; body; guard; comments } = case in
-      let pattern' = this#match_pattern pattern in
-      let guard' = Option.map ~f:this#expression guard in
-      let body' = (this#on_loc_annot * this#block) body in
-      let comments' = this#syntax_opt comments in
-      { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
+    method match_case
+        : 'BMT 'BNU.
+          on_case_body:('BMT -> 'BNU) ->
+          ('M, 'T, 'BMT) Ast.Match.Case.t' ->
+          ('N, 'U, 'BNU) Ast.Match.Case.t' =
+      fun ~on_case_body case ->
+        let open Ast.Match.Case in
+        let { pattern; body; guard; comments } = case in
+        let pattern' = this#match_pattern pattern in
+        let guard' = Option.map ~f:this#expression guard in
+        let body' = on_case_body body in
+        let comments' = this#syntax_opt comments in
+        { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
 
     method match_pattern (pattern : ('M, 'T) Ast.MatchPattern.t) : ('N, 'U) Ast.MatchPattern.t =
       let open Ast.MatchPattern in

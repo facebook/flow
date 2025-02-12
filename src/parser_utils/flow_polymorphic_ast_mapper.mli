@@ -536,15 +536,21 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method logical : ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
 
-    method match_expression : ('M, 'T) Ast.Expression.Match.t -> ('N, 'U) Ast.Expression.Match.t
+    method match_ :
+      'BMT 'BNU.
+      on_case_body:('BMT -> 'BNU) -> ('M, 'T, 'BMT) Ast.Match.t -> ('N, 'U, 'BNU) Ast.Match.t
 
-    method match_expression_case :
-      ('M, 'T) Ast.Expression.Match.Case.t' -> ('N, 'U) Ast.Expression.Match.Case.t'
+    method match_expression :
+      ('M, 'T) Ast.Expression.match_expression -> ('N, 'U) Ast.Expression.match_expression
 
-    method match_statement : ('M, 'T) Ast.Statement.Match.t -> ('N, 'U) Ast.Statement.Match.t
+    method match_statement :
+      ('M, 'T) Ast.Statement.match_statement -> ('N, 'U) Ast.Statement.match_statement
 
-    method match_statement_case :
-      ('M, 'T) Ast.Statement.Match.Case.t' -> ('N, 'U) Ast.Statement.Match.Case.t'
+    method match_case :
+      'BMT 'BNU.
+      on_case_body:('BMT -> 'BNU) ->
+      ('M, 'T, 'BMT) Ast.Match.Case.t' ->
+      ('N, 'U, 'BNU) Ast.Match.Case.t'
 
     method match_pattern : ('M, 'T) Ast.MatchPattern.t -> ('N, 'U) Ast.MatchPattern.t
 

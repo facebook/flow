@@ -2533,51 +2533,45 @@ class ['loc] mapper =
       else
         { expr with left = left'; right = right'; comments = comments' }
 
-    method match_expression _loc (expr : ('loc, 'loc) Ast.Expression.Match.t) =
-      let open Ast.Expression.Match in
-      let { arg; cases; match_keyword_loc; comments } = expr in
-      let arg' = this#expression arg in
-      let cases' = map_list this#match_expression_case cases in
-      let comments' = this#syntax_opt comments in
-      if arg == arg' && cases == cases' && comments == comments' then
-        expr
-      else
-        { arg = arg'; cases = cases'; match_keyword_loc; comments = comments' }
+    method match_
+        : 'B.
+          'loc ->
+          on_case_body:('B -> 'B) ->
+          ('loc, 'loc, 'B) Ast.Match.t ->
+          ('loc, 'loc, 'B) Ast.Match.t =
+      fun _loc ~on_case_body x ->
+        let open Ast.Match in
+        let { arg; cases; match_keyword_loc; comments } = x in
+        let arg' = this#expression arg in
+        let cases' = map_list (this#match_case ~on_case_body) cases in
+        let comments' = this#syntax_opt comments in
+        if arg == arg' && cases == cases' && comments == comments' then
+          x
+        else
+          { arg = arg'; cases = cases'; match_keyword_loc; comments = comments' }
 
-    method match_expression_case (case : ('loc, 'loc) Ast.Expression.Match.Case.t) =
-      let open Ast.Expression.Match.Case in
-      let (loc, { pattern; body; guard; comments }) = case in
-      let pattern' = this#match_pattern pattern in
-      let body' = this#expression body in
-      let guard' = map_opt this#expression guard in
-      let comments' = this#syntax_opt comments in
-      if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
-        case
-      else
-        (loc, { pattern; body; guard = guard'; comments = comments' })
+    method match_case
+        : 'B.
+          on_case_body:('B -> 'B) ->
+          ('loc, 'loc, 'B) Ast.Match.Case.t ->
+          ('loc, 'loc, 'B) Ast.Match.Case.t =
+      fun ~on_case_body case ->
+        let open Ast.Match.Case in
+        let (loc, { pattern; body; guard; comments }) = case in
+        let pattern' = this#match_pattern pattern in
+        let body' = on_case_body body in
+        let guard' = map_opt this#expression guard in
+        let comments' = this#syntax_opt comments in
+        if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
+          case
+        else
+          (loc, { pattern; body; guard = guard'; comments = comments' })
 
-    method match_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Match.t) =
-      let open Ast.Statement.Match in
-      let { arg; cases; match_keyword_loc; comments } = stmt in
-      let arg' = this#expression arg in
-      let cases' = map_list this#match_statement_case cases in
-      let comments' = this#syntax_opt comments in
-      if arg == arg' && cases == cases' && comments == comments' then
-        stmt
-      else
-        { arg = arg'; cases = cases'; match_keyword_loc; comments = comments' }
+    method match_expression loc (x : ('loc, 'loc) Ast.Expression.match_expression) =
+      this#match_ loc ~on_case_body:this#expression x
 
-    method match_statement_case (case : ('loc, 'loc) Ast.Statement.Match.Case.t) =
-      let open Ast.Statement.Match.Case in
-      let (loc, { pattern; body; guard; comments }) = case in
-      let pattern' = this#match_pattern pattern in
-      let body' = map_loc this#block body in
-      let guard' = map_opt this#expression guard in
-      let comments' = this#syntax_opt comments in
-      if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
-        case
-      else
-        (loc, { pattern; body; guard = guard'; comments = comments' })
+    method match_statement loc (x : ('loc, 'loc) Ast.Statement.match_statement) =
+      this#match_ loc ~on_case_body:(map_loc this#block) x
 
     method match_pattern (pattern : ('loc, 'loc) Ast.MatchPattern.t) =
       let open Ast.MatchPattern in

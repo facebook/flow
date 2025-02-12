@@ -286,8 +286,8 @@ struct
           Base.List.iter ~f:(this#add ~why:loc) writes;
           super#yield loc yield
 
-        method! match_expression _ x =
-          let { Ast.Expression.Match.arg; cases; match_keyword_loc; comments = _ } = x in
+        method! match_ _ ~on_case_body x =
+          let { Ast.Match.arg; cases; match_keyword_loc; comments = _ } = x in
           ignore @@ this#expression arg;
           ignore
           @@ this#pattern_identifier
@@ -295,7 +295,7 @@ struct
                (Flow_ast_utils.match_root_ident match_keyword_loc);
           Base.List.iter cases ~f:(fun (case_loc, case) ->
               ignore @@ this#identifier (Flow_ast_utils.match_root_ident case_loc);
-              ignore @@ super#match_expression_case (case_loc, case)
+              ignore @@ super#match_case ~on_case_body (case_loc, case)
           );
           ignore @@ this#identifier (Flow_ast_utils.match_root_ident match_keyword_loc);
           x

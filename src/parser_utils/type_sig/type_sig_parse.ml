@@ -4657,9 +4657,9 @@ let rec statement opts scope tbls (loc, stmt) =
       | None -> ()
       | Some (_, { S.If.Alternate.body; comments = _ }) -> statement opts scope tbls body
     end
-  | S.Match { S.Match.cases; _ } ->
+  | S.Match { Ast.Match.cases; _ } ->
     let block (loc, b) = statement opts scope tbls (loc, S.Block b) in
-    List.iter (fun (_, { S.Match.Case.body; _ }) -> block body) cases
+    List.iter (fun (_, { Ast.Match.Case.body; _ }) -> block body) cases
   | S.Switch { S.Switch.cases; _ } ->
     let scope = Scope.push_lex scope in
     List.iter

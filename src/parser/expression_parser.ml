@@ -1403,7 +1403,7 @@ module Expression
       | _ -> Expect.token env T_COMMA);
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      { Expression.Match.Case.pattern; body; guard; comments }
+      { Match.Case.pattern; body; guard; comments }
     in
     let rec case_list env acc =
       match Peek.token env with
@@ -1421,7 +1421,7 @@ module Expression
         let trailing = Eat.trailing_comments env in
         Expression.Match
           {
-            Expression.Match.arg;
+            Match.arg;
             cases;
             match_keyword_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();

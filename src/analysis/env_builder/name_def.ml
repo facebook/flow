@@ -633,10 +633,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.JSXElement _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
-    | Ast.Expression.Match { Ast.Expression.Match.cases; _ } ->
-      Base.List.for_all cases ~f:(function (_, { Ast.Expression.Match.Case.body; _ }) ->
-          synthesizable body
-          )
+    | Ast.Expression.Match { Ast.Match.cases; _ } ->
+      Base.List.for_all cases ~f:(function (_, { Ast.Match.Case.body; _ }) -> synthesizable body)
     (* TaggedTemplates are function calls! They are not automatically synthesizable *)
     | Ast.Expression.TaggedTemplate _ -> false
     | Ast.Expression.Identifier id -> not (identifier_has_autocomplete ~autocomplete_hooks id)
@@ -2874,7 +2872,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.Conditional expr -> this#visit_conditional ~hints expr
       | Ast.Expression.AsConstExpression { Ast.Expression.AsConstExpression.expression; _ } ->
         this#visit_expression ~hints ~cond expression
-      | Ast.Expression.Match x -> this#visit_match_expression x
+      | Ast.Expression.Match x ->
+        this#visit_match ~on_case_body:(fun e -> ignore @@ this#expression e) x
       | Ast.Expression.Class _
       | Ast.Expression.Identifier _
       | Ast.Expression.Import _
@@ -3148,24 +3147,27 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! match_expression loc _ = fail loc "Should be visited by visit_match_expression"
 
-    method private visit_match_expression x =
-      let open Ast.Expression.Match in
-      let { arg; cases; match_keyword_loc; comments = _ } = x in
-      this#add_ordinary_binding
-        match_keyword_loc
-        (mk_reason RMatchExpression match_keyword_loc)
-        (Binding (Root (Value { hints = []; expr = arg })));
-      Base.List.iter cases ~f:(function (case_loc, { Case.pattern; body; guard; comments = _ }) ->
-          let match_root =
-            (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
-          in
-          ignore @@ this#expression match_root;
-          let acc = Value { hints = []; expr = match_root } in
-          this#add_match_destructure_bindings acc pattern;
-          ignore @@ super#match_pattern pattern;
-          Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
-          ignore @@ this#expression body
-          )
+    method private visit_match
+        : 'B. on_case_body:('B -> unit) -> ('loc, 'loc, 'B) Ast.Match.t -> unit =
+      fun ~on_case_body x ->
+        let open Ast.Match in
+        let { arg; cases; match_keyword_loc; comments = _ } = x in
+        this#add_ordinary_binding
+          match_keyword_loc
+          (mk_reason RMatchExpression match_keyword_loc)
+          (Binding (Root (Value { hints = []; expr = arg })));
+        Base.List.iter cases ~f:(function
+            | (case_loc, { Case.pattern; body; guard; comments = _ }) ->
+            let match_root =
+              (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
+            in
+            ignore @@ this#expression match_root;
+            let acc = Value { hints = []; expr = match_root } in
+            this#add_match_destructure_bindings acc pattern;
+            ignore @@ super#match_pattern pattern;
+            Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+            on_case_body body
+            )
 
     method add_match_destructure_bindings root pattern =
       let visit_binding loc name binding =
