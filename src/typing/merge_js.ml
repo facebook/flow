@@ -654,11 +654,11 @@ let check_match_exhaustiveness cx tast =
         | [] -> ()
         | remaining_ts ->
           Base.List.iter remaining_ts ~f:(fun remaining_t ->
-              Flow_js.add_output
-                cx
-                (Error_message.EMatchNotExhaustive
-                   { loc; reason = TypeUtil.reason_of_t remaining_t }
-                )
+              let reason = TypeUtil.reason_of_t remaining_t in
+              let reason =
+                Reason.mk_reason (Reason.desc_of_reason reason) (Reason.def_loc_of_reason reason)
+              in
+              Flow_js.add_output cx (Error_message.EMatchNotExhaustive { loc; reason })
           ));
         super#match_ ~on_case_body x
     end
