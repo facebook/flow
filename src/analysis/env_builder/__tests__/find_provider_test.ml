@@ -290,6 +290,40 @@ x = 100;
          x = true;
          "
                "[(1, 4) to (1, 5)] array providers: [(4, 12) to (4, 14)], [(5, 12) to (5, 15)]";
+         "match_statement_null"
+         >:: mk_provider_test
+               "x"
+               "
+         let x = null;
+         declare const arg: 1 | 2;
+         match (arg) {
+           1: {
+             x = 42;
+           }
+           2: {
+             x = 100;
+           }
+         }
+         x = false;
+         "
+               "[(1, 4) to (1, 5)], [(5, 4) to (5, 5)], [(8, 4) to (8, 5)]";
+         "match_statement_array"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+         let x = [];
+         declare const arg: 1 | 2;
+         match (arg) {
+           1: {
+             x.push(true);
+           }
+           2: {
+             x.push(false);
+           }
+         }
+         x = false;
+         "
+               "[(1, 4) to (1, 5)] array providers: [(5, 11) to (5, 15)], [(8, 11) to (8, 16)]";
          "try"
          >:: mk_provider_test
                "x"

@@ -3147,6 +3147,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! match_expression loc _ = fail loc "Should be visited by visit_match_expression"
 
+    method! match_statement _ x =
+      this#visit_match ~on_case_body:(fun b -> ignore @@ map_loc this#block b) x;
+      x
+
     method private visit_match
         : 'B. on_case_body:('B -> unit) -> ('loc, 'loc, 'B) Ast.Match.t -> unit =
       fun ~on_case_body x ->
@@ -3154,7 +3158,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         let { arg; cases; match_keyword_loc; comments = _ } = x in
         this#add_ordinary_binding
           match_keyword_loc
-          (mk_reason RMatchExpression match_keyword_loc)
+          (mk_reason RMatch match_keyword_loc)
           (Binding (Root (Value { hints = []; expr = arg })));
         Base.List.iter cases ~f:(function
             | (case_loc, { Case.pattern; body; guard; comments = _ }) ->

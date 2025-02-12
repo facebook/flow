@@ -661,6 +661,31 @@ struct
         this#merge_completion_states if_completion_states;
         stmt
 
+      method! match_ _loc ~on_case_body x =
+        let open Ast.Match in
+        let { arg; cases; match_keyword_loc = _; comments = _ } = x in
+        run this#expression arg;
+        let env0 = this#ssa_env in
+        let (_, completion_states) =
+          Base.List.fold
+            cases
+            ~init:(this#empty_ssa_env, [])
+            ~f:(fun (env, completion_states) case ->
+              this#reset_ssa_env env0;
+              let completion_state =
+                this#run_to_completion (fun () -> ignore @@ this#match_case ~on_case_body case)
+              in
+              this#merge_self_ssa_env env;
+              (this#ssa_env, completion_state :: completion_states)
+          )
+        in
+        (match completion_states with
+        | [] -> ()
+        | completion_state :: [] -> this#from_completion completion_state
+        | first_completion_state :: rest_completion_states ->
+          this#merge_completion_states (first_completion_state, rest_completion_states));
+        x
+
       (********************************)
       (* [PRE] while (e) { s } [POST] *)
       (********************************)

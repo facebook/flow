@@ -808,5 +808,29 @@ References:
                                   ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ statement.js:22:3
 
-Found 66 errors
+Unreachable code. [unreachable-code]
+
+   22|   x; // ERROR: unreachable
+         ^^
+
+
+Error ------------------------------------------------------------------------------------------------ statement.js:70:3
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   70|   a; // ERROR
+         ^
+
+
+Error ------------------------------------------------------------------------------------------------ statement.js:84:3
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   84|   a; // ERROR
+         ^
+
+
+
+Found 69 errors
