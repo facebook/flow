@@ -592,15 +592,26 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ->
         (* ref prop is contravariantly typed. We need to flip the flow. *)
         rec_flow_t cx trace ~use_op (r, l)
-      (* In the following two cases, we can still directly flow the type to each other *)
-      (* component() (equivalent to component(ref?: React.RefSetter<void>))
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) *)
-      | (ComponentInstanceOmitted r1, ComponentInstanceTopType r2) ->
-        rec_flow_t cx trace ~use_op (VoidT.make r1, MixedT.why r2)
-      (* React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>))
-       * ~> component() (equivalent to component(ref?: React.RefSetter<void>)) *)
-      | (ComponentInstanceTopType r1, ComponentInstanceOmitted r2) ->
-        rec_flow_t cx trace ~use_op (MixedT.why r1, VoidT.make r2)
+      (* component() (treated as component(ref?: React.RefSetter<void>))
+       * ~> React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>))
+       *
+       * This is allowed since void ~> mixed, but only temporarily, because `component()` being treated
+       * as component(ref?: React.RefSetter<void>) is a result of intermediate ref-as-prop migration.
+       * In the future, it should be banned, in the same way that
+       * `{+ref?: React.RefSetter<mixed>} ~> {}` is banned. *)
+      | (ComponentInstanceOmitted _, ComponentInstanceTopType _) -> ()
+      (* React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) ~> component()
+       *
+       * If `component()` is treated as component(ref?: React.RefSetter<void>), it will fail due to
+       * `mixed ~> void`. However, this treatement is temporary while we are moving to full ref-as-prop
+       * model, in the ref as prop model, the subtyping behavior should be
+       *
+       * React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) ~> component()
+       * -> component(ref?: React.RefSetter<mixed>) ~> component()
+       *   -> {} ~> {+ref?: React.RefSetter<mixed>}
+       *      -> OK!
+       * *)
+      | (ComponentInstanceTopType _, ComponentInstanceOmitted _) -> ()
       (* The most tricky cases: LHS and RHS have different kinds of instance information,
        * and one side is ComponentInstanceAvailableAsRefSetterProp. We need to wrap the side
        * that's not ComponentInstanceAvailableAsRefSetterProp with React.RefSetter *)
