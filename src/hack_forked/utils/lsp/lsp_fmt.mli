@@ -106,6 +106,8 @@ val parse_documentOnTypeFormatting : Hh_json.json option -> Lsp.DocumentOnTypeFo
 
 val print_documentOnTypeFormatting : Lsp.DocumentOnTypeFormatting.result -> Hh_json.json
 
+val print_codeActionResult : key:string -> Lsp.CodeAction.result -> Hh_json.json
+
 val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
 
 val error_of_exn : exn -> Lsp.Error.t

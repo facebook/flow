@@ -1611,6 +1611,41 @@ let with_type_checked_file ~options ~profiling ~env ~file_key ~file_content ~f =
   | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; _ }) -> f ~cx ~ast
   | _ -> Error "Failed to parse or check file"
 
+let suggest_imports_cli
+    ~options ~profiling ~env ~loc_of_aloc ~module_system_info ~file_key ~file_content =
+  let uri = File_key.to_string file_key |> Lsp_helpers.path_to_lsp_uri ~default_path:"" in
+  let get_edits ~cx ~ast =
+    let errors = Context.errors cx in
+    let { ServerEnv.exports; _ } = env in
+    let (imports, _) =
+      Flow_error.ErrorSet.fold
+        (fun error (imports, unbound_names) ->
+          match
+            Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
+          with
+          | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+            when Options.autoimports options ->
+            let ranked_imports =
+              suggest_imports
+                ~layout_options:(Code_action_utils.layout_options options)
+                ~module_system_info
+                ~ast
+                ~diagnostics:[]
+                ~imports_ranked_usage:true
+                ~exports
+                ~name
+                uri
+                error_loc
+            in
+            (SMap.add name ranked_imports imports, SSet.add name unbound_names)
+          | _ -> (imports, unbound_names))
+        errors
+        (SMap.empty, SSet.empty)
+    in
+    Ok imports
+  in
+  with_type_checked_file ~options ~profiling ~env ~file_key ~file_content ~f:get_edits
+
 let autofix_imports_cli
     ~options ~profiling ~env ~loc_of_aloc ~module_system_info ~file_key ~file_content =
   let src_dir = File_key.to_string file_key |> Filename.dirname |> Base.Option.return in

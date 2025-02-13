@@ -11,21 +11,6 @@ open CommandSpec
 (* This module implements the flow command `apply-code-action` which exposes LSP code-actions via the CLI *)
 let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
-let handle_ok in_place patch source_path input =
-  let write_patch content =
-    let output_channel =
-      if in_place then
-        open_out source_path
-      else
-        stdout
-    in
-    output_string output_channel @@ Replacement_printer.print patch content;
-    close_out output_channel
-  in
-  match File_input.content_of_file_input input with
-  | Ok content -> write_patch content
-  | Error msg -> handle_error msg
-
 module SourceAddMissingImports = struct
   let spec =
     {
@@ -47,6 +32,21 @@ module SourceAddMissingImports = struct
           |> anon "file" (required string)
         );
     }
+
+  let handle_ok in_place patch source_path input =
+    let write_patch content =
+      let output_channel =
+        if in_place then
+          open_out source_path
+        else
+          stdout
+      in
+      output_string output_channel @@ Replacement_printer.print patch content;
+      close_out output_channel
+    in
+    match File_input.content_of_file_input input with
+    | Ok content -> write_patch content
+    | Error msg -> handle_error msg
 
   let main base_flags connect_params _json _pretty root_arg path wait_for_recheck in_place file () =
     let source_path = expand_path file in
@@ -85,7 +85,16 @@ module SuggestImports = struct
         );
     }
 
-  let main base_flags connect_params _json _pretty root_arg path wait_for_recheck in_place file () =
+  let handle_ok pretty lsp_result =
+    let result_json =
+      Hh_json.JSON_Object
+        (SMap.bindings lsp_result
+        |> List.map (fun (name, result) -> (name, Lsp_fmt.print_codeActionResult ~key:"" result))
+        )
+    in
+    print_endline (Hh_json.json_to_string ~sort_keys:pretty ~pretty result_json)
+
+  let main base_flags connect_params _json pretty root_arg path wait_for_recheck _in_place file () =
     let source_path = expand_path file in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path (Some source_path) in
     let root = get_the_root ~base_flags ~input root_arg in
@@ -96,7 +105,7 @@ module SuggestImports = struct
     in
     let result = connect_and_make_request flowconfig_name connect_params root request in
     match result with
-    | ServerProt.Response.APPLY_CODE_ACTION (Ok patch) -> handle_ok in_place patch source_path input
+    | ServerProt.Response.SUGGEST_IMPORTS (Ok result) -> handle_ok pretty result
     | _ -> handle_error "Flow: invalid server response"
 
   let command = CommandSpec.command spec main

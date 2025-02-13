@@ -54,16 +54,6 @@ val code_actions_at_loc :
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result
 
-val autofix_imports_lsp :
-  options:Options.t ->
-  env:ServerEnv.env ->
-  loc_of_aloc:(ALoc.t -> Loc.t) ->
-  module_system_info:Lsp_module_system_info.t ->
-  cx:Context.t ->
-  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
-  uri:Lsp.DocumentUri.t ->
-  Lsp.TextEdit.t list
-
 val autofix_imports_cli :
   options:Options.t ->
   profiling:Profiling_js.running ->
@@ -73,6 +63,26 @@ val autofix_imports_cli :
   file_key:File_key.t ->
   file_content:string ->
   (Replacement_printer.patch, string) result
+
+val suggest_imports_cli :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  env:ServerEnv.env ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  module_system_info:Lsp_module_system_info.t ->
+  file_key:File_key.t ->
+  file_content:string ->
+  (Lsp.CodeAction.command_or_action list SMap.t, string) result
+
+val autofix_imports_lsp :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  module_system_info:Lsp_module_system_info.t ->
+  cx:Context.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  uri:Lsp.DocumentUri.t ->
+  Lsp.TextEdit.t list
 
 val autofix_exports :
   options:Options.t ->
