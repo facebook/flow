@@ -329,6 +329,8 @@ module Response = struct
 
   type rage_response = (string * string) list
 
+  type suggest_imports_response = (Lsp.CodeAction.command_or_action list SMap.t, string) result
+
   type graph_response = (graph_response_subgraph, string) result
 
   and graph_response_subgraph = (string * string list) list
@@ -369,6 +371,7 @@ module Response = struct
         lazy_stats: lazy_stats;
       }
     | SAVE_STATE of (string, string) result
+    | SUGGEST_IMPORTS of suggest_imports_response
 
   let to_string = function
     | APPLY_CODE_ACTION _ -> "apply-code-action response"
@@ -390,4 +393,5 @@ module Response = struct
     | RAGE _ -> "rage response"
     | STATUS _ -> "status response"
     | SAVE_STATE _ -> "save_state response"
+    | SUGGEST_IMPORTS _ -> "suggest imports response"
 end

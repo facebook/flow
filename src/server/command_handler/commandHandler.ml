@@ -544,6 +544,18 @@ let autofix_imports_cli ~options ~env ~profiling ~loc_of_aloc ~module_system_inf
     ~file_key
     ~file_content
 
+let suggest_imports_cli ~options ~env ~profiling ~loc_of_aloc ~module_system_info ~input =
+  let file_key = file_key_of_file_input ~options ~env input in
+  File_input.content_of_file_input input >>= fun file_content ->
+  Code_action_service.suggest_imports_cli
+    ~options
+    ~profiling
+    ~env
+    ~loc_of_aloc
+    ~module_system_info
+    ~file_key
+    ~file_content
+
 let autocomplete
     ~trigger_character
     ~reader
@@ -1519,7 +1531,18 @@ let handle_apply_code_action ~options ~reader ~profiling ~env action file_input 
       in
       Lwt.return (ServerProt.Response.APPLY_CODE_ACTION result, None)
     | SuggestImports ->
-      Lwt.return (ServerProt.Response.APPLY_CODE_ACTION (Error "Not yet implemented"), None)
+      let result =
+        try_with (fun () ->
+            suggest_imports_cli
+              ~options
+              ~profiling
+              ~env
+              ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+              ~module_system_info:(mk_module_system_info ~options ~reader)
+              ~input:file_input
+        )
+      in
+      Lwt.return (ServerProt.Response.SUGGEST_IMPORTS result, None)
   )
 
 let handle_autocomplete

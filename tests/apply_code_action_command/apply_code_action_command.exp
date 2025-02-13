@@ -5,6 +5,7 @@ import OtherModule from "./OtherModule";
 
 OtherModule;
 > Confirm no errors
+Found 0 errors
 > apply-code-action 'source.addMissingImports' tmp/multi.js
 // @flow
 
@@ -13,4 +14,71 @@ import OtherModule from "./OtherModule";
 OtherModule;
 OtherModule;
 > Confirm no errors
-No errors!
+Found 0 errors
+> apply-code-action suggestImports tmp/suggest_imports.js
+{
+  "OtherModule":[
+    {
+      "command":{
+        "arguments":["textDocument/codeAction","import","Import default from ./OtherModule"],
+        "command":"log:",
+        "title":""
+      },
+      "diagnostics":[],
+      "edit":{
+        "changes":{
+          "file:tmp/suggest_imports.js": [
+            {
+              "newText":"import OtherModule from \"./OtherModule\";\n\n",
+              "range":{"end":{"character":0,"line":1},"start":{"character":0,"line":1}}
+            }
+          ]
+        }
+      },
+      "kind":"quickfix",
+      "title":"Import default from ./OtherModule"
+    }
+  ],
+  "foo":[
+    {
+      "command":{
+        "arguments":["textDocument/codeAction","import","Import from ./ExportFoo1"],
+        "command":"log:",
+        "title":""
+      },
+      "diagnostics":[],
+      "edit":{
+        "changes":{
+          "file:tmp/suggest_imports.js": [
+            {
+              "newText":"import { foo } from \"./ExportFoo1\";\n\n",
+              "range":{"end":{"character":0,"line":1},"start":{"character":0,"line":1}}
+            }
+          ]
+        }
+      },
+      "kind":"quickfix",
+      "title":"Import from ./ExportFoo1"
+    },
+    {
+      "command":{
+        "arguments":["textDocument/codeAction","import","Import from ./ExportFoo2"],
+        "command":"log:",
+        "title":""
+      },
+      "diagnostics":[],
+      "edit":{
+        "changes":{
+          "file:tmp/suggest_imports.js": [
+            {
+              "newText":"import { foo } from \"./ExportFoo2\";\n\n",
+              "range":{"end":{"character":0,"line":1},"start":{"character":0,"line":1}}
+            }
+          ]
+        }
+      },
+      "kind":"quickfix",
+      "title":"Import from ./ExportFoo2"
+    }
+  ]
+}
