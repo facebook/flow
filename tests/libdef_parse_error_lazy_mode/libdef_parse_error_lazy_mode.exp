@@ -9,5 +9,5 @@ Unexpected token `;`, expected an identifier
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 0/12 files.
+The Flow server is currently in lazy mode and is only checking 0/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

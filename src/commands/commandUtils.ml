@@ -1023,7 +1023,7 @@ let options_flags =
            (optional bool)
            ~doc:
              "If true, always wait for rechecks to finish before serving commands (default: false)"
-      |> flag "--no-flowlib" truthy ~doc:"Do not include embedded declarations"
+      |> flag "--no-flowlib" truthy ~doc:"Do not include embedded declarations" ~env:"NO_FLOWLIB"
       |> flag
            "--munge-underscore-members"
            truthy
