@@ -1,3 +1,8 @@
+### 0.261.1
+
+Notable bug fixes:
+* Fixed a crash after initialization with saved state if the typing for `react` module is provided as a userland module.
+
 ### 0.261.0
 
 New Features:
