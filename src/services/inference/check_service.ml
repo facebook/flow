@@ -338,9 +338,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     in
     Lazy.force file_rec
   and extend_local_globals cx ~resolved_requires =
-    if File_key.is_lib_file (Context.file cx) then
-      ()
-    else
+    if Context.enable_declare_global cx && not (File_key.is_lib_file (Context.file cx)) then
       let local_builtins =
         lazy
           (let global_types =
@@ -370,6 +368,8 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           )
       in
       Context.extend_local_builtins cx local_builtins
+    else
+      ()
   in
   let check_file file_key resolved_modules ast file_sig docblock aloc_table find_ref_request =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
