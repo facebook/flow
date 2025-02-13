@@ -1821,18 +1821,6 @@ let init_with_initial_state
   in
 
   let%lwt dependency_info = restore_dependency_info () in
-  (* We explicitly add libdef files to the dependency graph, since they are not included
-   * in the saved state due to unstable temporarily path problem. *)
-  let dependency_info =
-    Dependency_info.update
-      dependency_info
-      (FilenameSet.fold
-         (fun f -> FilenameMap.add f (FilenameSet.empty, FilenameSet.empty))
-         additional_parsed
-         FilenameMap.empty
-      )
-      FilenameSet.empty
-  in
 
   Hh_logger.info "Indexing files";
   let%lwt exports =
@@ -1877,7 +1865,6 @@ let init_with_initial_state
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   with_transaction "init" @@ fun transaction reader ->
   let is_init = Option.is_none env in
-  let root = Options.root options |> File_path.to_string in
   let file_options = Options.file_options options in
 
   (* We don't want to walk the file system for the checked in files. But we still need to find the
@@ -1916,7 +1903,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   let restore_parsed (fns, dirty_modules, invalid_hashes) (fn, parsed_file_data) =
     let { Saved_state.haste_module_info; normalized_file_data } = parsed_file_data in
     let { Saved_state.hash; exports; requires; resolved_modules; phantom_dependencies; imports } =
-      Saved_state.denormalize_file_data ~root normalized_file_data
+      Saved_state.denormalize_file_data ~options normalized_file_data
     in
 
     let file_opt =

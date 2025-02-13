@@ -80,6 +80,6 @@ val load :
   options:Options.t ->
   (Profiling_js.finished * saved_state_data) Lwt.t
 
-val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data
+val denormalize_file_data : options:Options.t -> normalized_file_data -> denormalized_file_data
 
 val restore_dependency_info : saved_state_dependency_graph -> Dependency_info.t
