@@ -110,6 +110,20 @@ let with_cache tbl key f =
     Hashtbl.add tbl key result;
     result
 
+let builtin_flow_lib_marker = "<BUILTIN_FLOW_LIB>///"
+
+let builtin_flowlib_root_of_options options =
+  options
+  |> Options.file_options
+  |> Files.default_lib_dir
+  |> Option.map (function
+         | Files.Flowlib p
+         | Files.Prelude p
+         ->
+         (* Ensure that the builtin lib path is fully real-path resolved *)
+         p |> File_path.to_string |> File_path.make |> File_path.to_string
+         )
+
 (* Saving the saved state generally consists of 3 things:
  *
  * 1. Collecting the various bits of data
@@ -131,10 +145,12 @@ module Save : sig
 end = struct
   type t = {
     root: string;
+    builtin_flowlib_root: string option;
     intern_tbl: (string, string) Hashtbl.t;
   }
 
-  let make ~root = { root; intern_tbl = Hashtbl.create (1 lsl 20) }
+  let make ~root ~builtin_flowlib_root =
+    { root; builtin_flowlib_root; intern_tbl = Hashtbl.create (1 lsl 20) }
 
   let intern t x =
     match Hashtbl.find_opt t.intern_tbl x with
@@ -154,7 +170,18 @@ end = struct
    * *)
   let normalize_path t path = intern t (Files.relative_path t.root path)
 
-  let normalize_file_key t file_key = File_key.map (normalize_path t) file_key
+  let normalize_file_key t = function
+    | File_key.LibFile p ->
+      let p =
+        match t.builtin_flowlib_root with
+        | Some flowlib_root when String.starts_with ~prefix:flowlib_root p ->
+          intern t (builtin_flow_lib_marker ^ Files.relative_path flowlib_root p)
+        | _ -> normalize_path t p
+      in
+      File_key.LibFile p
+    | File_key.SourceFile p -> File_key.SourceFile (normalize_path t p)
+    | File_key.JsonFile p -> File_key.JsonFile (normalize_path t p)
+    | File_key.ResourceFile p -> File_key.ResourceFile (normalize_path t p)
 
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error t =
@@ -312,7 +339,8 @@ end = struct
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
     let root = Options.root options |> File_path.to_string in
-    let t = make ~root in
+    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
+    let t = make ~root ~builtin_flowlib_root in
     let parsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
           FilenameSet.fold
@@ -359,16 +387,6 @@ end = struct
     in
     let dependency_graph =
       let dependency_info = env.ServerEnv.dependency_info in
-      let dependency_info =
-        Dependency_info.update
-          dependency_info
-          FilenameMap.empty
-          (SSet.fold
-             (fun n -> FilenameSet.add (File_key.LibFile n))
-             env.ServerEnv.libs
-             FilenameSet.empty
-          )
-      in
       let impl_map =
         dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
       in
@@ -497,33 +515,54 @@ module Load : sig
     profiling:Profiling_js.running ->
     saved_state_data Lwt.t
 
-  val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data
+  val denormalize_file_data : options:Options.t -> normalized_file_data -> denormalized_file_data
 end = struct
   module FileDenormalizer : sig
     type t
 
-    val make : root:string -> t
+    val make : root:string -> builtin_flowlib_root:string option -> t
+
+    val without_cache : t -> t
 
     val denormalize_path : t -> string -> string
+
+    val denormalize_file_key_no_cache : t -> File_key.t -> File_key.t
 
     val denormalize_file_key : t -> File_key.t -> File_key.t
   end = struct
     type t = {
       root: string;
+      builtin_flowlib_root: string option;
       file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
     }
 
-    let make ~root = { root; file_key_cache = Hashtbl.create 16 }
+    let make ~root ~builtin_flowlib_root =
+      { root; builtin_flowlib_root; file_key_cache = Hashtbl.create 16 }
+
+    let without_cache t = { t with file_key_cache = Hashtbl.create 0 }
 
     (* This could also have its own cache, but an October 2020 experiment showed that memoizing
      * these calls does not even save a single word in the denormalized saved state object. *)
     let denormalize_path { root; _ } path = Files.absolute_path root path
 
-    let denormalize_file_key ({ file_key_cache; _ } as denormalizer) file_key =
-      with_cache file_key_cache file_key (File_key.map (denormalize_path denormalizer))
-  end
+    let denormalize_file_key_no_cache t = function
+      | File_key.LibFile p ->
+        let p =
+          match t.builtin_flowlib_root with
+          | Some flowlib_root ->
+            (match Base.String.chop_prefix ~prefix:builtin_flow_lib_marker p with
+            | Some p -> Files.absolute_path flowlib_root p
+            | None -> denormalize_path t p)
+          | None -> denormalize_path t p
+        in
+        File_key.LibFile p
+      | File_key.SourceFile p -> File_key.SourceFile (denormalize_path t p)
+      | File_key.JsonFile p -> File_key.JsonFile (denormalize_path t p)
+      | File_key.ResourceFile p -> File_key.ResourceFile (denormalize_path t p)
 
-  let denormalize_file_key_nocache ~root fn = File_key.map (Files.absolute_path root) fn
+    let denormalize_file_key ({ file_key_cache; _ } as denormalizer) file_key =
+      with_cache file_key_cache file_key (denormalize_file_key_no_cache denormalizer)
+  end
 
   let denormalize_dependency_graph ~denormalizer (files, impls, sigs) =
     let files = Array.map (FileDenormalizer.denormalize_file_key denormalizer) files in
@@ -576,15 +615,17 @@ end = struct
       else
         Lwt.return (assert_version version)
 
-  let denormalize_resolved_requires ~root resolved_modules phantom_dependencies =
+  let denormalize_resolved_requires ~denormalizer resolved_modules phantom_dependencies =
     let resolved_modules =
       Array.map
-        (resolved_module_map_fn ~on_file:(denormalize_file_key_nocache ~root))
+        (resolved_module_map_fn
+           ~on_file:(FileDenormalizer.denormalize_file_key_no_cache denormalizer)
+        )
         resolved_modules
     in
     let phantom_dependencies =
       Array.map
-        (modulename_map_fn ~on_file:(denormalize_file_key_nocache ~root))
+        (modulename_map_fn ~on_file:(FileDenormalizer.denormalize_file_key_no_cache denormalizer))
         phantom_dependencies
     in
     (* Sort after denormalizing because the denormalized file keys could be in a
@@ -595,9 +636,12 @@ end = struct
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data
-      ~root { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
+      ~options { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
+    let root = Options.root options |> File_path.to_string in
+    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
+    let denormalizer = FileDenormalizer.make ~root ~builtin_flowlib_root in
     let (resolved_modules, phantom_dependencies) =
-      denormalize_resolved_requires ~root resolved_modules phantom_dependencies
+      denormalize_resolved_requires ~denormalizer resolved_modules phantom_dependencies
     in
     { requires; resolved_modules; phantom_dependencies; exports; hash; imports }
 
@@ -614,10 +658,11 @@ end = struct
       parsed_heaps
 
   (* Denormalize the data for all the unparsed files *)
-  let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
+  let denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps =
+    let denormalizer = FileDenormalizer.without_cache denormalizer in
     let next = MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers unparsed_heaps in
     let job acc (relative_fn, unparsed_file_data) =
-      let fn = denormalize_file_key_nocache ~root relative_fn in
+      let fn = FileDenormalizer.denormalize_file_key_no_cache denormalizer relative_fn in
       (fn, unparsed_file_data) :: acc
     in
     MultiWorkerLwt.fold workers ~job ~neutral:[] ~merge:List.rev_append ~next
@@ -634,7 +679,8 @@ end = struct
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =
     let root = Options.root options |> File_path.to_string in
-    let denormalizer = FileDenormalizer.make ~root in
+    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
+    let denormalizer = FileDenormalizer.make ~root ~builtin_flowlib_root in
     let {
       flowconfig_hash;
       parsed_heaps;
@@ -664,7 +710,7 @@ end = struct
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
       let progress_fn = progress_fn (List.length unparsed_heaps) in
-      denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
+      denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps
     in
     let ordered_non_flowlib_libs =
       Base.List.map ~f:(FileDenormalizer.denormalize_path denormalizer) ordered_non_flowlib_libs

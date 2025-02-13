@@ -1,0 +1,4 @@
+[options]
+all=true
+lazy_mode=true
+no_flowlib=true
