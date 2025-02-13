@@ -537,6 +537,9 @@ runtest() {
                 (
                   set -e # The script should probably use this option
                   export PATH="$THIS_DIR/scripts/tests_bin:$PATH"
+                  if [ "$flowlib" == " --no-flowlib" ]; then
+                    export NO_FLOWLIB=1
+                  fi
                   source "$shell" "$FLOW"
                 ) 1> "$abs_out_file" 2> "$stderr_dest"
                 code=$?

@@ -12,5 +12,13 @@ References:
                  ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- root/use-react.js:1:19
 
-Found 1 error
+Cannot resolve module `react`. [cannot-resolve-module]
+
+   1| import React from 'react';
+                        ^^^^^^^
+
+
+
+Found 2 errors
