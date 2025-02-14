@@ -2068,9 +2068,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
 
   if verify then assert_valid_hashes updates invalid_hashes;
 
-  Hh_logger.info "Loading libraries";
-  MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
-
   let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
   let%lwt (env, libs_ok) =
     init_with_initial_state
