@@ -35,6 +35,7 @@ let make_options_flags
     ?estimate_recheck_time
     ?long_lived_workers
     ?(distributed = false)
+    ?(no_autoimports = false)
     () =
   {
     CommandUtils.Options_flags.all;
@@ -57,6 +58,7 @@ let make_options_flags
     estimate_recheck_time;
     long_lived_workers;
     distributed;
+    no_autoimports;
   }
 
 let make_saved_state_flags

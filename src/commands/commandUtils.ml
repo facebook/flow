@@ -918,6 +918,7 @@ module Options_flags = struct
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
     distributed: bool;
+    no_autoimports: bool;
   }
 end
 
@@ -981,7 +982,8 @@ let options_flags =
       include_suppressions
       estimate_recheck_time
       long_lived_workers
-      distributed =
+      distributed
+      no_autoimports =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -1009,6 +1011,7 @@ let options_flags =
         estimate_recheck_time;
         long_lived_workers;
         distributed;
+        no_autoimports;
       }
   in
   fun prev ->
@@ -1057,6 +1060,7 @@ let options_flags =
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
       |> flag "--distributed" truthy ~doc:""
+      |> flag "--no-autoimports" truthy ~doc:"Disable auto-imports"
     )
 
 let saved_state_flags =
@@ -1484,7 +1488,9 @@ let make_options
     opt_automatic_require_default =
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
-    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
+    opt_autoimports =
+      (not options_flags.no_autoimports)
+      && Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_autoimports_min_characters =
       Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
     opt_autoimports_ranked_by_usage = FlowConfig.autoimports_ranked_by_usage flowconfig;
