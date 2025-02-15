@@ -1828,6 +1828,7 @@ let init_with_initial_state
         Export_service.init ~workers ~reader ~libs:lib_exports parsed
     )
   in
+  Hh_logger.info "Finished indexing files";
 
   let connections =
     Base.Option.value_map
@@ -2223,7 +2224,7 @@ let init_from_scratch ~profiling ~workers options =
         Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
     )
   in
-  Hh_logger.info "Done";
+  Hh_logger.info "Finished indexing files";
 
   let (collated_errors, _) =
     ErrorCollator.update_local_collated_errors
