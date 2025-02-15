@@ -1408,17 +1408,19 @@ end = struct
         ~sig_dependency_graph
     in
 
-    Hh_logger.info "Updating index";
     let%lwt exports =
-      with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-          Export_service.update
-            ~workers
-            ~reader
-            ~dirty_files:sig_new_or_changed
-            env.ServerEnv.exports
-      )
+      match env.ServerEnv.exports with
+      | None -> Lwt.return None
+      | Some exports ->
+        Hh_logger.info "Updating index";
+        let%lwt exports =
+          with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+              Export_service.update ~workers ~reader ~dirty_files:sig_new_or_changed exports
+          )
+        in
+        Hh_logger.info "Done updating index";
+        Lwt.return (Some exports)
     in
-    Hh_logger.info "Done updating index";
 
     let%lwt ( errors,
               coverage,
@@ -1822,13 +1824,19 @@ let init_with_initial_state
 
   let%lwt dependency_info = restore_dependency_info () in
 
-  Hh_logger.info "Indexing files";
   let%lwt exports =
-    with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed
-    )
+    if Options.autoimports options then (
+      Hh_logger.info "Indexing files";
+      let%lwt exports =
+        with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+            Export_service.init ~workers ~reader ~libs:lib_exports parsed
+        )
+      in
+      Hh_logger.info "Finished indexing files";
+      Lwt.return (Some exports)
+    ) else
+      Lwt.return None
   in
-  Hh_logger.info "Finished indexing files";
 
   let connections =
     Base.Option.value_map
@@ -2218,13 +2226,19 @@ let init_from_scratch ~profiling ~workers options =
     )
   in
 
-  Hh_logger.info "Indexing files";
   let%lwt exports =
-    with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
-    )
+    if Options.autoimports options then (
+      Hh_logger.info "Indexing files";
+      let%lwt exports =
+        with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+            Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
+        )
+      in
+      Hh_logger.info "Finished indexing files";
+      Lwt.return (Some exports)
+    ) else
+      Lwt.return None
   in
-  Hh_logger.info "Finished indexing files";
 
   let (collated_errors, _) =
     ErrorCollator.update_local_collated_errors

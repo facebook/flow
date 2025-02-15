@@ -344,5 +344,27 @@ module.exports = (suite(
         ],
       ),
     ]),
+
+    test('textDocument/completion with autoimports=false', [
+      addFiles('foo.js', 'types.js', 'lib/builtins.js'),
+      addCode(`type Test = T`),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/test.js'},
+        position: {line: 2, character: 13},
+        context: {triggerKind: 1},
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'completion_with_no_autoimports.json',
+        ),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]).flowConfig('_flowconfig_autoimports_false'),
   ],
 ): SuiteType);

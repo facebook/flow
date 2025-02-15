@@ -24,3 +24,5 @@ type search_results = {
   is_incomplete: bool;
 }
 [@@deriving show]
+
+let empty_search_results = { results = []; is_incomplete = false }
