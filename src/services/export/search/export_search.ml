@@ -67,12 +67,16 @@ let init index =
   let type_matcher = Fuzzy_path.init types in
   { index; value_matcher; type_matcher }
 
-let merge_available_exports old_index new_index { index; value_matcher; type_matcher } =
-  let (index, dead_candidates) = Export_index.subtract old_index index in
+let merge_available_exports
+    old_available_exports_index new_available_exports_index { index; value_matcher; type_matcher } =
+  let (addition_index, removal_index) =
+    Export_index.diff ~old_index:old_available_exports_index ~new_index:new_available_exports_index
+  in
+  let (index, dead_candidates) = Export_index.subtract removal_index index in
   let value_matcher = Fuzzy_path.remove_candidates value_matcher dead_candidates in
   let type_matcher = Fuzzy_path.remove_candidates type_matcher dead_candidates in
-  let index = Export_index.merge new_index index in
-  let { values; types } = partition_candidates new_index in
+  let index = Export_index.merge addition_index index in
+  let { values; types } = partition_candidates addition_index in
   let value_matcher = Fuzzy_path.add_candidates value_matcher values in
   let type_matcher = Fuzzy_path.add_candidates type_matcher types in
   { index; value_matcher; type_matcher }
