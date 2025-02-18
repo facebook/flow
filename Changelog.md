@@ -1,3 +1,8 @@
+### 0.261.2
+
+Notable bug fixes:
+* Fixed a bug that causes incorrect updates to our index that tracks usage of exports, which leads to incorrect autoimport-ranked-by-usage results.
+
 ### 0.261.1
 
 Notable bug fixes:
