@@ -333,6 +333,7 @@ let index ~workers ~reader parsed :
     (exports_to_add, exports_to_remove, imports_to_add, imports_to_remove, count)
   in
 
+  Hh_logger.info "Indexing files: creating index...";
   MonitorRPC.status_update
     ~event:ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
   (* each job returns two Export_index.t's. we cons them onto lists and merge them all
@@ -363,6 +364,7 @@ let index ~workers ~reader parsed :
         ))
       ~next:(MultiWorkerLwt.next workers parsed)
   in
+  Hh_logger.info "Indexing files: indexing post-process...";
   MonitorRPC.status_update ~event:ServerStatus.Indexing_post_process;
 
   let exports_to_add =
@@ -396,9 +398,12 @@ let init ~workers ~reader ~libs parsed =
   let%lwt (exports_to_add, _exports_to_remove, imports_to_add, _imports_to_remove) =
     index ~workers ~reader parsed
   in
+  Hh_logger.info "Indexing files: adding exports of builtins...";
   let exports_to_add = add_exports_of_builtins libs exports_to_add in
+  Hh_logger.info "Indexing files: merging exports-imports...";
   let final_export_index = Export_index.merge_export_import imports_to_add exports_to_add in
   (* TODO: assert that _exports_to_remove is empty? should be on init *)
+  Hh_logger.info "Indexing files: initing...";
   let search = Export_search.init final_export_index in
   MonitorRPC.status_update ~event:ServerStatus.Indexing_end;
   Lwt.return search
