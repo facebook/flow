@@ -1146,12 +1146,13 @@ let code_actions_of_errors
           Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
         in
         let (suggest_imports_actions, has_missing_import) =
-          match error_message with
-          | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+          match (error_message, env) with
+          | ( Error_message.EBuiltinNameLookupFailed { loc = error_loc; name },
+              { ServerEnv.exports = Some exports; _ }
+            )
             when Options.autoimports options ->
             let actions =
               if include_quick_fixes && Loc.intersects error_loc loc then
-                let { ServerEnv.exports; _ } = env in
                 suggest_imports
                   ~layout_options:(Code_action_utils.layout_options options)
                   ~module_system_info
@@ -1512,15 +1513,16 @@ end)
 (** insert imports for all undefined-variable errors that have only one suggestion *)
 let autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir =
   let errors = Context.errors cx in
-  let { ServerEnv.exports; _ } = env in
   (* collect imports for all of the undefined variables in the file *)
   let (imports, _) =
     Flow_error.ErrorSet.fold
       (fun error (imports, unbound_names) ->
         match
-          Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
+          (Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc, env)
         with
-        | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+        | ( Error_message.EBuiltinNameLookupFailed { loc = error_loc; name },
+            { ServerEnv.exports = Some exports; _ }
+          )
           when Options.autoimports options ->
           (match preferred_import ~ast ~exports name error_loc with
           | Some (source, export_kind) when not (SSet.mem name unbound_names) ->
@@ -1616,14 +1618,17 @@ let suggest_imports_cli
   let uri = File_key.to_string file_key |> Lsp_helpers.path_to_lsp_uri ~default_path:"" in
   let get_edits ~cx ~ast =
     let errors = Context.errors cx in
-    let { ServerEnv.exports; _ } = env in
     let (imports, _) =
       Flow_error.ErrorSet.fold
         (fun error (imports, unbound_names) ->
           match
-            Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
+            ( Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc,
+              env
+            )
           with
-          | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name }
+          | ( Error_message.EBuiltinNameLookupFailed { loc = error_loc; name },
+              { ServerEnv.exports = Some exports; _ }
+            )
             when Options.autoimports options ->
             let ranked_imports =
               suggest_imports

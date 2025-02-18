@@ -50,6 +50,6 @@ type env = {
   coverage: Coverage.file_coverage Utils_js.FilenameMap.t;
   collated_errors: Collated_errors.t;
   connections: Persistent_connection.t;
-  exports: Export_search.t;
+  exports: Export_search.t option;  (** None means auto-imports are not enabled *)
   master_cx: Context.master_context;
 }

@@ -499,14 +499,21 @@ let autocomplete_on_parsed
       let open AutocompleteService_js in
       let (token_opt, ac_loc, ac_type_string, results_res) =
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+            let (search_exported_values, search_exported_types) =
+              match env.ServerEnv.exports with
+              | Some exports -> (search_exported_values ~exports, search_exported_types ~exports)
+              | None ->
+                let empty ~ac_options:_ _ = Export_search_types.empty_search_results in
+                (empty, empty)
+            in
             let typing =
               AutocompleteService_js.mk_typing_artifacts
                 ~layout_options:(Code_action_utils.layout_options options)
                 ~module_system_info:(mk_module_system_info ~options ~reader)
                 ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
                 ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
-                ~search_exported_values:(search_exported_values ~exports:env.ServerEnv.exports)
-                ~search_exported_types:(search_exported_types ~exports:env.ServerEnv.exports)
+                ~search_exported_values
+                ~search_exported_types
                 ~cx
                 ~file_sig
                 ~ast

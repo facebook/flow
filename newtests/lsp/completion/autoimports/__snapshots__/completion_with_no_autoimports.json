@@ -1,0 +1,116 @@
+{
+  "method": "textDocument/completion",
+  "result": {
+    "isIncomplete": false,
+    "items": [
+      {
+        "label": "Test",
+        "kind": 6,
+        "detail": "type Test = any",
+        "sortText": "00000000000000000000",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 13
+            }
+          },
+          "newText": "Test"
+        },
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "unqualified type: local type identifier",
+            {
+              "token": "TAUTO332",
+              "index": 0,
+              "session_requests": 1,
+              "typed_length": 1,
+              "completion": "Test",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      },
+      {
+        "label": "true",
+        "kind": 6,
+        "detail": "true",
+        "sortText": "00000000000000000001",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 13
+            }
+          },
+          "newText": "true"
+        },
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "builtin type",
+            {
+              "token": "TAUTO332",
+              "index": 1,
+              "session_requests": 1,
+              "typed_length": 1,
+              "completion": "true",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      },
+      {
+        "label": "$NonMaybeType",
+        "kind": 3,
+        "detail": "$NonMaybeType",
+        "sortText": "00000000000000000002",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 13
+            }
+          },
+          "newText": "$NonMaybeType"
+        },
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "builtin type",
+            {
+              "token": "TAUTO332",
+              "index": 2,
+              "session_requests": 1,
+              "typed_length": 1,
+              "completion": "$NonMaybeType",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
