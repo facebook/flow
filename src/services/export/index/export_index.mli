@@ -37,6 +37,10 @@ val merge : t -> t -> t
 
 val merge_export_import : t -> t -> t
 
+(* Returns tuple of two disjoint index: (addition_index, removal_index),
+ * to be passed to [merge] and `[subtract]`. *)
+val diff : old_index:t -> new_index:t -> t * t
+
 (** [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
     also returns a list of keys that no longer are exported by any file. *)
 val subtract : t -> t -> t * string list

@@ -132,6 +132,29 @@ let fold ~f ~init t =
 
 let map ~f t = SMap.map (ExportMap.map f) t
 
+let diff ~old_index ~new_index =
+  let exist_in_index export_name export_key map =
+    match SMap.find_opt export_name map with
+    | None -> false
+    | Some map -> ExportMap.mem export_key map
+  in
+  let diff_index l r =
+    SMap.fold
+      (fun export_name map acc ->
+        ExportMap.fold
+          (fun export_key _ acc ->
+            if exist_in_index export_name export_key r then
+              acc
+            else
+              let (s, k) = export_key in
+              add export_name s k acc)
+          map
+          acc)
+      l
+      SMap.empty
+  in
+  (diff_index new_index old_index, diff_index old_index new_index)
+
 let subtract old_t t =
   let (t, dead_names) =
     SMap.fold
