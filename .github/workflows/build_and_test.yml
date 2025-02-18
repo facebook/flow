@@ -29,7 +29,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -80,7 +80,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -132,7 +132,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -174,7 +174,7 @@ jobs:
       run: arch --x86_64 .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -221,7 +221,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -289,7 +289,7 @@ jobs:
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
     - name: Cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         key: opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flowtype.opam', 'flow_parser.opam', '.circleci/config.yml') }}
         path: |
@@ -456,7 +456,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -487,7 +487,7 @@ jobs:
       run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
     - name: opam cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         path: |-
           ~/.opam
@@ -615,7 +615,7 @@ jobs:
         path: dist
     - run: chmod +x bin/linux/flow
     - name: Node cache
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4
       with:
         key: v2-website-${{ github.ref_name }}-${{ hashFiles('website/yarn.lock') }}
         path: website/node_modules
