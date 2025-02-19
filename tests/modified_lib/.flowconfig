@@ -3,4 +3,3 @@ lib
 
 [options]
 all=true
-experimental.libdef_recheck_partial_fix=true

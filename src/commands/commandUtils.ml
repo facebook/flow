@@ -1510,7 +1510,6 @@ let make_options
         gc_custom_minor_ratio = FlowConfig.gc_worker_custom_minor_ratio flowconfig;
         gc_custom_minor_max_size = FlowConfig.gc_worker_custom_minor_max_size flowconfig;
       };
-    opt_libdef_recheck_partial_fix = FlowConfig.libdef_recheck_partial_fix flowconfig;
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_log_file;
     opt_long_lived_workers =

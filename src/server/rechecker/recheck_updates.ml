@@ -141,8 +141,8 @@ let did_content_change ~reader filename =
     let reader = Abstract_state_reader.State_reader reader in
     not (Parsing_service_js.does_content_match_file_hash ~reader file content)
 
-let check_for_lib_changes
-    ~should_recover ~reader ~all_libs ~root ~skip_incompatible ~filter_wanted_updates updates =
+let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible ~filter_wanted_updates updates
+    =
   let flow_typed_path = File_path.to_string (Files.get_flowtyped_path root) in
   let is_changed_lib filename =
     let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
@@ -153,20 +153,11 @@ let check_for_lib_changes
     let messages =
       SSet.elements libs |> List.rev_map (spf "Modified lib file: %s") |> String.concat "\n"
     in
-    if should_recover then
-      let updates = filter_wanted_updates updates in
-      Error
-        (RecoverableShouldReinitNonLazily
-           { msg = spf "%s\nLib files changed in an incompatible way" messages; updates }
-        )
-    else
-      Error
-        (Unrecoverable
-           {
-             msg = spf "%s\nLib files changed in an incompatible way" messages;
-             exit_status = Exit.Server_out_of_date;
-           }
-        )
+    let updates = filter_wanted_updates updates in
+    Error
+      (RecoverableShouldReinitNonLazily
+         { msg = spf "%s\nLib files changed in an incompatible way" messages; updates }
+      )
   else
     Ok ()
 
@@ -232,14 +223,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   let filter_wanted_updates = filter_wanted_updates ~file_options ~sroot ~want in
   (* Try to recover/die if libs files have changed *)
   let%bind () =
-    check_for_lib_changes
-      ~should_recover:(Options.libdef_recheck_partial_fix options)
-      ~reader
-      ~all_libs
-      ~root
-      ~skip_incompatible
-      ~filter_wanted_updates
-      updates
+    check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible ~filter_wanted_updates updates
   in
   (* Return only the updates we care about *)
   Ok (filter_wanted_updates updates)
