@@ -472,7 +472,7 @@ struct
             ConcretizeT
               {
                 reason = _;
-                kind = ConcretizeForPredicate ConcretizeForMaybeOrExistPredicateTest;
+                kind = ConcretizeForPredicate ConcretizeKeepOptimizedUnions;
                 seen = _;
                 collector;
               }

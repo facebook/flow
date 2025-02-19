@@ -30,8 +30,10 @@ let concretization_variant_of_predicate = function
   | MaybeP
   | NotP MaybeP
   | TruthyP
-  | NotP TruthyP ->
-    ConcretizeForMaybeOrExistPredicateTest
+  | NotP TruthyP
+  | LatentP _
+  | NotP (LatentP _) ->
+    ConcretizeKeepOptimizedUnions
   | _ -> ConcretizeForGeneralPredicateTest
 
 type predicate_result_mut =
@@ -615,23 +617,56 @@ and intersect =
   in
   fun cx t1 t2 ->
     let reason1 = TypeUtil.reason_of_t t1 in
+    (* Pre-processing of t1 has concretized it up to optimized unions. It is
+     * important to keep it this way to prevent expensive checks right away.
+     * Consider for example the code:
+     *
+     *   declare var x: T;
+     *   declare var foo: (x: mixed) => x is T
+     *   if (foo(x)) {}
+     *
+     * where T is a really large enum-like union. `try_intersect` will quickly
+     * return `t1` as the result here, without us having to try to fully
+     * concretize `t1`.
+     *)
     (* Input t1 is already concretized as input to the predicate mechanism *)
     match try_intersect cx reason1 (C.wrap_unsafe t1) t2 with
     | Some t -> t
     | None ->
-      let r = update_desc_reason invalidate_rtype_alias reason1 in
-      IntersectionT (r, InterRep.make t2 t1 [])
+      (* No definitive refinement found. We fall back to more expensive
+       * concretization that breaks up all unions (including optimized ones). *)
+      possible_concrete_types_for_inspection cx reason1 t1
+      |> Base.List.map ~f:(fun t1 ->
+             (* t1 was just concretized *)
+             match try_intersect cx reason1 (C.wrap_unsafe t1) t2 with
+             | Some t -> t
+             | None ->
+               let r = update_desc_reason invalidate_rtype_alias reason1 in
+               IntersectionT (r, InterRep.make t2 t1 [])
+         )
+      |> TypeUtil.union_of_ts (update_desc_reason invalidate_rtype_alias reason1)
 
 (* This utility is expected to be used when negating the refinement of a type [t1]
  * with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
  * This means that the positive branch will always be taken, and so we are left with
  * `empty` in the negated case. *)
 and type_guard_diff cx t1 t2 =
+  let reason1 = TypeUtil.reason_of_t t1 in
   if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
-    let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+    let r = update_desc_reason invalidate_rtype_alias reason1 in
     Type_filter.TypeFilterResult { type_ = DefT (r, EmptyT); changed = true }
   else
-    Type_filter.TypeFilterResult { type_ = t1; changed = false }
+    let t1s_conc = possible_concrete_types_for_inspection cx reason1 t1 in
+    let (ts_rev, changed) =
+      Base.List.fold t1s_conc ~init:([], false) ~f:(fun (acc, changed) t1 ->
+          if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
+            (acc, changed)
+          else
+            (t1 :: acc, true)
+      )
+    in
+    let r1 = update_desc_reason invalidate_rtype_alias reason1 in
+    Type_filter.TypeFilterResult { type_ = TypeUtil.union_of_ts r1 (List.rev ts_rev); changed }
 
 and prop_exists_test cx key sense obj result_collector =
   match has_prop cx (OrdinaryName key) obj with

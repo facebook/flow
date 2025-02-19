@@ -125,7 +125,7 @@ function sentinel_multi_tag() {
 }
 
 
-function negation() {
+function negation1() {
   declare function isNumber(x: mixed): x is number;
   declare function isString(x: mixed): x is string;
 
@@ -295,4 +295,25 @@ function getRaccoon(s: string): ?Raccoon {
     return s; // okay
   }
   return null;
+}
+
+function negation2() {
+  declare var isA: (x: mixed) => x is 'a';
+  declare var x: 'a' | 'c';
+
+  if (isA(x)) { return; }
+  x as 'c'; // okay
+}
+
+function negation3() {
+  declare function isFalsey(value: ?mixed): value is null | void | false | '' | 0;
+
+  function foo(arr: ?Array<mixed> | $ReadOnlyArray<mixed>): void {
+    if (isFalsey(arr)) {
+      return;
+    }
+    arr as Array<mixed> | $ReadOnlyArray<mixed>; // okay
+  }
+
+  foo([]); // triggrers union optimization
 }

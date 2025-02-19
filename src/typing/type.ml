@@ -1013,7 +1013,7 @@ module rec TypeTerm : sig
 
   and predicate_concretizer_variant =
     | ConcretizeForGeneralPredicateTest
-    | ConcretizeForMaybeOrExistPredicateTest
+    | ConcretizeKeepOptimizedUnions
     | ConcretizeRHSForInstanceOfPredicateTest
     | ConcretizeRHSForLiteralPredicateTest
 
@@ -4141,7 +4141,7 @@ let string_of_use_op_rec : use_op -> string =
 
 let string_of_predicate_concretizer_variant = function
   | ConcretizeForGeneralPredicateTest -> "ConcretizeForGeneralPredicateTest"
-  | ConcretizeForMaybeOrExistPredicateTest -> "ConcretizeForMaybeOrExistPredicateTest"
+  | ConcretizeKeepOptimizedUnions -> "ConcretizeKeepOptimizedUnions"
   | ConcretizeRHSForInstanceOfPredicateTest -> "ConcretizeRHSForInstanceOfPredicateTest"
   | ConcretizeRHSForLiteralPredicateTest -> "ConcretizeRHSForLiteralPredicateTest"
 
