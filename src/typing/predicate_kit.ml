@@ -517,9 +517,9 @@ and call_latent_this_pred =
  * t1 is already concretized by the time it reaches this point. Type t2, on the
  * other hand, is not, since it is coming directly from the annotation. This is why
  * we concretize it first, before attempting any comparisons. *)
-and intersect cx t1 t2 =
+and intersect =
   let module C = ConcretizedType in
-  let is_any t =
+  let is_any cx t =
     let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
     List.exists Type.is_any ts
   in
@@ -533,9 +533,9 @@ and intersect cx t1 t2 =
     | DefT (_, VoidT) -> true
     | _ -> false
   in
-  let tags_of_t t = Type_filter.tag_of_t cx (C.unwrap t) in
-  let tags_differ t1 t2 =
-    match (tags_of_t t1, tags_of_t t2) with
+  let tags_of_t cx t = Type_filter.tag_of_t cx (C.unwrap t) in
+  let tags_differ cx t1 t2 =
+    match (tags_of_t cx t1, tags_of_t cx t2) with
     | (Some t1_tags, Some t2_tags) -> not (Type_filter.tags_overlap t1_tags t2_tags)
     | _ -> false
   in
@@ -557,13 +557,13 @@ and intersect cx t1 t2 =
       v1 <> v2
     | (_, _) -> false
   in
-  let rec type_tags_differ ~depth = function
+  let rec type_tags_differ cx ~depth = function
     | (t1 :: rest1, t2 :: rest2) ->
-      C.for_all_concrete_ts cx t1 ~f:(fun t1 -> types_differ ~depth t1 t2)
-      || type_tags_differ ~depth (rest1, rest2)
+      C.for_all_concrete_ts cx t1 ~f:(fun t1 -> types_differ cx ~depth t1 t2)
+      || type_tags_differ cx ~depth (rest1, rest2)
     | _ -> false
   (* C<T> has no overlap with C<S> iff T and S have no overlap *)
-  and instance_tags_differ ~depth t1 t2 =
+  and instance_tags_differ cx ~depth t1 t2 =
     match (C.unwrap t1, C.unwrap t2) with
     | ( DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts1; _ } as inst1; _ }),
         DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts2; _ } as inst2; _ })
@@ -571,52 +571,55 @@ and intersect cx t1 t2 =
       when Flow_js_utils.is_same_instance_type inst1 inst2 ->
       let ts1 = Base.List.map ts1 ~f:(fun (_, _, t, _) -> t) in
       let ts2 = Base.List.map ts2 ~f:(fun (_, _, t, _) -> t) in
-      type_tags_differ ~depth (ts1, ts2)
+      type_tags_differ cx ~depth (ts1, ts2)
     | _ -> false
-  and types_differ ~depth t1 t2 =
+  and types_differ cx ~depth t1 t2 =
     (* To prevent infinite recursion, we use a simple depth mechanism. *)
     if depth > 2 then
       false
     else
       let depth = depth + 1 in
       C.for_all_concrete_ts cx t2 ~f:(fun t2 ->
-          tags_differ t1 t2 || ground_types_differ t1 t2 || instance_tags_differ ~depth t1 t2
+          tags_differ cx t1 t2 || ground_types_differ t1 t2 || instance_tags_differ cx ~depth t1 t2
       )
   in
-  (* Input t1 is already concretized as input to the predicate mechanism *)
-  let t1_conc = C.wrap_unsafe t1 in
-  if types_differ ~depth:0 t1_conc t2 then
-    let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-    DefT (r, EmptyT)
-  else if is_any t1 then
-    t2
-  else if is_any t2 then
-    (* Filter out null and void types from the input if comparing with any *)
-    if is_null t1_conc || is_void t1_conc then
-      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
-      DefT (r, EmptyT)
+  let try_intersect cx reason1 t1_conc t2 =
+    let t1 = C.unwrap t1_conc in
+    if types_differ cx ~depth:0 t1_conc t2 then
+      let r = update_desc_reason invalidate_rtype_alias reason1 in
+      Some (DefT (r, EmptyT))
+    else if is_any cx t1 then
+      Some t2
+    else if is_any cx t2 then
+      (* Filter out null and void types from the input if comparing with any *)
+      if is_null (C.wrap_unsafe t1) || is_void (C.wrap_unsafe t1) then
+        let r = update_desc_reason invalidate_rtype_alias reason1 in
+        Some (DefT (r, EmptyT))
+      else
+        Some t1
+    else if TypeUtil.quick_subtype t1 t2 || speculative_subtyping_succeeds cx t1 t2 then
+      Some t1
+    else if TypeUtil.quick_subtype t2 t1 || speculative_subtyping_succeeds cx t2 t1 then
+      Some t2
     else
-      t1
-  else if TypeUtil.quick_subtype t1 t2 then
-    t1
-  else if TypeUtil.quick_subtype t2 t1 then
-    t2
-  else if speculative_subtyping_succeeds cx t1 t2 then
-    t1
-  else if speculative_subtyping_succeeds cx t2 t1 then
-    t2
-  else
-    match t1 with
-    | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
-      (* Apply the refinement on super and underlying type of opaque type.
-       * Preserve opaque_id to retain compatibility with original type. *)
-      let super_t =
-        Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
-      in
-      let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
-      OpaqueT (r, { opaquetype with underlying_t; super_t })
-    | _ ->
-      let r = update_desc_reason invalidate_rtype_alias (TypeUtil.reason_of_t t1) in
+      match t1 with
+      | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
+        (* Apply the refinement on super and underlying type of opaque type.
+         * Preserve opaque_id to retain compatibility with original type. *)
+        let super_t =
+          Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
+        in
+        let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
+        Some (OpaqueT (r, { opaquetype with underlying_t; super_t }))
+      | _ -> None
+  in
+  fun cx t1 t2 ->
+    let reason1 = TypeUtil.reason_of_t t1 in
+    (* Input t1 is already concretized as input to the predicate mechanism *)
+    match try_intersect cx reason1 (C.wrap_unsafe t1) t2 with
+    | Some t -> t
+    | None ->
+      let r = update_desc_reason invalidate_rtype_alias reason1 in
       IntersectionT (r, InterRep.make t2 t1 [])
 
 (* This utility is expected to be used when negating the refinement of a type [t1]
