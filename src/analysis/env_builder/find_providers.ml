@@ -666,7 +666,7 @@ end = struct
         let env2 =
           this#accumulate_branch_env
             (env0, cx)
-            (fun () -> run_opt_loc this#if_alternate_statement alternate)
+            (fun () -> run_loc_opt this#if_alternate_statement alternate)
             env1
         in
         this#set_acc (env2, cx);
@@ -703,11 +703,11 @@ end = struct
         let env' =
           this#accumulate_branch_env
             (env0, cx)
-            (fun () -> run_opt_loc this#catch_clause handler)
+            (fun () -> run_loc_opt this#catch_clause handler)
             env'
         in
         let env' =
-          this#accumulate_branch_env (env0, cx) (fun () -> run_opt_loc this#block finalizer) env'
+          this#accumulate_branch_env (env0, cx) (fun () -> run_loc_opt this#block finalizer) env'
         in
         this#set_acc (env', cx);
         stmt
