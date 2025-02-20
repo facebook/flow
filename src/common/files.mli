@@ -15,7 +15,7 @@ type options
 
 val mk_options :
   default_lib_dir:lib_dir option ->
-  ignores:(string * Str.regexp) list ->
+  ignores:((string * string option) * Str.regexp) list ->
   untyped:(string * Str.regexp) list ->
   declarations:(string * Str.regexp) list ->
   implicitly_include_root:bool ->
@@ -35,7 +35,7 @@ val default_options : options
 
 val default_lib_dir : options -> lib_dir option
 
-val ignores : options -> (string * Str.regexp) list
+val ignores : options -> ((string * string option) * Str.regexp) list
 
 val untyped : options -> (string * Str.regexp) list
 

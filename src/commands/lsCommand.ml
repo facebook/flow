@@ -119,7 +119,9 @@ let rec iter_get_next ~f get_next =
 
 let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
   let includes = CommandUtils.list_of_string_arg include_flag in
-  let ignores = CommandUtils.list_of_string_arg ignore_flag in
+  let ignores =
+    List.map (fun ignore -> (ignore, None)) (CommandUtils.list_of_string_arg ignore_flag)
+  in
   let untyped = CommandUtils.list_of_string_arg untyped_flag in
   let declarations = CommandUtils.list_of_string_arg declaration_flag in
   let libs = [] in

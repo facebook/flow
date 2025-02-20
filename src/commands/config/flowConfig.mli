@@ -46,7 +46,7 @@ val write : config -> out_channel -> unit
 (* Accessors *)
 
 (* completely ignored files (both module resolving and typing) *)
-val ignores : config -> string list
+val ignores : config -> (string * string option) list
 
 (* files that should be treated as untyped *)
 val untyped : config -> string list

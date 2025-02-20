@@ -594,7 +594,7 @@ let assert_version flowconfig =
   | Error msg -> Exit.(exit ~msg Invalid_flowconfig)
 
 type flowconfig_params = {
-  ignores: string list;
+  ignores: (string * string option) list;
   untyped: string list;
   declarations: string list;
   includes: string list;
@@ -611,7 +611,7 @@ let list_of_string_arg = function
 
 let collect_flowconfig_flags
     main ignores_str untyped_str declarations_str includes_str lib_str lints_str =
-  let ignores = list_of_string_arg ignores_str in
+  let ignores = List.map (fun ignore -> (ignore, None)) (list_of_string_arg ignores_str) in
   let untyped = list_of_string_arg untyped_str in
   let declarations = list_of_string_arg declarations_str in
   let includes = list_of_string_arg includes_str in
@@ -626,13 +626,24 @@ let remove_exclusion pattern =
     pattern
 
 let file_options =
-  let ignores_of_arg root patterns extras =
+  let path_pattern_of_arg root pattern =
     let expand_project_root_token = Files.expand_project_root_token ~root in
+    pattern |> remove_exclusion |> expand_project_root_token |> Str.regexp
+  in
+  let path_patterns_of_args root patterns extras =
     let patterns = Base.List.rev_append extras patterns in
     Base.List.map
       ~f:(fun s ->
-        let reg = s |> remove_exclusion |> expand_project_root_token |> Str.regexp in
+        let reg = path_pattern_of_arg root s in
         (s, reg))
+      patterns
+  in
+  let ignores_of_args root patterns extras =
+    let patterns = Base.List.rev_append extras patterns in
+    Base.List.map
+      ~f:(fun (path, backup) ->
+        let reg = path_pattern_of_arg root path in
+        ((path, backup), reg))
       patterns
   in
   let includes_of_arg ~implicitly_include_root ~root ~lib_paths paths =
@@ -703,9 +714,11 @@ let file_options =
       in
       Some libdir
     in
-    let ignores = ignores_of_arg root (FlowConfig.ignores flowconfig) ignores in
-    let untyped = ignores_of_arg root (FlowConfig.untyped flowconfig) untyped in
-    let declarations = ignores_of_arg root (FlowConfig.declarations flowconfig) declarations in
+    let ignores = ignores_of_args root (FlowConfig.ignores flowconfig) ignores in
+    let untyped = path_patterns_of_args root (FlowConfig.untyped flowconfig) untyped in
+    let declarations =
+      path_patterns_of_args root (FlowConfig.declarations flowconfig) declarations
+    in
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes

@@ -64,7 +64,16 @@ let main base_flags flowconfig_flags options root () =
     Exit.(exit ~msg Invalid_flowconfig)
   );
 
-  let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
+  let config =
+    FlowConfig.init
+      ~ignores:(List.map fst ignores)
+      ~untyped
+      ~declarations
+      ~includes
+      ~libs
+      ~options
+      ~lints
+  in
   let config =
     match config with
     | Ok (config, []) -> config

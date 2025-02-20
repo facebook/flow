@@ -13,7 +13,7 @@ type lib_dir =
 
 type options = {
   default_lib_dir: lib_dir option;
-  ignores: (string * Str.regexp) list;
+  ignores: ((string * string option) * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
   implicitly_include_root: bool;
@@ -521,7 +521,7 @@ let dir_filter_of_options (options : options) f =
        to be un-ignored. similarly, if an ignore ends in $, we could still prune if
        the current path isn't a prefix of it. *)
     Base.List.for_all
-      ~f:(fun (pattern, _rx) ->
+      ~f:(fun ((pattern, _), _rx) ->
         (not (String.starts_with ~prefix:"!" pattern)) && not (String.ends_with ~suffix:"$" pattern))
       options.ignores
   in
@@ -615,7 +615,7 @@ let is_ignored (options : options) path =
   (* On Windows, the path may use \ instead of /, but let's standardize the
    * ignore regex to use / *)
   let path = Sys_utils.normalize_filename_dir_sep path in
-  is_matching path options.ignores
+  is_matching path (options.ignores |> List.map (fun ((x, _y), z) -> (x, z)))
 
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options : options) path =

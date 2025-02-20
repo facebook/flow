@@ -1201,8 +1201,12 @@ type rollout = {
 
 type config = {
   rollouts: rollout SMap.t;
-  (* completely ignored files (both module resolving and typing) *)
-  ignores: string list;
+  (* completely ignored files (both module resolving and typing)
+   * This type *should* just be a string list, but we have an undocumented feature that allows
+   * you to specify a backup flowconfig to use if a file is ignored using our module-mapper syntax.
+   * This should be reverted to string list after we properly support multiplatform flow roots.
+   *)
+  ignores: (string * string option) list;
   (* files that should be treated as untyped *)
   untyped: string list;
   (* files that should be treated as declarations *)
@@ -1230,7 +1234,12 @@ end = struct
 
   let section_header o section = fprintf o "[%s]\n" section
 
-  let ignores o = Base.List.iter ~f:(fprintf o "%s\n")
+  let ignores o =
+    Base.List.iter ~f:(fun (ignore, backup_opt) ->
+        match backup_opt with
+        | None -> fprintf o "%s\n" ignore
+        | Some backup -> fprintf o "%s -> %s\n" ignore backup
+    )
 
   let untyped o = Base.List.iter ~f:(fprintf o "%s\n")
 
@@ -1368,7 +1377,16 @@ let parse_libs lines config : (config * warning list, error) result =
   Ok ({ config with libs }, [])
 
 let parse_ignores lines config =
-  let ignores = trim_lines lines in
+  let raw_ignores = trim_lines lines in
+  let ignores =
+    raw_ignores
+    |> Base.List.map ~f:(fun ignore ->
+           if Str.string_match Opts.mapping_regexp ignore 0 then
+             (Str.matched_group 1 ignore, Some (Str.matched_group 2 ignore))
+           else
+             (ignore, None)
+       )
+  in
   Ok ({ config with ignores }, [])
 
 let parse_untyped lines config =
