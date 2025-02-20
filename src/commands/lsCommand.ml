@@ -52,7 +52,7 @@ type file_result =
   | ImplicitlyIncluded
   | ExplicitlyIncluded
   | ImplicitlyIgnored
-  | ExplicitlyIgnored
+  | ExplicitlyIgnored of string option
   | ImplicitLib
   | ExplicitLib
   | ConfigFile
@@ -61,7 +61,7 @@ let string_of_file_result = function
   | ImplicitlyIncluded -> "ImplicitlyIncluded"
   | ExplicitlyIncluded -> "ExplicitlyIncluded"
   | ImplicitlyIgnored -> "ImplicitlyIgnored"
-  | ExplicitlyIgnored -> "ExplicitlyIgnored"
+  | ExplicitlyIgnored _ -> "ExplicitlyIgnored"
   | ImplicitLib -> "ImplicitLib"
   | ExplicitLib -> "ExplicitLib"
   | ConfigFile -> "ConfigFile"
@@ -70,7 +70,7 @@ let string_of_file_result_with_padding = function
   | ImplicitlyIncluded -> "ImplicitlyIncluded"
   | ExplicitlyIncluded -> "ExplicitlyIncluded"
   | ImplicitlyIgnored -> "ImplicitlyIgnored "
-  | ExplicitlyIgnored -> "ExplicitlyIgnored "
+  | ExplicitlyIgnored _ -> "ExplicitlyIgnored "
   | ImplicitLib -> "ImplicitLib       "
   | ExplicitLib -> "ExplicitLib       "
   | ConfigFile -> "ConfigFile        "
@@ -89,7 +89,7 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
     else if Server_files_js.config_file flowconfig_name root = file then
       ConfigFile
     else if Files.is_ignored options file then
-      ExplicitlyIgnored
+      ExplicitlyIgnored None
     else if String.starts_with ~prefix:root_str file then
       ImplicitlyIncluded
     else if Files.is_included options file then
