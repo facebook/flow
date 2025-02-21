@@ -687,7 +687,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun _profiling ->
         let file_options = Options.file_options options in
         let all = Options.all options in
-        let (_ordered_libs, libs) = Files.init file_options in
+        let (_ordered_libs, libs) = Files.ordered_and_unordered_lib_paths file_options in
 
         (* creates a closure that lists all files in the given root, returned in chunks *)
         let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in

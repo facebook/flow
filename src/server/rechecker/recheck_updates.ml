@@ -202,7 +202,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
   let file_options = Options.file_options options in
   let all_libs =
     let known_libs = libs in
-    let (_, maybe_new_libs) = Files.init file_options in
+    let (_, maybe_new_libs) = Files.ordered_and_unordered_lib_paths file_options in
     SSet.union known_libs maybe_new_libs
   in
   let root = Options.root options in

@@ -248,7 +248,7 @@ let main
   let options =
     make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
   in
-  let (_, libs) = Files.init options in
+  let (_, libs) = Files.ordered_and_unordered_lib_paths options in
   (* `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
    * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)
   let next_files =

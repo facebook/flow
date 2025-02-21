@@ -2164,7 +2164,7 @@ let init_from_scratch ~profiling ~workers options =
    * However making this change is likely going to be a breaking change for people with conflicting
    * libraries
    *)
-  let (ordered_libs, libs) = Files.init file_options in
+  let (ordered_libs, libs) = Files.ordered_and_unordered_lib_paths file_options in
   let next_files_for_parse =
     make_next_files ~libs ~file_options ~include_libdef:true (Options.root options)
   in
@@ -2413,7 +2413,7 @@ let reinit_full_check
   let%lwt env =
     with_transaction "partial-reinit" @@ fun transaction reader ->
     let file_options = Options.file_options options in
-    let (ordered_libs, _) = Files.init file_options in
+    let (ordered_libs, _) = Files.ordered_and_unordered_lib_paths file_options in
 
     let%lwt (env, libs_ok) =
       init_with_initial_state

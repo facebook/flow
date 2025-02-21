@@ -43,8 +43,6 @@ val implicitly_include_root : options -> bool
 
 val includes : options -> Path_matcher.t
 
-val lib_paths : options -> File_path.t list
-
 val module_declaration_dirnames : options -> string list
 
 val module_file_exts : options -> string list
@@ -108,7 +106,7 @@ val is_in_flowlib : options -> string -> bool
 
 val get_all_watched_extensions : options -> SSet.t
 
-val init : options -> string list * SSet.t
+val ordered_and_unordered_lib_paths : options -> string list * SSet.t
 
 (* regexp for Filename constants *)
 val dir_sep : Str.regexp

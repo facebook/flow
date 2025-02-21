@@ -92,8 +92,6 @@ let implicitly_include_root options = options.implicitly_include_root
 
 let includes options = options.includes
 
-let lib_paths options = options.lib_paths
-
 let module_declaration_dirnames options = options.module_declaration_dirnames
 
 let module_file_exts options = options.module_file_exts
@@ -546,7 +544,7 @@ let is_in_flowlib (options : options) : string -> bool =
     let root = File_path.make root_str in
     is_prefix (File_path.to_string root)
 
-let init (options : options) =
+let ordered_and_unordered_lib_paths (options : options) =
   let node_module_filter = is_node_module options in
   let libs = options.lib_paths in
   let (libs, filter) =
