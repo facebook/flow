@@ -2251,14 +2251,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.MatchPattern.AsPattern in
       let { pattern; target; comments } = as_pattern in
       let pattern' = this#match_pattern pattern in
-      let target' =
-        match target with
-        | Binding (loc, binding) ->
-          Binding (this#on_loc_annot loc, this#match_binding_pattern binding)
-        | Identifier id -> Identifier (this#pattern_identifier ~kind:Ast.Variable.Const id)
-      in
+      let target' = this#match_as_pattern_target target in
       let comments' = this#syntax_opt comments in
       { pattern = pattern'; target = target'; comments = comments' }
+
+    method match_as_pattern_target (target : ('M, 'T) Ast.MatchPattern.AsPattern.target)
+        : ('N, 'U) Ast.MatchPattern.AsPattern.target =
+      let open Ast.MatchPattern.AsPattern in
+      match target with
+      | Binding (loc, binding) -> Binding (this#on_loc_annot loc, this#match_binding_pattern binding)
+      | Identifier id -> Identifier (this#pattern_identifier ~kind:Ast.Variable.Const id)
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

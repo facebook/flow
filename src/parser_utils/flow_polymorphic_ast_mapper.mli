@@ -600,6 +600,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method match_as_pattern :
       ('M, 'T) Ast.MatchPattern.AsPattern.t -> ('N, 'U) Ast.MatchPattern.AsPattern.t
 
+    method match_as_pattern_target :
+      ('M, 'T) Ast.MatchPattern.AsPattern.target -> ('N, 'U) Ast.MatchPattern.AsPattern.target
+
     method member : 'T -> ('M, 'T) Ast.Expression.Member.t -> ('N, 'U) Ast.Expression.Member.t
 
     method member_private_name : 'M Flow_ast.PrivateName.t -> 'N Ast.PrivateName.t

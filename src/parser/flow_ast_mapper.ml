@@ -2740,18 +2740,20 @@ class ['loc] mapper =
       let open Ast.MatchPattern.AsPattern in
       let { pattern; target; comments } = as_pattern in
       let pattern' = this#match_pattern pattern in
-      let target' =
-        match target with
-        | Binding (loc, binding) ->
-          id_loc this#match_binding_pattern loc binding target (fun x -> Binding (loc, x))
-        | Identifier ident ->
-          id (this#pattern_identifier ~kind:Ast.Variable.Const) ident target (fun x -> Identifier x)
-      in
+      let target' = this#match_as_pattern_target target in
       let comments' = this#syntax_opt comments in
       if pattern == pattern' && target == target' && comments == comments' then
         as_pattern
       else
         { pattern = pattern'; target = target'; comments = comments' }
+
+    method match_as_pattern_target (target : ('loc, 'loc) Ast.MatchPattern.AsPattern.target) =
+      let open Ast.MatchPattern.AsPattern in
+      match target with
+      | Binding (loc, binding) ->
+        id_loc this#match_binding_pattern loc binding target (fun x -> Binding (loc, x))
+      | Identifier ident ->
+        id (this#pattern_identifier ~kind:Ast.Variable.Const) ident target (fun x -> Identifier x)
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in
