@@ -32,7 +32,7 @@ let get_target_filename_set ~options ~libs ~all filename_set =
     (fun f ->
       let s = File_key.to_string f in
       Files.is_valid_path ~options s
-      && (all || not (Files.is_ignored options s))
+      && (all || not (fst (Files.is_ignored options s)))
       && not (SSet.mem s libs))
     filename_set
 

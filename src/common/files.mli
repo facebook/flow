@@ -88,8 +88,10 @@ val is_json_file : string -> bool
 
 val is_flow_file : options:options -> string -> bool
 
-(* true if a file path matches an [ignore] entry in config *)
-val is_ignored : options -> string -> bool
+(* true if a file path matches an [ignore] entry in config, also returns the backup flowconfig if
+ * one is specified
+ *)
+val is_ignored : options -> string -> bool * string option
 
 (* true if a file path matches an [untyped] entry in config *)
 val is_untyped : options -> string -> bool

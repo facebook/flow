@@ -42,6 +42,7 @@ implicitly_included.js
 .flowconfig
 explicit_lib.js
 explicitly_ignored.js
+explicitly_ignored_with_backup.js
 flow-typed/implicit_lib.js
 implicitly_included.js
 
@@ -50,6 +51,7 @@ Implicit/Explicit Included/Ignored/Lib should be correct
 ================================================================================
 ExplicitLib           explicit_lib.js
 ExplicitlyIgnored     explicitly_ignored.js
+ExplicitlyIgnored     explicitly_ignored_with_backup.js
 ExplicitlyIncluded    ../other/explicitly_included.js
 ImplicitLib           flow-typed/implicit_lib.js
 ImplicitlyIgnored     ../other/implicitly_ignored.js
@@ -58,12 +60,12 @@ ImplicitlyIncluded    implicitly_included.js
 ================================================================================
 JSON output without --explain should be an array
 ================================================================================
-["../other/explicitly_included.js","../other/implicitly_ignored.js",".flowconfig","explicit_lib.js","explicitly_ignored.js","flow-typed/implicit_lib.js","implicitly_included.js"]
+["../other/explicitly_included.js","../other/implicitly_ignored.js",".flowconfig","explicit_lib.js","explicitly_ignored.js","explicitly_ignored_with_backup.js","flow-typed/implicit_lib.js","implicitly_included.js"]
 
 ================================================================================
 JSON output with --explain should be JSON object
 ================================================================================
-{"../other/explicitly_included.js":{"explanation":"ExplicitlyIncluded"},"../other/implicitly_ignored.js":{"explanation":"ImplicitlyIgnored"},".flowconfig":{"explanation":"ConfigFile"},"explicit_lib.js":{"explanation":"ExplicitLib"},"explicitly_ignored.js":{"explanation":"ExplicitlyIgnored"},"flow-typed/implicit_lib.js":{"explanation":"ImplicitLib"},"implicitly_included.js":{"explanation":"ImplicitlyIncluded"}}
+{"../other/explicitly_included.js":{"explanation":"ExplicitlyIncluded"},"../other/implicitly_ignored.js":{"explanation":"ImplicitlyIgnored"},".flowconfig":{"explanation":"ConfigFile"},"explicit_lib.js":{"explanation":"ExplicitLib"},"explicitly_ignored.js":{"explanation":"ExplicitlyIgnored"},"explicitly_ignored_with_backup.js":{"explanation":"ExplicitlyIgnored","backup":"other/.flowconfig"},"flow-typed/implicit_lib.js":{"explanation":"ImplicitLib"},"implicitly_included.js":{"explanation":"ImplicitlyIncluded"}}
 
 ================================================================================
 Listing files over stdin
@@ -73,6 +75,7 @@ Listing files over stdin
 .flowconfig
 explicit_lib.js
 explicitly_ignored.js
+explicitly_ignored_with_backup.js
 flow-typed/implicit_lib.js
 implicitly_included.js
 
@@ -82,6 +85,7 @@ implicitly_included.js
 .flowconfig
 explicit_lib.js
 explicitly_ignored.js
+explicitly_ignored_with_backup.js
 flow-typed/implicit_lib.js
 implicitly_included.js
 
@@ -93,6 +97,7 @@ Input file on disk
 .flowconfig
 explicit_lib.js
 explicitly_ignored.js
+explicitly_ignored_with_backup.js
 flow-typed/implicit_lib.js
 implicitly_included.js
 
@@ -102,6 +107,7 @@ implicitly_included.js
 .flowconfig
 explicit_lib.js
 explicitly_ignored.js
+explicitly_ignored_with_backup.js
 flow-typed/implicit_lib.js
 implicitly_included.js
 

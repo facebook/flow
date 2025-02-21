@@ -79,6 +79,7 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
   let file = raw_file |> File_path.make |> File_path.to_string in
   let root_str = File_path.to_string root in
   let result =
+    let (is_ignored, backup) = Files.is_ignored options file in
     if SSet.mem file libs then
       (* This is a lib file *)
       let flowtyped_path = Files.get_flowtyped_path root in
@@ -88,8 +89,8 @@ let explain ~flowconfig_name ~root ~options ~libs raw_file =
         ExplicitLib
     else if Server_files_js.config_file flowconfig_name root = file then
       ConfigFile
-    else if Files.is_ignored options file then
-      ExplicitlyIgnored None
+    else if is_ignored then
+      ExplicitlyIgnored backup
     else if String.starts_with ~prefix:root_str file then
       ImplicitlyIncluded
     else if Files.is_included options file then
@@ -104,7 +105,16 @@ let json_of_files_with_explanations files =
     let properties =
       Base.List.map
         ~f:(fun (file, res) ->
-          (file, JSON_Object [("explanation", JSON_String (string_of_file_result res))]))
+          ( file,
+            match res with
+            | ExplicitlyIgnored (Some backup) ->
+              JSON_Object
+                [
+                  ("explanation", JSON_String (string_of_file_result res));
+                  ("backup", JSON_String backup);
+                ]
+            | _ -> JSON_Object [("explanation", JSON_String (string_of_file_result res))]
+          ))
         files
     in
     JSON_Object properties

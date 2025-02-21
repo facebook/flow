@@ -593,14 +593,29 @@ let ordered_and_unordered_lib_paths (options : options) =
   in
   (libs, SSet.of_list libs)
 
+let is_matching_path path pattern rx current =
+  if String.starts_with ~prefix:"!" pattern then
+    current && not (Str.string_match rx path 0)
+  else
+    current || Str.string_match rx path 0
+
 let is_matching path pattern_list =
   List.fold_left
-    (fun current (pattern, rx) ->
-      if String.starts_with ~prefix:"!" pattern then
-        current && not (Str.string_match rx path 0)
-      else
-        current || Str.string_match rx path 0)
+    (fun current (pattern, rx) -> is_matching_path path pattern rx current)
     false
+    pattern_list
+
+let is_matching_ignore path pattern_list =
+  List.fold_left
+    (fun (matched_already, current_backup) ((pattern, backup), rx) ->
+      let matches = is_matching_path path pattern rx matched_already in
+      ( matches,
+        if matches && current_backup = None then
+          backup
+        else
+          current_backup
+      ))
+    (false, None)
     pattern_list
 
 (* true if a file path matches an [ignore] entry in config *)
@@ -608,7 +623,7 @@ let is_ignored (options : options) path =
   (* On Windows, the path may use \ instead of /, but let's standardize the
    * ignore regex to use / *)
   let path = Sys_utils.normalize_filename_dir_sep path in
-  is_matching path (options.ignores |> List.map (fun ((x, _y), z) -> (x, z)))
+  is_matching_ignore path options.ignores
 
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options : options) path =
@@ -628,7 +643,7 @@ let is_declaration (options : options) path =
 let is_included options f = Path_matcher.matches options.includes f
 
 let wanted ~options ~include_libdef lib_fileset =
-  let is_ignored_ = is_ignored options in
+  let is_ignored_ path = fst (is_ignored options path) in
   if include_libdef then
     fun path ->
   (not (is_ignored_ path)) || SSet.mem path lib_fileset
