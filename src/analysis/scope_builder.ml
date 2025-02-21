@@ -260,8 +260,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let { id; tparams; impltype; supertype; comments = _ } = alias in
           ignore @@ this#binding_type_identifier id;
           this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-              ignore @@ Base.Option.map ~f:this#type_ impltype;
-              ignore @@ Base.Option.map ~f:this#type_ supertype
+              run_opt this#type_ impltype;
+              run_opt this#type_ supertype
           );
           alias
 
@@ -270,7 +270,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           interface
         else
           let open Ast.Statement.Interface in
-          let { id; tparams; extends; body = (body_loc, body); comments = _ } = interface in
+          let { id; tparams; extends; body; comments = _ } = interface in
           ignore @@ this#binding_type_identifier id;
           let extends_targs =
             Base.List.filter_map
@@ -280,8 +280,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               extends
           in
           this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-              ignore @@ Base.List.map ~f:this#type_args extends_targs;
-              ignore @@ this#object_type body_loc body
+              run_list this#type_args extends_targs;
+              run_loc this#object_type body
           );
           interface
 
@@ -638,7 +638,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           | (loc, { name; bound; bound_kind = _; variance; default; const = _ }) :: next ->
             hoist_op (fun () -> ignore @@ this#type_annotation_hint bound);
             ignore @@ this#variance_opt variance;
-            hoist_op (fun () -> ignore @@ Base.Option.map ~f:this#type_ default);
+            hoist_op (fun () -> run_opt this#type_ default);
             let bindings =
               Bindings.(
                 singleton (name, Bindings.Type { imported = false; type_only_namespace = false })
@@ -664,7 +664,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
              so bounds in infer cannot refer to other infer types in the same hoisted list. *)
           Base.List.iter tps ~f:(fun (_, { bound; default; _ }) ->
               ignore @@ this#type_annotation_hint bound;
-              ignore @@ Base.Option.map ~f:this#type_ default
+              run_opt this#type_ default
           );
           let bindings =
             Base.List.fold tps ~init:Bindings.empty ~f:(fun bindings (_, { name; _ }) ->
@@ -706,7 +706,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! infer_type t = t
 
       method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
-        Base.Option.iter ident ~f:(fun id -> ignore @@ this#function_identifier id)
+        run_opt this#function_identifier ident
 
       method component_body_with_params ~component_loc:_ body params =
         (* In component syntax param types and defaults cannot reference other params, so we visit
@@ -728,7 +728,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                    shorthand = _;
                    name = _;
                  }
-               ) -> Base.Option.iter default ~f:(fun default -> ignore @@ this#expression default))
+               ) -> run_opt this#expression default)
           inline_params;
         let params_without_annots_and_defaults =
           let visitor = new component_annot_collector_and_default_remover in
@@ -936,10 +936,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           ft
         in
         let in_tparam_scope () =
-          ignore @@ Base.Option.map ~f:this#function_this_param_type this_;
-          ignore @@ Base.List.map ~f:this#function_param_type ps;
-          ignore @@ Base.Option.map ~f:this#function_rest_param_type rpo;
-          ignore @@ this#function_type_return_annotation return
+          run_opt this#function_this_param_type this_;
+          run_list this#function_param_type ps;
+          run_opt this#function_rest_param_type rpo;
+          run this#function_type_return_annotation return
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         ft
@@ -1008,21 +1008,18 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           )
         in
         let in_tparam_scope () =
-          ignore @@ Base.Option.map ~f:this#type_args extends_targs;
-          ignore @@ Base.List.map ~f:this#type_args implements_targs;
+          run_opt this#type_args extends_targs;
+          run_list this#type_args implements_targs;
           ignore @@ this#class_body body
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         cls
 
-      method private class_identifier_opt ~class_loc:_ id =
-        ignore @@ Base.Option.map ~f:this#class_identifier id
+      method private class_identifier_opt ~class_loc:_ id = run_opt this#class_identifier id
 
       method! declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
         let open Ast.Statement.DeclareClass in
-        let { id; tparams; body = (body_loc, body); extends; mixins; implements; comments = _ } =
-          decl
-        in
+        let { id; tparams; body; extends; mixins; implements; comments = _ } = decl in
         ignore @@ this#class_identifier id;
         let extends_targs =
           Base.Option.value_map
@@ -1053,10 +1050,10 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           )
         in
         let in_tparam_scope () =
-          ignore @@ Base.Option.map ~f:this#type_args extends_targs;
-          ignore @@ Base.List.map ~f:this#type_args mixins_targs;
-          ignore @@ Base.List.map ~f:this#type_args implements_targs;
-          ignore @@ this#object_type body_loc body
+          run_opt this#type_args extends_targs;
+          run_list this#type_args mixins_targs;
+          run_list this#type_args implements_targs;
+          run_loc this#object_type body
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         decl

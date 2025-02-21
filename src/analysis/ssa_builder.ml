@@ -565,7 +565,7 @@ struct
           end
           | (_, Expression _) ->
             (* This is an invalid expression that will cause a runtime error, so we skip the left hand side *)
-            ignore @@ Base.Option.map ~f:this#expression init
+            run_opt this#expression init
         end;
         decl
 
@@ -599,7 +599,7 @@ struct
       method! return _loc (stmt : (L.t, L.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
         let { argument; comments = _; return_out = _ } = stmt in
-        ignore @@ Flow_ast_mapper.map_opt this#expression argument;
+        run_opt this#expression argument;
         this#raise_abrupt_completion AbruptCompletion.return
 
       method! throw _loc (stmt : (L.t, L.t) Ast.Statement.Throw.t) =
@@ -646,11 +646,10 @@ struct
         this#reset_ssa_env env0;
         let else_completion_state =
           this#run_to_completion (fun () ->
-              ignore
-              @@ Flow_ast_mapper.map_opt
-                   (fun (loc, { Alternate.body; comments }) ->
-                     (loc, { Alternate.body = this#statement body; comments }))
-                   alternate
+              run_opt
+                (fun (loc, { Alternate.body; comments }) ->
+                  (loc, { Alternate.body = this#statement body; comments }))
+                alternate
           )
         in
         (* merge environments *)
@@ -814,10 +813,10 @@ struct
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.For in
             let { init; test; update; body; comments = _ } = stmt in
-            ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+            run_opt this#for_statement_init init;
             let env1 = this#fresh_ssa_env in
             this#merge_self_ssa_env env1;
-            ignore @@ Flow_ast_mapper.map_opt this#expression test;
+            run_opt this#expression test;
             let env2 = this#ssa_env in
             let loop_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#statement body)
@@ -832,7 +831,7 @@ struct
             in
             begin
               match loop_completion_state with
-              | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+              | None -> run_opt this#expression update
               | _ -> ()
             end;
             this#assert_ssa_env env1;
@@ -1035,7 +1034,7 @@ struct
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
-        ignore @@ Flow_ast_mapper.map_opt this#expression test;
+        run_opt this#expression test;
         let env0 = this#ssa_env in
         this#merge_ssa_env env0 env;
         let case_completion_state =
