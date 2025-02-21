@@ -546,14 +546,9 @@ let is_in_flowlib (options : options) : string -> bool =
     let root = File_path.make root_str in
     is_prefix (File_path.to_string root)
 
-let init ?(flowlibs_only = false) (options : options) =
+let init (options : options) =
   let node_module_filter = is_node_module options in
-  let libs =
-    if flowlibs_only then
-      []
-    else
-      options.lib_paths
-  in
+  let libs = options.lib_paths in
   let (libs, filter) =
     match options.default_lib_dir with
     | None -> (libs, is_valid_path ~options)

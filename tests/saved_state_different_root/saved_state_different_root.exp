@@ -1,0 +1,21 @@
+Generate saved-state
+Use saved state in a different root
+Error ----------------------------------------------------------------------------------------------------- test.js:1:19
+
+Cannot assign `new Object()` to `a` because `Object` [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:1:19
+   1| const a: string = new Object()
+                        ^^^^^^^^^^^^ [1]
+
+References:
+   test.js:1:10
+   1| const a: string = new Object()
+               ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 2/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

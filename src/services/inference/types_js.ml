@@ -1874,18 +1874,13 @@ let init_with_initial_state
 let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   with_transaction "init" @@ fun transaction reader ->
   let is_init = Option.is_none env in
-  let file_options = Options.file_options options in
-
-  (* We don't want to walk the file system for the checked in files. But we still need to find the
-   * flowlibs *)
-  let (ordered_flowlib_libs, _) = Files.init ~flowlibs_only:true file_options in
 
   let {
     Saved_state.flowconfig_hash = _;
     parsed_heaps;
     unparsed_heaps;
     package_heaps;
-    ordered_non_flowlib_libs;
+    ordered_libs;
     local_errors;
     node_modules_containers;
     dependency_graph;
@@ -2077,7 +2072,6 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
 
   if verify then assert_valid_hashes updates invalid_hashes;
 
-  let ordered_libs = List.rev_append (List.rev ordered_flowlib_libs) ordered_non_flowlib_libs in
   let%lwt (env, libs_ok) =
     init_with_initial_state
       ~profiling
@@ -2299,7 +2293,7 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          Recheck_updates.process_updates
            ~options
-           ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
+           ~libs:(SSet.of_list saved_state.Saved_state.ordered_libs)
            changed_files
        in
        let updates =

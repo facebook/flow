@@ -51,7 +51,7 @@ type saved_state_data = {
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
   package_heaps: (File_key.t * package_file_data) list;  (** package.json info *)
-  ordered_non_flowlib_libs: string list;
+  ordered_libs: string list;
   (* Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
    *
    * 1. Much smaller data structure. The whole env.errors data structure can be hundreds of MBs
@@ -170,15 +170,14 @@ end = struct
    * *)
   let normalize_path t path = intern t (Files.relative_path t.root path)
 
+  let normalize_libdef_path t p =
+    match t.builtin_flowlib_root with
+    | Some flowlib_root when String.starts_with ~prefix:flowlib_root p ->
+      intern t (builtin_flow_lib_marker ^ Files.relative_path flowlib_root p)
+    | _ -> normalize_path t p
+
   let normalize_file_key t = function
-    | File_key.LibFile p ->
-      let p =
-        match t.builtin_flowlib_root with
-        | Some flowlib_root when String.starts_with ~prefix:flowlib_root p ->
-          intern t (builtin_flow_lib_marker ^ Files.relative_path flowlib_root p)
-        | _ -> normalize_path t p
-      in
-      File_key.LibFile p
+    | File_key.LibFile p -> File_key.LibFile (normalize_libdef_path t p)
     | File_key.SourceFile p -> File_key.SourceFile (normalize_path t p)
     | File_key.JsonFile p -> File_key.JsonFile (normalize_path t p)
     | File_key.ResourceFile p -> File_key.ResourceFile (normalize_path t p)
@@ -325,13 +324,6 @@ end = struct
       let relative_fn = normalize_file_key t fn in
       (relative_fn, relative_file_data) :: unparsed_heaps
 
-  (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
-   * will extract and typecheck its own builtin flowlibs *)
-  let is_not_in_flowlib ~options =
-    let file_options = Options.file_options options in
-    let is_in_flowlib = Files.is_in_flowlib file_options in
-    (fun f -> not (is_in_flowlib f))
-
   let normalize_error_set t = Flow_error.ErrorSet.map (normalize_error t)
 
   (* Collect all the data for all the files *)
@@ -365,11 +357,7 @@ end = struct
             []
       )
     in
-    let ordered_non_flowlib_libs =
-      env.ServerEnv.ordered_libs
-      |> List.filter (is_not_in_flowlib ~options)
-      |> Base.List.map ~f:(normalize_path t)
-    in
+    let ordered_libs = Base.List.map env.ServerEnv.ordered_libs ~f:(normalize_libdef_path t) in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
@@ -417,7 +405,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        ordered_non_flowlib_libs;
+        ordered_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;
@@ -526,6 +514,8 @@ end = struct
 
     val denormalize_path : t -> string -> string
 
+    val denormalize_libdef_path : t -> string -> string
+
     val denormalize_file_key_no_cache : t -> File_key.t -> File_key.t
 
     val denormalize_file_key : t -> File_key.t -> File_key.t
@@ -545,17 +535,16 @@ end = struct
      * these calls does not even save a single word in the denormalized saved state object. *)
     let denormalize_path { root; _ } path = Files.absolute_path root path
 
+    let denormalize_libdef_path t p =
+      match t.builtin_flowlib_root with
+      | Some flowlib_root ->
+        (match Base.String.chop_prefix ~prefix:builtin_flow_lib_marker p with
+        | Some p -> Files.absolute_path flowlib_root p
+        | None -> denormalize_path t p)
+      | None -> denormalize_path t p
+
     let denormalize_file_key_no_cache t = function
-      | File_key.LibFile p ->
-        let p =
-          match t.builtin_flowlib_root with
-          | Some flowlib_root ->
-            (match Base.String.chop_prefix ~prefix:builtin_flow_lib_marker p with
-            | Some p -> Files.absolute_path flowlib_root p
-            | None -> denormalize_path t p)
-          | None -> denormalize_path t p
-        in
-        File_key.LibFile p
+      | File_key.LibFile p -> File_key.LibFile (denormalize_libdef_path t p)
       | File_key.SourceFile p -> File_key.SourceFile (denormalize_path t p)
       | File_key.JsonFile p -> File_key.JsonFile (denormalize_path t p)
       | File_key.ResourceFile p -> File_key.ResourceFile (denormalize_path t p)
@@ -686,7 +675,7 @@ end = struct
       parsed_heaps;
       unparsed_heaps;
       package_heaps;
-      ordered_non_flowlib_libs;
+      ordered_libs;
       local_errors;
       node_modules_containers;
       dependency_graph;
@@ -712,8 +701,8 @@ end = struct
       let progress_fn = progress_fn (List.length unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps
     in
-    let ordered_non_flowlib_libs =
-      Base.List.map ~f:(FileDenormalizer.denormalize_path denormalizer) ordered_non_flowlib_libs
+    let ordered_libs =
+      Base.List.map ~f:(FileDenormalizer.denormalize_libdef_path denormalizer) ordered_libs
     in
     let local_errors =
       FilenameMap.fold
@@ -738,7 +727,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        ordered_non_flowlib_libs;
+        ordered_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;
