@@ -556,7 +556,7 @@ end = struct
         match callee with
         | (_, Ast.Expression.Super _) ->
           (* Do not visit callee so that we can avoid a forward-reference error. *)
-          ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
+          run_opt this#call_type_args targs;
           ignore @@ this#arg_list arguments;
           (* Only after the super call, `this` and `super` are defined. *)
           this#init_this_super loc;
@@ -2169,7 +2169,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let open Ast.Pattern.Array.Element in
         let (_, { argument; default }) = elem in
         (* Flip order compared to base class *)
-        let _default' = Flow_ast_mapper.map_opt this#expression default in
+        run_opt this#expression default;
         let _argument' = this#pattern_array_element_pattern ?kind argument in
         elem
 
@@ -2810,7 +2810,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         (match (env_state.type_guard_name, argument) with
         | (None, _)
         | (Some _, None) ->
-          ignore @@ Flow_ast_mapper.map_opt this#expression argument
+          run_opt this#expression argument
         | (Some name, Some argument) ->
           let return = mk_expression_reason argument in
           this#record_type_guard_maps name return argument);
@@ -2875,11 +2875,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#negate_new_refinements ();
         let else_completion_state =
           this#run_to_completion (fun () ->
-              ignore
-              @@ Flow_ast_mapper.map_opt
-                   (fun (loc, { Alternate.body; comments }) ->
-                     (loc, { Alternate.body = this#statement body; comments }))
-                   alternate
+              run_opt
+                (fun (loc, { Alternate.body; comments }) ->
+                  (loc, { Alternate.body = this#statement body; comments }))
+                alternate
           )
         in
         (* merge environments *)
@@ -3713,27 +3712,27 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let { init; test; update; body; comments = _ } = stmt in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
         let scout () =
-          ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
-          ignore @@ Flow_ast_mapper.map_opt this#expression test;
+          run_opt this#for_statement_init init;
+          run_opt this#expression test;
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
           let loop_completion_state = this#handle_continues loop_completion_state continues in
           match loop_completion_state with
-          | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+          | None -> run_opt this#expression update
           | Some _ -> ()
         in
         let visit_guard_and_body () =
-          ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+          run_opt this#for_statement_init init;
           let env_before_guard = this#env_snapshot in
-          ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
+          run_opt this#expression_refinement test;
           let env = this#env_snapshot_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
           let loop_completion_state = this#handle_continues loop_completion_state continues in
           (match loop_completion_state with
-          | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+          | None -> run_opt this#expression update
           | Some _ -> ());
           (loop_completion_state, env_before_guard, Some env)
         in
@@ -4628,7 +4627,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   }
                 )
               ) ->
-              let _ = List.map this#expression_or_spread other_args in
+              run_list this#expression_or_spread other_args;
               this#raise_abrupt_completion AbruptCompletion.throw
             | ( None,
                 ( _,
@@ -4640,7 +4639,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               ) ->
               this#push_refinement_scope empty_refinements;
               ignore @@ this#expression_refinement cond;
-              let _ = List.map this#expression_or_spread other_args in
+              run_list this#expression_or_spread other_args;
               this#pop_refinement_scope_without_unrefining ()
             | ( _,
                 ( _,
@@ -6019,8 +6018,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                  ~can_refine_obj_prop:OptionalChainingRefinement.CanApplyPropNonNullishRefi
                  callee;
             this#commit_refinement refi;
-            let _targs' = Base.Option.map ~f:this#call_type_args targs in
-            let _arguments' = this#arg_list arguments in
+            run_opt this#call_type_args targs;
+            run this#arg_list arguments;
             this#pop_refinement_scope ();
             this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc
           | Member mem -> ignore @@ this#member loc mem

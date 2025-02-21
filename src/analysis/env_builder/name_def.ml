@@ -7,7 +7,7 @@
 
 open Hint
 open Reason
-open Flow_ast_mapper
+open Flow_ast_visitor
 open Loc_collections
 module EnvMap = Env_api.EnvMap
 module EnvSet = Env_api.EnvSet
@@ -557,9 +557,9 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
         | (Ast.Function.ReturnAnnot.TypeGuard _, _) ->
           true
         | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyExpression e) -> synthesizable e
-        | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyBlock (loc, block)) ->
+        | (Ast.Function.ReturnAnnot.Missing _, Ast.Function.BodyBlock block) ->
           let collector = new returned_expression_collector in
-          ignore @@ collector#block loc block;
+          run_loc collector#block block;
           collector#acc |> Base.List.for_all ~f:synthesizable
       ) else
         false
@@ -1357,8 +1357,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           this#record_hint renders_loc renders_hint;
           let old_stack = return_hint_stack in
           return_hint_stack <- renders_hint :: return_hint_stack;
-          let (body_loc, block) = body in
-          ignore @@ this#block body_loc block;
+          run_loc this#block body;
           return_hint_stack <- old_stack)
         ComponentBody
         ()
@@ -1685,7 +1684,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             expr
           in
           Base.Option.iter fun_tparams ~f:(fun tparams -> ignore @@ this#type_params tparams);
-          ignore (Base.Option.map this_ ~f:this#function_this_param : _ option);
+          run_opt this#function_this_param this_;
           let param_str_list = this#params_list_to_str_opt params_list in
           let pred = this#hint_pred_kind params body return in
           Base.List.iteri
@@ -1771,14 +1770,14 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           let () =
             this#in_scope
               (fun () ->
-                Flow_ast_visitor.run_opt this#class_identifier id;
-                Flow_ast_visitor.run_opt this#type_params class_tparams;
+                run_opt this#class_identifier id;
+                run_opt this#type_params class_tparams;
                 let this_tparam_loc = Base.Option.value_map ~default:loc ~f:fst id in
                 this#add_tparam this_tparam_loc "this";
                 ignore @@ this#class_body body;
-                Flow_ast_visitor.run_opt (Flow_ast_mapper.map_loc this#class_extends) extends;
-                Flow_ast_visitor.run_opt this#class_implements implements;
-                Flow_ast_visitor.run_list this#class_decorator class_decorators;
+                run_loc_opt this#class_extends extends;
+                run_opt this#class_implements implements;
+                run_list this#class_decorator class_decorators;
                 ())
               Ordinary
               ()
@@ -1837,7 +1836,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
       let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
-      let (_ : _ list) = map_list this#class_decorator decorators in
+      run_list this#class_decorator decorators;
       ignore @@ this#object_key key;
       ignore @@ this#type_annotation_hint annot;
       let hints =
@@ -1853,7 +1852,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
       let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
-      let (_ : _ list) = map_list this#class_decorator decorators in
+      run_list this#class_decorator decorators;
       ignore @@ this#private_name key;
       ignore @@ this#type_annotation_hint annot;
       let hints =
@@ -1883,7 +1882,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             this#visit_function ~scope_kind ~func_hints:[] value
         )
       in
-      let (_ : _ list) = map_list this#class_decorator decorators in
+      run_list this#class_decorator decorators;
       meth
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
@@ -3148,7 +3147,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! match_expression loc _ = fail loc "Should be visited by visit_match_expression"
 
     method! match_statement _ x =
-      this#visit_match ~on_case_body:(fun b -> ignore @@ map_loc this#block b) x;
+      this#visit_match ~on_case_body:(fun b -> run_loc this#block b) x;
       x
 
     method private visit_match
@@ -3169,7 +3168,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             let acc = Value { hints = []; expr = match_root } in
             this#add_match_destructure_bindings acc pattern;
             ignore @@ super#match_pattern pattern;
-            Base.Option.iter guard ~f:(fun guard -> ignore @@ this#expression guard);
+            run_opt this#expression guard;
             on_case_body body
             )
 

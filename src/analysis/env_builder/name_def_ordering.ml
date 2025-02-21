@@ -6,6 +6,7 @@
  *)
 
 open Reason
+open Flow_ast_visitor
 open Loc_collections
 open Name_def
 open Dependency_sigs
@@ -215,11 +216,11 @@ struct
             | InstanceOfR exp -> ignore (this#expression exp)
             | LatentR { func; targs; arguments; index = _ } ->
               ignore @@ this#expression func;
-              ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
+              run_opt this#call_type_args targs;
               ignore @@ this#arg_list arguments
             | LatentThisR { func; targs; arguments } ->
               ignore @@ this#expression func;
-              ignore @@ Flow_ast_mapper.map_opt this#call_type_args targs;
+              run_opt this#call_type_args targs;
               ignore @@ this#arg_list arguments
             | SentinelR { prop = _; other_loc } ->
               this#add ~why:other_loc (Env_api.ExpressionLoc, other_loc)
@@ -394,7 +395,7 @@ struct
         method! function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
           let open Ast.Type.Function.Param in
           let (_, { annot; _ }) = fpt in
-          let _annot' = this#type_ annot in
+          run this#type_ annot;
           fpt
 
         method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
@@ -420,63 +421,50 @@ struct
           let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
           (* Ignore renamed export *)
           let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
-          let _local : (_, _) Ast.Identifier.t = this#identifier local in
+          run this#identifier local;
           spec
 
         (* For classes/functions that are known to be fully annotated, we skip property bodies *)
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
           let { Ast.Function.params; body; predicate; return; tparams; _ } = expr in
-          let open Flow_ast_mapper in
-          let _ = this#function_return_annotation return in
-          let _ =
-            if fully_annotated then
-              (body, this#function_params_annotated params, predicate)
-            else
-              ( this#function_body_any body,
-                this#function_params params,
-                map_opt this#predicate predicate
-              )
-          in
-          let _ = map_opt this#type_params tparams in
-          ()
+          run this#function_return_annotation return;
+          if fully_annotated then
+            this#function_params_annotated params
+          else (
+            run this#function_body_any body;
+            run this#function_params params;
+            run_opt this#predicate predicate
+          );
+          run_opt this#type_params tparams
 
         method component_def (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
           let { Ast.Statement.ComponentDeclaration.params; renders; tparams; _ } = expr in
-          let open Flow_ast_mapper in
-          let _ = this#component_renders_annotation renders in
-          let _ = this#component_params_annotated params in
-          let _ = map_opt this#type_params tparams in
-          ()
+          run this#component_renders_annotation renders;
+          run this#component_params_annotated params;
+          run_opt this#type_params tparams
 
         method! declare_component _ (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
           let { Ast.Statement.DeclareComponent.params; renders; tparams; _ } = expr in
-          let open Flow_ast_mapper in
-          let _ = this#component_renders_annotation renders in
-          let _ = map_opt this#type_params tparams in
-          let _ = this#component_type_params params in
+          run this#component_renders_annotation renders;
+          run_opt this#type_params tparams;
+          run this#component_type_params params;
           expr
 
         method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =
           let open Ast.Pattern in
-          let open Flow_ast_mapper in
           let (_, patt) = expr in
           begin
             match patt with
             | Object { Object.properties; annot; comments = _ } ->
-              let _properties' =
-                map_list this#function_param_pattern_object_p_annotated properties
-              in
-              let _annot' = this#type_annotation_hint annot in
-              ()
+              Base.List.iter ~f:this#function_param_pattern_object_p_annotated properties;
+              run this#type_annotation_hint annot
             | Array { Array.elements; annot; comments = _ } ->
-              let _elements' = map_list this#function_param_pattern_array_e_annotated elements in
-              let _annot' = this#type_annotation_hint annot in
-              ()
+              Base.List.iter ~f:this#function_param_pattern_array_e_annotated elements;
+              run this#type_annotation_hint annot
             | Identifier { Identifier.name; annot; optional = _ } ->
-              let _name' = this#pattern_identifier name in
-              let _annot' = this#type_annotation_hint annot in
-              ()
-            | Expression e -> ignore @@ id this#pattern_expression e patt (fun e -> Expression e)
+              run this#pattern_identifier name;
+              run this#type_annotation_hint annot
+            | Expression e -> run this#pattern_expression e
           end;
           expr
 
@@ -501,23 +489,16 @@ struct
         method function_param_pattern_object_p_annotated
             (p : ('loc, 'loc) Ast.Pattern.Object.property) =
           let open Ast.Pattern.Object in
-          let open Flow_ast_mapper in
           match p with
-          | Property prop ->
-            id this#function_param_pattern_object_property_annotated prop p (fun prop ->
-                Property prop
-            )
-          | RestElement prop ->
-            id this#function_param_pattern_object_rest_property_annotated prop p (fun prop ->
-                RestElement prop
-            )
+          | Property prop -> run this#function_param_pattern_object_property_annotated prop
+          | RestElement prop -> run this#function_param_pattern_object_rest_property_annotated prop
 
         method function_param_pattern_object_property_annotated
             (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t) =
           let open Ast.Pattern.Object.Property in
           let (_, { key; pattern; default = _; shorthand = _ }) = prop in
-          let _key' = this#pattern_object_property_key key in
-          let _pattern' = this#function_param_pattern_annotated pattern in
+          run this#pattern_object_property_key key;
+          run this#function_param_pattern_annotated pattern;
           (* Skip default *)
           prop
 
@@ -525,27 +506,22 @@ struct
             (prop : ('loc, 'loc) Ast.Pattern.RestElement.t) =
           let open Ast.Pattern.RestElement in
           let (_, { argument; comments = _ }) = prop in
-          let _argument' = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           prop
 
         method function_param_pattern_array_e_annotated (e : ('loc, 'loc) Ast.Pattern.Array.element)
             =
           let open Ast.Pattern.Array in
-          let open Flow_ast_mapper in
           match e with
-          | Hole _ -> e
-          | Element elem ->
-            id this#function_param_pattern_array_element_annotated elem e (fun elem -> Element elem)
-          | RestElement elem ->
-            id this#function_param_pattern_array_rest_element_annotated elem e (fun elem ->
-                RestElement elem
-            )
+          | Hole _ -> ()
+          | Element elem -> run this#function_param_pattern_array_element_annotated elem
+          | RestElement elem -> run this#function_param_pattern_array_rest_element_annotated elem
 
         method function_param_pattern_array_element_annotated
             (elem : ('loc, 'loc) Ast.Pattern.Array.Element.t) =
           let open Ast.Pattern.Array.Element in
           let (_, { argument; default = _ }) = elem in
-          let _argument' = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           (* Skip default *)
           elem
 
@@ -553,23 +529,22 @@ struct
             (elem : ('loc, 'loc) Ast.Pattern.RestElement.t) =
           let open Ast.Pattern.RestElement in
           let (_, { argument; comments = _ }) = elem in
-          let _argument' = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           elem
 
         method component_params_annotated
             (params : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Params.t) =
-          let open Flow_ast_mapper in
           let open Ast.Statement.ComponentDeclaration in
           let (_, { Params.params = params_list; rest; comments = _ }) = params in
-          let _ = map_list this#component_param_annotated params_list in
-          let _ = map_opt this#component_rest_param_annotated rest in
+          run_list this#component_param_annotated params_list;
+          run_opt this#component_rest_param_annotated rest;
           params
 
         method component_param_annotated
             (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
           let open Ast.Statement.ComponentDeclaration.Param in
           let (_, { local; _ }) = param in
-          let _ = this#function_param_pattern_annotated local in
+          run this#function_param_pattern_annotated local;
           this#component_ref_param_maybe param;
           param
 
@@ -577,23 +552,21 @@ struct
             (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
           let open Ast.Statement.ComponentDeclaration.RestParam in
           let (_, { argument; _ }) = param in
-          let _ = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           param
 
         method function_params_annotated (params : ('loc, 'loc) Ast.Function.Params.t) =
-          let open Flow_ast_mapper in
           let open Ast.Function in
           let (_, { Params.params = params_list; rest; comments = _; this_ }) = params in
-          let _ = map_list this#function_param_annotated params_list in
-          let _ = map_opt this#function_rest_param_annotated rest in
-          let _ = map_opt this#function_this_param this_ in
-          params
+          run_list this#function_param_annotated params_list;
+          run_opt this#function_rest_param_annotated rest;
+          run_opt this#function_this_param this_
 
         method function_param_annotated (param : ('loc, 'loc) Ast.Function.Param.t) =
           let open Ast.Function.Param in
           let (loc, { argument; default = _ }) = param in
           (* Skip default *)
-          let _ = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           if (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
           then
             this#add ~why:loc (Env_api.FunctionParamLoc, loc);
@@ -602,14 +575,14 @@ struct
         method function_rest_param_annotated (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
           let open Ast.Function.RestParam in
           let (_, { argument; comments = _ }) = expr in
-          let _argument' = this#function_param_pattern_annotated argument in
+          run this#function_param_pattern_annotated argument;
           expr
 
         method! type_guard guard =
           let open Ast.Type.TypeGuard in
           let (_, { guard = (_x, t); _ }) = guard in
           (* We don't need to include the type guard name here *)
-          let _ = Flow_ast_mapper.map_opt this#type_ t in
+          run_opt this#type_ t;
           guard
 
         method! function_ loc expr =
@@ -642,7 +615,7 @@ struct
         method class_extends_sig
             ((_, { Ast.Class.Extends.expr; targs; comments = _ }) : ('loc, 'loc) Ast.Class.Extends.t)
             : unit =
-          Base.Option.iter targs ~f:(fun targs -> ignore @@ this#type_args targs);
+          run_opt this#type_args targs;
           (* We only visit expressions that is used to generate the class signature. *)
           let rec visit_expr_for_sig ((_, expr') as expr) =
             let open Ast.Expression in
@@ -673,10 +646,9 @@ struct
         method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
           let open Ast.Class.Method in
           let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
-          let _ = Base.List.map ~f:this#class_decorator decorators in
-          let _ = this#object_key key in
-          let _ = this#function_def ~fully_annotated:true value in
-          ()
+          run_list this#class_decorator decorators;
+          run this#object_key key;
+          this#function_def ~fully_annotated:true value
 
         method private class_property_value_annotated value =
           let open Ast.Class.Property in
@@ -684,37 +656,31 @@ struct
           | Initialized
               ((_, Ast.Expression.ArrowFunction function_) | (_, Ast.Expression.Function function_))
             ->
-            this#function_def ~fully_annotated:true function_;
-            value
-          | Initialized _ -> value
-          | Declared -> value
-          | Uninitialized -> value
+            this#function_def ~fully_annotated:true function_
+          | Initialized _
+          | Declared
+          | Uninitialized ->
+            ()
 
         method class_property_annotated (prop : ('loc, 'loc) Ast.Class.Property.t') =
           let open Ast.Class.Property in
           let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
-          let _ = Base.List.map ~f:this#class_decorator decorators in
-          let _ = this#object_key key in
-          let _ = this#type_annotation_hint annot in
-          let _ =
-            match annot with
-            | Ast.Type.Missing _ -> this#class_property_value_annotated value
-            | Ast.Type.Available _ -> value
-          in
-          ()
+          run_list this#class_decorator decorators;
+          run this#object_key key;
+          run this#type_annotation_hint annot;
+          match annot with
+          | Ast.Type.Missing _ -> this#class_property_value_annotated value
+          | Ast.Type.Available _ -> ()
 
         method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
           let open Ast.Class.PrivateField in
           let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
-          let _ = Base.List.map ~f:this#class_decorator decorators in
-          let _ = this#private_name key in
-          let _ = this#type_annotation_hint annot in
-          let _ =
-            match annot with
-            | Ast.Type.Missing _ -> this#class_property_value_annotated value
-            | Ast.Type.Available _ -> value
-          in
-          ()
+          run_list this#class_decorator decorators;
+          run this#private_name key;
+          run this#type_annotation_hint annot;
+          match annot with
+          | Ast.Type.Missing _ -> this#class_property_value_annotated value
+          | Ast.Type.Available _ -> ()
 
         (* In order to resolve a def containing a read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
@@ -910,12 +876,11 @@ struct
           { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = visitor#class_body_annotated body in
+            run visitor#class_body_annotated body;
             Base.Option.iter ~f:visitor#class_extends_sig extends;
-            let _ = map_opt visitor#class_implements implements in
-            let _ = map_list visitor#class_decorator class_decorators in
-            let _ = map_opt visitor#type_params tparams in
+            run_opt visitor#class_implements implements;
+            run_list visitor#class_decorator class_decorators;
+            run_opt visitor#type_params tparams;
             ())
           EnvMap.empty
       in
@@ -931,12 +896,11 @@ struct
           } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_opt visitor#type_params tparams in
-            let _ = map_loc visitor#object_type body in
-            let _ = map_opt (map_loc visitor#generic_type) extends in
-            let _ = map_list (map_loc visitor#generic_type) mixins in
-            let _ = map_opt visitor#class_implements implements in
+            run_opt visitor#type_params tparams;
+            run_loc visitor#object_type body;
+            run_loc_opt visitor#generic_type extends;
+            Base.List.iter ~f:(run_loc visitor#generic_type) mixins;
+            run_opt visitor#class_implements implements;
             ())
           EnvMap.empty
       in
@@ -953,47 +917,42 @@ struct
           { Ast.Statement.DeclareNamespace.id = _; body; comments = _ } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_loc visitor#block body in
+            run_loc visitor#block body;
             ())
           EnvMap.empty
       in
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_opt visitor#type_params tparams in
-            let _ = visitor#type_ right in
+            run_opt visitor#type_params tparams;
+            run visitor#type_ right;
             ())
           EnvMap.empty
       in
       let depends_of_opaque { Ast.Statement.OpaqueType.tparams; impltype; supertype; _ } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_opt visitor#type_params tparams in
-            let _ = map_opt visitor#type_ impltype in
-            let _ = map_opt visitor#type_ supertype in
+            run_opt visitor#type_params tparams;
+            run_opt visitor#type_ impltype;
+            run_opt visitor#type_ supertype;
             ())
           EnvMap.empty
       in
       let depends_of_tparam tparams_map (_, { Ast.Type.TypeParam.bound; variance; default; _ }) =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = visitor#type_annotation_hint bound in
-            let _ = visitor#variance_opt variance in
-            let _ = map_opt visitor#type_ default in
+            run visitor#type_annotation_hint bound;
+            run visitor#variance_opt variance;
+            run_opt visitor#type_ default;
             ())
           (depends_of_tparams_map tparams_map EnvMap.empty)
       in
       let depends_of_interface { Ast.Statement.Interface.tparams; extends; body; _ } =
         depends_of_node
           (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = map_opt visitor#type_params tparams in
-            let _ = map_list (map_loc visitor#generic_type) extends in
-            let _ = map_loc visitor#object_type body in
+            run_opt visitor#type_params tparams;
+            Base.List.iter ~f:(run_loc visitor#generic_type) extends;
+            run_loc visitor#object_type body;
             ())
           EnvMap.empty
       in
