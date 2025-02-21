@@ -2391,7 +2391,7 @@ Flags: --pretty
     },
     {
       "name":"?.includes",
-      "type":"void | ((searchElement: mixed, fromIndex?: number) => boolean)"
+      "type":"void | ((searchElement: mixed, fromIndex?: number) => implies searchElement is T)"
     },
     {
       "name":"?.indexOf",
@@ -2500,7 +2500,7 @@ Flags: --pretty
     },
     {
       "name":"includes",
-      "type":"(searchElement: mixed, fromIndex?: number) => boolean"
+      "type":"(searchElement: mixed, fromIndex?: number) => implies searchElement is T"
     },
     {
       "name":"indexOf",
