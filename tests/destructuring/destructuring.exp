@@ -207,6 +207,28 @@ References:
                     ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- array_rest.js:16:12
+
+Cannot assign array literal to `arr` because in index 0: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   array_rest.js:16:12
+   16| [...arr] = [true]; // error boolean ~> number|string
+                  ^^^^^^
+
+References:
+   array_rest.js:16:13
+   16| [...arr] = [true]; // error boolean ~> number|string
+                   ^^^^ [1]
+   array_rest.js:14:21
+   14| declare var arr :  [number|string];
+                           ^^^^^^ [2]
+   array_rest.js:14:28
+   14| declare var arr :  [number|string];
+                                  ^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- computed.js:2:2
 
 Cannot cast `val1` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -1581,7 +1603,7 @@ References:
 
 
 
-Found 111 errors
+Found 112 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

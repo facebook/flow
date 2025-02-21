@@ -2106,7 +2106,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | RArrayLit
         | REmptyArrayLit
         | RRestArrayLit _
-        | RReactChildren ->
+        | RReactChildren
+        | RArrayPatternRestProp ->
           true
         | _ -> false
       in

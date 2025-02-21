@@ -10,3 +10,7 @@ let d = zs[1]; // run off the end
 (d: void); // error: number|string|boolean ~> void
 
 let [...e] = 0;
+
+declare var arr :  [number|string];
+[...arr] = [1]; // okay
+[...arr] = [true]; // error boolean ~> number|string
