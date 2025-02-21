@@ -2656,29 +2656,17 @@ module Make
             }
         )
       | _ ->
-        let annot_t =
+        let () =
           match annot with
-          | Ast.Type.Missing _ ->
-            (match init_opt with
-            | Some (init_t, _) -> init_t
-            | None -> EmptyT.why id_reason)
+          | Ast.Type.Missing _ -> ()
           | Ast.Type.Available annot ->
             let (annot_t, _) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
             Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
                 let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
                 Flow.flow cx (init_t, UseT (use_op, annot_t))
-            );
-            annot_t
+            )
         in
-        let init =
-          Destructuring.empty
-            ?init
-            annot_t
-            ~annot:
-              (match annot with
-              | Ast.Type.Missing _ -> false
-              | Ast.Type.Available _ -> true)
-        in
+        let init = Destructuring.empty ?init () in
         Destructuring.pattern cx init id ~f:(fun ~use_op ~name_loc name default t ->
             let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
 
@@ -5466,7 +5454,7 @@ module Make
         in
         ((lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), lhs))
       (* other r structures are handled as destructuring assignments *)
-      | _ -> Destructuring.assignment cx t rhs lhs
+      | _ -> Destructuring.assignment cx rhs lhs
     in
     (t, lhs, typed_rhs)
 

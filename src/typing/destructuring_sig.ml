@@ -12,11 +12,7 @@ module type S = sig
     use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
 
   val empty :
-    ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    ?default:Type.t Default.t ->
-    annot:bool ->
-    Type.t ->
-    state
+    ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t -> ?default:Type.t Default.t -> unit -> state
 
   val pattern :
     Context.t ->
@@ -45,7 +41,6 @@ module type S = sig
 
   val assignment :
     Context.t ->
-    Type.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t

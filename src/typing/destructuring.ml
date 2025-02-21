@@ -25,7 +25,7 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
   type callback =
     use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
 
-  let empty ?init ?default ~annot:_ _current = { has_parent = false; init; default }
+  let empty ?init ?default () = { has_parent = false; init; default }
 
   let pattern_default cx (acc : state) = function
     | None -> (acc, None)
@@ -302,8 +302,8 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     | _ -> Ast.Type.Missing ALoc.none
 
   (* instantiate pattern visitor for assignments *)
-  let assignment cx rhs_t init =
-    let acc = empty ~init ~annot:false rhs_t in
+  let assignment cx init =
+    let acc = empty ~init () in
     let f ~use_op ~name_loc name _default t =
       (* TODO destructuring+defaults unsupported in assignment expressions *)
       ignore Type_env.(set_var cx ~use_op name t name_loc);

@@ -114,7 +114,7 @@ struct
     | Object { annot; properties; comments } ->
       let default = eval_default cx t has_anno default in
       let properties =
-        let init = Destructuring.empty t ~annot:has_anno in
+        let init = Destructuring.empty () in
         let f = destruct cx in
         Destructuring.object_properties cx ~f ~parent_loc:ploc init properties
       in
@@ -130,7 +130,7 @@ struct
     | Array { annot; elements; comments } ->
       let default = eval_default cx t has_anno default in
       let elements =
-        let init = Destructuring.empty t ~annot:has_anno in
+        let init = Destructuring.empty () in
         let f = destruct cx in
         Destructuring.array_elements cx ~f init elements
       in
@@ -144,7 +144,7 @@ struct
         }
       )
 
-  let eval_rest cx (Rest { t; loc; ploc; pattern; has_anno; comments = rest_comments }) =
+  let eval_rest cx (Rest { t; loc; ploc; pattern; has_anno = _; comments = rest_comments }) =
     match pattern with
     | Id id ->
       ( loc,
@@ -156,7 +156,7 @@ struct
       )
     | Object { annot; properties; comments } ->
       let properties =
-        let init = Destructuring.empty t ~annot:has_anno in
+        let init = Destructuring.empty () in
         let f = destruct cx in
         Destructuring.object_properties cx ~f ~parent_loc:ploc init properties
       in
@@ -169,7 +169,7 @@ struct
       )
     | Array { annot; elements; comments } ->
       let elements =
-        let init = Destructuring.empty t ~annot:has_anno in
+        let init = Destructuring.empty () in
         let f = destruct cx in
         Destructuring.array_elements cx ~f init elements
       in
