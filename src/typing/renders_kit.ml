@@ -282,7 +282,7 @@ module Make (Flow : INPUT) : S = struct
 
   let non_renders_to_renders cx trace ~use_op l (renders_r, upper_renders) =
     match (l, upper_renders) with
-    | ( DefT (_, (NullT | VoidT | BoolT_UNSOUND false)),
+    | ( DefT (_, (NullT | VoidT | BoolT_UNSOUND false | SingletonBoolT false)),
         ( StructuralRenders
             { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
         | DefaultRenders )
@@ -405,7 +405,7 @@ module Make (Flow : INPUT) : S = struct
               FailedSynthesisState
             else
               on_concretized_react_node_types cx ~drop_renders_any ~state ts
-          | DefT (_, (NullT | VoidT | BoolT_UNSOUND false)) ->
+          | DefT (_, (NullT | VoidT | BoolT_UNSOUND false | SingletonBoolT false)) ->
             let renders_variant = merge_renders_variant (renders_variant, RendersMaybe) in
             IntermediateSynthesisState { normalized_render_type_collector; renders_variant }
           | DefT (_, ArrT (ArrayAT { elem_t = t; _ } | TupleAT { elem_t = t; _ } | ROArrayAT (t, _)))

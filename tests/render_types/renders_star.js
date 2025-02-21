@@ -2,6 +2,7 @@ import * as React from 'react';
 component MenuItem() { return null }
 (null: renders* MenuItem); // OK
 (false: renders* MenuItem); // OK
+(false as false: renders* MenuItem); // OK
 (undefined: renders* MenuItem); // OK
 ([null, [false, [undefined]]]: renders* MenuItem); // OK
 ([null, false, undefined]: renders* MenuItem); // OK
