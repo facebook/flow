@@ -33,7 +33,7 @@ contain `m` with a type that conflicts with `m`'s definition in object type [1].
 
 References:
    error_positions.js:7:45
-    7| declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+    7| declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
                                                    ^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:9:33
     9| class C extends React.Component<{}> {}
@@ -51,7 +51,7 @@ class `C` [2]. [incompatible-call]
 
 References:
    error_positions.js:7:67
-    7| declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+    7| declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
                                                                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:11:17
    11| (foo(bar(C)): F<typeof C>); // error on call

@@ -4,7 +4,7 @@ type F<T> = (React.ElementConfig<T> => void) => void // error should not appear 
 
 declare function foo<T>(T): (React.ElementConfig<T> => void) => void
 
-declare function bar<P>(React$ComponentType<{ m: number, ...P}>): React$ComponentType<P>;
+declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
 
 class C extends React.Component<{}> {}
 

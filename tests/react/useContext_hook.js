@@ -18,9 +18,9 @@ type CustomType = {|
   stringValue = React.useContext(StringContext); // Ok
   numericValue = React.useContext(StringContext); // Error: string is incompatible with number
 
-  const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+  const InvalidContext: React.Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
 
-  const CustomContext: React$Context<CustomType> = React.createContext({
+  const CustomContext: React.Context<CustomType> = React.createContext({
     foo: 'abc',
     bar: 123,
   });

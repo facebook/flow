@@ -1,19 +1,19 @@
-Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:11:2
+Error ----------------------------------------------------------------------------------- contravariant_refsetter.js:9:2
 
 Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompatible-cast]
  - Either boolean [2] is incompatible with number [3].
  - Or boolean [2] is incompatible with string [4].
 
-   contravariant_refsetter.js:11:2
-    11| (x: React.RefSetter<number | string | boolean>); // ERROR
+   contravariant_refsetter.js:9:2
+     9| (x: React.RefSetter<number | string | boolean>); // ERROR
          ^
 
 References:
    <BUILTINS>/react.js:357:34
    357|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [1]
-   contravariant_refsetter.js:11:39
-    11| (x: React.RefSetter<number | string | boolean>); // ERROR
+   contravariant_refsetter.js:9:39
+     9| (x: React.RefSetter<number | string | boolean>); // ERROR
                                               ^^^^^^^ [2]
    contravariant_refsetter.js:3:34
      3| declare const x: React.RefSetter<number | string>;
@@ -23,62 +23,29 @@ References:
                                                   ^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:12:2
+Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:10:2
 
-Cannot cast `y` to `React.RefSetter` because: [incompatible-cast]
- - Either boolean [1] is incompatible with number [2] in the first parameter.
- - Or boolean [1] is incompatible with string [3] in the first parameter.
- - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
+Cannot cast `y` to `React.RefSetter` because in type argument `T` [1]: [incompatible-cast]
+ - Either boolean [2] is incompatible with number [3].
+ - Or boolean [2] is incompatible with string [4].
 
-   contravariant_refsetter.js:12:2
-    12| (y: React.RefSetter<number | string | boolean>); // ERROR
+   contravariant_refsetter.js:10:2
+    10| (y: React.RefSetter<number | string | boolean>); // ERROR
          ^
 
 References:
-   contravariant_refsetter.js:12:39
-    12| (y: React.RefSetter<number | string | boolean>); // ERROR
-                                              ^^^^^^^ [1]
-   contravariant_refsetter.js:7:34
-     7| declare const y: React$RefSetter<number | string>;
-                                         ^^^^^^ [2]
-   contravariant_refsetter.js:7:43
-     7| declare const y: React$RefSetter<number | string>;
-                                                  ^^^^^^ [3]
-   contravariant_refsetter.js:7:18
-     7| declare const y: React$RefSetter<number | string>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:192:5
-   192|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-
-
-Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:12:2
-
-Cannot cast `y` to `React.RefSetter` because: [incompatible-cast]
- - Either boolean [1] is incompatible with number [2] in property `current`.
- - Or boolean [1] is incompatible with string [3] in property `current`.
- - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
-
-   contravariant_refsetter.js:12:2
-    12| (y: React.RefSetter<number | string | boolean>); // ERROR
-         ^
-
-References:
-   contravariant_refsetter.js:12:39
-    12| (y: React.RefSetter<number | string | boolean>); // ERROR
-                                              ^^^^^^^ [1]
-   contravariant_refsetter.js:7:34
-     7| declare const y: React$RefSetter<number | string>;
-                                         ^^^^^^ [2]
-   contravariant_refsetter.js:7:43
-     7| declare const y: React$RefSetter<number | string>;
-                                                  ^^^^^^ [3]
-   contravariant_refsetter.js:7:18
-     7| declare const y: React$RefSetter<number | string>;
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:193:6
-   193|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:357:34
+   357|   declare export type RefSetter<-T> = React$RefSetter<T>;
+                                         ^ [1]
+   contravariant_refsetter.js:10:39
+    10| (y: React.RefSetter<number | string | boolean>); // ERROR
+                                              ^^^^^^^ [2]
+   contravariant_refsetter.js:6:34
+     6| declare const y: React.RefSetter<number | string>;
+                                         ^^^^^^ [3]
+   contravariant_refsetter.js:6:43
+     6| declare const y: React.RefSetter<number | string>;
+                                                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:16:24
@@ -575,7 +542,7 @@ References:
    9|       <Component />; // Error: `foo` is required.
             ^^^^^^^^^^^^^ [1]
    hoc.js:4:34
-   4|   Component: React$ComponentType<{foo: number, bar: number}>,
+   4|   Component: React.ComponentType<{foo: number, bar: number}>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -593,7 +560,7 @@ References:
    9|       <Component />; // Error: `foo` is required.
             ^^^^^^^^^^^^^ [1]
    hoc.js:4:34
-   4|   Component: React$ComponentType<{foo: number, bar: number}>,
+   4|   Component: React.ComponentType<{foo: number, bar: number}>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -611,7 +578,7 @@ References:
    10|       <Component foo={42} />; // Error: `bar` is required.
              ^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc.js:4:34
-    4|   Component: React$ComponentType<{foo: number, bar: number}>,
+    4|   Component: React.ComponentType<{foo: number, bar: number}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -626,7 +593,7 @@ property `foo`. [incompatible-call]
 
 References:
    hoc.js:4:40
-    4|   Component: React$ComponentType<{foo: number, bar: number}>,
+    4|   Component: React.ComponentType<{foo: number, bar: number}>,
                                               ^^^^^^ [2]
 
 
@@ -641,7 +608,7 @@ Cannot call `myHOC` with function bound to `Component` because number [1] is inc
 
 References:
    hoc.js:4:40
-    4|   Component: React$ComponentType<{foo: number, bar: number}>,
+    4|   Component: React.ComponentType<{foo: number, bar: number}>,
                                               ^^^^^^ [1]
    hoc.js:34:35
    34| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -662,7 +629,7 @@ References:
    39| <Wrapped nonsense="what" />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc.js:36:36
-   36| const Wrapped: React$ComponentType<{foo: number}> = myHOC(Unwrapped);
+   36| const Wrapped: React.ComponentType<{foo: number}> = myHOC(Unwrapped);
                                           ^^^^^^^^^^^^^ [2]
 
 
@@ -680,7 +647,7 @@ References:
    41| <WrappedFun />; // Error: `foo` is required.
        ^^^^^^^^^^^^^^ [1]
    hoc.js:5:24
-    5| ): React$ComponentType<{foo: number}> {
+    5| ): React.ComponentType<{foo: number}> {
                               ^^^^^^^^^^^^^ [2]
 
 
@@ -1655,12 +1622,12 @@ Cannot call `React.createContext` with `'hello'` bound to `defaultValue` because
 `CustomType` [2]. [incompatible-call]
 
    useContext_hook.js:21:73
-   21|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+   21|   const InvalidContext: React.Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                                                                ^^^^^^^ [1]
 
 References:
    useContext_hook.js:21:39
-   21|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+   21|   const InvalidContext: React.Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                              ^^^^^^^^^^ [2]
 
 
@@ -1675,7 +1642,7 @@ Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] 
 
 References:
    useContext_hook.js:23:38
-   23|   const CustomContext: React$Context<CustomType> = React.createContext({
+   23|   const CustomContext: React.Context<CustomType> = React.createContext({
                                             ^^^^^^^^^^ [1]
    useContext_hook.js:13:20
    13|   let stringValue: string;
@@ -2422,7 +2389,7 @@ Cannot assign `use(...)` to `notAny` because `Theme` [1] is incompatible with nu
 
 References:
    use_hook.js:4:43
-    4| declare const ThemeContext: React$Context<Theme>;
+    4| declare const ThemeContext: React.Context<Theme>;
                                                  ^^^^^ [1]
    use_hook.js:19:17
    19|   const notAny: 0 = use(ThemeContext);
@@ -2543,7 +2510,7 @@ References:
 
 
 
-Found 145 errors
+Found 144 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -1,6 +1,8 @@
 //@flow
 var React = require("react");
 
+import type {ComponentType} from 'react';
+
 export type Recipe<T> = (draft: T, state: $ReadOnly<T>) => void;
 export type Mutate<T> = (recipe: Recipe<T>) => void;
 
@@ -11,7 +13,7 @@ type ProviderProps<T> = {|
   initialState?: T,
 |};
 
-export type Provider<T> = React$ComponentType<ProviderProps<T>>;
+export type Provider<T> = ComponentType<ProviderProps<T>>;
 
 type GetReturnType = <T, S>((T) => S) => S;
 

@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 declare export function foo<P>(
-  Component: React$ComponentType<{|...P|}>,
-): React$ComponentType<P>;
+  Component: React.ComponentType<{|...P|}>,
+): React.ComponentType<P>;
 
 class Comp extends React.Component<{}, {}> {}
 

@@ -1,7 +1,7 @@
 import {use} from 'react';
 
 declare opaque type Theme;
-declare const ThemeContext: React$Context<Theme>;
+declare const ThemeContext: React.Context<Theme>;
 
 declare const AnswerPromise: Promise<42>;
 

@@ -11,7 +11,7 @@ References:
    20| var x = f<React.ComponentType<{}>, _>()(foo(Comp));
                                      ^^ [1]
    test1.js:4:34
-    4|   Component: React$ComponentType<{|...P|}>,
+    4|   Component: React.ComponentType<{|...P|}>,
                                         ^^^^^^^^ [2]
 
 
