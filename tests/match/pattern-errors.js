@@ -110,3 +110,39 @@
     const a as const b: 0, // ERROR
   }
 }
+
+// Reference before declaration
+{
+  declare const x: [number, number];
+
+  const out = match (x) {
+    [a, const a]: a, // ERROR: reference before declaration
+    _: 0,
+  };
+}
+{
+  declare const x: [number, {foo: number}];
+
+  const out = match (x) {
+    [a.foo, const a]: a, // ERROR: reference before declaration
+    _: 0,
+  };
+}
+
+// Reference binding introduced in same pattern
+{
+  declare const x: [number, number];
+
+  const out = match (x) {
+    [const a, a]: a, // ERROR
+    _: 0,
+  };
+}
+{
+  declare const x: [{foo: number}, number];
+
+  const out = match (x) {
+    [const a, a.foo]: a, // ERROR
+    _: 0,
+  };
+}

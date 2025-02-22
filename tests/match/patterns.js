@@ -68,16 +68,6 @@
   out as empty; // ERROR
 }
 
-// Reference before declaration
-{
-  declare const x: [boolean, number];
-
-  const out = match (x) {
-    [a, const a]: a, // ERROR: reference before declaration
-    _: 0,
-  };
-}
-
 // Guards
 {
   declare const x: {foo: number};
