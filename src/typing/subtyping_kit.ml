@@ -593,22 +593,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* ref prop is contravariantly typed. We need to flip the flow. *)
         rec_flow_t cx trace ~use_op (r, l)
       (* component() (treated as component(ref?: React.RefSetter<void>))
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>))
+       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty))
        *
-       * This is allowed since void ~> mixed, but only temporarily, because `component()` being treated
-       * as component(ref?: React.RefSetter<void>) is a result of intermediate ref-as-prop migration.
-       * In the future, it should be banned, in the same way that
-       * `{+ref?: React.RefSetter<mixed>} ~> {}` is banned. *)
+       * Technically `{+ref?: empty} ~> {}` should banned, but it's relatively benign,
+       * so we allow it for now. *)
       | (ComponentInstanceOmitted _, ComponentInstanceTopType _) -> ()
-      (* React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) ~> component()
+      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component()
        *
        * If `component()` is treated as component(ref?: React.RefSetter<void>), it will fail due to
        * `mixed ~> void`. However, this treatement is temporary while we are moving to full ref-as-prop
        * model, in the ref as prop model, the subtyping behavior should be
        *
-       * React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) ~> component()
-       * -> component(ref?: React.RefSetter<mixed>) ~> component()
-       *   -> {} ~> {+ref?: React.RefSetter<mixed>}
+       * React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component()
+       * -> component(ref?: empty) ~> component()
+       *   -> {} ~> {+ref?: empty}
        *      -> OK!
        * *)
       | (ComponentInstanceTopType _, ComponentInstanceOmitted _) -> ()
@@ -621,14 +619,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * Allowed since ``{} ~> {+ref?: ref_prop} *)
       | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceOmitted _) -> ()
       (* component(ref: ref_prop)
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) *)
-      | (ComponentInstanceAvailableAsRefSetterProp ref_prop, ComponentInstanceTopType r_mixed) ->
-        let instance = MixedT.why r_mixed in
-        (match try_extract_instance_of_ref_setter cx trace ref_prop with
-        | Some t -> rec_flow_t cx trace ~use_op (t, instance)
-        | None ->
-          (* RefSetter is contravariantly typed. We need to flip the flow. *)
-          rec_flow_t cx trace ~use_op (react_ref_setter_of cx instance, ref_prop))
+       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty)) *)
+      | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceTopType _) -> ()
       (* component() (equivalent to component(ref?: React.RefSetter<void>))
        * ~> component(ref: ref_prop) *)
       | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
@@ -637,8 +629,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | None ->
           (* RefSetter is contravariantly typed. We need to flip the flow. *)
           rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx (DefT (r, VoidT))))
-      (* React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>))
-       * ~> component(ref: ref_prop) *)
+      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component(ref: ref_prop)
+       *
+       * Should be banned since ref_prop ~> empty will almost always fail, but we allow it for now
+       * since it's needed for incremental migration and it's relatively harmless. *)
       | (ComponentInstanceTopType r_mixed, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
         let instance = MixedT.why r_mixed in
         (match try_extract_instance_of_ref_setter cx trace ref_prop with

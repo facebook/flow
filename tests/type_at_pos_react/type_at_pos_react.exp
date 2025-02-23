@@ -207,7 +207,7 @@ React$CreateElement
 
 react.js:4:7,4:19
 
-react_abstract_component.js:3:15 = component(ref: React.RefSetter<mixed>, ...any)
+react_abstract_component.js:3:15 = component(ref: empty, ...any)
 react_abstract_component.js:3:15,3:15
 react_abstract_component.js:8:15 = type RendersFoo = renders Foo
 
