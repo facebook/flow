@@ -617,14 +617,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * that's not ComponentInstanceAvailableAsRefSetterProp with React.RefSetter *)
       (* We finally reached the most hopeless case. We wrap the instance type form with
        * React.RefSetter, and let the subtyping rule take care of the rest. *)
-      (* component(ref: ref_prop)
-       * ~> component() (equivalent to component(ref?: React.RefSetter<void>)) *)
-      | (ComponentInstanceAvailableAsRefSetterProp ref_prop, ComponentInstanceOmitted r) ->
-        (match try_extract_instance_of_ref_setter cx trace ref_prop with
-        | Some t -> rec_flow_t cx trace ~use_op (t, VoidT.make r)
-        | None ->
-          (* RefSetter is contravariantly typed. We need to flip the flow. *)
-          rec_flow_t cx trace ~use_op (react_ref_setter_of cx (DefT (r, VoidT)), ref_prop))
+      (* component(ref?: ref_prop) ~> component().
+       * Allowed since ``{} ~> {+ref?: ref_prop} *)
+      | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceOmitted _) -> ()
       (* component(ref: ref_prop)
        * ~> React.ComponentType<{}> (equivalent to component(ref?: React.RefSetter<mixed>)) *)
       | (ComponentInstanceAvailableAsRefSetterProp ref_prop, ComponentInstanceTopType r_mixed) ->

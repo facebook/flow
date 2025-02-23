@@ -363,44 +363,8 @@ References:
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ subtyping.js:24:1
 
-Cannot cast `CompWithOptionalRefProp` to component because `HTMLElement` [1] is incompatible with instance of
-component [2]. [incompatible-cast]
-
-   subtyping.js:24:1
-   24| CompWithOptionalRefProp as component(foo: string); // error: missing ref prop
-       ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   component_syntax_components.js:2:85
-    2| declare export component CompWithOptionalRefProp(foo: string, ref?: React.RefSetter<HTMLElement>);
-                                                                                           ^^^^^^^^^^^ [1]
-   subtyping.js:24:28
-   24| CompWithOptionalRefProp as component(foo: string); // error: missing ref prop
-                                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ subtyping.js:28:1
-
-Cannot cast `CompWithRequiredRefProp` to component because `HTMLElement` [1] is incompatible with instance of
-component [2]. [incompatible-cast]
-
-   subtyping.js:28:1
-   28| CompWithRequiredRefProp as component(foo: string); // error: missing ref prop
-       ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   component_syntax_components.js:3:84
-    3| declare export component CompWithRequiredRefProp(foo: string, ref: React.RefSetter<HTMLElement>);
-                                                                                          ^^^^^^^^^^^ [1]
-   subtyping.js:28:28
-   28| CompWithRequiredRefProp as component(foo: string); // error: missing ref prop
-                                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 24 errors
+Found 22 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

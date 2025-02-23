@@ -21,10 +21,10 @@ CompWithoutRefProp as React.ComponentType<{+foo: string}>; // ok
 // since {ref: React.RefSetter<mixed>} ~> {} should be an error
 CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
 
-CompWithOptionalRefProp as component(foo: string); // error: missing ref prop
+CompWithOptionalRefProp as component(foo: string); // ok
 CompWithOptionalRefProp as React.ComponentType<{+foo: string}>; // ok
 CompWithOptionalRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
 
-CompWithRequiredRefProp as component(foo: string); // error: missing ref prop
+CompWithRequiredRefProp as component(foo: string); // ok
 CompWithRequiredRefProp as React.ComponentType<{+foo: string}>; // ok
 CompWithRequiredRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
