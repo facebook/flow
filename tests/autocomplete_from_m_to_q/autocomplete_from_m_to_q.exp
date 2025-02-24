@@ -392,8 +392,6 @@ Flags: --pretty
     {"name":"clearInterval","type":"(intervalId: ?IntervalID) => void"},
     {"name":"clearTimeout","type":"(timeoutId: ?TimeoutID) => void"},
     {"name":"Client","type":"typeof Client"},
-    {"name":"ClientRect","type":"typeof ClientRect"},
-    {"name":"ClientRectList","type":"typeof ClientRectList"},
     {"name":"Clients","type":"typeof Clients"},
     {"name":"clients","type":"Clients"},
     {"name":"Clipboard","type":"typeof Clipboard"},
@@ -1213,4 +1211,3 @@ Flags: --pretty
 qux.js:6:4
 Flags: --pretty
 {"result":[{"name":"x","type":"number"}]}
-

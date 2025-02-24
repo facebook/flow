@@ -1022,11 +1022,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4422:1
+   <BUILTINS>/dom.js:4410:1
          v--------------------------------
-   4422| typeof NodeFilter.FILTER_ACCEPT |
-   4423| typeof NodeFilter.FILTER_REJECT |
-   4424| typeof NodeFilter.FILTER_SKIP;
+   4410| typeof NodeFilter.FILTER_ACCEPT |
+   4411| typeof NodeFilter.FILTER_REJECT |
+   4412| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:188:48
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
@@ -1398,11 +1398,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:4422:1
+   <BUILTINS>/dom.js:4410:1
          v--------------------------------
-   4422| typeof NodeFilter.FILTER_ACCEPT |
-   4423| typeof NodeFilter.FILTER_REJECT |
-   4424| typeof NodeFilter.FILTER_SKIP;
+   4410| typeof NodeFilter.FILTER_ACCEPT |
+   4411| typeof NodeFilter.FILTER_REJECT |
+   4412| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
    traversal.js:195:46
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
