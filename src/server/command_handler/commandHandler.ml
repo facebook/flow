@@ -152,13 +152,16 @@ let file_input_of_text_document_position_opt ~client_id t =
       file_input_of_text_document_position ~client t
   )
 
-let file_key_of_file_input_without_env ~options ~libs file_input =
+let file_key_of_file_input_without_env ~options ~all_unordered_libs file_input =
   let file_options = Options.file_options options in
   File_input.filename_of_file_input file_input
-  |> Files.filename_from_string ~options:file_options ~consider_libdefs:true ~libs
+  |> Files.filename_from_string ~options:file_options ~consider_libdefs:true ~all_unordered_libs
 
 let file_key_of_file_input ~options ~env file_input =
-  file_key_of_file_input_without_env ~options ~libs:env.ServerEnv.libs file_input
+  file_key_of_file_input_without_env
+    ~options
+    ~all_unordered_libs:env.ServerEnv.all_unordered_libs
+    file_input
 
 (* This tries to simulate the logic from elsewhere which determines whether we would report
  * errors for a given file. The criteria are
@@ -172,7 +175,13 @@ let file_key_of_file_input ~options ~env file_input =
 let check_that_we_care_about_this_file =
   let is_stdin file_path = String.equal file_path "-" in
   let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options ~include_libdef:true env.ServerEnv.libs file_path then
+    if
+      Files.wanted
+        ~options:file_options
+        ~include_libdef:true
+        env.ServerEnv.all_unordered_libs
+        file_path
+    then
       Ok ()
     else
       Error "File is ignored"
@@ -1909,7 +1918,9 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
 
 let organize_imports ~options ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = file_key_of_file_input_without_env ~options ~libs:SSet.empty file_input in
+  let file_key =
+    file_key_of_file_input_without_env ~options ~all_unordered_libs:SSet.empty file_input
+  in
   match File_input.content_of_file_input file_input with
   | Error msg -> Error msg
   | Ok file_contents ->
@@ -2021,7 +2032,7 @@ let get_ephemeral_handler genv command =
       Files.filename_from_string
         ~options:file_options
         ~consider_libdefs:true
-        ~libs:SSet.empty
+        ~all_unordered_libs:SSet.empty
         filename
     in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
@@ -3731,7 +3742,7 @@ let handle_live_errors_request =
                   Files.filename_from_string
                     ~options:file_options
                     ~consider_libdefs:true
-                    ~libs:env.ServerEnv.libs
+                    ~all_unordered_libs:env.ServerEnv.all_unordered_libs
                     file_path
                 in
                 let (result, did_hit_cache) =

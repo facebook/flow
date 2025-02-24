@@ -357,7 +357,7 @@ end = struct
             []
       )
     in
-    let all_unordered_libs = SSet.map (normalize_libdef_path t) env.ServerEnv.libs in
+    let all_unordered_libs = SSet.map (normalize_libdef_path t) env.ServerEnv.all_unordered_libs in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->

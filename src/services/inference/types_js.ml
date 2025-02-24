@@ -1669,7 +1669,7 @@ let recheck_impl
   Lwt.return (log_recheck_event, recheck_stats, find_ref_results, env)
 
 (* creates a closure that lists all files in the given root, returned in chunks *)
-let make_next_files ~libs ~file_options ~include_libdef root =
+let make_next_files ~all_unordered_libs ~file_options ~include_libdef root =
   let make_next_raw =
     Files.make_next_files
       ~root
@@ -1678,7 +1678,7 @@ let make_next_files ~libs ~file_options ~include_libdef root =
       ~subdir:None
       ~options:file_options
       ~include_libdef
-      ~libs
+      ~all_unordered_libs
   in
   let total = ref 0 in
   fun () ->
@@ -1689,7 +1689,12 @@ let make_next_files ~libs ~file_options ~include_libdef root =
     total := finished + length;
     files
     |> Base.List.map
-         ~f:(Files.filename_from_string ~options:file_options ~consider_libdefs:include_libdef ~libs)
+         ~f:
+           (Files.filename_from_string
+              ~options:file_options
+              ~consider_libdefs:include_libdef
+              ~all_unordered_libs
+           )
     |> Bucket.of_list
 
 let mk_env
@@ -1699,7 +1704,7 @@ let mk_env
     ~package_json_files
     ~dependency_info
     ~ordered_libs
-    ~libs
+    ~all_unordered_libs
     ~errors
     ~collated_errors
     ~exports
@@ -1711,7 +1716,7 @@ let mk_env
     checked_files = CheckedSet.empty;
     package_json_files;
     ordered_libs;
-    libs;
+    all_unordered_libs;
     errors;
     coverage = FilenameMap.empty;
     collated_errors;
@@ -1866,7 +1871,7 @@ let init_with_initial_state
       ~package_json_files:packages
       ~dependency_info
       ~ordered_libs
-      ~libs:all_unordered_libs
+      ~all_unordered_libs
       ~errors
       ~collated_errors
       ~exports
@@ -2168,9 +2173,9 @@ let init_from_scratch ~profiling ~workers options =
    * However making this change is likely going to be a breaking change for people with conflicting
    * libraries
    *)
-  let (ordered_libs, libs) = Files.ordered_and_unordered_lib_paths file_options in
+  let (ordered_libs, all_unordered_libs) = Files.ordered_and_unordered_lib_paths file_options in
   let next_files_for_parse =
-    make_next_files ~libs ~file_options ~include_libdef:true (Options.root options)
+    make_next_files ~all_unordered_libs ~file_options ~include_libdef:true (Options.root options)
   in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ~event:ServerStatus.(Parsing_progress { finished = 0; total = None });
@@ -2259,7 +2264,7 @@ let init_from_scratch ~profiling ~workers options =
       ~package_json_files
       ~dependency_info
       ~ordered_libs
-      ~libs
+      ~all_unordered_libs
       ~errors
       ~collated_errors
       ~exports
@@ -2297,7 +2302,7 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          Recheck_updates.process_updates
            ~options
-           ~libs:saved_state.Saved_state.all_unordered_libs
+           ~previous_all_unordered_libs:saved_state.Saved_state.all_unordered_libs
            changed_files
        in
        let updates =
@@ -2594,7 +2599,10 @@ let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~me
 
 let libdef_check_for_lazy_init ~profiling ~options ~workers env =
   let parsed =
-    SSet.fold (fun n -> FilenameSet.add (File_key.LibFile n)) env.ServerEnv.libs FilenameSet.empty
+    SSet.fold
+      (fun n -> FilenameSet.add (File_key.LibFile n))
+      env.ServerEnv.all_unordered_libs
+      FilenameSet.empty
   in
   check_files_for_init
     ~profiling

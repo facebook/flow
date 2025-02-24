@@ -44,7 +44,7 @@ type env = {
   checked_files: CheckedSet.t;  (** All the current files we typecheck. *)
   package_json_files: Utils_js.FilenameSet.t;  (** package.json files *)
   ordered_libs: string list;  (** The lib files, in their merge order *)
-  libs: SSet.t;  (** The lib files as a set *)
+  all_unordered_libs: SSet.t;  (** The lib files as a set *)
   unparsed: Utils_js.FilenameSet.t;  (** The files which didn't parse (skipped or errored) *)
   errors: errors;
   coverage: Coverage.file_coverage Utils_js.FilenameMap.t;

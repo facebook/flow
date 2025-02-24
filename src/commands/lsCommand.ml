@@ -149,8 +149,8 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
 
 (* The problem with Files.wanted is that it says yes to everything except ignored files and libs.
  * So implicitly ignored files (like files in another directory) pass the Files.wanted check *)
-let wanted ~root ~options libs file =
-  Files.wanted ~options ~include_libdef:false libs file
+let wanted ~root ~options all_unordered_libs file =
+  Files.wanted ~options ~include_libdef:false all_unordered_libs file
   &&
   let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
   String.starts_with ~prefix:root_str file || Files.is_included options file
@@ -158,20 +158,34 @@ let wanted ~root ~options libs file =
 (* Directories will return a closure that returns every file under that
    directory. Individual files will return a closure that returns just that file
 *)
-let get_ls_files ~root ~all ~options ~libs ~imaginary = function
+let get_ls_files ~root ~all ~options ~all_unordered_libs ~imaginary = function
   | None ->
-    Files.make_next_files ~sort:true ~root ~all ~subdir:None ~options ~include_libdef:false ~libs
+    Files.make_next_files
+      ~sort:true
+      ~root
+      ~all
+      ~subdir:None
+      ~options
+      ~include_libdef:false
+      ~all_unordered_libs
   | Some dir
     when try Sys.is_directory dir with
          | _ -> false ->
     let subdir = Some (File_path.make dir) in
-    Files.make_next_files ~sort:true ~root ~all ~subdir ~options ~include_libdef:false ~libs
+    Files.make_next_files
+      ~sort:true
+      ~root
+      ~all
+      ~subdir
+      ~options
+      ~include_libdef:false
+      ~all_unordered_libs
   | Some file ->
     if
       (Sys.file_exists file || imaginary)
       (* Make flow ls never report flowlib files *)
       && (not (Files.is_in_flowlib options file))
-      && (all || wanted ~root ~options libs file)
+      && (all || wanted ~root ~options all_unordered_libs file)
     then
       let file = file |> File_path.make |> File_path.to_string in
       let rec cb =
@@ -263,11 +277,11 @@ let main
    * we pass in ~libs:SSet.empty, which means we won't filter out any lib files *)
   let next_files =
     match files_or_dirs with
-    | [] -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
+    | [] -> get_ls_files ~root ~all ~options ~all_unordered_libs:SSet.empty ~imaginary None
     | files_or_dirs ->
       files_or_dirs
       |> Base.List.map ~f:(fun f ->
-             get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f)
+             get_ls_files ~root ~all ~options ~all_unordered_libs:SSet.empty ~imaginary (Some f)
          )
       |> concat_get_next
   in

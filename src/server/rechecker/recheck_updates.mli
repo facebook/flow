@@ -18,6 +18,6 @@ type error =
 val process_updates :
   ?skip_incompatible:bool ->
   options:Options.t ->
-  libs:SSet.t ->
+  previous_all_unordered_libs:SSet.t ->
   SSet.t ->
   (Utils_js.FilenameSet.t, error) result

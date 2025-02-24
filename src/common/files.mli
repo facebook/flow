@@ -132,7 +132,7 @@ val make_next_files :
   subdir:File_path.t option ->
   options:options ->
   include_libdef:bool ->
-  libs:SSet.t ->
+  all_unordered_libs:SSet.t ->
   unit ->
   string list
 
@@ -158,7 +158,7 @@ val is_prefix : string -> string -> bool
 val get_flowtyped_path : File_path.t -> File_path.t
 
 val filename_from_string :
-  options:options -> consider_libdefs:bool -> libs:SSet.t -> string -> File_key.t
+  options:options -> consider_libdefs:bool -> all_unordered_libs:SSet.t -> string -> File_key.t
 
 val mkdirp : string -> Unix.file_perm -> unit
 

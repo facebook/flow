@@ -27,13 +27,13 @@ let log_input_files fileset =
 
    (iii) library files.
 *)
-let get_target_filename_set ~options ~libs ~all filename_set =
+let get_target_filename_set ~options ~all_unordered_libs ~all filename_set =
   FilenameSet.filter
     (fun f ->
       let s = File_key.to_string f in
       Files.is_valid_path ~options s
       && (all || not (fst (Files.is_ignored options s)))
-      && not (SSet.mem s libs))
+      && not (SSet.mem s all_unordered_libs))
     filename_set
 
 let extract_flowlibs_or_exit options =
@@ -587,7 +587,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
         let roots =
           get_target_filename_set
             ~options:(Options.file_options options)
-            ~libs:env.ServerEnv.libs
+            ~all_unordered_libs:env.ServerEnv.all_unordered_libs
             ~all:(Options.all options)
             roots
         in
@@ -687,10 +687,14 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
     Profiling_js.with_profiling_lwt ~label:"Codemod" ~should_print_summary (fun _profiling ->
         let file_options = Options.file_options options in
         let all = Options.all options in
-        let (_ordered_libs, libs) = Files.ordered_and_unordered_lib_paths file_options in
+        let (_ordered_libs, all_unordered_libs) =
+          Files.ordered_and_unordered_lib_paths file_options
+        in
 
         (* creates a closure that lists all files in the given root, returned in chunks *)
-        let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in
+        let filename_set =
+          get_target_filename_set ~options:file_options ~all_unordered_libs ~all roots
+        in
         let next = Parsing_service_js.next_of_filename_set workers filename_set in
 
         Transaction.with_transaction "codemod" (fun transaction ->
@@ -757,10 +761,12 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
 
         let file_options = Options.file_options options in
         let all = Options.all options in
-        let libs = env.ServerEnv.libs in
+        let all_unordered_libs = env.ServerEnv.all_unordered_libs in
 
         (* creates a closure that lists all files in the given root, returned in chunks *)
-        let filename_set = get_target_filename_set ~options:file_options ~libs ~all roots in
+        let filename_set =
+          get_target_filename_set ~options:file_options ~all_unordered_libs ~all roots
+        in
         (* Discard uparseable files *)
         let filename_set = FilenameSet.inter filename_set env.ServerEnv.files in
         let next = Parsing_service_js.next_of_filename_set workers filename_set in

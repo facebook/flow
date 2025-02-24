@@ -224,7 +224,7 @@ module Node = struct
         (Files.filename_from_string
            ~options:file_options
            ~consider_libdefs:false (* Module resolution should never resolve to a libdef file *)
-           ~libs:SSet.empty
+           ~all_unordered_libs:SSet.empty
            path
         )
     in

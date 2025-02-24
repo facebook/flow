@@ -91,7 +91,11 @@ let get_lazy_stats ~options env =
  * If any update can't be processed incrementally, the Flow server will exit *)
 let process_updates ~skip_incompatible ~options env updates =
   match
-    Recheck_updates.process_updates ~skip_incompatible ~options ~libs:env.ServerEnv.libs updates
+    Recheck_updates.process_updates
+      ~skip_incompatible
+      ~options
+      ~previous_all_unordered_libs:env.ServerEnv.all_unordered_libs
+      updates
   with
   | Ok updates -> ServerMonitorListenerState.NormalUpdates updates
   | Error (Recheck_updates.RecoverableShouldReinitNonLazily { msg; updates }) ->

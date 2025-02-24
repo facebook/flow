@@ -667,19 +667,19 @@ let watched_paths options =
  * If `include_libdef` is true, libdef files are also included.
  * If subdir is set, then we return the subset of files under subdir.
  *)
-let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~libs =
+let make_next_files ~root ~all ~sort ~subdir ~options ~include_libdef ~all_unordered_libs =
   let node_module_filter = is_node_module options in
   let filter =
     if all then
       fun _ ->
     true
     else
-      wanted ~options ~include_libdef libs
+      wanted ~options ~include_libdef all_unordered_libs
   in
   let (libdef_starting_points, is_libdef_filter) =
     if include_libdef then
-      let lib_filepaths = SSet.fold (fun f acc -> File_path.make f :: acc) libs [] in
-      let is_libdef_filter s = SSet.mem s libs in
+      let lib_filepaths = SSet.fold (fun f acc -> File_path.make f :: acc) all_unordered_libs [] in
+      let is_libdef_filter s = SSet.mem s all_unordered_libs in
       (lib_filepaths, is_libdef_filter)
     else
       ([], (fun _ -> false))
@@ -840,13 +840,13 @@ let absolute_path root =
 let get_flowtyped_path root = make_path_absolute root "flow-typed"
 
 (* helper: make different kinds of File_key.t from a path string *)
-let filename_from_string ~options ~consider_libdefs ~libs p =
+let filename_from_string ~options ~consider_libdefs ~all_unordered_libs p =
   let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
   | Some ".json" -> File_key.JsonFile p
   | Some ext when SSet.mem ext resource_file_exts -> File_key.ResourceFile p
   | _ ->
-    if consider_libdefs && SSet.mem p libs then
+    if consider_libdefs && SSet.mem p all_unordered_libs then
       File_key.LibFile p
     else
       File_key.SourceFile p

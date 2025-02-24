@@ -181,7 +181,7 @@ let filter_wanted_updates ~file_options ~sroot ~want updates =
           Files.filename_from_string
             ~options:file_options
             ~consider_libdefs:false
-            ~libs:SSet.empty
+            ~all_unordered_libs:SSet.empty
             f
         in
         FilenameSet.add filename acc
@@ -197,11 +197,11 @@ let filter_wanted_updates ~file_options ~sroot ~want updates =
  * 2. If we do care, are we unable to incrementally check this change. For example, maybe a libdef
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
-let process_updates ?(skip_incompatible = false) ~options ~libs updates =
+let process_updates ?(skip_incompatible = false) ~options ~previous_all_unordered_libs updates =
   let reader = State_reader.create () in
   let file_options = Options.file_options options in
   let all_libs =
-    let known_libs = libs in
+    let known_libs = previous_all_unordered_libs in
     let (_, maybe_new_libs) = Files.ordered_and_unordered_lib_paths file_options in
     SSet.union known_libs maybe_new_libs
   in
