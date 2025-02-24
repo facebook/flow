@@ -149,6 +149,32 @@ class visitor =
         this#add_with_children ~loc ~selection ~name ~kind (super#class_expression class_loc) cls
       | `Normal -> this#add_with_children ~loc ~selection ~name ~kind super#expression value
 
+    method! component_declaration loc component =
+      let (name, selection) =
+        Base.Option.value
+          ~default:("<component>", loc)
+          (name_and_loc_of_identifier component.Ast.Statement.ComponentDeclaration.id)
+      in
+      let k = Lsp.SymbolInformation.Function in
+      this#add_with_children
+        ~loc
+        ~selection
+        ~name
+        ~kind:k
+        (super#component_declaration loc)
+        component;
+      component
+
+    method! declare_component loc component =
+      let (name, selection) =
+        Base.Option.value
+          ~default:("<component>", loc)
+          (name_and_loc_of_identifier component.Ast.Statement.DeclareComponent.id)
+      in
+      let k = Lsp.SymbolInformation.Function in
+      this#add_with_children ~loc ~selection ~name ~kind:k (super#declare_component loc) component;
+      component
+
     method class_decl_or_expr f loc (cls : (Loc.t, Loc.t) Ast.Class.t) =
       let open Ast.Class in
       let { id; _ } = cls in

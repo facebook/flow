@@ -132,3 +132,6 @@ function loops() {
   for (let j in { x: 123 }) {}
   for (let k of [1, 2, 3]) {}
 }
+
+component ComponentFoo() {}
+declare component ComponentBar();

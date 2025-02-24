@@ -2070,6 +2070,54 @@ module.exports = (suite(
                   },
                 ],
               },
+              {
+                name: 'ComponentFoo',
+                kind: 12,
+                range: {
+                  start: {
+                    line: 135,
+                    character: 0,
+                  },
+                  end: {
+                    line: 135,
+                    character: 27,
+                  },
+                },
+                selectionRange: {
+                  start: {
+                    line: 135,
+                    character: 10,
+                  },
+                  end: {
+                    line: 135,
+                    character: 22,
+                  },
+                },
+              },
+              {
+                name: 'ComponentBar',
+                kind: 12,
+                range: {
+                  start: {
+                    line: 136,
+                    character: 0,
+                  },
+                  end: {
+                    line: 136,
+                    character: 33,
+                  },
+                },
+                selectionRange: {
+                  start: {
+                    line: 136,
+                    character: 18,
+                  },
+                  end: {
+                    line: 136,
+                    character: 30,
+                  },
+                },
+              },
             ],
           },
         ],
@@ -3534,6 +3582,40 @@ module.exports = (suite(
                   },
                 },
                 containerName: 'loops',
+              },
+              {
+                name: 'ComponentFoo',
+                kind: 12,
+                location: {
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                  range: {
+                    start: {
+                      line: 135,
+                      character: 0,
+                    },
+                    end: {
+                      line: 135,
+                      character: 27,
+                    },
+                  },
+                },
+              },
+              {
+                name: 'ComponentBar',
+                kind: 12,
+                location: {
+                  uri: '<PLACEHOLDER_PROJECT_URL>/stuff.js',
+                  range: {
+                    start: {
+                      line: 136,
+                      character: 0,
+                    },
+                    end: {
+                      line: 136,
+                      character: 33,
+                    },
+                  },
+                },
               },
             ],
           },
