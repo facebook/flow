@@ -126,6 +126,31 @@ References:
                                          ^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `HTMLDivElement` [1] is incompatible with
+`HTMLSpanElement` [2] in type argument `T` [3] of the first parameter of property `onAbort` of type argument `P` [4].
+[incompatible-cast]
+
+   createElement_invalid_implicit.js:2:3
+     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+          ^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:197:65
+   197|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
+                                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:261:67
+   261|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:14:31
+    14| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
+                                      ^ [3]
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                            ^ [4]
+
+
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
@@ -150,6 +175,31 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
         ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:3
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `HTMLDivElement` [1] is incompatible with
+`HTMLSpanElement` [2] in type argument `T` [3] of the first parameter of property `onAbort` of type argument `P` [4].
+[incompatible-cast]
+
+   createElement_invalid_implicit.js:7:3
+     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+          ^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:197:65
+   197|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
+                                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:261:67
+   261|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:14:31
+    14| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
+                                      ^ [3]
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                            ^ [4]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
@@ -198,6 +248,31 @@ References:
    createElement_invalid_implicit.js:6:9
    6|   const React = {};
               ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `HTMLDivElement` [1] is incompatible with
+`HTMLSpanElement` [2] in type argument `T` [3] of the first parameter of property `onAbort` of type argument `P` [4].
+[incompatible-cast]
+
+   createElement_invalid_implicit.js:12:3
+    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+          ^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:197:65
+   197|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
+                                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:261:67
+   261|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:14:31
+    14| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
+                                      ^ [3]
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                            ^ [4]
 
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
@@ -2510,7 +2585,7 @@ References:
 
 
 
-Found 144 errors
+Found 147 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

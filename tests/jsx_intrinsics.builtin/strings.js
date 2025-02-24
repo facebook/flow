@@ -17,4 +17,4 @@ const empty_exact: {||} = {...null};
 <div {...empty_exact} />;  // This is fine
 <bad {...empty_exact} />;  // This is fine
 
-<Div id={42} />; // This is fine
+<Div id='str' />; // This is fine

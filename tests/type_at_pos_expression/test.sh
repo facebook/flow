@@ -21,10 +21,10 @@ printf "jsx.js:7:29 = "
 assert_ok "$FLOW" type-at-pos jsx.js 7 29 --strip-root --pretty
 printf "jsx.js:7:35 = "
 assert_ok "$FLOW" type-at-pos jsx.js 7 35 --strip-root --pretty
-printf "jsx.js:7:55 = "
-assert_ok "$FLOW" type-at-pos jsx.js 7 55 --strip-root --pretty
-printf "jsx.js:7:61 = "
-assert_ok "$FLOW" type-at-pos jsx.js 7 61 --strip-root --pretty
+printf "jsx.js:7:48 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 48 --strip-root --pretty
+printf "jsx.js:7:59 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 59 --strip-root --pretty
 printf "jsx.js:8:17 = "
 assert_ok "$FLOW" type-at-pos jsx.js 8 17 --strip-root --pretty
 printf "jsx.js:8:23 = "

@@ -2482,9 +2482,9 @@ Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompa
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2500,9 +2500,9 @@ Cannot cast `intrinsicProp.children` to empty because `React.Element` [1] is inc
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2518,9 +2518,9 @@ Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is inco
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2535,9 +2535,9 @@ Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatibl
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2552,9 +2552,9 @@ Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible w
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2569,9 +2569,9 @@ Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2586,9 +2586,9 @@ Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2603,9 +2603,9 @@ Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompati
          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:429:19
-   429|       +children?: React$Node,
-                          ^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:787:14
+   787|   children?: React$Node,
+                     ^^^^^^^^^^ [1]
    propsof.js:14:26
     14| (intrinsicProp.children: empty); // children is ?React.Node
                                  ^^^^^ [2]
@@ -2639,9 +2639,9 @@ References:
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                                          ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:426:15
-   426|     instance: HTMLMetaElement,
-                      ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:235:67
+   235|   meta: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$metaProps, ReactDOM$metaInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -2664,9 +2664,9 @@ References:
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                                          ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:426:15
-   426|     instance: HTMLMetaElement,
-                      ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:235:67
+   235|   meta: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$metaProps, ReactDOM$metaInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
    propsof.js:26:18
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]

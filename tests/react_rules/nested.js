@@ -50,7 +50,7 @@ component H() {
     useEffect(cb_no_boom_effect);
     useEffect(() => cb_no_boom_effect());
 
-    return <div onWhatever={ok_in_jsx} onAnotherThing={() => { ref.current = 42 /* ok */ }} />;
+    return <div onAbort={ok_in_jsx} onAbortCapture={() => { ref.current = 42 /* ok */ }} />;
 }
 
 component Loops() {

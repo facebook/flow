@@ -9,18 +9,18 @@ component B(...props: Props) {
   (bar: empty); // bar is number
   return <div />;
 }
-type IntrinsicProp = React.PropsOf<'meta'>;
+type IntrinsicProp = React.PropsOf<'div'>;
 declare const intrinsicProp: IntrinsicProp;
 (intrinsicProp.children: empty); // children is ?React.Node
 
 type Str = React.PropOf<A, 'foo'>;
 const s: Str = 42; // Str is string
-type PAny = React.PropOf<'meta', 'anything'>;
-let p: PAny = 42;
+type PStringBoolNumber = React.PropOf<'meta', 'data-'>;
+let p: PStringBoolNumber = 42;
 if (s) {
   p = 'a';
 } else {
-  (p: boolean); // all ok
+  (p: ?(boolean | number | string)); // all ok
 }
 
 component C(ref: React.RefSetter<React.RefOf<A>>) {

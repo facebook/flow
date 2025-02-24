@@ -22,7 +22,7 @@ component Qux(ref: React$RefSetter<'div'>) { return null };
 import * as React from 'react';
 { // ok
     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLInputElement>) {
-        return <input other={other} ref={ref} />
+        return <input id={other} ref={ref} />
     }
 
     component MyInput(label: string, ref: React$RefSetter<?HTMLElement>, ...otherProps: { other: string}) {
@@ -54,7 +54,7 @@ import * as React from 'react';
 
 { //mismatch
     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
-        return <input other={other} ref={ref} />
+        return <input id={other} ref={ref} />
     }
 
     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {

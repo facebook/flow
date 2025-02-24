@@ -10,14 +10,12 @@ var b: ExactReactElement_DEPRECATED<typeof CustomComponentNope> =
 var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
 
-// Since intrinsics are typed as `any` out of the box, we can pass any
-// attributes to intrinsics!
-var d: ExactReactElement_DEPRECATED<any> = <div not_a_real_attr="asdf" />;
-// However, we don't allow such elements to be viewed as React elements with
+var d: ExactReactElement_DEPRECATED<any> = <div id="asdf" />;
+// We don't allow intrinsic elements to be viewed as React elements with
 // different component types.
-var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
+var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
 // No error as long as expectations are consistent, though.
-var f: ExactReactElement_DEPRECATED<'div'> = <div not_a_real_attr="asdf" />;
+var f: ExactReactElement_DEPRECATED<'div'> = <div id="asdf" />;
 
 const dataProps: {[StringPrefix<'data-'>]: string} = {};
 const g = <div {...dataProps} />; // OK

@@ -54,7 +54,7 @@ jsx.js:7:12 = {
   "end":14
 }
 jsx.js:7:16 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
+  "types":{"unevaluated":{"type":"?ReactDOM$Style"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -99,49 +99,49 @@ jsx.js:7:29 = {
   "end":32
 }
 jsx.js:7:35 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
+  "types":{"unevaluated":{"type":"?string"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
     "start":{"line":7,"column":35,"offset":146},
-    "end":{"line":7,"column":39,"offset":151}
+    "end":{"line":7,"column":36,"offset":148}
   },
   "path":"jsx.js",
   "line":7,
   "endline":7,
   "start":35,
-  "end":39
+  "end":36
 }
-jsx.js:7:55 = {
-  "types":{"unevaluated":{"type":"any (explicit)"},"evaluated":null},
+jsx.js:7:48 = {
+  "types":{"unevaluated":{"type":"?ReactDOM$Boolean<\"hidden\">"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":51,"offset":162},
-    "end":{"line":7,"column":55,"offset":167}
+    "start":{"line":7,"column":48,"offset":159},
+    "end":{"line":7,"column":53,"offset":165}
   },
   "path":"jsx.js",
   "line":7,
   "endline":7,
-  "start":51,
-  "end":55
+  "start":48,
+  "end":53
 }
-jsx.js:7:61 = {
+jsx.js:7:59 = {
   "types":{"unevaluated":{"type":"{data: A, name: string, ...}"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":61,"offset":172},
-    "end":{"line":7,"column":65,"offset":177}
+    "start":{"line":7,"column":59,"offset":170},
+    "end":{"line":7,"column":63,"offset":175}
   },
   "path":"jsx.js",
   "line":7,
   "endline":7,
-  "start":61,
-  "end":65
+  "start":59,
+  "end":63
 }
 jsx.js:8:17 = {
   "types":{"unevaluated":{"type":"{data: A, name: string, ...}"},"evaluated":null},
@@ -149,8 +149,8 @@ jsx.js:8:17 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":17,"offset":199},
-    "end":{"line":8,"column":21,"offset":204}
+    "start":{"line":8,"column":17,"offset":197},
+    "end":{"line":8,"column":21,"offset":202}
   },
   "path":"jsx.js",
   "line":8,
@@ -164,8 +164,8 @@ jsx.js:8:23 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":23,"offset":205},
-    "end":{"line":8,"column":26,"offset":209}
+    "start":{"line":8,"column":23,"offset":203},
+    "end":{"line":8,"column":26,"offset":207}
   },
   "path":"jsx.js",
   "line":8,
@@ -179,8 +179,8 @@ jsx.js:8:30 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":30,"offset":212},
-    "end":{"line":8,"column":32,"offset":215}
+    "start":{"line":8,"column":30,"offset":210},
+    "end":{"line":8,"column":32,"offset":213}
   },
   "path":"jsx.js",
   "line":8,
@@ -194,8 +194,8 @@ jsx.js:11:17 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":17,"offset":260},
-    "end":{"line":11,"column":19,"offset":263}
+    "start":{"line":11,"column":17,"offset":258},
+    "end":{"line":11,"column":19,"offset":261}
   },
   "path":"jsx.js",
   "line":11,
@@ -209,8 +209,8 @@ jsx.js:18:12 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":12,"offset":347},
-    "end":{"line":18,"column":12,"offset":348}
+    "start":{"line":18,"column":12,"offset":345},
+    "end":{"line":18,"column":12,"offset":346}
   },
   "path":"jsx.js",
   "line":18,
@@ -224,8 +224,8 @@ jsx.js:18:14 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":14,"offset":349},
-    "end":{"line":18,"column":14,"offset":350}
+    "start":{"line":18,"column":14,"offset":347},
+    "end":{"line":18,"column":14,"offset":348}
   },
   "path":"jsx.js",
   "line":18,
@@ -239,8 +239,8 @@ jsx.js:18:12 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":22,"offset":357},
-    "end":{"line":18,"column":22,"offset":358}
+    "start":{"line":18,"column":22,"offset":355},
+    "end":{"line":18,"column":22,"offset":356}
   },
   "path":"jsx.js",
   "line":18,
@@ -254,8 +254,8 @@ jsx.js:18:24 = {
   "loc":{
     "source":"jsx.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":24,"offset":359},
-    "end":{"line":18,"column":24,"offset":360}
+    "start":{"line":18,"column":24,"offset":357},
+    "end":{"line":18,"column":24,"offset":358}
   },
   "path":"jsx.js",
   "line":18,

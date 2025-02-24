@@ -88,18 +88,42 @@ References:
                                            ^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:18:48
+Error ---------------------------------------------------------------------------------------------------- main.js:16:47
+
+Cannot assign `<div />` to `e` because `HTMLDivElement` [1] is incompatible with `HTMLSpanElement` [2] in type argument
+`T` [3] of the first parameter of property `onAbort` of type argument `P` [4]. [incompatible-type-arg]
+
+   main.js:16:47
+    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
+                                                      ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:197:65
+   197|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
+                                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:261:67
+   261|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
+                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:14:31
+    14| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
+                                      ^ [3]
+   <BUILTINS>/react.js:146:69
+   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                            ^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:16:48
 
 Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in type argument
 `ElementType` [3]. [incompatible-type-arg]
 
-   main.js:18:48
-    18| var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
+   main.js:16:48
+    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
                                                        ^^^ [1]
 
 References:
-   main.js:18:37
-    18| var e: ExactReactElement_DEPRECATED<'span'> = <div not_a_real_attr="asdf" />;
+   main.js:16:37
+    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
                                             ^^^^^^ [2]
    <BUILTINS>/react.js:146:36
    146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -107,4 +131,4 @@ References:
 
 
 
-Found 5 errors
+Found 6 errors

@@ -28,10 +28,10 @@ const UnionRef = React.forwardRef<
   HTMLButtonElement | HTMLAnchorElement,
 >((props: FooProps, ref): React.MixedElement => {
   if (props.foo === 0) {
-    return <a {...props} ref={ref} />;
+    return <a ref={ref} />;
   }
 
-  return <button {...props} ref={ref} />;
+  return <button ref={ref} />;
 });
 
 const unionRef = React.createRef<HTMLButtonElement | HTMLAnchorElement>();
