@@ -51,7 +51,7 @@ type saved_state_data = {
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
   package_heaps: (File_key.t * package_file_data) list;  (** package.json info *)
-  ordered_libs: string list;
+  all_unordered_libs: SSet.t;
   (* Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
    *
    * 1. Much smaller data structure. The whole env.errors data structure can be hundreds of MBs
@@ -357,7 +357,7 @@ end = struct
             []
       )
     in
-    let ordered_libs = Base.List.map env.ServerEnv.ordered_libs ~f:(normalize_libdef_path t) in
+    let all_unordered_libs = SSet.map (normalize_libdef_path t) env.ServerEnv.libs in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
@@ -405,7 +405,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        ordered_libs;
+        all_unordered_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;
@@ -675,7 +675,7 @@ end = struct
       parsed_heaps;
       unparsed_heaps;
       package_heaps;
-      ordered_libs;
+      all_unordered_libs;
       local_errors;
       node_modules_containers;
       dependency_graph;
@@ -701,8 +701,8 @@ end = struct
       let progress_fn = progress_fn (List.length unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps
     in
-    let ordered_libs =
-      Base.List.map ~f:(FileDenormalizer.denormalize_libdef_path denormalizer) ordered_libs
+    let all_unordered_libs =
+      SSet.map (FileDenormalizer.denormalize_libdef_path denormalizer) all_unordered_libs
     in
     let local_errors =
       FilenameMap.fold
@@ -727,7 +727,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        ordered_libs;
+        all_unordered_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;

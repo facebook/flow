@@ -43,7 +43,7 @@ type saved_state_data = {
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
   package_heaps: (File_key.t * package_file_data) list;
-  ordered_libs: string list;
+  all_unordered_libs: SSet.t;
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t SMap.t;
   dependency_graph: saved_state_dependency_graph;

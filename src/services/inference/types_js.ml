@@ -1750,10 +1750,13 @@ let init_with_initial_state
     ~options
     ~restore_dependency_info
     env
-    (parsed, unparsed, ordered_libs, packages, dirty_modules, local_errors) =
+    (parsed, unparsed, packages, dirty_modules, local_errors) =
   let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
   Hh_logger.info "Loading libraries";
   MonitorRPC.status_update ~event:ServerStatus.Load_libraries_start;
+  let (ordered_libs, all_unordered_libs) =
+    Files.ordered_and_unordered_lib_paths (Options.file_options options)
+  in
 
   (* We actually parse and typecheck the libraries, even though we're loading from saved state.
    * We'd need to check them anyway, as soon as any file is checked, since we don't track
@@ -1766,7 +1769,6 @@ let init_with_initial_state
    * 1. The builtin libraries are merged first
    * 2. The non-builtin libraries are merged in the same order as before
    *)
-  let libs = SSet.of_list ordered_libs in
   let%lwt ( additional_parsed,
             additional_unparsed,
             _unchanged,
@@ -1778,7 +1780,9 @@ let init_with_initial_state
     let additional_libdef_files_not_delivered = ref true in
     parse ~options ~profiling ~workers ~reader (fun () ->
         if !additional_libdef_files_not_delivered then (
-          let files = SSet.fold (fun name acc -> File_key.LibFile name :: acc) libs [] in
+          let files =
+            SSet.fold (fun name acc -> File_key.LibFile name :: acc) all_unordered_libs []
+          in
           additional_libdef_files_not_delivered := false;
           Bucket.of_list files
         ) else
@@ -1862,7 +1866,7 @@ let init_with_initial_state
       ~package_json_files:packages
       ~dependency_info
       ~ordered_libs
-      ~libs
+      ~libs:all_unordered_libs
       ~errors
       ~collated_errors
       ~exports
@@ -1880,7 +1884,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
     parsed_heaps;
     unparsed_heaps;
     package_heaps;
-    ordered_libs;
+    all_unordered_libs = _;
     local_errors;
     node_modules_containers;
     dependency_graph;
@@ -2084,7 +2088,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
             Lwt.return (Saved_state.restore_dependency_info dependency_graph)
         ))
       env
-      (parsed, unparsed, ordered_libs, packages, dirty_modules, local_errors)
+      (parsed, unparsed, packages, dirty_modules, local_errors)
   in
   Lwt.return (env, libs_ok)
 
@@ -2293,7 +2297,7 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          Recheck_updates.process_updates
            ~options
-           ~libs:(SSet.of_list saved_state.Saved_state.ordered_libs)
+           ~libs:saved_state.Saved_state.all_unordered_libs
            changed_files
        in
        let updates =
@@ -2412,9 +2416,6 @@ let reinit_full_check
   Hh_logger.info "Reiniting with a full check.";
   let%lwt env =
     with_transaction "partial-reinit" @@ fun transaction reader ->
-    let file_options = Options.file_options options in
-    let (ordered_libs, _) = Files.ordered_and_unordered_lib_paths file_options in
-
     let%lwt (env, libs_ok) =
       init_with_initial_state
         ~profiling
@@ -2426,7 +2427,6 @@ let reinit_full_check
         (Some env)
         ( env.ServerEnv.files,
           env.ServerEnv.unparsed,
-          ordered_libs,
           env.ServerEnv.package_json_files,
           Modulename.Set.empty,
           env.ServerEnv.errors.ServerEnv.local_errors
