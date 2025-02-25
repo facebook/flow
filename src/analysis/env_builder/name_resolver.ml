@@ -3020,9 +3020,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 let arg =
                   (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
                 in
-                this#match_pattern_refinements ~arg pattern;
+                this#visit_match_pattern ~arg pattern;
                 let test_refinements = this#peek_new_refinements () in
-                ignore @@ this#match_pattern pattern;
                 (match this#get_val_of_expression arg with
                 | Some refined_value ->
                   let values =
@@ -3061,20 +3060,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           );
           (body_env_no_refinements, body_env_with_refinements, completion_state)
 
-      method! match_pattern pattern =
-        ( if Flow_ast_utils.match_pattern_has_binding pattern then
-          let (loc, _) = pattern in
-          let write_entries =
-            EnvMap.add
-              (Env_api.PatternLoc, loc)
-              (Env_api.AssigningWrite (mk_reason RDestructuring loc))
-              env_state.write_entries
-          in
-          env_state <- { env_state with write_entries }
-        );
-        super#match_pattern pattern
-
-      method private match_pattern_refinements ~arg root_pattern =
+      method private visit_match_pattern ~arg root_pattern =
         let open Ast.MatchPattern in
         let eq_refinement ~acc ~loc refis =
           match RefinementKey.of_expression acc with
@@ -3090,7 +3076,23 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) (EqR loc) refis
           | None -> refis
         in
+        let impossible_refinement ~acc loc =
+          match RefinementKey.of_expression acc with
+          | Some (RefinementKey.{ lookup = { projections = []; _ }; _ } as key) ->
+            this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) (NotR ImpossibleR)
+          | _ -> ()
+        in
         let rec recurse acc pattern =
+          ( if Flow_ast_utils.match_pattern_has_binding pattern then
+            let (loc, _) = pattern in
+            let write_entries =
+              EnvMap.add
+                (Env_api.PatternLoc, loc)
+                (Env_api.AssigningWrite (mk_reason RDestructuring loc))
+                env_state.write_entries
+            in
+            env_state <- { env_state with write_entries }
+          );
           match pattern with
           | (loc, NumberPattern ({ Ast.NumberLiteral.value; raw; _ } as x)) ->
             let lit = (value, raw) in
@@ -3177,13 +3179,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 acc
                 refi
                 (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }))
-          | (_, AsPattern { AsPattern.pattern; _ }) -> recurse acc pattern
-          | (loc, BindingPattern _)
-          | (loc, WildcardPattern _) ->
-            (match RefinementKey.of_expression acc with
-            | Some (RefinementKey.{ lookup = { projections = []; _ }; _ } as key) ->
-              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) (NotR ImpossibleR)
-            | _ -> ())
+          | (_, AsPattern { AsPattern.pattern; target; _ }) ->
+            ignore @@ this#match_as_pattern_target target;
+            recurse acc pattern
+          | (loc, BindingPattern x) ->
+            ignore @@ this#match_binding_pattern loc x;
+            impossible_refinement ~acc loc
+          | (loc, WildcardPattern _) -> impossible_refinement ~acc loc
           | (_, OrPattern { OrPattern.patterns; _ }) ->
             let rec check_or patterns =
               match patterns with
@@ -3208,7 +3210,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   rhs_latest_refinements
             in
             check_or (List.rev patterns)
-          | (loc, ObjectPattern { ObjectPattern.properties; rest = _; comments = _ }) ->
+          | (loc, ObjectPattern { ObjectPattern.properties; rest; comments = _ }) ->
             (match RefinementKey.of_expression acc with
             | Some key ->
               (* typeof x === 'object' && x !== null *)
@@ -3251,7 +3253,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   | None -> ())
                 | _ -> ());
                 recurse member pattern
-            )
+            );
+            run_loc_opt this#match_rest_pattern rest
           | (loc, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
             (match RefinementKey.of_expression acc with
             | Some key ->
@@ -3296,7 +3299,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   )
                 in
                 recurse member pattern
-            )
+            );
+            run_loc_opt this#match_rest_pattern rest
         in
         recurse arg root_pattern
 
