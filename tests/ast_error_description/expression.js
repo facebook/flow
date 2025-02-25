@@ -35,7 +35,7 @@ function MyComponent() {}
 ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
 ((function () {}: empty): T).p as empty;
 ((a: empty): T).p as empty;
-((import('fs'): empty): T).p as empty;
+((import('./expression'): empty): T).p as empty;
 ((<MyComponent />: empty): T).p as empty;
 ((<>foo</>: empty): T).p as empty;
 (('foo': empty): T).p as empty;

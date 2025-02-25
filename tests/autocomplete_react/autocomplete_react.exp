@@ -497,17 +497,7 @@ Flags: --pretty --imports
 
 components.js:21:16
 Flags: --pretty --imports
-{
-  "result":[
-    {"name":"xaaa","type":"number"},
-    {"name":"xbbb","type":"string"},
-    {"name":"XDomainRequest","type":"(global)"},
-    {"name":"XMLHttpRequest","type":"(global)"},
-    {"name":"XMLHttpRequestEventTarget","type":"(global)"},
-    {"name":"XMLSerializer","type":"(global)"},
-    {"name":"X_OK","type":"Import from fs"}
-  ]
-}
+{"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
 
 react_type_namespace.js:3:18
 Flags: --pretty

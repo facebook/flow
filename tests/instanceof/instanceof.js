@@ -72,8 +72,8 @@ function consumer6(b: boolean) {
 // this instanceof t
 class C {
   m() {
-    if (this instanceof D) alert(this.s);
-    else alert('nope');
+    if (this instanceof D) console.log(this.s);
+    else console.log('nope');
   }
 }
 

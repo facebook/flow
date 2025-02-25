@@ -71,12 +71,6 @@ function from_test() {
   Array.from('abcd') as Array<empty>; // ERROR
 
   Array.from('abcd', x => x.length) as Array<number>; // OK
-
-  const openRequest = (window.indexedDB: IDBFactory).open('dbName');
-  openRequest.onsuccess = function (e) {
-    const db = e.target.result as IDBDatabase;
-    Array.from(db.objectStoreNames) as Array<string>; // OK
-  }
 }
 
 function of_test() {

@@ -14,7 +14,7 @@ foo = foo;
 /**
  * this is bar!
  */
-var bar = alert(1);
+var bar = console.log(1);
 
   bar;
 // ^

@@ -36,7 +36,7 @@ var paths =
   function() {
     var x : ?string = "xxx";
     if (x != null) {
-      alert("");
+      console.log("");
       var y : string = x;  // ok
     }
   },

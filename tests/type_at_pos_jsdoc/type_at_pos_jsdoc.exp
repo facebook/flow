@@ -45,8 +45,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"variable_declaration.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":3,"offset":128},
-    "end":{"line":19,"column":5,"offset":131}
+    "start":{"line":19,"column":3,"offset":134},
+    "end":{"line":19,"column":5,"offset":137}
   },
   "path":"variable_declaration.js",
   "line":19,
@@ -64,8 +64,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"variable_declaration.js",
     "type":"SourceFile",
-    "start":{"line":27,"column":3,"offset":183},
-    "end":{"line":27,"column":5,"offset":186}
+    "start":{"line":27,"column":3,"offset":189},
+    "end":{"line":27,"column":5,"offset":192}
   },
   "path":"variable_declaration.js",
   "line":27,
@@ -83,8 +83,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"variable_declaration.js",
     "type":"SourceFile",
-    "start":{"line":35,"column":3,"offset":240},
-    "end":{"line":35,"column":7,"offset":245}
+    "start":{"line":35,"column":3,"offset":246},
+    "end":{"line":35,"column":7,"offset":251}
   },
   "path":"variable_declaration.js",
   "line":35,
@@ -102,8 +102,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"variable_declaration.js",
     "type":"SourceFile",
-    "start":{"line":43,"column":3,"offset":292},
-    "end":{"line":43,"column":6,"offset":296}
+    "start":{"line":43,"column":3,"offset":298},
+    "end":{"line":43,"column":6,"offset":302}
   },
   "path":"variable_declaration.js",
   "line":43,
@@ -121,8 +121,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"variable_declaration.js",
     "type":"SourceFile",
-    "start":{"line":48,"column":3,"offset":319},
-    "end":{"line":48,"column":6,"offset":323}
+    "start":{"line":48,"column":3,"offset":325},
+    "end":{"line":48,"column":6,"offset":329}
   },
   "path":"variable_declaration.js",
   "line":48,

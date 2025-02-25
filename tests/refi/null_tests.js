@@ -164,7 +164,7 @@ class D extends C {
 
   ensure103(): string {
     if (super.p != null) {
-      alert("");
+      console.log("");
       return super.p;  // not ok
     }
     return "";

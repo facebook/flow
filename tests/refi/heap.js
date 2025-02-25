@@ -36,7 +36,7 @@ var tests =
   function() {
     var x : {p:?string} = {p:"xxx"};
     if (x.p != null) {
-      alert("");
+      console.log("");
       var y : string = x.p;  // not ok
     }
   },

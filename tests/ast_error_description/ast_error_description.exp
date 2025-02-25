@@ -754,33 +754,33 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:38:1
 
-Cannot cast `import('fs').p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `import('./expression').p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
 
    expression.js:38:1
-   38| ((import('fs'): empty): T).p as empty;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   38| ((import('./expression'): empty): T).p as empty;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    expression.js:6:14
     6| type T = {p: mixed};
                     ^^^^^ [1]
-   expression.js:38:33
-   38| ((import('fs'): empty): T).p as empty;
-                                       ^^^^^ [2]
+   expression.js:38:43
+   38| ((import('./expression'): empty): T).p as empty;
+                                                 ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:38:3
 
-Cannot cast `import('fs')` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `import('./expression')` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
 
    expression.js:38:3
-   38| ((import('fs'): empty): T).p as empty;
-         ^^^^^^^^^^^^ [1]
+   38| ((import('./expression'): empty): T).p as empty;
+         ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   expression.js:38:17
-   38| ((import('fs'): empty): T).p as empty;
-                       ^^^^^ [2]
+   expression.js:38:27
+   38| ((import('./expression'): empty): T).p as empty;
+                                 ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:39:1

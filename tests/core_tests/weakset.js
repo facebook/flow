@@ -2,13 +2,10 @@ let ws = new WeakSet<any>();
 let obj: Object = {};
 let dict: {foo: string} = {foo: 'bar'};
 
-ws.add(window);
 ws.add(obj);
 ws.add(dict);
-ws.has(window);
 ws.has(obj);
 ws.has(dict);
-ws.delete(window);
 ws.delete(obj);
 ws.delete(dict);
 
