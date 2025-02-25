@@ -198,8 +198,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:764:44
-   764|       count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:757:44
+   757|       count(children: ChildrenArray<any>): number,
                                                    ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}
@@ -1146,22 +1146,22 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
  - Or `React.Element` [4] is incompatible with boolean [5].
 
    tabs.js:67:9
-    67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
-                ^^^^^^^^^ [4]
+   67| <TabBar><NotTab/></TabBar>; // Error: We can only have tab components.
+               ^^^^^^^^^ [4]
 
 References:
    tabs.js:11:7
-    11| class NotTab extends React.Component<{}, void> {}
-              ^^^^^^ [1]
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
    tabs.js:10:7
-    10| class Tab extends React.Component<{}, void> {}
-              ^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    tabs.js:16:5
-    16|   | boolean
-            ^^^^^^^ [5]
+   16|   | boolean
+           ^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:9
@@ -1171,25 +1171,25 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
  - Or `React.Element` [4] is incompatible with boolean [5] in array element.
 
    tabs.js:68:9
-    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                ^^^^^^^^^^^^^^^^^^
+   68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
+               ^^^^^^^^^^^^^^^^^^
 
 References:
    tabs.js:11:7
-    11| class NotTab extends React.Component<{}, void> {}
-              ^^^^^^ [1]
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
    tabs.js:10:7
-    10| class Tab extends React.Component<{}, void> {}
-              ^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    tabs.js:68:9
-    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
-                ^^^^^^^^^ [4]
+   68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
+               ^^^^^^^^^ [4]
    tabs.js:16:5
-    16|   | boolean
-            ^^^^^^^ [5]
+   16|   | boolean
+           ^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:9
@@ -1199,31 +1199,31 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
  - Or `React.Element` [4] is incompatible with boolean [5] in array element.
 
    tabs.js:71:9
-                v
-    71| <TabBar>
-    72|   <Tab/>
-    73|   <NotTab/>
-    74|   <Tab/>
-    75|   <Tab/>
-    76| </TabBar>;
-        ^
+               v
+   71| <TabBar>
+   72|   <Tab/>
+   73|   <NotTab/>
+   74|   <Tab/>
+   75|   <Tab/>
+   76| </TabBar>;
+       ^
 
 References:
    tabs.js:11:7
-    11| class NotTab extends React.Component<{}, void> {}
-              ^^^^^^ [1]
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [1]
    tabs.js:10:7
-    10| class Tab extends React.Component<{}, void> {}
-              ^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    tabs.js:73:3
-    73|   <NotTab/>
-          ^^^^^^^^^ [4]
+   73|   <NotTab/>
+         ^^^^^^^^^ [4]
    tabs.js:16:5
-    16|   | boolean
-            ^^^^^^^ [5]
+   16|   | boolean
+           ^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2

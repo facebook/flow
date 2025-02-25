@@ -1590,7 +1590,7 @@ Flags: --strip-root --pretty
 {
   "documentation":"`Component` lets you define a React component as a JavaScript class.\n\nWe recommend defining components as functions instead of classes.\n[See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).\n\n**@see** https://react.dev/reference/react/Component",
   "types":{
-    "unevaluated":{"type":"class React$Component<Props, State = void>"},
+    "unevaluated":{"type":"class Component<Props, State = void>"},
     "evaluated":null
   },
   "reasons":[],

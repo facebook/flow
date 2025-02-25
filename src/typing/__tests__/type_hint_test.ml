@@ -597,7 +597,7 @@ let eval_hint_tests =
     "jsx_props_of_class_component"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"{+bar: string, +foo: number}"
-          "class MyComponent extends React$Component<{bar: string, foo: number}> {}; MyComponent"
+          "import * as React from 'react'; class MyComponent extends React.Component<{bar: string, foo: number}> {}; MyComponent"
           [Decomp_JsxProps];
     "jsx_props_of_function_component"
     >:: mk_eval_hint_test

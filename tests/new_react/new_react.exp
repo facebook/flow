@@ -17,13 +17,13 @@ Error --------------------------------------------------------------------------
 Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-arg]
 
    bad_default_props.js:15:18
-   15| class C3 extends React.Component { // error
-                        ^^^^^^^^^^^^^^^
+    15| class C3 extends React.Component { // error
+                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:30:30
-   30| declare class React$Component<Props, State = void> {
-                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:635:28
+   635|     declare class Component<Props, State = void> {
+                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
@@ -31,13 +31,13 @@ Error --------------------------------------------------------------------------
 Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-arg]
 
    bad_default_props.js:20:18
-   20| class C4 extends React.Component {
-                        ^^^^^^^^^^^^^^^
+    20| class C4 extends React.Component {
+                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:30:30
-   30| declare class React$Component<Props, State = void> {
-                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:635:28
+   635|     declare class Component<Props, State = void> {
+                                   ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
@@ -67,16 +67,16 @@ Cannot extend `React.Component` [1] with `Foo` because object type [2] is incomp
 the first parameter of property `setState`. [incompatible-extend]
 
    classes.js:23:15
-   23|   setState(o: { y_: string }): void { }
-                     ^^^^^^^^^^^^^^ [2]
+    23|   setState(o: { y_: string }): void { }
+                      ^^^^^^^^^^^^^^ [2]
 
 References:
    classes.js:7:19
-    7| class Foo extends React.Component<Props, State> {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:39:19
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     7| class Foo extends React.Component<Props, State> {
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:644:23
+   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
@@ -85,16 +85,16 @@ Cannot extend `React.Component` [1] with `Foo` because object type [2] is incomp
 first parameter of property `setState`. Functions without statics are not compatible with objects. [incompatible-extend]
 
    classes.js:23:15
-   23|   setState(o: { y_: string }): void { }
-                     ^^^^^^^^^^^^^^ [2]
+    23|   setState(o: { y_: string }): void { }
+                      ^^^^^^^^^^^^^^ [2]
 
 References:
    classes.js:7:19
-    7| class Foo extends React.Component<Props, State> {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:39:49
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+     7| class Foo extends React.Component<Props, State> {
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:644:53
+   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -164,19 +164,19 @@ Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incomp
  - Or number [1] is incompatible with `React.ComponentType` [3].
 
    classes.js:39:25
-    39| var foo: $jsx<number> = <Foo/>;
-                                ^^^^^^
+   39| var foo: $jsx<number> = <Foo/>;
+                               ^^^^^^
 
 References:
    classes.js:39:15
-    39| var foo: $jsx<number> = <Foo/>;
-                      ^^^^^^ [1]
-   <BUILTINS>/react.js:131:5
-   131|   | string
-            ^^^^^^ [2]
-   <BUILTINS>/react.js:132:5
-   132|   | React$ComponentType<empty>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   39| var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [1]
+   <BUILTINS>/react.js:52:5
+   52|   | string
+           ^^^^^^ [2]
+   <BUILTINS>/react.js:53:5
+   53|   | React$ComponentType<empty>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
@@ -185,19 +185,19 @@ Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with nu
 `ElementType` [3]. [incompatible-type-arg]
 
    classes.js:39:26
-    39| var foo: $jsx<number> = <Foo/>;
-                                 ^^^
+   39| var foo: $jsx<number> = <Foo/>;
+                                ^^^
 
 References:
    classes.js:7:7
-     7| class Foo extends React.Component<Props, State> {
-              ^^^ [1]
+    7| class Foo extends React.Component<Props, State> {
+             ^^^ [1]
    classes.js:39:15
-    39| var foo: $jsx<number> = <Foo/>;
-                      ^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   39| var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
@@ -334,13 +334,13 @@ Error --------------------------------------------------------------------------
 Cannot get `this.state.x` because property `x` is missing in undefined [1]. [incompatible-use]
 
    state5.js:5:23
-    5|     return this.state.x; // error: need to declare type of state
-                             ^
+     5|     return this.state.x; // error: need to declare type of state
+                              ^
 
 References:
-   <BUILTINS>/react.js:30:46
-   30| declare class React$Component<Props, State = void> {
-                                                    ^^^^ [1]
+   <BUILTINS>/react.js:635:44
+   635|     declare class Component<Props, State = void> {
+                                                   ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19
@@ -350,22 +350,22 @@ Cannot call `this.setState` with function bound to `partialState` because: [inco
  - Or function [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:27:19
-                         v-------------------------------------------
-   27|     this.setState(() => ({ // Error: `bar` should be a number.
-   28|       bar: '42',
-   29|     }));
-           -^ [3]
+                          v-------------------------------------------
+    27|     this.setState(() => ({ // Error: `bar` should be a number.
+    28|       bar: '42',
+    29|     }));
+            -^ [3]
 
 References:
    state6.js:28:12
-   28|       bar: '42',
-                  ^^^^ [1]
+    28|       bar: '42',
+                   ^^^^ [1]
    state6.js:5:34
-    5| type State = {|foo: number, bar: number|};
-                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:39:19
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+     5| type State = {|foo: number, bar: number|};
+                                         ^^^^^^ [2]
+   <BUILTINS>/react.js:644:23
+   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -403,19 +403,19 @@ Cannot call `this.setState` with `any` bound to `partialState` because: [incompa
  - Or `StateUpdater3` [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:39:25
-   39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
-                               ^^^^^^^^^^^^^ [3]
+    39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
+                                ^^^^^^^^^^^^^ [3]
 
 References:
    state6.js:9:24
-    9| type StateUpdater3 = {(number): number, foo: number, bar: number};
-                              ^^^^^^ [1]
+     9| type StateUpdater3 = {(number): number, foo: number, bar: number};
+                               ^^^^^^ [1]
    state6.js:11:59
-   11| class MyComponent extends React.Component<{prop: number}, State> {
-                                                                 ^^^^^ [2]
-   <BUILTINS>/react.js:39:19
-   39|     partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    11| class MyComponent extends React.Component<{prop: number}, State> {
+                                                                  ^^^^^ [2]
+   <BUILTINS>/react.js:644:23
+   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:3

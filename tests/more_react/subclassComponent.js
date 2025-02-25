@@ -4,7 +4,7 @@ var React = require("react");
 
 type Props1 = {||}
 
-declare class A extends React$Component<Props1, void> {}
+declare class A extends React.Component<Props1, void> {}
 declare class B extends A {}
 declare class C extends B {}
 

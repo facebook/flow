@@ -50,19 +50,19 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
  - Or number [1] is incompatible with `React.ComponentType` [3].
 
    test.js:17:2
-    17| <Z />; // error, expected React component
-         ^
+   17| <Z />; // error, expected React component
+        ^
 
 References:
    test.js:16:9
-    16| var Z = 0;
-                ^ [1]
-   <BUILTINS>/react.js:131:5
-   131|   | string
-            ^^^^^^ [2]
-   <BUILTINS>/react.js:132:5
-   132|   | React$ComponentType<empty>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   16| var Z = 0;
+               ^ [1]
+   <BUILTINS>/react.js:52:5
+   52|   | string
+           ^^^^^^ [2]
+   <BUILTINS>/react.js:53:5
+   53|   | React$ComponentType<empty>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 

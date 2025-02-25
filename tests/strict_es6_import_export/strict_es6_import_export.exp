@@ -257,18 +257,18 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
  - Or module `./foo` [1] is incompatible with string [3].
 
    import_star_invalid_use.js:9:2
-     9| <Foo></Foo>;
-         ^^^
+    9| <Foo></Foo>;
+        ^^^
 
 References:
    foo.js
    ^^^^^^ [1]
-   <BUILTINS>/react.js:132:5
-   132|   | React$ComponentType<empty>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:131:5
-   131|   | string
-            ^^^^^^ [3]
+   <BUILTINS>/react.js:53:5
+   53|   | React$ComponentType<empty>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:52:5
+   52|   | string
+           ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2

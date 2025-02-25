@@ -3,7 +3,7 @@ import * as React from 'react';
 declare component Foo();
 component Bar<T>() {return 0}
 declare function Baz(): React$Node;
-declare class Boz extends React$Component<{}> {}
+declare class Boz extends React.Component<{}> {}
 
 type ReactElementAlias<T> = ExactReactElement_DEPRECATED<T>;
 type RGood0 = renders 'svg'; // ok

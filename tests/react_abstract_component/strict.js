@@ -4,7 +4,7 @@ declare var Component : React$ElementType;
 const c = <Component f = {3}/>;
 (c : React.MixedElement);
 
-declare function foo(a: ?React$Component<any, any>): void;
+declare function foo(a: ?React.Component<any, any>): void;
 declare var ref: ?React.ElementRef<React$ElementType>;
 foo(ref);
 

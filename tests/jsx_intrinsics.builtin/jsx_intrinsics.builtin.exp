@@ -4,19 +4,19 @@ Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is inco
 in type argument `ElementType` [3]. [incompatible-type-arg]
 
    main.js:9:4
-     9|   <CustomComponent prop="asdf" />; // Error: Bad class type
-           ^^^^^^^^^^^^^^^
+    9|   <CustomComponent prop="asdf" />; // Error: Bad class type
+          ^^^^^^^^^^^^^^^
 
 References:
    main.js:3:7
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-              ^^^^^^^^^^^^^^^ [1]
+    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^ [1]
    main.js:4:7
-     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
-              ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+    4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:3
@@ -25,19 +25,19 @@ Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing i
 type [2] in type argument `P` [3]. [prop-missing]
 
    main.js:11:3
-    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    main.js:3:47
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                      ^^^^^^^^^^^^^^ [1]
+    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                     ^^^^^^^^^^^^^^ [1]
    main.js:10:59
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:69
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                            ^ [3]
+   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                 ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:69
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                           ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -56,11 +56,11 @@ References:
    main.js:3:47
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:30:31
-    30| declare class React$Component<Props, State = void> {
-                                      ^^^^^ [3]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:635:29
+   635|     declare class Component<Props, State = void> {
+                                    ^^^^^ [3]
+   <BUILTINS>/react.js:67:36
+    67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [4]
 
 
@@ -80,11 +80,11 @@ References:
    main.js:10:59
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
                                                                   ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:30:31
-    30| declare class React$Component<Props, State = void> {
-                                      ^^^^^ [3]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:635:29
+   635|     declare class Component<Props, State = void> {
+                                    ^^^^^ [3]
+   <BUILTINS>/react.js:67:36
+    67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [4]
 
 
@@ -107,8 +107,8 @@ References:
    <BUILTINS>/react-dom.js:31:31
     31| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
                                       ^ [3]
-   <BUILTINS>/react.js:146:69
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:67:69
+    67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                             ^ [4]
 
 
@@ -118,16 +118,16 @@ Cannot assign `<div />` to `e` because `div` [1] is incompatible with string lit
 `ElementType` [3]. [incompatible-type-arg]
 
    main.js:16:48
-    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-                                                       ^^^ [1]
+   16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
+                                                      ^^^ [1]
 
 References:
    main.js:16:37
-    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
+                                           ^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
 
 
 

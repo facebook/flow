@@ -1031,8 +1031,8 @@ References:
    react.js:13:28
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:341:38
-   341|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:262:38
+   262|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 
@@ -1042,19 +1042,19 @@ Cannot cast `b` to `React.Component` because object type [1] is incompatible wit
 `Props` [3]. [incompatible-cast]
 
    react.js:14:3
-   14|   b as React.Component<Props>; // nope
-         ^
+    14|   b as React.Component<Props>; // nope
+          ^
 
 References:
    react.js:12:34
-   12|   declare var b: React.Component<{+a: number}>;
-                                        ^^^^^^^^^^^^ [1]
+    12|   declare var b: React.Component<{+a: number}>;
+                                         ^^^^^^^^^^^^ [1]
    react.js:14:24
-   14|   b as React.Component<Props>; // nope
-                              ^^^^^ [2]
-   <BUILTINS>/react.js:30:31
-   30| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
+    14|   b as React.Component<Props>; // nope
+                               ^^^^^ [2]
+   <BUILTINS>/react.js:635:29
+   635|     declare class Component<Props, State = void> {
+                                    ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:46:26
@@ -1063,21 +1063,21 @@ Cannot get `X.defaultProps` because property `defaultProps` is missing in `React
 [prop-missing]
 
    react.js:46:26
-    46|   C.defaultProps = {...X.defaultProps}; // nope
-                                 ^^^^^^^^^^^^
+   46|   C.defaultProps = {...X.defaultProps}; // nope
+                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:104:47
-                                                      v
-   104| declare type React$AbstractComponentStatics = {
-   105|   displayName?: ?string,
-   106|   // This is only on function components, but trying to access name when
-   107|   // displayName is undefined is a common pattern.
-   108|   name?: ?string,
-   109|   propTypes?: {[string] : any, ...},
-   110|   ...
-   111| };
-        ^ [1]
+   <BUILTINS>/react.js:25:47
+                                                     v
+   25| declare type React$AbstractComponentStatics = {
+   26|   displayName?: ?string,
+   27|   // This is only on function components, but trying to access name when
+   28|   // displayName is undefined is a common pattern.
+   29|   name?: ?string,
+   30|   propTypes?: {[string] : any, ...},
+   31|   ...
+   32| };
+       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:5

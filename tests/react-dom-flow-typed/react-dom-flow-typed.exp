@@ -23,8 +23,8 @@ Cannot call `ReactDOM.render` with `null` bound to `element` because null [1] is
                        ^^^^ [1]
 
 References:
-   flow-typed/npm/react-dom_v16.x.x.js:7:14
-    7|     element: React$Element<ElementType>,
+   flow-typed/npm/react-dom_v16.x.x.js:9:14
+    9|     element: React$Element<ElementType>,
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -38,8 +38,8 @@ Cannot call `ReactDOM.render` with `null` bound to `container` because null [1] 
                              ^^^^ [1]
 
 References:
-   flow-typed/npm/react-dom_v16.x.x.js:8:16
-    8|     container: Element,
+   flow-typed/npm/react-dom_v16.x.x.js:10:16
+   10|     container: Element,
                       ^^^^^^^ [2]
 
 

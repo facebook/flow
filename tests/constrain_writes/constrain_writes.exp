@@ -251,22 +251,22 @@ Cannot assign `<OtherComponent />` to `element` because property `other_prop` is
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
 
    wiki_examples.js:23:13
-    23|   element = <OtherComponent {...other_props} />; // Error
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:12:28
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                   ^^^^^ [1]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [1]
    wiki_examples.js:18:32
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                       ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:69
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                            ^ [3]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                      ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:69
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                           ^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
@@ -276,22 +276,22 @@ Cannot assign `<OtherComponent />` to `element` because property `prop` is missi
 Add an annotation to `element` [4] if a different type is desired. [prop-missing]
 
    wiki_examples.js:23:13
-    23|   element = <OtherComponent {...other_props} />; // Error
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:32
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                       ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                      ^^^^^^^^^^ [1]
    wiki_examples.js:12:28
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                   ^^^^^ [2]
-   <BUILTINS>/react.js:146:69
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                            ^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [2]
+   <BUILTINS>/react.js:67:69
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                           ^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -301,22 +301,22 @@ Cannot assign `<OtherComponent />` to `element` because property `other_prop` is
 with the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:12:28
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                   ^^^^^ [1]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [1]
    wiki_examples.js:18:32
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                       ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                      ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -326,22 +326,22 @@ Cannot assign `<OtherComponent />` to `element` because property `prop` is missi
 the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:32
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                       ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                      ^^^^^^^^^^ [1]
    wiki_examples.js:12:28
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                   ^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -351,22 +351,22 @@ the return value of type argument `ElementType` [3]. All writes to `element` mus
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -376,22 +376,22 @@ in the return value of type argument `ElementType` [3]. All writes to `element` 
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -401,22 +401,22 @@ return value of type argument `ElementType` [3]. All writes to `element` must be
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -426,22 +426,22 @@ return value of type argument `ElementType` [3]. All writes to `element` must be
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -451,22 +451,22 @@ return value of type argument `ElementType` [3]. All writes to `element` must be
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -476,22 +476,22 @@ return value of type argument `ElementType` [3]. All writes to `element` must be
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
@@ -501,22 +501,22 @@ return value of type argument `ElementType` [3]. All writes to `element` must be
 initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
 
    wiki_examples.js:23:14
-    23|   element = <OtherComponent {...other_props} />; // Error
-                     ^^^^^^^^^^^^^^
+   23|   element = <OtherComponent {...other_props} />; // Error
+                    ^^^^^^^^^^^^^^
 
 References:
    wiki_examples.js:18:47
-    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                                      ^^^^^^^^^^ [1]
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                     ^^^^^^^^^^ [1]
    wiki_examples.js:12:47
-    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:146:36
-   146| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                     ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:67:36
+   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                          ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
-    14|   let element = <Component {...props} />
-              ^^^^^^^ [4]
+   14|   let element = <Component {...props} />
+             ^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:54:24

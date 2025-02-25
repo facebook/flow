@@ -1,4 +1,6 @@
-declare class Foo extends React$Component<{bar: string}> {}
+import * as React from 'react';
+
+declare class Foo extends React.Component<{bar: string}> {}
 declare class ImNotARefSetter {}
 
 Foo as component(bar: string, ref: React.RefSetter<Foo>); // ok

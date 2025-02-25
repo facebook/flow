@@ -1,19 +1,19 @@
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
-Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-cast]
 
    commonjs.js:4:2
-    4| (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^
+     4| (React.Component: number); // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:30:15
-   30| declare class React$Component<Props, State = void> {
-                     ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:635:19
+   635|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [1]
    commonjs.js:4:19
-    4| (React.Component: number); // Error
-                         ^^^^^^ [2]
+     4| (React.Component: number); // Error
+                          ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
@@ -55,20 +55,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
-Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-cast]
 
    es-default.js:4:2
-    4| (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^
+     4| (React.Component: number); // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:30:15
-   30| declare class React$Component<Props, State = void> {
-                     ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:635:19
+   635|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [1]
    es-default.js:4:19
-    4| (React.Component: number); // Error
-                         ^^^^^^ [2]
+     4| (React.Component: number); // Error
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
@@ -103,27 +103,27 @@ Cannot get `React.Missing` because property `Missing` is missing in namespace Re
                       ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1033:26
-   1033|   declare export default typeof React;
+   <BUILTINS>/react.js:1026:26
+   1026|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
-Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
 [incompatible-cast]
 
    es-namespace.js:4:2
-    4| (React.Component: number); // Error
-        ^^^^^^^^^^^^^^^
+     4| (React.Component: number); // Error
+         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:30:15
-   30| declare class React$Component<Props, State = void> {
-                     ^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:635:19
+   635|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [1]
    es-namespace.js:4:19
-    4| (React.Component: number); // Error
-                         ^^^^^^ [2]
+     4| (React.Component: number); // Error
+                          ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
@@ -158,8 +158,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:276:16
-   276| declare module react {
+   <BUILTINS>/react.js:197:16
+   197| declare module react {
                        ^^^^^ [1]
 
 

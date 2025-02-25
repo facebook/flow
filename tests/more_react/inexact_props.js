@@ -12,8 +12,8 @@ type Props2 = {|
     y : string;
 |}
 
-class A extends React$Component<Props1> {}
-class B extends React$Component<Props2> {}
+class A extends React.Component<Props1> {}
+class B extends React.Component<Props2> {}
 
 <A x={4} y={"hello"} z={3}></A>;
 <B x={4} y={"hello"} z={3}></B>; // error

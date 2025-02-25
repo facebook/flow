@@ -772,7 +772,6 @@ Flags: --pretty
     },
     {"name":"Range","type":"typeof Range"},
     {"name":"RangeError","type":"typeof RangeError"},
-    {"name":"React$Component","type":"typeof React$Component"},
     {
       "name":"ReadableByteStreamController",
       "type":"typeof ReadableByteStreamController"

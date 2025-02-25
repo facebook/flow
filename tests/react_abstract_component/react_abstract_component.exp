@@ -17,21 +17,21 @@ Error --------------------------------------------------------------------------
 Cannot create `Component` element because props [1] is incompatible with empty [2]. [incompatible-type]
 
    strict.js:4:12
-     4| const c = <Component f = {3}/>;
-                   ^^^^^^^^^
+    4| const c = <Component f = {3}/>;
+                  ^^^^^^^^^
 
 References:
    strict.js:4:11
-     4| const c = <Component f = {3}/>;
-                  ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:132:25
-   132|   | React$ComponentType<empty>;
-                                ^^^^^ [2]
+    4| const c = <Component f = {3}/>;
+                 ^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:53:25
+   53|   | React$ComponentType<empty>;
+                               ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because `HTMLElement` [1] is incompatible with `React.Component` [2].
+Cannot call `foo` with `ref` bound to `a` because `HTMLElement` [1] is incompatible with `Component` [2].
 [incompatible-call]
 
    strict.js:9:5
@@ -43,14 +43,13 @@ References:
    8| declare var ref: ?React.ElementRef<React$ElementType>;
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    strict.js:7:26
-   7| declare function foo(a: ?React$Component<any, any>): void;
+   7| declare function foo(a: ?React.Component<any, any>): void;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `React.Component` [2].
-[incompatible-call]
+Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `Component` [2]. [incompatible-call]
 
    strict.js:9:5
    9| foo(ref);
@@ -61,7 +60,7 @@ References:
    8| declare var ref: ?React.ElementRef<React$ElementType>;
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    strict.js:7:26
-   7| declare function foo(a: ?React$Component<any, any>): void;
+   7| declare function foo(a: ?React.Component<any, any>): void;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
