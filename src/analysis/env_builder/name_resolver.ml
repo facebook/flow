@@ -3082,7 +3082,24 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) (NotR ImpossibleR)
           | _ -> ()
         in
-        let rec recurse acc pattern =
+        let add_binding kind id bindings =
+          let (_, { Ast.Identifier.name; _ }) = id in
+          SMap.add ~combine:Base.List.rev_append name [(kind, id)] bindings
+        in
+        let bindings_of_rest bindings = function
+          | Some (_, { RestPattern.argument = Some (_, { BindingPattern.kind; id; _ }); _ }) ->
+            add_binding kind id bindings
+          | _ -> bindings
+        in
+        let check_invalid_reference bindings id =
+          let (loc, { Ast.Identifier.name; _ }) = id in
+          match SMap.find_opt name bindings with
+          | Some ((_, (binding_loc, _)) :: _) ->
+            let binding_reason = mk_reason (RIdentifier (OrdinaryName name)) binding_loc in
+            add_output (Error_message.EMatchInvalidPatternReference { loc; binding_reason })
+          | _ -> ()
+        in
+        let rec recurse acc pattern bindings =
           ( if Flow_ast_utils.match_pattern_has_binding pattern then
             let (loc, _) = pattern in
             let write_entries =
@@ -3103,7 +3120,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               loc
               acc
               refi
-              (loc, Ast.Expression.NumberLiteral x)
+              (loc, Ast.Expression.NumberLiteral x);
+            bindings
           | (loc, BigIntPattern ({ Ast.BigIntLiteral.value; raw; _ } as x)) ->
             let lit = (value, raw) in
             let refi = SingletonBigIntR { loc; sense = true; lit } in
@@ -3113,7 +3131,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               loc
               acc
               refi
-              (loc, Ast.Expression.BigIntLiteral x)
+              (loc, Ast.Expression.BigIntLiteral x);
+            bindings
           | (loc, StringPattern ({ Ast.StringLiteral.value = lit; _ } as x)) ->
             let refi = SingletonStrR { loc; sense = true; lit } in
             this#literal_test
@@ -3122,7 +3141,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               loc
               acc
               refi
-              (loc, Ast.Expression.StringLiteral x)
+              (loc, Ast.Expression.StringLiteral x);
+            bindings
           | (loc, BooleanPattern ({ Ast.BooleanLiteral.value = lit; _ } as x)) ->
             let refi = SingletonBoolR { loc; sense = true; lit } in
             this#literal_test
@@ -3131,24 +3151,30 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               loc
               acc
               refi
-              (loc, Ast.Expression.BooleanLiteral x)
+              (loc, Ast.Expression.BooleanLiteral x);
+            bindings
           | (loc, NullPattern x) ->
-            this#null_test ~strict:true ~sense:true loc acc (loc, Ast.Expression.NullLiteral x)
-          | (loc, IdentifierPattern x) ->
-            let id_expr = (loc, Ast.Expression.Identifier x) in
-            ignore @@ this#expression id_expr;
+            this#null_test ~strict:true ~sense:true loc acc (loc, Ast.Expression.NullLiteral x);
+            bindings
+          | (loc, IdentifierPattern id) ->
+            check_invalid_reference bindings id;
+            run this#identifier id;
+            let id_expr = (loc, Ast.Expression.Identifier id) in
             let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc id_expr in
             let refis = eq_refinement ~acc ~loc refis in
-            this#commit_refinement refis
+            this#commit_refinement refis;
+            bindings
           | (loc, MemberPattern x) ->
-            let mem_expr =
+            let (mem_expr, root_ident) =
               Flow_ast_utils.expression_of_match_member_pattern
                 ~visit_expression:(fun e -> ignore @@ this#expression e)
                 x
             in
+            check_invalid_reference bindings root_ident;
             let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc mem_expr in
             let refis = eq_refinement ~acc ~loc refis in
-            this#commit_refinement refis
+            this#commit_refinement refis;
+            bindings
           | (loc, UnaryPattern { UnaryPattern.operator; argument; _ }) ->
             (match argument with
             | (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value; raw; comments }) ->
@@ -3178,27 +3204,35 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 loc
                 acc
                 refi
-                (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }))
+                (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }));
+            bindings
           | (_, AsPattern { AsPattern.pattern; target; _ }) ->
-            ignore @@ this#match_as_pattern_target target;
-            recurse acc pattern
-          | (loc, BindingPattern x) ->
-            ignore @@ this#match_binding_pattern loc x;
-            impossible_refinement ~acc loc
-          | (loc, WildcardPattern _) -> impossible_refinement ~acc loc
+            let bindings =
+              match target with
+              | AsPattern.Binding (_, { BindingPattern.kind; id; _ }) ->
+                add_binding kind id bindings
+              | AsPattern.Identifier id -> add_binding Ast.Variable.Const id bindings
+            in
+            recurse acc pattern bindings
+          | (loc, BindingPattern { BindingPattern.kind; id; _ }) ->
+            impossible_refinement ~acc loc;
+            add_binding kind id bindings
+          | (loc, WildcardPattern _) ->
+            impossible_refinement ~acc loc;
+            bindings
           | (_, OrPattern { OrPattern.patterns; _ }) ->
-            let rec check_or patterns =
+            let rec check_or patterns bindings =
               match patterns with
-              | [] -> ()
-              | [pattern] -> recurse acc pattern
+              | [] -> bindings
+              | [pattern] -> recurse acc pattern bindings
               | rhs :: rest ->
                 this#push_refinement_scope empty_refinements;
-                check_or rest;
+                let bindings = check_or rest bindings in
                 let lhs_latest_refinements = this#peek_new_refinements () in
                 let env1 = this#env_snapshot_without_latest_refinements in
                 this#negate_new_refinements ();
                 this#push_refinement_scope empty_refinements;
-                recurse acc rhs;
+                let bindings = recurse acc rhs bindings in
                 let rhs_latest_refinements = this#peek_new_refinements () in
                 this#pop_refinement_scope ();
                 (* Pop LHS refinement scope *)
@@ -3207,9 +3241,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 this#merge_refinement_scopes
                   ~conjunction:false
                   lhs_latest_refinements
-                  rhs_latest_refinements
+                  rhs_latest_refinements;
+                bindings
             in
-            check_or (List.rev patterns)
+            check_or (List.rev patterns) bindings
           | (loc, ObjectPattern { ObjectPattern.properties; rest; comments = _ }) ->
             (match RefinementKey.of_expression acc with
             | Some key ->
@@ -3217,44 +3252,46 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               let refi = AndR (ObjectR, NotR NullR) in
               this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
             | None -> ());
-            Base.List.iter properties ~f:(fun prop ->
-                let (loc, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) =
-                  prop
-                in
-                let (property, propname) =
-                  match key with
-                  | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
-                    (Ast.Expression.Member.PropertyIdentifier id, name)
-                  | ObjectPattern.Property.StringLiteral
-                      (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
-                    ( Ast.Expression.Member.PropertyExpression
-                        (loc, Ast.Expression.StringLiteral lit),
-                      value
-                    )
-                  | ObjectPattern.Property.NumberLiteral
-                      (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
-                    let name = Dtoa.ecma_string_of_float value in
-                    ( Ast.Expression.Member.PropertyExpression
-                        (loc, Ast.Expression.NumberLiteral lit),
-                      name
-                    )
-                in
-                let member =
-                  let open Ast.Expression in
-                  (loc, Member { Member._object = acc; property; comments = None })
-                in
-                (match pattern with
-                | (loc, WildcardPattern _)
-                | (loc, BindingPattern _) ->
-                  (match RefinementKey.of_expression acc with
-                  | Some key ->
-                    let refi = PropExistsR { propname; loc } in
-                    this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
-                  | None -> ())
-                | _ -> ());
-                recurse member pattern
-            );
-            run_loc_opt this#match_rest_pattern rest
+            let bindings =
+              Base.List.fold properties ~init:bindings ~f:(fun bindings prop ->
+                  let (loc, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) =
+                    prop
+                  in
+                  let (property, propname) =
+                    match key with
+                    | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
+                      (Ast.Expression.Member.PropertyIdentifier id, name)
+                    | ObjectPattern.Property.StringLiteral
+                        (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
+                      ( Ast.Expression.Member.PropertyExpression
+                          (loc, Ast.Expression.StringLiteral lit),
+                        value
+                      )
+                    | ObjectPattern.Property.NumberLiteral
+                        (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
+                      let name = Dtoa.ecma_string_of_float value in
+                      ( Ast.Expression.Member.PropertyExpression
+                          (loc, Ast.Expression.NumberLiteral lit),
+                        name
+                      )
+                  in
+                  let member =
+                    let open Ast.Expression in
+                    (loc, Member { Member._object = acc; property; comments = None })
+                  in
+                  (match pattern with
+                  | (loc, WildcardPattern _)
+                  | (loc, BindingPattern _) ->
+                    (match RefinementKey.of_expression acc with
+                    | Some key ->
+                      let refi = PropExistsR { propname; loc } in
+                      this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+                    | None -> ())
+                  | _ -> ());
+                  recurse member pattern bindings
+              )
+            in
+            bindings_of_rest bindings rest
           | (loc, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
             (match RefinementKey.of_expression acc with
             | Some key ->
@@ -3285,24 +3322,34 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               Ast.Expression.NumberLiteral
                 { Ast.NumberLiteral.value = float i; raw = string_of_int i; comments = None }
             in
-            Base.List.iteri elements ~f:(fun i { ArrayPattern.Element.pattern; index } ->
-                let (pat_loc, _) = pattern in
-                let member =
-                  ( index,
-                    let open Ast.Expression in
-                    Member
-                      {
-                        Member._object = acc;
-                        property = Member.PropertyExpression (pat_loc, number_of_i i);
-                        comments = None;
-                      }
-                  )
-                in
-                recurse member pattern
-            );
-            run_loc_opt this#match_rest_pattern rest
+            let bindings =
+              Base.List.foldi
+                elements
+                ~init:bindings
+                ~f:(fun i bindings { ArrayPattern.Element.pattern; index } ->
+                  let (pat_loc, _) = pattern in
+                  let member =
+                    ( index,
+                      let open Ast.Expression in
+                      Member
+                        {
+                          Member._object = acc;
+                          property = Member.PropertyExpression (pat_loc, number_of_i i);
+                          comments = None;
+                        }
+                    )
+                  in
+                  recurse member pattern bindings
+              )
+            in
+            bindings_of_rest bindings rest
         in
-        recurse arg root_pattern
+        recurse arg root_pattern SMap.empty
+        |> SMap.iter (fun _ bindings ->
+               Base.List.iter bindings ~f:(fun (kind, id) ->
+                   ignore @@ this#pattern_identifier ~kind id
+               )
+           )
 
       method merge_conditional_branches_with_refinements
           (env1, refined_env1, completion_state1) (env2, refined_env2, completion_state2) : unit =

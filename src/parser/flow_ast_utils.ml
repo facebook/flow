@@ -688,9 +688,9 @@ let match_root_ident loc = (loc, { Identifier.name = match_root_name; comments =
 let expression_of_match_member_pattern ~visit_expression pattern =
   let open MatchPattern in
   let rec f (loc, { MemberPattern.base; property; comments }) =
-    let _object =
+    let (_object, root_name) =
       match base with
-      | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, Expression.Identifier id)
+      | MemberPattern.BaseIdentifier ((loc, _) as id) -> ((loc, Expression.Identifier id), id)
       | MemberPattern.BaseMember mem -> f mem
     in
     let property =
@@ -703,7 +703,7 @@ let expression_of_match_member_pattern ~visit_expression pattern =
     in
     let exp = (loc, Expression.Member { Expression.Member._object; property; comments }) in
     visit_expression exp;
-    exp
+    (exp, root_name)
   in
   f pattern
 

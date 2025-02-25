@@ -727,48 +727,60 @@ References:
                           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:137:12
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:137:15
 
-The following definitions recursively depend on each other, and Flow cannot compute their types:
- - `a` [1] depends on other definition [2]
- - destructuring [2] depends on other definition [3]
-Please add type annotations to these definitions [definition-cycle]
+Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
+   pattern-errors.js:137:15
+   137|     [const a, a]: a, // ERROR
+                      ^
+
+References:
    pattern-errors.js:137:12
    137|     [const a, a]: a, // ERROR
                    ^ [1]
 
-References:
-   pattern-errors.js:137:5
-   137|     [const a, a]: a, // ERROR
-            ^^^^^^^^^^^^ [2]
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:137:15
+
+Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
+
    pattern-errors.js:137:15
    137|     [const a, a]: a, // ERROR
-                      ^ [3]
+                      ^
+
+References:
+   pattern-errors.js:137:12
+   137|     [const a, a]: a, // ERROR
+                   ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:145:12
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:145:15
 
-The following definitions recursively depend on each other, and Flow cannot compute their types:
- - `a` [1] depends on other definition [2]
- - property `1` [3] depends on other definition [4]
- - destructuring [2] depends on other definition [3]
-Please add type annotations to these definitions [definition-cycle]
+Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
+   pattern-errors.js:145:15
+   145|     [const a, a.foo]: a, // ERROR
+                      ^
+
+References:
    pattern-errors.js:145:12
    145|     [const a, a.foo]: a, // ERROR
                    ^ [1]
 
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:145:15
+
+Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
+
+   pattern-errors.js:145:15
+   145|     [const a, a.foo]: a, // ERROR
+                      ^
+
 References:
-   pattern-errors.js:145:5
+   pattern-errors.js:145:12
    145|     [const a, a.foo]: a, // ERROR
-            ^^^^^^^^^^^^^^^^ [2]
-   pattern-errors.js:145:15
-   145|     [const a, a.foo]: a, // ERROR
-                      ^^^^^ [3]
-   pattern-errors.js:145:15
-   145|     [const a, a.foo]: a, // ERROR
-                      ^ [4]
+                   ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
@@ -906,4 +918,4 @@ Cannot resolve name `a`. [cannot-resolve-name]
 
 
 
-Found 73 errors
+Found 75 errors

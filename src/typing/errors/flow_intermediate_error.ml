@@ -4101,6 +4101,12 @@ let to_printable_error :
       [text "New bindings in 'or' patterns are not yet supported."]
     | MessageMatchInvalidAsPattern ->
       [text "Invalid "; code "as"; text " pattern. Direct use on a binding pattern is not allowed."]
+    | MessageMatchInvalidPatternReference { binding_reason } ->
+      [
+        text "Cannot use variable ";
+        ref binding_reason;
+        text " within the same match pattern it is defined.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

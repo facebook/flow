@@ -921,6 +921,7 @@ type 'loc message =
   | MessageMatchDuplicateObjectProperty of { name: string }
   | MessageMatchBindingInOrPattern
   | MessageMatchInvalidAsPattern
+  | MessageMatchInvalidPatternReference of { binding_reason: 'loc virtual_reason }
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;
