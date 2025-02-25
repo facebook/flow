@@ -844,22 +844,35 @@ let do_initialize params : Initialize.result =
     server_info = { name = "Flow"; version = Flow_version.version };
   }
 
+let message_with_flow_and_root_name_prefix flowconfig msg =
+  match FlowConfig.root_name flowconfig with
+  | None -> "Flow: " ^ msg
+  | Some root -> "Flow (" ^ root ^ "): " ^ msg
+
 let show_connected_status (cenv : connected_env) : connected_env =
+  let message_with_prefix = message_with_flow_and_root_name_prefix cenv.c_ienv.i_flowconfig in
   let (type_, message, shortMessage, progress, total) =
     if cenv.c_is_rechecking then
       let (server_status, _) = cenv.c_server_status in
       if not (ServerStatus.is_free server_status) then
         let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
-        let message = "Flow: " ^ ServerStatus.string_of_status ~use_emoji:false server_status in
-        (MessageType.WarningMessage, message, shortMessage, progress, total)
+        let message =
+          message_with_prefix @@ ServerStatus.string_of_status ~use_emoji:false server_status
+        in
+        ( MessageType.WarningMessage,
+          message,
+          Base.Option.map ~f:message_with_prefix shortMessage,
+          progress,
+          total
+        )
       else
-        (MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None)
+        (MessageType.WarningMessage, message_with_prefix "Server is rechecking...", None, None, None)
     else
       let (_, watcher_status) = cenv.c_server_status in
       match watcher_status with
       | Some (_, FileWatcherStatus.Deferred { reason }) ->
         let message = Printf.sprintf "Waiting for %s to finish" reason in
-        let short_message = Some "Flow: blocked" in
+        let short_message = Some (message_with_prefix "blocked") in
         (MessageType.WarningMessage, message, short_message, None, None)
       | Some (_, FileWatcherStatus.Initializing)
       | Some (_, FileWatcherStatus.Ready)
@@ -875,7 +888,7 @@ let show_connected_status (cenv : connected_env) : connected_env =
               "https://flow.org/en/docs/lang/lazy-modes/"
           | _ -> "Flow is ready."
         in
-        let short_message = Some "Flow: ready" in
+        let short_message = Some (message_with_prefix "ready") in
         (MessageType.InfoMessage, message, short_message, None, None)
   in
   let c_ienv = show_status ~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv in
@@ -900,26 +913,30 @@ let show_connecting (reason : CommandConnectSimple.error) (env : disconnected_en
     Lsp_writers.log_info to_stdout "Starting Flow server";
 
   let (message, shortMessage, progress, total) =
+    let message_with_prefix = message_with_flow_and_root_name_prefix env.d_ienv.i_flowconfig in
     match (reason, env.d_server_status) with
-    | (CommandConnectSimple.Server_missing, _) -> ("Flow: Server starting", None, None, None)
-    | (CommandConnectSimple.Server_socket_missing, _) -> ("Flow: Server starting?", None, None, None)
+    | (CommandConnectSimple.Server_missing, _) ->
+      (message_with_prefix "Server starting", None, None, None)
+    | (CommandConnectSimple.Server_socket_missing, _) ->
+      (message_with_prefix "Server starting?", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch Server_exited), _) ->
-      ("Flow: Server was wrong version and exited", None, None, None)
+      (message_with_prefix "Server was wrong version and exited", None, None, None)
     | (CommandConnectSimple.(Build_id_mismatch (Client_should_error _)), _) ->
-      ("Flow: Server is wrong version", None, None, None)
+      (message_with_prefix "Server is wrong version", None, None, None)
     | (CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients, _) ->
-      ("Flow: Server busy", None, None, None)
-    | (CommandConnectSimple.Server_busy _, None) -> ("Flow: Server busy", None, None, None)
+      (message_with_prefix "Server busy", None, None, None)
+    | (CommandConnectSimple.Server_busy _, None) ->
+      (message_with_prefix "Server busy", None, None, None)
     | (CommandConnectSimple.Server_busy _, Some (server_status, watcher_status)) ->
       if not (ServerStatus.is_free server_status) then
         let (shortMessage, progress, total) = ServerStatus.get_progress server_status in
-        ( "Flow: " ^ ServerStatus.string_of_status ~use_emoji:false server_status,
+        ( message_with_prefix @@ ServerStatus.string_of_status ~use_emoji:false server_status,
           shortMessage,
           progress,
           total
         )
       else
-        ("Flow: " ^ FileWatcherStatus.string_of_status watcher_status, None, None, None)
+        (message_with_prefix @@ FileWatcherStatus.string_of_status watcher_status, None, None, None)
   in
   let d_ienv =
     show_status ~type_:MessageType.WarningMessage ~message ~shortMessage ~progress ~total env.d_ienv
@@ -937,8 +954,9 @@ let show_disconnected (code : FlowExit.t option) (message : string option) (env 
       false
   in
   let env = { env with d_ienv = { env.d_ienv with i_isConnected } } in
+  let message_with_prefix = message_with_flow_and_root_name_prefix env.d_ienv.i_flowconfig in
   (* show red status *)
-  let message = Base.Option.value message ~default:"Flow: server is stopped" in
+  let message = Base.Option.value message ~default:(message_with_prefix "server is stopped") in
   let message =
     match code with
     | Some code -> Printf.sprintf "%s [%s]" message (FlowExit.to_string code)
@@ -1864,7 +1882,11 @@ let try_connect ~version_mismatch_strategy flowconfig_name (env : disconnected_e
     else
       (* We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
        * die on a version mismatch. *)
-      let msg = "Flow: the server was the wrong version" in
+      let msg =
+        message_with_flow_and_root_name_prefix
+          env.d_ienv.i_flowconfig
+          "the server was the wrong version"
+      in
       show_disconnected None (Some msg) { env with d_server_status = None }
   (* The server and the lsp are different binaries and can't talk to each other. The server is not
      stopping (either because we asked it not to stop or because it is newer than this client). In
