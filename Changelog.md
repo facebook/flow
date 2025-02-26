@@ -1,3 +1,30 @@
+### 0.262.0
+
+Likely to cause new Flow errors:
+* Referencing `React$Component` directly will now be an error.
+* Use of `React$ComponentType`, `React$Context` and `React$RefSetter` will now trigger `internal-type` errors.
+
+New Features:
+* Added types for JSX intrinsics, which will cause new errors and show autocomplete for DOM intrinsics like `div`
+
+Notable bug fixes:
+* Replace incorrect definition for `ClientRect` and `ClientRectList` with aliases to `DOMRect` and `DOMRectList`
+This fixes the type definitions for the DOM APIs in Flow, but replacing an nonexistent globals `ClientRect` and `ClientRectList` types with just an alias to `DOMRect` and `DOMRectList`.
+* fixed a bug that caused spurious errors on rest array assignments (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABIDOVRKMhOQBtYQiG4AH3spigCAAugBuAA6UEFVlVfJlnIAvEKAIzyzkAegNnIA7nBjpyoBAJJycLyoJyTJQIJR7bROSIXdglbkQA0TCQ4NAkg0AAxWABMADYdZGQPSgA)).
+* When a library definition file has changed, Flow will no longer just stop the server. Instead, Flow will properly recheck everything, even under lazy mode.
+* We now allow something of type `React.ComponentType<{}>` to be a subtype of `component()`
+
+IDE:
+* Component syntax components will now show up in document symbols
+
+Library Definitions:
+* Most of the bundled libdefs will no longer be maintained and shipped with Flow. Going forward, they should be downloaded from flow-typed. To maintain the same behavior as before, you should have a `flow-typed.config.json` in the root of your project with the following content:
+```
+{
+  "env": ["node", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly"]
+}
+```
+
 ### 0.261.2
 
 Notable bug fixes:
