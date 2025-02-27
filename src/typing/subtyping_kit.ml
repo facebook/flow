@@ -2166,10 +2166,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
             | (false, (true, OptionalT { type_ = t2; _ })) -> (t1, t2)
             | _ -> (t1, t2)
           in
-          match p2 with
-          | Polarity.Positive -> rec_flow_t cx trace ~use_op (t1, t2)
-          | Polarity.Negative -> rec_flow_t cx trace ~use_op (t2, t1)
-          | Polarity.Neutral -> flow_to_mutable_child cx trace use_op fresh t1 t2
+          match (fresh, p2) with
+          | (true, _)
+          | (_, Polarity.Positive) ->
+            rec_flow_t cx trace ~use_op (t1, t2)
+          | (_, Polarity.Negative) -> rec_flow_t cx trace ~use_op (t2, t1)
+          | (_, Polarity.Neutral) -> rec_unify cx trace ~use_op t1 t2
         in
         iter2opt
           (fun t1 t2 ->

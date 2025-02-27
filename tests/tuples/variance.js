@@ -9,6 +9,7 @@ a[0] = "s"; // ERROR - can't write
 
 type B = [-foo: string];
 (["s"]: B); // OK
+(["s" as "s"]: B); // OK
 declare var b: B;
 (b: [-foo: string]); // OK
 (b: [+foo: string]); // ERROR
