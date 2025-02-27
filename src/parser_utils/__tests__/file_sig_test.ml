@@ -54,20 +54,12 @@ let assert_substrings_equal ~ctxt expected_remote expected_local source { remote
   assert_substring_equal ~ctxt expected_remote source remote_loc;
   assert_substring_equal ~ctxt expected_local source local_loc
 
-let requires_without_implicit_react_import file_sig =
-  file_sig
-  |> File_sig.requires
-  |> List.filter (function
-         | ImportSynthetic { source = "react" } -> false
-         | _ -> true
-         )
-
 let tests =
   "require"
   >::: [
          ( "cjs_require" >:: fun ctxt ->
            let source = "const Foo = require('foo')" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -85,7 +77,7 @@ let tests =
          );
          ( "cjs_deep_requires" >:: fun ctxt ->
            let source = "let foo = {x: require('bar')}; func(foo, require('baz'));" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -101,7 +93,7 @@ let tests =
          );
          ( "cjs_deep_requires_plus_bindings" >:: fun ctxt ->
            let source = "const Foo = require('foo'); func(Foo, require('bar'));" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -123,7 +115,7 @@ let tests =
          );
          ( "cjs_require_template_literal" >:: fun ctxt ->
            let source = "const Foo = require(`foo`)" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -141,7 +133,7 @@ let tests =
          );
          ( "cjs_require_named" >:: fun ctxt ->
            let source = "const {foo, bar: baz} = require('foo');" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -173,7 +165,7 @@ let tests =
          );
          ( "cjs_require_duplicate_remote" >:: fun ctxt ->
            let source = "const {foo: bar, foo: baz} = require('foo');" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -204,7 +196,7 @@ let tests =
          );
          ( "cjs_require_duplicate_local" >:: fun ctxt ->
            let source = "const {foo: bar, baz: bar} = require('foo');" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [
             Require
@@ -231,7 +223,7 @@ let tests =
            (* An initial version of the change to ban non-toplevel exports failed to descend into the RHS
             * of export statements *)
            let source = "module.exports.foo = require('foo');" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Require { source = (source_loc, "foo"); require_loc; bindings = None; prefix = _ }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc;
@@ -240,7 +232,7 @@ let tests =
          );
          ( "cjs_require_typeapp" >:: fun _ctxt ->
            let source = "const Foo = require<X>('foo')" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [] -> ()
            | _ -> assert_failure "Unexpected requires"
@@ -250,7 +242,7 @@ let tests =
            let parse_options =
              { Parser_env.default_parse_options with Parser_env.module_ref_prefix = Some "m#" }
            in
-           let requires = visit source ~parse_options |> requires_without_implicit_react_import in
+           let requires = visit source ~parse_options |> File_sig.requires in
            match requires with
            | [Require { source = (source_loc, "foo"); require_loc; bindings = _; prefix }] ->
              assert_substring_equal ~ctxt "'m#foo'" source source_loc;
@@ -262,7 +254,7 @@ let tests =
            let source = "graphql`query foo {}`" in
            let requires =
              visit source ~opts:{ default_opts with enable_relay_integration = true }
-             |> requires_without_implicit_react_import
+             |> File_sig.requires
            in
            match requires with
            | [Require { source = (source_loc, "foo.graphql"); require_loc; _ }] ->
@@ -281,7 +273,7 @@ let tests =
                    enable_relay_integration = true;
                    relay_integration_module_prefix = Some "./__generated__/";
                  }
-             |> requires_without_implicit_react_import
+             |> File_sig.requires
            in
            match requires with
            | [Require { source = (source_loc, "./__generated__/foo.graphql"); require_loc; _ }] ->
@@ -291,7 +283,7 @@ let tests =
          );
          ( "dynamic_import" >:: fun ctxt ->
            let source = "import('foo')" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [ImportDynamic { source = (source_loc, "foo"); import_loc }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc;
@@ -300,7 +292,7 @@ let tests =
          );
          ( "dynamic_import_template_literal" >:: fun ctxt ->
            let source = "import(`foo`)" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [ImportDynamic { source = (source_loc, "foo"); import_loc }] ->
              assert_substring_equal ~ctxt "`foo`" source source_loc;
@@ -309,14 +301,14 @@ let tests =
          );
          ( "es_import" >:: fun ctxt ->
            let source = "import 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import0 { source = (loc, "foo") }] -> assert_substring_equal ~ctxt "'foo'" source loc
            | _ -> assert_failure "Unexpected requires"
          );
          ( "es_import_default" >:: fun ctxt ->
            let source = "import Foo from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); named; _ }] ->
              named
@@ -328,7 +320,7 @@ let tests =
          );
          ( "es_import_named" >:: fun ctxt ->
            let source = "import {A} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); named; _ }] ->
              named
@@ -340,7 +332,7 @@ let tests =
          );
          ( "es_import_renamed" >:: fun ctxt ->
            let source = "import {A as B} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); named; _ }] ->
              named
@@ -352,7 +344,7 @@ let tests =
          );
          ( "es_import_named_type" >:: fun ctxt ->
            let source = "import {type A} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); types; _ }] ->
              types
@@ -364,7 +356,7 @@ let tests =
          );
          ( "es_import_named_typeof" >:: fun ctxt ->
            let source = "import {typeof A} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); typesof; _ }] ->
              typesof
@@ -376,7 +368,7 @@ let tests =
          );
          ( "es_import_ns" >:: fun ctxt ->
            let source = "import * as Foo from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); ns = Some (loc, "Foo"); _ }] ->
              assert_substring_equal ~ctxt "Foo" source loc
@@ -384,7 +376,7 @@ let tests =
          );
          ( "es_import_type" >:: fun ctxt ->
            let source = "import type A from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); types; _ }] ->
              types
@@ -396,7 +388,7 @@ let tests =
          );
          ( "es_import_type_named" >:: fun ctxt ->
            let source = "import type {A} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); types; _ }] ->
              types
@@ -408,7 +400,7 @@ let tests =
          );
          ( "es_import_type_renamed" >:: fun ctxt ->
            let source = "import type {A as B} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); types; _ }] ->
              types
@@ -420,7 +412,7 @@ let tests =
          );
          ( "es_import_typeof" >:: fun ctxt ->
            let source = "import typeof A from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); typesof; _ }] ->
              typesof
@@ -432,7 +424,7 @@ let tests =
          );
          ( "es_import_typeof_named" >:: fun ctxt ->
            let source = "import typeof {A} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); typesof; _ }] ->
              typesof
@@ -444,7 +436,7 @@ let tests =
          );
          ( "es_import_typeof_renamed" >:: fun ctxt ->
            let source = "import typeof {A as B} from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); typesof; _ }] ->
              typesof
@@ -456,7 +448,7 @@ let tests =
          );
          ( "es_import_typesof_ns" >:: fun ctxt ->
            let source = "import typeof * as Foo from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); typesof_ns = Some (loc, "Foo"); _ }] ->
              assert_substring_equal ~ctxt "Foo" source loc
@@ -464,7 +456,7 @@ let tests =
          );
          ( "es_import_type_ns" >:: fun ctxt ->
            let source = "import type * as Foo from 'foo'" in
-           let requires = visit source |> requires_without_implicit_react_import in
+           let requires = visit source |> File_sig.requires in
            match requires with
            | [Import { source = (_, "foo"); ns; typesof_ns; _ }] ->
              assert_equal ~ctxt None ns;
@@ -474,7 +466,7 @@ let tests =
          ( "export_star" >:: fun ctxt ->
            let source = "export * from 'foo'" in
            let file_sig = visit source in
-           let requires = requires_without_implicit_react_import file_sig in
+           let requires = File_sig.requires file_sig in
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -483,7 +475,7 @@ let tests =
          ( "export_type_star" >:: fun ctxt ->
            let source = "export type * from 'foo'" in
            let file_sig = visit source in
-           let requires = requires_without_implicit_react_import file_sig in
+           let requires = File_sig.requires file_sig in
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -493,7 +485,7 @@ let tests =
            let source = "export * as ns from 'foo'" in
            let parse_options = Parser_env.default_parse_options in
            let file_sig = visit ~parse_options source in
-           let requires = requires_without_implicit_react_import file_sig in
+           let requires = File_sig.requires file_sig in
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -502,7 +494,7 @@ let tests =
          ( "declare_export_star" >:: fun ctxt ->
            let source = "declare export * from 'foo'" in
            let file_sig = visit source in
-           let requires = requires_without_implicit_react_import file_sig in
+           let requires = File_sig.requires file_sig in
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc
@@ -512,7 +504,7 @@ let tests =
            let source = "declare export * as ns from 'foo'" in
            let parse_options = Parser_env.default_parse_options in
            let file_sig = visit ~parse_options source in
-           let requires = requires_without_implicit_react_import file_sig in
+           let requires = File_sig.requires file_sig in
            match requires with
            | [ExportFrom { source = (source_loc, "foo") }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc

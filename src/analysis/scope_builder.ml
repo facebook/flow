@@ -574,42 +574,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let open Ast.Statement.DeclareModule in
         let { id = _; body; comments = _ } = m in
         let (loc, body) = body in
-        let within_possible_declare_globals ~f =
-          let declare_global_bodies =
-            Base.List.filter_map body.Ast.Statement.Block.body ~f:(function
-                | ( _,
-                    Ast.Statement.DeclareNamespace
-                      {
-                        Ast.Statement.DeclareNamespace.id = Ast.Statement.DeclareNamespace.Global _;
-                        body;
-                        comments = _;
-                      }
-                  ) ->
-                  Some body
-                | _ -> None
-                )
-          in
-          if Base.List.is_empty declare_global_bodies then
-            f ()
-          else
-            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-            Base.List.iter declare_global_bodies ~f:(fun (loc, body) -> run (hoist#block loc) body);
-            let global_bindings = hoist#acc in
-            this#with_bindings loc global_bindings (fun () ->
-                Base.List.iter declare_global_bodies ~f:(fun (loc, body) ->
-                    run (this#block loc) body
-                );
-                f ()
-            )
+        let bindings =
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          run (hoist#block loc) body;
+          hoist#acc
         in
-        within_possible_declare_globals ~f:(fun () ->
-            let bindings =
-              let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-              run (hoist#block loc) body;
-              hoist#acc
-            in
-            this#with_bindings loc bindings (fun () -> run (this#block loc) body)
-        );
+        this#with_bindings loc bindings (fun () -> run (this#block loc) body);
         m
 
       method! declare_namespace _loc n =

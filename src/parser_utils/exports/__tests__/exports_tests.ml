@@ -55,7 +55,6 @@ let sig_opts =
     facebook_fbt = None;
     max_literal_len = 100;
     exact_by_default = true;
-    enable_declare_global = true;
     enable_enums = true;
     enable_component_syntax = true;
     component_syntax_enabled_in_config = true;

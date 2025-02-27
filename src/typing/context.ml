@@ -44,7 +44,6 @@ type metadata = {
   react_rules_always: bool;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
-  enable_declare_global: bool;
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
@@ -273,7 +272,6 @@ let metadata_of_options options =
     react_rules_always = false;
     dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
     enable_const_params = Options.enable_const_params options;
-    enable_declare_global = Options.enable_declare_global options;
     enable_enums = Options.enums options;
     enable_jest_integration = Options.enable_jest_integration options;
     enable_pattern_matching = Options.enable_pattern_matching options;
@@ -500,8 +498,6 @@ let dev_only_refinement_info_as_errors cx = cx.metadata.dev_only_refinement_info
 
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
-
-let enable_declare_global cx = cx.metadata.enable_declare_global
 
 let enable_enums cx = cx.metadata.enable_enums
 

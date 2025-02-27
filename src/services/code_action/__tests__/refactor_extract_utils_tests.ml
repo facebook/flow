@@ -10,10 +10,6 @@ open Ast_extraction_utils
 open Refactor_extract_utils
 open Loc_collections
 
-let parse contents =
-  let (ast, _) = Parser_flow.program contents in
-  ast
-
 let pretty_print layout =
   let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents source
@@ -44,7 +40,6 @@ let stub_metadata ~root ~checked =
     react_rules_always = false;
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
-    enable_declare_global = true;
     enable_enums = true;
     enable_jest_integration = false;
     enable_pattern_matching = false;
@@ -80,7 +75,13 @@ let stub_metadata ~root ~checked =
 
 let dummy_filename = File_key.SourceFile ""
 
+let parse contents =
+  let (ast, _) = Parser_flow.program_file contents (Some dummy_filename) in
+  ast
+
 let file_sig_of_ast ast = File_sig.program ~file_key:dummy_filename ~ast ~opts:File_sig.default_opts
+
+let mk_loc = Loc.mk_loc ~source:dummy_filename
 
 let dummy_context () =
   let root = File_path.dummy_path in
@@ -165,14 +166,12 @@ let typed_ast_of_ast cx ast =
     comments
     aloc_ast
 
-let mk_loc = Loc.mk_loc
-
 let extract_tests =
   let assert_extracted
       ~ctxt ?expected_statements ?expected_expression ?expected_type source extract_range =
     let ast = parse source in
     let parse_options = Parser_env.default_parse_options in
-    let tokens = AstExtractor.tokens ~parse_options None source in
+    let tokens = AstExtractor.tokens ~parse_options (Some dummy_filename) source in
     let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
       AstExtractor.extract tokens ast extract_range
     in

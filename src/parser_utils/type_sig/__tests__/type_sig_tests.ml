@@ -213,7 +213,6 @@ let sig_options
     ?facebook_fbt
     ?(max_literal_len = 100)
     ?(exact_by_default = false)
-    ?(enable_declare_global = true)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
     ?(enable_ts_syntax = true)
@@ -231,7 +230,6 @@ let sig_options
     facebook_fbt;
     max_literal_len;
     exact_by_default;
-    enable_declare_global;
     enable_enums;
     enable_component_syntax;
     component_syntax_enabled_in_config = true;
@@ -4914,80 +4912,6 @@ let%expect_test "builtin_cjs_module_used_type_exported" =
                 CJSModuleInfo {type_export_keys = [|"T"|];
                   type_stars = [];
                   module_globals = ModuleGlobals {global_types = [||]; global_types_keys = [||]};
-                  strict = true; platform_availability_set = None}} |}]
-
-let%expect_test "declare_global_within_declare_module" =
-print_builtins [{|
-    declare module foo {
-      declare global {
-        type Foo = string;
-        type Bar = Foo;
-      }
-      type Bar = number;
-      type Baz = number;
-      declare const baz: [Foo, Bar, Baz];
-      declare global {
-        type Foo = string;
-      }
-    }
-  |}];
-  [%expect {|
-    Local defs:
-    0. TypeAlias {id_loc = [3:9-12];
-         name = "Foo"; tparams = Mono;
-         body = (Annot (String [3:15-21]))}
-    1. TypeAlias {id_loc = [4:9-12];
-         name = "Bar"; tparams = Mono;
-         body = (TyRef (Unqualified LocalRef {ref_loc = [4:15-18]; index = 0}))}
-    2. TypeAlias {id_loc = [6:7-10];
-         name = "Bar"; tparams = Mono;
-         body = (Annot (Number [6:13-19]))}
-    3. TypeAlias {id_loc = [7:7-10];
-         name = "Baz"; tparams = Mono;
-         body = (Annot (Number [7:13-19]))}
-    4. Variable {id_loc = [8:16-19];
-         name = "baz";
-         def =
-         (Annot
-            Tuple {loc = [8:21-36];
-              elems_rev =
-              [TupleElement {loc = [8:32-35];
-                 name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:32-35]; index = 3}));
-                 polarity = Polarity.Neutral;
-                 optional = false};
-                TupleElement {loc = [8:27-30];
-                  name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:27-30]; index = 2}));
-                  polarity = Polarity.Neutral;
-                  optional = false};
-                TupleElement {loc = [8:22-25];
-                  name = None; t = (TyRef (Unqualified LocalRef {ref_loc = [8:22-25]; index = 0}));
-                  polarity = Polarity.Neutral;
-                  optional = false}
-                ];
-              inexact = false})}
-    5. NamespaceBinding {id_loc = [0:0];
-         name = "globalThis";
-         values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 5})) };
-         types = {}}
-
-    Builtin global value globalThis
-    Builtin module foo:
-    [1:15-18] CJSModule {type_exports = [|(ExportTypeBinding 2); (ExportTypeBinding 3)|];
-                exports =
-                (Some (Value
-                         DeclareModuleImplicitlyExportedObject {
-                           loc = [1:15-18];
-                           module_name = "foo";
-                           props =
-                           { "baz" ->
-                             (ObjValueField ([1:15-18],
-                                (Ref LocalRef {ref_loc = [1:15-18]; index = 4}), Polarity.Positive
-                                )) }}));
-                info =
-                CJSModuleInfo {type_export_keys = [|"Bar"; "Baz"|];
-                  type_stars = [];
-                  module_globals =
-                  ModuleGlobals {global_types = [|1; 0|]; global_types_keys = [|"Bar"; "Foo"|]};
                   strict = true; platform_availability_set = None}} |}]
 
 let%expect_test "builtin_cjs_module_with_implicit_exports" =

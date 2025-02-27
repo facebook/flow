@@ -57,7 +57,6 @@ module Opts = struct
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
-    enable_declare_global: bool;
     enums: bool;
     estimate_recheck_time: bool option;
     exact_by_default: bool option;
@@ -194,7 +193,6 @@ module Opts = struct
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
-      enable_declare_global = false;
       enums = false;
       estimate_recheck_time = None;
       exact_by_default = None;
@@ -1029,9 +1027,6 @@ module Opts = struct
       ( "experimental.component_syntax.hooklike_functions.excludes",
         hook_compatibility_excludes_parser
       );
-      ( "experimental.declare_global",
-        boolean (fun opts v -> Ok { opts with enable_declare_global = v })
-      );
       ("this_type_guards", boolean (fun opts v -> Ok { opts with this_type_guards = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
@@ -1744,8 +1739,6 @@ let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_in
 let emoji c = c.options.Opts.emoji
 
 let enable_const_params c = c.options.Opts.enable_const_params
-
-let enable_declare_global c = c.options.Opts.enable_declare_global
 
 let enums c = c.options.Opts.enums
 

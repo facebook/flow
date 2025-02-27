@@ -6400,51 +6400,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let v = val_simplify def_loc (Val.SourceLevelBinding kind) (Some name) v in
         v
 
-      method! declare_module loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =
+      method! declare_module _loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
-        let within_possible_declare_globals ~f =
-          let declare_global_bodies =
-            Base.List.filter_map statements ~f:(function
-                | ( _,
-                    Ast.Statement.DeclareNamespace
-                      {
-                        Ast.Statement.DeclareNamespace.id = Ast.Statement.DeclareNamespace.Global _;
-                        body;
-                        comments = _;
-                      }
-                  ) ->
-                  Some body
-                | _ -> None
-                )
+        let bindings =
+          let hoist =
+            new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
           in
-          if Base.List.is_empty declare_global_bodies then
-            f ()
-          else
-            let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
-            Base.List.iter declare_global_bodies ~f:(fun (loc, body) ->
-                Flow_ast_visitor.run (hoist#block loc) body
-            );
-            let global_bindings = hoist#acc in
-            this#with_bindings loc global_bindings (fun () ->
-                Base.List.iter declare_global_bodies ~f:(fun (loc, body) ->
-                    Flow_ast_visitor.run (this#block loc) body
-                );
-                f ()
-            );
-            ()
+          hoist#eval hoist#statement_list statements
         in
-        within_possible_declare_globals ~f:(fun () ->
-            let bindings =
-              let hoist =
-                new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
-              in
-              hoist#eval hoist#statement_list statements
-            in
-            let saved_exclude_syms = env_state.exclude_syms in
-            env_state <- { env_state with exclude_syms = SSet.empty };
-            ignore @@ this#statements_with_bindings block_loc bindings statements;
-            env_state <- { env_state with exclude_syms = saved_exclude_syms }
-        );
+        let saved_exclude_syms = env_state.exclude_syms in
+        env_state <- { env_state with exclude_syms = SSet.empty };
+        ignore @@ this#statements_with_bindings block_loc bindings statements;
+        env_state <- { env_state with exclude_syms = saved_exclude_syms };
         m
 
       method! declare_namespace loc ({ Ast.Statement.DeclareNamespace.id; body; _ } as m) =

@@ -539,7 +539,6 @@ class requires_calculator ~file_key ~ast ~opts =
 
 let program ~file_key ~ast ~opts =
   let walk = new requires_calculator ~file_key ~ast ~opts in
-  walk#add_require (ImportSynthetic { source = "react" });
   (match file_key with
   | File_key.LibFile _ -> ()
   | _ ->

@@ -1,4 +1,0 @@
-[options]
-all=true
-experimental.declare_global=true
-no_flowlib=false

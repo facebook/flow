@@ -909,18 +909,6 @@ let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_type cx x reason in
   typeapp ~from_value:false ~use_desc:false reason t targs
 
-let get_implicitly_imported_module cx module_name ~expected_module_purpose reason =
-  match Context.find_require cx module_name with
-  | Context.UncheckedModule _ -> Error (AnyT.untyped reason)
-  | Context.TypedModule f -> f ()
-  | Context.MissingModule _ ->
-    add_output
-      cx
-      (Error_message.EExpectedModuleLookupFailed
-         { loc = loc_of_reason reason; name = module_name; expected_module_purpose }
-      );
-    Error (AnyT.error reason)
-
 let builtin_promise_class_id cx =
   match Context.builtin_value_opt cx "Promise" with
   | Some (_, OpenT (_, id)) ->
@@ -2355,11 +2343,16 @@ end = struct
   let get_implicitly_imported_react_type
       cx loc ~singleton_concretize_type_for_imports_exports ~purpose =
     let source_module =
-      get_implicitly_imported_module
-        cx
-        "react"
-        ~expected_module_purpose:purpose
-        (mk_reason (RModule "react") loc)
+      match Context.builtin_module_opt cx "react" with
+      | Some (_, (lazy module_type)) -> Ok module_type
+      | None ->
+        let reason = mk_reason (RModule "react") loc in
+        add_output
+          cx
+          (Error_message.EExpectedModuleLookupFailed
+             { loc; name = "react"; expected_module_purpose = purpose }
+          );
+        Error (AnyT.error reason)
     in
     let (name, import_kind) =
       match purpose with
