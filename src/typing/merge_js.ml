@@ -866,14 +866,36 @@ let module_type_copied dst_cx src_cx ({ Type.module_export_types; module_global_
   { m with Type.module_global_types_tmap }
 
 let merge_lib_files ~sig_opts ordered_asts =
-  let (_builtin_errors, builtin_locs, builtins) =
+  let (builtin_errors, builtin_locs, builtins) =
     Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
   in
+  let builtin_errors =
+    builtin_errors
+    |> Base.List.filter_map ~f:(function
+           | Type_sig.SigError e ->
+             let e =
+               Signature_error.map
+                 (fun l -> l |> Type_sig_collections.Locs.get builtin_locs |> ALoc.of_loc)
+                 e
+             in
+             let msg = Error_message.ESignatureVerification e in
+             let source_file =
+               Base.Option.value_exn
+                 (msg |> Error_message.loc_of_msg |> Base.Option.bind ~f:ALoc.source)
+             in
+             Some (Flow_error.error_of_msg ~source_file msg)
+           | Type_sig.CheckError -> None
+           )
+    |> Flow_error.ErrorSet.of_list
+  in
   match ordered_asts with
-  | [] -> (builtins, Context.EmptyMasterContext)
+  | [] -> (builtins, builtin_errors, Context.EmptyMasterContext)
   | fst_ast :: _ ->
     let builtin_leader_file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
-    (builtins, Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins })
+    ( builtins,
+      builtin_errors,
+      Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins }
+    )
 
 let mk_builtins metadata master_cx =
   match master_cx with

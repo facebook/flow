@@ -181,7 +181,8 @@ end = struct
         locs_to_dirtify = [];
       }
     in
-    Merge_js.merge_lib_files ~sig_opts asts |> snd
+    let (_, _, master_cx) = Merge_js.merge_lib_files ~sig_opts asts in
+    master_cx
 
   let master_cx_ref = ref None
 

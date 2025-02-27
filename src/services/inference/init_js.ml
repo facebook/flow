@@ -45,7 +45,7 @@ let load_lib_files ~ccx ~options ~reader files =
   let (builtin_exports, master_cx, cx_opt) =
     if ok then
       let sig_opts = Type_sig_options.builtin_options options in
-      let (builtins, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
+      let (builtins, builtin_errors, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
       let cx_opt =
         match master_cx with
         | Context.EmptyMasterContext -> None
@@ -66,6 +66,7 @@ let load_lib_files ~ccx ~options ~reader files =
               (fun mref -> Context.MissingModule mref)
               mk_builtins
           in
+          Context.reset_errors cx builtin_errors;
           Some cx
       in
       (Exports.of_builtins builtins, master_cx, cx_opt)
