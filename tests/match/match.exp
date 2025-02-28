@@ -259,142 +259,112 @@ References:
                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:202:14
+Error ----------------------------------------------------------------------------------------------- matching.js:220:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:202:14
-   202|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
+   matching.js:220:14
+   220|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
                      ^^^^^
 
 References:
-   matching.js:193:20
-   193|                  | {type: 'baz', val: boolean};
+   matching.js:211:20
+   211|                  | {type: 'baz', val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:251:14
+Error ----------------------------------------------------------------------------------------------- matching.js:269:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:251:14
-   251|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
+   matching.js:269:14
+   269|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
                      ^^^^^
 
 References:
-   matching.js:236:20
-   236|                  | {type: 'bar', n: 2, val: boolean};
+   matching.js:254:20
+   254|                  | {type: 'bar', n: 2, val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- matching.js:279:14
-
-`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
-[match-not-exhaustive]
-
-   matching.js:279:14
-   279|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
-                     ^^^^^
-
-References:
-   matching.js:271:20
-   271|                  | {type: 'bar', val: string}
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- matching.js:297:14
 
-`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+`match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
    matching.js:297:14
-   297|   const e2 = match (x) { // ERROR: `'baz'` element not checked
+   297|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
                      ^^^^^
 
 References:
-   matching.js:288:20
-   288|                  | ['baz', boolean];
+   matching.js:289:20
+   289|                  | {type: 'bar', val: string}
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:315:14
+
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
+
+   matching.js:315:14
+   315|   const e2 = match (x) { // ERROR: `'baz'` element not checked
+                     ^^^^^
+
+References:
+   matching.js:306:20
+   306|                  | ['baz', boolean];
                            ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:335:22
+Error ----------------------------------------------------------------------------------------------- matching.js:353:22
 
 Cannot cast `a` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   matching.js:335:22
-   335|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:353:22
+   353|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
                              ^
 
 References:
-   matching.js:330:21
-   330|                  | [boolean, boolean, boolean];
+   matching.js:348:21
+   348|                  | [boolean, boolean, boolean];
                             ^^^^^^^ [1]
-   matching.js:335:27
-   335|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:353:27
+   353|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:355:16
+Error ----------------------------------------------------------------------------------------------- matching.js:373:16
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   matching.js:355:16
-   355|     [const a]: a as string, // ERROR: `number` is not `string`
+   matching.js:373:16
+   373|     [const a]: a as string, // ERROR: `number` is not `string`
                        ^
 
 References:
-   matching.js:351:21
-   351|   declare const x: [number] | Array<string>;
+   matching.js:369:21
+   369|   declare const x: [number] | Array<string>;
                             ^^^^^^ [1]
-   matching.js:355:21
-   355|     [const a]: a as string, // ERROR: `number` is not `string`
+   matching.js:373:21
+   373|     [const a]: a as string, // ERROR: `number` is not `string`
                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:375:14
+Error ----------------------------------------------------------------------------------------------- matching.js:393:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:375:14
-   375|   const e2 = match (x) { // ERROR: does not match all possibilities
+   matching.js:393:14
+   393|   const e2 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:368:20
-   368|   declare const x: [a: 0, b?: 1, c?: 2];
-                           ^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- matching.js:379:14
-
-`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
-[match-not-exhaustive]
-
-   matching.js:379:14
-   379|   const e3 = match (x) { // ERROR: does not match all possibilities
-                     ^^^^^
-
-References:
-   matching.js:368:20
-   368|   declare const x: [a: 0, b?: 1, c?: 2];
-                           ^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- matching.js:383:14
-
-`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
-[match-not-exhaustive]
-
-   matching.js:383:14
-   383|   const e4 = match (x) { // ERROR: does not match all possibilities
-                     ^^^^^
-
-References:
-   matching.js:368:20
-   368|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:386:20
+   386|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -404,27 +374,57 @@ Error --------------------------------------------------------------------------
 [match-not-exhaustive]
 
    matching.js:397:14
-   397|   const e2 = match (x) { // ERROR: does not match all elements
+   397|   const e3 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:390:20
-   390|   declare const x: [a: 0, ...];
+   matching.js:386:20
+   386|   declare const x: [a: 0, b?: 1, c?: 2];
+                           ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:401:14
+
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
+
+   matching.js:401:14
+   401|   const e4 = match (x) { // ERROR: does not match all possibilities
+                     ^^^^^
+
+References:
+   matching.js:386:20
+   386|   declare const x: [a: 0, b?: 1, c?: 2];
+                           ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- matching.js:415:14
+
+`match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
+[match-not-exhaustive]
+
+   matching.js:415:14
+   415|   const e2 = match (x) { // ERROR: does not match all elements
+                     ^^^^^
+
+References:
+   matching.js:408:20
+   408|   declare const x: [a: 0, ...];
                            ^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:407:14
+Error ----------------------------------------------------------------------------------------------- matching.js:425:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:407:14
-   407|   const e1 = match (x) {
+   matching.js:425:14
+   425|   const e1 = match (x) {
                      ^^^^^
 
 References:
-   matching.js:404:23
-   404|   type T = {foo: 1} | {foo: 2};
+   matching.js:422:23
+   422|   type T = {foo: 1} | {foo: 2};
                               ^^^^^^^^ [1]
 
 

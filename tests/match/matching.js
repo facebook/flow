@@ -185,6 +185,24 @@
     const d: d as empty, // OK: all members checked
   };
 }
+{
+  declare const x:
+    | {foo: void, a: 0}
+    | {bar: void, a: 1}
+    | {baz: void, a: 2}
+    | {zap: void, a: 3};
+
+  declare const u: void;
+  declare const o: {u: void};
+
+  const e1 = match (x) {
+    {foo: u, const a}: a as 0, // OK
+    {bar: o.u, const a}: a as 1, // OK
+    {baz: undefined as v, const a}: a as 2, // OK
+    {zap: 2 | u, const a}: a as 3, // OK
+    const d: d as empty, // OK: all members checked
+  };
+}
 
 // Disjoint object union
 {

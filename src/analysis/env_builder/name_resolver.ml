@@ -3099,6 +3099,25 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             add_output (Error_message.EMatchInvalidPatternReference { loc; binding_reason })
           | _ -> ()
         in
+        let rec needs_prop_exists_refi = function
+          | (loc, WildcardPattern _)
+          | (loc, BindingPattern _)
+          | (loc, IdentifierPattern _)
+          | (loc, MemberPattern _) ->
+            Some loc
+          | (_, NumberPattern _)
+          | (_, BigIntPattern _)
+          | (_, StringPattern _)
+          | (_, BooleanPattern _)
+          | (_, NullPattern _)
+          | (_, UnaryPattern _)
+          | (_, ObjectPattern _)
+          | (_, ArrayPattern _) ->
+            None
+          | (_, AsPattern { AsPattern.pattern; _ }) -> needs_prop_exists_refi pattern
+          | (_, OrPattern { OrPattern.patterns; _ }) ->
+            Base.List.find_map patterns ~f:needs_prop_exists_refi
+        in
         let rec recurse acc pattern bindings =
           ( if Flow_ast_utils.match_pattern_has_binding pattern then
             let (loc, _) = pattern in
@@ -3279,15 +3298,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     let open Ast.Expression in
                     (loc, Member { Member._object = acc; property; comments = None })
                   in
-                  (match pattern with
-                  | (loc, WildcardPattern _)
-                  | (loc, BindingPattern _) ->
+                  (match needs_prop_exists_refi pattern with
+                  | Some loc ->
                     (match RefinementKey.of_expression acc with
                     | Some key ->
                       let refi = PropExistsR { propname; loc } in
                       this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
                     | None -> ())
-                  | _ -> ());
+                  | None -> ());
                   recurse member pattern bindings
               )
             in
