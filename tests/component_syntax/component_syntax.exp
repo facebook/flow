@@ -3196,13 +3196,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:105:23
 
 Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
- - Either `HTMLElement` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
-   consider rewriting object type [2] as an interface.
- - Or `HTMLElement` [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
+ - Either number [1] is incompatible with object type [2].
+ - Or number [1] is incompatible with function type [3].
 
    refs.js:105:23
-   105|     <GenericRef1 ref={new HTMLElement()} />; // error
-                              ^^^^^^^^^^^^^^^^^ [1]
+   105|     <GenericRef1 ref={1} />; // error
+                              ^ [1]
 
 References:
    <BUILTINS>/react.js:113:5

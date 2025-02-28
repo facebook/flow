@@ -10,3 +10,5 @@ function CD(b: boolean) {
   function qux2(e: C | D) { } // OK
   qux2(new C);
 }
+
+declare opaque type Document;

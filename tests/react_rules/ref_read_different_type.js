@@ -1,4 +1,4 @@
-component Foo(otherRef: { current: HTMLElement | null }) {
+component Foo(otherRef: { current: interface {} | null }) {
     otherRef.current; // error
     return null;
 }

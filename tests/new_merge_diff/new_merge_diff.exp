@@ -78,6 +78,11 @@ Error --------------------------------------------------------------------------
 Invalid trivially recursive definition of exports.  [recursive-definition]
 
 
+Error ---------------------------------------------------------------------------------- recursive_module_cycle_B.js:0:1
+
+Invalid trivially recursive definition of exports.  [recursive-definition]
+
+
 Error ------------------------------------------------------------------------------------------ recursive_types.js:1:14
 
 Invalid type annotation for `x`. It contains a reference [1] to the binding being declared. [recursive-definition]
@@ -169,7 +174,7 @@ Invalid trivially recursive definition of object type.  [recursive-definition]
 
 
 
-Found 15 errors
+Found 16 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

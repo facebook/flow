@@ -471,48 +471,54 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- type_only_react_namespace.js:5:3
 
-Cannot cast `new HTMLAnchorElement()` to `Node` because: [incompatible-cast]
- - Either `HTMLAnchorElement` [1] is incompatible with `React.Element` [2].
- - Or `HTMLAnchorElement` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in `HTMLAnchorElement` [1] but exists in `$Iterable` [4].
+Cannot cast `Array` to `Node` because: [incompatible-cast]
+ - Either class `Array` [1] is incompatible with `React.Element` [2].
+ - Or class `Array` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `Array` [1] but exists in `$Iterable` [4].
 
    type_only_react_namespace.js:5:3
-    5|   new HTMLAnchorElement() as React.Node; // error
-         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+     5|   Array as React.Node; // error
+          ^^^^^
 
 References:
+   <BUILTINS>/core.js:946:15
+   946| declare class Array<T> extends $ReadOnlyArray<T> {
+                      ^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+    21|   | React$Element<any>
+            ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [3]
+    22|   | React$Portal
+            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
+    23|   | Iterable<?React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------- type_only_react_namespace.js:12:3
 
-Cannot cast `new HTMLAnchorElement()` to `Node` because: [incompatible-cast]
- - Either `HTMLAnchorElement` [1] is incompatible with `React.Element` [2].
- - Or `HTMLAnchorElement` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in `HTMLAnchorElement` [1] but exists in `$Iterable` [4].
+Cannot cast `Array` to `Node` because: [incompatible-cast]
+ - Either class `Array` [1] is incompatible with `React.Element` [2].
+ - Or class `Array` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `Array` [1] but exists in `$Iterable` [4].
 
    type_only_react_namespace.js:12:3
-   12|   new HTMLAnchorElement() as React.Node; // error
-         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    12|   Array as React.Node; // error
+          ^^^^^
 
 References:
+   <BUILTINS>/core.js:946:15
+   946| declare class Array<T> extends $ReadOnlyArray<T> {
+                      ^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+    21|   | React$Element<any>
+            ^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
-   22|   | React$Portal
-           ^^^^^^^^^^^^ [3]
+    22|   | React$Portal
+            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:23:5
-   23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [4]
+    23|   | Iterable<?React$Node>;
+            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- typing_test.js:7:1

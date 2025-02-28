@@ -102,7 +102,7 @@ import * as React from 'react';
 
     <GenericRef1 ref={(r: string | null) => {}} />; // ok
     <GenericRef1 ref={(r: number | null) => {}} />; // ok
-    <GenericRef1 ref={new HTMLElement()} />; // error
+    <GenericRef1 ref={1} />; // error
     <GenericRef2 ref={(r: Array<Array<Array<string>>> | null) => {}} />; // ok
     <GenericRef2 ref={(r: Array<Array<Array<number>>> | null) => {}} />; // ok
     <GenericRef2 ref={(r: string | null) => {}} />; // error
