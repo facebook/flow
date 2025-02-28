@@ -98,11 +98,11 @@ Cannot assign `<div />` to `e` because `HTMLDivElement` [1] is incompatible with
                                                       ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:213:65
-   213|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
+   <BUILTINS>/react-dom.js:214:65
+   214|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
                                                                         ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:277:67
-   277|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
+   <BUILTINS>/react-dom.js:278:67
+   278|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
                                                                           ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react-dom.js:31:31
     31| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
