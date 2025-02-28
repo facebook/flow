@@ -1,6 +1,6 @@
 import * as React from 'react';
 type Props = React.PropsOf<A>;
-component A(foo: string, bar: number, ref: React.RefSetter<HTMLAnchorElement>) {
+component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
   return <div />;
 }
 component B(...props: Props) {
@@ -24,7 +24,7 @@ if (s) {
 }
 
 component C(ref: React.RefSetter<React.RefOf<A>>) {
-  let a = <a ref={ref} />; // ok, HTMLAnchorElement
+  let a = <a ref={ref} />; // ok, AInstance
   let b = <meta ref={ref} />; // error
   return null;
 }

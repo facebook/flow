@@ -10,12 +10,5 @@ var b: ExactReactElement_DEPRECATED<typeof CustomComponentNope> =
 var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
 
-var d: ExactReactElement_DEPRECATED<any> = <div id="asdf" />;
-// We don't allow intrinsic elements to be viewed as React elements with
-// different component types.
-var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-// No error as long as expectations are consistent, though.
-var f: ExactReactElement_DEPRECATED<'div'> = <div id="asdf" />;
-
 const dataProps: {[StringPrefix<'data-'>]: string} = {};
-const g = <div {...dataProps} />; // OK
+const d = <div {...dataProps} />; // OK

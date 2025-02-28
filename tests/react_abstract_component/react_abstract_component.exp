@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
-Cannot call `foo` with `ref` bound to `a` because `HTMLElement` [1] is incompatible with `Component` [2].
+Cannot call `foo` with `ref` bound to `a` because `CommonInstance` [1] is incompatible with `Component` [2].
 [incompatible-call]
 
    strict.js:9:5

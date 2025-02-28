@@ -2448,7 +2448,7 @@ Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [i
 
 References:
    propsof.js:3:18
-   3| component A(foo: string, bar: number, ref: React.RefSetter<HTMLAnchorElement>) {
+   3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                        ^^^^^^ [1]
    propsof.js:8:9
    8|   (foo: empty); // foo is string
@@ -2465,7 +2465,7 @@ Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [i
 
 References:
    propsof.js:3:31
-   3| component A(foo: string, bar: number, ref: React.RefSetter<HTMLAnchorElement>) {
+   3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                                     ^^^^^^ [1]
    propsof.js:9:9
    9|   (bar: empty); // bar is number
@@ -2478,16 +2478,16 @@ Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompa
 [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2496,16 +2496,16 @@ Cannot cast `intrinsicProp.children` to empty because `React.Element` [1] is inc
 [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2514,16 +2514,16 @@ Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is inco
 [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2531,16 +2531,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2548,16 +2548,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2565,16 +2565,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2582,16 +2582,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
@@ -2599,16 +2599,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
 
    propsof.js:14:2
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-         ^^^^^^^^^^^^^^^^^^^^^^
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:866:14
-   866|   children?: React$Node,
-                     ^^^^^^^^^^ [1]
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React$Node, ...},
+                              ^^^^^^^^^^ [1]
    propsof.js:14:26
-    14| (intrinsicProp.children: empty); // children is ?React.Node
-                                 ^^^^^ [2]
+   14| (intrinsicProp.children: empty); // children is ?React.Node
+                                ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- propsof.js:17:16
@@ -2628,51 +2628,45 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in the first parameter.
- - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Either `MetaInstance` [1] is incompatible with `AInstance` [2] in the first parameter.
+ - Or `MetaInstance` [1] is incompatible with null [3] in the first parameter.
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
                              ^^^
 
 References:
+   flow-typed/jsx.js:29:15
+    29|     instance: MetaInstance,
+                      ^^^^^^^^^^^^ [1]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                                         ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:252:67
-   252|   meta: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$metaProps, ReactDOM$metaInstance>,
-                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
-   propsof.js:26:18
-    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                                         ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:114:11
+   114|   | ((T | null) => mixed)
+                  ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either `HTMLAnchorElement` [1] is incompatible with `HTMLMetaElement` [2] in property `current`.
- - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
+ - Either `MetaInstance` [1] is incompatible with `AInstance` [2] in property `current`.
+ - Or `MetaInstance` [1] is incompatible with null [3] in property `current`.
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
                              ^^^
 
 References:
+   flow-typed/jsx.js:29:15
+    29|     instance: MetaInstance,
+                      ^^^^^^^^^^^^ [1]
    propsof.js:26:34
     26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                                         ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:252:67
-   252|   meta: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$metaProps, ReactDOM$metaInstance>,
-                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
-   propsof.js:26:18
-    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [4]
+                                         ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:113:21
+   113|   | { -current: T | null, ... }
+                            ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
@@ -3094,8 +3088,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in the first parameter.
- - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in the first parameter.
+ - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in the first parameter.
+ - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in the first parameter.
  - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
 
    refs.js:64:53
@@ -3104,17 +3098,17 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
 
 References:
    refs.js:56:66
-    56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
-                                                                         ^^^^^^^^^^^ [1]
+    56|     component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
+                                                                         ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^^^^^ [2]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^^^^ [3]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                   ^^^^^^^^^^^^^ [3]
    refs.js:60:43
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:113:5
    113|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
@@ -3123,8 +3117,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either `HTMLElement` [1] is incompatible with nullable `HTMLInputElement` [2] in property `current`.
- - Or `HTMLElement` [1] is incompatible with `HTMLInputElement` [3] in property `current`.
+ - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in property `current`.
+ - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in property `current`.
  - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
 
    refs.js:64:53
@@ -3133,17 +3127,17 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
 
 References:
    refs.js:56:66
-    56|     component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
-                                                                         ^^^^^^^^^^^ [1]
+    56|     component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
+                                                                         ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^^^^^ [2]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^^^^ [3]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                   ^^^^^^^^^^^^^ [3]
    refs.js:60:43
-    60|     component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:114:6
    114|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [5]

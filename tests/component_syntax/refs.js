@@ -21,11 +21,11 @@ component Qux(ref: React$RefSetter<'div'>) { return null };
 
 import * as React from 'react';
 { // ok
-    component MyNestedInput(other: string, ref: React$RefSetter<?HTMLInputElement>) {
+    component MyNestedInput(other: string, ref: React$RefSetter<?InputInstance>) {
         return <input id={other} ref={ref} />
     }
 
-    component MyInput(label: string, ref: React$RefSetter<?HTMLElement>, ...otherProps: { other: string}) {
+    component MyInput(label: string, ref: React$RefSetter<?CommonInstance>, ...otherProps: { other: string}) {
         return (
             <label>
                 {label}
@@ -35,10 +35,10 @@ import * as React from 'react';
     }
 
     component Form() {
-        const ref = React.useRef<?HTMLElement>(null);
+        const ref = React.useRef<?CommonInstance>(null);
 
         function handleClick() {
-            ref.current?.focus();
+            ref.current as ?CommonInstance;
         }
 
         return (
@@ -53,11 +53,11 @@ import * as React from 'react';
 }
 
 { //mismatch
-    component MyNestedInput(other: string, ref: React$RefSetter<?HTMLElement>) {
+    component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
         return <input id={other} ref={ref} />
     }
 
-    component MyInput(label: string, ref: React$RefSetter<?HTMLInputElement>, ...otherProps: { other: string}) {
+    component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
         return (
             <label>
                 {label}
@@ -67,10 +67,10 @@ import * as React from 'react';
     }
 
     component Form() {
-        const ref = React.useRef<?HTMLElement>(null);
+        const ref = React.useRef<?CommonInstance>(null);
 
         function handleClick() {
-            ref.current?.focus();
+            ref.current as ?CommonInstance;
         }
 
         return (

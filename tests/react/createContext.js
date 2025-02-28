@@ -5,7 +5,7 @@ import * as React from 'react';
   const {Consumer, Provider} = Context;
 
   class Foo extends React.Component<{}> {
-    divRef: {current: null | HTMLDivElement} = React.createRef();
+    divRef: {current: null | DivInstance} = React.createRef();
 
     render(): React.Node {
       return (
@@ -27,8 +27,8 @@ import * as React from 'react';
     }
 
     componentDidMount() {
-      var div: null | HTMLDivElement = this.divRef.current; // Ok
-      var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+      var div: null | DivInstance = this.divRef.current; // Ok
+      var image: null | ImgInstance = this.divRef.current; // Error: DivInstance is incompatible with ImgInstance
     }
   }
 }

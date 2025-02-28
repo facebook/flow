@@ -8,8 +8,26 @@ Cannot create `div` element because number [1] is incompatible with string [2] i
 
 References:
    lib/jsx.js:4:27
-   4|   div: $JSXIntrinsic<{id: string, ...}>,
+   4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:7:12
+
+Cannot create `div` element because string `id` [1] is incompatible with string prefixed with `data-` [2] in the indexer
+property's key. [incompatible-type]
+
+   main.js:7:12
+   7| const d = <div {...dataProps} />; // OK with data props, but missing id
+                 ^^^
+
+References:
+   lib/jsx.js:4:22
+   4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   main.js:6:20
+   6| const dataProps: {[StringPrefix<'data-'>]: string} = {};
+                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- strings.js:9:2
@@ -25,8 +43,8 @@ References:
    9| <Div />; // This is fine
       ^^^^^^^ [1]
    lib/jsx.js:4:22
-   4|   div: $JSXIntrinsic<{id: string, ...}>,
-                           ^^^^^^^^^^^^^^^^^ [2]
+   4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:10:2
@@ -41,7 +59,7 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
     5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
     6|   ...
     7| };
@@ -61,7 +79,7 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
     5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
     6|   ...
     7| };
@@ -95,8 +113,8 @@ References:
    13| <div />; // This is not fine
        ^^^^^^^ [1]
    lib/jsx.js:4:22
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
-                            ^^^^^^^^^^^^^^^^^ [2]
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:14:2
@@ -111,7 +129,7 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
     5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
     6|   ...
     7| };
@@ -131,7 +149,7 @@ References:
    lib/jsx.js:3:23
                              v
     3| type $JSXIntrinsics = {
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
     5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
     6|   ...
     7| };
@@ -162,9 +180,9 @@ Cannot create `Div` element because number [1] is incompatible with string [2] i
 
 References:
    lib/jsx.js:4:27
-    4|   div: $JSXIntrinsic<{id: string, ...}>,
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
                                  ^^^^^^ [2]
 
 
 
-Found 10 errors
+Found 11 errors

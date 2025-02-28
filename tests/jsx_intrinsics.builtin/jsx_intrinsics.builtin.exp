@@ -88,47 +88,5 @@ References:
                                            ^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:16:47
 
-Cannot assign `<div />` to `e` because `HTMLDivElement` [1] is incompatible with `HTMLSpanElement` [2] in type argument
-`T` [3] of the first parameter of property `onAbort` of type argument `P` [4]. [incompatible-type-arg]
-
-   main.js:16:47
-    16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-                                                      ^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react-dom.js:214:65
-   214|   div: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$divProps, ReactDOM$divInstance>,
-                                                                        ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:278:67
-   278|   span: ReactDOM$HTMLElementJSXIntrinsicTyped<ReactDOM$spanProps, ReactDOM$spanInstance>,
-                                                                          ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react-dom.js:31:31
-    31| declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
-                                      ^ [3]
-   <BUILTINS>/react.js:67:69
-    67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                            ^ [4]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:16:48
-
-Cannot assign `<div />` to `e` because `div` [1] is incompatible with string literal `span` [2] in type argument
-`ElementType` [3]. [incompatible-type-arg]
-
-   main.js:16:48
-   16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-                                                      ^^^ [1]
-
-References:
-   main.js:16:37
-   16| var e: ExactReactElement_DEPRECATED<'span'> = <div id="asdf" />;
-                                           ^^^^^^ [2]
-   <BUILTINS>/react.js:67:36
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
-
-
-
-Found 6 errors
+Found 4 errors
