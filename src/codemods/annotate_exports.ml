@@ -96,6 +96,7 @@ module SignatureVerification = struct
       (fun acc err ->
         match err with
         | Type_sig.CheckError -> acc
+        | Type_sig.BindingValidationError _ -> acc
         | Type_sig.SigError err ->
           let open Signature_error in
           let (tot_errors, acc) = acc in

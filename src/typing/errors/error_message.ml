@@ -378,6 +378,7 @@ and 'loc t' =
   | EUnnecessaryDeclareTypeOnlyExport of 'loc
   | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
+  | ESignatureBindingValidation of 'loc Signature_error.binding_validation_t
   | ESignatureVerification of 'loc Signature_error.t
   | EPrimitiveAsInterface of {
       use_op: 'loc virtual_use_op;
@@ -1195,6 +1196,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnnecessaryDeclareTypeOnlyExport loc -> EUnnecessaryDeclareTypeOnlyExport (f loc)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
+  | ESignatureBindingValidation sve ->
+    ESignatureBindingValidation (Signature_error.map_binding_validation_t f sve)
   | ESignatureVerification sve -> ESignatureVerification (Signature_error.map f sve)
   | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
     EPrimitiveAsInterface
@@ -1713,6 +1716,7 @@ let util_use_op_of_msg nope util = function
   | EUnnecessaryDeclareTypeOnlyExport _
   | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
+  | ESignatureBindingValidation _
   | ESignatureVerification _
   | EExponentialSpread _
   | EComputedPropertyWithUnion _
@@ -1967,6 +1971,11 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMissingTypeArgs { reason_op; _ } -> Some (loc_of_reason reason_op)
   | EInvalidRendersTypeArgument { loc; _ } -> Some loc
   | EInvalidTypeCastSyntax { loc; _ } -> Some loc
+  | ESignatureBindingValidation e ->
+    Signature_error.(
+      (match e with
+      | NameAlreadyBound loc -> Some loc)
+    )
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -2616,6 +2625,8 @@ let friendly_message_of_msg = function
     Normal (MessageCannotExportRenamedDefault { name; is_reexport })
   | EUnexpectedTemporaryBaseType _ -> Normal MessageUnexpectedTemporaryBaseType
   | ECannotDelete (_, expr) -> Normal (MessageCannotDelete expr)
+  | ESignatureBindingValidation (Signature_error.NameAlreadyBound _) ->
+    Normal MessageCannotDeclareAlreadyBoundNameInLibdef
   | ESignatureVerification sve -> Normal (MessageCannotBuildTypedInterface sve)
   | EUnreachable _ -> Normal MessageUnreachableCode
   | EInvalidObjectKit { reason; reason_op = _; use_op } ->
@@ -3223,6 +3234,7 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
+  | ESignatureBindingValidation _ -> Some SignatureVerificationFailure
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
   | EExportRenamedDefault _ -> Some ExportRenamedDefault

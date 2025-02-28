@@ -884,6 +884,18 @@ let merge_lib_files ~sig_opts ordered_asts =
                  (msg |> Error_message.loc_of_msg |> Base.Option.bind ~f:ALoc.source)
              in
              Some (Flow_error.error_of_msg ~source_file msg)
+           | Type_sig.BindingValidationError e ->
+             let e =
+               Signature_error.map_binding_validation_t
+                 (fun l -> l |> Type_sig_collections.Locs.get builtin_locs |> ALoc.of_loc)
+                 e
+             in
+             let msg = Error_message.ESignatureBindingValidation e in
+             let source_file =
+               Base.Option.value_exn
+                 (msg |> Error_message.loc_of_msg |> Base.Option.bind ~f:ALoc.source)
+             in
+             Some (Flow_error.error_of_msg ~source_file msg)
            | Type_sig.CheckError -> None
            )
     |> Flow_error.ErrorSet.of_list

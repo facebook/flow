@@ -327,6 +327,7 @@ and 'loc tables = {
   remote_refs: 'loc remote_binding Remote_refs.builder;
   pattern_defs: 'loc parsed Pattern_defs.builder;
   patterns: 'loc pattern Patterns.builder;
+  mutable additional_errors: 'loc loc_node Signature_error.binding_validation_t list;
 }
 
 type frozen_kind =
@@ -344,6 +345,7 @@ let create_tables () =
     remote_refs = Remote_refs.create ();
     pattern_defs = Pattern_defs.create ();
     patterns = Patterns.create ();
+    additional_errors = [];
   }
 
 let push_loc tbls = Locs.push tbls.locs
@@ -1092,6 +1094,88 @@ module Scope = struct
   (* a `declare namespace` exports every binding. *)
   let finalize_declare_namespace_exn ~is_type_only scope tbls id_loc name =
     match scope with
+    (* Special declaration merging rules for namespaces in the global scope *)
+    | DeclareNamespace { values; types; parent = Global global_scope; _ } ->
+      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
+      let def : _ local_binding = NamespaceBinding { id_loc; name; values; types } in
+      let union_values_and_types existing_values existing_types values types =
+        let new_binding name (l, _) =
+          if SMap.mem name existing_values || SMap.mem name existing_types then (
+            tbls.additional_errors <- Signature_error.NameAlreadyBound l :: tbls.additional_errors;
+            false
+          ) else
+            true
+        in
+        let values = SMap.filter new_binding values in
+        let types = SMap.filter new_binding types in
+        (SMap.union existing_values values, SMap.union existing_types types)
+      in
+      (* When we decide that the namespace binding is mergeable. We call this function to
+       * mutate the existing node with merged names. *)
+      let merge_with_existing_local_binding_node (node : _ local_binding Local_defs.node) =
+        Local_defs.modify node (function
+            | NamespaceBinding { id_loc; name; values = existing_values; types = existing_types } ->
+              let (values, types) =
+                union_values_and_types existing_values existing_types values types
+              in
+              NamespaceBinding { id_loc; name; values; types }
+            | b -> b
+            )
+      in
+      (* This updater handle the simple case when we can directly update one kind of binding map
+       * (either value or type-only bindings). *)
+      let simple_updater = function
+        | Some (LocalBinding node) as existing_binding ->
+          merge_with_existing_local_binding_node node;
+          existing_binding
+        | Some (RemoteBinding _) as existing_binding -> existing_binding
+        | None ->
+          let node = push_local_def tbls def in
+          Some (LocalBinding node)
+      in
+      let updater values_map types_map =
+        match (is_type_only, SMap.find_opt name values_map, SMap.find_opt name types_map) with
+        | (_, Some _, Some _) ->
+          failwith "Invariant violation: a name cannot be in both values and types"
+        (* Simple case: no existing binding exist *)
+        | (false, None, None) -> (SMap.update name simple_updater values_map, types_map)
+        | (true, None, None) -> (values_map, SMap.update name simple_updater types_map)
+        (* Simple case: existing binding exist, but in the same value/type category *)
+        | (false, Some _, None) -> (SMap.update name simple_updater values_map, types_map)
+        | (true, None, Some _) -> (values_map, SMap.update name simple_updater types_map)
+        (* Originally not-type-only, now merging with a type-only namespace,
+         * so it's still not type-only *)
+        | (true, Some _, None) -> (SMap.update name simple_updater values_map, types_map)
+        (* Originally type-only, but now it's merging with a non-type-only namespace.
+         * The namespace binding needs to be promoted to a non-type-only namespace.
+         * (implemented by removing the node from type-only map, add to the value map, and
+         * mutate the binding node in place with additional names.)
+         *
+         * e.g. Consider
+         * ```
+         * declare namespace ns { type A = '' };
+         * declare namespace ns { declare const b: string };
+         * ```
+         *
+         * In order for the behavior to be equivalent to
+
+         * ```
+         * declare namespace ns { type A = ''; declare const b: string };
+         * ```
+         * We have to promote the original type-only namespace to a value binding.
+         *)
+        | (false, None, Some (LocalBinding node))
+          when match Local_defs.value node with
+               | NamespaceBinding _ -> true
+               | _ -> false ->
+          merge_with_existing_local_binding_node node;
+          (SMap.add name (LocalBinding node) values_map, SMap.remove name types_map)
+        (* Has an existing non-namespace binding, do nothing *)
+        | (false, None, Some _) -> (values_map, types_map)
+      in
+      let (values, types) = updater global_scope.values global_scope.types in
+      global_scope.values <- values;
+      global_scope.types <- types
     | DeclareNamespace { values; types; parent; _ } ->
       let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
       bind_local
@@ -1100,6 +1184,7 @@ module Scope = struct
         tbls
         name
         (NamespaceBinding { id_loc; name; values; types })
+        ignore2
     | _ -> failwith "The scope must be lexical"
 
   let bind_globalThis scope tbls ~global_this_loc =
@@ -4172,7 +4257,7 @@ let namespace_decl
       comments = _;
     } =
   match id with
-  | Ast.Statement.DeclareNamespace.Global _ -> ignore
+  | Ast.Statement.DeclareNamespace.Global _ -> ()
   | Ast.Statement.DeclareNamespace.Local (id_loc, { Ast.Identifier.name; _ }) ->
     let id_loc = push_loc tbls id_loc in
     let stmts =
@@ -4677,7 +4762,7 @@ let rec statement opts scope tbls (loc, stmt) =
     Scope.finalize_declare_module_exports_exn scope
   | S.DeclareNamespace decl ->
     let is_type_only = Flow_ast_utils.is_type_only_declaration_statement (loc, stmt) in
-    namespace_decl opts scope tbls ~is_type_only ~visit_statement:statement decl ignore2
+    namespace_decl opts scope tbls ~is_type_only ~visit_statement:statement decl
   | S.DeclareEnum decl
   | S.EnumDeclaration decl ->
     enum_decl opts scope tbls decl ignore2

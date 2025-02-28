@@ -53,8 +53,12 @@ let set_of_parse_exception ~source_file =
 let error_of_file_sig_tolerable_error ~source_file err =
   let open File_sig in
   let flow_err =
-    let (SignatureVerificationError sve) = err in
-    Error_message.ESignatureVerification (Signature_error.map ALoc.of_loc sve)
+    match err with
+    | SignatureVerificationError sve ->
+      Error_message.ESignatureVerification (Signature_error.map ALoc.of_loc sve)
+    | SignatureBindingValidationError sve ->
+      Error_message.ESignatureBindingValidation
+        (Signature_error.map_binding_validation_t ALoc.of_loc sve)
   in
   Flow_error.error_of_msg ~source_file flow_err
 

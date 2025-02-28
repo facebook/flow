@@ -615,6 +615,7 @@ type 'a op =
  *)
 type 'loc errno =
   | CheckError
+  | BindingValidationError of 'loc Signature_error.binding_validation_t
   | SigError of 'loc Signature_error.t
 [@@deriving show { with_path = false }, map]
 

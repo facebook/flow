@@ -13,5 +13,8 @@ val mark_exports :
   Loc.t Type_sig_parse.exports ->
   unit
 
+val mark_errors :
+  Loc.t Type_sig_collections.Locs.node Signature_error.binding_validation_t list -> unit
+
 val mark_builtin_module :
   Loc.t Type_sig_collections.Locs.node * Loc.t Type_sig_parse.exports -> unit

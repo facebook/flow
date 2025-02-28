@@ -28,12 +28,31 @@ let parse_libs opts ordered_asts =
   Scope.bind_globalThis scope tbls ~global_this_loc:Loc.none;
   (tbls, Scope.builtins_exn scope)
 
+let create_pack_cx additional_errors =
+  Pack.create_cx
+    (List.map
+       (fun e ->
+         Type_sig.BindingValidationError (Signature_error.map_binding_validation_t Locs.index_exn e))
+       additional_errors
+    )
+
 let pack_builtins (tbls, (global_values, global_types, global_modules)) =
-  let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
+  let {
+    Parse.locs;
+    module_refs;
+    local_defs;
+    remote_refs;
+    pattern_defs;
+    patterns;
+    additional_errors;
+  } =
+    tbls
+  in
   (* mark *)
   SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_values;
   SMap.iter (fun _ b -> Mark.mark_binding ~locs_to_dirtify:[] b) global_types;
   SMap.iter (fun _ m -> Mark.mark_builtin_module m) global_modules;
+  Mark.mark_errors additional_errors;
   (* compact *)
   let locs = Locs.compact locs in
   let module_refs = Module_refs.Interned.compact module_refs in
@@ -42,7 +61,7 @@ let pack_builtins (tbls, (global_values, global_types, global_modules)) =
   let pattern_defs = Pattern_defs.compact pattern_defs in
   let patterns = Patterns.compact patterns in
   (* copy *)
-  let cx = Pack.create_cx () in
+  let cx = create_pack_cx additional_errors in
   let (locs, _) = Locs.copy (fun x -> x) locs in
   let (module_refs, _) = Module_refs.copy (fun x -> x) module_refs in
   let (local_defs, _) = Local_defs.copy (Pack.pack_local_binding cx) local_defs in
@@ -97,9 +116,20 @@ let merge_locs loc0 loc1 =
       (Loc.debug_to_string ~include_source:true loc1)
 
 let pack ~locs_to_dirtify source (tbls, file_loc, exports) =
-  let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
+  let {
+    Parse.locs;
+    module_refs;
+    local_defs;
+    remote_refs;
+    pattern_defs;
+    patterns;
+    additional_errors;
+  } =
+    tbls
+  in
   (* mark *)
   Mark.mark_exports ~locs_to_dirtify file_loc exports;
+  Mark.mark_errors additional_errors;
   (* compact *)
   let locs = Locs.compact ~merge:merge_locs locs in
   let module_refs = Module_refs.Interned.compact module_refs in
@@ -108,7 +138,7 @@ let pack ~locs_to_dirtify source (tbls, file_loc, exports) =
   let pattern_defs = Pattern_defs.compact pattern_defs in
   let patterns = Patterns.compact patterns in
   (* copy *)
-  let cx = Pack.create_cx () in
+  let cx = create_pack_cx additional_errors in
   let (locs, _) = Locs.copy (fun x -> x) locs in
   let (module_refs, _) = Module_refs.copy (fun x -> x) module_refs in
   let (local_defs, dirty_local_defs) = Local_defs.copy (Pack.pack_local_binding cx) local_defs in

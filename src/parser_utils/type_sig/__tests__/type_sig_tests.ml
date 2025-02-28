@@ -5245,6 +5245,108 @@ let%expect_test "builtin_declare_namespace" =
     Builtin global value globalThis
     Builtin global value ns |}]
 
+let%expect_test "declare_namespace_declaration_merging" =
+  print_builtins [{|
+    declare namespace ns_v {
+      declare const a: string;
+    }
+    declare namespace ns_v {
+      declare const b: string;
+    }
+    declare namespace ns_t {
+      type T1 = string;
+    }
+    declare namespace ns_t {
+      type T2 = string;
+    }
+    declare namespace ns_v_and_then_t {
+      declare const a: string;
+    }
+    declare namespace ns_t_and_then_v {
+      type T1 = string;
+    }
+    declare namespace ns_v_and_then_t {
+      type T1 = string;
+    }
+    declare namespace ns_t_and_then_v {
+      declare const a: string;
+    }
+
+    declare const non_ns_value: string;
+    type non_ns_type = string;
+    // The following namespaces won't have any effect
+    declare namespace non_ns_value {
+      declare const b: string;
+    }
+    declare namespace non_ns_value {
+      type T1 = string;
+    }
+    declare namespace non_ns_type {
+      declare const b: string;
+    }
+    declare namespace non_ns_type {
+      type T1 = string;
+    }
+  |}];
+  [%expect {|
+    Local defs:
+    0. Variable {id_loc = [2:16-17]; name = "a"; def = (Annot (String [2:19-25]))}
+    1. NamespaceBinding {id_loc = [1:18-22];
+         name = "ns_v";
+         values =
+         { "a" -> ([2:16-17], (Ref LocalRef {ref_loc = [2:16-17]; index = 0}));
+           "b" -> ([5:16-17], (Ref LocalRef {ref_loc = [5:16-17]; index = 2})) };
+         types = {}}
+    2. Variable {id_loc = [5:16-17]; name = "b"; def = (Annot (String [5:19-25]))}
+    3. TypeAlias {id_loc = [8:7-9]; name = "T1"; tparams = Mono; body = (Annot (String [8:12-18]))}
+    4. NamespaceBinding {id_loc = [7:18-22];
+         name = "ns_t"; values = {};
+         types =
+         { "T1" -> ([8:7-9], (Ref LocalRef {ref_loc = [8:7-9]; index = 3}));
+           "T2" -> ([11:7-9], (Ref LocalRef {ref_loc = [11:7-9]; index = 5})) }}
+    5. TypeAlias {id_loc = [11:7-9];
+         name = "T2"; tparams = Mono;
+         body = (Annot (String [11:12-18]))}
+    6. Variable {id_loc = [14:16-17]; name = "a"; def = (Annot (String [14:19-25]))}
+    7. NamespaceBinding {id_loc = [13:18-33];
+         name = "ns_v_and_then_t";
+         values = { "a" -> ([14:16-17], (Ref LocalRef {ref_loc = [14:16-17]; index = 6})) };
+         types = { "T1" -> ([20:7-9], (Ref LocalRef {ref_loc = [20:7-9]; index = 10})) }}
+    8. TypeAlias {id_loc = [17:7-9];
+         name = "T1"; tparams = Mono;
+         body = (Annot (String [17:12-18]))}
+    9. NamespaceBinding {id_loc = [16:18-33];
+         name = "ns_t_and_then_v";
+         values = { "a" -> ([23:16-17], (Ref LocalRef {ref_loc = [23:16-17]; index = 11})) };
+         types = { "T1" -> ([17:7-9], (Ref LocalRef {ref_loc = [17:7-9]; index = 8})) }}
+    10. TypeAlias {id_loc = [20:7-9];
+          name = "T1"; tparams = Mono;
+          body = (Annot (String [20:12-18]))}
+    11. Variable {id_loc = [23:16-17]; name = "a"; def = (Annot (String [23:19-25]))}
+    12. Variable {id_loc = [25:14-26]; name = "non_ns_value"; def = (Annot (String [25:28-34]))}
+    13. TypeAlias {id_loc = [26:5-16];
+          name = "non_ns_type"; tparams = Mono;
+          body = (Annot (String [26:19-25]))}
+    14. NamespaceBinding {id_loc = [0:0];
+          name = "globalThis";
+          values =
+          { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 14}));
+            "non_ns_value" -> ([25:14-26], (Ref LocalRef {ref_loc = [25:14-26]; index = 12}));
+            "ns_t_and_then_v" -> ([16:18-33], (Ref LocalRef {ref_loc = [16:18-33]; index = 9}));
+            "ns_v" -> ([1:18-22], (Ref LocalRef {ref_loc = [1:18-22]; index = 1}));
+            "ns_v_and_then_t" -> ([13:18-33], (Ref LocalRef {ref_loc = [13:18-33]; index = 7})) };
+          types =
+          { "non_ns_type" -> ([26:5-16], (Ref LocalRef {ref_loc = [26:5-16]; index = 13}));
+            "ns_t" -> ([7:18-22], (Ref LocalRef {ref_loc = [7:18-22]; index = 4})) }}
+
+    Builtin global value globalThis
+    Builtin global value non_ns_value
+    Builtin global value ns_t_and_then_v
+    Builtin global value ns_v
+    Builtin global value ns_v_and_then_t
+    Builtin global type non_ns_type
+    Builtin global type ns_t |}]
+
 let%expect_test "builtin_pattern" =
   print_builtins [{|
     const o = { p: 0 };

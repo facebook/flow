@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------- flow-typed/namespaces.js:8:8
+
+Cannot declare the name in library definition because the name is already bound. [signature-verification-failure]
+
+   8|   type a = string; // error: already bound
+             ^
+
+
+Error ------------------------------------------------------------------------------------- flow-typed/namespaces.js:9:8
+
+Cannot declare the name in library definition because the name is already bound. [signature-verification-failure]
+
+   9|   type b = string; // error: already bound
+             ^
+
+
 Error ---------------------------------------------------------------------------------------------- binding_test.js:2:6
 
 Cannot declare `conflict_with_type_decl_1` [1] because the name is already bound. [name-already-bound]
@@ -329,6 +345,120 @@ References:
    exported.js:1:19
     1| declare namespace exported_ns {
                          ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:1:1
+
+Cannot cast `ns_v.a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   libdef_test.js:1:1
+   1| ns_v.a as empty; // error: string ~> empty
+      ^^^^^^
+
+References:
+   flow-typed/namespaces.js:2:20
+   2|   declare const a: string;
+                         ^^^^^^ [1]
+   libdef_test.js:1:11
+   1| ns_v.a as empty; // error: string ~> empty
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:2:1
+
+Cannot cast `ns_v.b` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   libdef_test.js:2:1
+   2| ns_v.b as empty; // error: string ~> empty
+      ^^^^^^
+
+References:
+   flow-typed/namespaces.js:5:20
+   5|   declare const b: string;
+                         ^^^^^^ [1]
+   libdef_test.js:2:11
+   2| ns_v.b as empty; // error: string ~> empty
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:3:1
+
+Cannot resolve name `ns_t`. [cannot-resolve-name]
+
+   3| ns_t; // error: it's a type only namespace
+      ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:4:1
+
+Cannot cast `1` to `T1` because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   libdef_test.js:4:1
+   4| 1 as ns_t.T1; // error: number ~> string
+      ^ [1]
+
+References:
+   libdef_test.js:4:6
+   4| 1 as ns_t.T1; // error: number ~> string
+           ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:5:1
+
+Cannot cast `ns_v_and_then_t` to empty because namespace ns_v_and_then_t [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   libdef_test.js:5:1
+    5| ns_v_and_then_t as empty; // error: value namespace ~> empty
+       ^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:17:19
+   17| declare namespace ns_v_and_then_t {
+                         ^^^^^^^^^^^^^^^ [1]
+   libdef_test.js:5:20
+    5| ns_v_and_then_t as empty; // error: value namespace ~> empty
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:6:1
+
+Cannot cast `ns_t_and_then_v` to empty because namespace ns_t_and_then_v [1] is incompatible with empty [2].
+[incompatible-cast]
+
+   libdef_test.js:6:1
+    6| ns_t_and_then_v as empty; // error: value namespace ~> empty
+       ^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/namespaces.js:20:19
+   20| declare namespace ns_t_and_then_v {
+                         ^^^^^^^^^^^^^^^ [1]
+   libdef_test.js:6:20
+    6| ns_t_and_then_v as empty; // error: value namespace ~> empty
+                          ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- libdef_test.js:8:14
+
+Cannot get `non_ns_value.b` because property `b` is missing in `String` [1]. [prop-missing]
+
+   libdef_test.js:8:14
+    8| non_ns_value.b as empty; // error: value namespace ~> empty
+                    ^
+
+References:
+   flow-typed/namespaces.js:30:29
+   30| declare const non_ns_value: string;
+                                   ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- libdef_test.js:9:1
+
+Cannot resolve name `non_ns_type`. [cannot-resolve-name]
+
+   9| non_ns_type; // error: it's a type
+      ^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------- type_only_react_namespace.js:3:3
@@ -777,7 +907,7 @@ References:
 
 
 
-Found 56 errors
+Found 66 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

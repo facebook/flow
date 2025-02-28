@@ -266,6 +266,8 @@ let mark_exports
     SMap.iter (fun _ t -> mark_export ~locs_to_dirtify t) names;
     List.iter mark_star stars
 
+let mark_errors = List.iter (Signature_error.iter_binding_validation_t (mark_loc ~visit_loc:ignore))
+
 let mark_builtin_module (loc, exports) =
   mark_loc ~visit_loc:ignore loc;
   mark_exports ~locs_to_dirtify:[] loc exports

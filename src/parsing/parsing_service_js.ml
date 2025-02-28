@@ -211,6 +211,13 @@ let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
                 | Type_sig.SigError err ->
                   let err = Signature_error.map (Type_sig_collections.Locs.get locs) err in
                   File_sig.SignatureVerificationError err :: acc
+                | Type_sig.BindingValidationError err ->
+                  let err =
+                    Signature_error.map_binding_validation_t
+                      (Type_sig_collections.Locs.get locs)
+                      err
+                  in
+                  File_sig.SignatureBindingValidationError err :: acc
                 | Type_sig.CheckError -> acc)
               []
               sig_errors

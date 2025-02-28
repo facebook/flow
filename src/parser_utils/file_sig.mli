@@ -101,7 +101,10 @@ and require_bindings =
   | BindNamed of (Loc.t Flow_ast_utils.ident * require_bindings) list
 [@@deriving show]
 
-type tolerable_error = SignatureVerificationError of Loc.t Signature_error.t [@@deriving show]
+type tolerable_error =
+  | SignatureVerificationError of Loc.t Signature_error.t
+  | SignatureBindingValidationError of Loc.t Signature_error.binding_validation_t
+[@@deriving show]
 
 type tolerable_t = t * tolerable_error list
 

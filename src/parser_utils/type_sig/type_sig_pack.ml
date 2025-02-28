@@ -235,7 +235,7 @@ type 'loc pattern =
 
 type 'loc cx = { mutable errs: 'loc errno list }
 
-let create_cx () = { errs = [] }
+let create_cx errs = { errs }
 
 let pack_smap f map =
   let bindings = Array.of_list (SMap.bindings map) in
