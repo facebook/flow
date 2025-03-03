@@ -162,18 +162,10 @@ type 'loc type_export =
   | ExportTypeFrom of Remote_refs.index
 [@@deriving map, show { with_path = false }]
 
-type module_globals =
-  | ModuleGlobals of {
-      global_types: Local_defs.index array;
-      global_types_keys: string array;
-    }
-[@@deriving show { with_path = false }]
-
 type 'loc cjs_module_info =
   | CJSModuleInfo of {
       type_export_keys: string array;
       type_stars: ('loc * Module_refs.index) list;
-      module_globals: module_globals;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -185,7 +177,6 @@ type 'loc es_module_info =
       type_stars: ('loc * Module_refs.index) list;
       export_keys: string array;
       stars: ('loc * Module_refs.index) list;
-      module_globals: module_globals;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -436,24 +427,16 @@ and pack_exports
     cx
     file_loc
     module_name
-    (P.Exports { kind; types; type_stars; global_types; strict; platform_availability_set }) =
+    (P.Exports { kind; types; type_stars; strict; platform_availability_set }) =
   let (type_export_keys, type_exports) = pack_smap pack_type_export types in
   let type_stars = List.map pack_star type_stars in
   match kind with
   | P.UnknownModule ->
-    let module_globals = pack_module_globals global_types in
-    let info =
-      CJSModuleInfo
-        { type_export_keys; type_stars; module_globals; strict; platform_availability_set }
-    in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports = None; info }
   | P.CJSModule t ->
     let exports = Some (pack_parsed cx t) in
-    let module_globals = pack_module_globals global_types in
-    let info =
-      CJSModuleInfo
-        { type_export_keys; type_stars; module_globals; strict; platform_availability_set }
-    in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.CJSModuleProps props ->
     let file_loc = pack_loc file_loc in
@@ -466,11 +449,7 @@ and pack_exports
         props
     in
     let exports = Some (Value (ObjLit { loc = file_loc; frozen = true; proto = None; props })) in
-    let module_globals = pack_module_globals global_types in
-    let info =
-      CJSModuleInfo
-        { type_export_keys; type_stars; module_globals; strict; platform_availability_set }
-    in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.CJSDeclareModule props ->
     let file_loc = pack_loc file_loc in
@@ -485,27 +464,14 @@ and pack_exports
     let exports =
       Some (Value (DeclareModuleImplicitlyExportedObject { loc = file_loc; module_name; props }))
     in
-    let module_globals = pack_module_globals global_types in
-    let info =
-      CJSModuleInfo
-        { type_export_keys; type_stars; module_globals; strict; platform_availability_set }
-    in
+    let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }
   | P.ESModule { names; stars } ->
     let (export_keys, exports) = pack_smap (pack_export cx) names in
     let stars = List.map pack_star stars in
-    let module_globals = pack_module_globals global_types in
     let info =
       ESModuleInfo
-        {
-          type_export_keys;
-          type_stars;
-          export_keys;
-          stars;
-          module_globals;
-          strict;
-          platform_availability_set;
-        }
+        { type_export_keys; type_stars; export_keys; stars; strict; platform_availability_set }
     in
     ESModule { type_exports; exports; info }
 
@@ -562,10 +528,6 @@ and pack_op cx op = map_op (pack_parsed cx) op
 and pack_builtin = function
   | P.LocalBinding b -> Local_defs.index_exn b
   | P.RemoteBinding _ -> failwith "unexpected remote builtin"
-
-and pack_module_globals global_types =
-  let (global_types_keys, global_types) = pack_smap pack_builtin global_types in
-  ModuleGlobals { global_types_keys; global_types }
 
 and pack_builtin_module cx name (loc, exports) =
   let module_kind = pack_exports cx loc name exports in

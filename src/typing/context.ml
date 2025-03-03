@@ -242,7 +242,6 @@ type t = {
   mutable refined_locations: ALocSet.t ALocMap.t;
   mutable aggressively_invalidated_locations: Refinement_invalidation.t ALocMap.t;
   node_cache: Node_cache.t;
-  mutable local_builtins: Builtins.t Lazy.t option;
 }
 
 and resolve_require = string -> resolved_require
@@ -434,7 +433,6 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       node_cache = Node_cache.mk_empty ();
       refined_locations = ALocMap.empty;
       aggressively_invalidated_locations = ALocMap.empty;
-      local_builtins = None;
     }
   in
   ccx.builtins <- lazy (mk_builtins cx);
@@ -460,13 +458,7 @@ let global_builtins cx = Lazy.force cx.ccx.builtins
 
 let builtin_value_opt cx = Builtins.get_builtin_value_opt (global_builtins cx)
 
-let builtin_type_opt cx n =
-  match cx.local_builtins with
-  | Some (lazy b) ->
-    (match Builtins.get_builtin_type_opt b n with
-    | Some v -> Some v
-    | None -> Builtins.get_builtin_type_opt (global_builtins cx) n)
-  | None -> Builtins.get_builtin_type_opt (global_builtins cx) n
+let builtin_type_opt cx n = Builtins.get_builtin_type_opt (global_builtins cx) n
 
 let builtin_module_opt cx = Builtins.get_builtin_module_opt (global_builtins cx)
 
@@ -788,8 +780,6 @@ let add_inferred_component_return cx loc t =
     | Some bounds -> Nel.cons t bounds
   in
   cx.ccx.inferred_component_return <- ALocFuzzyMap.add loc bounds inferred_component_return
-
-let extend_local_builtins cx local_builtins = cx.local_builtins <- Some local_builtins
 
 let set_evaluated cx evaluated = cx.ccx.sig_cx <- { cx.ccx.sig_cx with evaluated }
 

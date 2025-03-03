@@ -239,11 +239,9 @@ let mark_star (loc, mref) =
 let mark_exports
     ~locs_to_dirtify
     file_loc
-    (P.Exports { kind; types; type_stars; global_types; strict = _; platform_availability_set = _ })
-    =
+    (P.Exports { kind; types; type_stars; strict = _; platform_availability_set = _ }) =
   SMap.iter (fun _ t -> mark_export_type ~locs_to_dirtify t) types;
   List.iter mark_star type_stars;
-  SMap.iter (fun _ -> mark_binding ~locs_to_dirtify) global_types;
   match kind with
   | P.UnknownModule -> ()
   | P.CJSModule t -> mark_parsed ~locs_to_dirtify ~visit_loc:ignore t

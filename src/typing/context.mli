@@ -391,8 +391,6 @@ val add_refined_location : t -> ALoc.t -> ALocSet.t -> unit
 
 val add_aggressively_invalidated_location : t -> ALoc.t -> Refinement_invalidation.t -> unit
 
-val extend_local_builtins : t -> Builtins.t Lazy.t -> unit
-
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 
 val set_graph : t -> Type.Constraint.graph -> unit

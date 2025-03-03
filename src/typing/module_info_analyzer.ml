@@ -426,7 +426,6 @@ let mk_module_type =
           cjs_export = None;
           has_every_named_export = false;
         };
-      module_global_types_tmap = SMap.empty;
       module_is_strict = Context.is_strict cx;
       module_available_platforms = Context.available_platforms cx;
     }
@@ -482,7 +481,6 @@ let mk_module_type =
         {
           module_reason = reason_exports_module;
           module_export_types;
-          module_global_types_tmap = SMap.empty;
           module_is_strict = Context.is_strict cx;
           module_available_platforms = Context.available_platforms cx;
         }

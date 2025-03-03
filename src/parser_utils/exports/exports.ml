@@ -314,7 +314,6 @@ module ESM = struct
             export_keys;
             type_stars;
             stars;
-            module_globals = _;
             strict = _;
             platform_availability_set = _;
           }
@@ -410,15 +409,8 @@ module CJS = struct
       NamedType name :: acc
 
   let exports type_sig type_exports exports info =
-    let (CJSModuleInfo
-          {
-            type_export_keys;
-            type_stars;
-            module_globals = _;
-            strict = _;
-            platform_availability_set = _;
-          }
-          ) =
+    let (CJSModuleInfo { type_export_keys; type_stars; strict = _; platform_availability_set = _ })
+        =
       info
     in
     let acc =

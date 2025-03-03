@@ -127,7 +127,6 @@ and 'loc exports =
       mutable kind: 'loc module_kind;
       mutable types: 'loc export_type smap;
       mutable type_stars: ('loc loc_node * module_ref_node) list;
-      mutable global_types: 'loc binding_node SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -424,7 +423,6 @@ module Exports = struct
         kind = UnknownModule;
         types = SMap.empty;
         type_stars = [];
-        global_types = SMap.empty;
         strict;
         platform_availability_set;
       }
@@ -672,19 +670,12 @@ module Scope = struct
       (match lookup_scope name values types with
       | Some binding -> Some (binding, scope)
       | None -> lookup_type parent name)
-    | Module { values; types; exports = Exports { global_types; _ }; _ } ->
-      Base.Option.map
-        ~f:(fun binding -> (binding, scope))
-        (match lookup_scope name values types with
-        | Some result -> Some result
-        | None -> lookup_scope name SMap.empty global_types)
-    | DeclareModule { parent; values; types; exports = Exports { global_types; _ }; _ } ->
+    | Module { values; types; _ } ->
+      Base.Option.map ~f:(fun binding -> (binding, scope)) (lookup_scope name values types)
+    | DeclareModule { parent; values; types; _ } ->
       (match lookup_scope name values types with
       | Some binding -> Some (binding, scope)
-      | None ->
-        (match lookup_scope name SMap.empty global_types with
-        | Some binding -> Some (binding, scope)
-        | None -> lookup_type parent name))
+      | None -> lookup_type parent name)
 
   let rec find_host scope b =
     match scope with

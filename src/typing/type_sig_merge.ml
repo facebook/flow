@@ -24,7 +24,6 @@ type exports =
       type_exports: Type.named_symbol Lazy.t SMap.t;
       exports: Type.t Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
-      global_types: (ALoc.t * Type.t) Lazy.t SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -33,7 +32,6 @@ type exports =
       exports: Type.named_symbol Lazy.t SMap.t;
       type_stars: (ALoc.t * Module_refs.index) list;
       stars: (ALoc.t * Module_refs.index) list;
-      global_types: (ALoc.t * Type.t) Lazy.t SMap.t;
       strict: bool;
       platform_availability_set: Platform_set.t option;
     }
@@ -382,8 +380,7 @@ let merge_type_export file reason = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
-let mk_commonjs_module_t
-    cx module_reason module_global_types_tmap module_is_strict module_available_platforms t =
+let mk_commonjs_module_t cx module_reason module_is_strict module_available_platforms t =
   let open Type in
   let module_export_types =
     {
@@ -394,13 +391,7 @@ let mk_commonjs_module_t
     }
   in
   let local_module =
-    {
-      module_reason;
-      module_export_types;
-      module_global_types_tmap;
-      module_is_strict;
-      module_available_platforms;
-    }
+    { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
   ConsGen.lazy_cjs_extract_named_exports cx module_reason local_module t
 
@@ -415,8 +406,7 @@ let merge_exports =
     in
     (loc, f)
   in
-  let mk_es_module_t
-      file module_reason module_global_types_tmap module_is_strict module_available_platforms =
+  let mk_es_module_t file module_reason module_is_strict module_available_platforms =
     let open Type in
     let module_export_types =
       {
@@ -426,13 +416,7 @@ let merge_exports =
         has_every_named_export = false;
       }
     in
-    {
-      module_reason;
-      module_export_types;
-      module_global_types_tmap;
-      module_is_strict;
-      module_available_platforms;
-    }
+    { module_reason; module_export_types; module_is_strict; module_available_platforms }
   in
 
   let copy_named_exports file target_module_type (_, from_ns) =
@@ -464,8 +448,7 @@ let merge_exports =
     (fun file reason stars acc -> loop file reason acc stars)
   in
   fun file reason -> function
-    | CJSExports
-        { type_exports; exports; type_stars; global_types; strict; platform_availability_set } ->
+    | CJSExports { type_exports; exports; type_stars; strict; platform_availability_set } ->
       let exports =
         match exports with
         | Some (lazy t) -> t
@@ -477,14 +460,7 @@ let merge_exports =
         lazy
           (let module_type =
              Lazy.force
-               (mk_commonjs_module_t
-                  file.cx
-                  reason
-                  global_types
-                  strict
-                  platform_availability_set
-                  exports
-               )
+               (mk_commonjs_module_t file.cx reason strict platform_availability_set exports)
            in
            Flow_js_utils.ExportNamedTKit.mod_ModuleT
              file.cx
@@ -495,25 +471,14 @@ let merge_exports =
           )
       in
       lazy_module
-    | ESExports
-        {
-          type_exports;
-          exports;
-          stars;
-          type_stars;
-          global_types;
-          strict;
-          platform_availability_set;
-        } ->
+    | ESExports { type_exports; exports; stars; type_stars; strict; platform_availability_set } ->
       let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       let lazy_module =
         lazy
-          (let module_type =
-             mk_es_module_t file reason global_types strict platform_availability_set
-           in
+          (let module_type = mk_es_module_t file reason strict platform_availability_set in
            Flow_js_utils.ExportNamedTKit.mod_ModuleT
              file.cx
              (exports, type_exports, Type.DirectExport)
@@ -2108,7 +2073,7 @@ let merge_resource_module_t cx file_key filename =
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
   let reason = Reason.(mk_reason RExports file_loc) in
-  (reason, mk_commonjs_module_t cx reason SMap.empty (Context.is_strict cx) None exports_t)
+  (reason, mk_commonjs_module_t cx reason (Context.is_strict cx) None exports_t)
 
 let merge tps = merge (mk_merge_env tps)
 
@@ -2219,37 +2184,8 @@ let merge_builtins
         |> merge_export (Lazy.force file_and_dependency_map_rec |> fst)
         )
     in
-    let global_types_map =
-      let local n index =
-        lazy
-          (let ({ local_defs; _ }, _) = Lazy.force file_and_dependency_map_rec in
-           let (loc, _, (lazy t), _) = Local_defs.get local_defs index |> Lazy.force in
-           let error_on_bad_global_shadow global_i =
-             let (def_loc, _, _, _) = Local_defs.get local_defs global_i |> Lazy.force in
-             ConsGen.error_on_bad_global_shadow cx n ~loc ~def_loc
-           in
-           (match SMap.find_opt n global_values with
-           | Some global_i -> error_on_bad_global_shadow global_i
-           | None ->
-             (match SMap.find_opt n global_types with
-             | Some global_i -> error_on_bad_global_shadow global_i
-             | None -> ()));
-           (loc, t)
-          )
-      in
-      let f acc name i = SMap.add name (local name i) acc in
-      Base.Array.fold2_exn ~init:SMap.empty ~f
-    in
     let cjs_module type_exports exports info =
-      let (Pack.CJSModuleInfo
-            {
-              type_export_keys;
-              type_stars;
-              module_globals = Pack.ModuleGlobals { global_types; global_types_keys };
-              strict;
-              platform_availability_set;
-            }
-            ) =
+      let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set }) =
         Pack.map_cjs_module_info aloc info
       in
       let type_exports = Array.map type_export type_exports in
@@ -2258,21 +2194,11 @@ let merge_builtins
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
       in
-      let global_types = global_types_map global_types_keys global_types in
-      CJSExports
-        { type_exports; exports; type_stars; global_types; strict; platform_availability_set }
+      CJSExports { type_exports; exports; type_stars; strict; platform_availability_set }
     in
     let es_module type_exports exports info =
       let (Pack.ESModuleInfo
-            {
-              type_export_keys;
-              export_keys;
-              type_stars;
-              stars;
-              module_globals = Pack.ModuleGlobals { global_types; global_types_keys };
-              strict;
-              platform_availability_set;
-            }
+            { type_export_keys; export_keys; type_stars; stars; strict; platform_availability_set }
             ) =
         Pack.map_es_module_info aloc info
       in
@@ -2286,17 +2212,7 @@ let merge_builtins
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
       in
-      let global_types = global_types_map global_types_keys global_types in
-      ESExports
-        {
-          type_exports;
-          exports;
-          type_stars;
-          stars;
-          global_types;
-          strict;
-          platform_availability_set;
-        }
+      ESExports { type_exports; exports; type_stars; stars; strict; platform_availability_set }
     in
     lazy
       (let info =
