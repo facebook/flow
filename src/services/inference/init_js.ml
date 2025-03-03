@@ -43,34 +43,31 @@ let load_lib_files ~ccx ~options ~reader files =
          (true, ErrorSet.empty, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
-    if ok then
+    if ok then (
       let sig_opts = Type_sig_options.builtin_options options in
-      let (builtins, builtin_errors, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
-      let cx_opt =
-        match master_cx with
-        | Context.EmptyMasterContext -> None
-        | Context.NonEmptyMasterContext { builtin_leader_file_key; _ } ->
-          let metadata =
-            Context.(
-              let metadata = metadata_of_options options in
-              { metadata with checked = false }
-            )
-          in
-          let mk_builtins = Merge_js.mk_builtins metadata master_cx in
-          let cx =
-            Context.make
-              ccx
-              metadata
-              builtin_leader_file_key
-              (lazy (ALoc.empty_table builtin_leader_file_key))
-              (fun mref -> Context.MissingModule mref)
-              mk_builtins
-          in
-          Context.reset_errors cx builtin_errors;
-          Some cx
-      in
-      (Exports.of_builtins builtins, master_cx, cx_opt)
-    else
+      let (builtin_errors, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
+      match master_cx with
+      | Context.EmptyMasterContext -> (Exports.empty, Context.EmptyMasterContext, None)
+      | Context.NonEmptyMasterContext { builtin_leader_file_key; builtins; _ } ->
+        let metadata =
+          Context.(
+            let metadata = metadata_of_options options in
+            { metadata with checked = false }
+          )
+        in
+        let mk_builtins = Merge_js.mk_builtins metadata master_cx in
+        let cx =
+          Context.make
+            ccx
+            metadata
+            builtin_leader_file_key
+            (lazy (ALoc.empty_table builtin_leader_file_key))
+            (fun mref -> Context.MissingModule mref)
+            mk_builtins
+        in
+        Context.reset_errors cx builtin_errors;
+        (Exports.of_builtins builtins, master_cx, Some cx)
+    ) else
       (Exports.empty, Context.EmptyMasterContext, None)
   in
   Lwt.return (ok, master_cx, cx_opt, errors, builtin_exports)

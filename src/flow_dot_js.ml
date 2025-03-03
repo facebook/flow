@@ -83,7 +83,7 @@ let load_lib_files files =
       locs_to_dirtify = [];
     }
   in
-  let (_, _, master_cx) = Merge_js.merge_lib_files ~sig_opts asts in
+  let (_, master_cx) = Merge_js.merge_lib_files ~sig_opts asts in
   master_cx
 
 let stub_metadata ~root ~checked =

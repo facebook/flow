@@ -901,11 +901,10 @@ let merge_lib_files ~sig_opts ordered_asts =
     |> Flow_error.ErrorSet.of_list
   in
   match ordered_asts with
-  | [] -> (builtins, builtin_errors, Context.EmptyMasterContext)
+  | [] -> (builtin_errors, Context.EmptyMasterContext)
   | fst_ast :: _ ->
     let builtin_leader_file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
-    ( builtins,
-      builtin_errors,
+    ( builtin_errors,
       Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins }
     )
 

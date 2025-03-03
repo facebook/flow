@@ -28,8 +28,6 @@ val copy_into :
 val merge_lib_files :
   sig_opts:Type_sig_options.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t list ->
-  Type_sig_collections.Locs.index Packed_type_sig.Builtins.t
-  * Flow_error.ErrorSet.t
-  * Context.master_context
+  Flow_error.ErrorSet.t * Context.master_context
 
 val mk_builtins : Context.metadata -> Context.master_context -> Context.t -> Builtins.t
