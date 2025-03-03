@@ -122,11 +122,13 @@ module Make
     let body_ast = B.eval cx reason_cmp renders_t body in
     (params_ast, body_ast)
 
-  let component_type cx _component_loc x =
+  let component_type cx ~in_annotation x =
     let { T.reason; tparams; cparams; renders_t; id_opt; _ } = x in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
     let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
-    let (config, instance) = F.config_and_instance cx ~config_reason ~instance_reason cparams in
+    let (config, instance) =
+      F.config_and_instance cx ~in_annotation ~config_reason ~instance_reason cparams
+    in
     let component_kind =
       match id_opt with
       | None -> Structural

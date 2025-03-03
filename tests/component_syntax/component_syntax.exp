@@ -154,30 +154,6 @@ References:
                                                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- annotation.js:48:34
-
-Cannot declare ref because: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with function type [3].
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
-
-   annotation.js:48:34
-    48| declare var InlineRef: component(ref: number); // error
-                                         ^^^
-
-References:
-   annotation.js:48:39
-    48| declare var InlineRef: component(ref: number); // error
-                                              ^^^^^^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
-
-
 Error ---------------------------------------------------------------------------------------------- annotation.js:51:40
 
 Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
@@ -3700,7 +3676,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 239 errors
+Found 238 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

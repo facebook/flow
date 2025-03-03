@@ -33,5 +33,5 @@ module type S = sig
 
   val toplevels : Context.t -> t -> component_params_tast * (ALoc.t * Type.t) BodyConfig.body
 
-  val component_type : Context.t -> ALoc.t -> t -> Type.t
+  val component_type : Context.t -> in_annotation:bool -> t -> Type.t
 end

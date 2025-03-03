@@ -67,33 +67,7 @@ Cannot cast `Foo` to component because: [incompatible-cast]
 
 References:
    class_to_component_type.js:15:10
-    15|     ref: ImNotARefSetter // error: bad ref
-                 ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------- class_to_component_type.js:15:5
-
-Cannot declare ref because: [incompatible-type]
- - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
-   consider rewriting object type [2] as an interface.
- - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
-   functions.
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
-
-   class_to_component_type.js:15:5
-    15|     ref: ImNotARefSetter // error: bad ref
-            ^^^
-
-References:
-   class_to_component_type.js:15:10
-    15|     ref: ImNotARefSetter // error: bad ref
+    15|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:113:5
    113|   | { -current: T | null, ... }
@@ -668,33 +642,7 @@ Cannot cast `Foo` to component because: [incompatible-cast]
 
 References:
    function_to_component_type.js:14:10
-    14|     ref: ImNotARefSetter // error: bad ref
-                 ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------- function_to_component_type.js:14:5
-
-Cannot declare ref because: [incompatible-type]
- - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
-   consider rewriting object type [2] as an interface.
- - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
-   functions.
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
-
-   function_to_component_type.js:14:5
-    14|     ref: ImNotARefSetter // error: bad ref
-            ^^^
-
-References:
-   function_to_component_type.js:14:10
-    14|     ref: ImNotARefSetter // error: bad ref
+    14|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:113:5
    113|   | { -current: T | null, ... }
@@ -931,30 +879,6 @@ References:
                   ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:8:51
-
-Cannot declare ref because: [incompatible-type]
- - Either mixed [1] is incompatible with object type [2].
- - Or mixed [1] is incompatible with function type [3].
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
-
-   ref_prop_implicit_instantiation.js:8:51
-     8| declare function extractRefSetter<S>(c: component(ref: S)): S; // error: bad ref
-                                                          ^^^
-
-References:
-   ref_prop_implicit_instantiation.js:8:56
-     8| declare function extractRefSetter<S>(c: component(ref: S)): S; // error: bad ref
-                                                               ^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
-
-
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
 Cannot cast `refSetter` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1068,7 +992,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 57 errors
+Found 54 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

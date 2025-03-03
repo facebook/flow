@@ -26,6 +26,7 @@ module type S = sig
 
   val config_and_instance :
     Context.t ->
+    in_annotation:bool ->
     config_reason:Reason.reason ->
     instance_reason:Reason.reason ->
     Types.t ->
@@ -72,7 +73,8 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config_and_instance cx ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
+  let config_and_instance
+      cx ~in_annotation ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
     let (pmap, ref_prop) =
       List.fold_left
         (fun (acc, ref_prop) p ->
@@ -126,20 +128,21 @@ module Make
         C.read_react cx key_loc;
         let open Type in
         let () =
-          let open Reason in
-          let reason_op = mk_reason RReactRef key_loc in
-          let u =
-            Flow_js.get_builtin_react_typeapp
+          if not in_annotation then
+            let open Reason in
+            let reason_op = mk_reason RReactRef key_loc in
+            let u =
+              Flow_js.get_builtin_react_typeapp
+                cx
+                reason_op
+                Flow_intermediate_error_types.ReactModuleForReactRefSetterType
+                [AnyT.error reason_op]
+            in
+            Context.add_post_inference_subtyping_check
               cx
-              reason_op
-              Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-              [AnyT.error reason_op]
-          in
-          Context.add_post_inference_subtyping_check
-            cx
-            ref_prop
-            (Op (DeclareComponentRef { op = reason_op }))
-            u
+              ref_prop
+              (Op (DeclareComponentRef { op = reason_op }))
+              u
         in
         ComponentInstanceAvailableAsRefSetterProp ref_prop
     in

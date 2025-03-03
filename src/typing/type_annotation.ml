@@ -3143,8 +3143,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           id_opt;
         }
       in
-      let loc = loc_of_reason reason in
-      let t = Component_type_sig.component_type env.cx loc sig_ in
+      let t =
+        Component_type_sig.component_type env.cx ~in_annotation:(Base.Option.is_none id_opt) sig_
+      in
       (t, tparam_asts, params_ast, renders_ast)
 
   let mk_super env loc c targs =

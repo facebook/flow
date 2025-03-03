@@ -11,5 +11,5 @@ Foo as component( // error: void ~> string
 );
 Foo as component( // error again due to bad ref
     bar: string,
-    ref: ImNotARefSetter // error: bad ref
+    ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
 );

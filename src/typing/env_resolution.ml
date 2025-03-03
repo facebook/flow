@@ -421,7 +421,7 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
     in
     let cache = Context.node_cache cx in
     Node_cache.set_component_sig cache sig_loc sig_data;
-    Statement.Component_declaration_sig.component_type cx component_loc component_sig
+    Statement.Component_declaration_sig.component_type cx ~in_annotation:false component_sig
   end
 
 let rec binding_has_annot = function
