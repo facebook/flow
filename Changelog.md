@@ -1,3 +1,22 @@
+### 0.263.0
+
+Likely to cause new Flow errors:
+* Signature verification errors will now show up for libdef files
+
+New Features:
+* Declaration merging for `declare namespace` is now supported in toplevel library definitions.
+
+Notable bug fixes:
+* In component type annotation, the ref prop can now have any type.
+
+Library Definitions:
+* Since the last version, most of the bundled libdefs will no longer be maintained and shipped with Flow. Going forward, they should be downloaded from flow-typed. Starting from this version, we will also no longer ship a set of precise typing definition for jsx intrinsics. To maintain the same behavior as before, you should have a `flow-typed.config.json` in the root of your project with the following content:
+```
+{
+  "env": ["node", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly", "jsx"]
+}
+```
+
 ### 0.262.0
 
 Likely to cause new Flow errors:
