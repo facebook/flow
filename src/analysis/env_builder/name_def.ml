@@ -2993,16 +2993,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ignore @@ this#expression value)
           ~on_member_eq_other:(fun expr value ->
             this#visit_expression ~hints:[] ~cond expr;
-            ignore @@ this#expression value)
+            this#visit_expression ~hints:[] ~cond value)
           ~on_other_eq_member:(fun value expr ->
             this#visit_expression ~hints:[] ~cond expr;
-            ignore @@ this#expression value)
+            this#visit_expression ~hints:[] ~cond value)
           ~is_switch_cond_context:false
           ~strict:false
           ~sense:false
           ~on_other_eq_test:(fun left right ->
-            ignore @@ this#expression left;
-            ignore @@ this#expression right)
+            ignore @@ this#visit_expression ~hints:[] ~cond left;
+            ignore @@ this#visit_expression ~hints:[] ~cond right)
           ALoc.none
           left
           right
@@ -3147,6 +3147,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | _ -> ()
       );
       res
+
+    method! switch_case case =
+      let open Ast.Statement.Switch.Case in
+      let (_loc, { test; consequent; comments = _ }) = case in
+      Base.Option.iter ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest) test;
+      ignore @@ this#statement_list consequent;
+      case
 
     method! match_expression loc _ = fail loc "Should be visited by visit_match_expression"
 
