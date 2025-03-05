@@ -1244,7 +1244,8 @@ struct
       in
       function
       | Binding bind -> bind_loop bind
-      | ExpressionDef { hints = []; expr; chain = false; _ } -> expression_resolvable expr
+      | ExpressionDef { hints = []; expr; chain = _; cond_context = _ } ->
+        expression_resolvable expr
       | GeneratorNext _
       | TypeAlias _
       | OpaqueType _
