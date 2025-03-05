@@ -649,6 +649,10 @@ and 'loc t' =
       loc: 'loc;
       binding_reason: 'loc virtual_reason;
     }
+  | EMatchInvalidObjectShorthand of {
+      loc: 'loc;
+      name: string;
+    }
   | EUndocumentedFeature of { loc: 'loc }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
@@ -1478,6 +1482,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidAsPattern { loc } -> EMatchInvalidAsPattern { loc = f loc }
   | EMatchInvalidPatternReference { loc; binding_reason } ->
     EMatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
+  | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
@@ -1792,6 +1797,7 @@ let util_use_op_of_msg nope util = function
   | EMatchBindingInOrPattern _
   | EMatchInvalidAsPattern _
   | EMatchInvalidPatternReference _
+  | EMatchInvalidObjectShorthand _
   | EUndocumentedFeature _ ->
     nope
 
@@ -2009,6 +2015,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchBindingInOrPattern { loc } -> Some loc
   | EMatchInvalidAsPattern { loc } -> Some loc
   | EMatchInvalidPatternReference { loc; _ } -> Some loc
+  | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
@@ -2989,6 +2996,8 @@ let friendly_message_of_msg = function
   | EMatchInvalidAsPattern { loc = _ } -> Normal MessageMatchInvalidAsPattern
   | EMatchInvalidPatternReference { loc = _; binding_reason } ->
     Normal (MessageMatchInvalidPatternReference { binding_reason })
+  | EMatchInvalidObjectShorthand { loc = _; name } ->
+    Normal (MessageMatchInvalidObjectShorthand { name })
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
 
 let defered_in_speculation = function
@@ -3344,4 +3353,5 @@ let error_code_of_message err : error_code option =
   | EMatchBindingInOrPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidAsPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidPatternReference _ -> Some MatchInvalidPattern
+  | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
   | EUndocumentedFeature _ -> Some UndocumentedFeature

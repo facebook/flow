@@ -3425,15 +3425,17 @@ and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; 
   in
   let props_rev =
     Base.List.rev_map
-      ~f:(fun (loc, { Property.key; pattern; shorthand; comments }) ->
-        layout_node_with_comments_opt
-          loc
-          comments
-          ( if shorthand then
-            match_pattern ~opts pattern
-          else
-            fuse [prop_key key; Atom ":"; pretty_space; match_pattern ~opts pattern]
-          ))
+      ~f:(function
+        | (loc, Property.Valid { Property.key; pattern; shorthand; comments }) ->
+          layout_node_with_comments_opt
+            loc
+            comments
+            ( if shorthand then
+              match_pattern ~opts pattern
+            else
+              fuse [prop_key key; Atom ":"; pretty_space; match_pattern ~opts pattern]
+            )
+        | (_, Property.InvalidShorthand ident) -> identifier ident)
       properties
   in
   let props_rev =

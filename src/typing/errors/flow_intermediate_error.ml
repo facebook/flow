@@ -4109,6 +4109,18 @@ let to_printable_error :
         ref binding_reason;
         text " within the same match pattern it is defined.";
       ]
+    | MessageMatchInvalidObjectShorthand { name } ->
+      [
+        text "Invalid object pattern property. Use ";
+        code (spf "{const %s}" name);
+        text " if you want to create a new variable with the value of property ";
+        code name;
+        text ", or use ";
+        code (spf "{%s: %s}" name name);
+        text " if you want to match property ";
+        code name;
+        text " against the value of the variable of the same name.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

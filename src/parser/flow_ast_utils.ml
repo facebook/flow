@@ -86,7 +86,11 @@ let rec pattern_has_binding =
 
 let rec match_pattern_has_binding =
   let open MatchPattern in
-  let property (_, { ObjectPattern.Property.pattern = p; _ }) = match_pattern_has_binding p in
+  let property = function
+    | (_, ObjectPattern.Property.Valid { ObjectPattern.Property.pattern = p; _ }) ->
+      match_pattern_has_binding p
+    | (_, ObjectPattern.Property.InvalidShorthand _) -> false
+  in
   let rest_has_binding = function
     | Some (_, { RestPattern.argument = Some _; comments = _ }) -> true
     | _ -> false

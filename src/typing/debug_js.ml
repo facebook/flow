@@ -1890,6 +1890,8 @@ let dump_error_message =
         "EMatchInvalidPatternReference (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx binding_reason)
+    | EMatchInvalidObjectShorthand { loc; name } ->
+      spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)

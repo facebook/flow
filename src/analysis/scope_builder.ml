@@ -301,6 +301,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! match_object_pattern_property_key key = key
 
+      method! match_object_pattern_property prop =
+        let open Ast.MatchPattern.ObjectPattern.Property in
+        match prop with
+        | (_, Valid _) -> super#match_object_pattern_property prop
+        | (_, InvalidShorthand _) -> prop
+
       (* don't rename the `Foo` in `enum E { Foo }` *)
       method! enum_member_identifier id = id
 

@@ -2013,14 +2013,19 @@ and MatchPattern : sig
         | NumberLiteral of ('M * 'M NumberLiteral.t)
         | Identifier of ('M, 'T) Identifier.t
 
-      and ('M, 'T) t = 'M * ('M, 'T) t'
-
-      and ('M, 'T) t' = {
+      and ('M, 'T) property = {
         key: ('M, 'T) key;
         pattern: ('M, 'T) MatchPattern.t;
         shorthand: bool;
         comments: ('M, unit) Syntax.t option;
       }
+
+      and ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' =
+        | Valid of ('M, 'T) property
+        (* Invalid code parsed so we can error with quick-fix. *)
+        | InvalidShorthand of ('M, 'M) Identifier.t
       [@@deriving show]
     end
 

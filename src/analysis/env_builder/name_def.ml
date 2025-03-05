@@ -382,10 +382,15 @@ end = struct
 
   and object_properties ~visit_binding ~visit_expression ~visit_intermediate acc properties =
     Base.List.fold properties ~init:[] ~f:(fun used_props prop ->
-        let (_, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) = prop in
-        let (acc, prop_name) = object_property acc key in
-        visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
-        prop_name :: used_props
+        match prop with
+        | ( _,
+            ObjectPattern.Property.Valid
+              { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
+          ) ->
+          let (acc, prop_name) = object_property acc key in
+          visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+          prop_name :: used_props
+        | (_, ObjectPattern.Property.InvalidShorthand _) -> used_props
     )
 end
 

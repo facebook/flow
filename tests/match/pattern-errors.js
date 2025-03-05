@@ -146,3 +146,14 @@
     _: 0,
   };
 }
+
+// Invalid object property shorthand
+{
+  declare const x: {foo: 1, bar: boolean};
+
+  const out = match (x) {
+    {foo}: 0,
+    {foo, bar: true}: 0,
+    _: 0,
+  };
+}

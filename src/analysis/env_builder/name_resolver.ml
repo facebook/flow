@@ -3272,10 +3272,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
             | None -> ());
             let bindings =
-              Base.List.fold properties ~init:bindings ~f:(fun bindings prop ->
-                  let (loc, { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }) =
-                    prop
-                  in
+              Base.List.fold properties ~init:bindings ~f:(fun bindings -> function
+                | ( loc,
+                    ObjectPattern.Property.Valid
+                      { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
+                  ) ->
                   let (property, propname) =
                     match key with
                     | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
@@ -3307,6 +3308,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     | None -> ())
                   | None -> ());
                   recurse member pattern bindings
+                | (_, ObjectPattern.Property.InvalidShorthand _) -> bindings
               )
             in
             bindings_of_rest bindings rest

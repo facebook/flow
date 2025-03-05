@@ -783,6 +783,26 @@ References:
                    ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:155:6
+
+Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
+`foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
+[match-invalid-pattern]
+
+   155|     {foo}: 0,
+             ^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:156:6
+
+Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
+`foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
+[match-invalid-pattern]
+
+   156|     {foo, bar: true}: 0,
+             ^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -918,4 +938,4 @@ Cannot resolve name `a`. [cannot-resolve-name]
 
 
 
-Found 75 errors
+Found 77 errors

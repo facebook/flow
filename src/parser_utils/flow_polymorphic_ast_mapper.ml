@@ -2196,11 +2196,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method match_object_pattern_property (prop : ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.t)
         : ('N, 'U) Ast.MatchPattern.ObjectPattern.Property.t =
       let open Ast.MatchPattern.ObjectPattern.Property in
-      let (loc, { key; pattern; shorthand; comments }) = prop in
-      let key' = this#match_object_pattern_property_key key in
-      let pattern' = this#match_pattern pattern in
-      let comments' = this#syntax_opt comments in
-      (this#on_loc_annot loc, { key = key'; pattern = pattern'; shorthand; comments = comments' })
+      match prop with
+      | (loc, Valid { key; pattern; shorthand; comments }) ->
+        let key' = this#match_object_pattern_property_key key in
+        let pattern' = this#match_pattern pattern in
+        let comments' = this#syntax_opt comments in
+        ( this#on_loc_annot loc,
+          Valid { key = key'; pattern = pattern'; shorthand; comments = comments' }
+        )
+      | (loc, InvalidShorthand id) -> (this#on_loc_annot loc, InvalidShorthand (this#identifier id))
 
     method match_object_pattern_property_key
         (key : ('M, 'T) Ast.MatchPattern.ObjectPattern.Property.key)

@@ -211,7 +211,7 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
   let open Ast.MatchPattern.ObjectPattern in
   let rec loop acc seen rev_props = function
     | [] -> List.rev rev_props
-    | (loc, { Property.key; pattern = p; shorthand; comments }) :: props ->
+    | (loc, Property.Valid { Property.key; pattern = p; shorthand; comments }) :: props ->
       let (acc, key, name) = object_property_key cx acc key in
       ( if SSet.mem name seen then
         let key_loc =
@@ -231,7 +231,10 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
         Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc = key_loc; name })
       );
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
-      let prop = (loc, { Property.key; pattern = p; shorthand; comments }) in
+      let prop = (loc, Property.Valid { Property.key; pattern = p; shorthand; comments }) in
+      loop acc (SSet.add name seen) (prop :: rev_props) props
+    | ((loc, Property.InvalidShorthand (_, { Ast.Identifier.name; _ })) as prop) :: props ->
+      Flow_js.add_output cx (Error_message.EMatchInvalidObjectShorthand { loc; name });
       loop acc (SSet.add name seen) (prop :: rev_props) props
   in
   loop acc SSet.empty [] props

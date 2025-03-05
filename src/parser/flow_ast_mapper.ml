@@ -2676,14 +2676,21 @@ class ['loc] mapper =
     method match_object_pattern_property
         (prop : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Property.t) =
       let open Ast.MatchPattern.ObjectPattern.Property in
-      let (loc, { key; pattern; shorthand; comments }) = prop in
-      let key' = this#match_object_pattern_property_key key in
-      let pattern' = this#match_pattern pattern in
-      let comments' = this#syntax_opt comments in
-      if key == key' && pattern == pattern' && comments == comments' then
-        prop
-      else
-        (loc, { key = key'; pattern = pattern'; shorthand; comments = comments' })
+      match prop with
+      | (loc, Valid { key; pattern; shorthand; comments }) ->
+        let key' = this#match_object_pattern_property_key key in
+        let pattern' = this#match_pattern pattern in
+        let comments' = this#syntax_opt comments in
+        if key == key' && pattern == pattern' && comments == comments' then
+          prop
+        else
+          (loc, Valid { key = key'; pattern = pattern'; shorthand; comments = comments' })
+      | (loc, InvalidShorthand id) ->
+        let id' = this#identifier id in
+        if id == id' then
+          prop
+        else
+          (loc, InvalidShorthand id')
 
     method match_object_pattern_property_key
         (key : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.Property.key) =

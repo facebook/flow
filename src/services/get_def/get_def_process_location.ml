@@ -745,16 +745,18 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
        location also covers the binding name. *)
     method! match_object_pattern_property prop =
       let open Ast.MatchPattern.ObjectPattern.Property in
-      let (loc, { key; pattern; shorthand; comments }) = prop in
-      let key =
-        if shorthand then
-          key
-        else
-          this#match_object_pattern_property_key key
-      in
-      let pattern = this#match_pattern pattern in
-      let comments = this#syntax_opt comments in
-      (this#on_loc_annot loc, { key; pattern; shorthand; comments })
+      match prop with
+      | (loc, Valid { key; pattern; shorthand; comments }) ->
+        let key =
+          if shorthand then
+            key
+          else
+            this#match_object_pattern_property_key key
+        in
+        let pattern = this#match_pattern pattern in
+        let comments = this#syntax_opt comments in
+        (this#on_loc_annot loc, Valid { key; pattern; shorthand; comments })
+      | (_, InvalidShorthand _) -> prop
   end
 
 class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =

@@ -8,4 +8,6 @@ const e = match (x) {
   {const x, ...let y}: y,
   {const x, ...var z}: y,
   {const x, ...}: 1,
+  {x}: 1,
+  {x, foo: 1}: 1,
 };

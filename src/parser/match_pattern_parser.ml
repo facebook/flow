@@ -276,19 +276,30 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
             let pattern = (loc, BindingPattern binding) in
             let trailing = Eat.trailing_comments env in
             let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-            { ObjectPattern.Property.key; pattern; shorthand = true; comments }
+            ObjectPattern.Property.Valid
+              { ObjectPattern.Property.key; pattern; shorthand = true; comments }
           in
           match Peek.token env with
           | T_CONST -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Const)
           | T_LET -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Let)
           | T_VAR -> shorthand_prop (binding_pattern env ~kind:Ast.Variable.Var)
+          | _
+            when Peek.is_identifier env
+                 &&
+                 match Peek.ith_token ~i:1 env with
+                 | T_COMMA
+                 | T_RCURLY ->
+                   true
+                 | _ -> false ->
+            ObjectPattern.Property.InvalidShorthand (identifier_name env)
           | _ ->
             let key = property_key env in
             Expect.token env T_COLON;
             let pattern = match_pattern env in
             let trailing = Eat.trailing_comments env in
             let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-            { ObjectPattern.Property.key; pattern; shorthand = false; comments }
+            ObjectPattern.Property.Valid
+              { ObjectPattern.Property.key; pattern; shorthand = false; comments }
       )
     in
     let rec properties env acc =

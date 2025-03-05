@@ -732,17 +732,31 @@ with type t = Impl.t = struct
           | ObjectPattern.Property.NumberLiteral lit -> number_literal lit
           | ObjectPattern.Property.Identifier id -> identifier id
         in
-        let property (loc, { ObjectPattern.Property.key; pattern; shorthand; comments }) =
-          node
-            ?comments
-            "MatchObjectPatternProperty"
-            loc
-            [
-              ("key", property_key key);
-              ("pattern", match_pattern pattern);
-              ("shorthand", bool shorthand);
-            ]
+        let property = function
+          | ( loc,
+              ObjectPattern.Property.Valid
+                { ObjectPattern.Property.key; pattern; shorthand; comments }
+            ) ->
+            node
+              ?comments
+              "MatchObjectPatternProperty"
+              loc
+              [
+                ("key", property_key key);
+                ("pattern", match_pattern pattern);
+                ("shorthand", bool shorthand);
+              ]
+          | (loc, ObjectPattern.Property.InvalidShorthand id) ->
+            node
+              "MatchObjectPatternProperty"
+              loc
+              [
+                ("key", identifier id);
+                ("pattern", match_identifier_pattern id);
+                ("shorthand", bool true);
+              ]
         in
+
         node
           ?comments:(format_internal_comments comments)
           "MatchObjectPattern"
