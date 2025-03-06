@@ -15,6 +15,12 @@ type 'loc t =
   | UnexpectedExpression of 'loc * Flow_ast_utils.ExpressionSort.t
 [@@deriving show, iter, map]
 
-type 'loc binding_validation_t = NameAlreadyBound of 'loc [@@deriving show, iter, map]
+type 'loc binding_validation_t =
+  | NamespacedNameAlreadyBound of {
+      name: string;
+      invalid_binding_loc: 'loc;
+      existing_binding_loc: 'loc;
+    }
+[@@deriving show, iter, map]
 
 let compare = Stdlib.compare

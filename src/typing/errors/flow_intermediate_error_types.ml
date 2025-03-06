@@ -396,7 +396,7 @@ type 'loc message =
   | MessageCannotCreateExactType of 'loc virtual_reason
   | MessageCannotDeclareAlreadyBoundGlobal of concrete_reason
   | MessageCannotDeclareAlreadyBoundName of concrete_reason
-  | MessageCannotDeclareAlreadyBoundNameInLibdef
+  | MessageCannotDeclareAlreadyBoundNameInNamespace of 'loc virtual_reason
   | MessageCannotDelete of 'loc virtual_reason
   | MessageCannotDetermineEmptyArrayLiteralType
   | MessageCannotDetermineModuleType

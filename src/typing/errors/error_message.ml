@@ -1980,7 +1980,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESignatureBindingValidation e ->
     Signature_error.(
       (match e with
-      | NameAlreadyBound loc -> Some loc)
+      | NamespacedNameAlreadyBound { invalid_binding_loc; _ } -> Some invalid_binding_loc)
     )
   | ESignatureVerification sve ->
     Signature_error.(
@@ -2632,8 +2632,10 @@ let friendly_message_of_msg = function
     Normal (MessageCannotExportRenamedDefault { name; is_reexport })
   | EUnexpectedTemporaryBaseType _ -> Normal MessageUnexpectedTemporaryBaseType
   | ECannotDelete (_, expr) -> Normal (MessageCannotDelete expr)
-  | ESignatureBindingValidation (Signature_error.NameAlreadyBound _) ->
-    Normal MessageCannotDeclareAlreadyBoundNameInLibdef
+  | ESignatureBindingValidation
+      (Signature_error.NamespacedNameAlreadyBound { name; existing_binding_loc; _ }) ->
+    let x = mk_reason (RIdentifier (OrdinaryName name)) existing_binding_loc in
+    Normal (MessageCannotDeclareAlreadyBoundNameInNamespace x)
   | ESignatureVerification sve -> Normal (MessageCannotBuildTypedInterface sve)
   | EUnreachable _ -> Normal MessageUnreachableCode
   | EInvalidObjectKit { reason; reason_op = _; use_op } ->

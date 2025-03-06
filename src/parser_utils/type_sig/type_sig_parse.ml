@@ -1091,11 +1091,22 @@ module Scope = struct
       let def : _ local_binding = NamespaceBinding { id_loc; name; values; types } in
       let union_values_and_types existing_values existing_types values types =
         let new_binding name (l, _) =
-          if SMap.mem name existing_values || SMap.mem name existing_types then (
-            tbls.additional_errors <- Signature_error.NameAlreadyBound l :: tbls.additional_errors;
+          match SMap.find_opt name existing_values with
+          | Some (existing_binding_loc, _) ->
+            tbls.additional_errors <-
+              Signature_error.NamespacedNameAlreadyBound
+                { name; invalid_binding_loc = l; existing_binding_loc }
+              :: tbls.additional_errors;
             false
-          ) else
-            true
+          | None ->
+            (match SMap.find_opt name existing_types with
+            | Some (existing_binding_loc, _) ->
+              tbls.additional_errors <-
+                Signature_error.NamespacedNameAlreadyBound
+                  { name; invalid_binding_loc = l; existing_binding_loc }
+                :: tbls.additional_errors;
+              false
+            | None -> true)
         in
         let values = SMap.filter new_binding values in
         let types = SMap.filter new_binding types in

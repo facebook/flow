@@ -1,17 +1,29 @@
 Error ------------------------------------------------------------------------------------- flow-typed/namespaces.js:8:8
 
-Cannot declare the name in library definition because the name is already bound. [signature-verification-failure]
+Cannot declare the name in the namespace because the name `a` [1] is already bound. [signature-verification-failure]
 
+   flow-typed/namespaces.js:8:8
    8|   type a = string; // error: already bound
              ^
+
+References:
+   flow-typed/namespaces.js:2:17
+   2|   declare const a: string;
+                      ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- flow-typed/namespaces.js:9:8
 
-Cannot declare the name in library definition because the name is already bound. [signature-verification-failure]
+Cannot declare the name in the namespace because the name `b` [1] is already bound. [signature-verification-failure]
 
+   flow-typed/namespaces.js:9:8
    9|   type b = string; // error: already bound
              ^
+
+References:
+   flow-typed/namespaces.js:5:17
+   5|   declare const b: string;
+                      ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- binding_test.js:2:6

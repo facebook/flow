@@ -1636,8 +1636,11 @@ let dump_error_message =
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
-    | ESignatureBindingValidation (Signature_error.NameAlreadyBound l) ->
-      spf "ESignatureBindingValidation (NameAlreadyBound %s)" (string_of_aloc l)
+    | ESignatureBindingValidation
+        (Signature_error.NamespacedNameAlreadyBound { invalid_binding_loc; _ }) ->
+      spf
+        "ESignatureBindingValidation (NamespacedNameAlreadyBound %s)"
+        (string_of_aloc invalid_binding_loc)
     | ESignatureVerification sve ->
       let msg = string_of_signature_error ALoc.debug_to_string sve in
       spf "ESignatureVerification (%s)" msg

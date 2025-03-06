@@ -1637,8 +1637,12 @@ let to_printable_error :
       ]
     | MessageCannotDeclareAlreadyBoundName x ->
       [text "Cannot declare "; Friendly.ref x; text " because the name is already bound."]
-    | MessageCannotDeclareAlreadyBoundNameInLibdef ->
-      [text "Cannot declare the name in library definition because the name is already bound."]
+    | MessageCannotDeclareAlreadyBoundNameInNamespace x ->
+      [
+        text "Cannot declare the name in the namespace because the name ";
+        ref x;
+        text " is already bound.";
+      ]
     | MessageCannotDelete expr ->
       [
         text "Cannot delete ";
