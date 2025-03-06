@@ -1209,7 +1209,7 @@ type config = {
   (* non-root include paths *)
   includes: string list;
   (* library paths. no wildcards *)
-  libs: string list;
+  libs: (string option * string) list;
   (* lint severities *)
   lint_severities: Severity.severity LintSettings.t;
   (* strict mode *)
@@ -1242,7 +1242,12 @@ end = struct
 
   let includes o = Base.List.iter ~f:(fprintf o "%s\n")
 
-  let libs o = Base.List.iter ~f:(fprintf o "%s\n")
+  let libs o =
+    Base.List.iter ~f:(fun (scoped_dir_opt, lib) ->
+        match scoped_dir_opt with
+        | None -> fprintf o "%s\n" lib
+        | Some scoped_dir -> fprintf o "%s -> %s\n" scoped_dir lib
+    )
 
   let options =
     let pp_opt o name value = fprintf o "%s=%s\n" name value in
@@ -1368,8 +1373,41 @@ let parse_includes lines config =
   Ok ({ config with includes }, [])
 
 let parse_libs lines config : (config * warning list, error) result =
-  let libs = trim_lines lines in
-  Ok ({ config with libs }, [])
+  let libs =
+    Base.List.filter_map lines ~f:(fun (line_no, line) ->
+        let line = String.trim line in
+        if line = "" then
+          None
+        else if Str.string_match Opts.mapping_regexp line 0 then
+          Some
+            ( line_no,
+              Some (Str.matched_group 1 line |> String.trim),
+              Str.matched_group 2 line |> String.trim
+            )
+        else
+          Some (line_no, None, line)
+    )
+  in
+  match
+    Base.List.fold_until
+      libs
+      ~init:false
+      ~finish:(fun _seen_scoped -> Ok ())
+      ~f:
+        (fun seen_scoped -> function
+          | (line_no, None, _) ->
+            if seen_scoped then
+              Base.Continue_or_stop.Stop (Error line_no)
+            else
+              Base.Continue_or_stop.Continue seen_scoped
+          | (_, Some _, _) -> Base.Continue_or_stop.Continue true)
+  with
+  | Ok () ->
+    let libs =
+      Base.List.map libs ~f:(fun (_line_no, scoped_dir_opt, file) -> (scoped_dir_opt, file))
+    in
+    Ok ({ config with libs }, [])
+  | Error line_no -> Error (line_no, "All non-scoped libdefs must come before scoped ones")
 
 let parse_ignores lines config =
   let raw_ignores = trim_lines lines in

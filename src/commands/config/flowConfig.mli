@@ -58,7 +58,7 @@ val declarations : config -> string list
 val includes : config -> string list
 
 (* library paths. no wildcards *)
-val libs : config -> string list
+val libs : config -> (string option * string) list
 
 (* A map from the rollout's name to the enabled group's name *)
 val enabled_rollouts : config -> string SMap.t

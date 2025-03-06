@@ -259,6 +259,12 @@ let add_exports_of_builtins lib_exports index =
       | Exports.ReExportModuleTypes _ -> (* impossible *) acc
   )
 
+let add_exports_of_builtins (lib_exports, scoped_lib_exports) index =
+  let index = add_exports_of_builtins lib_exports index in
+  Base.List.fold scoped_lib_exports ~init:index ~f:(fun index (_scoped_dir, lib_exports) ->
+      add_exports_of_builtins lib_exports index
+  )
+
 (** [index_file ~reader (exports_to_add, exports_to_remove) file] reads the exports of [file] from
     shared memory and adds all of the current exports to [exports_to_add], and all of the
     previous exports to [exports_to_remove]. *)

@@ -682,27 +682,33 @@ let file_options =
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
       Base.List.fold_right
-        ~f:(fun lib abs_libs ->
+        ~f:(fun (scoped_dir_opt, lib) abs_libs ->
+          let scoped_dir_opt =
+            Base.Option.map scoped_dir_opt ~f:(fun f ->
+                f |> Files.expand_project_root_token ~root |> File_path.make |> File_path.to_string
+            )
+          in
           let abs_lib = Files.make_path_absolute root lib in
           (*
            * "flow-typed" is always included in the libs list for convenience,
            * but there's no guarantee that it exists on the filesystem.
            *)
           if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
-          abs_lib :: abs_libs)
+          (scoped_dir_opt, abs_lib) :: abs_libs)
         (FlowConfig.libs flowconfig)
         ~init:[]
     in
     let config_libs =
       if !has_explicit_flowtyped_lib = false && Sys.file_exists (File_path.to_string flowtyped_path)
       then
-        flowtyped_path :: config_libs
+        (None, flowtyped_path) :: config_libs
       else
         config_libs
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ Base.List.map ~f:(Files.make_path_absolute root) extras
+    | _ ->
+      config_libs @ Base.List.map ~f:(fun lib -> (None, Files.make_path_absolute root lib)) extras
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
@@ -726,7 +732,7 @@ let file_options =
       |> includes_of_arg
            ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
            ~root
-           ~lib_paths
+           ~lib_paths:(Base.List.map ~f:snd lib_paths)
     in
     let module_declaration_dirnames =
       FlowConfig.module_declaration_dirnames flowconfig

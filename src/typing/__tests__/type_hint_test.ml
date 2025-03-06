@@ -157,7 +157,7 @@ end = struct
       |> List.rev_map (fun (filename, lib_content) ->
              let lib_file = File_key.LibFile filename in
              let ast = parse_content lib_file lib_content in
-             ast
+             (None, ast)
          )
     in
     let sig_opts =
@@ -242,9 +242,9 @@ let mk_cx ~verbose () =
     else
       { metadata with Context.verbose = None }
   in
-  let builtins_ref = ref (Builtins.empty ()) in
+  let builtins_ref = ref (Builtins.empty (), []) in
   let resolve_require mref =
-    match Builtins.get_builtin_module_opt !builtins_ref mref with
+    match Builtins.get_builtin_module_opt (fst !builtins_ref) mref with
     | Some m ->
       Context.TypedModule
         (fun () ->

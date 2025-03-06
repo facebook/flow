@@ -59,7 +59,7 @@ let load_lib_files files =
         let lib_content = Sys_utils.cat file in
         let lib_file = File_key.LibFile file in
         let (ast, _) = parse_content lib_file lib_content |> Result.get_ok in
-        ast)
+        (None, ast))
       files
   in
   let sig_opts =

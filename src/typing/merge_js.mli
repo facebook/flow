@@ -27,7 +27,8 @@ val copy_into :
 
 val merge_lib_files :
   sig_opts:Type_sig_options.t ->
-  (Loc.t, Loc.t) Flow_ast.Program.t list ->
+  (string option * (Loc.t, Loc.t) Flow_ast.Program.t) list ->
   Flow_error.ErrorSet.t * Context.master_context
 
-val mk_builtins : Context.metadata -> Context.master_context -> Context.t -> Builtins.t
+val mk_builtins :
+  Context.metadata -> Context.master_context -> Context.t -> Builtins.t * (string * Builtins.t) list

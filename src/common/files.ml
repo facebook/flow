@@ -18,7 +18,7 @@ type options = {
   declarations: (string * Str.regexp) list;
   implicitly_include_root: bool;
   includes: Path_matcher.t;
-  lib_paths: File_path.t list;
+  lib_paths: (string option * File_path.t) list;
   module_declaration_dirnames: string list;
   module_file_exts: string list;
   module_resource_exts: SSet.t;
@@ -566,7 +566,7 @@ let ordered_and_unordered_lib_paths (options : options) =
       let is_in_flowlib = is_prefix (File_path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in
-      (root :: libs, filter)
+      ((None, root) :: libs, filter)
   in
   let dir_filter _path = true in
   (* preserve enumeration order *)
@@ -589,9 +589,17 @@ let ordered_and_unordered_lib_paths (options : options) =
           ~sort
           [lib]
       in
-      libs |> Base.List.map ~f:(fun lib -> SSet.elements (get_all (get_next lib))) |> List.flatten
+      libs
+      |> Base.List.map ~f:(fun (scoped_dir_opt, lib) ->
+             SSet.elements (get_all (get_next lib))
+             |> Base.List.map ~f:(fun lib -> (scoped_dir_opt, lib))
+         )
+      |> List.flatten
   in
-  (libs, SSet.of_list libs)
+  let all_libs_set =
+    Base.List.fold libs ~init:SSet.empty ~f:(fun acc (_, lib) -> SSet.add lib acc)
+  in
+  (libs, all_libs_set)
 
 let is_matching_path path pattern rx current =
   if String.starts_with ~prefix:"!" pattern then

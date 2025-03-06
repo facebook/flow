@@ -1,0 +1,10 @@
+[libs]
+common_lib.js
+common_lib2.js
+'<PROJECT_ROOT>/foo' -> 'foo_lib.js'
+# test normalization of prefix
+'<PROJECT_ROOT>/bar/../foo' -> 'foo_lib2.js'
+'<PROJECT_ROOT>/bar' -> 'bar_lib.js'
+
+[options]
+all=true

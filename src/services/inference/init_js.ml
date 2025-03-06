@@ -30,16 +30,16 @@ let load_lib_files ~ccx ~options ~reader files =
   let%lwt (ok, errors, ordered_asts) =
     files
     |> Lwt_list.fold_left_s
-         (fun (ok_acc, errors_acc, asts_acc) file ->
+         (fun (ok_acc, errors_acc, asts_with_scoped_dir_opt_acc) (scoped_dir_opt, file) ->
            let lib_file = File_key.LibFile file in
            match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
            | Some ast ->
              (* construct ast list in reverse override order *)
-             let asts_acc = ast :: asts_acc in
+             let asts_acc = (scoped_dir_opt, ast) :: asts_with_scoped_dir_opt_acc in
              Lwt.return (ok_acc, errors_acc, asts_acc)
            | None ->
              Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
-             Lwt.return (false, errors_acc, asts_acc))
+             Lwt.return (false, errors_acc, asts_with_scoped_dir_opt_acc))
          (true, ErrorSet.empty, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
@@ -47,8 +47,9 @@ let load_lib_files ~ccx ~options ~reader files =
       let sig_opts = Type_sig_options.builtin_options options in
       let (builtin_errors, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
       match master_cx with
-      | Context.EmptyMasterContext -> (Exports.empty, Context.EmptyMasterContext, None)
-      | Context.NonEmptyMasterContext { builtin_leader_file_key; builtins; _ } ->
+      | Context.EmptyMasterContext -> ((Exports.empty, []), Context.EmptyMasterContext, None)
+      | Context.NonEmptyMasterContext
+          { builtin_leader_file_key; unscoped_builtins; scoped_builtins; _ } ->
         let metadata =
           Context.(
             let metadata = metadata_of_options options in
@@ -66,9 +67,17 @@ let load_lib_files ~ccx ~options ~reader files =
             mk_builtins
         in
         Context.reset_errors cx builtin_errors;
-        (Exports.of_builtins builtins, master_cx, Some cx)
+        let exports_of_builtins (Context.BuiltinGroup { builtins; _ }) =
+          Exports.of_builtins builtins
+        in
+        ( ( exports_of_builtins unscoped_builtins,
+            Base.List.Assoc.map ~f:exports_of_builtins scoped_builtins
+          ),
+          master_cx,
+          Some cx
+        )
     ) else
-      (Exports.empty, Context.EmptyMasterContext, None)
+      ((Exports.empty, []), Context.EmptyMasterContext, None)
   in
   Lwt.return (ok, master_cx, cx_opt, errors, builtin_exports)
 
@@ -77,7 +86,7 @@ type init_result = {
   errors: ErrorSet.t FilenameMap.t;
   warnings: ErrorSet.t FilenameMap.t;
   suppressions: Error_suppressions.t;
-  exports: Exports.t;
+  exports: Exports.t * (string * Exports.t) list;
   master_cx: Context.master_context;
 }
 

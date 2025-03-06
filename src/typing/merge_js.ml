@@ -846,7 +846,7 @@ let module_type_copied dst_cx src_cx ({ Type.module_export_types; _ } as m) =
   let (_ : Context.t) = copier#export_types src_cx Polarity.Positive dst_cx module_export_types in
   m
 
-let merge_lib_files ~sig_opts ordered_asts =
+let merge_libs_from_ordered_asts ~sig_opts ordered_asts =
   let (builtin_errors, builtin_locs, builtins) =
     Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts
   in
@@ -881,19 +881,80 @@ let merge_lib_files ~sig_opts ordered_asts =
            )
     |> Flow_error.ErrorSet.of_list
   in
-  match ordered_asts with
-  | [] -> (builtin_errors, Context.EmptyMasterContext)
-  | fst_ast :: _ ->
-    let builtin_leader_file_key = Base.Option.value_exn (fst_ast |> fst |> Loc.source) in
+  (builtin_errors, builtin_locs, builtins)
+
+let merge_lib_files ~sig_opts ordered_asts_with_scoped_dirs =
+  let builtin_leader_file_key =
+    match ordered_asts_with_scoped_dirs with
+    | [] -> None
+    | (_, fst_ast) :: _ -> fst_ast |> fst |> Loc.source
+  in
+  let scoped_dir_key_equal = Base.Option.equal Base.String.equal in
+  let scoped_dir_of_ordered_ast =
+    let scoped_dir_of_ordered_ast =
+      Base.List.fold_right
+        ordered_asts_with_scoped_dirs
+        ~init:[]
+        ~f:(fun (scoped_dir_key, ast) acc ->
+          match Base.List.Assoc.find acc ~equal:scoped_dir_key_equal scoped_dir_key with
+          | None -> Base.List.Assoc.add ~equal:scoped_dir_key_equal acc scoped_dir_key [ast]
+          | Some exisiting_list ->
+            Base.List.Assoc.add
+              ~equal:scoped_dir_key_equal
+              acc
+              scoped_dir_key
+              (ast :: exisiting_list)
+      )
+    in
+    let non_scoped_asts =
+      Base.List.Assoc.find scoped_dir_of_ordered_ast ~equal:scoped_dir_key_equal None
+    in
+    (* Make every scoped asts include all of non-scoped asts at the end *)
+    Base.List.map scoped_dir_of_ordered_ast ~f:(function
+        | (Some scoped_dir, ast_list) ->
+          (match non_scoped_asts with
+          | None -> (Some scoped_dir, ast_list)
+          | Some non_scoped_asts -> (Some scoped_dir, Base.List.append ast_list non_scoped_asts))
+        | entry -> entry
+        )
+  in
+  let (scoped_builtins, builtin_errors) =
+    let all_errors_ref = ref Flow_error.ErrorSet.empty in
+    let scoped_dir_builtins =
+      Base.List.Assoc.map scoped_dir_of_ordered_ast ~f:(fun ordered_asts ->
+          let (builtin_errors, builtin_locs, builtins) =
+            merge_libs_from_ordered_asts ~sig_opts ordered_asts
+          in
+          all_errors_ref := Flow_error.ErrorSet.union !all_errors_ref builtin_errors;
+          Context.BuiltinGroup { builtin_locs; builtins }
+      )
+    in
+    (scoped_dir_builtins, !all_errors_ref)
+  in
+  let (unscoped_builtins, scoped_builtins) =
+    Base.List.partition_map scoped_builtins ~f:(fun (scoped_dir_opt, builtins) ->
+        match scoped_dir_opt with
+        | None -> Base.Either.First builtins
+        | Some scoped_dir -> Base.Either.Second (scoped_dir, builtins)
+    )
+  in
+  let unscoped_builtins =
+    match unscoped_builtins with
+    | [unscoped_builtins] -> unscoped_builtins
+    | _ -> failwith "There can be only one group of unscoped builtins"
+  in
+  match builtin_leader_file_key with
+  | None -> (builtin_errors, Context.EmptyMasterContext)
+  | Some builtin_leader_file_key ->
     ( builtin_errors,
-      Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins }
+      Context.NonEmptyMasterContext { builtin_leader_file_key; unscoped_builtins; scoped_builtins }
     )
 
 let mk_builtins metadata master_cx =
   match master_cx with
-  | Context.EmptyMasterContext -> (fun _ -> Builtins.empty ())
-  | Context.NonEmptyMasterContext { builtin_leader_file_key; builtin_locs; builtins } ->
-    let builtins_ref = ref (Builtins.empty ()) in
+  | Context.EmptyMasterContext -> (fun _ -> (Builtins.empty (), []))
+  | Context.NonEmptyMasterContext { builtin_leader_file_key; unscoped_builtins; scoped_builtins } ->
+    let builtins_ref = ref (Builtins.empty (), []) in
     let cx =
       Context.make
         (Context.make_ccx ())
@@ -903,20 +964,37 @@ let mk_builtins metadata master_cx =
         (fun mref -> Context.MissingModule mref)
         (fun _ -> !builtins_ref)
     in
-    let (values, types, modules) =
-      Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
+    let create_original_and_mapped_builtins (Context.BuiltinGroup { builtin_locs; builtins }) =
+      let (values, types, modules) =
+        Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
+      in
+      let original_builtins =
+        Builtins.of_name_map
+          ~type_mapper:Base.Fn.id
+          ~module_type_mapper:Base.Fn.id
+          ~values
+          ~types
+          ~modules
+      in
+      let mapped_builtins dst_cx =
+        Builtins.of_name_map
+          ~type_mapper:(copied dst_cx cx)
+          ~module_type_mapper:(module_type_copied dst_cx cx)
+          ~values
+          ~types
+          ~modules
+      in
+      (original_builtins, mapped_builtins)
+    in
+    let (original_unscoped_builtins, mapped_unscoped_builtins) =
+      create_original_and_mapped_builtins unscoped_builtins
+    in
+    let original_and_mapped_scoped_builtins =
+      Base.List.Assoc.map scoped_builtins ~f:create_original_and_mapped_builtins
     in
     builtins_ref :=
-      Builtins.of_name_map
-        ~type_mapper:Base.Fn.id
-        ~module_type_mapper:Base.Fn.id
-        ~values
-        ~types
-        ~modules;
+      (original_unscoped_builtins, Base.List.Assoc.map original_and_mapped_scoped_builtins ~f:fst);
     fun dst_cx ->
-      Builtins.of_name_map
-        ~type_mapper:(copied dst_cx cx)
-        ~module_type_mapper:(module_type_copied dst_cx cx)
-        ~values
-        ~types
-        ~modules
+      ( mapped_unscoped_builtins dst_cx,
+        Base.List.Assoc.map original_and_mapped_scoped_builtins ~f:(fun (_, f) -> f dst_cx)
+      )

@@ -56,12 +56,18 @@ type component_t
  * resolved tvars. *)
 type sig_t = Type.TypeContext.t
 
+type builtins_group =
+  | BuiltinGroup of {
+      builtin_locs: Loc.t Type_sig_collections.Locs.t;
+      builtins: Type_sig_collections.Locs.index Packed_type_sig.Builtins.t;
+    }
+
 type master_context =
   | EmptyMasterContext
   | NonEmptyMasterContext of {
       builtin_leader_file_key: File_key.t;
-      builtin_locs: Loc.t Type_sig_collections.Locs.t;
-      builtins: Type_sig_collections.Locs.index Packed_type_sig.Builtins.t;
+      unscoped_builtins: builtins_group;
+      scoped_builtins: (string * builtins_group) list;
     }
 
 type metadata = {
@@ -151,7 +157,7 @@ val make :
   File_key.t ->
   ALoc.table Lazy.t ->
   resolve_require ->
-  (t -> Builtins.t) ->
+  (t -> Builtins.t * (string * Builtins.t) list) ->
   t
 
 val metadata_of_options : Options.t -> metadata
@@ -178,7 +184,7 @@ val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
 
-val global_builtins : t -> Builtins.t
+val active_global_builtins : t -> Builtins.t
 
 val hook_compatibility : t -> bool
 

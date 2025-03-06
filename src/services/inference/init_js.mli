@@ -10,7 +10,7 @@ type init_result = {
   errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   suppressions: Error_suppressions.t;
-  exports: Exports.t;
+  exports: Exports.t * (string * Exports.t) list;
   master_cx: Context.master_context;
 }
 
@@ -19,4 +19,8 @@ type init_result = {
    circular deps in Ocaml prevent direct calls from here
    to Types_js, where error management stuff lives.
 *)
-val init : options:Options.t -> reader:Mutator_state_reader.t -> string list -> init_result Lwt.t
+val init :
+  options:Options.t ->
+  reader:Mutator_state_reader.t ->
+  (string option * string) list ->
+  init_result Lwt.t

@@ -123,17 +123,23 @@ type possibly_refined_write_state =
       actually_refined_refining_locs: ALocSet.t option;
     }
 
-type master_context =
-  | EmptyMasterContext
-  | NonEmptyMasterContext of {
-      builtin_leader_file_key: File_key.t;
+type builtins_group =
+  | BuiltinGroup of {
       builtin_locs: Loc.t Type_sig_collections.Locs.t;
       builtins: Type_sig_collections.Locs.index Packed_type_sig.Builtins.t;
     }
 
+type master_context =
+  | EmptyMasterContext
+  | NonEmptyMasterContext of {
+      builtin_leader_file_key: File_key.t;
+      unscoped_builtins: builtins_group;
+      scoped_builtins: (string * builtins_group) list;
+    }
+
 type component_t = {
   mutable sig_cx: sig_t;
-  mutable builtins: Builtins.t lazy_t;
+  mutable builtins: (Builtins.t * (string * Builtins.t) list) lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   mutable synthesis_produced_placeholders: bool;
@@ -373,7 +379,7 @@ let empty_sig_cx =
 let make_ccx () =
   {
     sig_cx = empty_sig_cx;
-    builtins = lazy (Builtins.empty ());
+    builtins = lazy (Builtins.empty (), []);
     aloc_tables = Utils_js.FilenameMap.empty;
     synthesis_produced_placeholders = false;
     matching_props = [];
@@ -454,14 +460,6 @@ let max_literal_length cx = cx.metadata.max_literal_length
 
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 
-let global_builtins cx = Lazy.force cx.ccx.builtins
-
-let builtin_value_opt cx = Builtins.get_builtin_value_opt (global_builtins cx)
-
-let builtin_type_opt cx n = Builtins.get_builtin_type_opt (global_builtins cx) n
-
-let builtin_module_opt cx = Builtins.get_builtin_module_opt (global_builtins cx)
-
 let file cx = cx.file
 
 let is_lib_file cx = File_key.is_lib_file cx.file
@@ -473,6 +471,26 @@ let in_dirlist cx dirs =
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
+
+(** With the scoped libdef feature, the set of libdefs active for a given file might be different.
+  * This function computes the set based on directory prefix. *)
+let active_global_builtins cx =
+  let (unscoped_builtins, scoped_builtins) = Lazy.force cx.ccx.builtins in
+  Base.Option.value
+    ~default:unscoped_builtins
+    (Base.List.find_map scoped_builtins ~f:(fun (scoped_dir, builtins) ->
+         if Base.String.is_prefix ~prefix:scoped_dir (File_key.to_string (file cx)) then
+           Some builtins
+         else
+           None
+     )
+    )
+
+let builtin_value_opt cx = Builtins.get_builtin_value_opt (active_global_builtins cx)
+
+let builtin_type_opt cx n = Builtins.get_builtin_type_opt (active_global_builtins cx) n
+
+let builtin_module_opt cx = Builtins.get_builtin_module_opt (active_global_builtins cx)
 
 let casting_syntax cx = cx.metadata.casting_syntax
 

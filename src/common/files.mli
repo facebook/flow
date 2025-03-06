@@ -20,7 +20,7 @@ val mk_options :
   declarations:(string * Str.regexp) list ->
   implicitly_include_root:bool ->
   includes:Path_matcher.t ->
-  lib_paths:File_path.t list ->
+  lib_paths:(string option * File_path.t) list ->
   module_declaration_dirnames:string list ->
   module_file_exts:string list ->
   module_resource_exts:SSet.t ->
@@ -108,7 +108,7 @@ val is_in_flowlib : options -> string -> bool
 
 val get_all_watched_extensions : options -> SSet.t
 
-val ordered_and_unordered_lib_paths : options -> string list * SSet.t
+val ordered_and_unordered_lib_paths : options -> (string option * string) list * SSet.t
 
 (* regexp for Filename constants *)
 val dir_sep : Str.regexp

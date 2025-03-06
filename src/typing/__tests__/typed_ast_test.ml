@@ -88,16 +88,19 @@ let before_and_after_stmts file_name =
       let desc = Reason.RAnyExplicit in
       Reason.mk_reason desc loc
     in
-    Builtins.of_name_map
-      ~type_mapper:Base.Fn.id
-      ~module_type_mapper:Base.Fn.id
-      ~values:
-        (SMap.singleton
-           "Object"
-           (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
-        )
-      ~types:SMap.empty
-      ~modules:SMap.empty
+    let builtins =
+      Builtins.of_name_map
+        ~type_mapper:Base.Fn.id
+        ~module_type_mapper:Base.Fn.id
+        ~values:
+          (SMap.singleton
+             "Object"
+             (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
+          )
+        ~types:SMap.empty
+        ~modules:SMap.empty
+    in
+    (builtins, [])
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in
