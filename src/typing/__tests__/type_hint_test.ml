@@ -276,7 +276,7 @@ let mk_eval_hint_test ~expected base ops ctxt =
   let cx = mk_cx ~verbose:false () in
   let actual =
     mk_hint (TypeParser.parse cx base) ops
-    |> Type_hint.evaluate_hint cx dummy_reason
+    |> Type_hint.evaluate_hint cx ~expected_only:false dummy_reason
     |> string_of_hint_eval_result cx
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
@@ -343,7 +343,7 @@ let mk_private_method_eval_hint_test
   in
   let actual =
     mk_hint base [Decomp_MethodPrivateName ("bar", [class_stack_loc])]
-    |> Type_hint.evaluate_hint cx dummy_reason
+    |> Type_hint.evaluate_hint cx ~expected_only:false dummy_reason
     |> string_of_hint_eval_result cx
   in
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual
@@ -352,7 +352,9 @@ let mk_eval_hint_test_with_type_setup ~expected type_setup_code ops ctxt =
   let cx = mk_cx ~verbose:false () in
   let base_t = TypeLoader.get_type_of_last_expression cx type_setup_code in
   let actual =
-    mk_hint base_t ops |> Type_hint.evaluate_hint cx dummy_reason |> string_of_hint_eval_result cx
+    mk_hint base_t ops
+    |> Type_hint.evaluate_hint cx ~expected_only:false dummy_reason
+    |> string_of_hint_eval_result cx
   in
   (* DEBUGGING TIP: set [~verbose:true] above to print traces *)
   assert_equal ~ctxt ~printer:Base.Fn.id expected actual

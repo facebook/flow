@@ -357,7 +357,7 @@ module Type_at_pos = struct
         if self#covers_target loc then
           let reason = Reason.mk_reason (Reason.RCustom "jsx attr") loc in
           let (_, lazy_hint) = Type_env.get_hint cx loc in
-          lazy_hint reason
+          lazy_hint reason ~expected_only:false
           |> Type_hint.with_hint_result
                ~ok:(fun t ->
                  self#annot_with_tparams (self#find_loc loc t ~is_type_identifier:false))

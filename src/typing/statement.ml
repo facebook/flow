@@ -203,7 +203,8 @@ module Make
             )
           in
           let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
-          lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
+          lazy_hint reason ~expected_only:false
+          |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:get_autocomplete_t
         else
           obj_t
       | os ->
@@ -282,7 +283,8 @@ module Make
         in
         if obj_key_autocomplete acc then
           let (_, lazy_hint) = Type_env.get_hint cx (Reason.loc_of_reason reason) in
-          lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
+          lazy_hint reason ~expected_only:false
+          |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> tout)
         else
           tout
   end
@@ -755,7 +757,8 @@ module Make
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let reason = mk_reason RAutocompleteToken loc in
       let (_, lazy_hint) = Type_env.get_hint cx loc in
-      lazy_hint reason |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> EmptyT.at loc)
+      lazy_hint reason ~expected_only:false
+      |> Type_hint.with_hint_result ~ok:Base.Fn.id ~error:(fun () -> EmptyT.at loc)
     else
       get_checking_mode_type ()
 
@@ -766,7 +769,7 @@ module Make
   let string_literal_value cx ~singleton loc value =
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
-      let hint = lazy_hint (mk_reason RString loc) in
+      let hint = lazy_hint (mk_reason RString loc) ~expected_only:false in
       let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
     else if singleton then
@@ -2736,7 +2739,7 @@ module Make
       if not has_hint then
         EmptyT.make (mk_reason REmptyArrayElement loc)
       else
-        match lazy_hint element_reason with
+        match lazy_hint element_reason ~expected_only:false with
         | HintAvailable (hint, _) -> hint
         | DecompositionError ->
           (* A hint is available, but cannot be used to provide a type for this

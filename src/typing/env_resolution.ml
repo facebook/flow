@@ -328,7 +328,9 @@ let resolve_hints cx loc = Base.List.map ~f:(resolve_hint cx loc)
 
 let lazily_resolve_hints cx loc hints =
   let has_hint = not @@ Base.List.is_empty hints in
-  let lazy_hint reason = resolve_hints cx loc hints |> Type_hint.evaluate_hints cx reason in
+  let lazy_hint reason ~expected_only =
+    resolve_hints cx loc hints |> Type_hint.evaluate_hints cx ~expected_only reason
+  in
   (has_hint, lazy_hint)
 
 let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
@@ -748,7 +750,7 @@ let rec resolve_binding cx reason loc b =
     let param_loc = Reason.loc_of_reason reason in
     let t =
       let (has_hint, lazy_hint) = lazily_resolve_hints cx loc hints in
-      match lazy_hint reason with
+      match lazy_hint ~expected_only:false reason with
       | HintAvailable (t, _) ->
         let t =
           if Option.is_some default_expression then

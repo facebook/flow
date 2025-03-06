@@ -177,7 +177,7 @@ let rec instantiate_callee cx fn instantiation_hint =
           loop 0 (Lazy.force arg_list)
         in
         let return_hint =
-          match evaluate_hints cx reason (Lazy.force return_hints) with
+          match evaluate_hints cx ~expected_only:false reason (Lazy.force return_hints) with
           | HintAvailable (t, k) -> Some (t, k)
           | _ -> None
         in
@@ -234,7 +234,7 @@ and instantiate_component cx component instantiation_hint =
       instantiation_hint
     in
     let return_hint =
-      match evaluate_hints cx reason (Lazy.force jsx_hints) with
+      match evaluate_hints cx ~expected_only:false reason (Lazy.force jsx_hints) with
       | HintAvailable (t, k) -> Some (t, k)
       | _ -> None
     in
@@ -674,15 +674,20 @@ and evaluate_hint_ops cx reason t kind ops =
   | None -> DecompositionError
   | Some t -> fully_resolve_final_result cx t kind
 
-and evaluate_hint cx reason hint =
+and evaluate_hint cx ~expected_only reason hint =
   match hint with
+  | Hint_Placeholder
+  | Hint_t (_, BestEffortHint)
+  | Hint_Decomp (_, _, BestEffortHint)
+    when expected_only ->
+    DecompositionError
   | Hint_Placeholder ->
     HintAvailable (AnyT.annot (mk_reason RAnyImplicit ALoc.none), ExpectedTypeHint)
   | Hint_t (t, kind) -> fully_resolve_final_result cx t kind
   | Hint_Decomp (ops, t, kind) ->
     ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t kind
 
-and evaluate_hints cx reason hints =
+and evaluate_hints cx ~expected_only reason hints =
   Debug_js.Verbose.print_if_verbose_lazy
     cx
     (lazy [spf "Evaluating hint %s" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints)]);
@@ -692,7 +697,7 @@ and evaluate_hints cx reason hints =
       ~init:NoHint
       ~finish:(fun r -> r)
       ~f:(fun _ hint ->
-        match evaluate_hint cx reason hint with
+        match evaluate_hint cx ~expected_only reason hint with
         | HintAvailable (t, kind) -> Base.Continue_or_stop.Stop (HintAvailable (t, kind))
         | r -> Base.Continue_or_stop.Continue r)
   in

@@ -1533,7 +1533,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       | _ -> (check, false)
     in
     let (allow_underconstrained, return_hint) =
-      match lazy_hint reason_op with
+      match lazy_hint reason_op ~expected_only:false with
       | HintAvailable (t, kind) -> (true, Some (t, kind))
       | DecompositionError -> (true, None)
       | NoHint
