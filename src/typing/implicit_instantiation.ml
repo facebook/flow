@@ -1034,15 +1034,17 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           in
           let result =
             if is_inferred then
-              pin_type
-                cx
-                ~use_op
-                tparam
-                polarity
-                ~default_bound:
-                  (Base.Option.some_if has_new_errors (AnyT.error (TypeUtil.reason_of_t t)))
-                instantiation_reason
-                t
+              let default_bound =
+                if has_new_errors then
+                  match Context.typing_mode cx with
+                  | Context.CheckingMode -> Some (AnyT.error (TypeUtil.reason_of_t t))
+                  | Context.SynthesisMode
+                  | Context.HintEvaluationMode ->
+                    Some (AnyT.placeholder (TypeUtil.reason_of_t t))
+                else
+                  None
+              in
+              pin_type cx ~use_op tparam polarity ~default_bound instantiation_reason t
             else
               Observer.on_pinned_tparam cx tparam t
           in

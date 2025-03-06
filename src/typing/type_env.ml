@@ -967,7 +967,11 @@ let init_env cx toplevel_scope_kind =
               ( Flow_js_utils.add_output
                   cx
                   Error_message.(EInternal (loc_of_reason reason, ReadOfUnreachedTvar def_loc_type));
-                AnyT.error reason
+                match Context.typing_mode cx with
+                | Context.CheckingMode -> AnyT.error reason
+                | Context.SynthesisMode
+                | Context.HintEvaluationMode ->
+                  AnyT.placeholder reason
               )
               )
         in
