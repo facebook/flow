@@ -64,10 +64,7 @@ module Make
 
   let empty_seen_names = { static_names = SMap.empty; instance_names = SMap.empty }
 
-  type frozen_kind =
-    | NotFrozen
-    | FrozenProp
-    | FrozenDirect
+  let empty_syntactic_flags = Primitive_literal.empty_syntactic_flags
 
   module ObjectExpressionAcc = struct
     type element =
@@ -737,7 +734,7 @@ module Make
   (* Values *)
   (**********)
 
-  let identifier_ cx name loc =
+  let identifier_ cx _syntactic_flags name loc =
     let get_checking_mode_type () =
       let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
@@ -762,17 +759,18 @@ module Make
     else
       get_checking_mode_type ()
 
-  let identifier cx { Ast.Identifier.name; comments = _ } loc =
-    let t = identifier_ cx name loc in
+  let identifier cx syntactic_flags { Ast.Identifier.name; comments = _ } loc =
+    let t = identifier_ cx syntactic_flags name loc in
     t
 
-  let string_literal_value cx ~singleton loc value =
+  let string_literal_value cx syntactic_flags loc value =
+    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason RString loc) ~expected_only:false in
       let error () = EmptyT.at loc in
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
-    else if singleton then
+    else if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
       DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName value })
     else
@@ -785,11 +783,12 @@ module Make
         let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
         DefT (reason, StrGeneralT AnyLiteral)
 
-  let string_literal cx ~singleton loc { Ast.StringLiteral.value; _ } =
-    string_literal_value cx ~singleton loc value
+  let string_literal cx syntactic_flags loc { Ast.StringLiteral.value; _ } =
+    string_literal_value cx syntactic_flags loc value
 
-  let boolean_literal ~singleton loc { Ast.BooleanLiteral.value; _ } =
-    if singleton then
+  let boolean_literal _cx syntactic_flags loc { Ast.BooleanLiteral.value; _ } =
+    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBooleanLit value) loc in
       DefT (reason, SingletonBoolT { from_annot = true; value })
     else
@@ -798,16 +797,18 @@ module Make
 
   let null_literal loc = NullT.at loc
 
-  let number_literal ~singleton loc { Ast.NumberLiteral.value; raw; _ } =
-    if singleton then
+  let number_literal _cx syntactic_flags loc { Ast.NumberLiteral.value; raw; _ } =
+    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RNumberLit raw) loc in
       DefT (reason, SingletonNumT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RNumber loc in
       DefT (reason, NumT_UNSOUND (None, (value, raw)))
 
-  let bigint_literal ~singleton loc { Ast.BigIntLiteral.value; raw; _ } =
-    if singleton then
+  let bigint_literal _cx syntactic_flags loc { Ast.BigIntLiteral.value; raw; _ } =
+    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBigIntLit raw) loc in
       DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
     else
@@ -1220,7 +1221,7 @@ module Make
                     Flow_ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
                   )
                   pattern
-                  ~on_identifier:identifier
+                  ~on_identifier:(fun cx -> identifier cx empty_syntactic_flags)
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -2760,7 +2761,7 @@ module Make
   (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond ?(as_const = false) ?(frozen = NotFrozen) cx (loc, e) =
+  and expression ?cond ?decl ?(as_const = false) ?(frozen = NotFrozen) cx (loc, e) =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2787,7 +2788,10 @@ module Make
             (lazy [spf "Expression cache hit at %s" (ALoc.debug_to_string loc)]);
           node
         | None ->
-          let res = expression_ ~cond ~as_const ~frozen cx loc e in
+          let syntactic_flags =
+            Primitive_literal.mk_syntactic_flags ?cond ?decl ~as_const ~frozen ()
+          in
+          let res = expression_ cx syntactic_flags loc e in
           if Context.typing_mode cx = Context.CheckingMode then begin
             Context.constraint_cache cx := FlowSet.empty;
             Context.eval_repos_cache cx := EvalReposCacheMap.empty;
@@ -2816,24 +2820,25 @@ module Make
 
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
-  and expression_ ~cond ~as_const ~frozen cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+  and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    let { Primitive_literal.cond; decl; as_const; frozen; _ } = syntactic_flags in
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
     | StringLiteral lit ->
-      let t = string_literal cx ~singleton:(as_const || frozen = FrozenProp) loc lit in
+      let t = string_literal cx syntactic_flags loc lit in
       ((loc, t), StringLiteral lit)
     | BooleanLiteral lit ->
-      let t = boolean_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
+      let t = boolean_literal cx syntactic_flags loc lit in
       ((loc, t), BooleanLiteral lit)
     | NullLiteral lit ->
       let t = null_literal loc in
       ((loc, t), NullLiteral lit)
     | NumberLiteral lit ->
-      let t = number_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
+      let t = number_literal cx syntactic_flags loc lit in
       ((loc, t), NumberLiteral lit)
     | BigIntLiteral lit ->
-      let t = bigint_literal ~singleton:(as_const || frozen = FrozenProp) loc lit in
+      let t = bigint_literal cx syntactic_flags loc lit in
       ((loc, t), BigIntLiteral lit)
     | RegExpLiteral lit ->
       let t = regexp_literal cx loc in
@@ -2850,14 +2855,15 @@ module Make
       let t = VoidT.make (mk_reason RVoid loc) in
       ((loc, t), Identifier ((id_loc, t), name))
     | Identifier (id_loc, name) ->
-      let t = identifier cx name loc in
+      let t = identifier cx syntactic_flags name loc in
       ((loc, t), Identifier ((id_loc, t), name))
     | This this ->
       let t = this_ cx loc this in
       ((loc, t), This this)
-    | Super s -> ((loc, identifier cx (mk_ident ~comments:None "super") loc), Super s)
+    | Super s ->
+      ((loc, identifier cx empty_syntactic_flags (mk_ident ~comments:None "super") loc), Super s)
     | Unary u ->
-      let (t, u) = unary cx ~cond ~as_const ~frozen loc u in
+      let (t, u) = unary cx syntactic_flags loc u in
       ((loc, t), Unary u)
     | Update u ->
       let (t, u) = update cx loc u in
@@ -2866,7 +2872,7 @@ module Make
       let (t, b) = binary cx loc ~cond b in
       ((loc, t), Binary b)
     | Logical l ->
-      let (t, l) = logical cx loc ~cond l in
+      let (t, l) = logical cx syntactic_flags loc l in
       ((loc, t), Logical l)
     | TypeCast ({ TypeCast.expression = e; annot; comments } as cast) ->
       let casting_syntax = Context.casting_syntax cx in
@@ -2933,7 +2939,7 @@ module Make
                   cx
                   (case_loc, Identifier (Flow_ast_utils.match_root_ident case_loc))
                   pattern
-                  ~on_identifier:identifier
+                  ~on_identifier:(fun cx -> identifier cx empty_syntactic_flags)
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -2953,7 +2959,7 @@ module Make
                 | None -> (None, false)
               in
               let ((((_, t), _) as body), body_throws) =
-                Abnormal.catch_expr_control_flow_exception (fun () -> expression cx body)
+                Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl body)
               in
               let case_ast = (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) in
               let throws = guard_throws || body_throws in
@@ -3067,7 +3073,7 @@ module Make
           (argts, Some arges)
         | None -> ([], None)
       in
-      let id_t = identifier cx name callee_loc in
+      let id_t = identifier cx empty_syntactic_flags name callee_loc in
       let callee_annot = (callee_loc, id_t) in
       (match targts_opt with
       | None ->
@@ -3178,7 +3184,7 @@ module Make
           | None ->
             (None, None)
         in
-        let id_t = identifier cx name callee_loc in
+        let id_t = identifier cx empty_syntactic_flags name callee_loc in
         let reason_call = mk_reason (RConstructorCall (desc_of_t id_t)) loc in
         let use_op =
           Op
@@ -3234,10 +3240,10 @@ module Make
       let reason = mk_reason RConditional loc in
       let test = condition ~cond:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx consequent)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl consequent)
       in
       let ((((_, t2), _) as alternate), else_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx alternate)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl alternate)
       in
       let combined_type =
         match (then_throws, else_throws) with
@@ -3409,7 +3415,7 @@ module Make
               ) =
             head
           in
-          let t = string_literal_value cx ~singleton:false elem_loc cooked in
+          let t = string_literal_value cx empty_syntactic_flags elem_loc cooked in
           (t, [])
         | _ ->
           let t_out = StrModuleT.at loc in
@@ -4945,7 +4951,8 @@ module Make
     ast
 
   (* traverse a unary expression, return result type *)
-  and unary cx ~cond ~as_const ~frozen loc =
+  and unary cx syntactic_flags loc =
+    let { Primitive_literal.cond; as_const; frozen; _ } = syntactic_flags in
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -5172,8 +5179,9 @@ module Make
         { operator; left = left_ast; right = right_ast; comments }
       )
 
-  and logical cx loc ~cond { Ast.Expression.Logical.operator; left; right; comments } =
+  and logical cx syntactic_flags loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
+    let { Primitive_literal.cond; _ } = syntactic_flags in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
      * As such, we only analyze the RHS expression if the LHS does not throw.
@@ -5230,7 +5238,7 @@ module Make
     | ( pat_loc,
         Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (loc, name); optional; annot }
       ) ->
-      let t = identifier cx name loc in
+      let t = identifier cx empty_syntactic_flags name loc in
       ( (pat_loc, t),
         Ast.Pattern.Identifier
           {
@@ -5793,7 +5801,7 @@ module Make
           in
           let c =
             if name = String.capitalize_ascii name then
-              identifier cx (mk_ident ~comments:None name) loc
+              identifier cx empty_syntactic_flags (mk_ident ~comments:None name) loc
             else begin
               Type_env.intrinsic_ref cx (OrdinaryName name) loc
               |> Base.Option.iter ~f:(fun (t, def_loc) ->
@@ -5987,7 +5995,7 @@ module Make
               match value with
               (* <element name="literal" /> *)
               | Some (Attribute.StringLiteral (loc, lit)) ->
-                let t = string_literal cx ~singleton:false loc lit in
+                let t = string_literal cx empty_syntactic_flags loc lit in
                 (t, Some (Attribute.StringLiteral ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some
@@ -6975,16 +6983,16 @@ module Make
         let (annot_t, annot_ast) =
           match (expr, annot) with
           | ((loc, Ast.Expression.StringLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = string_literal cx ~singleton:false loc lit in
+            let t = string_literal cx empty_syntactic_flags loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BooleanLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = boolean_literal ~singleton:false loc lit in
+            let t = boolean_literal cx empty_syntactic_flags loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.NumberLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = number_literal ~singleton:false loc lit in
+            let t = number_literal cx empty_syntactic_flags loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.BigIntLiteral lit), Ast.Type.Missing annot_loc) ->
-            let t = bigint_literal loc ~singleton:false lit in
+            let t = bigint_literal cx empty_syntactic_flags loc lit in
             (t, Ast.Type.Missing (annot_loc, t))
           | ((loc, Ast.Expression.RegExpLiteral _), Ast.Type.Missing annot_loc) ->
             let t = regexp_literal cx loc in
@@ -8587,6 +8595,21 @@ module Make
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
 
-  let expression ?cond ?as_const cx (loc, e) =
-    expression ?cond ?as_const ~frozen:NotFrozen cx (loc, e)
+  let expression ?cond ?decl ?as_const cx (loc, e) =
+    expression ?cond ?decl ?as_const ~frozen:NotFrozen cx (loc, e)
+
+  let identifier ~cond cx id loc =
+    identifier cx { empty_syntactic_flags with Primitive_literal.cond } id loc
+
+  let string_literal cx ~cond loc v =
+    string_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+
+  let number_literal cx ~cond loc v =
+    number_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+
+  let boolean_literal cx ~cond loc v =
+    boolean_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+
+  let bigint_literal cx ~cond loc v =
+    bigint_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
 end

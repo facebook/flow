@@ -1728,6 +1728,11 @@ module rec TypeTerm : sig
   external use_t_compare : use_t -> use_t -> int = "caml_fast_generic_compare" [@@noalloc]
 
   external type_term_compare : t -> t -> int = "caml_fast_generic_compare" [@@noalloc]
+
+  type frozen_kind =
+    | NotFrozen
+    | FrozenProp
+    | FrozenDirect
 end =
   TypeTerm
 

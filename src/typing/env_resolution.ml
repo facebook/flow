@@ -105,12 +105,12 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
 let rec synthesizable_expression cx ?cond exp =
   let open Ast.Expression in
   match exp with
-  | (loc, Identifier (_, name)) -> Statement.identifier cx name loc
-  | (loc, StringLiteral lit) -> Statement.string_literal cx ~singleton:false loc lit
-  | (loc, BooleanLiteral lit) -> Statement.boolean_literal ~singleton:false loc lit
+  | (loc, Identifier (_, name)) -> Statement.identifier cx ~cond name loc
+  | (loc, StringLiteral lit) -> Statement.string_literal cx ~cond loc lit
+  | (loc, BooleanLiteral lit) -> Statement.boolean_literal cx ~cond loc lit
   | (loc, NullLiteral _) -> Statement.null_literal loc
-  | (loc, NumberLiteral lit) -> Statement.number_literal ~singleton:false loc lit
-  | (loc, BigIntLiteral lit) -> Statement.bigint_literal ~singleton:false loc lit
+  | (loc, NumberLiteral lit) -> Statement.number_literal cx ~cond loc lit
+  | (loc, BigIntLiteral lit) -> Statement.bigint_literal cx ~cond loc lit
   | (loc, RegExpLiteral _) -> Statement.regexp_literal cx loc
   | (loc, ModuleRefLiteral lit) ->
     let (t, _lit) = Statement.module_ref_literal cx loc lit in
