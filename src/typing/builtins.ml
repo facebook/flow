@@ -20,6 +20,9 @@ let builtin_ordinary_name_set { original_global_values; original_global_types; _
   let add = SMap.fold (fun k _ acc -> SSet.add k acc) in
   SSet.empty |> add original_global_values |> add original_global_types
 
+let builtin_modules_set { original_global_modules; _ } =
+  SMap.fold (fun k _ acc -> SSet.add k acc) original_global_modules SSet.empty
+
 let get_builtin_value_opt { original_global_values; type_mapper; mapped_global_names; _ } name =
   match Hashtbl.find_opt mapped_global_names name with
   | Some v -> Some v

@@ -8,6 +8,18 @@
 open Code_action_text_edits
 open Lsp_module_system_info
 
+let is_available_autoimport_result cx =
+  let (available_globals, available_modules) =
+    let builtins = Context.active_global_builtins cx in
+    (Builtins.builtin_ordinary_name_set builtins, Builtins.builtin_modules_set builtins)
+  in
+  fun ~name ~source ->
+    let open Export_index in
+    match source with
+    | Global -> SSet.mem name available_globals
+    | Builtin mref -> SSet.mem mref available_modules
+    | File_key _ -> true
+
 let main_of_package ~get_package_info package_dir =
   let file_key = File_key.JsonFile (package_dir ^ Filename.dir_sep ^ "package.json") in
   match get_package_info file_key with

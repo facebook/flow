@@ -1,0 +1,7 @@
+[libs]
+common_lib.js
+'<PROJECT_ROOT>/foo' -> 'foo_lib.js'
+'<PROJECT_ROOT>/bar' -> 'bar_lib.js'
+
+[options]
+all=true

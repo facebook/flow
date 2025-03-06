@@ -476,6 +476,7 @@ let maybe_sort_by_usage ~imports_ranked_usage imports =
     imports
 
 let suggest_imports
+    ~cx
     ~layout_options
     ~module_system_info
     ~ast
@@ -504,8 +505,10 @@ let suggest_imports
           source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range
       )
     in
+    let is_available_autoimport_result = Lsp_import_edits.is_available_autoimport_result cx in
     files
     |> Export_index.ExportMap.bindings
+    |> Base.List.filter ~f:(fun ((source, _), _) -> is_available_autoimport_result ~name ~source)
     |> maybe_sort_by_usage ~imports_ranked_usage
     |> Base.List.fold ~init:[] ~f:(fun acc ((source, export_kind), _num) ->
            match
@@ -1154,6 +1157,7 @@ let code_actions_of_errors
             let actions =
               if include_quick_fixes && Loc.intersects error_loc loc then
                 suggest_imports
+                  ~cx
                   ~layout_options:(Code_action_utils.layout_options options)
                   ~module_system_info
                   ~ast
@@ -1632,6 +1636,7 @@ let suggest_imports_cli
             when Options.autoimports options ->
             let ranked_imports =
               suggest_imports
+                ~cx
                 ~layout_options:(Code_action_utils.layout_options options)
                 ~module_system_info
                 ~ast

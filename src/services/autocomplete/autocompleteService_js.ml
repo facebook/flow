@@ -358,6 +358,18 @@ type typing = {
   canonical: Autocomplete_sigil.Canonical.token option;
 }
 
+let search_with_filtered_auto_import_results cx =
+  let is_available_autoimport_result = Lsp_import_edits.is_available_autoimport_result cx in
+  fun f ~ac_options name ->
+    let open Export_search_types in
+    let { results; is_incomplete } = f ~ac_options name in
+    let results =
+      Base.List.filter results ~f:(fun { search_result = { name; source; _ }; _ } ->
+          is_available_autoimport_result ~name ~source
+      )
+    in
+    { results; is_incomplete }
+
 let mk_typing_artifacts
     ~layout_options
     ~loc_of_aloc
@@ -378,8 +390,8 @@ let mk_typing_artifacts
     loc_of_aloc;
     get_ast_from_shared_mem;
     module_system_info;
-    search_exported_values;
-    search_exported_types;
+    search_exported_values = search_with_filtered_auto_import_results cx search_exported_values;
+    search_exported_types = search_with_filtered_auto_import_results cx search_exported_types;
     cx;
     file_sig;
     ast;

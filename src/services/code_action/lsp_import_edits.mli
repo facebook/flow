@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val is_available_autoimport_result : Context.t -> name:string -> source:Export_index.source -> bool
+
 (** Generates the 'from' part of 'import ... from ...' required to import [source] from
     a file in [src_dir] *)
 val from_of_source :

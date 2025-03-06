@@ -1,0 +1,51 @@
+common_test.js:1:7
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"commonValueNoOverride","type":"(global)"},
+    {"name":"commonValueWithOverride","type":"(global)"}
+  ]
+}
+
+common_test.js:3:5
+Flags: --pretty --imports
+{"result":[]}
+
+common_test.js:5:5
+Flags: --pretty --imports
+{"result":[]}
+
+foo/test.js:1:7
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"commonValueNoOverride","type":"(global)"},
+    {"name":"commonValueWithOverride","type":"(global)"}
+  ]
+}
+
+foo/test.js:3:5
+Flags: --pretty --imports
+{"result":[{"name":"fooSpecific","type":"(global)"}]}
+
+foo/test.js:5:5
+Flags: --pretty --imports
+{"result":[]}
+
+bar/test.js:1:7
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"commonValueNoOverride","type":"(global)"},
+    {"name":"commonValueWithOverride","type":"(global)"}
+  ]
+}
+
+bar/test.js:3:5
+Flags: --pretty --imports
+{"result":[]}
+
+bar/test.js:5:5
+Flags: --pretty --imports
+{"result":[{"name":"barSpecific","type":"(global)"}]}
+
