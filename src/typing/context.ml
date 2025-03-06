@@ -241,7 +241,7 @@ type t = {
   hint_map_jsx_cache: (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable environment: Loc_env.t;
-  mutable typing_mode: typing_mode;
+  mutable typing_mode: typing_mode Nel.t;
   (* A subset of all transitive dependencies of the current file as determined by import/require.
    * This set will only be populated with type sig files that are actually forced. *)
   mutable reachable_deps: Utils_js.FilenameSet.t;
@@ -434,7 +434,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       hint_map_jsx_cache = Hashtbl.create 0;
       hint_eval_cache = IMap.empty;
       environment = Loc_env.empty Name_def.Global;
-      typing_mode = CheckingMode;
+      typing_mode = Nel.one CheckingMode;
       reachable_deps = Utils_js.FilenameSet.empty;
       node_cache = Node_cache.mk_empty ();
       refined_locations = ALocMap.empty;
@@ -677,7 +677,9 @@ let reachable_deps cx = cx.reachable_deps
 
 let environment cx = cx.environment
 
-let typing_mode cx = cx.typing_mode
+let full_typing_mode cx = cx.typing_mode
+
+let typing_mode cx = Nel.hd cx.typing_mode
 
 let node_cache cx = cx.node_cache
 
@@ -737,7 +739,7 @@ let add_tvar cx id bounds =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let mk_placeholder cx reason =
-  if cx.typing_mode = SynthesisMode then cx.ccx.synthesis_produced_placeholders <- true;
+  if Nel.hd cx.typing_mode = SynthesisMode then cx.ccx.synthesis_produced_placeholders <- true;
   Type.AnyT.placeholder reason
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
@@ -911,7 +913,7 @@ let run_in_synthesis_mode cx f =
   let old_typing_mode = cx.typing_mode in
   let old_produced_placeholders = cx.ccx.synthesis_produced_placeholders in
   cx.ccx.synthesis_produced_placeholders <- false;
-  cx.typing_mode <- SynthesisMode;
+  cx.typing_mode <- Nel.cons SynthesisMode cx.typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
   let produced_placeholders = ref false in
@@ -931,7 +933,7 @@ let run_in_signature_tvar_env cx f =
   let saved_instantiation_stack = !(cx.ccx.instantiation_stack) in
   cx.ccx.speculation_state := [];
   cx.ccx.instantiation_stack := [];
-  cx.typing_mode <- CheckingMode;
+  cx.typing_mode <- Nel.cons CheckingMode cx.typing_mode;
   Exception.protect ~f ~finally:(fun () ->
       cx.typing_mode <- saved_typing_mode;
       cx.ccx.speculation_state := saved_speculation_state;
@@ -944,7 +946,7 @@ let run_in_hint_eval_mode cx f =
    * independent unit of type evaluation that's separate from an ongoing speculation. *)
   let saved_speculation_state = !(cx.ccx.speculation_state) in
   cx.ccx.speculation_state := [];
-  cx.typing_mode <- HintEvaluationMode;
+  cx.typing_mode <- Nel.cons HintEvaluationMode cx.typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () ->

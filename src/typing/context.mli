@@ -333,6 +333,8 @@ val aggressively_invalidated_locations : t -> Refinement_invalidation.t ALocMap.
 
 val environment : t -> Loc_env.t
 
+val full_typing_mode : t -> typing_mode Nel.t
+
 val typing_mode : t -> typing_mode
 
 val node_cache : t -> Node_cache.t
