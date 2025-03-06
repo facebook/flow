@@ -771,11 +771,11 @@ module rec ConsGen : S = struct
       BoolModuleT.at (loc_of_reason reason)
     (* !x when x is falsy *)
     | (DefT (_, BoolT_UNSOUND false), Annot_NotT reason)
-    | (DefT (_, SingletonBoolT false), Annot_NotT reason)
+    | (DefT (_, SingletonBoolT { value = false; _ }), Annot_NotT reason)
     | (DefT (_, StrT_UNSOUND (_, OrdinaryName "")), Annot_NotT reason)
-    | (DefT (_, SingletonStrT (OrdinaryName "")), Annot_NotT reason)
+    | (DefT (_, SingletonStrT { value = OrdinaryName ""; _ }), Annot_NotT reason)
     | (DefT (_, NumT_UNSOUND (_, (0., _))), Annot_NotT reason)
-    | (DefT (_, SingletonNumT (0., _)), Annot_NotT reason)
+    | (DefT (_, SingletonNumT { value = (0., _); _ }), Annot_NotT reason)
     | (DefT (_, NullT), Annot_NotT reason)
     | (DefT (_, VoidT), Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit true) reason in
@@ -1152,11 +1152,12 @@ module rec ConsGen : S = struct
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
       elab_t cx (DefT (reason, StrT_UNSOUND (None, OrdinaryName s))) op
-    | (DefT (reason, SingletonStrT key), _) ->
+    | (DefT (reason, SingletonStrT { value = key; _ }), _) ->
       elab_t cx (DefT (reason, StrT_UNSOUND (None, key))) op
-    | (DefT (reason, SingletonNumT lit), _) ->
+    | (DefT (reason, SingletonNumT { value = lit; _ }), _) ->
       elab_t cx (DefT (reason, NumT_UNSOUND (None, lit))) op
-    | (DefT (reason, SingletonBoolT b), _) -> elab_t cx (DefT (reason, BoolT_UNSOUND b)) op
+    | (DefT (reason, SingletonBoolT { value = b; _ }), _) ->
+      elab_t cx (DefT (reason, BoolT_UNSOUND b)) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (********************)
     (* Function Statics *)

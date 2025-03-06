@@ -1854,7 +1854,12 @@ let map_object
                | None -> loc_of_reason (reason_of_t prop_t)
                | Some loc -> loc
              in
-             let key_t = DefT (mk_reason (RStringLit key) key_loc, SingletonStrT key) in
+             let key_t =
+               DefT
+                 ( mk_reason (RStringLit key) key_loc,
+                   SingletonStrT { from_annot = true; value = key }
+                 )
+             in
              let prop_optional = is_prop_optional prop_t in
              let polarity =
                if frozen then

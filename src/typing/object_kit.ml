@@ -68,7 +68,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
          (fun (keys, indexers) t ->
            match t with
            | DefT (r, StrT_UNSOUND (_, name))
-           | DefT (r, SingletonStrT name) ->
+           | DefT (r, SingletonStrT { value = name; _ }) ->
              ((name, r) :: keys, indexers)
            | DefT (_, EmptyT) -> (keys, indexers)
            | _ -> (keys, t :: indexers))

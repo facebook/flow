@@ -814,10 +814,10 @@ module Make (I : INPUT) : S = struct
       | DefT (_, NullT) -> return Ty.Null
       | DefT (_, SymbolT) -> return Ty.Symbol
       | DefT (_, NumericStrKeyT (_, s)) -> return (Ty.StrLit (OrdinaryName s))
-      | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
-      | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
-      | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)
-      | DefT (_, SingletonBigIntT (_, lit)) -> return (Ty.BigIntLit lit)
+      | DefT (_, SingletonNumT { value = (_, lit); _ }) -> return (Ty.NumLit lit)
+      | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
+      | DefT (_, SingletonBoolT { value = lit; _ }) -> return (Ty.BoolLit lit)
+      | DefT (_, SingletonBigIntT { value = (_, lit); _ }) -> return (Ty.BigIntLit lit)
       | StrUtilT { reason = _; op; remainder = None } ->
         return
           (Ty.Utility
@@ -2549,9 +2549,9 @@ module Make (I : INPUT) : S = struct
       | MaybeT (_, t) -> maybe_t ~env ?id ~cont:type__ t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:type__ t
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r ~force_eval:true t
-      | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
-      | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
-      | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)
+      | DefT (_, SingletonNumT { value = (_, lit); _ }) -> return (Ty.NumLit lit)
+      | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
+      | DefT (_, SingletonBoolT { value = lit; _ }) -> return (Ty.BoolLit lit)
       | DefT (_, BoolGeneralT)
       | DefT (_, BoolT_UNSOUND _) ->
         return (Ty.Bool None)

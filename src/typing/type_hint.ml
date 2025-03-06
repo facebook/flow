@@ -597,10 +597,16 @@ and type_of_hint_decomposition cx op reason t =
             let predicate_of_check (prop, literal_check) =
               let other_t =
                 match literal_check with
-                | SingletonBool b -> DefT (reason, SingletonBoolT b)
-                | SingletonNum n -> DefT (reason, SingletonNumT (n, string_of_float n))
-                | SingletonStr s -> DefT (reason, SingletonStrT (OrdinaryName s))
-                | SingletonBigInt n -> DefT (reason, SingletonBigIntT (Some n, Int64.to_string n))
+                | SingletonBool b -> DefT (reason, SingletonBoolT { from_annot = true; value = b })
+                | SingletonNum n ->
+                  DefT (reason, SingletonNumT { from_annot = true; value = (n, string_of_float n) })
+                | SingletonStr s ->
+                  DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName s })
+                | SingletonBigInt n ->
+                  DefT
+                    ( reason,
+                      SingletonBigIntT { from_annot = true; value = (Some n, Int64.to_string n) }
+                    )
                 | Member reason -> Type_env.find_write cx Env_api.ExpressionLoc reason
               in
               BinaryP (SentinelProp prop, other_t)

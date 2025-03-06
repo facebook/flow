@@ -306,7 +306,7 @@ let ground_subtype = function
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
+  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT { value = OrdinaryName s; _ })),
       UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
     )
     when String.starts_with ~prefix s ->
@@ -316,7 +316,7 @@ let ground_subtype = function
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
     true
-  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT (OrdinaryName s))),
+  | ( DefT (_, (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT { value = OrdinaryName s; _ })),
       UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
     )
     when String.ends_with ~suffix s ->
@@ -1015,7 +1015,7 @@ let obj_key_mirror cx o reason_op =
   in
   let map_field key t =
     let reason = replace_desc_reason (RStringLit key) reason_op in
-    map_t (DefT (reason, SingletonStrT key)) t
+    map_t (DefT (reason, SingletonStrT { from_annot = true; value = key })) t
   in
   let props_tmap =
     Context.find_props cx o.props_tmap
@@ -2699,8 +2699,12 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral));
           F.error_type cx trace reason_op
         | GenericT
-            { bound = DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))); _ }
-        | DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))) ->
+            {
+              bound =
+                DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT { value = (value, _); _ }));
+              _;
+            }
+        | DefT (_, (NumT_UNSOUND (_, (value, _)) | SingletonNumT { value = (value, _); _ })) ->
           let reason_prop = reason_of_t elem_t in
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
@@ -2749,8 +2753,10 @@ let array_elem_check
   in
   let (can_write_tuple, value, use_op) =
     match l with
-    | DefT (index_reason, (NumT_UNSOUND (_, (float_value, _)) | SingletonNumT (float_value, _))) ->
-    begin
+    | DefT
+        ( index_reason,
+          (NumT_UNSOUND (_, (float_value, _)) | SingletonNumT { value = (float_value, _); _ })
+        ) -> begin
       match elements with
       | None -> (false, elem_t, use_op)
       | Some elements ->
@@ -2843,19 +2849,21 @@ let array_elem_check
   (value, is_tuple, use_op, react_dro)
 
 let propref_for_elem_t = function
-  | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT name)); _ })
-  | GenericT { bound = DefT (_, (SingletonStrT name | StrT_UNSOUND (_, name))); reason; _ }
-  | DefT (reason, (SingletonStrT name | StrT_UNSOUND (_, name))) ->
+  | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
+  | GenericT
+      { bound = DefT (_, (SingletonStrT { value = name; _ } | StrT_UNSOUND (_, name))); reason; _ }
+  | DefT (reason, (SingletonStrT { value = name; _ } | StrT_UNSOUND (_, name))) ->
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
-  | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT (value, raw))); _ })
+  | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
   | GenericT
       {
-        bound = DefT (_, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT (value, raw)));
+        bound =
+          DefT (_, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT { value = (value, raw); _ }));
         reason = reason_num;
         _;
       }
-  | DefT (reason_num, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT (value, raw)))
+  | DefT (reason_num, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT { value = (value, raw); _ }))
     when Js_number.is_float_safe_integer value ->
     let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
@@ -2868,7 +2876,7 @@ let keylist_of_props props reason_op =
       match name with
       | OrdinaryName _ ->
         let reason = replace_desc_new_reason (RStringLit name) reason_op in
-        DefT (reason, SingletonStrT name) :: acc
+        DefT (reason, SingletonStrT { from_annot = true; value = name }) :: acc
       | InternalName _ -> acc)
     props
     []
@@ -2984,9 +2992,9 @@ let flow_unary_arith cx l reason kind =
   | (Minus, DefT (lreason, NumT_UNSOUND (_, lit))) ->
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
     DefT (reason, NumT_UNSOUND (None, lit))
-  | (Minus, DefT (lreason, SingletonNumT lit)) ->
+  | (Minus, DefT (lreason, SingletonNumT { from_annot; value = lit })) ->
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
-    DefT (reason, SingletonNumT lit)
+    DefT (reason, SingletonNumT { from_annot; value = lit })
   | (Minus, DefT (_, NumGeneralT _)) -> l
   | (Minus, DefT (_, BigIntT_UNSOUND (_, (value, raw)))) ->
     let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
@@ -3330,7 +3338,7 @@ end = struct
 
   let on_concretized_bad_non_element_normalization normalization_cx = function
     | DefT (invalid_type_reason, BoolT_UNSOUND false)
-    | DefT (invalid_type_reason, SingletonBoolT false)
+    | DefT (invalid_type_reason, SingletonBoolT { value = false; _ })
     | DefT (invalid_type_reason, NullT)
     | DefT (invalid_type_reason, VoidT) ->
       TypeCollector.add normalization_cx.type_collector (AnyT.error normalization_cx.result_reason);
@@ -3373,7 +3381,7 @@ end = struct
              invalid_type_reasons = Nel.one generic_reason;
            }
         )
-    | DefT (reason, SingletonStrT (OrdinaryName "svg")) ->
+    | DefT (reason, SingletonStrT { value = OrdinaryName "svg"; _ }) ->
       TypeCollector.add
         normalization_cx.type_collector
         (DefT (reason, RendersT (InstrinsicRenders "svg")))

@@ -345,10 +345,12 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | DefT (_, NumericStrKeyT (_, s)) -> p ~extra:s t
-    | DefT (_, SingletonStrT s) -> p ~extra:(spf "%S" (display_string_of_name s)) t
-    | DefT (_, SingletonNumT (_, s)) -> p ~extra:s t
-    | DefT (_, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
-    | DefT (_, SingletonBigIntT (_, s)) -> p ~extra:s t
+    | DefT (_, SingletonStrT { from_annot; value = s }) ->
+      p ~extra:(spf "%S (from_annot=%b)" (display_string_of_name s) from_annot) t
+    | DefT (_, SingletonNumT { from_annot; value = (_, s) }) ->
+      p ~extra:(s ^ spf " (from_annot=%b)" from_annot) t
+    | DefT (_, SingletonBoolT { value = b; _ }) -> p ~extra:(spf "%B" b) t
+    | DefT (_, SingletonBigIntT { value = (_, s); _ }) -> p ~extra:s t
     | NamespaceT { namespace_symbol; values_type; types_tmap } ->
       p
         t

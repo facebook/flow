@@ -449,11 +449,11 @@ module Operators = struct
         BoolModuleT.at (loc_of_reason reason)
       (* !x when x is falsy *)
       | DefT (_, BoolT_UNSOUND false)
-      | DefT (_, SingletonBoolT false)
+      | DefT (_, SingletonBoolT { value = false; _ })
       | DefT (_, StrT_UNSOUND (_, OrdinaryName ""))
-      | DefT (_, SingletonStrT (OrdinaryName ""))
+      | DefT (_, SingletonStrT { value = OrdinaryName ""; _ })
       | DefT (_, NumT_UNSOUND (_, (0., _)))
-      | DefT (_, SingletonNumT (0., _))
+      | DefT (_, SingletonNumT { value = (0., _); _ })
       | DefT (_, NullT)
       | DefT (_, VoidT) ->
         let reason = replace_desc_reason (RBooleanLit true) reason in

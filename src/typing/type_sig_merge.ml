@@ -633,16 +633,16 @@ and merge_annot env file = function
     Type.(DefT (reason, ArrT (ROArrayAT (t, None))))
   | SingletonString (loc, str) ->
     let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName str)) loc) in
-    Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName str)))
+    Type.(DefT (reason, SingletonStrT { from_annot = true; value = Reason.OrdinaryName str }))
   | SingletonNumber (loc, num, raw) ->
     let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
-    Type.(DefT (reason, SingletonNumT (num, raw)))
+    Type.(DefT (reason, SingletonNumT { from_annot = true; value = (num, raw) }))
   | SingletonBigInt (loc, bigint, raw) ->
     let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-    Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
+    Type.(DefT (reason, SingletonBigIntT { from_annot = true; value = (bigint, raw) }))
   | SingletonBoolean (loc, b) ->
     let reason = Reason.(mk_annot_reason (RBooleanLit b) loc) in
-    Type.(DefT (reason, SingletonBoolT b))
+    Type.(DefT (reason, SingletonBoolT { from_annot = true; value = b }))
   | StringPrefix { loc; prefix; remainder } ->
     let reason = Reason.(mk_reason (RStringPrefix { prefix }) loc) in
     let remainder = Base.Option.map ~f:(merge env file) remainder in
@@ -1138,7 +1138,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | StringLit (loc, lit) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
-      Type.(DefT (reason, SingletonStrT (Reason.OrdinaryName lit)))
+      Type.(DefT (reason, SingletonStrT { from_annot = false; value = Reason.OrdinaryName lit }))
     else
       let reason = Reason.(mk_reason RString loc) in
       Type.(DefT (reason, StrGeneralT AnyLiteral))
@@ -1152,7 +1152,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | NumberLit (loc, num, raw) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
-      Type.(DefT (reason, SingletonNumT (num, raw)))
+      Type.(DefT (reason, SingletonNumT { from_annot = false; value = (num, raw) }))
     else
       let reason = Reason.(mk_reason RNumber loc) in
       Type.(DefT (reason, NumGeneralT AnyLiteral))
@@ -1162,7 +1162,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | BigIntLit (loc, bigint, raw) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-      Type.(DefT (reason, SingletonBigIntT (bigint, raw)))
+      Type.(DefT (reason, SingletonBigIntT { from_annot = false; value = (bigint, raw) }))
     else
       let reason = Reason.(mk_reason RBigInt loc) in
       Type.(DefT (reason, BigIntGeneralT AnyLiteral))
@@ -1172,7 +1172,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | BooleanLit (loc, lit) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
-      Type.(DefT (reason, SingletonBoolT lit))
+      Type.(DefT (reason, SingletonBoolT { from_annot = false; value = lit }))
     else
       let reason = Reason.(mk_reason RBoolean loc) in
       Type.(DefT (reason, BoolGeneralT))

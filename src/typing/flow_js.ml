@@ -1433,8 +1433,8 @@ struct
           ) ->
           (match (drop_generic key, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
-          | (DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT x)), _) when Context.has_prop cx mapr x
-            ->
+          | (DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ })), _)
+            when Context.has_prop cx mapr x ->
             ()
           (* If we have a dictionary, try that next *)
           | (_, Indexed { key = expected_key; _ }) ->
@@ -1442,7 +1442,7 @@ struct
           | _ ->
             let (prop, suggestion) =
               match drop_generic key with
-              | DefT (_, (StrT_UNSOUND (_, prop) | SingletonStrT prop)) ->
+              | DefT (_, (StrT_UNSOUND (_, prop) | SingletonStrT { value = prop; _ })) ->
                 (Some prop, prop_typo_suggestion cx [mapr] (display_string_of_name prop))
               | _ -> (None, None)
             in
@@ -1461,9 +1461,12 @@ struct
             HasOwnPropT
               ( use_op,
                 reason_op,
-                ( ( DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT x))
-                  | GenericT { bound = DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT x)); _ } ) as
-                key
+                ( ( DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }))
+                  | GenericT
+                      {
+                        bound = DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }));
+                        _;
+                      } ) as key
                 )
               )
           ) ->
@@ -3965,7 +3968,9 @@ struct
               let r = reason_of_t value_t in
               match index with
               | None -> NumModuleT.why r
-              | Some i -> DefT (r, SingletonNumT (float_of_int i, string_of_int i))
+              | Some i ->
+                DefT
+                  (r, SingletonNumT { from_annot = true; value = (float_of_int i, string_of_int i) })
             in
             Slice_utils.mk_mapped_prop_type
               ~use_op
@@ -5268,7 +5273,7 @@ struct
                  suggestion = None;
                }
             )
-        | ( DefT (reason, (NumT_UNSOUND (_, (value, _)) | SingletonNumT (value, _))),
+        | ( DefT (reason, (NumT_UNSOUND (_, (value, _)) | SingletonNumT { value = (value, _); _ })),
             WriteComputedObjPropCheckT { reason_key; _ }
           ) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in

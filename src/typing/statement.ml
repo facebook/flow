@@ -771,7 +771,7 @@ module Make
       Type_hint.with_hint_result hint ~ok:Base.Fn.id ~error
     else if singleton then
       let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
-      DefT (reason, SingletonStrT (OrdinaryName value))
+      DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName value })
     else
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
@@ -788,7 +788,7 @@ module Make
   let boolean_literal ~singleton loc { Ast.BooleanLiteral.value; _ } =
     if singleton then
       let reason = mk_annot_reason (RBooleanLit value) loc in
-      DefT (reason, SingletonBoolT value)
+      DefT (reason, SingletonBoolT { from_annot = true; value })
     else
       let reason = mk_annot_reason RBoolean loc in
       DefT (reason, BoolT_UNSOUND value)
@@ -798,7 +798,7 @@ module Make
   let number_literal ~singleton loc { Ast.NumberLiteral.value; raw; _ } =
     if singleton then
       let reason = mk_annot_reason (RNumberLit raw) loc in
-      DefT (reason, SingletonNumT (value, raw))
+      DefT (reason, SingletonNumT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RNumber loc in
       DefT (reason, NumT_UNSOUND (None, (value, raw)))
@@ -806,7 +806,7 @@ module Make
   let bigint_literal ~singleton loc { Ast.BigIntLiteral.value; raw; _ } =
     if singleton then
       let reason = mk_annot_reason (RBigIntLit raw) loc in
-      DefT (reason, SingletonBigIntT (value, raw))
+      DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RBigInt loc in
       DefT (reason, BigIntT_UNSOUND (None, (value, raw)))
@@ -4972,9 +4972,9 @@ module Make
                make a negative number not look like a literal.) *)
             let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
             DefT (reason, NumT_UNSOUND (sense, lit))
-          | DefT (reason, SingletonNumT lit) ->
+          | DefT (reason, SingletonNumT { from_annot; value = lit }) ->
             let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
-            DefT (reason, SingletonNumT lit)
+            DefT (reason, SingletonNumT { from_annot; value = lit })
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
             Operators.unary_arith cx reason UnaryArithKind.Minus arg
@@ -5797,7 +5797,7 @@ module Make
                      let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
                      TypeAssertions.assert_non_component_like_base cx def_loc reason t
                  );
-              let strt = SingletonStrT (OrdinaryName name) in
+              let strt = SingletonStrT { from_annot = true; value = OrdinaryName name } in
               DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, strt)
             end
           in

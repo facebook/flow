@@ -270,7 +270,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [instance]
       |> Option.some
-    | DefT (_, SingletonStrT name) ->
+    | DefT (_, SingletonStrT { value = name; _ }) ->
       let instance =
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
             get_intrinsic
@@ -335,7 +335,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     (* Special case for intrinsic components. *)
-    | DefT (_, SingletonStrT name) ->
+    | DefT (_, SingletonStrT { value = name; _ }) ->
       get_intrinsic
         cx
         trace
@@ -497,7 +497,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Abstract components. *)
       | DefT (reason, ReactAbstractComponentT _) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
-      | DefT (_, SingletonStrT name) ->
+      | DefT (_, SingletonStrT { value = name; _ }) ->
         get_intrinsic ~artifact:`Props ~literal:(`Literal name) ~prop_polarity:Polarity.Negative tin
       | DefT (_, StrGeneralT gen) ->
         get_intrinsic ~artifact:`Props ~literal:(`General gen) ~prop_polarity:Polarity.Negative tin
@@ -539,7 +539,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx props))
         && speculative_subtyping_succeeds
              cx
-             (DefT (r, SingletonStrT (OrdinaryName "ref")))
+             (DefT (r, SingletonStrT { from_annot = false; value = OrdinaryName "ref" }))
              (KeysT (r, props))
       in
       (* Create a type variable for our props. *)
@@ -901,7 +901,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (r, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
       (* Intrinsic components. *)
-      | DefT (_, SingletonStrT name) ->
+      | DefT (_, SingletonStrT { value = name; _ }) ->
         get_intrinsic
           ~artifact:`Instance
           ~literal:(`Literal name)

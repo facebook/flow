@@ -202,8 +202,11 @@ module rec TypeTerm : sig
     (* type of an instance of a class *)
     | InstanceT of instance_t
     (* singleton string, matches exactly a given string literal *)
-    (* TODO SingletonStrT should not include internal names *)
-    | SingletonStrT of name
+    | SingletonStrT of {
+        from_annot: bool;
+        (* TODO SingletonStrT should not include internal names *)
+        value: name;
+      }
     (* This type is only to be used to represent numeric-like object keys in the
        context of object-to-object subtyping. It allows numeric-like object keys
        to be a subtype of both `number` and `string`, so that `{1: true}` can be
@@ -215,10 +218,19 @@ module rec TypeTerm : sig
     | NumericStrKeyT of number_literal
     (* matches exactly a given number literal, for some definition of "exactly"
        when it comes to floats... *)
-    | SingletonNumT of number_literal
+    | SingletonNumT of {
+        from_annot: bool;
+        value: number_literal;
+      }
     (* singleton bool, matches exactly a given boolean literal *)
-    | SingletonBoolT of bool
-    | SingletonBigIntT of bigint_literal
+    | SingletonBoolT of {
+        from_annot: bool;
+        value: bool;
+      }
+    | SingletonBigIntT of {
+        from_annot: bool;
+        value: bigint_literal;
+      }
     (* type aliases *)
     | TypeT of type_t_kind * t
     (* A polymorphic type is like a type-level "function" that, when applied to
@@ -2411,17 +2423,17 @@ end = struct
   let canon =
     TypeTerm.(
       function
-      | DefT (_, SingletonStrT lit)
+      | DefT (_, SingletonStrT { value = lit; _ })
       | DefT (_, StrT_UNSOUND (_, lit)) ->
         Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
-      | DefT (_, SingletonNumT lit)
+      | DefT (_, SingletonNumT { value = lit; _ })
       | DefT (_, NumT_UNSOUND (_, lit)) ->
         Some (UnionEnum.Num lit)
-      | DefT (_, SingletonBigIntT lit)
+      | DefT (_, SingletonBigIntT { value = lit; _ })
       | DefT (_, BigIntT_UNSOUND (_, lit)) ->
         Some (UnionEnum.BigInt lit)
-      | DefT (_, SingletonBoolT lit)
+      | DefT (_, SingletonBoolT { value = lit; _ })
       | DefT (_, BoolT_UNSOUND lit) ->
         Some (UnionEnum.Bool lit)
       | DefT (_, VoidT) -> Some UnionEnum.Void

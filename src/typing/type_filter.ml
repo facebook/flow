@@ -273,17 +273,18 @@ let mk_str_literal cx expected =
   if Context.allow_unsound_literal_coercsion cx then
     StrT_UNSOUND (None, expected)
   else
-    SingletonStrT expected
+    SingletonStrT { from_annot = false; value = expected }
 
 let string_literal cx expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, SingletonStrT actual) ->
+  | DefT (_, SingletonStrT { from_annot; value = actual }) ->
     if actual = expected then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, SingletonStrT expected) |> changed_result
+      DefT (mk_reason expected_desc expected_loc, SingletonStrT { from_annot; value = expected })
+      |> changed_result
   | DefT (_, StrT_UNSOUND (_, actual)) ->
     if actual = expected then
       unchanged_result t
@@ -300,7 +301,7 @@ let string_literal cx expected_loc sense expected t =
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_string_literal expected = function
-  | DefT (r, SingletonStrT actual)
+  | DefT (r, SingletonStrT { value = actual; _ })
   | DefT (r, StrT_UNSOUND (_, actual))
     when actual = expected ->
     DefT (r, EmptyT) |> changed_result
@@ -310,18 +311,19 @@ let mk_num_literal cx expected =
   if Context.allow_unsound_literal_coercsion cx then
     NumT_UNSOUND (None, expected)
   else
-    SingletonNumT expected
+    SingletonNumT { from_annot = false; value = expected }
 
 let number_literal cx expected_loc sense expected t =
   let (_, expected_raw) = expected in
   let expected_desc = RNumberLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, SingletonNumT (_, actual_raw)) ->
+  | DefT (_, SingletonNumT { from_annot; value = (_, actual_raw) }) ->
     if actual_raw = expected_raw then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, SingletonNumT expected) |> changed_result
+      DefT (mk_reason expected_desc expected_loc, SingletonNumT { from_annot; value = expected })
+      |> changed_result
   | DefT (_, NumT_UNSOUND (_, (_, actual_raw))) ->
     if actual_raw = expected_raw then
       unchanged_result t
@@ -337,7 +339,7 @@ let number_literal cx expected_loc sense expected t =
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_number_literal expected = function
-  | DefT (r, SingletonNumT actual)
+  | DefT (r, SingletonNumT { value = actual; _ })
   | DefT (r, NumT_UNSOUND (_, actual))
     when snd actual = snd expected ->
     DefT (r, EmptyT) |> changed_result
@@ -347,18 +349,19 @@ let mk_bigint_literal cx expected =
   if Context.allow_unsound_literal_coercsion cx then
     BigIntT_UNSOUND (None, expected)
   else
-    SingletonBigIntT expected
+    SingletonBigIntT { from_annot = false; value = expected }
 
 let bigint_literal cx expected_loc sense expected t =
   let (_, expected_raw) = expected in
   let expected_desc = RBigIntLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
-  | DefT (_, SingletonBigIntT (_, actual_raw)) ->
+  | DefT (_, SingletonBigIntT { from_annot; value = (_, actual_raw) }) ->
     if actual_raw = expected_raw then
       unchanged_result t
     else
-      DefT (mk_reason expected_desc expected_loc, SingletonBigIntT expected) |> changed_result
+      DefT (mk_reason expected_desc expected_loc, SingletonBigIntT { from_annot; value = expected })
+      |> changed_result
   | DefT (_, BigIntT_UNSOUND (_, (_, actual_raw))) ->
     if actual_raw = expected_raw then
       unchanged_result t
@@ -374,7 +377,7 @@ let bigint_literal cx expected_loc sense expected t =
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_bigint_literal expected = function
-  | DefT (r, SingletonBigIntT actual)
+  | DefT (r, SingletonBigIntT { value = actual; _ })
   | DefT (r, BigIntT_UNSOUND (_, actual))
     when snd actual = snd expected ->
     DefT (r, EmptyT) |> changed_result
@@ -384,12 +387,13 @@ let mk_bool_literal cx expected =
   if Context.allow_unsound_literal_coercsion cx then
     BoolT_UNSOUND expected
   else
-    SingletonBoolT expected
+    SingletonBoolT { from_annot = false; value = expected }
 
 let true_ cx t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, SingletonBoolT true) -> DefT (lit_reason r, SingletonBoolT true) |> unchanged_result
+  | DefT (r, SingletonBoolT { from_annot; value = true }) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot; value = true }) |> unchanged_result
   | DefT (r, BoolT_UNSOUND true) -> DefT (lit_reason r, BoolT_UNSOUND true) |> unchanged_result
   | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
   | DefT (r, MixedT _) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
@@ -399,7 +403,7 @@ let true_ cx t =
 let not_true cx t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, SingletonBoolT true)
+  | DefT (r, SingletonBoolT { value = true; _ })
   | DefT (r, BoolT_UNSOUND true) ->
     DefT (r, EmptyT) |> changed_result
   | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
@@ -408,7 +412,8 @@ let not_true cx t =
 let false_ cx t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, SingletonBoolT false) -> DefT (lit_reason r, SingletonBoolT false) |> unchanged_result
+  | DefT (r, SingletonBoolT { from_annot; value = false }) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot; value = false }) |> unchanged_result
   | DefT (r, BoolT_UNSOUND false) -> DefT (lit_reason r, BoolT_UNSOUND false) |> unchanged_result
   | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
   | DefT (r, MixedT _) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
@@ -418,7 +423,7 @@ let false_ cx t =
 let not_false cx t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, SingletonBoolT false)
+  | DefT (r, SingletonBoolT { value = false; _ })
   | DefT (r, BoolT_UNSOUND false) ->
     DefT (r, EmptyT) |> changed_result
   | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
@@ -742,19 +747,19 @@ let array_length ~sense ~op ~n t =
 let sentinel_refinement =
   let open UnionEnum in
   let enum_match sense = function
-    | (DefT (_, SingletonStrT value), Str sentinel)
+    | (DefT (_, SingletonStrT { value; _ }), Str sentinel)
     | (DefT (_, StrT_UNSOUND (_, value)), Str sentinel)
       when value = sentinel != sense ->
       true
-    | (DefT (_, SingletonNumT (value, _)), Num (sentinel, _))
+    | (DefT (_, SingletonNumT { value = (value, _); _ }), Num (sentinel, _))
     | (DefT (_, NumT_UNSOUND (_, (value, _))), Num (sentinel, _))
       when value = sentinel != sense ->
       true
-    | (DefT (_, SingletonBoolT value), Bool sentinel)
+    | (DefT (_, SingletonBoolT { value; _ }), Bool sentinel)
     | (DefT (_, BoolT_UNSOUND value), Bool sentinel)
       when value = sentinel != sense ->
       true
-    | (DefT (_, SingletonBigIntT (value, _)), BigInt (sentinel, _))
+    | (DefT (_, SingletonBigIntT { value = (value, _); _ }), BigInt (sentinel, _))
     | (DefT (_, BigIntT_UNSOUND (_, (value, _))), BigInt (sentinel, _))
       when value = sentinel != sense ->
       true
@@ -887,9 +892,9 @@ module TypeTagSet : Flow_set.S with type elt = TypeTag.t = Flow_set.Make (TypeTa
 let tag_of_value cx type_ =
   match Context.find_resolved cx type_ with
   | Some (DefT (_, NumericStrKeyT (_, s))) -> Some (TypeTag.Str (OrdinaryName s))
-  | Some (DefT (_, SingletonStrT name)) -> Some (TypeTag.Str name)
-  | Some (DefT (_, SingletonNumT num_lit)) -> Some (TypeTag.Num num_lit)
-  | Some (DefT (_, SingletonBoolT b)) -> Some (TypeTag.Bool b)
+  | Some (DefT (_, SingletonStrT { value = name; _ })) -> Some (TypeTag.Str name)
+  | Some (DefT (_, SingletonNumT { value = num_lit; _ })) -> Some (TypeTag.Num num_lit)
+  | Some (DefT (_, SingletonBoolT { value = b; _ })) -> Some (TypeTag.Bool b)
   | _ -> None
 
 let sentinel_of_obj cx id =

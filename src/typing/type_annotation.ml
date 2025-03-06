@@ -753,7 +753,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           let (ts, targs) = convert_type_params () in
           let create_string_prefix_type ~prefix ~remainder =
             match prefix with
-            | DefT (_, SingletonStrT (OrdinaryName prefix)) ->
+            | DefT (_, SingletonStrT { value = OrdinaryName prefix; _ }) ->
               let reason = mk_reason (RStringPrefix { prefix }) loc in
               reconstruct_ast (StrUtilT { reason; op = StrPrefix prefix; remainder }) targs
             | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
@@ -778,7 +778,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           let (ts, targs) = convert_type_params () in
           let create_string_suffix_type ~suffix ~remainder =
             match suffix with
-            | DefT (_, SingletonStrT (OrdinaryName suffix)) ->
+            | DefT (_, SingletonStrT { value = OrdinaryName suffix; _ }) ->
               let reason = mk_reason (RStringSuffix { suffix }) loc in
               reconstruct_ast (StrUtilT { reason; op = StrSuffix suffix; remainder }) targs
             | _ -> error_type cx loc (Error_message.EStrUtilTypeNonLiteralArg loc) t_ast
@@ -825,7 +825,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         | "$PropertyType" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               match convert_type_params () with
-              | ([t; DefT (_, SingletonStrT key)], targs) ->
+              | ([t; DefT (_, SingletonStrT { value = key; _ })], targs) ->
                 let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
                 reconstruct_ast
                   (mk_type_destructor
@@ -2606,19 +2606,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   and mk_singleton_string loc key =
     let reason = mk_annot_reason (RStringLit (OrdinaryName key)) loc in
-    DefT (reason, SingletonStrT (OrdinaryName key))
+    DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName key })
 
   and mk_singleton_number loc num raw =
     let reason = mk_annot_reason (RNumberLit raw) loc in
-    DefT (reason, SingletonNumT (num, raw))
+    DefT (reason, SingletonNumT { from_annot = true; value = (num, raw) })
 
   and mk_singleton_boolean loc b =
     let reason = mk_annot_reason (RBooleanLit b) loc in
-    DefT (reason, SingletonBoolT b)
+    DefT (reason, SingletonBoolT { from_annot = true; value = b })
 
   and mk_singleton_bigint loc num raw =
     let reason = mk_annot_reason (RBigIntLit raw) loc in
-    DefT (reason, SingletonBigIntT (num, raw))
+    DefT (reason, SingletonBigIntT { from_annot = true; value = (num, raw) })
 
   (* Given the type of expression C and type arguments T1...Tn, return the type of
      values described by C<T1,...,Tn>, or C when there are no type arguments. *)

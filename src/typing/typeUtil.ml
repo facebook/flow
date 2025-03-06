@@ -465,14 +465,14 @@ let is_falsy = function
   | DefT
       ( _,
         ( NullT | VoidT
-        | SingletonBoolT false
+        | SingletonBoolT { value = false; _ }
         | BoolT_UNSOUND false
         | EnumValueT
             ( ConcreteEnum { representation_t = DefT (_, BoolT_UNSOUND false); _ }
             | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND false) } )
-        | SingletonStrT (OrdinaryName "")
+        | SingletonStrT { value = OrdinaryName ""; _ }
         | StrT_UNSOUND (_, OrdinaryName "")
-        | SingletonNumT (0., _)
+        | SingletonNumT { value = (0., _); _ }
         | NumT_UNSOUND (_, (0., _)) )
       ) ->
     true
@@ -556,18 +556,23 @@ let quick_subtype t1 t2 =
   | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _)) -> false
-  | (DefT (_, StrT_UNSOUND (_, actual)), DefT (_, SingletonStrT expected)) -> expected = actual
+  | (DefT (_, StrT_UNSOUND (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
+    expected = actual
   | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _)) -> false
-  | (DefT (_, NumT_UNSOUND (_, (actual, _))), DefT (_, SingletonNumT (expected, _))) ->
+  | (DefT (_, NumT_UNSOUND (_, (actual, _))), DefT (_, SingletonNumT { value = (expected, _); _ }))
+    ->
     expected = actual
   | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _)) -> false
-  | (DefT (_, BigIntT_UNSOUND (_, (actual, _))), DefT (_, SingletonBigIntT (expected, _))) ->
+  | ( DefT (_, BigIntT_UNSOUND (_, (actual, _))),
+      DefT (_, SingletonBigIntT { value = (expected, _); _ })
+    ) ->
     expected = actual
   | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) -> false
-  | (DefT (_, BoolT_UNSOUND actual), DefT (_, SingletonBoolT expected)) -> expected = actual
-  | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT (expected, _))) ->
+  | (DefT (_, BoolT_UNSOUND actual), DefT (_, SingletonBoolT { value = expected; _ })) ->
+    expected = actual
+  | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT { value = (expected, _); _ })) ->
     actual = expected
-  | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT expected)) ->
+  | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     OrdinaryName actual = expected
   | _ -> reasonless_eq t1 t2
 
@@ -824,7 +829,7 @@ let tuple_length reason ~inexact (num_req, num_total) =
       let t =
         let float = Base.Float.of_int n in
         let string = Base.Int.to_string n in
-        SingletonNumT (float, string)
+        SingletonNumT { from_annot = false; value = (float, string) }
       in
       DefT (r, t)
     in

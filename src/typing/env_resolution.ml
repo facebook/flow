@@ -206,7 +206,10 @@ let resolve_hint cx loc hint =
       UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
     | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
-      DefT (mk_reason (RIdentifier (OrdinaryName name)) loc, SingletonStrT (OrdinaryName name))
+      DefT
+        ( mk_reason (RIdentifier (OrdinaryName name)) loc,
+          SingletonStrT { from_annot = true; value = OrdinaryName name }
+        )
     | ReactFragmentType ->
       Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
         cx

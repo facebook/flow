@@ -545,16 +545,16 @@ and intersect =
    * handling a few cases here explicitly. *)
   let ground_types_differ t1 t2 =
     match (C.unwrap t1, C.unwrap t2) with
-    | ( DefT (_, (SingletonStrT v1 | StrT_UNSOUND (_, v1))),
-        DefT (_, (SingletonStrT v2 | StrT_UNSOUND (_, v2)))
+    | ( DefT (_, (SingletonStrT { value = v1; _ } | StrT_UNSOUND (_, v1))),
+        DefT (_, (SingletonStrT { value = v2; _ } | StrT_UNSOUND (_, v2)))
       ) ->
       v1 <> v2
-    | ( DefT (_, (SingletonNumT v1 | NumT_UNSOUND (_, v1))),
-        DefT (_, (SingletonNumT v2 | NumT_UNSOUND (_, v2)))
+    | ( DefT (_, (SingletonNumT { value = v1; _ } | NumT_UNSOUND (_, v1))),
+        DefT (_, (SingletonNumT { value = v2; _ } | NumT_UNSOUND (_, v2)))
       ) ->
       v1 <> v2
-    | ( DefT (_, (SingletonBoolT v1 | BoolT_UNSOUND v1)),
-        DefT (_, (SingletonBoolT v2 | BoolT_UNSOUND v2))
+    | ( DefT (_, (SingletonBoolT { value = v1; _ } | BoolT_UNSOUND v1)),
+        DefT (_, (SingletonBoolT { value = v2; _ } | BoolT_UNSOUND v2))
       ) ->
       v1 <> v2
     | (_, _) -> false
@@ -1146,16 +1146,16 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
   in
   let sentinel_of_literal = function
     | DefT (_, StrT_UNSOUND (_, value))
-    | DefT (_, SingletonStrT value) ->
+    | DefT (_, SingletonStrT { value; _ }) ->
       Some UnionEnum.(One (Str value))
     | DefT (_, NumT_UNSOUND (_, value))
-    | DefT (_, SingletonNumT value) ->
+    | DefT (_, SingletonNumT { value; _ }) ->
       Some UnionEnum.(One (Num value))
     | DefT (_, BoolT_UNSOUND value)
-    | DefT (_, SingletonBoolT value) ->
+    | DefT (_, SingletonBoolT { value; _ }) ->
       Some UnionEnum.(One (Bool value))
     | DefT (_, BigIntT_UNSOUND (_, value))
-    | DefT (_, SingletonBigIntT value) ->
+    | DefT (_, SingletonBigIntT { value; _ }) ->
       Some UnionEnum.(One (BigInt value))
     | DefT (_, VoidT) -> Some UnionEnum.(One Void)
     | DefT (_, NullT) -> Some UnionEnum.(One Null)
@@ -1223,10 +1223,10 @@ and concretize_and_run_sentinel_prop_test
              | UnionEnum.One enum ->
                let def =
                  match enum with
-                 | UnionEnum.Str v -> SingletonStrT v
-                 | UnionEnum.Num v -> SingletonNumT v
-                 | UnionEnum.Bool v -> SingletonBoolT v
-                 | UnionEnum.BigInt v -> SingletonBigIntT v
+                 | UnionEnum.Str v -> SingletonStrT { from_annot = true; value = v }
+                 | UnionEnum.Num v -> SingletonNumT { from_annot = true; value = v }
+                 | UnionEnum.Bool v -> SingletonBoolT { from_annot = true; value = v }
+                 | UnionEnum.BigInt v -> SingletonBigIntT { from_annot = true; value = v }
                  | UnionEnum.Void -> VoidT
                  | UnionEnum.Null -> NullT
                in
@@ -1258,10 +1258,10 @@ and concretize_and_run_sentinel_prop_test
                    (fun enum acc ->
                      let def =
                        match enum with
-                       | UnionEnum.Str v -> SingletonStrT v
-                       | UnionEnum.Num v -> SingletonNumT v
-                       | UnionEnum.Bool v -> SingletonBoolT v
-                       | UnionEnum.BigInt v -> SingletonBigIntT v
+                       | UnionEnum.Str v -> SingletonStrT { from_annot = true; value = v }
+                       | UnionEnum.Num v -> SingletonNumT { from_annot = true; value = v }
+                       | UnionEnum.Bool v -> SingletonBoolT { from_annot = true; value = v }
+                       | UnionEnum.BigInt v -> SingletonBigIntT { from_annot = true; value = v }
                        | UnionEnum.Void -> VoidT
                        | UnionEnum.Null -> NullT
                      in
@@ -1311,7 +1311,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
   let expected_loc = loc_of_t right in
   match right with
   | DefT (_, StrT_UNSOUND (_, value))
-  | DefT (_, SingletonStrT value) ->
+  | DefT (_, SingletonStrT { value; _ }) ->
     let filtered =
       if sense then
         Type_filter.string_literal cx expected_loc sense value left
@@ -1320,7 +1320,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, NumT_UNSOUND (_, value))
-  | DefT (_, SingletonNumT value) ->
+  | DefT (_, SingletonNumT { value; _ }) ->
     let filtered =
       if sense then
         Type_filter.number_literal cx expected_loc sense value left
@@ -1329,7 +1329,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, BoolT_UNSOUND true)
-  | DefT (_, SingletonBoolT true) ->
+  | DefT (_, SingletonBoolT { value = true; _ }) ->
     let filtered =
       if sense then
         Type_filter.true_ cx left
@@ -1338,7 +1338,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, BoolT_UNSOUND false)
-  | DefT (_, SingletonBoolT false) ->
+  | DefT (_, SingletonBoolT { value = false; _ }) ->
     let filtered =
       if sense then
         Type_filter.false_ cx left
@@ -1347,7 +1347,7 @@ and eq_test cx _trace result_collector (sense, left, right) =
     in
     report_filtering_result_to_predicate_result filtered result_collector
   | DefT (_, BigIntT_UNSOUND (_, value))
-  | DefT (_, SingletonBigIntT value) ->
+  | DefT (_, SingletonBigIntT { value; _ }) ->
     let filtered =
       if sense then
         Type_filter.bigint_literal cx expected_loc sense value left
