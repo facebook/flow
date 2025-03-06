@@ -1011,6 +1011,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               let visit statics =
                 this#visit_function_expr
                   ~func_hints:[]
+                  ~func_return_hints:[]
                   ~has_this_def:(not arrow)
                   ~var_assigned_to:(Some var_id)
                   ~statics
@@ -1506,7 +1507,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       ignore @@ super#component_rest_param param
 
     method visit_function_expr
-        ~func_hints ~has_this_def ~var_assigned_to ~statics ~arrow ~hooklike function_loc expr =
+        ~func_hints
+        ~func_return_hints
+        ~has_this_def
+        ~var_assigned_to
+        ~statics
+        ~arrow
+        ~hooklike
+        function_loc
+        expr =
       let { Ast.Function.id; async; generator; sig_loc; params; body; _ } = expr in
       let scope_kind = func_scope_kind expr in
       if
@@ -1520,7 +1529,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           (mk_reason RThis function_loc)
           MissingThisAnnot;
       this#in_new_tparams_env (fun () ->
-          this#visit_function ~scope_kind ~func_hints expr;
+          this#visit_function ~scope_kind ~func_hints ~func_return_hints expr;
           (match var_assigned_to with
           | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
             let binding =
@@ -1575,6 +1584,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! function_expression loc expr =
       this#visit_function_expr
         ~func_hints:[]
+        ~func_return_hints:[]
         ~has_this_def:true
         ~var_assigned_to:None
         ~statics:SMap.empty
@@ -1595,7 +1605,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           if Signature_utils.This_finder.missing_this_annotation ~needs_this_param:true body params
           then
             this#add_binding (Env_api.FunctionThisLoc, loc) (mk_reason RThis loc) MissingThisAnnot;
-          this#visit_function ~func_hints:[] ~scope_kind expr;
+          this#visit_function ~func_hints:[] ~func_return_hints:[] ~scope_kind expr;
           let reason = func_reason ~async ~generator sig_loc in
           let def =
             def_of_function
@@ -1620,7 +1630,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! function_ _ expr =
       let scope_kind = func_scope_kind expr in
-      this#in_new_tparams_env (fun () -> this#visit_function ~scope_kind ~func_hints:[] expr);
+      this#in_new_tparams_env (fun () ->
+          this#visit_function ~scope_kind ~func_hints:[] ~func_return_hints:[] expr
+      );
       expr
 
     method hint_pred_kind params body return =
@@ -1669,7 +1681,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private params_list_to_str_opt params = Base.List.map params ~f:this#name_of_param
 
-    method private visit_function ~scope_kind ~func_hints expr =
+    (* func_hints are used for parameter typing, whereas func_return_hints are
+     * used specifically for return expression typing. *)
+    method private visit_function ~scope_kind ~func_hints ~func_return_hints expr =
       this#in_scope
         (fun () ->
           let {
@@ -1716,11 +1730,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           in
           let return_hint =
             let base_hint =
-              match return with
-              | Ast.Function.ReturnAnnot.Available annot ->
-                [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-              | Ast.Function.ReturnAnnot.TypeGuard _ -> []
-              | Ast.Function.ReturnAnnot.Missing _ -> decompose_hints Decomp_FuncReturn func_hints
+              if generator then
+                (* Return hints do not apply to generators *)
+                []
+              else
+                match return with
+                | Ast.Function.ReturnAnnot.Available annot ->
+                  [Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
+                | Ast.Function.ReturnAnnot.TypeGuard _ -> []
+                | Ast.Function.ReturnAnnot.Missing _ ->
+                  decompose_hints Decomp_FuncReturn func_return_hints
             in
             match scope_kind with
             | Async -> base_hint |> decompose_hints Decomp_Promise
@@ -1884,7 +1903,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let scope_kind = func_scope_kind ~key value in
       let () =
         this#in_new_tparams_env ~keep:true (fun () ->
-            this#visit_function ~scope_kind ~func_hints:[] value
+            this#visit_function ~scope_kind ~func_hints:[] ~func_return_hints:[] value
         )
       in
       run_list this#class_decorator decorators;
@@ -2822,10 +2841,24 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       end;
       let () =
         match expr with
-        (* Member expressions are always synthesizable, but we use hints on member expressions to avoid
-         * method-unbinding errors when the hint is a supertype of a mixed (which would make the method un-callable
-         *)
-        | Ast.Expression.Member _ -> this#record_hint loc hints_before_synthesizable_check
+        (* Member expressions are always synthesizable, but we use hints on
+         * member expressions to avoid method-unbinding errors when the hint is
+         * a supertype of a mixed (which would make the method un-callable). *)
+        | Ast.Expression.Member _
+        (* The following kinds of expressions are also typically synthesizable,
+         * but it is often unseful for Natural Inference to have hint information
+         * to decide if we are going to generalize singleton types or not.*)
+        | Ast.Expression.Array _
+        | Ast.Expression.ArrowFunction _
+        | Ast.Expression.Object _
+        | Ast.Expression.Logical _
+        | Ast.Expression.Conditional _
+        | Ast.Expression.Identifier _
+        | Ast.Expression.StringLiteral _
+        | Ast.Expression.NumberLiteral _
+        | Ast.Expression.BooleanLiteral _
+        | Ast.Expression.BigIntLiteral _ ->
+          this#record_hint loc hints_before_synthesizable_check
         | _ -> this#record_hint loc hints
       in
       match expr with
@@ -2833,7 +2866,12 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.ArrowFunction x ->
         let scope_kind = func_scope_kind x in
         this#in_new_tparams_env (fun () ->
-            this#visit_function ~func_hints:hints ~scope_kind x;
+            this#visit_function
+              ~func_hints:hints
+              ~func_return_hints:hints_before_synthesizable_check
+                (* Again we pass in more informative hints for Natural Inference *)
+              ~scope_kind
+              x;
             match EnvMap.find_opt_ordinary loc env_info.Env_api.env_entries with
             | Some (Env_api.AssigningWrite reason) ->
               let def =
@@ -2854,6 +2892,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.Function x ->
         this#visit_function_expr
           ~func_hints:hints
+          ~func_return_hints:hints_before_synthesizable_check
           ~has_this_def:true
           ~var_assigned_to:None
           ~statics:SMap.empty
@@ -3119,6 +3158,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               let func_hints = visit_object_key_and_compute_hint key in
               this#visit_function_expr
                 ~func_hints
+                ~func_return_hints:func_hints
                 ~has_this_def:false
                 ~var_assigned_to:None
                 ~statics:SMap.empty

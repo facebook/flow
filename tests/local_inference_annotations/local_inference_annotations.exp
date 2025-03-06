@@ -341,22 +341,22 @@ Missing an annotation on return. [missing-local-annot]
                        
 
 
-Error ---------------------------------------------------------------------------------------------- conditional.js:15:1
+Error ---------------------------------------------------------------------------------------------- conditional.js:22:3
 
 Cannot cast `test3` to read-only array type because number [1] is incompatible with string [2] in the first parameter of
 array element. [incompatible-cast]
 
-   conditional.js:15:1
-   15| test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
-       ^^^^^
+   conditional.js:22:3
+   22|   test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
+         ^^^^^
 
 References:
-   conditional.js:13:39
-   13| const test3 = true ? [x => {}] : [(x: number) => {}];
-                                             ^^^^^^ [1]
-   conditional.js:15:26
-   15| test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
-                                ^^^^^^ [2]
+   conditional.js:20:41
+   20|   const test3 = true ? [x => {}] : [(x: number) => {}];
+                                               ^^^^^^ [1]
+   conditional.js:22:28
+   22|   test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
+                                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- destructuring_init.js:3:6
