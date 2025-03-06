@@ -4946,7 +4946,7 @@ module Make
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
-      let (((_, arg), _) as argument) = expression cx ?cond argument in
+      let (((_, arg), _) as argument) = expression cx ~cond:OtherTest argument in
       let tout =
         match cond with
         | Some _ -> BoolModuleT.at loc
