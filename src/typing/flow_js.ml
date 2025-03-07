@@ -4489,6 +4489,21 @@ struct
              return mixed and treat them as a hit. *)
           Context.test_prop_hit cx id;
           rec_flow_t cx trace ~use_op (DefT (r, MixedT Mixed_everything), OpenT tout)
+        | ( _,
+            TestPropT
+              {
+                use_op;
+                reason;
+                id;
+                propref = Named { name = OrdinaryName "constructor"; _ } as propref;
+                tout;
+                hint;
+              }
+          ) ->
+          rec_flow
+            cx
+            trace
+            (l, GetPropT { use_op; reason; id = Some id; from_annot = false; propref; tout; hint })
         | (_, TestPropT { use_op; reason = reason_op; id; propref; tout; hint = _ }) ->
           (* NonstrictReturning lookups unify their result, but we don't want to
              unify with the tout tvar directly, so we create an indirection here to
@@ -4533,9 +4548,8 @@ struct
                   lookup_action = ReadProp { use_op; obj_t = l; tout };
                   method_accessible =
                     begin
-                      match (l, propref) with
-                      | (_, Named { name = OrdinaryName "constructor"; _ }) -> true
-                      | (DefT (_, InstanceT _), _) -> false
+                      match l with
+                      | DefT (_, InstanceT _) -> false
                       | _ -> true
                     end;
                   ids = Some Properties.Set.empty;

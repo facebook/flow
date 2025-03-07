@@ -5063,23 +5063,17 @@ module Make
     match cond with
     | None -> check ~cond:None
     | Some c ->
-      let reconstruct_ast expr_under_cond e =
-        if e == expr_under_cond then
-          check ~cond:(Some OtherTest) e
-        else
-          check ~cond:None e
-      in
+      let reconstruct_ast = check ~cond:(Some OtherTest) in
       Eq_test.visit_eq_test
       (* Strict and sense don't influence whether we should propagate cond context. *)
         ~sense:false
         ~strict:false
-        ~on_type_of_test:(fun _ expr _value _ _ -> reconstruct_ast expr)
-        ~on_literal_test:(fun ~strict:_ ~sense:_ _ expr _ _value -> reconstruct_ast expr)
-        ~on_null_test:(fun ~sense:_ ~strict:_ _ expr _value -> reconstruct_ast expr)
-        ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ expr _value ->
-          reconstruct_ast expr)
-        ~on_member_eq_other:(fun expr _value -> reconstruct_ast expr)
-        ~on_other_eq_member:(fun _value expr -> reconstruct_ast expr)
+        ~on_type_of_test:(fun _ _ _value _ _ -> reconstruct_ast)
+        ~on_literal_test:(fun ~strict:_ ~sense:_ _ _ _ _value -> reconstruct_ast)
+        ~on_null_test:(fun ~sense:_ ~strict:_ _ _ _value -> reconstruct_ast)
+        ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ _ _ -> reconstruct_ast)
+        ~on_member_eq_other:(fun _ _value -> reconstruct_ast)
+        ~on_other_eq_member:(fun _value _ -> reconstruct_ast)
         ~on_other_eq_test:(fun _ _ -> check ~cond:None)
         ~is_switch_cond_context:
           (match c with
