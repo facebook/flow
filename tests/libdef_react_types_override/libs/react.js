@@ -1,4 +1,4 @@
-declare type React$Node =
+declare type React$Node =  // intentional-libdef-override
   | void
   | null
   | boolean

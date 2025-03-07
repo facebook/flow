@@ -1,1 +1,17 @@
-Found 0 errors
+Error -------------------------------------------------------------------------------------------- libs/Promise.js:10:15
+
+This name declaration overrides an existing binding `Promise` [1]. Overriding in library definitions can lead to
+surprising behaviors. [libdef-override]
+
+   libs/Promise.js:10:15
+     10| declare class Promise<+R> { // intentional-libdef-override
+                       ^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2102:15
+   2102| declare class Promise<+R = mixed> {
+                       ^^^^^^^ [1]
+
+
+
+Found 1 error

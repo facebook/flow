@@ -94,7 +94,7 @@ copy tmplibk/libk1.js lib/libk1.js
 copy tmpk/k.js ./k.js
 assert_errors "$FLOW" status .
 copy tmplibk/libk2.js lib/libk2.js
-assert_ok "$FLOW" status .
+assert_errors "$FLOW" status .
 remove lib/libk2.js
 assert_errors "$FLOW" status .
 remove k.js lib/*.js

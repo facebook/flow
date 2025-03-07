@@ -24,7 +24,7 @@ type CheckedReactElement<
 > =
   ExactReactElement_DEPRECATED<Comp>;
 
-declare opaque type React$CreateElement:
+declare opaque type React$CreateElement: // intentional-libdef-override
   & (<
     Comp: React$ElementType,
     Children: $ReadOnlyArray<mixed> = [],

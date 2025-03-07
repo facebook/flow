@@ -1,3 +1,12 @@
+Error -------------------------------------------------------------------------------------------------- globals.js:1:15
+
+This name declaration overrides an existing binding `globalThis`. Overriding in library definitions can lead to
+surprising behaviors. [libdef-override]
+
+   1| declare const globalThis: mixed; // intentional-libdef-override
+                    ^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:1:12
 
 Cannot call `globalThis.alert` because property `alert` is missing in mixed [1]. [incompatible-use]
@@ -8,9 +17,9 @@ Cannot call `globalThis.alert` because property `alert` is missing in mixed [1].
 
 References:
    globals.js:1:27
-   1| declare const globalThis: mixed;
+   1| declare const globalThis: mixed; // intentional-libdef-override
                                 ^^^^^ [1]
 
 
 
-Found 1 error
+Found 2 errors

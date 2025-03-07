@@ -1,1 +1,17 @@
-Found 0 errors
+Error ----------------------------------------------------------------------------------------------- libs/react.js:1:14
+
+This name declaration overrides an existing binding `React.Node` [1]. Overriding in library definitions can lead to
+surprising behaviors. [libdef-override]
+
+   libs/react.js:1:14
+    1| declare type React$Node =  // intentional-libdef-override
+                    ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:15:14
+   15| declare type React$Node =
+                    ^^^^^^^^^^ [1]
+
+
+
+Found 1 error

@@ -336,6 +336,33 @@ type frozen_kind =
 
 let ignore2 _ _ = ()
 
+let loc_of_binding = function
+  | LocalBinding node ->
+    (match Local_defs.value node with
+    | VarBinding { id_loc; _ }
+    | LetConstBinding { id_loc; _ }
+    | ConstRefBinding { id_loc; _ }
+    | ConstFunBinding { id_loc; _ }
+    | ClassBinding { id_loc; _ }
+    | DeclareClassBinding { id_loc; _ }
+    | FunBinding { id_loc; _ }
+    | ComponentBinding { id_loc; _ }
+    | EnumBinding { id_loc; _ }
+    | NamespaceBinding { id_loc; _ }
+    | TypeBinding { id_loc; _ } ->
+      id_loc
+    | DeclareFunBinding { defs_rev; _ } ->
+      let (id_loc, _, _) = Nel.last defs_rev in
+      id_loc)
+  | RemoteBinding node ->
+    (match Remote_refs.value node with
+    | ImportBinding { id_loc; _ }
+    | ImportTypeBinding { id_loc; _ }
+    | ImportTypeofBinding { id_loc; _ }
+    | ImportNsBinding { id_loc; _ }
+    | ImportTypeofNsBinding { id_loc; _ } ->
+      id_loc)
+
 let create_tables () =
   {
     locs = Locs.create ();
@@ -608,8 +635,37 @@ module Scope = struct
     | ID.ImportTypeof -> ImportTypeofNsBinding { id_loc; name; mref }
     | ID.ImportType -> failwith "unexpected import type *"
 
-  let bind ~type_only scope name f =
-    let bind_value values types =
+  let bind ~type_only scope tbls name id_loc f =
+    let bind_updater ~in_global_scope f existing_binding =
+      (* For now, we allow $JSXIntrinsics, since we intentionally kept only a minimal version in
+         * the builtins, and let flow-typed supply a full one. *)
+      if in_global_scope && name <> "$JSXIntrinsics" then (
+        let (binding, legal) = f existing_binding in
+        (match (legal, existing_binding) with
+        | (false, Some existing_binding) ->
+          let override_binding_loc = loc_of_binding existing_binding in
+          (* Consider
+           * ```
+           * declare const foo: string;
+           * declare const foo: number;
+           * ```
+           * The first one is considered the overriding one,
+           * while the second one is considered to be the existing one.
+           * This ensures that the builtin libdefs (which come last) will always considered to be the
+           * existing ones.
+           * *)
+          tbls.additional_errors <-
+            Signature_error.NameOverride
+              { name; override_binding_loc; existing_binding_loc = id_loc }
+            :: tbls.additional_errors
+        | _ -> ());
+        binding
+      ) else
+        let (binding, _legal) = f existing_binding in
+        binding
+    in
+    let bind_value ~in_global_scope f values types =
+      let f = bind_updater ~in_global_scope f in
       match SMap.find_opt name values with
       | Some _ -> SMap.update name f values
       | None ->
@@ -617,7 +673,8 @@ module Scope = struct
         | None -> SMap.update name f values
         | Some _ -> values)
     in
-    let bind_type values types =
+    let bind_type ~in_global_scope f values types =
+      let f = bind_updater ~in_global_scope f in
       match SMap.find_opt name types with
       | Some _ -> SMap.update name f types
       | None ->
@@ -627,19 +684,24 @@ module Scope = struct
     in
     if type_only then
       match scope with
-      | Global scope -> scope.types <- bind_type scope.values scope.types
-      | DeclareModule scope -> scope.types <- bind_type scope.values scope.types
-      | DeclareNamespace scope -> scope.types <- bind_type scope.values scope.types
-      | Module scope -> scope.types <- bind_type scope.values scope.types
-      | Lexical scope -> scope.types <- bind_type scope.values scope.types
+      | Global scope -> scope.types <- bind_type ~in_global_scope:true f scope.values scope.types
+      | DeclareModule scope ->
+        scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
+      | DeclareNamespace scope ->
+        scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
+      | Module scope -> scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
+      | Lexical scope -> scope.types <- bind_type ~in_global_scope:false f scope.values scope.types
       | ConditionalTypeExtends _ -> ()
     else
       match scope with
-      | Global scope -> scope.values <- bind_value scope.values scope.types
-      | DeclareModule scope -> scope.values <- bind_value scope.values scope.types
-      | DeclareNamespace scope -> scope.values <- bind_value scope.values scope.types
-      | Module scope -> scope.values <- bind_value scope.values scope.types
-      | Lexical scope -> scope.values <- bind_value scope.values scope.types
+      | Global scope -> scope.values <- bind_value ~in_global_scope:true f scope.values scope.types
+      | DeclareModule scope ->
+        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
+      | DeclareNamespace scope ->
+        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
+      | Module scope -> scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
+      | Lexical scope ->
+        scope.values <- bind_value ~in_global_scope:false f scope.values scope.types
       | ConditionalTypeExtends _ -> ()
 
   let rec lookup_value scope name =
@@ -704,41 +766,41 @@ module Scope = struct
       | Some l when l = loc -> Some scope
       | _ -> None)
 
-  let bind_local scope tbls name def k =
+  let bind_local scope tbls name id_loc def k =
     let host = find_host scope def in
-    bind host name (function
-        | Some _ as existing_binding -> existing_binding
+    bind host tbls name id_loc (function
+        | Some _ as existing_binding -> (existing_binding, false)
         | None ->
           let node = push_local_def tbls def in
           k name node;
-          Some (LocalBinding node)
+          (Some (LocalBinding node), true)
         )
 
-  let bind_remote scope tbls name ref =
-    bind scope name (function
-        | Some _ as existing_binding -> existing_binding
+  let bind_remote scope tbls name id_loc ref =
+    bind scope tbls name id_loc (function
+        | Some _ as existing_binding -> (existing_binding, false)
         | None ->
           let node = push_remote_ref tbls ref in
-          Some (RemoteBinding node)
+          (Some (RemoteBinding node), true)
         )
 
   let bind_type scope tbls id_loc name def =
-    bind_local ~type_only:true scope tbls name (TypeBinding { id_loc; def })
+    bind_local ~type_only:true scope tbls name id_loc (TypeBinding { id_loc; def })
 
   let bind_class scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name (ClassBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name id_loc (ClassBinding { id_loc; name; def })
 
   let bind_declare_class scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name (DeclareClassBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name id_loc (DeclareClassBinding { id_loc; name; def })
 
   let bind_enum scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name (EnumBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name id_loc (EnumBinding { id_loc; name; def })
 
   (* Function declarations preceded by declared functions are taken to have the
    * type of the declared functions. This is a weird special case aimed to
    * support overloaded signatures. *)
   let bind_function scope tbls id_loc fn_loc name ~async ~generator ~effect:_ def k =
-    bind ~type_only:false scope name (fun binding_opt ->
+    bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
           let statics = SMap.empty in
@@ -747,13 +809,13 @@ module Scope = struct
           in
           let node = push_local_def tbls def in
           k name node;
-          Some (LocalBinding node)
-        | Some (RemoteBinding _) -> binding_opt
+          (Some (LocalBinding node), true)
+        | Some (RemoteBinding _) -> (binding_opt, false)
         | Some (LocalBinding node) ->
           (match Local_defs.value node with
           | DeclareFunBinding _ -> k name node
           | _ -> ());
-          binding_opt
+          (binding_opt, false)
     )
 
   (* Multiple declared functions with the same name in the same scope define an
@@ -761,38 +823,46 @@ module Scope = struct
    * don't need to walk the scope chain since the scope argument is certainly
    * the host scope. *)
   let bind_declare_function scope tbls id_loc fn_loc name def k =
-    bind ~type_only:false scope name (fun binding_opt ->
+    bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
           let defs_rev = Nel.one (id_loc, fn_loc, def) in
           let def = DeclareFunBinding { name; defs_rev } in
           let node = push_local_def tbls def in
           k name node;
-          Some (LocalBinding node)
-        | Some (RemoteBinding _) -> binding_opt
+          (Some (LocalBinding node), true)
+        | Some (RemoteBinding _) -> (binding_opt, false)
         | Some (LocalBinding node) ->
+          let legal_ref = ref false in
           Local_defs.modify node (function
               | DeclareFunBinding { name; defs_rev } ->
                 k name node;
+                legal_ref := true;
                 let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
                 DeclareFunBinding { name; defs_rev }
               | def -> def
               );
-          binding_opt
+          (binding_opt, !legal_ref)
     )
 
   let bind_component scope tbls id_loc fn_loc name def =
-    bind_local ~type_only:false scope tbls name (ComponentBinding { id_loc; fn_loc; name; def })
+    bind_local
+      ~type_only:false
+      scope
+      tbls
+      name
+      id_loc
+      (ComponentBinding { id_loc; fn_loc; name; def })
 
   let bind_var scope tbls kind id_loc name def =
-    bind_local ~type_only:false scope tbls name (value_binding kind id_loc name def)
+    bind_local ~type_only:false scope tbls name id_loc (value_binding kind id_loc name def)
 
   let bind_const scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name (LetConstBinding { id_loc; name; def })
+    bind_local ~type_only:false scope tbls name id_loc (LetConstBinding { id_loc; name; def })
 
   let bind_const_ref scope tbls id_loc name ref_loc ref_name ref_scope =
     let ref = Ref { ref_loc; name = ref_name; scope = ref_scope; resolved = None } in
-    bind_local ~type_only:false scope tbls name (ConstRefBinding { id_loc; name; ref })
+    bind_local ~type_only:false scope tbls name id_loc (ConstRefBinding { id_loc; name; ref })
 
   let bind_const_fun scope tbls id_loc name loc ~async ~generator def =
     let statics = SMap.empty in
@@ -801,6 +871,7 @@ module Scope = struct
       scope
       tbls
       name
+      id_loc
       (ConstFunBinding { id_loc; name; loc; async; generator; def; statics })
 
   let bind_import scope tbls kind id_loc ~local ~remote mref =
@@ -813,7 +884,7 @@ module Scope = struct
       | ImportTypeof ->
         true
     in
-    bind_remote ~type_only scope tbls local (import_binding kind id_loc local mref ~remote)
+    bind_remote ~type_only scope tbls local id_loc (import_binding kind id_loc local mref ~remote)
 
   let bind_import_ns scope tbls kind id_loc name mref =
     let mref = push_module_ref tbls mref in
@@ -825,7 +896,7 @@ module Scope = struct
       | ImportTypeof ->
         true
     in
-    bind_remote ~type_only scope tbls name (import_ns_binding kind id_loc name mref)
+    bind_remote ~type_only scope tbls name id_loc (import_ns_binding kind id_loc name mref)
 
   let rec assign_binding =
     let f prop_name prop def =
@@ -1185,6 +1256,7 @@ module Scope = struct
         parent
         tbls
         name
+        id_loc
         (NamespaceBinding { id_loc; name; values; types })
         ignore2
     | _ -> failwith "The scope must be lexical"
@@ -1206,6 +1278,7 @@ module Scope = struct
         scope
         tbls
         name
+        loc
         (NamespaceBinding { id_loc = loc; name; values; types })
         ignore2
     | _ -> failwith "finalize_globalThis must be called after parsing all lib files on global scope"

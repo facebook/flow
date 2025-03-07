@@ -350,7 +350,23 @@ References:
 
 
 Found 1 error
-No errors!
+Error ------------------------------------------------------------------------------------------------- lib/libk2.js:1:6
+
+This name declaration overrides an existing binding `LibK` [1]. Overriding in library definitions can lead to surprising
+behaviors. [libdef-override]
+
+   lib/libk2.js:1:6
+   1| type LibK = {
+           ^^^^
+
+References:
+   lib/libk1.js:1:6
+   1| type LibK = {...}
+           ^^^^ [1]
+
+
+
+Found 1 error
 Error --------------------------------------------------------------------------------------------------------- k.js:4:4
 
 Cannot get `x.p` because property `p` is missing in `LibK` [1]. [prop-missing]

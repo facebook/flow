@@ -1,3 +1,33 @@
+Error -------------------------------------------------------------------------------------------------- bar_lib.js:1:15
+
+This name declaration overrides an existing binding `commonValueWithOverride` [1]. Overriding in library definitions can
+lead to surprising behaviors. [libdef-override]
+
+   bar_lib.js:1:15
+   1| declare const commonValueWithOverride: boolean; // intentional-libdef-override
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   common_lib2.js:1:15
+   1| declare const commonValueWithOverride: string;
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- foo_lib2.js:1:15
+
+This name declaration overrides an existing binding `commonValueWithOverride` [1]. Overriding in library definitions can
+lead to surprising behaviors. [libdef-override]
+
+   foo_lib2.js:1:15
+   1| declare const commonValueWithOverride: number;
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   common_lib2.js:1:15
+   1| declare const commonValueWithOverride: string;
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- bar/test.js:1:1
 
 Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -25,7 +55,7 @@ Cannot cast `commonValueWithOverride` to empty because boolean [1] is incompatib
 
 References:
    bar_lib.js:1:40
-   1| declare const commonValueWithOverride: boolean;
+   1| declare const commonValueWithOverride: boolean; // intentional-libdef-override
                                              ^^^^^^^ [1]
    bar/test.js:2:28
    2| commonValueWithOverride as empty; // error: boolean ~> empty
@@ -167,4 +197,4 @@ Cannot resolve name `barSpecific`. [cannot-resolve-name]
 
 
 
-Found 12 errors
+Found 14 errors
