@@ -12,6 +12,7 @@ type syntactic_flags = {
   decl: Ast.Variable.kind option;
   as_const: bool;
   frozen: Type.frozen_kind;
+  has_hint: bool Lazy.t;
 }
 
 val empty_syntactic_flags : syntactic_flags
@@ -21,5 +22,8 @@ val mk_syntactic_flags :
   ?decl:Ast.Variable.kind ->
   ?as_const:bool ->
   ?frozen:Type.frozen_kind ->
+  ?has_hint:bool Lazy.t ->
   unit ->
   syntactic_flags
+
+val loc_has_hint : Context.t -> ALoc.t -> bool

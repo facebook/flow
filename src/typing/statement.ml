@@ -2186,7 +2186,7 @@ module Make
       in
       (t, { Ast.Statement.DeclareNamespace.id; body; comments })
 
-  and object_prop cx ~as_const ~frozen acc prop =
+  and object_prop cx ~as_const ~frozen ~has_hint acc prop =
     let open Ast.Expression.Object in
     match prop with
     (* named prop *)
@@ -2215,10 +2215,10 @@ module Make
             let key = translate_identifer_or_literal_key t key in
             (* don't add `name` to `acc` because `name` is the autocomplete token *)
             let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
-            let (((_, _t), _) as value) = expression cx ~as_const ~frozen v in
+            let (((_, _t), _) as value) = expression cx ~as_const ~frozen ~has_hint v in
             (acc, key, value)
           else
-            let (((_, t), _) as value) = expression cx ~as_const ~frozen v in
+            let (((_, t), _) as value) = expression cx ~as_const ~frozen ~has_hint v in
             let key = translate_identifer_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
@@ -2365,7 +2365,9 @@ module Make
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (map, rev_prop_asts) prop ->
-          let (map, prop) = object_prop cx ~as_const:false ~frozen:false map prop in
+          let (map, prop) =
+            object_prop cx ~as_const:false ~frozen:false ~has_hint:(lazy false) map prop
+          in
           (map, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2447,8 +2449,10 @@ module Make
         ObjectExpressionAcc.ComputedProp.NonLiteralKey
           { key_loc; key = unconcretized_key; value; named_set_opt; reason_obj })
 
-  and object_ cx reason ~frozen ~as_const props =
+  and object_ cx ~frozen ~as_const ~has_hint loc props =
     let open Ast.Expression.Object in
+    error_on_this_uses_in_object_methods cx props;
+    let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
@@ -2470,6 +2474,7 @@ module Make
         ~frozen
         value
     in
+    let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
     let (acc, rev_prop_asts) =
       List.fold_left
         (fun (acc, rev_prop_asts) -> function
@@ -2562,7 +2567,7 @@ module Make
               :: rev_prop_asts
             )
           | prop ->
-            let (acc, prop) = object_prop cx ~as_const ~frozen acc prop in
+            let (acc, prop) = object_prop cx ~as_const ~frozen ~has_hint acc prop in
             (acc, prop :: rev_prop_asts))
         (ObjectExpressionAcc.empty (), [])
         props
@@ -2709,14 +2714,14 @@ module Make
       let (((_, t), _) as e') = expression cx argument in
       (SpreadArg t, Spread (loc, { SpreadElement.argument = e'; comments }))
 
-  and array_elements cx ~as_const =
+  and array_elements cx ~as_const ~has_hint =
     let open Ast.Expression.Array in
     Base.Fn.compose
       List.split
       (Base.List.map ~f:(fun e ->
            match e with
            | Expression e ->
-             let (((loc, t), _) as e) = expression cx ~as_const e in
+             let (((loc, t), _) as e) = expression cx ~as_const ~has_hint e in
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Expression e)
            | Hole loc ->
@@ -2724,7 +2729,7 @@ module Make
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-             let (((_, t), _) as argument) = expression cx argument in
+             let (((_, t), _) as argument) = expression cx ~has_hint argument in
              ( UnresolvedSpreadArg t,
                Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
              )
@@ -2761,7 +2766,8 @@ module Make
   (* can raise Abnormal.(Exn (_, _))
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
-  and expression ?cond ?decl ?(as_const = false) ?(frozen = NotFrozen) cx (loc, e) =
+  and expression
+      ?cond ?decl ?(as_const = false) ?(frozen = NotFrozen) ?(has_hint = lazy false) cx (loc, e) =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2789,7 +2795,7 @@ module Make
           node
         | None ->
           let syntactic_flags =
-            Primitive_literal.mk_syntactic_flags ?cond ?decl ~as_const ~frozen ()
+            Primitive_literal.mk_syntactic_flags ?cond ?decl ~as_const ~frozen ~has_hint ()
           in
           let res = expression_ cx syntactic_flags loc e in
           if Context.typing_mode cx = Context.CheckingMode then begin
@@ -2821,7 +2827,7 @@ module Make
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let { Primitive_literal.cond; decl; as_const; frozen; _ } = syntactic_flags in
+    let { Primitive_literal.cond; decl; as_const; frozen; has_hint } = syntactic_flags in
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
@@ -2995,10 +3001,8 @@ module Make
     | Member _ -> subscript ~cond cx ex
     | OptionalMember _ -> subscript ~cond cx ex
     | Object { Object.properties; comments } ->
-      error_on_this_uses_in_object_methods cx properties;
-      let reason = Reason.mk_obj_lit_reason ~as_const ~frozen:false loc in
       let (t, properties) =
-        object_ ~frozen:(frozen = FrozenDirect) ~as_const cx reason properties
+        object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx loc properties
       in
       ((loc, t), Object { Object.properties; comments })
     | Array { Array.elements; comments } ->
@@ -3028,7 +3032,8 @@ module Make
           else
             mk_reason RArrayLit loc
         in
-        let (elem_spread_list, elements) = array_elements cx ~as_const elems in
+        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+        let (elem_spread_list, elements) = array_elements cx ~as_const ~has_hint elems in
         ( ( loc,
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
                 let reason_op = reason in
@@ -3237,13 +3242,18 @@ module Make
     | Call _ -> subscript ~cond cx ex
     | OptionalCall _ -> subscript ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
+      let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
       let reason = mk_reason RConditional loc in
       let test = condition ~cond:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl consequent)
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            expression cx ?decl ~has_hint consequent
+        )
       in
       let ((((_, t2), _) as alternate), else_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl alternate)
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            expression cx ?decl ~has_hint alternate
+        )
       in
       let combined_type =
         match (then_throws, else_throws) with
@@ -5175,7 +5185,8 @@ module Make
 
   and logical cx syntactic_flags loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
-    let { Primitive_literal.cond; _ } = syntactic_flags in
+    let { Primitive_literal.cond; has_hint; _ } = syntactic_flags in
+    let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
      * As such, we only analyze the RHS expression if the LHS does not throw.
@@ -5186,9 +5197,9 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~cond:OtherTest ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond ~has_hint right)
       in
       let t2 =
         if right_throws then
@@ -5199,9 +5210,9 @@ module Make
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
     | And ->
-      let (((_, t1), _) as left) = condition ~cond:OtherTest cx left in
+      let (((_, t1), _) as left) = condition ~cond:OtherTest ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond ~has_hint right)
       in
       let t2 =
         if right_throws then
@@ -5212,9 +5223,9 @@ module Make
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
     | NullishCoalesce ->
-      let (((_, t1), _) as left) = expression cx left in
+      let (((_, t1), _) as left) = expression cx ~has_hint left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~has_hint right)
       in
       let t2 =
         if right_throws then
@@ -6421,7 +6432,8 @@ module Make
      accesses are provisionally allowed even when such properties do not exist.
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
-  and condition cx ~cond e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t = expression ~cond cx e
+  and condition cx ~cond ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    expression ~cond ?has_hint cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Type_env.get_class_entries cx in
@@ -6834,9 +6846,9 @@ module Make
       in
       let (((_, arg_t), _) as e_ast) =
         let { Object.properties; comments } = o in
-        error_on_this_uses_in_object_methods cx properties;
-        let reason = mk_reason (RFrozen RObjectLit) arg_loc in
-        let (t, properties) = object_ ~frozen:true ~as_const:false cx reason properties in
+        let (t, properties) =
+          object_ ~frozen:true ~as_const:false ~has_hint:(lazy false) cx arg_loc properties
+        in
         ((arg_loc, t), Object { Object.properties; comments })
       in
       let reason = mk_reason (RMethodCall (Some m)) loc in
