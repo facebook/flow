@@ -2144,7 +2144,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:113:10
 
-Cannot get `b?.w.u` because property `u` is missing in undefined [1]. [incompatible-type]
+Cannot get `b?.w.u` because property `u` is missing in undefined [1]. [incompatible-use]
 
    refinements.js:113:10
    113| if (b?.w.u) {
@@ -2158,7 +2158,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:119:14
 
-Cannot get `b.w.u` because property `u` is missing in undefined [1]. [incompatible-type]
+Cannot get `b.w.u` because property `u` is missing in undefined [1]. [incompatible-use]
 
    refinements.js:119:14
    119| if (b && b.w.u) {

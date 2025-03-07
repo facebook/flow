@@ -4473,7 +4473,7 @@ struct
            know what the type of the property would be, we set things up so that the
            result of the read cannot be used in any interesting way. *)
         (**************************************************************************)
-        | (DefT (_, NullT), TestPropT { use_op; reason; id; propref; tout; hint }) ->
+        | (DefT (_, (NullT | VoidT)), TestPropT { use_op; reason; id; propref; tout; hint }) ->
           (* The wildcard TestPropT implementation forwards the lower bound to
              LookupT. This is unfortunate, because LookupT is designed to terminate
              (successfully) on NullT, but property accesses on null should be type

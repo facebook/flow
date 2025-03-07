@@ -7492,38 +7492,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:306:9
 
-Cannot get `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-type]
-
-   invalidation.js:306:9
-   306|     foo.bar != null && // error
-                ^^^
-
-References:
-   invalidation.js:303:22
-   303|   declare const foo: ?{bar: string};
-                             ^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:306:9
-
 Cannot get `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
 
    invalidation.js:306:9
    306|     foo.bar != null && // error
-                ^^^
-
-References:
-   invalidation.js:303:22
-   303|   declare const foo: ?{bar: string};
-                             ^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------- invalidation.js:308:9
-
-Cannot get `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-type]
-
-   invalidation.js:308:9
-   308|     foo.bar // error
                 ^^^
 
 References:
@@ -17043,7 +17015,7 @@ References:
 
 
 
-Found 1158 errors
+Found 1156 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
