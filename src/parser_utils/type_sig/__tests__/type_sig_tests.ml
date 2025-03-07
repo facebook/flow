@@ -4657,7 +4657,12 @@ let%expect_test "builtin_cjs_ignore_later" =
                 info =
                 CJSModuleInfo {type_export_keys = [||];
                   type_stars = []; strict = true;
-                  platform_availability_set = None}} |}]
+                  platform_availability_set = None}}
+    Errors:
+    (BindingValidationError
+       Signature_error.ModuleOverride {
+         name = "foo"; override_binding_loc = [2:15-18];
+         existing_binding_loc = [5:15-18]}) |}]
 
 let%expect_test "builtin_cjs_module_auto_export_type" =
   (* All types in cjs modules are auto exported. *)

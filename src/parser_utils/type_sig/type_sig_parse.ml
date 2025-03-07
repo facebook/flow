@@ -544,7 +544,7 @@ module Scope = struct
   let push_declare_namespace parent =
     DeclareNamespace { parent; values = SMap.empty; types = SMap.empty }
 
-  let push_declare_module loc name parent =
+  let push_declare_module loc name parent tbls =
     let exports = Exports.create ~strict:true ~platform_availability_set:None in
     begin
       match parent with
@@ -554,7 +554,13 @@ module Scope = struct
             name
             (function
               | None -> Some (loc, exports)
-              | Some existing -> Some existing)
+              | Some existing ->
+                let override_binding_loc = fst existing in
+                tbls.additional_errors <-
+                  Signature_error.ModuleOverride
+                    { name; override_binding_loc; existing_binding_loc = loc }
+                  :: tbls.additional_errors;
+                Some existing)
             g.modules
       | _ -> ()
     end;
@@ -4824,7 +4830,7 @@ let rec statement opts scope tbls (loc, stmt) =
       | S.DeclareModule.Literal (id_loc, { Ast.StringLiteral.value; _ }) ->
         (push_loc tbls id_loc, value)
     in
-    let scope = Scope.push_declare_module loc name scope in
+    let scope = Scope.push_declare_module loc name scope tbls in
     let (_, { S.Block.body = stmts; comments = _ }) = body in
     let visit_statement ((_, stmt') as stmt) =
       match
