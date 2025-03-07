@@ -88,6 +88,7 @@ type dro_annot =
 type value = {
   hints: ast_hints;
   expr: (ALoc.t, ALoc.t) Ast.Expression.t;
+  decl_kind: Ast.Variable.kind option;
 }
 
 type root =

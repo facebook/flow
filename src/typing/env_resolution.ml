@@ -45,12 +45,12 @@ let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l 
     cache e;
     e
 
-let expression cx ?cond exp =
+let expression cx ?cond ?decl exp =
   let cache = Context.node_cache cx in
   let ((_, t), _) =
     try_cache
       cx
-      ~check:(fun () -> Statement.expression ?cond cx exp)
+      ~check:(fun () -> Statement.expression ?cond ?decl cx exp)
       ~cache:(Node_cache.set_expression cache)
   in
   t
@@ -466,7 +466,7 @@ let rec resolve_binding cx reason loc b =
       TypeUtil.optional t
     else
       t
-  | Root (Value { hints = _; expr }) -> expression cx expr
+  | Root (Value { hints = _; expr; decl_kind }) -> expression cx ?decl:decl_kind expr
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
