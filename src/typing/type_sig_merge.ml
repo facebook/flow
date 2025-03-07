@@ -1138,7 +1138,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | StringLit (loc, lit) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RStringLit (OrdinaryName lit)) loc) in
-      Type.(DefT (reason, SingletonStrT { from_annot = false; value = Reason.OrdinaryName lit }))
+      Type.(DefT (reason, SingletonStrT { from_annot = as_const; value = Reason.OrdinaryName lit }))
     else
       let reason = Reason.(mk_reason RString loc) in
       Type.(DefT (reason, StrGeneralT AnyLiteral))
@@ -1152,7 +1152,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | NumberLit (loc, num, raw) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RNumberLit raw) loc) in
-      Type.(DefT (reason, SingletonNumT { from_annot = false; value = (num, raw) }))
+      Type.(DefT (reason, SingletonNumT { from_annot = as_const; value = (num, raw) }))
     else
       let reason = Reason.(mk_reason RNumber loc) in
       Type.(DefT (reason, NumGeneralT AnyLiteral))
@@ -1162,7 +1162,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | BigIntLit (loc, bigint, raw) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBigIntLit raw) loc) in
-      Type.(DefT (reason, SingletonBigIntT { from_annot = false; value = (bigint, raw) }))
+      Type.(DefT (reason, SingletonBigIntT { from_annot = as_const; value = (bigint, raw) }))
     else
       let reason = Reason.(mk_reason RBigInt loc) in
       Type.(DefT (reason, BigIntGeneralT AnyLiteral))
@@ -1172,7 +1172,7 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
   | BooleanLit (loc, lit) ->
     if as_const || const_decl then
       let reason = Reason.(mk_annot_reason (RBooleanLit lit) loc) in
-      Type.(DefT (reason, SingletonBoolT { from_annot = false; value = lit }))
+      Type.(DefT (reason, SingletonBoolT { from_annot = as_const; value = lit }))
     else
       let reason = Reason.(mk_reason RBoolean loc) in
       Type.(DefT (reason, BoolGeneralT))
