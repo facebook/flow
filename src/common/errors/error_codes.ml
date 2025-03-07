@@ -105,6 +105,7 @@ type error_code =
   | InvalidTypeCastSyntax
   | InvalidTypeOf
   | InvalidTempType
+  | LibdefOverride
   | LintSetting
   | MalformedPackage
   | MatchInvalidPattern
@@ -207,6 +208,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.MixedImportAndRequire -> MixedImportAndRequire
   | Lints.ExportRenamedDefault -> ExportRenamedDefault
   | Lints.UnusedPromise -> UnusedPromise
+  | Lints.LibdefOverride -> LibdefOverride
 
 let require_specific : error_code -> bool = function
   | InvalidRendersTypeArgument
@@ -321,6 +323,7 @@ let string_of_code : error_code -> string = function
   | InvalidTypeCastSyntax -> "invalid-type-cast-syntax"
   | InvalidTypeOf -> "invalid-typeof"
   | InvalidTempType -> "invalid-temp-type"
+  | LibdefOverride -> "libdef-override"
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
   | MatchInvalidPattern -> "match-invalid-pattern"

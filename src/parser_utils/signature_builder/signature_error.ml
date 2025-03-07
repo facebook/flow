@@ -16,6 +16,16 @@ type 'loc t =
 [@@deriving show, iter, map]
 
 type 'loc binding_validation_t =
+  | ModuleOverride of {
+      name: string;
+      override_binding_loc: 'loc;
+      existing_binding_loc: 'loc;
+    }
+  | NameOverride of {
+      name: string;
+      override_binding_loc: 'loc;
+      existing_binding_loc: 'loc;
+    }
   | NamespacedNameAlreadyBound of {
       name: string;
       invalid_binding_loc: 'loc;

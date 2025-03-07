@@ -1638,6 +1638,10 @@ let dump_error_message =
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ECannotDelete (l1, r1) -> spf "ECannotDelete (%s, %s)" (string_of_aloc l1) (dump_reason cx r1)
+    | ESignatureBindingValidation (Signature_error.ModuleOverride { override_binding_loc; _ }) ->
+      spf "ESignatureBindingValidation (ModuleOverride %s)" (string_of_aloc override_binding_loc)
+    | ESignatureBindingValidation (Signature_error.NameOverride { override_binding_loc; _ }) ->
+      spf "ESignatureBindingValidation (NameOverride %s)" (string_of_aloc override_binding_loc)
     | ESignatureBindingValidation
         (Signature_error.NamespacedNameAlreadyBound { invalid_binding_loc; _ }) ->
       spf

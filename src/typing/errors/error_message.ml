@@ -1980,6 +1980,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESignatureBindingValidation e ->
     Signature_error.(
       (match e with
+      | ModuleOverride { override_binding_loc; _ } -> Some override_binding_loc
+      | NameOverride { override_binding_loc; _ } -> Some override_binding_loc
       | NamespacedNameAlreadyBound { invalid_binding_loc; _ } -> Some invalid_binding_loc)
     )
   | ESignatureVerification sve ->
@@ -2632,6 +2634,13 @@ let friendly_message_of_msg = function
     Normal (MessageCannotExportRenamedDefault { name; is_reexport })
   | EUnexpectedTemporaryBaseType _ -> Normal MessageUnexpectedTemporaryBaseType
   | ECannotDelete (_, expr) -> Normal (MessageCannotDelete expr)
+  | ESignatureBindingValidation (Signature_error.ModuleOverride { name; existing_binding_loc; _ })
+    ->
+    let x = mk_reason (RIdentifier (OrdinaryName name)) existing_binding_loc in
+    Normal (MessageBadLibdefModuleOverride x)
+  | ESignatureBindingValidation (Signature_error.NameOverride { name; existing_binding_loc; _ }) ->
+    let x = mk_reason (RIdentifier (OrdinaryName name)) existing_binding_loc in
+    Normal (MessageBadLibdefNameOverride x)
   | ESignatureBindingValidation
       (Signature_error.NamespacedNameAlreadyBound { name; existing_binding_loc; _ }) ->
     let x = mk_reason (RIdentifier (OrdinaryName name)) existing_binding_loc in
@@ -3245,7 +3254,11 @@ let error_code_of_message err : error_code option =
   (* We don't want these to be suppressible *)
   | ERecursionLimit (_, _) -> None
   | EROArrayWrite (_, use_op) -> react_rule_of_use_op use_op ~default:CannotWrite
-  | ESignatureBindingValidation _ -> Some SignatureVerificationFailure
+  | ESignatureBindingValidation (Signature_error.ModuleOverride _ | Signature_error.NameOverride _)
+    ->
+    Some LibdefOverride
+  | ESignatureBindingValidation (Signature_error.NamespacedNameAlreadyBound _) ->
+    Some SignatureVerificationFailure
   | ESignatureVerification _ -> Some SignatureVerificationFailure
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
   | EExportRenamedDefault _ -> Some ExportRenamedDefault

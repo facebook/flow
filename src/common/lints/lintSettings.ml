@@ -27,6 +27,7 @@ let default_explicit_values =
   LintMap.empty
   |> LintMap.add Lints.(DeprecatedType DeprecatedBool) (Severity.Err, None)
   |> LintMap.add Lints.InternalType (Severity.Err, None)
+  |> LintMap.add Lints.LibdefOverride (Severity.Err, None)
   |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 
 let ignored_by_all =

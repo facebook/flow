@@ -1385,6 +1385,18 @@ let to_printable_error :
         code "any";
         text "-typed, to use it as an annotation.";
       ]
+    | MessageBadLibdefModuleOverride x ->
+      [
+        text "This module declaration overrides an existing module ";
+        ref x;
+        text ". Overriding in library definitions can lead to surprising behaviors.";
+      ]
+    | MessageBadLibdefNameOverride x ->
+      [
+        text "This name declaration overrides an existing binding ";
+        ref x;
+        text ". Overriding in library definitions can lead to surprising behaviors.";
+      ]
     | MessageCannotAccessEnumMember { member_name; suggestion; description; enum_reason } ->
       [text "Cannot access "; desc description]
       @
