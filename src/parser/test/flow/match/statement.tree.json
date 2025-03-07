@@ -117,14 +117,6 @@
           },
           "body":{
             "type":"BlockStatement",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":7,"column":4},"end":{"line":7,"column":12}},
-                "range":[65,73],
-                "value":" empty"
-              }
-            ],
             "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":8,"column":3}},
             "range":[59,77],
             "body":[]

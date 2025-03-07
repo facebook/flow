@@ -82,14 +82,6 @@
                 },
                 "body":{
                   "type":"Literal",
-                  "trailingComments":[
-                    {
-                      "type":"Line",
-                      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":25}},
-                      "range":[48,73],
-                      "value":" <-- half written match"
-                    }
-                  ],
                   "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":14}},
                   "range":[42,47],
                   "value":false,

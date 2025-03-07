@@ -2565,7 +2565,7 @@ class ['loc] mapper =
         if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
           case
         else
-          (loc, { pattern; body; guard = guard'; comments = comments' })
+          (loc, { pattern = pattern'; body = body'; guard = guard'; comments = comments' })
 
     method match_expression loc (x : ('loc, 'loc) Ast.Expression.match_expression) =
       this#match_ loc ~on_case_body:this#expression x

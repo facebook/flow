@@ -76,14 +76,6 @@
                 },
                 "body":{
                   "type":"Literal",
-                  "trailingComments":[
-                    {
-                      "type":"Line",
-                      "loc":{"source":null,"start":{"line":3,"column":15},"end":{"line":3,"column":40}},
-                      "range":[48,73],
-                      "value":" <-- no final separator"
-                    }
-                  ],
                   "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":14}},
                   "range":[42,47],
                   "value":false,

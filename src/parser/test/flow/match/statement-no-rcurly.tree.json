@@ -93,14 +93,6 @@
           },
           "body":{
             "type":"BlockStatement",
-            "trailingComments":[
-              {
-                "type":"Line",
-                "loc":{"source":null,"start":{"line":8,"column":0},"end":{"line":8,"column":23}},
-                "range":[72,95],
-                "value":" <-- unfinished match"
-              }
-            ],
             "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":7,"column":3}},
             "range":[49,71],
             "body":[
