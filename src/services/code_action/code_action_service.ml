@@ -1085,6 +1085,25 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchInvalidObjectShorthand { loc = error_loc; name } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = Utils_js.spf "Convert to `const %s`" name;
+          diagnostic_title = "convert_match_object_shorthand_to_const";
+          transform = untyped_ast_transform Autofix_match_syntax.convert_object_shorthand_to_const;
+          target_loc = error_loc;
+        };
+        {
+          title = Utils_js.spf "Convert to `%s: %s`" name name;
+          diagnostic_title = "convert_match_object_shorthand_to_reference";
+          transform =
+            untyped_ast_transform Autofix_match_syntax.convert_object_shorthand_to_reference;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing

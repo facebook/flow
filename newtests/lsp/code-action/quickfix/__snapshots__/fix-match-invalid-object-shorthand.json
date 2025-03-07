@@ -1,0 +1,71 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `const foo`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-object-shorthand.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 12
+                },
+                "end": {
+                  "line": 7,
+                  "character": 1
+                }
+              },
+              "newText": "match (x) {\n  {const foo}: 0,\n  _: 0,\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_match_object_shorthand_to_const",
+          "Convert to `const foo`"
+        ]
+      }
+    },
+    {
+      "title": "Convert to `foo: foo`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-object-shorthand.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 12
+                },
+                "end": {
+                  "line": 7,
+                  "character": 1
+                }
+              },
+              "newText": "match (x) {\n  {foo: foo}: 0,\n  _: 0,\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_match_object_shorthand_to_reference",
+          "Convert to `foo: foo`"
+        ]
+      }
+    }
+  ]
+}
