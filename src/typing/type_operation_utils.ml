@@ -236,12 +236,12 @@ module Operators = struct
         false
       | _ -> true
     in
-    let strict_equatable_error cond_context (l, r) =
+    let strict_equatable_error encl_ctx (l, r) =
       let comparison_error =
         let open TypeUtil in
         lazy
-          (match cond_context with
-          | Some (SwitchTest { case_test_loc; switch_discriminant_loc }) ->
+          (match encl_ctx with
+          | SwitchTest { case_test_loc; switch_discriminant_loc } ->
             let use_op =
               Op
                 (SwitchRefinementCheck
@@ -255,7 +255,8 @@ module Operators = struct
                 use_op;
                 explanation = None;
               }
-          | _ ->
+          | NoContext
+          | OtherTest ->
             let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
             Error_message.EComparison reasons)
       in
@@ -278,10 +279,10 @@ module Operators = struct
       (* We allow the comparison of enums to null and void outside of switches. *)
       | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
       | (DefT (_, (NullT | VoidT)), DefT (_, EnumValueT _)) -> begin
-        match cond_context with
-        | Some (SwitchTest _) -> Some (Lazy.force comparison_error)
-        | None
-        | Some _ ->
+        match encl_ctx with
+        | SwitchTest _ -> Some (Lazy.force comparison_error)
+        | NoContext
+        | OtherTest ->
           None
       end
       (* We don't allow the comparison of enums and other types in general. *)
@@ -293,7 +294,7 @@ module Operators = struct
       (* We don't check other strict equality comparisons. *)
       | _ -> None
     in
-    let rec distribute cx ~cond_context (t1, t2) =
+    let rec distribute cx ~encl_ctx (t1, t2) =
       match (t1, t2) with
       | (DefT (_, EmptyT), _)
       | (_, DefT (_, EmptyT))
@@ -302,9 +303,7 @@ module Operators = struct
         ()
       | (IntersectionT (r1, rep1), t2) ->
         let cases =
-          Base.List.map (InterRep.members rep1) ~f:(fun t1 () ->
-              distribute cx ~cond_context (t1, t2)
-          )
+          Base.List.map (InterRep.members rep1) ~f:(fun t1 () -> distribute cx ~encl_ctx (t1, t2))
         in
         Speculation_flow.try_custom
           cx
@@ -312,9 +311,7 @@ module Operators = struct
           cases
       | (t1, IntersectionT (r2, rep2)) ->
         let cases =
-          Base.List.map (InterRep.members rep2) ~f:(fun t2 () ->
-              distribute cx ~cond_context (t1, t2)
-          )
+          Base.List.map (InterRep.members rep2) ~f:(fun t2 () -> distribute cx ~encl_ctx (t1, t2))
         in
         Speculation_flow.try_custom
           cx
@@ -324,7 +321,7 @@ module Operators = struct
         let t1_needs_concretization = eq_needs_concretization t1 in
         let t2_needs_concretization = eq_needs_concretization t2 in
         if (not t1_needs_concretization) && not t2_needs_concretization then
-          match strict_equatable_error cond_context (t1, t2) with
+          match strict_equatable_error encl_ctx (t1, t2) with
           | Some error -> add_output cx error
           | None -> ()
         else
@@ -349,11 +346,10 @@ module Operators = struct
             ()
           else
             Base.List.iter t1s ~f:(fun t1 ->
-                Base.List.iter t2s ~f:(fun t2 -> distribute cx ~cond_context (t1, t2))
+                Base.List.iter t2s ~f:(fun t2 -> distribute cx ~encl_ctx (t1, t2))
             )
     in
-
-    (fun ~cond_context -> distribute ~cond_context)
+    (fun ~encl_ctx -> distribute ~encl_ctx)
 
   let unary_arith cx reason kind t =
     Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->

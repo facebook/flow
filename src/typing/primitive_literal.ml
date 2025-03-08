@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 
 type syntactic_flags = {
-  cond: Type.cond_context option;
+  encl_ctx: Type.enclosing_context;
   decl: Ast.Variable.kind option;
   as_const: bool;
   frozen: Type.frozen_kind;
@@ -16,10 +16,21 @@ type syntactic_flags = {
 }
 
 let empty_syntactic_flags =
-  { cond = None; decl = None; as_const = false; frozen = Type.NotFrozen; has_hint = lazy false }
+  {
+    encl_ctx = Type.NoContext;
+    decl = None;
+    as_const = false;
+    frozen = Type.NotFrozen;
+    has_hint = lazy false;
+  }
 
 let mk_syntactic_flags
-    ?cond ?decl ?(as_const = false) ?(frozen = Type.NotFrozen) ?(has_hint = lazy false) () =
-  { cond; decl; as_const; frozen; has_hint }
+    ?(encl_ctx = Type.NoContext)
+    ?decl
+    ?(as_const = false)
+    ?(frozen = Type.NotFrozen)
+    ?(has_hint = lazy false)
+    () =
+  { encl_ctx; decl; as_const; frozen; has_hint }
 
 let loc_has_hint _cx _loc = (* TODO *) false

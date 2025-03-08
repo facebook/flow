@@ -45,12 +45,12 @@ let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l 
     cache e;
     e
 
-let expression cx ?cond ?decl exp =
+let expression cx ?encl_ctx ?decl exp =
   let cache = Context.node_cache cx in
   let ((_, t), _) =
     try_cache
       cx
-      ~check:(fun () -> Statement.expression ?cond ?decl cx exp)
+      ~check:(fun () -> Statement.expression ?encl_ctx ?decl cx exp)
       ~cache:(Node_cache.set_expression cache)
   in
   t
@@ -102,15 +102,15 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
 
-let rec synthesizable_expression cx ?cond exp =
+let rec synthesizable_expression cx ?(encl_ctx = Type.NoContext) exp =
   let open Ast.Expression in
   match exp with
-  | (loc, Identifier (_, name)) -> Statement.identifier cx ~cond name loc
-  | (loc, StringLiteral lit) -> Statement.string_literal cx ~cond loc lit
-  | (loc, BooleanLiteral lit) -> Statement.boolean_literal cx ~cond loc lit
+  | (loc, Identifier (_, name)) -> Statement.identifier cx ~encl_ctx name loc
+  | (loc, StringLiteral lit) -> Statement.string_literal cx ~encl_ctx loc lit
+  | (loc, BooleanLiteral lit) -> Statement.boolean_literal cx ~encl_ctx loc lit
   | (loc, NullLiteral _) -> Statement.null_literal loc
-  | (loc, NumberLiteral lit) -> Statement.number_literal cx ~cond loc lit
-  | (loc, BigIntLiteral lit) -> Statement.bigint_literal cx ~cond loc lit
+  | (loc, NumberLiteral lit) -> Statement.number_literal cx ~encl_ctx loc lit
+  | (loc, BigIntLiteral lit) -> Statement.bigint_literal cx ~encl_ctx loc lit
   | (loc, RegExpLiteral _) -> Statement.regexp_literal cx loc
   | (loc, ModuleRefLiteral lit) ->
     let (t, _lit) = Statement.module_ref_literal cx loc lit in
@@ -127,7 +127,7 @@ let rec synthesizable_expression cx ?cond exp =
           comments = _;
         }
     ) ->
-    let t = synthesizable_expression cx ?cond _object in
+    let t = synthesizable_expression cx ~encl_ctx _object in
     let tout =
       match Refinement.get ~allow_optional:false cx exp loc with
       | Some t -> t
@@ -138,14 +138,14 @@ let rec synthesizable_expression cx ?cond exp =
         Statement.get_prop
           ~use_op (* TODO(jmbrown) This feels incorrect *)
           ~hint:(Type_env.get_hint cx loc)
-          ~cond:None
+          ~encl_ctx:NoContext
           cx
           expr_reason
           t
           (prop_reason, name)
     in
     tout
-  | _ -> expression cx ?cond exp
+  | _ -> expression cx ~encl_ctx exp
 
 let mk_selector_reason_has_default cx loc = function
   | Selector.Elem { index = n; has_default } ->
@@ -803,7 +803,7 @@ let rec resolve_binding cx reason loc b =
       AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-    let right_t = expression cx ~cond:OtherTest exp in
+    let right_t = expression cx ~encl_ctx:OtherTest exp in
     (match kind with
     | In ->
       TypeAssertions.assert_for_in_rhs cx right_t;
@@ -1037,22 +1037,22 @@ let resolve_type_param cx id_loc =
 
 let resolve_chain_expression cx ~cond exp =
   let cache = Context.node_cache cx in
-  let cond =
+  let encl_ctx =
     match cond with
-    | NonConditionalContext -> None
-    | OtherConditionalTest -> Some OtherTest
+    | NonConditionalContext -> NoContext
+    | OtherConditionalTest -> OtherTest
   in
-  let (t, _, exp) = Statement.optional_chain ~cond cx exp in
+  let (t, _, exp) = Statement.optional_chain ~encl_ctx cx exp in
   Node_cache.set_expression cache exp;
   t
 
 let resolve_write_expression cx ~cond exp =
-  let cond =
+  let encl_ctx =
     match cond with
-    | NonConditionalContext -> None
-    | OtherConditionalTest -> Some OtherTest
+    | NonConditionalContext -> NoContext
+    | OtherConditionalTest -> OtherTest
   in
-  synthesizable_expression cx ?cond exp
+  synthesizable_expression cx ~encl_ctx exp
 
 let resolve_generator_next cx reason gen =
   let open TypeUtil in

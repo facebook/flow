@@ -1172,7 +1172,7 @@ module Make
       );
       (loc, Expression { Expression.expression = expr; directive; comments })
     | (loc, If { If.test; consequent; alternate; comments }) ->
-      let test_ast = condition ~cond:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTest cx test in
       let then_ast = statement cx consequent in
       let else_ast =
         Base.Option.map alternate ~f:(fun (loc, { If.Alternate.body; comments }) ->
@@ -1285,7 +1285,7 @@ module Make
                    let (_, fake_ast) =
                      condition
                        cx
-                       ~cond:
+                       ~encl_ctx:
                          (SwitchTest
                             { case_test_loc = fst expr; switch_discriminant_loc = fst discriminant }
                          )
@@ -1368,12 +1368,12 @@ module Make
           }
       )
     | (loc, While { While.test; body; comments }) ->
-      let test_ast = condition ~cond:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTest cx test in
       let body_ast = statement cx body in
       (loc, While { While.test = test_ast; body = body_ast; comments })
     | (loc, DoWhile { DoWhile.body; test; comments }) ->
       let body_ast = statement cx body in
-      let test_ast = condition ~cond:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTest cx test in
       (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments })
     | (loc, For { For.init; test; update; body; comments }) ->
       let init_ast =
@@ -1388,7 +1388,7 @@ module Make
         match test with
         | None -> None
         | Some expr ->
-          let expr_ast = condition ~cond:OtherTest cx expr in
+          let expr_ast = condition ~encl_ctx:OtherTest cx expr in
           Some expr_ast
       in
       let body_ast = statement cx body in
@@ -1398,7 +1398,7 @@ module Make
       )
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let eval_right () =
-        let (((_, _), _) as right_ast) = condition ~cond:OtherTest cx right in
+        let (((_, _), _) as right_ast) = condition ~encl_ctx:OtherTest cx right in
         right_ast
       in
       let (left_ast, right_ast) =
@@ -1508,7 +1508,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let (((_, t), _) as right_ast) = condition ~cond:OtherTest cx right in
+        let (((_, t), _) as right_ast) = condition ~encl_ctx:OtherTest cx right in
         let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
@@ -2767,7 +2767,8 @@ module Make
    * annot should become a Type.t option when we have the ability to
    * inspect annotations and recurse into them *)
   and expression
-      ?cond ?decl ?(as_const = false) ?(frozen = NotFrozen) ?(has_hint = lazy false) cx (loc, e) =
+      ?encl_ctx ?decl ?(as_const = false) ?(frozen = NotFrozen) ?(has_hint = lazy false) cx (loc, e)
+      =
     let log_slow_to_check ~f =
       match Context.slow_to_check_logging cx with
       | { Slow_to_check_logging.slow_expressions_logging_threshold = Some threshold; _ } ->
@@ -2795,7 +2796,7 @@ module Make
           node
         | None ->
           let syntactic_flags =
-            Primitive_literal.mk_syntactic_flags ?cond ?decl ~as_const ~frozen ~has_hint ()
+            Primitive_literal.mk_syntactic_flags ?encl_ctx ?decl ~as_const ~frozen ~has_hint ()
           in
           let res = expression_ cx syntactic_flags loc e in
           if Context.typing_mode cx = Context.CheckingMode then begin
@@ -2827,7 +2828,7 @@ module Make
   and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let { Primitive_literal.cond; decl; as_const; frozen; has_hint } = syntactic_flags in
+    let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
@@ -2875,7 +2876,7 @@ module Make
       let (t, u) = update cx loc u in
       ((loc, t), Update u)
     | Binary b ->
-      let (t, b) = binary cx loc ~cond b in
+      let (t, b) = binary cx loc ~encl_ctx b in
       ((loc, t), Binary b)
     | Logical l ->
       let (t, l) = logical cx syntactic_flags loc l in
@@ -2998,8 +2999,8 @@ module Make
           Abnormal.throw_expr_control_flow_exception loc ast
         else
           ast
-    | Member _ -> subscript ~cond cx ex
-    | OptionalMember _ -> subscript ~cond cx ex
+    | Member _ -> subscript ~encl_ctx cx ex
+    | OptionalMember _ -> subscript ~encl_ctx cx ex
     | Object { Object.properties; comments } ->
       let (t, properties) =
         object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx loc properties
@@ -3239,12 +3240,12 @@ module Make
       ( (loc, t),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
-    | Call _ -> subscript ~cond cx ex
-    | OptionalCall _ -> subscript ~cond cx ex
+    | Call _ -> subscript ~encl_ctx cx ex
+    | OptionalCall _ -> subscript ~encl_ctx cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
       let reason = mk_reason RConditional loc in
-      let test = condition ~cond:OtherTest cx test in
+      let test = condition ~encl_ctx:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
             expression cx ?decl ~has_hint consequent
@@ -3635,7 +3636,7 @@ module Make
          short-circuiting and non short-circuiting (i.e. representing the actual
          range of possible types of the expression)
   *)
-  and optional_chain ~cond cx ((loc, e) as ex) =
+  and optional_chain ~encl_ctx cx ((loc, e) as ex) =
     let open Ast.Expression in
     let normalize_voided_out t =
       let ts = Flow.possible_concrete_types_for_inspection cx (reason_of_t t) t in
@@ -4144,7 +4145,7 @@ module Make
             let arguments =
               Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
-            let (((_, cond_t), _) as cond) = condition ~cond:OtherTest cx cond in
+            let (((_, cond_t), _) as cond) = condition ~encl_ctx:OtherTest cx cond in
             let concretized_cond_t =
               Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t cond_t) cond_t
             in
@@ -4218,7 +4219,7 @@ module Make
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
             get_prop
               ~use_op
-              ~cond
+              ~encl_ctx
               ~hint:(Type_env.get_hint cx loc)
               cx
               expr_reason
@@ -4400,7 +4401,7 @@ module Make
       | NewChain ->
         let lhs_reason = mk_expression_reason obj_ in
         let ((filtered_t, voided_t, object_ast) as object_data) =
-          optional_chain ~cond:None cx obj_
+          optional_chain ~encl_ctx:NoContext cx obj_
         in
         begin
           match refine () with
@@ -4422,7 +4423,7 @@ module Make
             )
           | None -> handle_new_chain conf lhs_reason loc object_data
         end
-      | ContinueChain -> handle_continue_chain conf (optional_chain ~cond:None cx obj_)
+      | ContinueChain -> handle_continue_chain conf (optional_chain ~encl_ctx:NoContext cx obj_)
     in
     let specialize_callee callee specialized_callee =
       let (Specialized_callee { finalized; _ }) = specialized_callee in
@@ -4577,7 +4578,7 @@ module Make
         let use_op = Op (GetProperty expr_reason) in
         let opt_use =
           get_prop_opt_use
-            ~cond
+            ~encl_ctx
             expr_reason
             ~use_op
             ~hint:(Type_env.get_hint cx loc)
@@ -4949,28 +4950,30 @@ module Make
         in
         (filtered_out, voided_out, ((loc, lhs_t), exp object_ast))
       | _ ->
-        let (((_, t), _) as res) = expression ?cond cx ex in
+        let (((_, t), _) as res) = expression ~encl_ctx cx ex in
         (t, [], res))
 
   and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
     let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in
     (argts, (args_loc, { Ast.Expression.ArgList.arguments = arg_asts; comments }))
 
-  and subscript ~cond cx ex =
-    let (_, _, ast) = optional_chain ~cond cx ex in
+  and subscript ~encl_ctx cx ex =
+    let (_, _, ast) = optional_chain ~encl_ctx cx ex in
     ast
 
   (* traverse a unary expression, return result type *)
   and unary cx syntactic_flags loc =
-    let { Primitive_literal.cond; as_const; frozen; _ } = syntactic_flags in
+    let { Primitive_literal.encl_ctx; as_const; frozen; _ } = syntactic_flags in
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
-      let (((_, arg), _) as argument) = expression cx ~cond:OtherTest argument in
+      let (((_, arg), _) as argument) = expression cx ~encl_ctx:OtherTest argument in
       let tout =
-        match cond with
-        | Some _ -> BoolModuleT.at loc
-        | None ->
+        match encl_ctx with
+        | SwitchTest _
+        | OtherTest ->
+          BoolModuleT.at loc
+        | NoContext ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5068,12 +5071,13 @@ module Make
     (result_t, { expr with argument = arg_ast })
 
   (* Returns a function that type check LHS or RHS of eq_test under correct conditional context. *)
-  and visit_eq_test cx ~cond loc left right =
-    let check ~cond = expression cx ?cond in
-    match cond with
-    | None -> check ~cond:None
-    | Some c ->
-      let reconstruct_ast = check ~cond:(Some OtherTest) in
+  and visit_eq_test cx ~encl_ctx loc left right =
+    let check ~encl_ctx = expression cx ~encl_ctx in
+    match encl_ctx with
+    | NoContext -> check ~encl_ctx:NoContext
+    | SwitchTest _
+    | OtherTest ->
+      let reconstruct_ast = check ~encl_ctx:OtherTest in
       Eq_test.visit_eq_test
       (* Strict and sense don't influence whether we should propagate cond context. *)
         ~sense:false
@@ -5084,11 +5088,11 @@ module Make
         ~on_void_test:(fun ~sense:_ ~strict:_ ~check_for_bound_undefined:_ _ _ _ -> reconstruct_ast)
         ~on_member_eq_other:(fun _ _value -> reconstruct_ast)
         ~on_other_eq_member:(fun _value _ -> reconstruct_ast)
-        ~on_other_eq_test:(fun _ _ -> check ~cond:None)
+        ~on_other_eq_test:(fun _ _ -> check ~encl_ctx:NoContext)
         ~is_switch_cond_context:
-          (match c with
+          (match encl_ctx with
           | SwitchTest _ -> true
-          | OtherTest -> false)
+          | _ -> false)
         loc
         left
         right
@@ -5115,12 +5119,12 @@ module Make
     | _ -> ()
 
   (* traverse a binary expression, return result type *)
-  and binary cx loc ~cond { Ast.Expression.Binary.operator; left; right; comments } =
+  and binary cx loc ~encl_ctx { Ast.Expression.Binary.operator; left; right; comments } =
     let open Ast.Expression.Binary in
     match operator with
     | Equal
     | NotEqual ->
-      let reconstruct_ast = visit_eq_test cx ~cond loc left right in
+      let reconstruct_ast = visit_eq_test cx ~encl_ctx loc left right in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
       Operators.check_eq cx (t1, t2);
@@ -5133,19 +5137,22 @@ module Make
       (BoolModuleT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
-      let reconstruct_ast = visit_eq_test cx ~cond loc left right in
+      let reconstruct_ast = visit_eq_test cx ~encl_ctx loc left right in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
-      Base.Option.iter
-        ~f:(fun _ ->
+      begin
+        match encl_ctx with
+        | NoContext -> ()
+        | SwitchTest _
+        | OtherTest ->
           matching_prop_check cx left right;
           (* If this is a switch statement only consider the case where the object
            * access in the discriminant. *)
-          match cond with
-          | Some (SwitchTest _) -> ()
+          (match encl_ctx with
+          | SwitchTest _ -> ()
           | _ -> matching_prop_check cx right left)
-        cond;
-      Operators.check_strict_eq ~cond_context:cond cx (t1, t2);
+      end;
+      Operators.check_strict_eq ~encl_ctx cx (t1, t2);
       (BoolModuleT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in
@@ -5185,7 +5192,7 @@ module Make
 
   and logical cx syntactic_flags loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
-    let { Primitive_literal.cond; has_hint; _ } = syntactic_flags in
+    let { Primitive_literal.encl_ctx; has_hint; _ } = syntactic_flags in
     let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -5197,9 +5204,11 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = condition ~cond:OtherTest ~has_hint cx left in
+      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond ~has_hint right)
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            expression cx ~encl_ctx ~has_hint right
+        )
       in
       let t2 =
         if right_throws then
@@ -5210,9 +5219,11 @@ module Make
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
     | And ->
-      let (((_, t1), _) as left) = condition ~cond:OtherTest ~has_hint cx left in
+      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?cond ~has_hint right)
+        Abnormal.catch_expr_control_flow_exception (fun () ->
+            expression cx ~encl_ctx ~has_hint right
+        )
       in
       let t2 =
         if right_throws then
@@ -5305,7 +5316,7 @@ module Make
       *)
       match (optional, mode) with
       | ((NewChain | ContinueChain), Delete) ->
-        let (o, _, _object) = optional_chain ~cond:None cx obj in
+        let (o, _, _object) = optional_chain ~encl_ctx:NoContext cx obj in
         (o, _object)
       | _ ->
         let (((_, o), _) as _object) = expression cx obj in
@@ -5564,7 +5575,7 @@ module Make
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
-          let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
@@ -5579,7 +5590,7 @@ module Make
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
-          let ((_, lhs_t), _) = condition ~cond:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTest cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
@@ -5705,7 +5716,14 @@ module Make
         let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
         let react = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
         let use_op = Op (GetProperty reason) in
-        get_prop ~cond:None cx reason ~use_op ~hint:hint_unavailable react (reason, "Fragment")
+        get_prop
+          ~encl_ctx:NoContext
+          cx
+          reason
+          ~use_op
+          ~hint:hint_unavailable
+          react
+          (reason, "Fragment")
     in
     let (unresolved_params, frag_children) = collapse_children cx frag_children in
     let props =
@@ -6208,7 +6226,7 @@ module Make
       let react_t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
       let create_element_t =
         get_prop
-          ~cond:None
+          ~encl_ctx:NoContext
           cx
           reason
           ~use_op
@@ -6432,8 +6450,8 @@ module Make
      accesses are provisionally allowed even when such properties do not exist.
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
-  and condition cx ~cond ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    expression ~cond ?has_hint cx e
+  and condition cx ~encl_ctx ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    expression ~encl_ctx ?has_hint cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Type_env.get_class_entries cx in
@@ -6446,12 +6464,14 @@ module Make
      expressions out of `expression`, somewhat like what assignment_lhs does. That
      would make everything involving Refinement be in the same place.
   *)
-  and get_prop_opt_use ~cond reason ~use_op ~hint (prop_reason, name) =
+  and get_prop_opt_use ~encl_ctx reason ~use_op ~hint (prop_reason, name) =
     let id = mk_id () in
     let prop_name = OrdinaryName name in
-    if Base.Option.is_some cond then
+    match encl_ctx with
+    | SwitchTest _
+    | OtherTest ->
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
-    else
+    | NoContext ->
       OptGetPropT
         {
           use_op;
@@ -6461,8 +6481,8 @@ module Make
           hint;
         }
 
-  and get_prop ~cond cx reason ~use_op ~hint tobj (prop_reason, name) =
-    let opt_use = get_prop_opt_use ~cond reason ~use_op ~hint (prop_reason, name) in
+  and get_prop ~encl_ctx cx reason ~use_op ~hint tobj (prop_reason, name) =
+    let opt_use = get_prop_opt_use ~encl_ctx reason ~use_op ~hint (prop_reason, name) in
     Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
         let get_prop_u = apply_opt_use opt_use t in
         Flow.flow cx (tobj, get_prop_u)
@@ -8601,21 +8621,21 @@ module Make
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
 
-  let expression ?cond ?decl ?as_const cx (loc, e) =
-    expression ?cond ?decl ?as_const ~frozen:NotFrozen cx (loc, e)
+  let expression ?encl_ctx ?decl ?as_const cx (loc, e) =
+    expression ?encl_ctx ?decl ?as_const ~frozen:NotFrozen cx (loc, e)
 
-  let identifier ~cond cx id loc =
-    identifier cx { empty_syntactic_flags with Primitive_literal.cond } id loc
+  let identifier ~encl_ctx cx id loc =
+    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx } id loc
 
-  let string_literal cx ~cond loc v =
-    string_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+  let string_literal cx ~encl_ctx loc v =
+    string_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
 
-  let number_literal cx ~cond loc v =
-    number_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+  let number_literal cx ~encl_ctx loc v =
+    number_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
 
-  let boolean_literal cx ~cond loc v =
-    boolean_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+  let boolean_literal cx ~encl_ctx loc v =
+    boolean_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
 
-  let bigint_literal cx ~cond loc v =
-    bigint_literal cx { empty_syntactic_flags with Primitive_literal.cond } loc v
+  let bigint_literal cx ~encl_ctx loc v =
+    bigint_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
 end

@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 
 type syntactic_flags = {
-  cond: Type.cond_context option;
+  encl_ctx: Type.enclosing_context;
   decl: Ast.Variable.kind option;
   as_const: bool;
   frozen: Type.frozen_kind;
@@ -18,7 +18,7 @@ type syntactic_flags = {
 val empty_syntactic_flags : syntactic_flags
 
 val mk_syntactic_flags :
-  ?cond:Type.cond_context ->
+  ?encl_ctx:Type.enclosing_context ->
   ?decl:Ast.Variable.kind ->
   ?as_const:bool ->
   ?frozen:Type.frozen_kind ->

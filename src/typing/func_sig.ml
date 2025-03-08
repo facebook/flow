@@ -465,7 +465,7 @@ struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | Func.FieldInit e ->
-            let (((_, t), _) as ast) = Statement.expression ?cond:None cx e in
+            let (((_, t), _) as ast) = Statement.expression ~encl_ctx:Type.NoContext cx e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

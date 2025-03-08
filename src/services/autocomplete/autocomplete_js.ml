@@ -162,7 +162,7 @@ module Inference = struct
   let type_of_match_member_pattern cx loc mem =
     Match_pattern.type_of_member_pattern
       cx
-      ~on_identifier:(Statement.identifier ~cond:None)
+      ~on_identifier:(Statement.identifier ~encl_ctx:Type.NoContext)
       ~on_expression:Statement.expression
       (loc, mem)
 end
@@ -966,7 +966,8 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
       let member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc:base_loc) in
       let obj_type () =
         match base with
-        | BaseIdentifier (loc, id) -> Inference.type_of_identifier ~cond:None cx loc id
+        | BaseIdentifier (loc, id) ->
+          Inference.type_of_identifier ~encl_ctx:Type.NoContext cx loc id
         | BaseMember (loc, mem) -> Inference.type_of_match_member_pattern cx loc mem
       in
       (match property with
