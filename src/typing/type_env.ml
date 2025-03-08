@@ -969,7 +969,7 @@ let init_env cx toplevel_scope_kind =
                   Error_message.(EInternal (loc_of_reason reason, ReadOfUnreachedTvar def_loc_type));
                 match Context.typing_mode cx with
                 | Context.CheckingMode -> AnyT.error reason
-                | Context.SynthesisMode
+                | Context.SynthesisMode _
                 | Context.HintEvaluationMode ->
                   AnyT.placeholder reason
               )

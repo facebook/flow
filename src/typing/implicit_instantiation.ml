@@ -1038,7 +1038,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                 if has_new_errors then
                   match Context.typing_mode cx with
                   | Context.CheckingMode -> Some (AnyT.error (TypeUtil.reason_of_t t))
-                  | Context.SynthesisMode
+                  | Context.SynthesisMode _
                   | Context.HintEvaluationMode ->
                     Some (AnyT.placeholder (TypeUtil.reason_of_t t))
                 else
@@ -1553,7 +1553,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       )
     in
     if in_nested_instantiation then
-      Context.run_in_synthesis_mode cx f |> snd
+      Context.run_in_synthesis_mode cx ~target_loc:None f |> snd
     else
       f ()
 

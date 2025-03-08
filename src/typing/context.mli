@@ -129,8 +129,10 @@ type metadata = {
 
 type typing_mode =
   | CheckingMode
-  | SynthesisMode
+  | SynthesisMode of { target_loc: ALoc.t option }
   | HintEvaluationMode
+
+val show_typing_mode : typing_mode Nel.t -> string
 
 type resolved_require =
   | TypedModule of (unit -> (Type.moduletype, Type.t) result)
@@ -427,7 +429,7 @@ val set_union_opt : t -> ALoc.t -> Type.t -> unit
 
 val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
-val run_in_synthesis_mode : t -> (unit -> 'a) -> bool * 'a
+val run_in_synthesis_mode : t -> target_loc:ALoc.t option -> (unit -> 'a) -> bool * 'a
 
 val run_in_signature_tvar_env : t -> (unit -> 'a) -> 'a
 
@@ -517,7 +519,7 @@ val env_cache_find_opt : t -> for_value:bool -> int -> possibly_refined_write_st
 
 val hint_eval_cache_find_opt : t -> int -> Type.t option option
 
-val hint_map_arglist_cache : t -> (ALoc.t * Type.call_arg) list ALocMap.t ref
+val hint_map_arglist_cache : t -> (ALoc.t * ALoc.t option, (ALoc.t * Type.call_arg) list) Hashtbl.t
 
 val hint_map_jsx_cache : t -> (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t) Hashtbl.t
 

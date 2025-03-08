@@ -115,7 +115,15 @@ let rec get_t cx ~depth = function
    complicated case known. If we run into issues in the future, we can increase the depth limit. *)
 let get_t = get_t ~depth:3
 
-let rec instantiate_callee cx fn instantiation_hint =
+type concr_hint =
+  ( Type.t,
+    Type.targ list option,
+    target_loc:ALoc.t option -> (ALoc.t * Type.call_arg) Base.List.t,
+    Type.t Lazy.t
+  )
+  Hint.hint
+
+let rec instantiate_callee cx target_reason fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let rec handle_poly = function
     | DefT (_, ObjT { call_t = Some id; _ })
@@ -174,7 +182,7 @@ let rec instantiate_callee cx fn instantiation_hint =
               in
               t' :: loop (i + 1) rest
           in
-          loop 0 (Lazy.force arg_list)
+          loop 0 ((Lazy.force arg_list) ~target_loc:(Some (Reason.loc_of_reason target_reason)))
         in
         let return_hint =
           match evaluate_hints cx ~expected_only:false reason (Lazy.force return_hints) with
@@ -217,7 +225,9 @@ let rec instantiate_callee cx fn instantiation_hint =
           reason
           (r, rep)
           (Lazy.force targs)
-          (Lazy.force arg_list |> Base.List.map ~f:snd)
+          ((Lazy.force arg_list) ~target_loc:(Some (Reason.loc_of_reason target_reason))
+          |> Base.List.map ~f:snd
+          )
       | t -> t
     in
     handle_poly (get_t cx t)
@@ -627,7 +637,7 @@ and type_of_hint_decomposition cx op reason t =
         | MaybeT (_, t) -> simplify t
         | OptionalT { type_; _ } -> simplify type_
         | fn -> fn)
-      | Instantiate_Callee instantiation_hint -> instantiate_callee cx t instantiation_hint
+      | Instantiate_Callee instantiation_hint -> instantiate_callee cx reason t instantiation_hint
       | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
       | Decomp_Promise ->
         Tvar.mk_where cx reason (fun inner_t ->

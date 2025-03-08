@@ -26,12 +26,11 @@ let mk_tparams_map cx tparams_map =
     tparams_map
     Subst_name.Map.empty
 
-let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l =
- fun ~check ~cache cx ->
+let try_cache ~target_loc ~check ~cache cx =
   if Context.typing_mode cx <> Context.CheckingMode then begin
     let original_errors = Context.errors cx in
     Context.reset_errors cx Flow_error.ErrorSet.empty;
-    let (produced_placeholders, e) = Context.run_in_synthesis_mode cx check in
+    let (produced_placeholders, e) = Context.run_in_synthesis_mode ~target_loc cx check in
     let can_cache =
       (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
          we can cache the result *)
@@ -47,9 +46,15 @@ let try_cache : 'l. check:(unit -> 'l) -> cache:('l -> unit) -> Context.t -> 'l 
 
 let expression cx ?encl_ctx ?decl exp =
   let cache = Context.node_cache cx in
+  let target_loc =
+    match Context.typing_mode cx with
+    | Context.SynthesisMode { target_loc } -> target_loc
+    | _ -> None
+  in
   let ((_, t), _) =
     try_cache
       cx
+      ~target_loc
       ~check:(fun () -> Statement.expression ?encl_ctx ?decl cx exp)
       ~cache:(Node_cache.set_expression cache)
   in
@@ -165,32 +170,37 @@ let mk_selector_reason_has_default cx loc = function
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
   | Selector.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
-let synthesize_expression_for_instantiation cx e =
+let synthesize_expression_for_instantiation ~target_loc cx e =
   let cache = Context.node_cache cx in
-  try_cache cx ~check:(fun () -> Statement.expression cx e) ~cache:(Node_cache.set_expression cache)
+  try_cache
+    cx
+    ~target_loc
+    ~check:(fun () -> Statement.expression cx e)
+    ~cache:(Node_cache.set_expression cache)
 
 let synthesize_jsx_children_for_instantiation cx children =
   let cache = Context.node_cache cx in
   try_cache
     cx
+    ~target_loc:None
     ~check:(fun () -> Statement.collapse_children cx children)
     ~cache:(Node_cache.set_jsx_children cache)
 
-let synth_arg_list cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
+let synth_arg_list ~target_loc cx (_loc, { Ast.Expression.ArgList.arguments; comments = _ }) =
   Base.List.map
     arguments
     ~f:
       (let open Ast.Expression in
       function
       | Expression e ->
-        let ((loc, t), _) = synthesize_expression_for_instantiation cx e in
+        let ((loc, t), _) = synthesize_expression_for_instantiation ~target_loc cx e in
         (loc, Arg t)
       | Spread (_, { SpreadElement.argument = e; comments = _ }) ->
-        let ((loc, t), _) = synthesize_expression_for_instantiation cx e in
+        let ((loc, t), _) = synthesize_expression_for_instantiation ~target_loc cx e in
         (loc, SpreadArg t)
       )
 
-let resolve_hint cx loc hint =
+let resolve_hint cx loc hint : Type_hint.concr_hint =
   let rec resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
     | ValueHint exp -> expression cx exp
@@ -275,14 +285,14 @@ let resolve_hint cx loc hint =
   in
   let map_base_hint = resolve_hint_node in
   let map_targs = Statement.convert_call_targs_opt' cx in
-  let map_arg_list arg_list =
-    let cache_ref = Context.hint_map_arglist_cache cx in
+  let map_arg_list arg_list ~target_loc =
+    let cache = Context.hint_map_arglist_cache cx in
     let (l, _) = arg_list in
-    match ALocMap.find_opt l !cache_ref with
+    match Hashtbl.find_opt cache (l, target_loc) with
     | Some result -> result
     | None ->
-      let result = synth_arg_list cx arg_list in
-      cache_ref := ALocMap.add l result !cache_ref;
+      let result = synth_arg_list ~target_loc cx arg_list in
+      Hashtbl.add cache (l, target_loc) result;
       result
   in
   let map_jsx reason name (props, children) =
@@ -309,7 +319,7 @@ let resolve_hint cx loc hint =
              Statement.jsx_mk_props
                cx
                reason
-               ~check_expression:synthesize_expression_for_instantiation
+               ~check_expression:(synthesize_expression_for_instantiation ~target_loc:None)
                ~collapse_children:synthesize_jsx_children_for_instantiation
                name
                props
@@ -352,7 +362,7 @@ let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
      let (_, callee) =
        Type_env.with_class_stack cx class_stack ~f:(fun () ->
            (* Synthesis mode to avoid caching *)
-           Context.run_in_synthesis_mode cx (fun () ->
+           Context.run_in_synthesis_mode cx ~target_loc:None (fun () ->
                let original_errors = Context.errors cx in
                Context.reset_errors cx Flow_error.ErrorSet.empty;
                match expression cx callee with

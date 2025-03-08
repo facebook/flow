@@ -223,7 +223,7 @@ type component_t = {
 
 type typing_mode =
   | CheckingMode
-  | SynthesisMode
+  | SynthesisMode of { target_loc: ALoc.t option }
   | HintEvaluationMode
 
 type resolved_require =
@@ -237,7 +237,7 @@ type t = {
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   resolve_require: resolve_require;
-  hint_map_arglist_cache: (ALoc.t * Type.call_arg) list ALocMap.t ref;
+  hint_map_arglist_cache: (ALoc.t * ALoc.t option, (ALoc.t * Type.call_arg) list) Hashtbl.t;
   hint_map_jsx_cache: (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable environment: Loc_env.t;
@@ -430,7 +430,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
       aloc_table;
       metadata;
       resolve_require;
-      hint_map_arglist_cache = ref ALocMap.empty;
+      hint_map_arglist_cache = Hashtbl.create 0;
       hint_map_jsx_cache = Hashtbl.create 0;
       hint_eval_cache = IMap.empty;
       environment = Loc_env.empty Name_def.Global;
@@ -681,6 +681,16 @@ let full_typing_mode cx = cx.typing_mode
 
 let typing_mode cx = Nel.hd cx.typing_mode
 
+let show_typing_mode_frame = function
+  | CheckingMode -> "CheckingMode"
+  | SynthesisMode { target_loc = Some loc } ->
+    Utils_js.spf "SynthesisMode (target=%s)" (Reason.string_of_aloc loc)
+  | SynthesisMode { target_loc = None } -> "SynthesisMode (no target)"
+  | HintEvaluationMode -> "HintEvaluationMode"
+
+let show_typing_mode frames =
+  frames |> Nel.to_list |> Base.List.map ~f:show_typing_mode_frame |> String.concat ", "
+
 let node_cache cx = cx.node_cache
 
 let refined_locations cx = cx.refined_locations
@@ -739,7 +749,11 @@ let add_tvar cx id bounds =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let mk_placeholder cx reason =
-  if Nel.hd cx.typing_mode = SynthesisMode then cx.ccx.synthesis_produced_placeholders <- true;
+  begin
+    match Nel.hd cx.typing_mode with
+    | SynthesisMode { target_loc = _ } -> cx.ccx.synthesis_produced_placeholders <- true
+    | _ -> ()
+  end;
   Type.AnyT.placeholder reason
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
@@ -909,11 +923,11 @@ let run_and_rolled_back_cache cx f =
   cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
-let run_in_synthesis_mode cx f =
+let run_in_synthesis_mode cx ~target_loc f =
   let old_typing_mode = cx.typing_mode in
   let old_produced_placeholders = cx.ccx.synthesis_produced_placeholders in
   cx.ccx.synthesis_produced_placeholders <- false;
-  cx.typing_mode <- Nel.cons SynthesisMode cx.typing_mode;
+  cx.typing_mode <- Nel.cons (SynthesisMode { target_loc }) cx.typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
   let produced_placeholders = ref false in
