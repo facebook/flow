@@ -897,6 +897,8 @@ module rec TypeTerm : sig
       }
     (* `if(C){}`, `while(C){}`, `C?e1:e2`, `invariant(C)`, ... *)
     | OtherTest
+    (* `o[C]`, `o[C]=e`, `{[C]:e}`, `o[C]()` *)
+    | IndexContext
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,

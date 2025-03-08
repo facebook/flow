@@ -162,7 +162,7 @@ module Inference = struct
   let type_of_match_member_pattern cx loc mem =
     Match_pattern.type_of_member_pattern
       cx
-      ~on_identifier:(Statement.identifier ~encl_ctx:Type.NoContext)
+      ~on_identifier:Statement.identifier
       ~on_expression:Statement.expression
       (loc, mem)
 end

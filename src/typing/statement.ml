@@ -1221,7 +1221,8 @@ module Make
                     Flow_ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
                   )
                   pattern
-                  ~on_identifier:(fun cx -> identifier cx empty_syntactic_flags)
+                  ~on_identifier:(fun ~encl_ctx cx ->
+                    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx })
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -2493,7 +2494,7 @@ module Make
                     shorthand;
                   }
               ) ->
-            let (((_, kt), _) as k') = expression cx k in
+            let (((_, kt), _) as k') = expression cx ~encl_ctx:IndexContext k in
             let (((_, vt), _) as v') = expression cx ~as_const v in
             let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_computed cx computed acc,
@@ -2516,7 +2517,7 @@ module Make
                     value = (fn_loc, fn);
                   }
               ) ->
-            let (((_, kt), _) as k') = expression cx k in
+            let (((_, kt), _) as k') = expression cx ~encl_ctx:IndexContext k in
             let ((_, vt), v') = expression cx (fn_loc, Ast.Expression.Function fn) in
             let fn =
               match v' with
@@ -2946,7 +2947,8 @@ module Make
                   cx
                   (case_loc, Identifier (Flow_ast_utils.match_root_ident case_loc))
                   pattern
-                  ~on_identifier:(fun cx -> identifier cx empty_syntactic_flags)
+                  ~on_identifier:(fun ~encl_ctx cx ->
+                    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx })
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -4539,7 +4541,7 @@ module Make
           )
         in
         let eval_index () =
-          let (((_, tind), _) as index) = expression cx index in
+          let (((_, tind), _) as index) = expression ~encl_ctx:IndexContext cx index in
           (tind, index)
         in
         let conf =
@@ -4836,7 +4838,7 @@ module Make
               )
             in
             let eval_args_and_expr () =
-              let (((_, elem_t), _) as expr) = expression cx expr in
+              let (((_, elem_t), _) as expr) = expression ~encl_ctx:IndexContext cx expr in
               let (argts, arguments_ast) = arg_list cx arguments in
               ((argts, elem_t), (arguments_ast, expr))
             in
@@ -4973,7 +4975,8 @@ module Make
         | SwitchTest _
         | OtherTest ->
           BoolModuleT.at loc
-        | NoContext ->
+        | NoContext
+        | IndexContext ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5074,7 +5077,9 @@ module Make
   and visit_eq_test cx ~encl_ctx loc left right =
     let check ~encl_ctx = expression cx ~encl_ctx in
     match encl_ctx with
-    | NoContext -> check ~encl_ctx:NoContext
+    | NoContext
+    | IndexContext ->
+      check ~encl_ctx
     | SwitchTest _
     | OtherTest ->
       let reconstruct_ast = check ~encl_ctx:OtherTest in
@@ -5142,7 +5147,9 @@ module Make
       let (((_, t2), _) as right) = reconstruct_ast right in
       begin
         match encl_ctx with
-        | NoContext -> ()
+        | NoContext
+        | IndexContext ->
+          ()
         | SwitchTest _
         | OtherTest ->
           matching_prop_check cx left right;
@@ -5452,7 +5459,7 @@ module Make
       let reason = mk_reason (RPropertyAssignment None) lhs_loc in
       let lhs_reason = mk_expression_reason _object in
       let (o, _object) = typecheck_object _object in
-      let (((_, i), _) as index) = expression cx index in
+      let (((_, i), _) as index) = expression ~encl_ctx:IndexContext cx index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
       let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
       Flow.flow cx (o, upper);
@@ -6471,7 +6478,8 @@ module Make
     | SwitchTest _
     | OtherTest ->
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
-    | NoContext ->
+    | NoContext
+    | IndexContext ->
       OptGetPropT
         {
           use_op;

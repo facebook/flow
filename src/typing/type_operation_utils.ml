@@ -256,6 +256,7 @@ module Operators = struct
                 explanation = None;
               }
           | NoContext
+          | IndexContext
           | OtherTest ->
             let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
             Error_message.EComparison reasons)
@@ -282,6 +283,7 @@ module Operators = struct
         match encl_ctx with
         | SwitchTest _ -> Some (Lazy.force comparison_error)
         | NoContext
+        | IndexContext
         | OtherTest ->
           None
       end
