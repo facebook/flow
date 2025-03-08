@@ -2409,6 +2409,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         match arguments with
         | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_is_array callee ->
           this#visit_expression ~hints:[] ~cond expr
+        | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_require callee ->
+          this#visit_expression ~hints:[] ~cond expr
         | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_object_dot_freeze callee
           ->
           this#visit_expression ~hints ~cond:NonConditionalContext expr

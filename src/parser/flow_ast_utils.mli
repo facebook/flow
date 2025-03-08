@@ -35,6 +35,8 @@ val hoist_function_and_component_declarations :
 
 val is_call_to_invariant : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val is_call_to_require : ('a, 'b) Flow_ast.Expression.t -> bool
+
 val is_call_to_is_array : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_call_to_object_dot_freeze : ('a, 'b) Flow_ast.Expression.t -> bool
