@@ -431,6 +431,9 @@ val run_and_rolled_back_cache : t -> (unit -> 'a) -> 'a
 
 val run_in_synthesis_mode : t -> target_loc:ALoc.t option -> (unit -> 'a) -> bool * 'a
 
+val run_in_synthesis_mode_with_errors :
+  t -> target_loc:ALoc.t option -> f:(unit -> 'a) -> bool * ('a * Flow_error.ErrorSet.t)
+
 val run_in_signature_tvar_env : t -> (unit -> 'a) -> 'a
 
 val run_in_hint_eval_mode : t -> (unit -> 'a) -> 'a

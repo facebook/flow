@@ -359,25 +359,18 @@ let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
      in
      (* [callee] might be a member access expression. Since we are explicitly unbinding it from
       * the call, make sure we don't raise a method-unbinding error. *)
-     let (_, callee) =
+     let callee =
        Type_env.with_class_stack cx class_stack ~f:(fun () ->
            (* Synthesis mode to avoid caching *)
-           Context.run_in_synthesis_mode cx ~target_loc:None (fun () ->
-               let original_errors = Context.errors cx in
-               Context.reset_errors cx Flow_error.ErrorSet.empty;
-               match expression cx callee with
-               | exception exn ->
-                 let exn = Exception.wrap exn in
-                 Context.reset_errors cx original_errors;
-                 Exception.reraise exn
-               | t ->
-                 let new_errors = Context.errors cx in
-                 Context.reset_errors cx original_errors;
-                 if Flow_error.is_lint_only_errorset new_errors then
-                   t
-                 else
-                   AnyT.at (AnyError None) loc
-           )
+           let (_, (t, new_errors)) =
+             Context.run_in_synthesis_mode_with_errors cx ~target_loc:None ~f:(fun () ->
+                 expression cx callee
+             )
+           in
+           if Flow_error.is_lint_only_errorset new_errors then
+             t
+           else
+             AnyT.at (AnyError None) loc
        )
      in
      let targs = Statement.convert_call_targs_opt' cx targs in

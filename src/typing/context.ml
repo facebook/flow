@@ -923,9 +923,11 @@ let run_and_rolled_back_cache cx f =
   cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () -> restore_cache_snapshot cx cache_snapshot)
 
-let run_in_synthesis_mode cx ~target_loc f =
+let run_in_synthesis_mode cx ?(reset_forcing_state = false) ~target_loc f =
   let old_typing_mode = cx.typing_mode in
   let old_produced_placeholders = cx.ccx.synthesis_produced_placeholders in
+  let old_delayed_forcing_tvars = cx.ccx.delayed_forcing_tvars in
+  let old_post_component_tvar_forcing_states = cx.ccx.post_component_tvar_forcing_states in
   cx.ccx.synthesis_produced_placeholders <- false;
   cx.typing_mode <- Nel.cons (SynthesisMode { target_loc }) cx.typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
@@ -936,10 +938,31 @@ let run_in_synthesis_mode cx ~target_loc f =
         restore_cache_snapshot cx cache_snapshot;
         cx.typing_mode <- old_typing_mode;
         produced_placeholders := cx.ccx.synthesis_produced_placeholders;
-        cx.ccx.synthesis_produced_placeholders <- old_produced_placeholders
+        cx.ccx.synthesis_produced_placeholders <- old_produced_placeholders;
+        if reset_forcing_state then (
+          cx.ccx.delayed_forcing_tvars <- old_delayed_forcing_tvars;
+          cx.ccx.post_component_tvar_forcing_states <- old_post_component_tvar_forcing_states
+        )
     )
   in
   (!produced_placeholders, result)
+
+let run_in_synthesis_mode_with_errors cx ~target_loc ~f =
+  (* Since this mode resets errors, we make sure to reset_forcing_state so that
+   * we don't raise errors in a post-inference pass. *)
+  run_in_synthesis_mode cx ~reset_forcing_state:true ~target_loc (fun () ->
+      let original_errors = errors cx in
+      reset_errors cx Flow_error.ErrorSet.empty;
+      match f () with
+      | exception exn ->
+        let exn = Exception.wrap exn in
+        reset_errors cx original_errors;
+        Exception.reraise exn
+      | t ->
+        let new_errors = errors cx in
+        reset_errors cx original_errors;
+        (t, new_errors)
+  )
 
 let run_in_signature_tvar_env cx f =
   let saved_speculation_state = !(cx.ccx.speculation_state) in
@@ -1159,3 +1182,6 @@ let new_specialized_callee cx =
       speculative_candidates = [];
       sig_help = [];
     }
+
+(* External uses shouldn't need to reset forcing state. *)
+let run_in_synthesis_mode = run_in_synthesis_mode ~reset_forcing_state:false
