@@ -182,6 +182,7 @@ type expression_node_parent =
   | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
   | SlotParentOfExpression (* Any slot that does not require expression to be parenthesized. *)
   | SpreadParentOfExpression
+  | MatchExpressionCaseBodyParentOfExpression
 [@@deriving show]
 
 type statement_node_parent =
@@ -224,6 +225,8 @@ type node =
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Ast.JSX.Identifier.t
+  | MatchPattern of (Loc.t, Loc.t) Ast.MatchPattern.t
+  | MatchObjectPatternProperty of (Loc.t, Loc.t) Ast.MatchPattern.ObjectPattern.Property.t
 [@@deriving show]
 
 let expand_loc_with_comments loc node =
@@ -269,6 +272,9 @@ let expand_loc_with_comments loc node =
     | TemplateLiteral (loc, lit) ->
       bounds (loc, lit) (fun collect (loc, lit) -> collect#template_literal loc lit)
     | JSXIdentifier id -> bounds id (fun collect id -> collect#jsx_identifier id)
+    | MatchPattern pat -> bounds pat (fun collect pat -> collect#match_pattern pat)
+    | MatchObjectPatternProperty prop ->
+      bounds prop (fun collect prop -> collect#match_object_pattern_property prop)
     (* Nodes that do have attached comments *)
     | Raw _
     | Comment _
@@ -661,6 +667,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         declare_variable loc decl1 decl2
       | ((loc, EnumDeclaration enum1), (_, EnumDeclaration enum2)) ->
         enum_declaration loc enum1 enum2
+      | ((loc, Match m1), (_, Match m2)) -> match_statement loc m1 m2
       | ((loc, Empty empty1), (_, Empty empty2)) -> empty_statement loc empty1 empty2
       | (_, _) -> None
     in
@@ -1553,6 +1560,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
       | ((loc, MetaProperty m1), (_, MetaProperty m2)) -> meta_property loc m1 m2
       | ((loc, Import i1), (_, Import i2)) -> import_expression loc i1 i2
+      | ((loc, Match m1), (_, Match m2)) -> match_expression loc m1 m2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
@@ -3541,6 +3549,243 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
            argument1
            argument2
         )
+    in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [argument; comments]
+  and match_expression
+      (loc : Loc.t)
+      (m1 : (Loc.t, Loc.t) Ast.Expression.match_expression)
+      (m2 : (Loc.t, Loc.t) Ast.Expression.match_expression) : node change list option =
+    let open Ast.Match in
+    let { arg = arg1; cases = cases1; comments = comments1; match_keyword_loc = _ } = m1 in
+    let { arg = arg2; cases = cases2; comments = comments2; match_keyword_loc = _ } = m2 in
+    let arg = Some (diff_if_changed (expression ~parent:SlotParentOfExpression) arg1 arg2) in
+    let cases = diff_and_recurse_no_trivial match_expression_case cases1 cases2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [arg; cases; comments]
+  and match_expression_case (loc, c1) (_, c2) : node change list option =
+    let open Ast.Match.Case in
+    let { pattern = pattern1; body = body1; guard = guard1; comments = comments1 } = c1 in
+    let { pattern = pattern2; body = body2; guard = guard2; comments = comments2 } = c2 in
+    let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
+    let body =
+      Some
+        (diff_if_changed (expression ~parent:MatchExpressionCaseBodyParentOfExpression) body1 body2)
+    in
+    let guard =
+      diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) guard1 guard2
+    in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [pattern; body; guard; comments]
+  and match_statement
+      (loc : Loc.t)
+      (m1 : (Loc.t, Loc.t) Ast.Statement.match_statement)
+      (m2 : (Loc.t, Loc.t) Ast.Statement.match_statement) : node change list option =
+    let open Ast.Match in
+    let { arg = arg1; cases = cases1; comments = comments1; match_keyword_loc = _ } = m1 in
+    let { arg = arg2; cases = cases2; comments = comments2; match_keyword_loc = _ } = m2 in
+    let arg = Some (diff_if_changed (expression ~parent:SlotParentOfExpression) arg1 arg2) in
+    let cases = diff_and_recurse_no_trivial match_statement_case cases1 cases2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [arg; cases; comments]
+  and match_statement_case (loc, c1) (_, c2) : node change list option =
+    let open Ast.Match.Case in
+    let { pattern = pattern1; body = (block_loc, block1); guard = guard1; comments = comments1 } =
+      c1
+    in
+    let { pattern = pattern2; body = (_, block2); guard = guard2; comments = comments2 } = c2 in
+    let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
+    let body = block block_loc block1 block2 in
+    let guard =
+      diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) guard1 guard2
+    in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [pattern; body; guard; comments]
+  and match_pattern (p1 : (Loc.t, Loc.t) Ast.MatchPattern.t) (p2 : (Loc.t, Loc.t) Ast.MatchPattern.t)
+      : node change list =
+    let open Ast.MatchPattern in
+    let result =
+      match (p1, p2) with
+      | ((loc, WildcardPattern p1), (_, WildcardPattern p2)) ->
+        diff_if_changed_ret_opt (syntax_opt loc) p1 p2
+      | ((loc1, NumberPattern p1), (loc2, NumberPattern p2)) ->
+        diff_if_changed_ret_opt (number_literal loc1 loc2) p1 p2
+      | ((loc1, BigIntPattern p1), (loc2, BigIntPattern p2)) ->
+        diff_if_changed_ret_opt (bigint_literal loc1 loc2) p1 p2
+      | ((loc1, StringPattern p1), (loc2, StringPattern p2)) ->
+        diff_if_changed_ret_opt (string_literal loc1 loc2) p1 p2
+      | ((loc1, BooleanPattern p1), (loc2, BooleanPattern p2)) ->
+        diff_if_changed_ret_opt (boolean_literal loc1 loc2) p1 p2
+      | ((loc, NullPattern p1), (_, NullPattern p2)) ->
+        diff_if_changed_ret_opt (syntax_opt loc) p1 p2
+      | ((loc, UnaryPattern p1), (_, UnaryPattern p2)) ->
+        let { UnaryPattern.operator = op1; argument = arg1; comments = comments1 } = p1 in
+        let { UnaryPattern.operator = op2; argument = arg2; comments = comments2 } = p2 in
+        if op1 != op2 then
+          None
+        else
+          let argument =
+            match (arg1, arg2) with
+            | ((loc1, UnaryPattern.NumberLiteral lit1), (loc2, UnaryPattern.NumberLiteral lit2)) ->
+              diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+            | ((loc1, UnaryPattern.BigIntLiteral lit1), (loc2, UnaryPattern.BigIntLiteral lit2)) ->
+              diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2
+            | _ -> None
+          in
+          let comments = syntax_opt loc comments1 comments2 in
+          join_diff_list [argument; comments]
+      | ((loc, BindingPattern p1), (_, BindingPattern p2)) ->
+        diff_if_changed_ret_opt (match_binding_pattern loc) p1 p2
+      | ((_, IdentifierPattern p1), (_, IdentifierPattern p2)) ->
+        Some (diff_if_changed identifier p1 p2)
+      | ((loc, MemberPattern p1), (_, MemberPattern p2)) ->
+        diff_if_changed_ret_opt (match_member_pattern loc) p1 p2
+      | ((loc, OrPattern p1), (_, OrPattern p2)) ->
+        let { OrPattern.patterns = patterns1; comments = comments1 } = p1 in
+        let { OrPattern.patterns = patterns2; comments = comments2 } = p2 in
+        let patterns = diff_and_recurse_nonopt_no_trivial match_pattern patterns1 patterns2 in
+        let comments = syntax_opt loc comments1 comments2 in
+        join_diff_list [patterns; comments]
+      | ((loc, ArrayPattern p1), (_, ArrayPattern p2)) ->
+        let { ArrayPattern.elements = elements1; rest = rest1; comments = comments1 } = p1 in
+        let { ArrayPattern.elements = elements2; rest = rest2; comments = comments2 } = p2 in
+        let elements =
+          diff_and_recurse_nonopt_no_trivial match_array_pattern_element elements1 elements2
+        in
+        let rest = diff_if_changed_opt match_rest_pattern rest1 rest2 in
+        let comments = syntax_opt loc comments1 comments2 in
+        join_diff_list [elements; rest; comments]
+      | ((loc, ObjectPattern p1), (_, ObjectPattern p2)) ->
+        let { ObjectPattern.properties = props1; rest = rest1; comments = comments1 } = p1 in
+        let { ObjectPattern.properties = props2; rest = rest2; comments = comments2 } = p2 in
+        let properties =
+          diff_and_recurse_nonopt_no_trivial match_object_pattern_property props1 props2
+        in
+        let rest = diff_if_changed_opt match_rest_pattern rest1 rest2 in
+        let comments = syntax_opt loc comments1 comments2 in
+        join_diff_list [properties; rest; comments]
+      | ((loc, AsPattern p1), (_, AsPattern p2)) ->
+        let { AsPattern.pattern = pattern1; target = t1; comments = comments1 } = p1 in
+        let { AsPattern.pattern = pattern2; target = t2; comments = comments2 } = p2 in
+        let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
+        let target =
+          match (t1, t2) with
+          | (AsPattern.Identifier id1, AsPattern.Identifier id2) ->
+            Some (diff_if_changed identifier id1 id2)
+          | (AsPattern.Binding (loc, b1), AsPattern.Binding (_, b2)) ->
+            diff_if_changed_ret_opt (match_binding_pattern loc) b1 b2
+          | _ -> None
+        in
+        let comments = syntax_opt loc comments1 comments2 in
+        join_diff_list [pattern; target; comments]
+      | _ -> None
+    in
+    let (loc, _) = p1 in
+    result |> Base.Option.value ~default:[replace loc (MatchPattern p1) (MatchPattern p2)]
+  and match_member_pattern
+      (loc : Loc.t)
+      (p1 : (Loc.t, Loc.t) Ast.MatchPattern.MemberPattern.t)
+      (p2 : (Loc.t, Loc.t) Ast.MatchPattern.MemberPattern.t) : node change list option =
+    let open Ast.MatchPattern.MemberPattern in
+    let (_, { base = base1; property = property1; comments = comments1 }) = p1 in
+    let (_, { base = base2; property = property2; comments = comments2 }) = p2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    let base =
+      match (base1, base2) with
+      | (BaseIdentifier id1, BaseIdentifier id2) -> Some (diff_if_changed identifier id1 id2)
+      | (BaseMember m1, BaseMember m2) ->
+        let (loc, _) = m1 in
+        diff_if_changed_ret_opt (match_member_pattern loc) m1 m2
+      | _ -> None
+    in
+    let property =
+      match (property1, property2) with
+      | (PropertyNumber (loc1, lit1), PropertyNumber (loc2, lit2)) ->
+        diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+      | (PropertyString (loc1, lit1), PropertyString (loc2, lit2)) ->
+        diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
+      | (PropertyIdentifier id1, PropertyIdentifier id2) -> Some (diff_if_changed identifier id1 id2)
+      | _ -> None
+    in
+    join_diff_list [base; property; comments]
+  and match_binding_pattern
+      (loc : Loc.t)
+      (p1 : (Loc.t, Loc.t) Ast.MatchPattern.BindingPattern.t)
+      (p2 : (Loc.t, Loc.t) Ast.MatchPattern.BindingPattern.t) : node change list option =
+    let open Ast.MatchPattern.BindingPattern in
+    let { kind = kind1; id = id1; comments = comments1 } = p1 in
+    let { kind = kind2; id = id2; comments = comments2 } = p2 in
+    if kind1 != kind2 then
+      None
+    else
+      let id = Some (diff_if_changed identifier id1 id2) in
+      let comments = syntax_opt loc comments1 comments2 in
+      join_diff_list [id; comments]
+  and match_array_pattern_element
+      (e1 : (Loc.t, Loc.t) Ast.MatchPattern.ArrayPattern.Element.t)
+      (e2 : (Loc.t, Loc.t) Ast.MatchPattern.ArrayPattern.Element.t) : node change list =
+    let open Ast.MatchPattern.ArrayPattern.Element in
+    let { pattern = p1; index = _ } = e1 in
+    let { pattern = p2; index = _ } = e2 in
+    diff_if_changed match_pattern p1 p2
+  and match_object_pattern_property
+      (p1 : (Loc.t, Loc.t) Ast.MatchPattern.ObjectPattern.Property.t)
+      (p2 : (Loc.t, Loc.t) Ast.MatchPattern.ObjectPattern.Property.t) : node change list =
+    let open Ast.MatchPattern.ObjectPattern in
+    let result =
+      match (p1, p2) with
+      | ( ( loc,
+            Property.Valid
+              {
+                Property.key = key1;
+                pattern = pattern1;
+                shorthand = shorthand1;
+                comments = comments1;
+              }
+          ),
+          ( _,
+            Property.Valid
+              {
+                Property.key = key2;
+                pattern = pattern2;
+                shorthand = shorthand2;
+                comments = comments2;
+              }
+          )
+        ) ->
+        if shorthand1 != shorthand2 then
+          None
+        else
+          let key =
+            match (key1, key2) with
+            | (Property.NumberLiteral (loc1, lit1), Property.NumberLiteral (loc2, lit2)) ->
+              diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+            | (Property.StringLiteral (loc1, lit1), Property.StringLiteral (loc2, lit2)) ->
+              diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
+            | (Property.Identifier id1, Property.Identifier id2) ->
+              Some (diff_if_changed identifier id1 id2)
+            | _ -> None
+          in
+          let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
+          let comments = syntax_opt loc comments1 comments2 in
+          join_diff_list [key; pattern; comments]
+      | _ -> None
+    in
+    let (loc, _) = p1 in
+    result
+    |> Base.Option.value
+         ~default:[replace loc (MatchObjectPatternProperty p1) (MatchObjectPatternProperty p2)]
+  and match_rest_pattern
+      (r1 : (Loc.t, Loc.t) Ast.MatchPattern.RestPattern.t)
+      (r2 : (Loc.t, Loc.t) Ast.MatchPattern.RestPattern.t) : node change list option =
+    let open Ast.MatchPattern.RestPattern in
+    let (loc, { argument = arg1; comments = comments1 }) = r1 in
+    let (_, { argument = arg2; comments = comments2 }) = r2 in
+    let argument =
+      diff_if_changed_opt
+        (fun (loc, arg1) (_, arg2) -> match_binding_pattern loc arg1 arg2)
+        arg1
+        arg2
     in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [argument; comments]

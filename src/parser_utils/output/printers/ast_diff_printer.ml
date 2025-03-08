@@ -48,6 +48,11 @@ let layout_of_node ~opts = function
   (* Do not wrap expression in parentheses for cases where we know parentheses are not needed. *)
   | Expression (expr, (StatementParentOfExpression _ | SlotParentOfExpression)) ->
     Js_layout_generator.expression ~opts expr
+  | Expression (expr, MatchExpressionCaseBodyParentOfExpression) ->
+    (match expr with
+    | (_, Flow_ast.Expression.Sequence _) ->
+      Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
+    | _ -> Js_layout_generator.expression ~opts expr)
   | Expression (expr, _) ->
     (* TODO use expression context for printing to insert parens when actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
@@ -72,6 +77,8 @@ let layout_of_node ~opts = function
     | None -> Layout.Empty
   end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id
+  | MatchPattern pat -> Js_layout_generator.match_pattern ~opts pat
+  | MatchObjectPatternProperty prop -> Js_layout_generator.match_object_pattern_property ~opts prop
 
 let text_of_layout layout =
   (* wrap these layout fragments in a group so they try to fit on one line *)

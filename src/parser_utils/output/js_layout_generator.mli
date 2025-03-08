@@ -136,6 +136,11 @@ val function_params :
 val function_params_and_return :
   opts:opts -> Loc.t * (Loc.t, Loc.t) Flow_ast.Function.t -> Layout.layout_node
 
+val match_pattern : opts:opts -> (Loc.t, Loc.t) Flow_ast.MatchPattern.t -> Layout.layout_node
+
+val match_object_pattern_property :
+  opts:opts -> (Loc.t, Loc.t) Flow_ast.MatchPattern.ObjectPattern.Property.t -> Layout.layout_node
+
 val better_quote : prefer_single_quotes:bool -> string -> string
 
 val utf8_escape : quote:string -> string -> string

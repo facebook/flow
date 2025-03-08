@@ -25,6 +25,7 @@ type expression_node_parent =
   | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
   | SlotParentOfExpression (* Any slot that does not require expression to be parenthesized. *)
   | SpreadParentOfExpression
+  | MatchExpressionCaseBodyParentOfExpression
 [@@deriving show]
 
 type statement_node_parent =
@@ -65,6 +66,8 @@ type node =
   | TemplateLiteral of Loc.t * (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
+  | MatchPattern of (Loc.t, Loc.t) Flow_ast.MatchPattern.t
+  | MatchObjectPatternProperty of (Loc.t, Loc.t) Flow_ast.MatchPattern.ObjectPattern.Property.t
 [@@deriving show]
 
 val expand_statement_comment_bounds : (Loc.t, Loc.t) Flow_ast.Statement.t -> Loc.t

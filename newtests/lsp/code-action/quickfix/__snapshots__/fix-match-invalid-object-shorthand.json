@@ -11,15 +11,15 @@
             {
               "range": {
                 "start": {
-                  "line": 4,
-                  "character": 12
+                  "line": 5,
+                  "character": 3
                 },
                 "end": {
-                  "line": 7,
-                  "character": 1
+                  "line": 5,
+                  "character": 6
                 }
               },
-              "newText": "match (x) {\n  {const foo}: 0,\n  _: 0,\n}"
+              "newText": "const foo"
             }
           ]
         }
@@ -44,15 +44,15 @@
             {
               "range": {
                 "start": {
-                  "line": 4,
-                  "character": 12
+                  "line": 5,
+                  "character": 3
                 },
                 "end": {
-                  "line": 7,
-                  "character": 1
+                  "line": 5,
+                  "character": 6
                 }
               },
-              "newText": "match (x) {\n  {foo: foo}: 0,\n  _: 0,\n}"
+              "newText": "foo: foo"
             }
           ]
         }

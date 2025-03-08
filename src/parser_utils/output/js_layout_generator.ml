@@ -3416,28 +3416,7 @@ and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; commen
   source_location_with_comments ?comments (loc, fuse_with_space [variable_kind kind; identifier id])
 
 and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; rest; comments } =
-  let open Ast.MatchPattern.ObjectPattern in
-  let prop_key key =
-    match key with
-    | Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
-    | Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
-    | Property.Identifier ident -> identifier ident
-  in
-  let props_rev =
-    Base.List.rev_map
-      ~f:(function
-        | (loc, Property.Valid { Property.key; pattern; shorthand; comments }) ->
-          layout_node_with_comments_opt
-            loc
-            comments
-            ( if shorthand then
-              match_pattern ~opts pattern
-            else
-              fuse [prop_key key; Atom ":"; pretty_space; match_pattern ~opts pattern]
-            )
-        | (_, Property.InvalidShorthand ident) -> identifier ident)
-      properties
-  in
+  let props_rev = Base.List.rev_map ~f:(match_object_pattern_property ~opts) properties in
   let props_rev =
     Base.Option.value_map rest ~default:props_rev ~f:(fun rest ->
         match_rest_pattern rest :: props_rev
@@ -3448,6 +3427,26 @@ and match_object_pattern ~opts loc { Ast.MatchPattern.ObjectPattern.properties; 
     loc
     comments
     (group [new_list ~wrap:(Atom "{", Atom "}") ~sep:(fuse [Atom ","]) props])
+
+and match_object_pattern_property ~opts prop =
+  let open Ast.MatchPattern.ObjectPattern in
+  let prop_key key =
+    match key with
+    | Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
+    | Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
+    | Property.Identifier ident -> identifier ident
+  in
+  match prop with
+  | (loc, Property.Valid { Property.key; pattern; shorthand; comments }) ->
+    layout_node_with_comments_opt
+      loc
+      comments
+      ( if shorthand then
+        match_pattern ~opts pattern
+      else
+        fuse [prop_key key; Atom ":"; pretty_space; match_pattern ~opts pattern]
+      )
+  | (_, Property.InvalidShorthand ident) -> identifier ident
 
 and match_array_pattern ~opts loc { Ast.MatchPattern.ArrayPattern.elements; rest; comments } =
   let open Ast.MatchPattern.ArrayPattern in
