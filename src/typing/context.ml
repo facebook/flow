@@ -57,6 +57,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
+  natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
   no_unchecked_indexed_access: bool;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -290,6 +291,8 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
+    natural_inference_local_primitive_literals =
+      Options.natural_inference_local_primitive_literals options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
@@ -662,6 +665,20 @@ let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
+
+let natural_inference_local_primitive_literals_partial cx =
+  match cx.metadata.natural_inference_local_primitive_literals with
+  | Options.NaturalInferenceLevel.Off -> false
+  | Options.NaturalInferenceLevel.Partial
+  | Options.NaturalInferenceLevel.Full ->
+    true
+
+let natural_inference_local_primitive_literals_full cx =
+  match cx.metadata.natural_inference_local_primitive_literals with
+  | Options.NaturalInferenceLevel.Off
+  | Options.NaturalInferenceLevel.Partial ->
+    false
+  | Options.NaturalInferenceLevel.Full -> true
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

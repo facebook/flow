@@ -208,6 +208,8 @@ val multi_platform_ambient_supports_platform_directory_overrides :
 
 val munge_underscores : config -> bool
 
+val natural_inference_local_primitive_literals : config -> Options.NaturalInferenceLevel.t
+
 val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool

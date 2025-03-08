@@ -48,6 +48,7 @@ let metadata =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
+    natural_inference_local_primitive_literals = Options.NaturalInferenceLevel.Off;
     no_unchecked_indexed_access = false;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
