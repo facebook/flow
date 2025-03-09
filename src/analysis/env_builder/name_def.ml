@@ -3247,7 +3247,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
           run_opt this#expression guard;
-          run_loc this#block body
+          run this#statement body
       );
       x
 

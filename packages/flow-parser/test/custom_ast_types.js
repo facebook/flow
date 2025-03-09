@@ -246,7 +246,7 @@ function custom_ast_types(fork) {
   def('MatchStatementCase')
     .build('pattern', 'body', 'guard')
     .field('pattern', def('MatchPattern'))
-    .field('body', def('BlockStatement'))
+    .field('body', def('Statement'))
     .field('guard', or(def('Expression'), null));
 
   def('MatchWildcardPattern').bases('MatchPattern');

@@ -1901,6 +1901,8 @@ let dump_error_message =
         (dump_reason cx binding_reason)
     | EMatchInvalidObjectShorthand { loc; name } ->
       spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
+    | EMatchStatementInvalidBody { loc } ->
+      spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)

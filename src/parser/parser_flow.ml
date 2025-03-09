@@ -331,8 +331,9 @@ module rec Parse : PARSER = struct
     | _ when Peek.is_component env -> Declaration.component env
     | _ -> statement env
 
-  and statement env =
+  and statement ?(allow_sequence = true) env =
     let open Statement in
+    let expression = Statement.expression ~allow_sequence in
     match Peek.token env with
     | T_EOF ->
       error_unexpected ~expected:"the start of a statement" env;
@@ -354,7 +355,7 @@ module rec Parse : PARSER = struct
            && Peek.ith_token ~i:1 env = T_LPAREN ->
       (match Try.to_parse env Statement.match_statement with
       | Try.ParsedSuccessfully m -> m
-      | Try.FailedToParse -> Statement.expression env)
+      | Try.FailedToParse -> expression env)
     | T_THROW -> throw env
     | T_TRY -> try_ env
     | T_WHILE -> while_ env
@@ -399,14 +400,14 @@ module rec Parse : PARSER = struct
          member expression, so it is banned. *)
       let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
       error_at env (loc, Parse_error.AmbiguousLetBracket);
-      Statement.expression env
+      expression env
     (* recover as a member expression *)
     | _ when Peek.is_identifier env -> maybe_labeled env
     | _ when Peek.is_class env ->
       error_unexpected env;
       Eat.token env;
-      Statement.expression env
-    | _ -> Statement.expression env
+      expression env
+    | _ -> expression env
 
   and expression env =
     let start_loc = Peek.loc env in

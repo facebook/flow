@@ -752,7 +752,7 @@ let match_expression_case_comment_bounds (loc, case) =
 
 let match_statement_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
-  ignore (collector#match_case ~on_case_body:(map_loc collector#block) (loc, case));
+  ignore (collector#match_case ~on_case_body:collector#statement (loc, case));
   collector#comment_bounds
 
 let switch_case_comment_bounds (loc, case) =

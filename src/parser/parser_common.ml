@@ -20,7 +20,7 @@ type pattern_cover =
 module type PARSER = sig
   val program : env -> (Loc.t, Loc.t) Program.t
 
-  val statement : env -> (Loc.t, Loc.t) Statement.t
+  val statement : ?allow_sequence:bool -> env -> (Loc.t, Loc.t) Statement.t
 
   val statement_list_item :
     ?decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
@@ -221,7 +221,7 @@ module type STATEMENT = sig
   val export_declaration :
     decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
 
-  val expression : env -> (Loc.t, Loc.t) Statement.t
+  val expression : ?allow_sequence:bool -> env -> (Loc.t, Loc.t) Statement.t
 
   val import_declaration : env -> (Loc.t, Loc.t) Statement.t
 

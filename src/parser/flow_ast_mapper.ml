@@ -2571,7 +2571,7 @@ class ['loc] mapper =
       this#match_ loc ~on_case_body:this#expression x
 
     method match_statement loc (x : ('loc, 'loc) Ast.Statement.match_statement) =
-      this#match_ loc ~on_case_body:(map_loc this#block) x
+      this#match_ loc ~on_case_body:this#statement x
 
     method match_pattern (pattern : ('loc, 'loc) Ast.MatchPattern.t) =
       let open Ast.MatchPattern in

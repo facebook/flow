@@ -776,7 +776,7 @@ and Statement : sig
     [@@deriving show]
   end
 
-  type ('M, 'T) match_statement = ('M, 'T, 'M * ('M, 'T) Block.t) Match.t [@@deriving show]
+  type ('M, 'T) match_statement = ('M, 'T, ('M, 'T) Statement.t) Match.t [@@deriving show]
 
   module Switch : sig
     module Case : sig

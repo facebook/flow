@@ -678,7 +678,7 @@ with type t = Impl.t = struct
           ("body", on_case_body body);
           ("guard", option expression guard);
         ]
-    and match_statement_case case = match_case "MatchStatementCase" ~on_case_body:block case
+    and match_statement_case case = match_case "MatchStatementCase" ~on_case_body:statement case
     and match_pattern (loc, pattern) =
       let open MatchPattern in
       let literal x = node "MatchLiteralPattern" loc [("literal", x)] in

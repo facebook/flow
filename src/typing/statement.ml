@@ -1233,10 +1233,10 @@ module Make
                       name_loc)
               in
               let guard = Base.Option.map ~f:(expression cx) guard in
-              let body =
-                let (body_loc, { Block.body; comments }) = body in
-                (body_loc, { Block.body = statement_list cx body; comments })
-              in
+              (match body with
+              | (_, Block _) -> ()
+              | (loc, _) -> Flow.add_output cx (Error_message.EMatchStatementInvalidBody { loc }));
+              let body = statement cx body in
               (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments })
           )
         in

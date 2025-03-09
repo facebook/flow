@@ -653,6 +653,7 @@ and 'loc t' =
       loc: 'loc;
       name: string;
     }
+  | EMatchStatementInvalidBody of { loc: 'loc }
   | EUndocumentedFeature of { loc: 'loc }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
@@ -1483,6 +1484,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidPatternReference { loc; binding_reason } ->
     EMatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
   | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
+  | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
@@ -1798,6 +1800,7 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidAsPattern _
   | EMatchInvalidPatternReference _
   | EMatchInvalidObjectShorthand _
+  | EMatchStatementInvalidBody _
   | EUndocumentedFeature _ ->
     nope
 
@@ -2018,6 +2021,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidAsPattern { loc } -> Some loc
   | EMatchInvalidPatternReference { loc; _ } -> Some loc
   | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
+  | EMatchStatementInvalidBody { loc } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
@@ -3009,6 +3013,7 @@ let friendly_message_of_msg = function
     Normal (MessageMatchInvalidPatternReference { binding_reason })
   | EMatchInvalidObjectShorthand { loc = _; name } ->
     Normal (MessageMatchInvalidObjectShorthand { name })
+  | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
 
 let defered_in_speculation = function
@@ -3369,4 +3374,5 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidAsPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidPatternReference _ -> Some MatchInvalidPattern
   | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
+  | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
   | EUndocumentedFeature _ -> Some UndocumentedFeature

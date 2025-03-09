@@ -24,7 +24,8 @@ let infer_indentation_count = function
   | IfParentOfStatement loc
   | LoopParentOfStatement loc
   | WithStatementParentOfStatement loc
-  | SwitchCaseParentOfStatement loc ->
+  | SwitchCaseParentOfStatement loc
+  | MatchCaseParentOfStatement loc ->
     (* These cases introduces one more level of nesting. *)
     Loc.(loc.start.column / 2) + 1
   | TopLevelParentOfStatement -> 0

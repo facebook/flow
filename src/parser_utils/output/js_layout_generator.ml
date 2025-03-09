@@ -676,15 +676,12 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
             (fun ((loc, _) as case) ->
               ( loc,
                 Comment_attachment.match_statement_case_comment_bounds case,
-                match_case ~opts ~on_case_body:block case
+                match_case ~opts ~on_case_body:(statement ~pretty_semicolon:false) case
               ))
             cases
+          |> list_with_newlines
         in
-        let cases_nodes = list_with_newlines ~sep:(Atom ",") ~skip_empty:false cases in
-        let cases_nodes = cases_nodes @ [if_pretty (Atom ",") Empty] in
-        let cases_node =
-          wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse cases_nodes]
-        in
+        let cases_node = wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse cases] in
         layout_node_with_comments_opt
           loc
           comments

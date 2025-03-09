@@ -2098,7 +2098,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method match_statement (x : ('M, 'T) Ast.Statement.match_statement)
         : ('N, 'U) Ast.Statement.match_statement =
-      this#match_ ~on_case_body:(this#on_loc_annot * this#block) x
+      this#match_ ~on_case_body:this#statement x
 
     method match_case
         : 'BMT 'BNU.

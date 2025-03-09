@@ -37,6 +37,7 @@ type statement_node_parent =
   | WithStatementParentOfStatement of Loc.t
   | TopLevelParentOfStatement
   | SwitchCaseParentOfStatement of Loc.t
+  | MatchCaseParentOfStatement of Loc.t
 [@@deriving show]
 
 type node =

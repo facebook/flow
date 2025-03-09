@@ -937,5 +937,23 @@ Cannot resolve name `a`. [cannot-resolve-name]
          ^
 
 
+Error ----------------------------------------------------------------------------------------------- statement.js:176:8
 
-Found 77 errors
+Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
+[match-statement-invalid-body]
+
+   176|     1: return 1;
+               ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- statement.js:177:8
+
+Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
+[match-statement-invalid-body]
+
+   177|     2: throw false;
+               ^^^^^^^^^^^^
+
+
+
+Found 79 errors

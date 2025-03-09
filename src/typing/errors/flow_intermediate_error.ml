@@ -4137,6 +4137,17 @@ let to_printable_error :
         code name;
         text " against the value of the variable of the same name.";
       ]
+    | MessageMatchStatementInvalidBody ->
+      [
+        text "Invalid ";
+        code "match";
+        text " statement case body. A block is required for each case body. ";
+        text "Wrap this statement with ";
+        code "{";
+        text " and ";
+        code "}";
+        text ".";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

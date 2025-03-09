@@ -194,6 +194,7 @@ type statement_node_parent =
   | WithStatementParentOfStatement of Loc.t
   | TopLevelParentOfStatement
   | SwitchCaseParentOfStatement of Loc.t
+  | MatchCaseParentOfStatement of Loc.t
 [@@deriving show]
 
 (* We need a variant here for every node that we want to be able to store a diff for. The more we
@@ -3590,12 +3591,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     join_diff_list [arg; cases; comments]
   and match_statement_case (loc, c1) (_, c2) : node change list option =
     let open Ast.Match.Case in
-    let { pattern = pattern1; body = (block_loc, block1); guard = guard1; comments = comments1 } =
-      c1
-    in
-    let { pattern = pattern2; body = (_, block2); guard = guard2; comments = comments2 } = c2 in
+    let { pattern = pattern1; body = body1; guard = guard1; comments = comments1 } = c1 in
+    let { pattern = pattern2; body = body2; guard = guard2; comments = comments2 } = c2 in
     let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
-    let body = block block_loc block1 block2 in
+    let body =
+      Some (diff_if_changed (statement ~parent:(MatchCaseParentOfStatement loc)) body1 body2)
+    in
     let guard =
       diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) guard1 guard2
     in
