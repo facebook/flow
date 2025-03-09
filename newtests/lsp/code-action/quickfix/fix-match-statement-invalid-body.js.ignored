@@ -1,0 +1,7 @@
+// @flow
+
+function f(x: 1) {
+  match (x) {
+    1: return true;
+  }
+}

@@ -2006,5 +2006,32 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match statement invalid body quickfix', [
+      addFile(
+        'fix-match-statement-invalid-body.js.ignored',
+        'fix-match-statement-invalid-body.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-body.js',
+        },
+        range: {
+          start: {line: 4, character: 8},
+          end: {line: 4, character: 8},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-statement-invalid-body.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);

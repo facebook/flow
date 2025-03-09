@@ -8,6 +8,7 @@
 type kind =
   | ObjShorthandToConst
   | ObjShorthandToReference
+  | InvalidMatchStatementBody
 
 class mapper target_loc ~kind =
   object (this)
@@ -38,7 +39,26 @@ class mapper target_loc ~kind =
             (Loc.none, Property.Valid { Property.key; pattern; shorthand = true; comments = None })
           | ObjShorthandToReference ->
             let pattern = (Loc.none, Flow_ast.MatchPattern.IdentifierPattern id) in
-            (Loc.none, Property.Valid { Property.key; pattern; shorthand = false; comments = None }))
+            (Loc.none, Property.Valid { Property.key; pattern; shorthand = false; comments = None })
+          | _ -> super#match_object_pattern_property prop)
+
+    method! match_statement loc x =
+      match kind with
+      | InvalidMatchStatementBody when this#target_contained_by loc ->
+        let on_case_body stmt =
+          let (stmt_loc, _) = stmt in
+          let body =
+            if not @@ this#is_target stmt_loc then
+              stmt
+            else
+              ( Loc.none,
+                Flow_ast.Statement.Block { Flow_ast.Statement.Block.body = [stmt]; comments = None }
+              )
+          in
+          this#statement body
+        in
+        this#match_ loc ~on_case_body x
+      | _ -> super#match_statement loc x
   end
 
 let convert_object_shorthand_to_const ast loc =
@@ -47,4 +67,8 @@ let convert_object_shorthand_to_const ast loc =
 
 let convert_object_shorthand_to_reference ast loc =
   let mapper = new mapper loc ~kind:ObjShorthandToReference in
+  mapper#program ast
+
+let fix_invalid_match_statement_body ast loc =
+  let mapper = new mapper loc ~kind:InvalidMatchStatementBody in
   mapper#program ast

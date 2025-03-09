@@ -1104,6 +1104,18 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchStatementInvalidBody { loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Wrap in a block";
+          diagnostic_title = "fix_invalid_match_statement_body";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_match_statement_body;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing

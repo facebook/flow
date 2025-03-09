@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Wrap in a block",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-body.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 7
+                },
+                "end": {
+                  "line": 4,
+                  "character": 19
+                }
+              },
+              "newText": "{\n        return true;\n      }"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_invalid_match_statement_body",
+          "Wrap in a block"
+        ]
+      }
+    }
+  ]
+}
