@@ -19,6 +19,15 @@
   }
 }
 
+{
+  declare const x: {a: number};
+
+  const out = match (x) {
+    {const a}: a,
+//         ^
+  }
+}
+
 // Identifier
 {
   declare const x: number;

@@ -375,6 +375,18 @@ module Type_at_pos = struct
           | Literal _ -> ()
         in
         super#declare_module annot m
+
+      method! match_object_pattern_property prop =
+        let open Ast.MatchPattern.ObjectPattern.Property in
+        match prop with
+        | (loc, Valid { key = _; pattern; shorthand; comments = _ }) when self#covers_target loc ->
+          (* If shorthand, skip looking at the key which doesn't exist in the source. *)
+          if shorthand then (
+            ignore @@ super#match_pattern pattern;
+            prop
+          ) else
+            super#match_object_pattern_property prop
+        | _ -> super#match_object_pattern_property prop
     end
 
   let find cx typed_ast loc =

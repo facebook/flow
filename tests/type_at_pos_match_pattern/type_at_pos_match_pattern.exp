@@ -8,33 +8,38 @@ Flags:
 string
 test.js:17:15,17:15
 
-test.js:27:5
+test.js:26:12
+Flags:
+number
+test.js:26:12,26:12
+
+test.js:36:5
 Flags:
 1
-test.js:27:5,27:7
+test.js:36:5,36:7
 
-test.js:37:6
+test.js:46:6
 Flags:
 1
-test.js:37:6,37:8
+test.js:46:6,46:8
 
-test.js:48:5
+test.js:57:5
 Flags:
 {bar: 1, foo: 1}
-test.js:48:5,48:5
+test.js:57:5,57:5
 
-test.js:50:7
+test.js:59:7
 Flags:
 1
-test.js:50:7,50:9
+test.js:59:7,59:9
 
-test.js:60:6
+test.js:69:6
 Flags:
 {bar: 1, foo: 1}
-test.js:60:6,60:6
+test.js:69:6,69:6
 
-test.js:62:8
+test.js:71:8
 Flags:
 1
-test.js:62:8,62:10
+test.js:71:8,71:10
 
