@@ -213,6 +213,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
 
 let require_specific : error_code -> bool = function
   | InvalidRendersTypeArgument
+  | LibdefOverride
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
   | ReactRuleHookIncompatible
