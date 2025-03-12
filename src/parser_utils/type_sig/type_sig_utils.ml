@@ -102,6 +102,13 @@ let parse_module ~strict ~platform_availability_set source opts ast =
   List.iter (statement opts scope tbls) stmts;
   (tbls, file_loc, Scope.exports_exn scope)
 
+let parse_libdef_file_as_empty_module ~strict ~platform_availability_set source =
+  let open Parse in
+  let scope = Scope.create_module ~strict ~platform_availability_set in
+  let tbls = create_tables () in
+  let file_loc = push_loc tbls { Loc.none with Loc.source } in
+  (tbls, file_loc, Scope.exports_exn scope)
+
 let merge_locs loc0 loc1 =
   let k = Packed_locs.compare_locs loc0 loc1 in
   if k < 0 then
@@ -167,9 +174,17 @@ let pack ~locs_to_dirtify source (tbls, file_loc, exports) =
   )
 
 let parse_and_pack_module ~strict ~platform_availability_set opts source ast =
-  pack
-    ~locs_to_dirtify:opts.Type_sig_options.locs_to_dirtify
-    source
-    (parse_module ~strict ~platform_availability_set source opts ast)
+  let parsed =
+    match source with
+    | Some (File_key.LibFile _) ->
+      (* We will generate an empty file_sig for libdef files in parsing_service.
+       * Therefore, we should also generate an empty type sig for libdef files, so that
+       * both will consistently report that there are no imports and exports in libdef files.
+       * If they are inconsistent, we can potentially crash like what's reported in
+       * https://github.com/facebook/flow/issues/9262 *)
+      parse_libdef_file_as_empty_module ~strict ~platform_availability_set source
+    | _ -> parse_module ~strict ~platform_availability_set source opts ast
+  in
+  pack ~locs_to_dirtify:opts.Type_sig_options.locs_to_dirtify source parsed
 
 let parse_and_pack_builtins opts ordered_asts = pack_builtins (parse_libs opts ordered_asts)
