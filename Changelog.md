@@ -1,3 +1,14 @@
+### 0.264.0
+
+Likely to cause new Flow errors:
+* Overriding already defined names and modules in library definitions will now error with code `[libdef-override]`. The error cannot be suppressed without specific error code like `$FlowFixMe[libdef-override]`. It can be turned off by turning off the `libdef-override` lint.
+
+New Features:
+* The `Number` static methods `Number.isFinite`, `Number.isInteger`, `Number.isNaN`, and `Number.isSafeInteger` now apply a refinement that their input is a `number`. Note that the top level `isNaN` and `isFinite` functions (not off of `Number`) do not apply the same refinement as they first coerce their input to number.
+
+Notable bug fixes:
+* Fix a potential crash in libdef files with illegal import export. Thanks @techieshark for the repro.
+
 ### 0.263.0
 
 Likely to cause new Flow errors:
