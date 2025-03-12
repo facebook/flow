@@ -804,10 +804,10 @@ Flags: --pretty
   "result":[
     {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
-    {"name":"at","type":"(index: number) => string | void"},
-    {"name":"charAt","type":"(pos: number) => string"},
-    {"name":"charCodeAt","type":"(index: number) => number"},
-    {"name":"codePointAt","type":"(index: number) => number | void"},
+    {"name":"at","type":"(index?: number) => string | void"},
+    {"name":"charAt","type":"(pos?: number) => string"},
+    {"name":"charCodeAt","type":"(index?: number) => number"},
+    {"name":"codePointAt","type":"(index?: number) => number | void"},
     {"name":"concat","type":"(...strings: Array<string>) => string"},
     {
       "name":"endsWith",
