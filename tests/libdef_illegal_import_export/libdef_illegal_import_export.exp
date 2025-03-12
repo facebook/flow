@@ -1,0 +1,19 @@
+Error -------------------------------------------------------------------------- flow-typed/crash-regression-test.js:4:1
+
+Cannot use an import statement at the toplevel of a library file. Import statements may only appear inside a
+`declare module`. The statement will be ignored. [unsupported-syntax]
+
+   4| import Unresolved from 'Unresolved'; // error: unsupported syntax
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- flow-typed/crash-regression-test.js:5:31
+
+Cannot resolve name `Unresolved`. [cannot-resolve-name]
+
+   5| declare export class A mixins Unresolved {} // error: unresolved
+                                    ^^^^^^^^^^
+
+
+
+Found 2 errors
