@@ -1,4 +1,4 @@
-### 0.264.0
+### 0.265.0
 
 Likely to cause new Flow errors:
 * Overriding already defined names and modules in library definitions will now error with code `[libdef-override]`. The error cannot be suppressed without specific error code like `$FlowFixMe[libdef-override]`. It can be turned off by turning off the `libdef-override` lint.
@@ -8,6 +8,11 @@ New Features:
 
 Notable bug fixes:
 * Fix a potential crash in libdef files with illegal import export. Thanks @techieshark for the repro.
+
+### 0.264.0
+
+Misc:
+ * Version skipped.
 
 ### 0.263.0
 
