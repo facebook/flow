@@ -614,6 +614,9 @@ jobs:
         name: build_js_bin
         path: dist
     - run: chmod +x bin/linux/flow
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
     - name: Node cache
       uses: actions/cache@v4
       with:
