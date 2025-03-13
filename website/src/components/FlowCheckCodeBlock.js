@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {useState, useEffect, useRef, type MixedElement} from 'react';
 import clsx from 'clsx';
-import Highlight, {defaultProps} from 'prism-react-renderer';
+import {Highlight} from 'prism-react-renderer';
 import copy from 'copy-text-to-clipboard';
 import {usePrismTheme} from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
@@ -79,7 +79,6 @@ export default component FlowCheckCodeBlock(
 
   return (
     <Highlight
-      {...defaultProps}
       key={String(mounted)}
       theme={prismTheme}
       code={code}

@@ -7,7 +7,7 @@
  * @format
  */
 
-const getFlowErrors = require('./initialized-flow-provider');
+import getFlowErrors from './initialized-flow-provider.js';
 
 /*:: type UnwrapPromise<T> = T extends Promise<infer V> ? V : T */
 
@@ -23,24 +23,12 @@ const transformNode = async (node /*: any */) => [
 const matchNode = (node /*: any */) =>
   node.type === 'code' && node.meta === 'flow-check';
 
-const nodeForImport = {
-  type: 'import',
-  value:
-    "import FlowCheckCodeBlock from '@site/src/components/FlowCheckCodeBlock';",
-};
-
-module.exports = () /*: any */ => {
+export default () /*: any */ => {
   let transformed = false;
   let alreadyImported = false;
   const transformer = async (
     node /*: any */,
   ) /*: Promise<UnwrapPromise<ReturnType<typeof transformNode>> | null> */ => {
-    if (
-      node.type === 'import' &&
-      node.value.includes('@site/src/components/FlowCheckCodeBlock')
-    ) {
-      alreadyImported = true;
-    }
     if (matchNode(node)) {
       transformed = true;
       return transformNode(node);
@@ -56,9 +44,6 @@ module.exports = () /*: any */ => {
           index += 1;
         }
       }
-    }
-    if (node.type === 'root' && transformed && !alreadyImported) {
-      node.children.unshift(nodeForImport);
     }
     return null;
   };

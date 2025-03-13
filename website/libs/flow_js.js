@@ -41,6 +41,7 @@ declare type FlowJsParseOptions = {
   components?: boolean,
   enums?: boolean,
   types?: boolean,
+  pattern_matching?: boolean,
 };
 
 declare type FlowJsConfigSchema = Array<

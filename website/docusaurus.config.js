@@ -13,7 +13,7 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const allFlowVersions = require('./src/js/flow-versions');
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
-module.exports = {
+module.exports = async () => ({
   title: 'Flow',
   tagline: 'A Static Type Checker for JavaScript',
   url: 'https://flow.org',
@@ -92,7 +92,7 @@ module.exports = {
           contextualSearch: true,
         },
     prism: {
-      theme: require('prism-react-renderer/themes/github'),
+      theme: require('prism-react-renderer').themes.github,
     },
     colorMode: {
       defaultMode: 'light',
@@ -242,7 +242,7 @@ module.exports = {
           }),
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
-            require('./src/js/flow-check-remark-plugin'),
+            (await import('./src/js/flow-check-remark-plugin.js')).default,
           ],
         },
         staticDocsProject: 'flow',
@@ -262,4 +262,4 @@ module.exports = {
       },
     ],
   ],
-};
+});

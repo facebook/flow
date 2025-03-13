@@ -7,7 +7,7 @@
  * @format
  */
 
-const {spawn} = require('child_process');
+import {spawn} from 'child_process';
 
 async function checkContents(input /*: string */) {
   const flowProcess = spawn(process.env.FLOW_BIN_PATH || 'flow', [
@@ -24,7 +24,7 @@ async function checkContents(input /*: string */) {
   return JSON.parse(json);
 }
 
-module.exports = async function getFlowErrors(
+export default async function getFlowErrors(
   code /*: string */,
 ) /*: Promise<string> */ {
   if (process.env.NO_INLINE_FLOW_ERRORS) {
@@ -41,4 +41,4 @@ module.exports = async function getFlowErrors(
         description: descr,
       })),
   );
-};
+}

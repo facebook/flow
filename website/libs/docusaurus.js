@@ -21,6 +21,10 @@ declare module '@docusaurus/Link' {
   declare module.exports: any;
 }
 
+declare module '@docusaurus/plugin-content-blog/client' {
+  declare module.exports: any;
+}
+
 declare module '@docusaurus/Translate' {
   declare module.exports: any;
 }

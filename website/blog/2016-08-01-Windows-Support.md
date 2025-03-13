@@ -15,8 +15,6 @@ using the [flow-bin npm package](https://www.npmjs.com/package/flow-bin). Try
 it out and [report any issues](https://github.com/facebook/flow/issues) you
 come across!
 
-![Windows Support GIF]({{ site.baseurl }}/static/windows.gif)
-
 Getting Flow working on Windows was not easy, and it was made possible by the
 hard work of [Grégoire](https://github.com/OCamlPro-Henry),
 [Çagdas](https://github.com/OCamlPro-Bozman) and

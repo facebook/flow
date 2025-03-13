@@ -11,7 +11,7 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import {useBlogPost} from '@docusaurus/theme-common/internal';
+import {useBlogPost} from '@docusaurus/plugin-content-blog/client';
 
 import styles from './styles.module.css';
 
