@@ -66,6 +66,17 @@ let load_lib_files ~ccx ~options ~reader files =
             (fun mref -> Context.MissingModule mref)
             mk_builtins
         in
+        let (severity_cover, _, _) =
+          Type_inference_js.scan_for_suppressions
+            ~in_libdef:true
+            (Options.lint_severities options)
+            (Base.List.map ordered_asts ~f:(fun (_, ast) ->
+                 let (loc, { Flow_ast.Program.all_comments; _ }) = ast in
+                 (Base.Option.value_exn (Loc.source loc), all_comments)
+             )
+            )
+        in
+        Context.add_severity_covers cx severity_cover;
         Context.reset_errors cx builtin_errors;
         let exports_of_builtins (Context.BuiltinGroup { builtins; _ }) =
           Exports.of_builtins builtins
