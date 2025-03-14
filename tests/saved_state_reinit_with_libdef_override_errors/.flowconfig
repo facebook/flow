@@ -1,0 +1,7 @@
+[libs]
+lib.js
+
+[options]
+all=true
+saved_state.allow_reinit=true
+lazy_mode=true

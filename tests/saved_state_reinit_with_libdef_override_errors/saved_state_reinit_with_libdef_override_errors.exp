@@ -1,0 +1,24 @@
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error ------------------------------------------------------------------------------------------------------ lib.js:2:13
+
+This name declaration overrides an existing binding `foo` [1]. Overriding in library definitions can lead to surprising
+behaviors. [libdef-override]
+
+   lib.js:2:13
+   2| declare var foo: string;
+                  ^^^
+
+References:
+   lib.js:3:13
+   3| declare var foo: string;
+                  ^^^ [1]
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
