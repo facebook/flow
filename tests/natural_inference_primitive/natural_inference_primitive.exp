@@ -648,17 +648,35 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:163:3
 
-Cannot cast `obj1` to object type because `n0` ?? `one` [1] is incompatible with number literal `2` [2] in property `f`.
-[incompatible-cast]
+Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
+`f`. [incompatible-cast]
 
    imported.js:163:3
    163|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   imported.js:161:21
-   161|   const obj1 = { f: n0 ?? one };
-                            ^^^^^^^^^ [1]
+   imported.js:159:20
+   159|   declare var n0: ?1;
+                           ^ [1]
+   imported.js:163:15
+   163|   obj1 as {f: 2}; // error number ~> 2
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:163:3
+
+Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
+`f`. [incompatible-cast]
+
+   imported.js:163:3
+   163|   obj1 as {f: 2}; // error number ~> 2
+          ^^^^
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [1]
    imported.js:163:15
    163|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
@@ -666,16 +684,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:165:3
 
-Cannot cast `2` to `typeof obj1.f` because number [1] is incompatible with `n0` ?? `one` [2]. [incompatible-cast]
+Cannot cast `2` to `typeof obj1.f` because: [incompatible-cast]
+ - Either number [1] is incompatible with number literal `1` [2].
+ - Or number [1] is incompatible with number literal `1` [3].
 
    imported.js:165:3
    165|   2 as typeof obj1.f; // TODO okay 2 ~> number
           ^ [1]
 
 References:
-   imported.js:165:8
-   165|   2 as typeof obj1.f; // TODO okay 2 ~> number
-               ^^^^^^^^^^^^^ [2]
+   imported.js:159:20
+   159|   declare var n0: ?1;
+                           ^ [2]
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:169:3
@@ -1554,4 +1577,4 @@ References:
 
 
 
-Found 93 errors
+Found 94 errors

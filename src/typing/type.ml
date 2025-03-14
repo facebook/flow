@@ -2453,10 +2453,10 @@ end = struct
     TypeTerm.(
       function
       | DefT (_, NumericStrKeyT _)
-      | DefT (_, SingletonStrT _)
-      | DefT (_, SingletonNumT _)
-      | DefT (_, SingletonBigIntT _)
-      | DefT (_, SingletonBoolT _)
+      | DefT (_, SingletonStrT { from_annot = true; _ })
+      | DefT (_, SingletonNumT { from_annot = true; _ })
+      | DefT (_, SingletonBigIntT { from_annot = true; _ })
+      | DefT (_, SingletonBoolT { from_annot = true; _ })
       | DefT (_, VoidT)
       | DefT (_, NullT) ->
         true
