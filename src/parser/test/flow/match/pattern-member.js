@@ -4,4 +4,5 @@ const e = match (x) {
   foo["bar"]: true,
   foo.bar[1]: true,
   foo[1].bar["baz"]: true,
+  foo[1n]: true,
 };

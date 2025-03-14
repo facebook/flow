@@ -3294,6 +3294,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                           (loc, Ast.Expression.NumberLiteral lit),
                         name
                       )
+                    | ObjectPattern.Property.BigIntLiteral
+                        (loc, ({ Ast.BigIntLiteral.raw; _ } as lit)) ->
+                      ( Ast.Expression.Member.PropertyExpression
+                          (loc, Ast.Expression.BigIntLiteral lit),
+                        raw
+                      )
                   in
                   let member =
                     let open Ast.Expression in

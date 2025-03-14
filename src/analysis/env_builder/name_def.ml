@@ -305,6 +305,7 @@ end = struct
         (Select { selector; parent = acc }, prop)
       else
         (snd acc, "")
+    | BigIntLiteral _ -> (snd acc, "")
 
   let object_rest acc used_props =
     let selector = Selector.ObjRest { used_props; after_computed = false } in

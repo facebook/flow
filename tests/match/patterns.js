@@ -170,3 +170,14 @@
     [_, const b]: b as string, // OK
   };
 }
+
+// BigInt member pattern
+{
+  declare const x: string;
+  declare const O: {[bigint]: 'foo'};
+
+  const out = match (x) {
+    O[1n]: 0, // OK
+    _: 0,
+  };
+}

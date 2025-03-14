@@ -10,4 +10,5 @@ const e = match (x) {
   {const x, ...}: 1,
   {x}: 1,
   {x, foo: 1}: 1,
+  {1n: 1}: 1,
 };

@@ -1975,6 +1975,7 @@ and MatchPattern : sig
     and ('M, 'T) property =
       | PropertyString of ('M * 'M StringLiteral.t)
       | PropertyNumber of ('M * 'M NumberLiteral.t)
+      | PropertyBigInt of ('M * 'M BigIntLiteral.t)
       | PropertyIdentifier of ('M, 'T) Identifier.t
 
     and ('M, 'T) t = 'T * ('M, 'T) t'
@@ -2011,6 +2012,7 @@ and MatchPattern : sig
       type ('M, 'T) key =
         | StringLiteral of ('M * 'M StringLiteral.t)
         | NumberLiteral of ('M * 'M NumberLiteral.t)
+        | BigIntLiteral of ('M * 'M BigIntLiteral.t)
         | Identifier of ('M, 'T) Identifier.t
 
       and ('M, 'T) property = {

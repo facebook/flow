@@ -3407,6 +3407,7 @@ and match_member_pattern ~opts (loc, { Ast.MatchPattern.MemberPattern.base; prop
     (match property with
     | PropertyString (loc, lit) -> fuse [base; Atom "["; string_literal ~opts loc lit; Atom "]"]
     | PropertyNumber (loc, lit) -> fuse [base; Atom "["; number_literal ~opts loc lit; Atom "]"]
+    | PropertyBigInt (loc, lit) -> fuse [base; Atom "["; bigint_literal loc lit; Atom "]"]
     | PropertyIdentifier ident -> fuse [base; Atom "."; identifier ident])
 
 and match_binding_pattern loc { Ast.MatchPattern.BindingPattern.kind; id; comments } =
@@ -3431,6 +3432,7 @@ and match_object_pattern_property ~opts prop =
     match key with
     | Property.StringLiteral (loc, lit) -> string_literal ~opts loc lit
     | Property.NumberLiteral (loc, lit) -> number_literal ~opts loc lit
+    | Property.BigIntLiteral (loc, lit) -> bigint_literal loc lit
     | Property.Identifier ident -> identifier ident
   in
   match prop with

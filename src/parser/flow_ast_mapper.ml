@@ -2648,6 +2648,8 @@ class ['loc] mapper =
         id_loc this#string_literal loc lit prop (fun lit -> PropertyString (loc, lit))
       | PropertyNumber (loc, lit) ->
         id_loc this#number_literal loc lit prop (fun lit -> PropertyNumber (loc, lit))
+      | PropertyBigInt (loc, lit) ->
+        id_loc this#bigint_literal loc lit prop (fun lit -> PropertyBigInt (loc, lit))
       | PropertyIdentifier ident ->
         id this#identifier ident prop (fun ident -> PropertyIdentifier ident)
 
@@ -2700,6 +2702,8 @@ class ['loc] mapper =
         id_loc this#string_literal loc lit key (fun lit -> StringLiteral (loc, lit))
       | NumberLiteral (loc, lit) ->
         id_loc this#number_literal loc lit key (fun lit -> NumberLiteral (loc, lit))
+      | BigIntLiteral (loc, lit) ->
+        id_loc this#bigint_literal loc lit key (fun lit -> BigIntLiteral (loc, lit))
       | Identifier ident -> id this#identifier ident key (fun ident -> Identifier ident)
 
     method match_array_pattern (array_pattern : ('loc, 'loc) Ast.MatchPattern.ArrayPattern.t) =

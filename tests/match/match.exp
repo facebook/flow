@@ -789,7 +789,7 @@ Invalid object pattern property. Use `{const foo}` if you want to create a new v
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   155|     {foo}: 0,
+   155|     {foo}: 0, // ERROR
              ^^^
 
 
@@ -799,8 +799,17 @@ Invalid object pattern property. Use `{const foo}` if you want to create a new v
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   156|     {foo, bar: true}: 0,
+   156|     {foo, bar: true}: 0, // ERROR
              ^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:166:6
+
+Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
+[match-invalid-pattern]
+
+   166|     {1n: 1}: 0, // ERROR
+             ^^
 
 
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
@@ -942,7 +951,7 @@ Error --------------------------------------------------------------------------
 Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
-   176|     1: return 1;
+   176|     1: return 1; // ERROR
                ^^^^^^^^^
 
 
@@ -951,9 +960,9 @@ Error --------------------------------------------------------------------------
 Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
-   177|     2: throw false;
+   177|     2: throw false; // ERROR
                ^^^^^^^^^^^^
 
 
 
-Found 79 errors
+Found 80 errors

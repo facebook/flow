@@ -947,6 +947,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
         match key with
         | StringLiteral (loc, { Ast.StringLiteral.raw; _ }) -> (loc, raw)
         | NumberLiteral (loc, { Ast.NumberLiteral.raw; _ }) -> (loc, raw)
+        | BigIntLiteral (loc, { Ast.BigIntLiteral.raw; _ }) -> (loc, raw)
         | Identifier (loc, { Ast.Identifier.name; _ }) -> (loc, name)
       in
       if this#covers_target loc then

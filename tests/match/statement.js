@@ -173,7 +173,7 @@ function t2(): boolean {
 // Invalid case body
 function t3() {
   match (x) {
-    1: return 1;
-    2: throw false;
+    1: return 1; // ERROR
+    2: throw false; // ERROR
   }
 }

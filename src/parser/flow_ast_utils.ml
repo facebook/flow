@@ -709,6 +709,8 @@ let expression_of_match_member_pattern ~visit_expression pattern =
         Expression.Member.PropertyExpression (loc, Expression.StringLiteral lit)
       | MemberPattern.PropertyNumber (loc, lit) ->
         Expression.Member.PropertyExpression (loc, Expression.NumberLiteral lit)
+      | MemberPattern.PropertyBigInt (loc, lit) ->
+        Expression.Member.PropertyExpression (loc, Expression.BigIntLiteral lit)
     in
     let exp = (loc, Expression.Member { Expression.Member._object; property; comments }) in
     visit_expression exp;

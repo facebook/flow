@@ -3703,6 +3703,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       match (property1, property2) with
       | (PropertyNumber (loc1, lit1), PropertyNumber (loc2, lit2)) ->
         diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+      | (PropertyBigInt (loc1, lit1), PropertyBigInt (loc2, lit2)) ->
+        diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2
       | (PropertyString (loc1, lit1), PropertyString (loc2, lit2)) ->
         diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
       | (PropertyIdentifier id1, PropertyIdentifier id2) -> Some (diff_if_changed identifier id1 id2)
@@ -3761,6 +3763,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             match (key1, key2) with
             | (Property.NumberLiteral (loc1, lit1), Property.NumberLiteral (loc2, lit2)) ->
               diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2
+            | (Property.BigIntLiteral (loc1, lit1), Property.BigIntLiteral (loc2, lit2)) ->
+              diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2
             | (Property.StringLiteral (loc1, lit1), Property.StringLiteral (loc2, lit2)) ->
               diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
             | (Property.Identifier id1, Property.Identifier id2) ->

@@ -716,6 +716,7 @@ with type t = Impl.t = struct
           let member_property = function
             | MemberPattern.PropertyString lit -> string_literal lit
             | MemberPattern.PropertyNumber lit -> number_literal lit
+            | MemberPattern.PropertyBigInt lit -> bigint_literal lit
             | MemberPattern.PropertyIdentifier id -> identifier id
           in
           node
@@ -730,6 +731,7 @@ with type t = Impl.t = struct
           match key with
           | ObjectPattern.Property.StringLiteral lit -> string_literal lit
           | ObjectPattern.Property.NumberLiteral lit -> number_literal lit
+          | ObjectPattern.Property.BigIntLiteral lit -> bigint_literal lit
           | ObjectPattern.Property.Identifier id -> identifier id
         in
         let property = function

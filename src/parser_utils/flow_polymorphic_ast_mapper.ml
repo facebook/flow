@@ -2167,6 +2167,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match prop with
       | PropertyString (loc, lit) -> PropertyString (this#on_loc_annot loc, this#string_literal lit)
       | PropertyNumber (loc, lit) -> PropertyNumber (this#on_loc_annot loc, this#number_literal lit)
+      | PropertyBigInt (loc, lit) -> PropertyBigInt (this#on_loc_annot loc, this#bigint_literal lit)
       | PropertyIdentifier ident -> PropertyIdentifier (this#t_identifier ident)
 
     method match_unary_pattern_argument (argument : 'M Ast.MatchPattern.UnaryPattern.argument)
@@ -2215,6 +2216,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         StringLiteral (this#on_loc_annot annot, this#string_literal lit)
       | NumberLiteral (annot, lit) ->
         NumberLiteral (this#on_loc_annot annot, this#number_literal lit)
+      | BigIntLiteral (annot, lit) ->
+        BigIntLiteral (this#on_loc_annot annot, this#bigint_literal lit)
       | Identifier ident -> Identifier (this#t_identifier ident)
 
     method match_array_pattern (array_pattern : ('M, 'T) Ast.MatchPattern.ArrayPattern.t)

@@ -171,8 +171,14 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
                     let trailing = Eat.trailing_comments env in
                     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
                     MemberPattern.PropertyNumber (loc, { Ast.NumberLiteral.value; raw; comments })
+                  | T_BIGINT { kind; raw } ->
+                    let loc = Peek.loc env in
+                    let value = Parse.bigint env kind raw in
+                    let trailing = Eat.trailing_comments env in
+                    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+                    MemberPattern.PropertyBigInt (loc, { Ast.BigIntLiteral.value; raw; comments })
                   | _ ->
-                    error_unexpected ~expected:"a number or string literal" env;
+                    error_unexpected ~expected:"a numeric or string literal" env;
                     let loc = Peek.loc env in
                     MemberPattern.PropertyString
                       (loc, { Ast.StringLiteral.value = ""; raw = "\"\""; comments = None })
@@ -263,6 +269,12 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         let trailing = Eat.trailing_comments env in
         let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
         NumberLiteral (loc, { Ast.NumberLiteral.value; raw; comments })
+      | T_BIGINT { kind; raw } ->
+        let loc = Peek.loc env in
+        let value = Parse.bigint env kind raw in
+        let trailing = Eat.trailing_comments env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        BigIntLiteral (loc, { Ast.BigIntLiteral.value; raw; comments })
       | _ ->
         let id = identifier_name env in
         Identifier id

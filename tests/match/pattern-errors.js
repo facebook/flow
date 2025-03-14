@@ -152,8 +152,18 @@
   declare const x: {foo: 1, bar: boolean};
 
   const out = match (x) {
-    {foo}: 0,
-    {foo, bar: true}: 0,
+    {foo}: 0, // ERROR
+    {foo, bar: true}: 0, // ERROR
+    _: 0,
+  };
+}
+
+// BigInt property usage
+{
+  declare const x: mixed;
+
+  const out = match (x) {
+    {1n: 1}: 0, // ERROR
     _: 0,
   };
 }

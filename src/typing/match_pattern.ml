@@ -59,6 +59,9 @@ let object_property_key cx acc key :
       Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
       (acc, Property.NumberLiteral (loc, lit), prop)
     )
+  | Property.BigIntLiteral (loc, { Ast.BigIntLiteral.raw; _ }) ->
+    Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
+    (acc, Tast_utils.error_mapper#match_object_pattern_property_key key, raw)
 
 let binding cx ~on_binding ~kind acc name_loc name =
   let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
@@ -111,6 +114,9 @@ let rec member cx ~on_identifier ~on_expression mem =
     | PropertyNumber (loc, lit) ->
       let exp = Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.NumberLiteral lit) in
       (exp, (fun _ -> PropertyNumber (loc, lit)))
+    | PropertyBigInt (loc, lit) ->
+      let exp = Ast.Expression.Member.PropertyExpression (loc, Ast.Expression.BigIntLiteral lit) in
+      (exp, (fun _ -> PropertyBigInt (loc, lit)))
   in
   let exp =
     ( loc,
@@ -217,7 +223,8 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
         let key_loc =
           match key with
           | Property.StringLiteral (loc, _)
-          | Property.NumberLiteral (loc, _) ->
+          | Property.NumberLiteral (loc, _)
+          | Property.BigIntLiteral (loc, _) ->
             loc
           | Property.Identifier ((loc, _), _) ->
             (match p with
