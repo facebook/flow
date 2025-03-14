@@ -14,4 +14,4 @@ echo "" > .flow.saved_state_file_changes
 "$FLOW" status --strip-root
 
 "$FLOW" force-recheck lib.js --missed-changes --changed-mergebase
-assert_errors "$FLOW" status --strip-root
+"$FLOW" status --strip-root

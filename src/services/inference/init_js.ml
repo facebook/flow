@@ -66,7 +66,7 @@ let load_lib_files ~ccx ~options ~reader files =
             (fun mref -> Context.MissingModule mref)
             mk_builtins
         in
-        let (severity_cover, _, _) =
+        let (severity_cover, suppressions, suppression_errors) =
           Type_inference_js.scan_for_suppressions
             ~in_libdef:true
             (Options.lint_severities options)
@@ -76,8 +76,10 @@ let load_lib_files ~ccx ~options ~reader files =
              )
             )
         in
-        Context.add_severity_covers cx severity_cover;
         Context.reset_errors cx builtin_errors;
+        Context.add_severity_covers cx severity_cover;
+        Context.add_error_suppressions cx suppressions;
+        List.iter (Flow_js.add_output cx) suppression_errors;
         let exports_of_builtins (Context.BuiltinGroup { builtins; _ }) =
           Exports.of_builtins builtins
         in
