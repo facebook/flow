@@ -59,7 +59,6 @@ let synthesis_speculation_call cx call_reason (reason, rep) targs argts =
         call_tout = tout;
         call_strict_arity = true;
         call_speculation_hint_state = Some call_speculation_hint_state;
-        call_kind = RegularCallKind;
         call_specialized_callee = None;
       }
   in
@@ -202,7 +201,6 @@ let rec instantiate_callee cx target_reason fn instantiation_hint =
               call_tout = (reason, Tvar.mk_no_wrap cx reason);
               call_strict_arity = true;
               call_speculation_hint_state = None;
-              call_kind = RegularCallKind;
               call_specialized_callee = None;
             }
         in

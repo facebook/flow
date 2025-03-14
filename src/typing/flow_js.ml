@@ -2611,7 +2611,6 @@ struct
             call_tout = t2;
             call_strict_arity;
             call_speculation_hint_state = _;
-            call_kind = _;
             call_specialized_callee;
           } =
             calltype
@@ -2660,7 +2659,6 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
-            call_kind = _;
             call_specialized_callee;
           } =
             calltype
@@ -4088,7 +4086,6 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
-            call_kind = _;
             call_specialized_callee;
           } =
             calltype
@@ -4114,7 +4111,6 @@ struct
             call_tout;
             call_strict_arity = _;
             call_speculation_hint_state = _;
-            call_kind = _;
             call_specialized_callee;
           } =
             calltype

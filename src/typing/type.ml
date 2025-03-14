@@ -1154,10 +1154,6 @@ module rec TypeTerm : sig
     | Speculation_hint_invalid
     | Speculation_hint_set of (int list * t)
 
-  and call_kind =
-    | MapTypeKind
-    | RegularCallKind
-
   (* speculation id * case id *)
   and spec_state = int * int
 
@@ -1197,7 +1193,6 @@ module rec TypeTerm : sig
     call_tout: tvar;
     call_strict_arity: bool;
     call_speculation_hint_state: speculation_hint_state ref option;
-    call_kind: call_kind;
     call_specialized_callee: specialized_callee option;
   }
 
@@ -4421,7 +4416,7 @@ let mk_boundfunctiontype ~this = mk_methodtype ~subtyping:(This_Method { unbound
   then we create a methodtype with a specific `this` type. *)
 let mk_functiontype reason ?(this = global_this reason) = mk_methodtype this
 
-let mk_boundfunctioncalltype ~call_kind this targs args ?(call_strict_arity = true) tout =
+let mk_boundfunctioncalltype this targs args ?(call_strict_arity = true) tout =
   {
     call_this_t = this;
     call_targs = targs;
@@ -4429,11 +4424,10 @@ let mk_boundfunctioncalltype ~call_kind this targs args ?(call_strict_arity = tr
     call_tout = tout;
     call_strict_arity;
     call_speculation_hint_state = None;
-    call_kind;
     call_specialized_callee = None;
   }
 
-let mk_functioncalltype ~call_kind reason = mk_boundfunctioncalltype ~call_kind (global_this reason)
+let mk_functioncalltype reason = mk_boundfunctioncalltype (global_this reason)
 
 let mk_opt_functioncalltype reason targs args strict instantiation_probe =
   (global_this reason, targs, args, strict, instantiation_probe)
@@ -4462,7 +4456,6 @@ let apply_opt_funcalltype (this, targs, args, strict, t_callee) t_out =
       call_tout = t_out;
       call_strict_arity = strict;
       call_speculation_hint_state = None;
-      call_kind = RegularCallKind;
       call_specialized_callee = t_callee;
     }
 
@@ -4543,7 +4536,6 @@ let call_of_method_app
     call_tout = meth_tout;
     call_strict_arity = meth_strict_arity;
     call_speculation_hint_state = None;
-    call_kind = RegularCallKind;
     call_specialized_callee;
   }
 

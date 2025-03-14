@@ -1487,53 +1487,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     reposition cx ~trace (loc_of_reason reason_tapp) (Type_subst.subst cx ~use_op subst_map poly_t)
 
   let run_call cx check ~return_hint:(_, lazy_hint) trace ~use_op ~reason_op ~reason_tapp =
-    let (check, in_nested_instantiation) =
-      match check.Check.operation with
-      | ( use_op,
-          reason,
-          Check.Call
-            {
-              call_this_t;
-              call_targs;
-              call_args_tlist;
-              call_tout;
-              call_strict_arity;
-              call_speculation_hint_state;
-              call_kind = MapTypeKind as call_kind;
-              call_specialized_callee;
-            }
-        )
-        when Context.in_implicit_instantiation cx ->
-        (* We ensure that the nested instantiated to have a fully resolved view of the input.
-         * As a starting point, we just replace any types that contain unresolved tvars with
-         * placeholders. Soundness is guaranteed by the post instantiation check.
-         * In the future, we can optimize this by doing more careful book-keeping in one pass. *)
-        let ensure_resolved t =
-          if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t then
-            Context.mk_placeholder cx (TypeUtil.reason_of_t t)
-          else
-            t
-        in
-        let fun_type =
-          {
-            call_this_t = ensure_resolved call_this_t;
-            call_args_tlist =
-              ListUtils.ident_map
-                (function
-                  | Arg t -> Arg (ensure_resolved t)
-                  | SpreadArg t -> SpreadArg (ensure_resolved t))
-                call_args_tlist;
-            call_targs;
-            call_tout;
-            call_strict_arity;
-            call_speculation_hint_state;
-            call_kind;
-            call_specialized_callee;
-          }
-        in
-        ({ check with Check.operation = (use_op, reason, Check.Call fun_type) }, true)
-      | _ -> (check, false)
-    in
     let (allow_underconstrained, return_hint) =
       match lazy_hint reason_op ~expected_only:false with
       | HintAvailable (t, kind) -> (true, Some (t, kind))
@@ -1542,20 +1495,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       | EncounteredPlaceholder ->
         (false, None)
     in
-    let f () =
-      Context.run_in_implicit_instantiation_mode cx (fun () ->
-          let (_, _, t) = check.Implicit_instantiation_check.poly_t in
-          let (soln, inferred_targs) =
-            Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check
-          in
-          let t = instantiate_poly_with_subst_map cx trace t soln ~use_op ~reason_op ~reason_tapp in
-          (t, inferred_targs)
-      )
-    in
-    if in_nested_instantiation then
-      Context.run_in_synthesis_mode cx ~target_loc:None f |> snd
-    else
-      f ()
+    Context.run_in_implicit_instantiation_mode cx (fun () ->
+        let (_, _, t) = check.Implicit_instantiation_check.poly_t in
+        let (soln, inferred_targs) =
+          Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check
+        in
+        let t = instantiate_poly_with_subst_map cx trace t soln ~use_op ~reason_op ~reason_tapp in
+        (t, inferred_targs)
+    )
 
   let run_ref_extractor cx ~use_op ~reason t =
     let lhs =

@@ -646,15 +646,7 @@ module Make
          performed by the flow algorithm itself. *)
       ( f,
         Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-            let app =
-              mk_boundfunctioncalltype
-                ~call_kind:RegularCallKind
-                obj_t
-                targts
-                argts
-                t
-                ~call_strict_arity
-            in
+            let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
             Flow.flow
               cx
               ( f,
@@ -3394,7 +3386,7 @@ module Make
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
         in
-        let ft = mk_functioncalltype ~call_kind:RegularCallKind reason None args ret in
+        let ft = mk_functioncalltype reason None args ret in
         let use_op =
           Op
             (FunCall
@@ -4712,15 +4704,7 @@ module Make
             in
             let handle_refined_callee argts obj_t f =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
-                  let app =
-                    mk_boundfunctioncalltype
-                      ~call_kind:RegularCallKind
-                      obj_t
-                      targts
-                      argts
-                      t
-                      ~call_strict_arity:true
-                  in
+                  let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
                   Flow.unify cx f prop_t;
                   let call_t =
                     match opt_state with
@@ -6176,7 +6160,6 @@ module Make
                 call_action =
                   Funcalltype
                     (mk_functioncalltype
-                       ~call_kind:RegularCallKind
                        reason
                        targs_opt
                        ([Arg component_t; Arg props]

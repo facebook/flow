@@ -472,7 +472,7 @@ and call_latent_pred
       end
       | DefT (reason_tapp, PolyT { tparams_loc; tparams = ids; t_out = t; _ }) as fun_t ->
         let tvar = (reason, Tvar.mk_no_wrap cx reason) in
-        let calltype = mk_functioncalltype ~call_kind:RegularCallKind reason targs argts tvar in
+        let calltype = mk_functioncalltype reason targs argts tvar in
         let check =
           lazy
             (Implicit_instantiation_check.of_call

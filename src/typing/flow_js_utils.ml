@@ -3536,12 +3536,7 @@ end = struct
 
   let add_callee_use cx kind l u =
     match u with
-    | Type.CallT
-        Type.
-          {
-            call_action = Funcalltype { call_kind = RegularCallKind; call_specialized_callee; _ };
-            _;
-          } ->
+    | Type.CallT Type.{ call_action = Funcalltype { call_specialized_callee; _ }; _ } ->
       add_callee cx kind l call_specialized_callee
     | _ -> ()
 
