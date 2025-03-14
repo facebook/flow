@@ -1,3 +1,8 @@
+### 0.265.1
+
+Notable bug fixes:
+* Make `libdef-override=off` in `[lints]` section actually turn off all `libdef-override` errors.
+
 ### 0.265.0
 
 Likely to cause new Flow errors:
