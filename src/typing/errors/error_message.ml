@@ -2101,6 +2101,9 @@ let kind_of_msg =
     | EUnusedPromise _ -> LintError Lints.UnusedPromise
     | EReactIntrinsicOverlap _ -> LintError Lints.ReactIntrinsicOverlap
     | ENestedComponent _ -> LintError Lints.NestedComponent
+    | ESignatureBindingValidation (Signature_error.ModuleOverride _ | Signature_error.NameOverride _)
+      ->
+      LintError Lints.LibdefOverride
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
