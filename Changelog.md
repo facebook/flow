@@ -1,3 +1,9 @@
+### 0.265.2
+
+Notable bug fixes:
+* We fixed a bug that caused suppressions to not apply for `libdef-override` errors.
+* We fixed a bug that caused `libdef-override` errors not being raised even if it's turned on.
+
 ### 0.265.1
 
 Notable bug fixes:
