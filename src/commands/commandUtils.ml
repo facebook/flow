@@ -735,8 +735,9 @@ let file_options =
            ~lib_paths:(Base.List.map ~f:snd lib_paths)
     in
     let module_declaration_dirnames =
-      FlowConfig.module_declaration_dirnames flowconfig
-      |> Base.List.map ~f:(Files.expand_project_root_token ~root)
+      Base.List.map (FlowConfig.module_declaration_dirnames flowconfig) ~f:(fun dir ->
+          dir |> Files.expand_project_root_token ~root |> File_path.make |> File_path.to_string
+      )
     in
     let module_file_exts = FlowConfig.module_file_exts flowconfig in
     let module_resource_exts = FlowConfig.module_resource_exts flowconfig in
