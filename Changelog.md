@@ -1,3 +1,7 @@
+### 0.265.3
+
+* Make `@flowtyped` resolution support work on Windows.
+
 ### 0.265.2
 
 Notable bug fixes:
