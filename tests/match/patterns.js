@@ -3,7 +3,7 @@
   declare const x: number;
 
   const out = match (x) {
-    const a: a,
+    const a => a,
   };
   out as number; // OK
   out as empty; // ERROR
@@ -14,7 +14,7 @@
   declare const x: number;
 
   const out = match (x) {
-    const a: a,
+    const a => a,
   };
 
   a; // ERROR: cannot resolve name
@@ -25,7 +25,7 @@
   declare const x: [number];
 
   const out = match (x) {
-    [const a]: a,
+    [const a] => a,
   };
   out as number; // OK
   out as empty; // ERROR
@@ -36,7 +36,7 @@
   declare const x: {foo: number};
 
   const out = match (x) {
-    {foo: const a}: a,
+    {foo: const a} => a,
   };
 
   out as number; // OK
@@ -48,7 +48,7 @@
   declare const x: {foo: number};
 
   const out = match (x) {
-    {const foo}: foo,
+    {const foo} => foo,
   };
 
   out as number; // OK
@@ -60,8 +60,8 @@
   declare const x: {foo: [{bar: number}]};
 
   const out = match (x) {
-    {foo: [{bar: const a}]}: a,
-    {foo: const a}: a[0].bar,
+    {foo: [{bar: const a}]} => a,
+    {foo: const a} => a[0].bar,
   };
 
   out as number; // OK
@@ -74,10 +74,10 @@
   declare const f: number => boolean;
 
   const out = match (x) {
-    {foo: const n} if (n === 0): n, // OK
-    {foo: const n} if (f(n)): n, // OK
-    {foo: const n} if (n as empty): n, // ERROR
-    _: 0,
+    {foo: const n} if (n === 0) => n, // OK
+    {foo: const n} if (f(n)) => n, // OK
+    {foo: const n} if (n as empty) => n, // ERROR
+    _ => 0,
   };
 }
 
@@ -86,29 +86,29 @@
   declare const x: {foo: [number]};
 
   const out = match (x) {
-    {foo: [1] as n}: n as [number], // OK
-    {foo: [1 as n]}: n as number, // OK
-    _: 0,
+    {foo: [1] as n} => n as [number], // OK
+    {foo: [1 as n]} => n as number, // OK
+    _ => 0,
   };
 }
 {
   declare const x: {foo: [number]};
 
   const out = match (x) {
-    {foo: [1] as const n}: n as [number], // OK
-    {foo: [1 as const n]}: n as number, // OK
-    _: 0,
+    {foo: [1] as const n} => n as [number], // OK
+    {foo: [1 as const n]} => n as number, // OK
+    _ => 0,
   };
 }
 {
   declare const x: {foo: {bar: number}};
 
   const out = match (x) {
-    {foo: {bar: _} as const a}: 0, // OK
-    {foo: {bar: 1}}: 0, // OK
-    {foo: {bar: const a}}: 0, // OK
-    {foo: {bar: 1 as const a}}: 0, // OK
-    _: 0,
+    {foo: {bar: _} as const a} => 0, // OK
+    {foo: {bar: 1}} => 0, // OK
+    {foo: {bar: const a}} => 0, // OK
+    {foo: {bar: 1 as const a}} => 0, // OK
+    _ => 0,
   };
 }
 
@@ -117,10 +117,10 @@
   declare const x: [1, 2, 3];
 
   const out = match (x) {
-    [...const xs]: xs as [1, 2, 3], // OK
-    [1, ...const xs]: xs as [2, 3], // OK
-    [1, 2, 3, ...const xs]: xs as [], // OK
-    _: 0,
+    [...const xs] => xs as [1, 2, 3], // OK
+    [1, ...const xs] => xs as [2, 3], // OK
+    [1, 2, 3, ...const xs] => xs as [], // OK
+    _ => 0,
   };
 }
 
@@ -129,10 +129,10 @@
   declare const x: {foo: 1, bar: 2, baz: 3};
 
   const out = match (x) {
-    {...const xs}: xs as {foo: 1, bar: 2, baz: 3}, // OK
-    {bar: _, ...const xs}: xs as {foo: 1, baz: 3}, // OK
-    {foo: _, bar: _, baz: _, ...const xs}: xs as {}, // OK
-    _: 0,
+    {...const xs} => xs as {foo: 1, bar: 2, baz: 3}, // OK
+    {bar: _, ...const xs} => xs as {foo: 1, baz: 3}, // OK
+    {foo: _, bar: _, baz: _, ...const xs} => xs as {}, // OK
+    _ => 0,
   };
 }
 
@@ -143,12 +143,12 @@
   declare const x: number;
 
   const out = match (x) {
-    0: 0,
-    -1: 0,
-    +1: 0,
-    A: 0,
-    O.B: 0,
-    _: 0,
+    0 => 0,
+    -1 => 0,
+    +1 => 0,
+    A => 0,
+    O.B => 0,
+    _ => 0,
   };
 }
 
@@ -157,8 +157,8 @@
   declare const x: number;
 
   const out = match (x) {
-    1 | 2 | 3: 0,
-    _: 0,
+    1 | 2 | 3 => 0,
+    _ => 0,
   };
 }
 
@@ -167,7 +167,7 @@
   const x = [1, 'foo'];
 
   const out = match (x) {
-    [_, const b]: b as string, // OK
+    [_, const b] => b as string, // OK
   };
 }
 
@@ -177,7 +177,7 @@
   declare const O: {[bigint]: 'foo'};
 
   const out = match (x) {
-    O[1n]: 0, // OK
-    _: 0,
+    O[1n] => 0, // OK
+    _ => 0,
   };
 }

@@ -3587,147 +3587,147 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
              ~mapper:(new literal_mapper)
          );
          ( "match_expression_case_body" >:: fun ctxt ->
-           let source = "const e = match (x) {1: null};" in
+           let source = "const e = match (x) {1 => null};" in
            assert_edits_equal
              ctxt
-             ~edits:[((24, 28), "\"wasNull\"")]
+             ~edits:[((26, 30), "\"wasNull\"")]
              ~source
-             ~expected:"const e = match (x) {1: \"wasNull\"};"
+             ~expected:"const e = match (x) {1 => \"wasNull\"};"
              ~mapper:(new literal_mapper)
          );
          ( "match_expression_case_guard" >:: fun ctxt ->
-           let source = "const e = match (x) {1 if (null): 0};" in
+           let source = "const e = match (x) {1 if (null) => 0};" in
            assert_edits_equal
              ctxt
              ~edits:[((27, 31), "\"wasNull\"")]
              ~source
-             ~expected:"const e = match (x) {1 if (\"wasNull\"): 0};"
+             ~expected:"const e = match (x) {1 if (\"wasNull\") => 0};"
              ~mapper:(new literal_mapper)
          );
          ( "match_statement_case_guard" >:: fun ctxt ->
-           let source = "match (x) {1 if (null): {}}" in
+           let source = "match (x) {1 if (null) => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((17, 21), "\"wasNull\"")]
              ~source
-             ~expected:"match (x) {1 if (\"wasNull\"): {}}"
+             ~expected:"match (x) {1 if (\"wasNull\") => {}}"
              ~mapper:(new literal_mapper)
          );
          ( "match_null_pattern" >:: fun ctxt ->
-           let source = "match (x) {null: {}}" in
+           let source = "match (x) {null => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((11, 15), "UpdatedPattern")]
              ~source
-             ~expected:"match (x) {UpdatedPattern: {}}"
+             ~expected:"match (x) {UpdatedPattern => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_identifier_pattern" >:: fun ctxt ->
-           let source = "match (x) {rename: {}}" in
+           let source = "match (x) {rename => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((11, 17), "gotRenamed")]
              ~source
-             ~expected:"match (x) {gotRenamed: {}}"
+             ~expected:"match (x) {gotRenamed => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_number_pattern" >:: fun ctxt ->
-           let source = "match (x) {4: {}}" in
+           let source = "match (x) {4 => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((11, 12), "5")]
              ~source
-             ~expected:"match (x) {5: {}}"
+             ~expected:"match (x) {5 => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_string_pattern" >:: fun ctxt ->
-           let source = "match (x) {\"RenameSL\": {}}" in
+           let source = "match (x) {\"RenameSL\" => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((11, 21), "\"GotRenamedSL\"")]
              ~source
-             ~expected:"match (x) {\"GotRenamedSL\": {}}"
+             ~expected:"match (x) {\"GotRenamedSL\" => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_member_pattern" >:: fun ctxt ->
-           let source = "match (x) {O.rename: {}}" in
+           let source = "match (x) {O.rename => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((13, 19), "gotRenamed")]
              ~source
-             ~expected:"match (x) {O.gotRenamed: {}}"
+             ~expected:"match (x) {O.gotRenamed => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_unary_pattern" >:: fun ctxt ->
-           let source = "match (x) {-4: {}}" in
+           let source = "match (x) {-4 => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((12, 13), "5")]
              ~source
-             ~expected:"match (x) {-5: {}}"
+             ~expected:"match (x) {-5 => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_binding_pattern" >:: fun ctxt ->
-           let source = "match (x) {const rename: {}}" in
+           let source = "match (x) {const rename => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((17, 23), "gotRenamed")]
              ~source
-             ~expected:"match (x) {const gotRenamed: {}}"
+             ~expected:"match (x) {const gotRenamed => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_array_pattern" >:: fun ctxt ->
-           let source = "match (x) {[1, null, 3]: {}}" in
+           let source = "match (x) {[1, null, 3] => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((15, 19), "UpdatedPattern")]
              ~source
-             ~expected:"match (x) {[1, UpdatedPattern, 3]: {}}"
+             ~expected:"match (x) {[1, UpdatedPattern, 3] => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_object_pattern_property_key" >:: fun ctxt ->
-           let source = "match (x) {{a: 1, rename: 2, c: 3}: {}}" in
+           let source = "match (x) {{a: 1, rename: 2, c: 3} => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((18, 24), "gotRenamed")]
              ~source
-             ~expected:"match (x) {{a: 1, gotRenamed: 2, c: 3}: {}}"
+             ~expected:"match (x) {{a: 1, gotRenamed: 2, c: 3} => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_object_pattern_property_value" >:: fun ctxt ->
-           let source = "match (x) {{a: 1, b: null, c: 3}: {}}" in
+           let source = "match (x) {{a: 1, b: null, c: 3} => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((21, 25), "UpdatedPattern")]
              ~source
-             ~expected:"match (x) {{a: 1, b: UpdatedPattern, c: 3}: {}}"
+             ~expected:"match (x) {{a: 1, b: UpdatedPattern, c: 3} => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_object_pattern_property_entire" >:: fun ctxt ->
-           let source = "match (x) {{a: 1, changeProp, c: 3}: {}}" in
+           let source = "match (x) {{a: 1, changeProp, c: 3} => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((18, 28), "UpdatedProp: null")]
              ~source
-             ~expected:"match (x) {{a: 1, UpdatedProp: null, c: 3}: {}}"
+             ~expected:"match (x) {{a: 1, UpdatedProp: null, c: 3} => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_as_pattern" >:: fun ctxt ->
-           let source = "match (x) {null as rename: {}}" in
+           let source = "match (x) {null as rename => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((11, 15), "UpdatedPattern"); ((19, 25), "gotRenamed")]
              ~source
-             ~expected:"match (x) {UpdatedPattern as gotRenamed: {}}"
+             ~expected:"match (x) {UpdatedPattern as gotRenamed => {}}"
              ~mapper:(new useless_mapper)
          );
          ( "match_or_pattern" >:: fun ctxt ->
-           let source = "match (x) {1 | null | 3: {}}" in
+           let source = "match (x) {1 | null | 3 => {}}" in
            assert_edits_equal
              ctxt
              ~edits:[((15, 19), "UpdatedPattern")]
              ~source
-             ~expected:"match (x) {1 | UpdatedPattern | 3: {}}"
+             ~expected:"match (x) {1 | UpdatedPattern | 3 => {}}"
              ~mapper:(new useless_mapper)
          );
        ]

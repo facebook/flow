@@ -2717,55 +2717,57 @@ let tests =
            )
          );
          ( "match_expression" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){1:true,2:false}";
-           assert_expression_string ~ctxt "match(x){1 if(b):true,2 if(f()):false}";
+           assert_expression_string ~ctxt "match(x){1=>true,2=>false}";
+           assert_expression_string ~ctxt "match(x){1 if(b)=>true,2 if(f())=>false}";
            assert_expression_string
              ~ctxt
              ~pretty:true
-             "match (x) {\n  1 if (b): true,\n  2 if (f()): false,\n}";
-           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1: true,\n  2: false,\n}"
+             "match (x) {\n  1 if (b) => true,\n  2 if (f()) => false,\n}";
+           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1 => true,\n  2 => false,\n}"
          );
          ( "match_statement" >:: fun ctxt ->
-           assert_statement_string ~ctxt "match(x){1:{const x=true}2:{const y=false}}";
-           assert_statement_string ~ctxt "match(x){1 if(b):{const x=true}2 if(f()):{const y=false}}";
+           assert_statement_string ~ctxt "match(x){1=>{const x=true}2=>{const y=false}}";
+           assert_statement_string
+             ~ctxt
+             "match(x){1 if(b)=>{const x=true}2 if(f())=>{const y=false}}";
            assert_statement_string
              ~ctxt
              ~pretty:true
-             "match (x) {\n  1: {\n    const x = true;\n  }\n  2: {\n    const y = false;\n  }\n}"
+             "match (x) {\n  1 => {\n    const x = true;\n  }\n  2 => {\n    const y = false;\n  }\n}"
          );
          ( "match_pattern_core" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){-1:true,+2:false,-3n:true,+4n:false}";
+           assert_expression_string ~ctxt "match(x){-1=>true,+2=>false,-3n=>true,+4n=>false}";
            assert_expression_string
              ~ctxt
-             "match(x){0:0,1n:1,\"s\":2,true:3,null:4,x:5,const y:6,_:7}"
+             "match(x){0=>0,1n=>1,\"s\"=>2,true=>3,null=>4,x=>5,const y=>6,_=>7}"
          );
          ( "match_pattern_object" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){{foo:true}:2}";
+           assert_expression_string ~ctxt "match(x){{foo:true}=>2}";
            assert_expression_string
              ~ctxt
              ~pretty:true
-             "match (x) {\n  {foo: true, bar: 1, const x, let y}: 2,\n}";
-           assert_expression_string ~ctxt "match(x){{foo:1,...const x}:x}"
+             "match (x) {\n  {foo: true, bar: 1, const x, let y} => 2,\n}";
+           assert_expression_string ~ctxt "match(x){{foo:1,...const x}=>x}"
          );
          ( "match_pattern_array" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){[1,false]:x}";
-           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  [1, false]: x,\n}";
-           assert_expression_string ~ctxt "match(x){[1,...]:x}";
-           assert_expression_string ~ctxt "match(x){[1,...const x]:x}"
+           assert_expression_string ~ctxt "match(x){[1,false]=>x}";
+           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  [1, false] => x,\n}";
+           assert_expression_string ~ctxt "match(x){[1,...]=>x}";
+           assert_expression_string ~ctxt "match(x){[1,...const x]=>x}"
          );
          ( "match_pattern_or_as" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){1|2|3:true}";
-           assert_expression_string ~ctxt "match(x){{foo:1|2|3}:true}";
-           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1 | 2 | 3: true,\n}";
-           assert_expression_string ~ctxt "match(x){{foo:[1] as y}:true}";
-           assert_expression_string ~ctxt "match(x){{foo:(1|2|3) as y}:true}"
+           assert_expression_string ~ctxt "match(x){1|2|3=>true}";
+           assert_expression_string ~ctxt "match(x){{foo:1|2|3}=>true}";
+           assert_expression_string ~ctxt ~pretty:true "match (x) {\n  1 | 2 | 3 => true,\n}";
+           assert_expression_string ~ctxt "match(x){{foo:[1] as y}=>true}";
+           assert_expression_string ~ctxt "match(x){{foo:(1|2|3) as y}=>true}"
          );
          ( "match_pattern_member" >:: fun ctxt ->
-           assert_expression_string ~ctxt "match(x){foo.bar:true}";
-           assert_expression_string ~ctxt "match(x){foo[1]:true}";
-           assert_expression_string ~ctxt "match(x){foo[\"bar\"]:true}";
-           assert_expression_string ~ctxt "match(x){foo.bar[1]:true}";
-           assert_expression_string ~ctxt "match(x){foo[1].bar[\"baz\"]:true}"
+           assert_expression_string ~ctxt "match(x){foo.bar=>true}";
+           assert_expression_string ~ctxt "match(x){foo[1]=>true}";
+           assert_expression_string ~ctxt "match(x){foo[\"bar\"]=>true}";
+           assert_expression_string ~ctxt "match(x){foo.bar[1]=>true}";
+           assert_expression_string ~ctxt "match(x){foo[1].bar[\"baz\"]=>true}"
          );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";

@@ -1628,105 +1628,105 @@ type T = typeof w;
 let%expect_test "match_pattern_binding" =
   print_init_test {|
 (match (x) {
-  const a: a,
+  const a => a,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 8) to (3, 9) => val (3, 2) to (3, 13)
+      (3, 8) to (3, 9) => val (3, 2) to (3, 15)
     ] |}]
 
 let%expect_test "match_pattern_tuple" =
   print_init_test {|
 (match (x) {
-  [const a]: a,
+  [const a] => a,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 9) to (3, 10) => (val (3, 2) to (3, 15))[0];
-      (3, 2) to (3, 11) => val (3, 2) to (3, 15)
+      (3, 9) to (3, 10) => (val (3, 2) to (3, 17))[0];
+      (3, 2) to (3, 11) => val (3, 2) to (3, 17)
     ] |}]
 
 let%expect_test "match_pattern_tuple_rest" =
   print_init_test {|
 (match (x) {
-  [_, ...const b]: b,
+  [_, ...const b] => b,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 15) to (3, 16) => (val (3, 2) to (3, 21))[...];
-      (3, 2) to (3, 17) => val (3, 2) to (3, 21)
+      (3, 15) to (3, 16) => (val (3, 2) to (3, 23))[...];
+      (3, 2) to (3, 17) => val (3, 2) to (3, 23)
     ] |}]
 
 let%expect_test "match_pattern_object" =
   print_init_test {|
 (match (x) {
-  {foo: const a}: a,
+  {foo: const a} => a,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 14) to (3, 15) => (val (3, 2) to (3, 20)).foo;
-      (3, 2) to (3, 16) => val (3, 2) to (3, 20)
+      (3, 14) to (3, 15) => (val (3, 2) to (3, 22)).foo;
+      (3, 2) to (3, 16) => val (3, 2) to (3, 22)
     ] |}]
 
 let%expect_test "match_pattern_object_shorthand" =
   print_init_test {|
 (match (x) {
-  {const foo}: foo,
+  {const foo} => foo,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 9) to (3, 12) => (val (3, 2) to (3, 19)).foo;
-      (3, 2) to (3, 13) => val (3, 2) to (3, 19)
+      (3, 9) to (3, 12) => (val (3, 2) to (3, 21)).foo;
+      (3, 2) to (3, 13) => val (3, 2) to (3, 21)
     ] |}]
 
 let%expect_test "match_pattern_object_rest" =
   print_init_test {|
 (match (x) {
-  {foo: _, ...const rest}: rest,
+  {foo: _, ...const rest} => rest,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 20) to (3, 24) => (val (3, 2) to (3, 32)){ ... };
-      (3, 2) to (3, 25) => val (3, 2) to (3, 32)
+      (3, 20) to (3, 24) => (val (3, 2) to (3, 34)){ ... };
+      (3, 2) to (3, 25) => val (3, 2) to (3, 34)
     ] |}]
 
 let%expect_test "match_pattern_as" =
   print_init_test {|
 (match (x) {
-  {foo: 1 as a}: a,
+  {foo: 1 as a} => a,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 13) to (3, 14) => (val (3, 2) to (3, 19)).foo;
-      (3, 2) to (3, 15) => val (3, 2) to (3, 19);
+      (3, 13) to (3, 14) => (val (3, 2) to (3, 21)).foo;
+      (3, 2) to (3, 15) => val (3, 2) to (3, 21);
       (3, 8) to (3, 9) => exp (3, 8) to (3, 9) (hint = [])
     ] |}]
 
 let%expect_test "match_pattern_nested" =
   print_init_test {|
 (match (x) {
-  {foo: [_, _, {bar: const x}]}: x,
+  {foo: [_, _, {bar: const x}]} => x,
 });
   |};
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 27) to (3, 28) => (((val (3, 2) to (3, 35)).foo)[2]).bar;
-      (3, 2) to (3, 31) => val (3, 2) to (3, 35);
-      (3, 8) to (3, 30) => (val (3, 2) to (3, 35)).foo;
-      (3, 15) to (3, 29) => ((val (3, 2) to (3, 35)).foo)[2]
+      (3, 27) to (3, 28) => (((val (3, 2) to (3, 37)).foo)[2]).bar;
+      (3, 2) to (3, 31) => val (3, 2) to (3, 37);
+      (3, 8) to (3, 30) => (val (3, 2) to (3, 37)).foo;
+      (3, 15) to (3, 29) => ((val (3, 2) to (3, 37)).foo)[2]
     ] |}]

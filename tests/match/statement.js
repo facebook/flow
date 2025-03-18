@@ -6,16 +6,16 @@
 declare const x: 1 | 2;
 
 match (x) {
-  1: {}
-  2: {}
+  1 => {}
+  2 => {}
 }
 
 function f1() {
   match (x) {
-    1: {
+    1 => {
       throw 0;
     }
-    2: {
+    2 => {
       throw 0;
     }
   };
@@ -27,8 +27,8 @@ function f2() {
   declare function invariant(boolean): empty;
 
   match (x) {
-    1: {}
-    2 if (invariant(false)): {}
+    1 => {}
+    2 if (invariant(false)) => {}
   };
 
   x; // OK: not unreachable
@@ -37,10 +37,10 @@ function f2() {
 // Nested matches
 {
   match (x) {
-    1: {}
-    const a: {
+    1 => {}
+    const a => {
       match (a) {
-        _: {}
+        _ => {}
       }
     }
   }
@@ -50,10 +50,10 @@ function f2() {
 {
   let target;
   match (x) {
-    1: {
+    1 => {
       target = "foo";
     }
-    2: {
+    2 => {
       target = true;
     }
   }
@@ -63,7 +63,7 @@ function f2() {
 {
   let target;
   match (x) {
-    const a: {
+    const a => {
       target = "foo";
     }
   }
@@ -74,10 +74,10 @@ function f2() {
 {
   let target = null;
   match (x) {
-    const a: {
+    const a => {
       target = "foo";
     }
-    const a: {
+    const a => {
       target = true;
     }
   }
@@ -88,10 +88,10 @@ function f2() {
 {
   let target;
   match (x) {
-    1: {
+    1 => {
       target = "foo";
     }
-    2: {
+    2 => {
       throw 0;
     }
   }
@@ -101,10 +101,10 @@ function f2() {
 {
   declare const o: {prop: number};
   match (x) {
-    1: {
+    1 => {
       o.prop = 1;
     }
-    2: {
+    2 => {
       o.prop = 2;
     }
   }
@@ -114,10 +114,10 @@ function f2() {
 {
   const a = [];
   match (x) {
-    1: {
+    1 => {
       a.push(1);
     }
-    2: {
+    2 => {
       a.push(2);
     }
   }
@@ -128,10 +128,10 @@ function f2() {
 // Abnormal exits functions
 function t1(): boolean {
   match (x) {
-    1: {
+    1 => {
       return true;
     }
-    2: {
+    2 => {
       return false;
     }
   }
@@ -139,10 +139,10 @@ function t1(): boolean {
 
 function t2(): boolean {
   match (x) {
-    1: {
+    1 => {
       throw 0;
     }
-    2: {
+    2 => {
       return false;
     }
   }
@@ -152,20 +152,20 @@ function t2(): boolean {
 {
   for (let i = 0; i < 2; i++) {
     match (i) {
-      0: {
+      0 => {
         break;
       }
-      _: {}
+      _ => {}
     }
   }
 }
 {
   label: for (let i = 0; i < 2; i++) {
     match (i) {
-      0: {
+      0 => {
         break label;
       }
-      _: {}
+      _ => {}
     }
   }
 }
@@ -173,7 +173,7 @@ function t2(): boolean {
 // Invalid case body
 function t3() {
   match (x) {
-    1: return 1; // ERROR
-    2: throw false; // ERROR
+    1 => return 1; // ERROR
+    2 => throw false; // ERROR
   }
 }

@@ -3,20 +3,20 @@
   declare const x: 1 | -2 | 3n | 's' | false | null;
 
   const e1 = match (x) {
-    1: 0,
-    -2: 0,
-    3n: 0,
-    's': 0,
-    false: 0,
-    null: 0,
-    const d: d as empty, // OK: all members checked
+    1 => 0,
+    -2 => 0,
+    3n => 0,
+    's' => 0,
+    false => 0,
+    null => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: not all members checked
-    1: 0,
-    false: 0,
-    3n: 0,
-    null: 0,
+    1 => 0,
+    false => 0,
+    3n => 0,
+    null => 0,
   };
 }
 
@@ -28,13 +28,13 @@
   declare const two: 2;
 
   const e1 = match (x) {
-    one: 0,
-    two: 0,
-    const d: d as empty, // OK: all members checked
+    one => 0,
+    two => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `2` not checked
-    one: 0,
+    one => 0,
   };
 }
 
@@ -43,13 +43,13 @@
   declare const x: 1 | void;
 
   const e1 = match (x) {
-    1: 0,
-    undefined: 0,
-    const d: d as empty, // OK: all members checked
+    1 => 0,
+    undefined => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `undefined` not checked
-    1: 0,
+    1 => 0,
   };
 }
 
@@ -58,14 +58,14 @@
   declare const x: ?1;
 
   const e1 = match (x) {
-    1: 0,
-    undefined: 0,
-    null: 0,
-    const d: d as empty, // OK: all members checked
+    1 => 0,
+    undefined => 0,
+    null => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `null` and `undefined` not checked
-    1: 0,
+    1 => 0,
   };
 }
 
@@ -79,13 +79,13 @@
   };
 
   const e1 = match (x) {
-    o.one: 0,
-    o.two: 0,
-    const d: d as empty, // OK: all members checked
+    o.one => 0,
+    o.two => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `2` not checked
-    o.one: 0,
+    o.one => 0,
   };
 }
 
@@ -94,9 +94,9 @@
   declare const x: 1 | 2;
 
   const e1 = match (x) {
-    1 as a: a as 1, // OK
-    2 as a: a as 2, // OK
-    const d: d as empty, // OK: all members checked
+    1 as a => a as 1, // OK
+    2 as a => a as 2, // OK
+    const d => d as empty, // OK: all members checked
   };
 }
 {
@@ -105,8 +105,8 @@
 
   // Nested `as` pattern
   const e1 = match (x) {
-    {type: 'foo' as a, const value}: (a as 'foo', value as 1), // OK
-    {type: 'bar' as a, const value}: (a as 'bar', value as 2), // OK
+    {type: 'foo' as a, const value} => (a as 'foo', value as 1), // OK
+    {type: 'bar' as a, const value} => (a as 'bar', value as 2), // OK
   };
 }
 
@@ -115,15 +115,15 @@
   declare const x: 1 | 2;
 
   const e1 = match (x) {
-    1: 0,
-    const a: a as 2, // OK
-    const d: d as empty, // OK: above binding catches all
+    1 => 0,
+    const a => a as 2, // OK
+    const d => d as empty, // OK: above binding catches all
   };
 
   const e2 = match (x) {
-    1: 0,
-    _: 0, // OK
-    const d: d as empty, // OK: above wildcard catches all
+    1 => 0,
+    _ => 0, // OK
+    const d => d as empty, // OK: above wildcard catches all
   };
 }
 
@@ -132,13 +132,13 @@
   declare const f: () => 1 | 2;
 
   const e1 = match (f()) {
-    1: 0,
-    2: 0,
-    const d: d as empty, // OK: all members checked
+    1 => 0,
+    2 => 0,
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (f()) { // ERROR: `2` not checked
-    1: 0,
+    1 => 0,
   };
 }
 
@@ -147,12 +147,12 @@
   declare const x: 1 | 2 | 3;
 
   const e1 = match (x) {
-    1 | 2 | 3: true,
-    const d: d as empty, // OK
+    1 | 2 | 3 => true,
+    const d => d as empty, // OK
   };
 
   const e2 = match (x) { // ERROR: `3` not checked
-    1 | 2: true,
+    1 | 2 => true,
   };
 }
 
@@ -163,15 +163,15 @@
   declare function f(): boolean;
 
   const e1 = match (x) { // ERROR: `2` not checked
-    1: 0,
-    2 if (f()): 0,
+    1 => 0,
+    2 if (f()) => 0,
   };
 
   const e2 = match (x) {
-    1: 0,
-    2 if (f()): 0,
-    2: 0,
-    const d: d as empty, // OK
+    1 => 0,
+    2 if (f()) => 0,
+    2 => 0,
+    const d => d as empty, // OK
   };
 }
 
@@ -180,9 +180,9 @@
   declare const x: {foo: void, a: 0} | {bar: void, a: 1};
 
   const e1 = match (x) {
-    {foo: _, const a}: a as 0, // OK
-    {bar: _, const a}: a as 1, // OK
-    const d: d as empty, // OK: all members checked
+    {foo: _, const a} => a as 0, // OK
+    {bar: _, const a} => a as 1, // OK
+    const d => d as empty, // OK: all members checked
   };
 }
 {
@@ -196,11 +196,11 @@
   declare const o: {u: void};
 
   const e1 = match (x) {
-    {foo: u, const a}: a as 0, // OK
-    {bar: o.u, const a}: a as 1, // OK
-    {baz: undefined as v, const a}: a as 2, // OK
-    {zap: 2 | u, const a}: a as 3, // OK
-    const d: d as empty, // OK: all members checked
+    {foo: u, const a} => a as 0, // OK
+    {bar: o.u, const a} => a as 1, // OK
+    {baz: undefined as v, const a} => a as 2, // OK
+    {zap: 2 | u, const a} => a as 3, // OK
+    const d => d as empty, // OK: all members checked
   };
 }
 
@@ -211,15 +211,15 @@
                  | {type: 'baz', val: boolean};
 
   const e1 = match (x) {
-    {type: 'foo', val: const a}: a as number, // OK
-    {type: 'bar', val: const a}: a as string, // OK
-    {type: 'baz', val: const a}: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    {type: 'foo', val: const a} => a as number, // OK
+    {type: 'bar', val: const a} => a as string, // OK
+    {type: 'baz', val: const a} => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
-    {type: 'foo', val: const a}: a as number, // OK
-    {type: 'bar', val: const a}: a as string, // OK
+    {type: 'foo', val: const a} => a as number, // OK
+    {type: 'bar', val: const a} => a as string, // OK
   };
 
   // Using idents as pattern
@@ -227,10 +227,10 @@
   declare const bar: 'bar';
   declare const baz: 'baz';
   const e3 = match (x) {
-    {type: foo, val: const a}: a as number, // OK
-    {type: bar, val: const a}: a as string, // OK
-    {type: baz, val: const a}: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    {type: foo, val: const a} => a as number, // OK
+    {type: bar, val: const a} => a as string, // OK
+    {type: baz, val: const a} => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 
   // Using members as pattern
@@ -240,10 +240,10 @@
     baz: 'baz',
   };
   const e4 = match (x) {
-    {type: o.foo, val: const a}: a as number, // OK
-    {type: o.bar, val: const a}: a as string, // OK
-    {type: o.baz, val: const a}: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    {type: o.foo, val: const a} => a as number, // OK
+    {type: o.bar, val: const a} => a as string, // OK
+    {type: o.baz, val: const a} => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 }
 
@@ -254,21 +254,21 @@
                  | {type: 'bar', n: 2, val: boolean};
 
   const e1 = match (x) {
-    {type: 'foo', val: const a}: a as number, // OK
-    {type: 'bar', val: const a}: a as string | boolean, // OK
-    const d: d as empty, // OK: all members checked
+    {type: 'foo', val: const a} => a as number, // OK
+    {type: 'bar', val: const a} => a as string | boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) {
-    {type: 'foo', val: const a}: a as number, // OK
-    {type: 'bar', n: 1, val: const a}: a as string, // OK
-    {type: 'bar', n: 2, val: const a}: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    {type: 'foo', val: const a} => a as number, // OK
+    {type: 'bar', n: 1, val: const a} => a as string, // OK
+    {type: 'bar', n: 2, val: const a} => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 
   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
-    {type: 'foo', val: const a}: a as number, // OK
-    {type: 'bar', n: 1, val: const a}: a as string, // OK
+    {type: 'foo', val: const a} => a as number, // OK
+    {type: 'bar', n: 1, val: const a} => a as string, // OK
   };
 }
 
@@ -277,9 +277,9 @@
   declare const x: null | {type: 'bar', val: number};
 
   const e1 = match (x) {
-    {type: 'bar', val: const a}: a as number, // OK
-    null: 0,
-    const d: d as empty, // OK: all members checked
+    {type: 'bar', val: const a} => a as number, // OK
+    null => 0,
+    const d => d as empty, // OK: all members checked
   };
 }
 
@@ -290,12 +290,12 @@
                  | {type: 'baz', val: boolean};
 
   const e1 = match (x) {
-    {type: 'foo'} | {type: 'bar'} | {type: 'baz'}: 0,
-    const d: d as empty, // OK
+    {type: 'foo'} | {type: 'bar'} | {type: 'baz'} => 0,
+    const d => d as empty, // OK
   };
 
   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
-    {type: 'foo'} | {type: 'baz'}: 0,
+    {type: 'foo'} | {type: 'baz'} => 0,
   };
 }
 
@@ -306,15 +306,15 @@
                  | ['baz', boolean];
 
   const e1 = match (x) {
-    ['foo', const a]: a as number, // OK
-    ['bar', const a]: a as string, // OK
-    ['baz', const a]: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    ['foo', const a] => a as number, // OK
+    ['bar', const a] => a as string, // OK
+    ['baz', const a] => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) { // ERROR: `'baz'` element not checked
-    ['foo', const a]: a as number, // OK
-    ['bar', const a]: a as string, // OK
+    ['foo', const a] => a as number, // OK
+    ['bar', const a] => a as string, // OK
   };
 
   // Using idents as pattern
@@ -322,10 +322,10 @@
   declare const bar: 'bar';
   declare const baz: 'baz';
   const e3 = match (x) {
-    [foo, const a]: a as number, // OK
-    [bar, const a]: a as string, // OK
-    [baz, const a]: a as boolean, // OK
-    const d: d as empty, // OK: all members checked
+    [foo, const a] => a as number, // OK
+    [bar, const a] => a as string, // OK
+    [baz, const a] => a as boolean, // OK
+    const d => d as empty, // OK: all members checked
   };
 }
 
@@ -334,10 +334,10 @@
   declare const x: null | ['bar', number] | ['foo', string];
 
   const e1 = match (x) {
-    ['bar', const a]: a as number, // OK
-    ['foo', const a]: a as string, // OK
-    null: 0,
-    const d: d as empty, // OK: all members checked
+    ['bar', const a] => a as number, // OK
+    ['foo', const a] => a as string, // OK
+    null => 0,
+    const d => d as empty, // OK: all members checked
   };
 }
 
@@ -348,36 +348,36 @@
                  | [boolean, boolean, boolean];
 
   const e1 = match (x) {
-    [const a]: a as number, // OK
-    [const a, _]: a as string, // OK
-    [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
-    const d: d as empty, // OK: all members checked
+    [const a] => a as number, // OK
+    [const a, _] => a as string, // OK
+    [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+    const d => d as empty, // OK: all members checked
   };
 
   const e2 = match (x) {
-    [...]: 0, // OK: matches all
-    const d: d as empty, // OK: all members checked
+    [...] => 0, // OK: matches all
+    const d => d as empty, // OK: all members checked
   }
 
   const e3 = match (x) {
-    [const a, _, ...]: a as string | boolean, // OK
-    [const a, ...]: a as number, // OK
-    const d: d as empty, // OK: all members checked
+    [const a, _, ...] => a as string | boolean, // OK
+    [const a, ...] => a as number, // OK
+    const d => d as empty, // OK: all members checked
   }
 }
 {
   declare const x: [number] | Array<string>;
 
   const e1 = match (x) {
-    []: 0, // OK
-    [const a]: a as string, // ERROR: `number` is not `string`
-    [const a, _]: a as string, // OK
-    const d: d as Array<string>, // OK: tuple checked, but array could have other lengths
+    [] => 0, // OK
+    [const a] => a as string, // ERROR: `number` is not `string`
+    [const a, _] => a as string, // OK
+    const d => d as Array<string>, // OK: tuple checked, but array could have other lengths
   };
 
   const e2 = match (x) {
-    [...]: 0, // OK: matches all
-    const d: d as empty, // OK: all members checked
+    [...] => 0, // OK: matches all
+    const d => d as empty, // OK: all members checked
   }
 }
 
@@ -386,20 +386,20 @@
   declare const x: [a: 0, b?: 1, c?: 2];
 
   const e1 = match (x) {
-    [_, ...]: 0,
-    const d: d as empty, // OK: all elements matched
+    [_, ...] => 0,
+    const d => d as empty, // OK: all elements matched
   };
 
   const e2 = match (x) { // ERROR: does not match all possibilities
-    [_, _, ...]: 0,
+    [_, _, ...] => 0,
   };
 
   const e3 = match (x) { // ERROR: does not match all possibilities
-    [_]: 0,
+    [_] => 0,
   };
 
   const e4 = match (x) { // ERROR: does not match all possibilities
-    [_, _, _]: 0,
+    [_, _, _] => 0,
   };
 }
 
@@ -408,12 +408,12 @@
   declare const x: [a: 0, ...];
 
   const e1 = match (x) {
-    [_, ...]: 0,
-    const d: d as empty, // OK: all elements matched
+    [_, ...] => 0,
+    const d => d as empty, // OK: all elements matched
   };
 
   const e2 = match (x) { // ERROR: does not match all elements
-    [_]: 0,
+    [_] => 0,
   };
 }
 
@@ -423,6 +423,6 @@
   declare const x: T;
 
   const e1 = match (x) {
-    {foo: 1}: 0,
+    {foo: 1} => 0,
   };
 }

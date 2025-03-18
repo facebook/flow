@@ -271,12 +271,12 @@ x = 100;
          let x = null;
          declare const arg: 1 | 2;
          (match (arg) {
-           1: x = 42,
-           2: x = 100,
+           1 => x = 42,
+           2 => x = 100,
          });
          x = true;
          "
-               "[(1, 4) to (1, 5)], [(4, 5) to (4, 6)], [(5, 5) to (5, 6)]";
+               "[(1, 4) to (1, 5)], [(4, 7) to (4, 8)], [(5, 7) to (5, 8)]";
          "match_expression_array"
          >:: mk_provider_loc_test
                (mk_loc (1, 4) (1, 5))
@@ -284,12 +284,12 @@ x = 100;
          let x = [];
          declare const arg: 1 | 2;
          (match (arg) {
-           1: x.push(42),
-           2: x.push(100),
+           1 => x.push(42),
+           2 => x.push(100),
          });
          x = true;
          "
-               "[(1, 4) to (1, 5)] array providers: [(4, 12) to (4, 14)], [(5, 12) to (5, 15)]";
+               "[(1, 4) to (1, 5)] array providers: [(4, 14) to (4, 16)], [(5, 14) to (5, 17)]";
          "match_statement_null"
          >:: mk_provider_test
                "x"
@@ -297,10 +297,10 @@ x = 100;
          let x = null;
          declare const arg: 1 | 2;
          match (arg) {
-           1: {
+           1 => {
              x = 42;
            }
-           2: {
+           2 => {
              x = 100;
            }
          }
@@ -314,10 +314,10 @@ x = 100;
          let x = [];
          declare const arg: 1 | 2;
          match (arg) {
-           1: {
+           1 => {
              x.push(true);
            }
-           2: {
+           2 => {
              x.push(false);
            }
          }

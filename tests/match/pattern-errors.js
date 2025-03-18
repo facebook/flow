@@ -3,17 +3,17 @@
   declare const x: 0 | 1 | [2] | {a: 3, b: 4};
 
   const e1 = match (x) {
-     [...let a]: 0, // ERROR
-     {let a, ...let b}: 0, // ERROR
-     0 as let a: 0, // ERROR
-     let a: 0, // ERROR
+     [...let a] => 0, // ERROR
+     {let a, ...let b} => 0, // ERROR
+     0 as let a => 0, // ERROR
+     let a => 0, // ERROR
   };
 
   const e2 = match (x) {
-     [...var a]: 0, // ERROR
-     {var a, ...var b}: 0, // ERROR
-     0 as var a: 0, // ERROR
-     var a: 0, // ERROR
+     [...var a] => 0, // ERROR
+     {var a, ...var b} => 0, // ERROR
+     0 as var a => 0, // ERROR
+     var a => 0, // ERROR
   };
 }
 
@@ -22,8 +22,8 @@
   declare const x: {1: true};
 
   const e1 = match (x) {
-    {1.1: _}: 0, // ERROR
-    _: 0,
+    {1.1: _} => 0, // ERROR
+    _ => 0,
   };
 }
 
@@ -32,9 +32,9 @@
   declare const x: 0;
 
   const e1 = match (x) {
-    -0: true, // ERROR
-    +0: true, // ERROR
-    0: true, // OK
+    -0 => true, // ERROR
+    +0 => true, // ERROR
+    0 => true, // OK
   };
 }
 
@@ -43,8 +43,8 @@
   declare const x: 1n;
 
   const e1 = match (x) {
-    +1n: true, // ERROR
-    1n: true, // OK
+    +1n => true, // ERROR
+    1n => true, // OK
   };
 }
 
@@ -53,18 +53,18 @@
   declare const x: {foo: boolean};
 
   const e1 = match (x) {
-    {foo: true, foo: false}: 0, // ERROR
-    _: 0,
+    {foo: true, foo: false} => 0, // ERROR
+    _ => 0,
   };
 
   const e2 = match (x) {
-    {foo: true, const foo}: 0, // ERROR
-    _: 0,
+    {foo: true, const foo} => 0, // ERROR
+    _ => 0,
   };
 
   const e3 = match (x) {
-    {foo: true, 'foo': false}: 0, // ERROR
-    _: 0,
+    {foo: true, 'foo': false} => 0, // ERROR
+    _ => 0,
   };
 }
 
@@ -73,12 +73,12 @@
   declare const x: [boolean, boolean] | {a: boolean, b: boolean};
 
   const e1 = match (x) {
-    [const a, true as a]: 0, // ERROR
-    [const a, true as const a]: 0, // ERROR
-    [const a, const a]: 0, // ERROR
-    [const a, ...const a]: 0, // ERROR
-    {const a, ...const a}: 0, // ERROR
-    _: 0,
+    [const a, true as a] => 0, // ERROR
+    [const a, true as const a] => 0, // ERROR
+    [const a, const a] => 0, // ERROR
+    [const a, ...const a] => 0, // ERROR
+    {const a, ...const a} => 0, // ERROR
+    _ => 0,
   };
 }
 
@@ -87,17 +87,17 @@
   declare const x: [boolean];
 
   const e1 = match (x) {
-    _ | [true as a]: 0, // ERROR
-    _ | [true as const a]: 0, // ERROR
-    _ | [const a]: 0, // ERROR
-    _ | [...const a]: 0, // ERROR
+    _ | [true as a] => 0, // ERROR
+    _ | [true as const a] => 0, // ERROR
+    _ | [const a] => 0, // ERROR
+    _ | [...const a] => 0, // ERROR
   };
 
   declare const y: {a: boolean};
 
   const e2 = match (y) {
-    _ | {const a}: 0, // ERROR
-    _ | {...const a}: 0, // ERROR
+    _ | {const a} => 0, // ERROR
+    _ | {...const a} => 0, // ERROR
   };
 }
 
@@ -106,8 +106,8 @@
   declare const x: [boolean];
 
   const e1 = match (x) {
-    const a as b: 0, // ERROR
-    const a as const b: 0, // ERROR
+    const a as b => 0, // ERROR
+    const a as const b => 0, // ERROR
   }
 }
 
@@ -116,16 +116,16 @@
   declare const x: [number, number];
 
   const out = match (x) {
-    [a, const a]: a, // ERROR: reference before declaration
-    _: 0,
+    [a, const a] => a, // ERROR: reference before declaration
+    _ => 0,
   };
 }
 {
   declare const x: [number, {foo: number}];
 
   const out = match (x) {
-    [a.foo, const a]: a, // ERROR: reference before declaration
-    _: 0,
+    [a.foo, const a] => a, // ERROR: reference before declaration
+    _ => 0,
   };
 }
 
@@ -134,16 +134,16 @@
   declare const x: [number, number];
 
   const out = match (x) {
-    [const a, a]: a, // ERROR
-    _: 0,
+    [const a, a] => a, // ERROR
+    _ => 0,
   };
 }
 {
   declare const x: [{foo: number}, number];
 
   const out = match (x) {
-    [const a, a.foo]: a, // ERROR
-    _: 0,
+    [const a, a.foo] => a, // ERROR
+    _ => 0,
   };
 }
 
@@ -152,9 +152,9 @@
   declare const x: {foo: 1, bar: boolean};
 
   const out = match (x) {
-    {foo}: 0, // ERROR
-    {foo, bar: true}: 0, // ERROR
-    _: 0,
+    {foo} => 0, // ERROR
+    {foo, bar: true} => 0, // ERROR
+    _ => 0,
   };
 }
 
@@ -163,7 +163,7 @@
   declare const x: mixed;
 
   const out = match (x) {
-    {1n: 1}: 0, // ERROR
-    _: 0,
+    {1n: 1} => 0, // ERROR
+    _ => 0,
   };
 }

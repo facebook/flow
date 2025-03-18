@@ -1,4 +1,4 @@
 const e = match (a) {
-  1: true,
-  'foo': false // <-- no final separator
+  1 => true,
+  'foo' => false // <-- no final separator
 };

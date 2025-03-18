@@ -10,7 +10,7 @@
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":19}},
-      "message":"Unexpected number, expected the token `:`"
+      "message":"Unexpected number, expected the token `=>`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":20}},
@@ -21,23 +21,23 @@
       "message":"Unexpected token `]`, expected the token `,`"
     },
     {
-      "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-      "message":"Unexpected token `:`"
+      "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":23}},
+      "message":"Unexpected token `=>`"
     }
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
-  "range":[0,48],
+  "range":[0,50],
   "body":[
     {
       "type":"VariableDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":1}},
-      "range":[0,48],
+      "range":[0,50],
       "declarations":[
         {
           "type":"VariableDeclarator",
           "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":3,"column":1}},
-          "range":[6,48],
+          "range":[6,50],
           "id":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":7}},
@@ -49,7 +49,7 @@
           "init":{
             "type":"MatchExpression",
             "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":3,"column":1}},
-            "range":[10,48],
+            "range":[10,50],
             "argument":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
@@ -112,17 +112,17 @@
               },
               {
                 "type":"MatchExpressionCase",
-                "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":24}},
-                "range":[42,46],
+                "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":26}},
+                "range":[43,48],
                 "pattern":{
                   "type":"MatchWildcardPattern",
-                  "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-                  "range":[42,43]
+                  "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":23}},
+                  "range":[43,45]
                 },
                 "body":{
                   "type":"Literal",
-                  "loc":{"source":null,"start":{"line":2,"column":22},"end":{"line":2,"column":23}},
-                  "range":[44,45],
+                  "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":25}},
+                  "range":[46,47],
                   "value":1,
                   "raw":"1"
                 },

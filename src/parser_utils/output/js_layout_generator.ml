@@ -3343,7 +3343,8 @@ and match_case :
        [
          match_pattern ~opts pattern;
          match_case_guard ~opts guard;
-         Atom ":";
+         pretty_space;
+         Atom "=>";
          pretty_space;
          on_case_body ~opts body;
        ]

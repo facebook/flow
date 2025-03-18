@@ -386,16 +386,16 @@ function test_hint_passes_through_array() {
 function test_pattern_match() {
   declare var n: number;
   const m1 = match (n) {
-    1: 'a',
-    _: 'b',
+    1 => 'a',
+    _ => 'b',
   };
   m1 as 'a' | 'b'; // okay
   m1 as 'a'; // error 'b' ~> 'a'
   m1 as 'b'; // error 'a' ~> 'b'
 
   const m2 = match (n) {
-    1: abc,
-    _: def,
+    1 => abc,
+    _ => def,
   };
   m2 as 'abc' | 'def'; // okay
   m2 as 'abc'; // error 'def' ~> 'abc'

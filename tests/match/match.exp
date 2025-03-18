@@ -7,9 +7,9 @@ Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [
          ^^^
 
 References:
-   expression.js:13:8
-   13|     1: true,
-              ^^^^ [1]
+   expression.js:13:10
+   13|     1 => true,
+                ^^^^ [1]
    expression.js:18:10
    18|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [
          ^^^
 
 References:
-   expression.js:14:8
-   14|     2: false,
-              ^^^^^ [1]
+   expression.js:14:10
+   14|     2 => false,
+                ^^^^^ [1]
    expression.js:18:10
    18|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -41,9 +41,9 @@ Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [
          ^^^
 
 References:
-   expression.js:23:8
-   23|     1: true,
-              ^^^^ [1]
+   expression.js:23:10
+   23|     1 => true,
+                ^^^^ [1]
    expression.js:27:10
    27|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -58,9 +58,9 @@ Cannot cast `out` to empty because string [1] is incompatible with empty [2]. [i
          ^^^
 
 References:
-   expression.js:24:8
-   24|     2: 's',
-              ^^^ [1]
+   expression.js:24:10
+   24|     2 => 's',
+                ^^^ [1]
    expression.js:27:10
    27|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -75,9 +75,9 @@ Cannot cast `out` to empty because boolean [1] is incompatible with empty [2]. [
          ^^^
 
 References:
-   expression.js:34:8
-   34|     1: true,
-              ^^^^ [1]
+   expression.js:34:10
+   34|     1 => true,
+                ^^^^ [1]
    expression.js:38:10
    38|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -100,9 +100,9 @@ Cannot cast `out` to empty because string [1] is incompatible with empty [2]. [i
          ^^^
 
 References:
-   expression.js:53:8
-   53|     _: 's',
-              ^^^ [1]
+   expression.js:53:10
+   53|     _ => 's',
+                ^^^ [1]
    expression.js:56:10
    56|   out as empty; // ERROR
                 ^^^^^ [2]
@@ -319,38 +319,38 @@ References:
                            ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:353:22
+Error ----------------------------------------------------------------------------------------------- matching.js:353:24
 
 Cannot cast `a` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   matching.js:353:22
-   353|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
-                             ^
+   matching.js:353:24
+   353|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+                               ^
 
 References:
    matching.js:348:21
    348|                  | [boolean, boolean, boolean];
                             ^^^^^^^ [1]
-   matching.js:353:27
-   353|     [const a, _, _]: a as empty, // ERROR: `boolean` is not `empty`
-                                  ^^^^^ [2]
+   matching.js:353:29
+   353|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+                                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:373:16
+Error ----------------------------------------------------------------------------------------------- matching.js:373:18
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   matching.js:373:16
-   373|     [const a]: a as string, // ERROR: `number` is not `string`
-                       ^
+   matching.js:373:18
+   373|     [const a] => a as string, // ERROR: `number` is not `string`
+                         ^
 
 References:
    matching.js:369:21
    369|   declare const x: [number] | Array<string>;
                             ^^^^^^ [1]
-   matching.js:373:21
-   373|     [const a]: a as string, // ERROR: `number` is not `string`
-                            ^^^^^^ [2]
+   matching.js:373:23
+   373|     [const a] => a as string, // ERROR: `number` is not `string`
+                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- matching.js:393:14
@@ -432,7 +432,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   6|      [...let a]: 0, // ERROR
+   6|      [...let a] => 0, // ERROR
                ^^^^^
 
 
@@ -440,7 +440,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   7|      {let a, ...let b}: 0, // ERROR
+   7|      {let a, ...let b} => 0, // ERROR
             ^^^^^
 
 
@@ -448,7 +448,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   7|      {let a, ...let b}: 0, // ERROR
+   7|      {let a, ...let b} => 0, // ERROR
                       ^^^^^
 
 
@@ -456,7 +456,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   8|      0 as let a: 0, // ERROR
+   8|      0 as let a => 0, // ERROR
                 ^^^^^
 
 
@@ -464,7 +464,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `let` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   9|      let a: 0, // ERROR
+   9|      let a => 0, // ERROR
            ^^^^^
 
 
@@ -472,7 +472,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   13|      [...var a]: 0, // ERROR
+   13|      [...var a] => 0, // ERROR
                 ^^^^^
 
 
@@ -480,7 +480,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   14|      {var a, ...var b}: 0, // ERROR
+   14|      {var a, ...var b} => 0, // ERROR
              ^^^^^
 
 
@@ -488,7 +488,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   14|      {var a, ...var b}: 0, // ERROR
+   14|      {var a, ...var b} => 0, // ERROR
                        ^^^^^
 
 
@@ -496,7 +496,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   15|      0 as var a: 0, // ERROR
+   15|      0 as var a => 0, // ERROR
                  ^^^^^
 
 
@@ -504,7 +504,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   16|      var a: 0, // ERROR
+   16|      var a => 0, // ERROR
             ^^^^^
 
 
@@ -513,7 +513,7 @@ Error --------------------------------------------------------------------------
 Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
 [match-invalid-pattern]
 
-   25|     {1.1: _}: 0, // ERROR
+   25|     {1.1: _} => 0, // ERROR
             ^^^
 
 
@@ -521,7 +521,7 @@ Error --------------------------------------------------------------------------
 
 Unary pattern on `0` is not supported. [match-invalid-pattern]
 
-   35|     -0: true, // ERROR
+   35|     -0 => true, // ERROR
            ^^
 
 
@@ -529,7 +529,7 @@ Error --------------------------------------------------------------------------
 
 Unary pattern on `0` is not supported. [match-invalid-pattern]
 
-   36|     +0: true, // ERROR
+   36|     +0 => true, // ERROR
            ^^
 
 
@@ -537,7 +537,7 @@ Error --------------------------------------------------------------------------
 
 Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
-   46|     +1n: true, // ERROR
+   46|     +1n => true, // ERROR
            ^^^
 
 
@@ -545,7 +545,7 @@ Error --------------------------------------------------------------------------
 
 Duplicate property `foo` in object pattern. [match-invalid-pattern]
 
-   56|     {foo: true, foo: false}: 0, // ERROR
+   56|     {foo: true, foo: false} => 0, // ERROR
                        ^^^
 
 
@@ -553,7 +553,7 @@ Error --------------------------------------------------------------------------
 
 Duplicate property `foo` in object pattern. [match-invalid-pattern]
 
-   61|     {foo: true, const foo}: 0, // ERROR
+   61|     {foo: true, const foo} => 0, // ERROR
                              ^^^
 
 
@@ -561,7 +561,7 @@ Error --------------------------------------------------------------------------
 
 Duplicate property `foo` in object pattern. [match-invalid-pattern]
 
-   66|     {foo: true, 'foo': false}: 0, // ERROR
+   66|     {foo: true, 'foo': false} => 0, // ERROR
                        ^^^^^
 
 
@@ -570,12 +570,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
    pattern-errors.js:76:23
-   76|     [const a, true as a]: 0, // ERROR
+   76|     [const a, true as a] => 0, // ERROR
                              ^
 
 References:
    pattern-errors.js:76:12
-   76|     [const a, true as a]: 0, // ERROR
+   76|     [const a, true as a] => 0, // ERROR
                   ^ [1]
 
 
@@ -584,12 +584,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
    pattern-errors.js:77:29
-   77|     [const a, true as const a]: 0, // ERROR
+   77|     [const a, true as const a] => 0, // ERROR
                                    ^
 
 References:
    pattern-errors.js:77:12
-   77|     [const a, true as const a]: 0, // ERROR
+   77|     [const a, true as const a] => 0, // ERROR
                   ^ [1]
 
 
@@ -598,12 +598,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
    pattern-errors.js:78:21
-   78|     [const a, const a]: 0, // ERROR
+   78|     [const a, const a] => 0, // ERROR
                            ^
 
 References:
    pattern-errors.js:78:12
-   78|     [const a, const a]: 0, // ERROR
+   78|     [const a, const a] => 0, // ERROR
                   ^ [1]
 
 
@@ -612,12 +612,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
    pattern-errors.js:79:24
-   79|     [const a, ...const a]: 0, // ERROR
+   79|     [const a, ...const a] => 0, // ERROR
                               ^
 
 References:
    pattern-errors.js:79:12
-   79|     [const a, ...const a]: 0, // ERROR
+   79|     [const a, ...const a] => 0, // ERROR
                   ^ [1]
 
 
@@ -626,12 +626,12 @@ Error --------------------------------------------------------------------------
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
    pattern-errors.js:80:24
-   80|     {const a, ...const a}: 0, // ERROR
+   80|     {const a, ...const a} => 0, // ERROR
                               ^
 
 References:
    pattern-errors.js:80:12
-   80|     {const a, ...const a}: 0, // ERROR
+   80|     {const a, ...const a} => 0, // ERROR
                   ^ [1]
 
 
@@ -639,7 +639,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   90|     _ | [true as a]: 0, // ERROR
+   90|     _ | [true as a] => 0, // ERROR
                         ^
 
 
@@ -647,7 +647,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   91|     _ | [true as const a]: 0, // ERROR
+   91|     _ | [true as const a] => 0, // ERROR
                               ^
 
 
@@ -655,7 +655,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   92|     _ | [const a]: 0, // ERROR
+   92|     _ | [const a] => 0, // ERROR
                       ^
 
 
@@ -663,7 +663,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   93|     _ | [...const a]: 0, // ERROR
+   93|     _ | [...const a] => 0, // ERROR
                          ^
 
 
@@ -671,7 +671,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   99|     _ | {const a}: 0, // ERROR
+   99|     _ | {const a} => 0, // ERROR
                       ^
 
 
@@ -679,7 +679,7 @@ Error --------------------------------------------------------------------------
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   100|     _ | {...const a}: 0, // ERROR
+   100|     _ | {...const a} => 0, // ERROR
                           ^
 
 
@@ -687,7 +687,7 @@ Error --------------------------------------------------------------------------
 
 Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
 
-   109|     const a as b: 0, // ERROR
+   109|     const a as b => 0, // ERROR
             ^^^^^^^^^^^^
 
 
@@ -695,7 +695,7 @@ Error --------------------------------------------------------------------------
 
 Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
 
-   110|     const a as const b: 0, // ERROR
+   110|     const a as const b => 0, // ERROR
             ^^^^^^^^^^^^^^^^^^
 
 
@@ -704,12 +704,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    pattern-errors.js:119:6
-   119|     [a, const a]: a, // ERROR: reference before declaration
+   119|     [a, const a] => a, // ERROR: reference before declaration
              ^
 
 References:
    pattern-errors.js:119:15
-   119|     [a, const a]: a, // ERROR: reference before declaration
+   119|     [a, const a] => a, // ERROR: reference before declaration
                       ^ [1]
 
 
@@ -718,12 +718,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    pattern-errors.js:127:6
-   127|     [a.foo, const a]: a, // ERROR: reference before declaration
+   127|     [a.foo, const a] => a, // ERROR: reference before declaration
              ^
 
 References:
    pattern-errors.js:127:19
-   127|     [a.foo, const a]: a, // ERROR: reference before declaration
+   127|     [a.foo, const a] => a, // ERROR: reference before declaration
                           ^ [1]
 
 
@@ -732,12 +732,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    pattern-errors.js:137:15
-   137|     [const a, a]: a, // ERROR
+   137|     [const a, a] => a, // ERROR
                       ^
 
 References:
    pattern-errors.js:137:12
-   137|     [const a, a]: a, // ERROR
+   137|     [const a, a] => a, // ERROR
                    ^ [1]
 
 
@@ -746,12 +746,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
 
    pattern-errors.js:137:15
-   137|     [const a, a]: a, // ERROR
+   137|     [const a, a] => a, // ERROR
                       ^
 
 References:
    pattern-errors.js:137:12
-   137|     [const a, a]: a, // ERROR
+   137|     [const a, a] => a, // ERROR
                    ^ [1]
 
 
@@ -760,12 +760,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    pattern-errors.js:145:15
-   145|     [const a, a.foo]: a, // ERROR
+   145|     [const a, a.foo] => a, // ERROR
                       ^
 
 References:
    pattern-errors.js:145:12
-   145|     [const a, a.foo]: a, // ERROR
+   145|     [const a, a.foo] => a, // ERROR
                    ^ [1]
 
 
@@ -774,12 +774,12 @@ Error --------------------------------------------------------------------------
 Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
 
    pattern-errors.js:145:15
-   145|     [const a, a.foo]: a, // ERROR
+   145|     [const a, a.foo] => a, // ERROR
                       ^
 
 References:
    pattern-errors.js:145:12
-   145|     [const a, a.foo]: a, // ERROR
+   145|     [const a, a.foo] => a, // ERROR
                    ^ [1]
 
 
@@ -789,7 +789,7 @@ Invalid object pattern property. Use `{const foo}` if you want to create a new v
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   155|     {foo}: 0, // ERROR
+   155|     {foo} => 0, // ERROR
              ^^^
 
 
@@ -799,7 +799,7 @@ Invalid object pattern property. Use `{const foo}` if you want to create a new v
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   156|     {foo, bar: true}: 0, // ERROR
+   156|     {foo, bar: true} => 0, // ERROR
              ^^^
 
 
@@ -808,7 +808,7 @@ Error --------------------------------------------------------------------------
 Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
 [match-invalid-pattern]
 
-   166|     {1n: 1}: 0, // ERROR
+   166|     {1n: 1} => 0, // ERROR
              ^^
 
 
@@ -910,7 +910,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    patterns.js:79:24
-   79|     {foo: const n} if (n as empty): n, // ERROR
+   79|     {foo: const n} if (n as empty) => n, // ERROR
                               ^
 
 References:
@@ -918,7 +918,7 @@ References:
    73|   declare const x: {foo: number};
                                 ^^^^^^ [1]
    patterns.js:79:29
-   79|     {foo: const n} if (n as empty): n, // ERROR
+   79|     {foo: const n} if (n as empty) => n, // ERROR
                                    ^^^^^ [2]
 
 
@@ -946,22 +946,22 @@ Cannot resolve name `a`. [cannot-resolve-name]
          ^
 
 
-Error ----------------------------------------------------------------------------------------------- statement.js:176:8
+Error ---------------------------------------------------------------------------------------------- statement.js:176:10
 
 Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
-   176|     1: return 1; // ERROR
-               ^^^^^^^^^
+   176|     1 => return 1; // ERROR
+                 ^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- statement.js:177:8
+Error ---------------------------------------------------------------------------------------------- statement.js:177:10
 
 Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
-   177|     2: throw false; // ERROR
-               ^^^^^^^^^^^^
+   177|     2 => throw false; // ERROR
+                 ^^^^^^^^^^^^
 
 
 

@@ -340,8 +340,8 @@ function test_hint_passes_through_array() {
 function test_pattern_match() {
   declare var n: number;
   const m = match (n) {
-    1: abc,
-    _: def,
+    1 => abc,
+    _ => def,
   };
   m as 'abc' | 'def'; // okay
   m as 'abc'; // error 'def' ~> 'abc'

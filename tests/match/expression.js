@@ -10,8 +10,8 @@ declare const x: 1 | 2;
 
 {
   const out = match (x) {
-    1: true,
-    2: false,
+    1 => true,
+    2 => false,
   };
 
   out as boolean; // OK
@@ -20,8 +20,8 @@ declare const x: 1 | 2;
 
 {
   const out = match (x) {
-    1: true,
-    2: 's',
+    1 => true,
+    2 => 's',
   };
   out as boolean | string; // OK
   out as empty; // ERROR
@@ -31,8 +31,8 @@ declare function invariant(boolean): empty;
 
 {
   const out = match (x) {
-    1: true,
-    2: invariant(false),
+    1 => true,
+    2 => invariant(false),
   };
   out as boolean; // OK
   out as empty; // ERROR
@@ -40,8 +40,8 @@ declare function invariant(boolean): empty;
 
 function f1() {
   const out = match (x) {
-    1: invariant(false),
-    2: invariant(false),
+    1 => invariant(false),
+    2 => invariant(false),
   };
   out; // ERROR: unreachable
 }
@@ -49,8 +49,8 @@ function f1() {
 // Throws in guards
 function f2() {
   const out = match (x) {
-    1 if (invariant(false)): true,
-    _: 's',
+    1 if (invariant(false)) => true,
+    _ => 's',
   };
   out as string; // OK
   out as empty; // ERROR
@@ -59,9 +59,9 @@ function f2() {
 // Nested matches
 {
   const out = match (x) {
-    1: 1,
-    const a: match (a) {
-      const a: a,
+    1 => 1,
+    const a => match (a) {
+      const a => a,
     },
   };
 
@@ -73,9 +73,9 @@ function f2() {
   declare const y: number | string;
 
   const out = match (x) {
-    1 if (typeof y === 'number'): y as number, // OK
-    const a if (a === 1): a as 1,
-    _: 0,
+    1 if (typeof y === 'number') => y as number, // OK
+    const a if (a === 1) => a as 1,
+    _ => 0,
   };
 }
 
@@ -83,8 +83,8 @@ function f2() {
 {
   let target;
   const out = match (x) {
-    1: target = "foo",
-    2: target = true,
+    1 => target = "foo",
+    2 => target = true,
   };
 
   target as string | boolean; // OK
@@ -92,7 +92,7 @@ function f2() {
 {
   let target;
   const out = match (x) {
-    const a: target = "foo",
+    const a => target = "foo",
   };
   a; // ERROR
 
@@ -101,8 +101,8 @@ function f2() {
 {
   let target = null;
   const out = match (x) {
-    const a: target = "foo",
-    const a: target = true,
+    const a => target = "foo",
+    const a => target = true,
   };
   a; // ERROR
 
@@ -111,8 +111,8 @@ function f2() {
 {
   let target;
   const out = match (x) {
-    1: target = "foo",
-    2: invariant(false),
+    1 => target = "foo",
+    2 => invariant(false),
   };
 
   target as string; // OK
@@ -120,8 +120,8 @@ function f2() {
 {
   declare const o: {prop: number};
   const out = match (x) {
-    1: o.prop = 1,
-    2: o.prop = 2,
+    1 => o.prop = 1,
+    2 => o.prop = 2,
   };
 
   o.prop as 1 | 2; // OK
@@ -129,8 +129,8 @@ function f2() {
 {
   const a = [];
   const out = match (x) {
-    1: a.push(1),
-    2: a.push(2),
+    1 => a.push(1),
+    2 => a.push(2),
   };
 
   a as Array<number>; // OK

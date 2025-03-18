@@ -12,11 +12,11 @@
               "range": {
                 "start": {
                   "line": 4,
-                  "character": 7
+                  "character": 9
                 },
                 "end": {
                   "line": 4,
-                  "character": 19
+                  "character": 21
                 }
               },
               "newText": "{\n        return true;\n      }"

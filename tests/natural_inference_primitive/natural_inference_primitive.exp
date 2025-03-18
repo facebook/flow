@@ -1453,9 +1453,9 @@ Cannot cast `m1` to string literal `a` because string [1] is incompatible with s
           ^^
 
 References:
-   local.js:390:8
-   390|     _: 'b',
-               ^^^ [1]
+   local.js:390:10
+   390|     _ => 'b',
+                 ^^^ [1]
    local.js:393:9
    393|   m1 as 'a'; // error 'b' ~> 'a'
                 ^^^ [2]
@@ -1471,9 +1471,9 @@ Cannot cast `m1` to string literal `b` because string [1] is incompatible with s
           ^^
 
 References:
-   local.js:389:8
-   389|     1: 'a',
-               ^^^ [1]
+   local.js:389:10
+   389|     1 => 'a',
+                 ^^^ [1]
    local.js:394:9
    394|   m1 as 'b'; // error 'a' ~> 'b'
                 ^^^ [2]

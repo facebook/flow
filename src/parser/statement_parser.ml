@@ -593,7 +593,8 @@ module Statement
         ) else
           None
       in
-      Expect.token env T_COLON;
+      (* Continue parsing colon until hermes-parser is also updated. *)
+      if not @@ Eat.maybe env T_COLON then Expect.token env T_ARROW;
       let body = Parse.statement ~allow_sequence:false env in
       (match Peek.token env with
       | T_EOF

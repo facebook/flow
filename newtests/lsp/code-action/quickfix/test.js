@@ -2017,8 +2017,8 @@ module.exports = (suite(
           uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-body.js',
         },
         range: {
-          start: {line: 4, character: 8},
-          end: {line: 4, character: 8},
+          start: {line: 4, character: 10},
+          end: {line: 4, character: 10},
         },
         context: {
           only: ['quickfix'],

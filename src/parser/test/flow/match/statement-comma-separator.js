@@ -1,8 +1,8 @@
 match (a) {
-  1: {
+  1 => {
     const x = 1;
   },
-  'foo': {
+  'foo' => {
     const y = 1;
   },
 }
