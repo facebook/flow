@@ -24,6 +24,7 @@ type t = {
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   scope_kind: Name_def.scope_kind;
+  ast_hint_map: Name_def.hint_map;
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
   pred_func_map: Type.pred_funcall_info Lazy.t ALocMap.t;
@@ -66,11 +67,12 @@ let empty scope_kind =
     class_bindings = ALocMap.empty;
     class_stack = [];
     scope_kind;
+    ast_hint_map = ALocMap.empty;
     hint_map = ALocMap.empty;
     pred_func_map = ALocMap.empty;
     name_defs = EnvMap.empty;
   }
 
-let with_info scope_kind hint_map var_info pred_func_map name_defs =
+let with_info scope_kind ast_hint_map hint_map var_info pred_func_map name_defs =
   let env = empty scope_kind in
-  { env with hint_map; var_info; pred_func_map; name_defs }
+  { env with ast_hint_map; hint_map; var_info; pred_func_map; name_defs }

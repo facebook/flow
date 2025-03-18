@@ -129,6 +129,7 @@ end = struct
       Loc_env.with_info
         Name_def.Global
         Loc_collections.ALocMap.empty
+        Loc_collections.ALocMap.empty
         info
         ALocMap.empty
         Env_api.EnvMap.empty

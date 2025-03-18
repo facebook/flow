@@ -24,6 +24,7 @@ type t = {
   class_bindings: Type.class_binding ALocMap.t;
   class_stack: ALoc.t list;
   scope_kind: Name_def.scope_kind;
+  ast_hint_map: Name_def.hint_map;
   hint_map: Type.lazy_hint_t ALocMap.t;
   var_info: Env_api.env_info;
   pred_func_map: Type.pred_funcall_info Lazy.t ALocMap.t;
@@ -42,6 +43,7 @@ val empty : Name_def.scope_kind -> t
 
 val with_info :
   Name_def.scope_kind ->
+  Name_def.hint_map ->
   Type.lazy_hint_t ALocMap.t ->
   Env_api.env_info ->
   Type.pred_funcall_info Lazy.t ALocMap.t ->

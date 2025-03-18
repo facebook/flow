@@ -371,7 +371,7 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
         obj_prop_decl_hook = Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx;
       }
     in
-    let (name_def_graph, hint_map) =
+    let (name_def_graph, ast_hint_map) =
       Name_def.find_defs
         ~autocomplete_hooks
         ~react_jsx:(Context.jsx cx = Options.Jsx_react)
@@ -379,11 +379,13 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
         toplevel_scope_kind
         aloc_ast
     in
-    let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) hint_map in
+    let hint_map = ALocMap.mapi (Env_resolution.lazily_resolve_hints cx) ast_hint_map in
     let pred_func_map =
       ALocMap.map (Env_resolution.resolve_pred_func cx) info.Env_api.pred_func_map
     in
-    let env = Loc_env.with_info Name_def.Global hint_map info pred_func_map name_def_graph in
+    let env =
+      Loc_env.with_info Name_def.Global ast_hint_map hint_map info pred_func_map name_def_graph
+    in
     Context.set_environment cx env;
     let components = NameDefOrdering.build_ordering cx ~autocomplete_hooks info name_def_graph in
     Base.List.iter ~f:(Cycles.handle_component cx name_def_graph) components;
