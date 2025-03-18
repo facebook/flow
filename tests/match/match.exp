@@ -905,21 +905,21 @@ References:
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ patterns.js:79:23
+Error ------------------------------------------------------------------------------------------------ patterns.js:79:24
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:79:23
-   79|     {foo: const n} if n as empty: n, // ERROR
-                             ^
+   patterns.js:79:24
+   79|     {foo: const n} if (n as empty): n, // ERROR
+                              ^
 
 References:
    patterns.js:73:26
    73|   declare const x: {foo: number};
                                 ^^^^^^ [1]
-   patterns.js:79:28
-   79|     {foo: const n} if n as empty: n, // ERROR
-                                  ^^^^^ [2]
+   patterns.js:79:29
+   79|     {foo: const n} if (n as empty): n, // ERROR
+                                   ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ statement.js:22:3

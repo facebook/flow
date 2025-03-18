@@ -3596,21 +3596,21 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
              ~mapper:(new literal_mapper)
          );
          ( "match_expression_case_guard" >:: fun ctxt ->
-           let source = "const e = match (x) {1 if null: 0};" in
+           let source = "const e = match (x) {1 if (null): 0};" in
            assert_edits_equal
              ctxt
-             ~edits:[((26, 30), "\"wasNull\"")]
+             ~edits:[((27, 31), "\"wasNull\"")]
              ~source
-             ~expected:"const e = match (x) {1 if \"wasNull\": 0};"
+             ~expected:"const e = match (x) {1 if (\"wasNull\"): 0};"
              ~mapper:(new literal_mapper)
          );
          ( "match_statement_case_guard" >:: fun ctxt ->
-           let source = "match (x) {1 if null: {}}" in
+           let source = "match (x) {1 if (null): {}}" in
            assert_edits_equal
              ctxt
-             ~edits:[((16, 20), "\"wasNull\"")]
+             ~edits:[((17, 21), "\"wasNull\"")]
              ~source
-             ~expected:"match (x) {1 if \"wasNull\": {}}"
+             ~expected:"match (x) {1 if (\"wasNull\"): {}}"
              ~mapper:(new literal_mapper)
          );
          ( "match_null_pattern" >:: fun ctxt ->

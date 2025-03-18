@@ -74,9 +74,9 @@
   declare const f: number => boolean;
 
   const out = match (x) {
-    {foo: const n} if n === 0: n, // OK
-    {foo: const n} if f(n): n, // OK
-    {foo: const n} if n as empty: n, // ERROR
+    {foo: const n} if (n === 0): n, // OK
+    {foo: const n} if (f(n)): n, // OK
+    {foo: const n} if (n as empty): n, // ERROR
     _: 0,
   };
 }

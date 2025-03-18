@@ -164,12 +164,12 @@
 
   const e1 = match (x) { // ERROR: `2` not checked
     1: 0,
-    2 if f(): 0,
+    2 if (f()): 0,
   };
 
   const e2 = match (x) {
     1: 0,
-    2 if f(): 0,
+    2 if (f()): 0,
     2: 0,
     const d: d as empty, // OK
   };

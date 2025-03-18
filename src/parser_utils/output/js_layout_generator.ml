@@ -3326,7 +3326,7 @@ and const const_ =
 
 and match_case_guard ~opts guard =
   Base.Option.value_map guard ~default:Empty ~f:(fun e ->
-      fuse [space; Atom "if"; space; expression ~opts e]
+      fuse [space; Atom "if"; pretty_space; wrap_in_parens (expression ~opts e)]
   )
 
 and match_case :

@@ -1389,9 +1389,12 @@ module Expression
       let leading = Peek.comments env in
       let pattern = Parse.match_pattern env in
       let guard =
-        if Eat.maybe env T_IF then
-          Some (Parse.expression env)
-        else
+        if Eat.maybe env T_IF then (
+          Expect.token env T_LPAREN;
+          let test = Parse.expression env in
+          Expect.token env T_RPAREN;
+          Some test
+        ) else
           None
       in
       Expect.token env T_COLON;

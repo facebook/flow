@@ -1,17 +1,17 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":2}},
-  "range":[0,82],
+  "range":[0,88],
   "body":[
     {
       "type":"VariableDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":2}},
-      "range":[0,82],
+      "range":[0,88],
       "declarations":[
         {
           "type":"VariableDeclarator",
           "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":5,"column":1}},
-          "range":[6,81],
+          "range":[6,87],
           "id":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":6},"end":{"line":1,"column":7}},
@@ -23,7 +23,7 @@
           "init":{
             "type":"MatchExpression",
             "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":5,"column":1}},
-            "range":[10,81],
+            "range":[10,87],
             "argument":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":18}},
@@ -35,8 +35,8 @@
             "cases":[
               {
                 "type":"MatchExpressionCase",
-                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":15}},
-                "range":[24,37],
+                "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":17}},
+                "range":[24,39],
                 "pattern":{
                   "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
@@ -51,15 +51,15 @@
                 },
                 "body":{
                   "type":"Literal",
-                  "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":14}},
-                  "range":[32,36],
+                  "loc":{"source":null,"start":{"line":2,"column":12},"end":{"line":2,"column":16}},
+                  "range":[34,38],
                   "value":true,
                   "raw":"true"
                 },
                 "guard":{
                   "type":"Identifier",
-                  "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":8}},
-                  "range":[29,30],
+                  "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
+                  "range":[30,31],
                   "name":"b",
                   "typeAnnotation":null,
                   "optional":false
@@ -67,35 +67,35 @@
               },
               {
                 "type":"MatchExpressionCase",
-                "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":21}},
-                "range":[40,59],
+                "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":23}},
+                "range":[42,63],
                 "pattern":{
                   "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
-                  "range":[40,45],
+                  "range":[42,47],
                   "literal":{
                     "type":"Literal",
                     "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":7}},
-                    "range":[40,45],
+                    "range":[42,47],
                     "value":"foo",
                     "raw":"'foo'"
                   }
                 },
                 "body":{
                   "type":"Literal",
-                  "loc":{"source":null,"start":{"line":3,"column":16},"end":{"line":3,"column":20}},
-                  "range":[54,58],
+                  "loc":{"source":null,"start":{"line":3,"column":18},"end":{"line":3,"column":22}},
+                  "range":[58,62],
                   "value":true,
                   "raw":"true"
                 },
                 "guard":{
                   "type":"CallExpression",
-                  "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":14}},
-                  "range":[49,52],
+                  "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":15}},
+                  "range":[52,55],
                   "callee":{
                     "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":3,"column":11},"end":{"line":3,"column":12}},
-                    "range":[49,50],
+                    "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
+                    "range":[52,53],
                     "name":"f",
                     "typeAnnotation":null,
                     "optional":false
@@ -106,44 +106,44 @@
               },
               {
                 "type":"MatchExpressionCase",
-                "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":19}},
-                "range":[62,79],
+                "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":21}},
+                "range":[66,85],
                 "pattern":{
                   "type":"MatchLiteralPattern",
                   "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":3}},
-                  "range":[62,63],
+                  "range":[66,67],
                   "literal":{
                     "type":"Literal",
                     "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":3}},
-                    "range":[62,63],
+                    "range":[66,67],
                     "value":2,
                     "raw":"2"
                   }
                 },
                 "body":{
                   "type":"Literal",
-                  "loc":{"source":null,"start":{"line":4,"column":14},"end":{"line":4,"column":18}},
-                  "range":[74,78],
+                  "loc":{"source":null,"start":{"line":4,"column":16},"end":{"line":4,"column":20}},
+                  "range":[80,84],
                   "value":true,
                   "raw":"true"
                 },
                 "guard":{
                   "type":"BinaryExpression",
-                  "loc":{"source":null,"start":{"line":4,"column":7},"end":{"line":4,"column":12}},
-                  "range":[67,72],
+                  "loc":{"source":null,"start":{"line":4,"column":8},"end":{"line":4,"column":13}},
+                  "range":[72,77],
                   "operator":"<",
                   "left":{
                     "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":4,"column":7},"end":{"line":4,"column":8}},
-                    "range":[67,68],
+                    "loc":{"source":null,"start":{"line":4,"column":8},"end":{"line":4,"column":9}},
+                    "range":[72,73],
                     "name":"x",
                     "typeAnnotation":null,
                     "optional":false
                   },
                   "right":{
                     "type":"Identifier",
-                    "loc":{"source":null,"start":{"line":4,"column":11},"end":{"line":4,"column":12}},
-                    "range":[71,72],
+                    "loc":{"source":null,"start":{"line":4,"column":12},"end":{"line":4,"column":13}},
+                    "range":[76,77],
                     "name":"y",
                     "typeAnnotation":null,
                     "optional":false

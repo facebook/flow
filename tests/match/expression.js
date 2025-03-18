@@ -49,7 +49,7 @@ function f1() {
 // Throws in guards
 function f2() {
   const out = match (x) {
-    1 if invariant(false): true,
+    1 if (invariant(false)): true,
     _: 's',
   };
   out as string; // OK
@@ -73,8 +73,8 @@ function f2() {
   declare const y: number | string;
 
   const out = match (x) {
-    1 if typeof y === 'number': y as number, // OK
-    const a if a === 1: a as 1,
+    1 if (typeof y === 'number'): y as number, // OK
+    const a if (a === 1): a as 1,
     _: 0,
   };
 }

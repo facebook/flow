@@ -28,7 +28,7 @@ function f2() {
 
   match (x) {
     1: {}
-    2 if invariant(false): {}
+    2 if (invariant(false)): {}
   };
 
   x; // OK: not unreachable
