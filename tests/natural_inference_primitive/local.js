@@ -335,6 +335,18 @@ function test_logical() {
   let x2 = fn2();
   x2 = 5; // okay
   x2 as 5; // TODO error number ~> 5
+
+  declare var maybeOne: ?1;
+  const two = 2;
+
+  const nullish = maybeOne ?? two;
+  nullish as 1 | 2; // okay
+
+  const or_ = maybeOne || two;
+  or_ as 1 | 2; // okay
+
+  const and_ = maybeOne && two;
+  and_ as ?(1 | 2); // okay
 }
 
 function test_logical_literals() {

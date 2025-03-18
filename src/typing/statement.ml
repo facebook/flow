@@ -5183,7 +5183,7 @@ module Make
 
   and logical cx syntactic_flags loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
-    let { Primitive_literal.encl_ctx; has_hint; _ } = syntactic_flags in
+    let { Primitive_literal.encl_ctx; has_hint; decl; _ } = syntactic_flags in
     let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
@@ -5195,10 +5195,10 @@ module Make
     match operator with
     | Or ->
       let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ~has_hint cx left in
+      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~encl_ctx ~has_hint right
+            expression cx ~encl_ctx ?decl ~has_hint right
         )
       in
       let t2 =
@@ -5210,10 +5210,10 @@ module Make
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
     | And ->
-      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ~has_hint cx left in
+      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
       let ((((_, t2), _) as right), right_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~encl_ctx ~has_hint right
+            expression cx ~encl_ctx ?decl ~has_hint right
         )
       in
       let t2 =
@@ -5225,9 +5225,9 @@ module Make
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
     | NullishCoalesce ->
-      let (((_, t1), _) as left) = expression cx ~has_hint left in
+      let (((_, t1), _) as left) = expression cx ?decl ~has_hint left in
       let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~has_hint right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl ~has_hint right)
       in
       let t2 =
         if right_throws then
@@ -6440,8 +6440,8 @@ module Make
      accesses are provisionally allowed even when such properties do not exist.
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
-  and condition cx ~encl_ctx ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    expression ~encl_ctx ?has_hint cx e
+  and condition cx ~encl_ctx ?decl ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    expression ~encl_ctx ?decl ?has_hint cx e
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Type_env.get_class_entries cx in
