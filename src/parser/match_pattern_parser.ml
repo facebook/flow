@@ -14,6 +14,7 @@ module Ast = Flow_ast
 module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
   let rec match_pattern env =
     let start_loc = Peek.loc env in
+    ignore @@ Eat.maybe env T_BIT_OR;
     let pattern = subpattern env in
     let pattern =
       match Peek.token env with
