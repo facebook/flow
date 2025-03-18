@@ -2104,16 +2104,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 )
           )
       ) ->
-      let fresh =
-        match desc_of_reason r1 with
-        | RArrayLit
-        | REmptyArrayLit
-        | RRestArrayLit _
-        | RReactChildren
-        | RArrayPatternRestProp ->
-          true
-        | _ -> false
-      in
+      let fresh = is_literal_array_reason r1 in
       let (num_req1, num_total1) = lower_arity in
       let (num_req2, num_total2) = upper_arity in
       if
