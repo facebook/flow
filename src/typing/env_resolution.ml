@@ -166,7 +166,7 @@ let mk_selector_reason_has_default cx loc = function
     (* TODO: eveyrthing after a computed prop should be optional *)
     (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc, false)
   | Selector.Computed { expression = exp; has_default } ->
-    let t = expression cx exp in
+    let t = expression cx ~encl_ctx:Type.IndexContext exp in
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
   | Selector.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 

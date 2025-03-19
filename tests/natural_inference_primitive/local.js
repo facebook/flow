@@ -459,3 +459,10 @@ function test_logical_instantiation() {
   const [arr, _] = useState([x]);
   arr[0] as 1|2; // TODO error number ~> 1|2
 }
+
+function test_destructure_computed() {
+  const PROP = 'prop';
+  const {[PROP]: one} =  {prop: 1};
+  one as 1; // okay
+  one as 2; // error 1 ~> 2
+}
