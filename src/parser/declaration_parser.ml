@@ -310,11 +310,11 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
   let _function =
     with_loc (fun env ->
         let (async, leading_async) = async env in
-        let (sig_loc, (generator, effect, tparams, id, params, return, predicate, leading)) =
+        let (sig_loc, (generator, effect_, tparams, id, params, return, predicate, leading)) =
           with_loc
             (fun env ->
               let leading_function = Peek.comments env in
-              let (effect, (generator, leading_generator)) =
+              let (effect_, (generator, leading_generator)) =
                 match Peek.token env with
                 | T_FUNCTION ->
                   Eat.token env;
@@ -372,7 +372,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                 | None -> (return_annotation_remove_trailing env return, predicate)
                 | Some _ -> (return, predicate_remove_trailing env predicate)
               in
-              (generator, effect, tparams, id, params, return, predicate, leading))
+              (generator, effect_, tparams, id, params, return, predicate, leading))
             env
         in
         let simple_params = is_simple_parameter_list params in
@@ -386,7 +386,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             params;
             body;
             generator;
-            effect;
+            effect_;
             async;
             predicate;
             return;

@@ -1831,7 +1831,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       multiflow_subtype cx trace ~use_op ureason args ft1;
 
       begin
-        match (ft1.effect, ft2.effect) with
+        match (ft1.effect_, ft2.effect_) with
         | (AnyEffect, _)
         | (_, AnyEffect)
         | (ArbitraryEffect, ArbitraryEffect)
@@ -1847,7 +1847,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  lower = lreason;
                  upper = ureason;
                  lower_is_hook = true;
-                 hook_is_annot = ft1.effect = HookAnnot;
+                 hook_is_annot = ft1.effect_ = HookAnnot;
                }
             )
         | (ArbitraryEffect, (HookDecl _ | HookAnnot)) ->
@@ -1859,7 +1859,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  lower = lreason;
                  upper = ureason;
                  lower_is_hook = false;
-                 hook_is_annot = ft2.effect = HookAnnot;
+                 hook_is_annot = ft2.effect_ = HookAnnot;
                }
             )
         | ((HookDecl _ | HookAnnot), HookDecl _) ->

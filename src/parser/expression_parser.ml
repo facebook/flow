@@ -1188,7 +1188,7 @@ module Expression
             params;
             body;
             generator;
-            effect = Function.Arbitrary;
+            effect_ = Function.Arbitrary;
             async;
             predicate;
             return;
@@ -1875,7 +1875,7 @@ module Expression
               async;
               generator = false;
               (* arrow functions cannot be generators *)
-              effect = Function.Arbitrary;
+              effect_ = Function.Arbitrary;
               predicate;
               return;
               tparams;

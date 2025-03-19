@@ -76,7 +76,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
            (fun env ->
              let leading = Peek.comments env in
              Eat.token env;
-             Flow_ast_utils.mk_comments_opt ~leading ())
+             Flow_ast_utils.mk_comments_opt ~leading ()
+           )
            env
         )
     | _ -> None
@@ -121,7 +122,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     with_loc
       (fun env ->
         Expect.token env T_COLON;
-        _type env)
+        _type env
+      )
       env
 
   and function_return_annotation env =
@@ -159,7 +161,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               true_type;
               false_type;
               comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-            })
+            }
+        )
         env
     | _ -> check_type
 
@@ -250,7 +253,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           )
         )
       in
-      function_with_params ~effect:Function.Arbitrary env start_loc tparams params
+      function_with_params ~effect_:Function.Arbitrary env start_loc tparams params
     | _ -> param
 
   and prefix env =
@@ -264,7 +267,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             {
               Type.Nullable.argument = prefix env;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+            }
+        )
         env
     | _ -> postfix env
 
@@ -333,7 +337,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               Type.OptionalIndexedAccess
                 { Type.OptionalIndexedAccess.indexed_access; optional = optional_indexed_access }
             else
-              Type.IndexedAccess indexed_access)
+              Type.IndexedAccess indexed_access
+        )
         env
     in
     postfix_with env ~in_optional_indexed_access ~start_loc t
@@ -349,7 +354,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             (fun env ->
               Expect.token env T_PERIOD;
               let id = identifier_name env in
-              { Type.Typeof.Target.qualification; id })
+              { Type.Typeof.Target.qualification; id }
+            )
             env
         in
         let qualification = Type.Typeof.Target.Qualified (loc, q) in
@@ -394,7 +400,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               type_args env
           in
           Type.Typeof
-            { Type.Typeof.argument; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+            { Type.Typeof.argument; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+      )
       env
 
   and primary env =
@@ -418,7 +425,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           Eat.token env;
           let (extends, body) = interface_helper env in
           Type.Interface
-            { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+            { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+        )
         env
     | T_TYPEOF -> typeof env
     | T_LBRACKET -> tuple env
@@ -445,7 +453,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               params;
               renders;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+            }
+        )
         env
     | T_IDENTIFIER { raw = "renders"; _ }
     | T_RENDERS_QUESTION
@@ -499,7 +508,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let trailing = Eat.trailing_comments env in
           let argument = _type env in
           Type.Keyof
-            { Type.Keyof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+            { Type.Keyof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
         env
     | T_READONLY ->
       with_loc
@@ -512,7 +522,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             {
               Type.ReadOnly.argument;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+            }
+        )
         env
     | T_INFER ->
       with_loc
@@ -534,7 +545,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                       if Parser_env.no_conditional_type env || Peek.token env <> T_PLING then
                         Type.Available (fst bound, bound)
                       else
-                        raise Try.Rollback)
+                        raise Try.Rollback
+                    )
                 in
                 {
                   Type.TypeParam.name;
@@ -543,11 +555,13 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                   variance = None;
                   default = None;
                   const = None;
-                })
+                }
+              )
               env
           in
           Type.Infer
-            { Type.Infer.tparam; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+            { Type.Infer.tparam; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
         env
     | T_ERROR "`" ->
       error env Parse_error.TSTemplateLiteralType;
@@ -725,7 +739,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 )
             | _ ->
               if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-              TupleElement (Type.Tuple.UnlabeledElement (_type env)))
+              TupleElement (Type.Tuple.UnlabeledElement (_type env))
+        )
         env
     in
     let rec elements env acc =
@@ -755,7 +770,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               Type.Tuple.elements = els;
               inexact;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+            }
+        )
         env
 
   and render_type env =
@@ -793,7 +809,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         let optional = Eat.maybe env T_PLING in
         Expect.token env T_COLON;
         let annot = _type env in
-        { Type.Function.Param.name = Some name; annot; optional })
+        { Type.Function.Param.name = Some name; annot; optional }
+      )
       env
 
   and function_param_list_without_parens =
@@ -819,7 +836,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                   {
                     Type.Function.RestParam.argument = param env;
                     comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                  })
+                  }
+                )
                 env
             in
             Some rest
@@ -839,7 +857,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               {
                 Type.Function.ThisParam.annot = annotation env;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+            )
             env
         in
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
@@ -864,7 +883,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           params with
           Ast.Type.Function.Params.comments =
             Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-        })
+        }
+      )
       env
 
   and component_param_list_without_parens =
@@ -890,7 +910,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let name = param_name env in
           let optional = Eat.maybe env T_PLING in
           let annot = annotation env in
-          { Ast.Type.Component.Param.name; annot; optional })
+          { Ast.Type.Component.Param.name; annot; optional }
+        )
         env
     in
     let rec param_list env acc =
@@ -927,7 +948,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                     annot;
                     optional;
                     comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                  })
+                  }
+                )
                 env
             in
             Some rest
@@ -942,7 +964,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     in
     (* Need this wrapper function due to a compilation issue with js_of_ocaml.
        Directly returning param_list causes an error. *)
-    (fun env acc -> param_list env acc)
+    fun env acc -> param_list env acc
 
   and component_param_list env =
     with_loc
@@ -957,7 +979,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           params with
           Ast.Type.Component.Params.comments =
             Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-        })
+        }
+      )
       env
 
   and param_list_or_type env =
@@ -1070,23 +1093,24 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     let start_loc = Peek.loc env in
     match with_loc param_list_or_type env with
     | (loc, ParamList params) ->
-      function_with_params ~effect:Function.Arbitrary env start_loc None (loc, params)
+      function_with_params ~effect_:Function.Arbitrary env start_loc None (loc, params)
     | (_, Type _type) -> _type
 
   and _function env =
     let start_loc = Peek.loc env in
     let tparams = type_params_remove_trailing env (type_params env) in
     let params = function_param_list env in
-    function_with_params ~effect:Function.Arbitrary env start_loc tparams params
+    function_with_params ~effect_:Function.Arbitrary env start_loc tparams params
 
   and function_with_params
-      ~effect env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
+      ~effect_ env start_loc tparams (params : (Loc.t, Loc.t) Ast.Type.Function.Params.t) =
     with_loc
       ~start_loc
       (fun env ->
         Expect.token env T_ARROW;
         let return = function_return_type env in
-        Type.(Function { Function.params; return; tparams; comments = None; effect }))
+        Type.(Function { Function.params; return; tparams; comments = None; effect_ })
+      )
       env
 
   and hook env =
@@ -1094,7 +1118,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     Eat.token env;
     let tparams = type_params_remove_trailing env (type_params env) in
     let params = function_param_list env in
-    function_with_params ~effect:Function.Hook env start_loc tparams params
+    function_with_params ~effect_:Function.Hook env start_loc tparams params
 
   and function_return_type env =
     if is_start_of_type_guard env then
@@ -1135,7 +1159,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         in
         let guard = (param, t) in
         let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~internal () in
-        { Ast.Type.TypeGuard.kind; guard; comments })
+        { Ast.Type.TypeGuard.kind; guard; comments }
+      )
       env
 
   and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env
@@ -1148,7 +1173,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let params = function_param_list env in
           Expect.token env T_COLON;
           let return = function_return_type env in
-          { Type.Function.params; return; tparams; comments = None; effect = Function.Arbitrary })
+          { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary }
+        )
         env
     in
     let method_property env start_loc static key ~leading =
@@ -1185,7 +1211,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 value;
                 static = static <> None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
           env
       in
       Type.Object.CallProperty prop
@@ -1214,7 +1241,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 _method = false;
                 variance;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
           env
       in
       Type.Object.Property prop
@@ -1250,9 +1278,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 key;
                 value =
                   ( if is_getter then
-                    Get value
-                  else
-                    Set value
+                      Get value
+                    else
+                      Set value
                   );
                 optional = false;
                 static = static <> None;
@@ -1260,7 +1288,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 _method = false;
                 variance = None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
           env
       in
       Type.Object.Property prop
@@ -1290,7 +1319,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               static = static <> None;
               variance;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+            }
+          )
           env
       in
       Type.Object.Indexer indexer
@@ -1344,7 +1374,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               variance;
               optional;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+            }
+          )
           env
       in
       Type.Object.MappedType mapped_type
@@ -1394,7 +1425,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               static = static <> None;
               _method;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+            }
+          )
           env
       in
       Type.Object.InternalSlot islot
@@ -1408,7 +1440,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             {
               Type.Object.SpreadProperty.argument = _type env;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+            }
+          )
           env
       in
       Type.Object.SpreadProperty spread
@@ -1697,9 +1730,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           Expect.token
             env
             ( if exact then
-              T_LCURLYBAR
-            else
-              T_LCURLY
+                T_LCURLYBAR
+              else
+                T_LCURLY
             );
           let (properties, inexact, internal) =
             let env = with_no_anon_function_type false env in
@@ -1709,9 +1742,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           Expect.token
             env
             ( if exact then
-              T_RCURLYBAR
-            else
-              T_RCURLY
+                T_RCURLYBAR
+              else
+                T_RCURLY
             );
           let trailing = Eat.trailing_comments env in
 
@@ -1721,7 +1754,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             properties;
             inexact;
             comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-          })
+          }
+        )
         env
 
   and interface_helper =
@@ -1762,14 +1796,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 (with_loc
                    (fun env ->
                      Eat.token env;
-                     _type env)
+                     _type env
+                   )
                    env
                 ),
               Ast.Type.TypeParam.Extends
             )
           | _ -> (Ast.Type.Missing (Peek.loc_skip_lookahead env), Ast.Type.TypeParam.Colon)
         in
-        (name, bound, bound_kind))
+        (name, bound, bound_kind)
+      )
       env
 
   and type_params =
@@ -1826,7 +1862,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 in
                 ( { Type.TypeParam.name; bound; bound_kind; variance; default; const },
                   require_default
-                ))
+                )
+              )
               env
           in
           (param :: acc, require_default)
@@ -1870,7 +1907,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               let comments =
                 Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
               in
-              { Type.TypeParams.params; comments })
+              { Type.TypeParams.params; comments }
+            )
             env
         in
         (match params with
@@ -1907,7 +1945,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                  Type.TypeArgs.arguments;
                  comments =
                    Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-               })
+               }
+             )
              env
           )
       else
@@ -1924,7 +1963,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             (fun env ->
               Expect.token env T_PERIOD;
               let id = type_identifier env in
-              { Type.Generic.Identifier.qualification; id })
+              { Type.Generic.Identifier.qualification; id }
+            )
             env
         in
         let qualification = Type.Generic.Identifier.Qualified (loc, q) in
@@ -1946,7 +1986,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               remove_trailing id (fun remover id -> remover#generic_identifier_type id)
           in
           let targs = type_args env in
-          { Type.Generic.id; targs; comments = None })
+          { Type.Generic.id; targs; comments = None }
+        )
         env
 
   and generic_type_with_identifier env id =
@@ -2114,7 +2155,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_CHECKS;
-        predicate_checks_contents env ~leading)
+        predicate_checks_contents env ~leading
+      )
       env
 
   let function_return_annotation_and_predicate env =

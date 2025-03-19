@@ -1211,7 +1211,7 @@ module Statement
 
   and declare_function ~async ?(leading = []) env =
     let leading = leading @ Peek.comments env in
-    let effect =
+    let effect_ =
       match Peek.token env with
       | T_FUNCTION ->
         Eat.token env;
@@ -1232,18 +1232,18 @@ module Statement
           Expect.token env T_COLON;
           Eat.push_lex_mode env Lex_mode.TYPE;
           let return =
-            if is_start_of_type_guard env && effect <> Function.Hook then
+            if is_start_of_type_guard env && effect_ <> Function.Hook then
               Ast.Type.Function.TypeGuard (Type.type_guard env)
             else
               let return = Type._type env in
               let has_predicate = Peek.token env = T_CHECKS in
-              if has_predicate && effect <> Function.Hook then
+              if has_predicate && effect_ <> Function.Hook then
                 Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
               else
                 Ast.Type.Function.TypeAnnotation return
           in
           Eat.pop_lex_mode env;
-          Ast.Type.(Function { Function.params; return; tparams; comments = None; effect }))
+          Ast.Type.(Function { Function.params; return; tparams; comments = None; effect_ }))
         env
     in
     let predicate = Type.predicate_opt env in

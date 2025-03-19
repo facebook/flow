@@ -319,7 +319,7 @@ class ['a] t =
         return_t;
         type_guard;
         def_reason = _;
-        effect = _;
+        effect_ = _;
       } =
         ft
       in

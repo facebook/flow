@@ -394,7 +394,7 @@ class virtual ['a] t =
             return_t;
             type_guard;
             def_reason;
-            effect;
+            effect_;
           } as t
         ) =
       let this' = self#type_ cx map_cx this in
@@ -434,7 +434,7 @@ class virtual ['a] t =
         let params = params' in
         let rest_param = rest_param' in
         let type_guard = type_guard' in
-        { this_t; params; rest_param; return_t; type_guard; def_reason; effect }
+        { this_t; params; rest_param; return_t; type_guard; def_reason; effect_ }
 
     method inst_type cx map_cx i =
       let {

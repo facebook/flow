@@ -605,7 +605,7 @@ end = struct
           tparams;
           async = _;
           generator = _;
-          effect = _;
+          effect_ = _;
           sig_loc = _;
           comments = _;
         } =
@@ -881,7 +881,7 @@ end = struct
           tparams;
           async = _;
           generator = _;
-          effect = _;
+          effect_ = _;
           sig_loc = _;
           comments = _;
         } =
@@ -921,7 +921,7 @@ end = struct
           tparams;
           async = _;
           generator = _;
-          effect = _;
+          effect_ = _;
           sig_loc = _;
           comments = _;
         } =

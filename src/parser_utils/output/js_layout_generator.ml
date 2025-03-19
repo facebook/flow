@@ -1807,7 +1807,7 @@ and arrow_function
       tparams;
       comments;
       generator = _;
-      effect = _;
+      effect_ = _;
       id = _;
       (* arrows don't have ids and can't be generators *) sig_loc = _;
     } =
@@ -1912,7 +1912,7 @@ and function_ ~opts loc func =
     body;
     async;
     generator;
-    effect;
+    effect_;
     predicate;
     return;
     tparams;
@@ -1925,7 +1925,7 @@ and function_ ~opts loc func =
     let s_func =
       fuse
         [
-          ( if effect = Ast.Function.Hook then
+          ( if effect_ = Ast.Function.Hook then
             Atom "hook"
           else
             Atom "function"
@@ -2258,7 +2258,7 @@ and class_method
     body;
     async;
     generator;
-    effect = _;
+    effect_ = _;
     predicate;
     return;
     tparams;
@@ -2744,7 +2744,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
-      effect = _;
+      effect_ = _;
       predicate;
       return;
       tparams;
@@ -2795,7 +2795,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
-      effect = _;
+      effect_ = _;
       predicate;
       return;
       tparams;
@@ -2838,7 +2838,7 @@ and object_property ~opts property =
       body;
       async;
       generator;
-      effect = _;
+      effect_ = _;
       predicate;
       return;
       tparams;
@@ -3911,11 +3911,11 @@ and type_function_return ~opts = function
   | Ast.Type.Function.TypeGuard guard -> type_guard ~opts ~needs_parens:false guard
 
 and type_function
-    ~opts ~sep loc { Ast.Type.Function.params; return; tparams; effect; comments = func_comments } =
+    ~opts ~sep loc { Ast.Type.Function.params; return; tparams; effect_; comments = func_comments } =
   layout_node_with_comments_opt loc func_comments
   @@ group
        [
-         ( if effect = Ast.Function.Hook then
+         ( if effect_ = Ast.Function.Hook then
            Atom "hook"
          else
            Empty

@@ -1418,7 +1418,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end
-    | (loc, Function { Function.params; return; tparams; comments = func_comments; effect }) ->
+    | (loc, Function { Function.params; return; tparams; comments = func_comments; effect_ }) ->
       let (params_loc, { Function.Params.params = ps; rest; this_; comments = params_comments }) =
         params
       in
@@ -1494,7 +1494,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
       let (effect_flag, return_t) =
-        match effect with
+        match effect_ with
         | Ast.Function.Hook ->
           ( HookAnnot,
             if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
@@ -1524,7 +1524,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   return_t;
                   type_guard;
                   def_reason = reason;
-                  effect = effect_flag;
+                  effect_ = effect_flag;
                 }
               )
           )
@@ -1543,7 +1543,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             return = return_ast;
             tparams = tparams_ast;
             comments = func_comments;
-            effect;
+            effect_;
           }
       )
     | ( obj_loc,
@@ -2530,7 +2530,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       (fparams, Base.Option.value_exn params_ast)
     in
     fun ~meth_kind env loc func ->
-      let { Ast.Type.Function.params; effect; tparams = func_tparams; return = func_return; _ } =
+      let { Ast.Type.Function.params; effect_; tparams = func_tparams; return = func_return; _ } =
         func
       in
       let (tparams, env, tparams_ast) = mk_type_param_declarations env func_tparams in
@@ -2559,13 +2559,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           return_t = Annotated return_t;
           ret_annot_loc = loc_of_t return_t;
           statics = None;
-          effect = effect_flag;
+          effect_ = effect_flag;
         },
         {
           Ast.Type.Function.tparams = tparams_ast;
           params = params_ast;
           return = return_ast;
-          effect;
+          effect_;
           comments = None;
         }
       )

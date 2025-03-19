@@ -981,7 +981,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       async = async1;
       generator = generator1;
       predicate = predicate1;
-      effect = effect1;
+      effect_ = effect1;
       return = return1;
       tparams = tparams1;
       sig_loc = _;
@@ -995,7 +995,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       body = body2;
       async = async2;
       generator = generator2;
-      effect = effect2;
+      effect_ = effect2;
       predicate = predicate2;
       return = return2;
       tparams = tparams2;
@@ -2961,7 +2961,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       return = return1;
       tparams = tparams1;
       comments = func_comments1;
-      effect = effect1;
+      effect_ = effect1;
     } =
       ft1
     in
@@ -2971,7 +2971,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       return = return2;
       tparams = tparams2;
       comments = func_comments2;
-      effect = effect2;
+      effect_ = effect2;
     } =
       ft2
     in

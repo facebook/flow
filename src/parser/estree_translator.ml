@@ -426,7 +426,7 @@ with type t = Impl.t = struct
             {
               Function.params = (_, { Function.Params.comments = params_comments; _ }) as params;
               async;
-              effect = _;
+              effect_ = _;
               predicate = predicate_;
               tparams;
               return;
@@ -804,7 +804,7 @@ with type t = Impl.t = struct
             params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
-            effect;
+            effect_;
             predicate = predicate_;
             tparams;
             return;
@@ -824,7 +824,7 @@ with type t = Impl.t = struct
           ~inner:(format_internal_comments params_comments)
       in
       let (node_name, nonhook_attrs) =
-        if effect = Function.Hook then
+        if effect_ = Function.Hook then
           ("HookDeclaration", [])
         else
           ( "FunctionDeclaration",
@@ -859,7 +859,7 @@ with type t = Impl.t = struct
             params = (_, { Function.Params.comments = params_comments; _ }) as params;
             async;
             generator;
-            effect = _;
+            effect_ = _;
             predicate = predicate_;
             tparams;
             return;
@@ -954,7 +954,7 @@ with type t = Impl.t = struct
       let id_loc = Loc.btwn (fst id) (fst annot) in
       let (name, predicate) =
         match annot with
-        | (_, (_, Type.Function { Type.Function.effect = Function.Hook; _ })) -> ("DeclareHook", [])
+        | (_, (_, Type.Function { Type.Function.effect_ = Function.Hook; _ })) -> ("DeclareHook", [])
         | _ -> ("DeclareFunction", [("predicate", option predicate predicate_)])
       in
       node
@@ -1807,7 +1807,7 @@ with type t = Impl.t = struct
               (_, { Type.Function.Params.this_; params; rest; comments = params_comments });
             return;
             tparams;
-            effect;
+            effect_;
             comments = func_comments;
           }
         ) =
@@ -1817,7 +1817,7 @@ with type t = Impl.t = struct
           ~outer:func_comments
       in
       let name =
-        if effect = Function.Hook then
+        if effect_ = Function.Hook then
           "HookTypeAnnotation"
         else
           "FunctionTypeAnnotation"
@@ -1833,7 +1833,7 @@ with type t = Impl.t = struct
            ("typeParameters", option type_parameter_declaration tparams);
          ]
         @
-        if effect = Function.Hook then
+        if effect_ = Function.Hook then
           []
         else
           [("this", option function_type_this_constraint this_)]

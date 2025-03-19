@@ -306,7 +306,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        params;
        rest_param = None;
        type_guard = None | Some (TypeGuard { inferred = true; _ });
-       effect = ArbitraryEffect | AnyEffect;
+       effect_ = ArbitraryEffect | AnyEffect;
        _;
       } ->
         (* Contravariance *)
@@ -453,7 +453,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
          return_t;
          rest_param = None;
          type_guard = _;
-         effect = ArbitraryEffect | AnyEffect;
+         effect_ = ArbitraryEffect | AnyEffect;
          _;
         } ->
           (* Contravariance *)

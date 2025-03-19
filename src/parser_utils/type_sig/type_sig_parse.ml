@@ -805,7 +805,7 @@ module Scope = struct
   (* Function declarations preceded by declared functions are taken to have the
    * type of the declared functions. This is a weird special case aimed to
    * support overloaded signatures. *)
-  let bind_function scope tbls id_loc fn_loc name ~async ~generator ~effect:_ def k =
+  let bind_function scope tbls id_loc fn_loc name ~async ~generator ~effect_:_ def k =
     bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
         match binding_opt with
         | None ->
@@ -1807,8 +1807,8 @@ and return_annot opts scope tbls xs = function
     in
     (Annot (Boolean loc), guard)
 
-and convert_effect opts effect fun_loc_opt name_opt =
-  match (effect, fun_loc_opt) with
+and convert_effect opts effect_ fun_loc_opt name_opt =
+  match (effect_, fun_loc_opt) with
   | (Ast.Function.Hook, Some loc) when opts.component_syntax_enabled_in_config -> HookDecl loc
   | (Ast.Function.Hook, None) when opts.component_syntax_enabled_in_config -> HookAnnot
   | (Ast.Function.Hook, _) -> ArbitraryEffect
@@ -1826,7 +1826,7 @@ and function_type opts scope tbls xs f =
     F.tparams = tps;
     params = (_, { F.Params.params = ps; rest = rp; this_; comments = _ });
     return = r;
-    effect;
+    effect_;
     comments = _;
   } =
     f
@@ -1836,8 +1836,8 @@ and function_type opts scope tbls xs f =
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
   let (return, type_guard) = return_annot opts scope tbls xs r in
-  let effect = convert_effect opts effect None None in
-  FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
+  let effect_ = convert_effect opts effect_ None None in
+  FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
 
 and function_component_type_param opts scope tbls xs t optional =
   let t = annot opts scope tbls xs t in
@@ -3076,7 +3076,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
           name
           ~async
           ~generator
-          ~effect:ArbitraryEffect
+          ~effect_:ArbitraryEffect
           def
           ignore2;
         val_ref ~type_only:false scope id_loc name
@@ -3639,7 +3639,7 @@ and function_def_helper =
       predicate = _;
       async;
       generator;
-      effect;
+      effect_;
       sig_loc = _;
       comments = _;
     } =
@@ -3664,14 +3664,14 @@ and function_def_helper =
         Some (TypeGuard { loc; param_name; type_guard; one_sided })
       | None -> None
     in
-    let effect =
+    let effect_ =
       convert_effect
         opts
-        effect
+        effect_
         (Some fun_loc)
         (Base.Option.map ~f:(fun (_, { Ast.Identifier.name; _ }) -> name) id)
     in
-    FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
+    FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
 
 and function_def = function_def_helper ~constructor:false
 
@@ -4138,7 +4138,7 @@ let rec const_var_init_decl opts scope tbls id_loc name k expr =
           fn_name
           ~async
           ~generator
-          ~effect:ArbitraryEffect
+          ~effect_:ArbitraryEffect
           def
           ignore2;
         Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope k
@@ -4238,14 +4238,14 @@ let class_decl opts scope tbls decl =
   Scope.bind_class scope tbls id_loc name def
 
 let function_decl opts scope tbls decl =
-  let { Ast.Function.id; async; generator; effect; sig_loc; _ } = decl in
+  let { Ast.Function.id; async; generator; effect_; sig_loc; _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
   let sig_loc = push_loc tbls sig_loc in
   let id_loc = push_loc tbls id_loc in
   let def =
     lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty id_loc decl))
   in
-  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~effect def
+  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator ~effect_ def
 
 let component_decl opts scope tbls decl =
   let {
@@ -4304,7 +4304,7 @@ let declare_function_decl opts scope tbls decl =
                  T.Function.tparams = tps;
                  params = (_, { T.Function.Params.params = ps; rest = rp; this_; comments = _ });
                  return = r;
-                 effect;
+                 effect_;
                  comments = _;
                } ->
              let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
@@ -4312,8 +4312,8 @@ let declare_function_decl opts scope tbls decl =
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
              let (return, type_guard) = return_annot opts scope tbls xs r in
-             let effect = convert_effect opts effect None (Some name) in
-             FunSig { tparams; params; rest_param; this_param; return; type_guard; effect }
+             let effect_ = convert_effect opts effect_ None (Some name) in
+             FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
            | _ -> failwith "unexpected declare function annot"
        )
       )

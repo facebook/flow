@@ -19,8 +19,8 @@ module Types = struct
     let params ?(loc = Loc.none) ?rest ?this ?comments params =
       (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
 
-    let make ?tparams ?comments ?(effect = Ast.Function.Arbitrary) params return =
-      { Ast.Type.Function.tparams; params; return; effect; comments }
+    let make ?tparams ?comments ?(effect_ = Ast.Function.Arbitrary) params return =
+      { Ast.Type.Function.tparams; params; return; effect_; comments }
   end
 
   module Objects = struct
@@ -218,7 +218,7 @@ module Functions = struct
       ?tparams
       ?(return = Ast.Function.ReturnAnnot.Missing Loc.none)
       ?(generator = false)
-      ?(effect = Ast.Function.Arbitrary)
+      ?(effect_ = Ast.Function.Arbitrary)
       ?(async = false)
       ?body:body_
       () =
@@ -238,7 +238,7 @@ module Functions = struct
       body;
       async;
       generator;
-      effect;
+      effect_;
       predicate = None;
       return;
       tparams;
@@ -290,7 +290,7 @@ module Functions = struct
       ?id
       ?(generator = false)
       ?(async = false)
-      ?(effect = Ast.Function.Arbitrary)
+      ?(effect_ = Ast.Function.Arbitrary)
       ?body:body_
       { Ast.Type.Function.tparams; params; return; _ } =
     let params = params_of_type params in
@@ -311,7 +311,7 @@ module Functions = struct
           body;
           async;
           generator;
-          effect;
+          effect_;
           predicate = None;
           return;
           tparams;
