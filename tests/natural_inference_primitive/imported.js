@@ -146,7 +146,7 @@ function test_obj_with_typeof_abc(x: ObjWithTypeofAbc) {
 
 function test_objlit() {
   const obj = { f: one };
-  obj as {f: 1}; // TODO error number ~> 1
+  obj as {f: 1}; // error number ~> 1
   obj as {f: number}; // okay
 }
 
@@ -159,16 +159,16 @@ function test_objlit_nullish() {
   declare var n0: ?1;
 
   const obj1 = { f: n0 ?? one };
-  obj1 as {f: 1}; // TODO error number ~> 1
+  obj1 as {f: 1}; // error number ~> 1
   obj1 as {f: 2}; // error number ~> 2
   1 as typeof obj1.f; // okay 1 ~> number
-  2 as typeof obj1.f; // TODO okay 2 ~> number
+  2 as typeof obj1.f; // okay 2 ~> number
 
   const obj2 = { f: one ?? n0 };
-  obj2 as {f: 1}; // TODO error number ~> 1
+  obj2 as {f: 1}; // error number ~> 1
   obj2 as {f: 2}; // error number ~> 2
   1 as typeof obj2.f; // okay 1 ~> number
-  2 as typeof obj2.f; // TODO okay 2 ~> number
+  2 as typeof obj2.f; // okay 2 ~> number
 }
 
 function test_conditional() {
@@ -185,7 +185,7 @@ declare function useStateWithDefault<T = {f:1|2}>(x: T): [T, (y: T) => void];
 function test_useState_1() {
   const [o, set] = useState({f: one});
   set({f: 1}); // okay
-  set({f: 2}); // TODO okay
+  set({f: 2}); // okay
 }
 
 function test_useState_2() {
@@ -197,8 +197,8 @@ function test_useState_2() {
 
 function test_useState_4() {
   const [n_, set] = useState(one);
-  n_ as 1; // TODO error number ~> 1
-  set(2); // TODO okay
+  n_ as 1; // TODO error number ~> 1 (infers NumT_UNSOUND now)
+  set(2); // okay
 }
 
 function test_useState_5() {
@@ -219,7 +219,7 @@ function test_useState_7() {
   declare function useStateWithBound<T: {f:number|string}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
-  set({f: 2}); // TODO okay
+  set({f: 2}); // okay
   set({f: "blah"}); // error "blah" ~> number
 }
 
@@ -227,17 +227,17 @@ function test_useState_8() {
   declare function useStateWithBound<T: {f:number}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
-  set({f: 2}); // TODO okay
+  set({f: 2}); // okay
   set({f: "blah"}); // error "blah" ~> number
 }
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // okay (infers 1)
+  const [o, set] = useStateWithBound({f: one}); // infers general type
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // error 2 ~> 1
-  set({f: 3}); // error 3 ~> 1
+  set({f: 2}); // okay
+  set({f: 3}); // okay
 }
 
 function test_useState_10() {
@@ -250,13 +250,13 @@ function test_useState_11() {
   abc as "abc";
   const [o, set] = useState({f: abc});
   set({f: "abc"}); // okay
-  set({f: "blah"}); // TODO okay
+  set({f: "blah"}); // okay
 }
 
 function test_apply() {
   declare function apply<T>(f: (v: T) => T, v: T): T;
   apply((v) => {
-    v as 1; // TODO error number ~> 1
+    v as 1; // error number ~> 1
     return v
   }, one);
 }
@@ -313,7 +313,7 @@ function test_logical() {
   const x1 = one || "hello";
   x1 as 1; // okay
   let y1 = x1;
-  y1 = 5; // TODO okay
+  y1 = 5; // okay
 
   // use hint to preserve precise type
   function fn1(): 1 { return one || ""; } // okay
@@ -321,7 +321,7 @@ function test_logical() {
   // generalize at return
   function fn2() { return one || ""; }
   let x2 = fn2();
-  x2 = 5; // TODO okay
+  x2 = 5; // okay
   x2 as 5; // TODO error number ~> 5
 }
 
@@ -351,7 +351,7 @@ function test_pattern_match() {
 function test_assign() {
   const x = abc;
   x as 'abc'; // okay
-  x as 'def'; // TODO error 'abc' ~> 'def'
+  x as 'def'; // error 'abc' ~> 'def'
 
   const o1 = {f: x};
   o1 as {f: 'abc'}; // error string ~> 'abc'
@@ -367,7 +367,7 @@ function test_reduce() {
   x1[0] = "a"; // error string ~> number
 
   const x2 = arr.reduce((acc, _) => acc, [one]);
-  x2[0] = 42; // TODO okay x2 inferred as Array<number>
+  x2[0] = 42; // okay x2 inferred as Array<number>
   x2[0] = "a"; // error string ~> number
 
   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay

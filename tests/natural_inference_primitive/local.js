@@ -34,56 +34,56 @@ function test_string() {
   abc as "abc"; // okay
   abc as "def" // error "abc" ~> "def"
   _ as "abc" as typeof abc; // okay
-  _ as "def" as typeof abc; // TODO error "def" ~> "abc"
+  _ as "def" as typeof abc; // error "def" ~> "abc"
 }
 
 function test_number() {
   one as 1; // okay
   one as 2 // error 1 ~> 2
   _ as 1 as typeof one; // okay
-  _ as 2 as typeof one; // TODO error 2 ~> 1
+  _ as 2 as typeof one; // error 2 ~> 1
 }
 
 function test_boolean() {
   tru as true; // okay
   tru as false // error true ~> false
   _ as true as typeof tru; // okay
-  _ as false as typeof tru; // TODO error false ~> true
+  _ as false as typeof tru; // error false ~> true
 }
 
 function test_bigint() {
   bigOne as 1n; // okay
   bigOne as 2n // error 1n ~> 2n
   _ as 1n as typeof bigOne; // okay
-  _ as 2n as typeof bigOne; // TODO error 2n ~> 1n
+  _ as 2n as typeof bigOne; // error 2n ~> 1n
 }
 
 function test_string_ref() {
   abcRef as "abc"; // okay
   abcRef as "def" // error "abc" ~> "def"
   _ as "abc" as typeof abcRef; // okay
-  _ as "def" as typeof abcRef; // TODO error "def" ~> "abc"
+  _ as "def" as typeof abcRef; // error "def" ~> "abc"
 }
 
 function test_number_ref() {
   oneRef as 1; // okay
   oneRef as 2 // error 1 ~> 2
   _ as 1 as typeof oneRef; // okay
-  _ as 2 as typeof oneRef; // TODO error 2 ~> 1
+  _ as 2 as typeof oneRef; // error 2 ~> 1
 }
 
 function test_boolean_ref() {
   truRef as true; // okay
   truRef as false // error true ~> false
   _ as true as typeof truRef; // okay
-  _ as false as typeof truRef; // TODO error false ~> true
+  _ as false as typeof truRef; // error false ~> true
 }
 
 function test_bigint_ref() {
   bigOneRef as 1n; // okay
   bigOneRef as 2n // error 1n ~> 2n
   _ as 1n as typeof bigOneRef; // okay
-  _ as 2n as typeof bigOneRef; // TODO error 2n ~> 1n
+  _ as 2n as typeof bigOneRef; // error 2n ~> 1n
 }
 
 function test_obj() {
@@ -101,10 +101,10 @@ function test_spread() {
 }
 
 function test_obj_refs() {
-  objRefs.abc as "abc"; // TODO error string ~> "abc"
-  objRefs.abcRef as "abc"; // TODO error string ~> "abc"
-  spreadObjRefs.abc as "abc"; // TODO error string ~> "abc"
-  spreadObjRefs.abcRef as "abc"; // TODO error string ~> "abc"
+  objRefs.abc as "abc"; // error string ~> "abc"
+  objRefs.abcRef as "abc"; // error string ~> "abc"
+  spreadObjRefs.abc as "abc"; // error string ~> "abc"
+  spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
 }
 
 function test_as_const() {
@@ -112,10 +112,10 @@ function test_as_const() {
   asConst.abcRef as "abc"; // okay
   asConst.abc as "def"; // error "abc" ~> "def"
   asConst.abcRef as "def"; // error "abc" ~> "def"
-  _ as "def" as typeof asConst.abc; // TODO error "def" ~> "abc"
-  _ as "def" as typeof asConst.abcRef; // TODO error "def" ~> "abc"
-  _ as string as typeof asConst.abc; // TODO error string ~> "abc"
-  _ as string as typeof asConst.abcRef; // TODO error string ~> "abc"
+  _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+  _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+  _ as string as typeof asConst.abc; // error string ~> "abc"
+  _ as string as typeof asConst.abcRef; // error string ~> "abc"
 }
 
 function test_typeof() {
@@ -126,13 +126,13 @@ function test_typeof() {
 }
 
 function test_typeof_obj(x: ObjRefs) {
-  x.abc as "abc"; // TODO error string ~> "abc"
-  x.abcRef as "abc"; // TODO error string ~> "abc"
+  x.abc as "abc"; // error string ~> "abc"
+  x.abcRef as "abc"; // error string ~> "abc"
 }
 
 function test_spread_ref(x: SpreadObjRefs) {
-  x.abc as "abc"; // TODO error string ~> "abc"
-  x.abcRef as "abc"; // TODO error string ~> "abc"
+  x.abc as "abc"; // error string ~> "abc"
+  x.abcRef as "abc"; // error string ~> "abc"
 }
 
 function test_obj_with_typeof_abc(x: ObjWithTypeofAbc) {
@@ -141,7 +141,7 @@ function test_obj_with_typeof_abc(x: ObjWithTypeofAbc) {
 
 function test_objlit() {
   const obj = { f: one };
-  obj as {f: 1}; // TODO error number ~> 1
+  obj as {f: 1}; // error number ~> 1
   obj as {f: number}; // okay
 }
 
@@ -154,13 +154,13 @@ function test_objlit_nullish() {
   declare var n0: ?1;
 
   const obj1 = { f: n0 ?? one };
-  obj1 as {f: 1}; // TODO error number ~> 1
+  obj1 as {f: 1}; // error number ~> 1
   obj1 as {f: 2}; // error number ~> 2
   1 as typeof obj1.f; // okay 1 ~> number
   2 as typeof obj1.f; // okay 2 ~> number
 
   const obj2 = { f: one ?? n0 };
-  obj2 as {f: 1}; // TODO error number ~> 1
+  obj2 as {f: 1}; // error number ~> 1
   obj2 as {f: 2}; // error number ~> 2
   1 as typeof obj2.f; // okay 1 ~> number
   2 as typeof obj2.f; // okay 2 ~> number
@@ -201,7 +201,7 @@ function test_useState_1() {
 }
 
 function test_useState_2() {
-  const [o, set] = useState<{f:1|2}>({f: one}); // TODO okay
+  const [o, set] = useState<{f:1|2}>({f: one}); // okay
   set({f: 1}); // okay
   set({f: 2}); // okay
   set({f: 3}); // error 3 ~> 1|2
@@ -209,7 +209,7 @@ function test_useState_2() {
 
 function test_useState_4() {
   const [n_, set] = useState(one);
-  n_ as 1; // TODO error number ~> 1
+  n_ as 1; // TODO error number ~> 1 (infers NumT_UNSOUND now)
   set(2); // okay
 }
 
@@ -217,14 +217,14 @@ function test_useState_5() {
   declare var x: typeof one;
   const [x_, set] = useState(x);
   x_ as 1; // okay
-  set(2); // TODO error 2 ~> 1
+  set(2); // error 2 ~> 1
 }
 
 function test_useState_6() {
   declare var x: typeof one;
   const [o, set] = useState({f: x});
   set({f: 1}); // okay
-  set({f: 2}); // TODO error
+  set({f: 2}); // error
 }
 
 function test_useState_7() {
@@ -245,17 +245,17 @@ function test_useState_8() {
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // okay (infers 1)
+  const [o, set] = useStateWithBound({f: one}); // infers general type
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // TODO error 2 ~> 1
-  set({f: 3}); // TODO error 3 ~> 1
+  set({f: 2}); // okay
+  set({f: 3}); // okay
 }
 
 function test_useState_10() {
-  const [o, set] = useStateWithDefault({f: one});
+  const [o, set] = useStateWithDefault({f: one}); // infers general type
   set({f: 1}); // okay
-  set({f: 2}); // TODO error
+  set({f: 2}); // okay
 }
 
 function test_useState_11() {
@@ -268,7 +268,7 @@ function test_useState_11() {
 function test_apply() {
   declare function apply<T>(f: (v: T) => T, v: T): T;
   apply((v) => {
-    v as 1; // TODO error number ~> 1
+    v as 1; // error number ~> 1
     return v
   }, one);
 }
@@ -420,7 +420,7 @@ function test_assign() {
   x as 'def'; // error 'abc' ~> 'def'
 
   const o1 = {f: x};
-  o1 as {f: 'abc'}; // TODO error string ~> 'abc'
+  o1 as {f: 'abc'}; // error string ~> 'abc'
 
   const o2: {f: 'abc'} = {f: x}; // okay
   const o3: {f: string} = {f: x}; // okay
@@ -450,4 +450,12 @@ function test_reduce() {
 
   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay
   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // okay
+}
+
+function test_logical_instantiation() {
+  declare var zerOrOne: 0|1;
+  const x = zerOrOne || 2;
+
+  const [arr, _] = useState([x]);
+  arr[0] as 1|2; // TODO error number ~> 1|2
 }

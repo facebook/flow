@@ -26,4 +26,18 @@ val mk_syntactic_flags :
   unit ->
   syntactic_flags
 
+val generalize_singletons : Context.t -> force_general:bool -> Type.t -> Type.t
+
 val loc_has_hint : Context.t -> ALoc.t -> bool
+
+val primitive_literal :
+  Context.t ->
+  Reason.t ->
+  syntactic_flags ->
+  legacy:(unit -> Type.t) ->
+  precise:(unit -> Type.t) ->
+  general:(unit -> Type.t) ->
+  ALoc.t ->
+  Type.t
+
+val try_generalize : Context.t -> syntactic_flags -> ALoc.t -> Type.t -> Type.t

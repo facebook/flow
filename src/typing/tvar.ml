@@ -51,6 +51,9 @@ let mk_fully_resolved_lazy cx reason ?(force_post_component = true) lazy_t =
       (Debug_js.string_of_reason cx reason);
   Type.OpenT (reason, id)
 
+let mk_fully_resolved_no_wrap cx t =
+  mk_fully_resolved_helper cx (Type.Constraint.ForcingState.of_non_lazy_t t)
+
 let mk_fully_resolved cx reason t =
   Type.OpenT (reason, mk_fully_resolved_helper cx (Type.Constraint.ForcingState.of_non_lazy_t t))
 

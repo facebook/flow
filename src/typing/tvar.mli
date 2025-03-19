@@ -17,6 +17,8 @@ val mk_where_no_wrap : Context.t -> reason -> (Type.t -> unit) -> int
 
 val mk_no_wrap_where : Context.t -> reason -> (reason * int -> unit) -> Type.t
 
+val mk_fully_resolved_no_wrap : Context.t -> Type.t -> int
+
 val mk_fully_resolved_lazy :
   Context.t -> reason -> ?force_post_component:bool -> Type.t lazy_t -> Type.t
 

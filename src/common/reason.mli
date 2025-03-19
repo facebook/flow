@@ -279,6 +279,8 @@ val is_literal_object_reason : 'loc virtual_reason -> bool
 
 val is_literal_array_reason : 'loc virtual_reason -> bool
 
+val is_literal_union_reason : 'loc virtual_reason -> bool
+
 val is_lib_reason : reason -> bool
 
 val is_lib_reason_def : reason -> bool

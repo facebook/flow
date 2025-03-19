@@ -19,6 +19,23 @@ and union_flatten = function
   | UnionT (_, rep) -> union_flatten_list (UnionRep.members rep)
   | t -> [t]
 
+(* Makes sure the solution does not "leak" a potentially overly precise type to
+ * the output of a generic call, when this precision is not necessary for checking
+ * the call. Condider for example
+ *
+ *   declare function useState<S>(init: S): [S, (S)=>void];
+ *   const [st, setSt] = useState(42);
+ *
+ * We would like the type of `st` and `setSt` to use the general form of the type
+ * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
+ * the rather impractical `42` (resp. `(42)=>void`).
+ *)
+let generalize_singletons cx ts =
+  if Context.natural_inference_local_primitive_literals_partial cx then
+    Base.List.map ~f:(Primitive_literal.generalize_singletons cx ~force_general:false) ts
+  else
+    ts
+
 type inferred_targ = {
   tparam: Type.typeparam;
   inferred: Type.t;
@@ -755,6 +772,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           TypeMap.keys lowers
           |> Flow_js_utils.collect_lowers cx (ISet.singleton id) [] ~filter_empty:false
           |> union_flatten_list
+          |> generalize_singletons cx
           |> Base.List.filter ~f:(fun t -> not @@ Flow_js_utils.TvarVisitors.has_placeholders cx t)
           |> TypeUtil.union_of_ts_opt r)
     | t -> Some t

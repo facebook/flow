@@ -726,9 +726,10 @@ module Make
   (* Values *)
   (**********)
 
-  let identifier_ cx _syntactic_flags name loc =
+  let identifier_ cx syntactic_flags name loc =
     let get_checking_mode_type () =
       let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
+      let t = Primitive_literal.try_generalize cx syntactic_flags loc t in
       (* We want to make sure that the reason description for the type we return
        * is always `RIdentifier name`. *)
       match (desc_of_t t, t) with
@@ -766,46 +767,65 @@ module Make
       let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
       DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName value })
     else
-      (* It's too expensive to track literal information for large strings.*)
-      let max_literal_length = Context.max_literal_length cx in
-      if max_literal_length = 0 || String.length value <= max_literal_length then
-        let reason = mk_annot_reason RString loc in
-        DefT (reason, StrT_UNSOUND (None, OrdinaryName value))
-      else
-        let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-        DefT (reason, StrGeneralT AnyLiteral)
+      let legacy () =
+        (* It's too expensive to track literal information for large strings.*)
+        let max_literal_length = Context.max_literal_length cx in
+        if max_literal_length = 0 || String.length value <= max_literal_length then
+          let reason = mk_annot_reason RString loc in
+          DefT (reason, StrT_UNSOUND (None, OrdinaryName value))
+        else
+          let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
+          DefT (reason, StrGeneralT AnyLiteral)
+      in
+      let reason = mk_annot_reason RString loc in
+      let precise () =
+        DefT (reason, SingletonStrT { from_annot = false; value = OrdinaryName value })
+      in
+      let general () = DefT (reason, StrGeneralT AnyLiteral) in
+      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
 
   let string_literal cx syntactic_flags loc { Ast.StringLiteral.value; _ } =
     string_literal_value cx syntactic_flags loc value
 
-  let boolean_literal _cx syntactic_flags loc { Ast.BooleanLiteral.value; _ } =
+  let boolean_literal cx syntactic_flags loc { Ast.BooleanLiteral.value; _ } =
     let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBooleanLit value) loc in
       DefT (reason, SingletonBoolT { from_annot = true; value })
     else
       let reason = mk_annot_reason RBoolean loc in
-      DefT (reason, BoolT_UNSOUND value)
+      let legacy () = DefT (reason, BoolT_UNSOUND value) in
+      let precise () = DefT (reason, SingletonBoolT { from_annot = false; value }) in
+      let general () = DefT (reason, BoolGeneralT) in
+      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
 
   let null_literal loc = NullT.at loc
 
-  let number_literal _cx syntactic_flags loc { Ast.NumberLiteral.value; raw; _ } =
+  let number_literal cx syntactic_flags loc { Ast.NumberLiteral.value; raw; _ } =
     let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RNumberLit raw) loc in
       DefT (reason, SingletonNumT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RNumber loc in
-      DefT (reason, NumT_UNSOUND (None, (value, raw)))
+      let legacy () = DefT (reason, NumT_UNSOUND (None, (value, raw))) in
+      let precise () = DefT (reason, SingletonNumT { from_annot = false; value = (value, raw) }) in
+      let general () = DefT (reason, NumGeneralT AnyLiteral) in
+      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
 
-  let bigint_literal _cx syntactic_flags loc { Ast.BigIntLiteral.value; raw; _ } =
+  let bigint_literal cx syntactic_flags loc { Ast.BigIntLiteral.value; raw; _ } =
     let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBigIntLit raw) loc in
       DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RBigInt loc in
-      DefT (reason, BigIntT_UNSOUND (None, (value, raw)))
+      let legacy () = DefT (reason, BigIntT_UNSOUND (None, (value, raw))) in
+      let precise () =
+        DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
+      in
+      let general () = DefT (reason, BigIntGeneralT AnyLiteral) in
+      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
@@ -5192,53 +5212,57 @@ module Make
      * entire expression throws, because we only evaluate the RHS depending on the value of the LHS.
      * Thus, we catch abnormal control flow exceptions on the RHS and do not rethrow them.
      *)
-    match operator with
-    | Or ->
-      let () = check_default_pattern cx left right in
-      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
-      let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~encl_ctx ?decl ~has_hint right
+    let (t, op) =
+      match operator with
+      | Or ->
+        let () = check_default_pattern cx left right in
+        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
+        let ((((_, t2), _) as right), right_throws) =
+          Abnormal.catch_expr_control_flow_exception (fun () ->
+              expression cx ~encl_ctx ?decl ~has_hint right
+          )
+        in
+        let t2 =
+          if right_throws then
+            EmptyT.at loc
+          else
+            t2
+        in
+        let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
+        (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
+      | And ->
+        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
+        let ((((_, t2), _) as right), right_throws) =
+          Abnormal.catch_expr_control_flow_exception (fun () ->
+              expression cx ~encl_ctx ?decl ~has_hint right
+          )
+        in
+        let t2 =
+          if right_throws then
+            EmptyT.at loc
+          else
+            t2
+        in
+        let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
+        (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
+      | NullishCoalesce ->
+        let (((_, t1), _) as left) = expression cx ?decl ~has_hint left in
+        let ((((_, t2), _) as right), right_throws) =
+          Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl ~has_hint right)
+        in
+        let t2 =
+          if right_throws then
+            EmptyT.at loc
+          else
+            t2
+        in
+        let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
+        ( Operators.logical_nullish_coalesce cx reason t1 t2,
+          { operator = NullishCoalesce; left; right; comments }
         )
-      in
-      let t2 =
-        if right_throws then
-          EmptyT.at loc
-        else
-          t2
-      in
-      let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-      (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
-    | And ->
-      let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
-      let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ~encl_ctx ?decl ~has_hint right
-        )
-      in
-      let t2 =
-        if right_throws then
-          EmptyT.at loc
-        else
-          t2
-      in
-      let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-      (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
-    | NullishCoalesce ->
-      let (((_, t1), _) as left) = expression cx ?decl ~has_hint left in
-      let ((((_, t2), _) as right), right_throws) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl ~has_hint right)
-      in
-      let t2 =
-        if right_throws then
-          EmptyT.at loc
-        else
-          t2
-      in
-      let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
-      ( Operators.logical_nullish_coalesce cx reason t1 t2,
-        { operator = NullishCoalesce; left; right; comments }
-      )
+    in
+    let t = Primitive_literal.try_generalize cx syntactic_flags loc t in
+    (t, op)
 
   and assignment_lhs cx patt =
     match patt with
