@@ -2507,7 +2507,7 @@ module Make
                   }
               ) ->
             let (((_, kt), _) as k') = expression cx ~encl_ctx:IndexContext k in
-            let (((_, vt), _) as v') = expression cx ~as_const v in
+            let (((_, vt), _) as v') = expression cx ~as_const ~has_hint v in
             let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_computed cx computed acc,
               Property

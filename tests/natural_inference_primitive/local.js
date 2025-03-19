@@ -466,3 +466,10 @@ function test_destructure_computed() {
   one as 1; // okay
   one as 2; // error 1 ~> 2
 }
+
+function test_computed_prop_hint() {
+  type Name = 'a'| 'b' | 'c';
+  const KeyName = 'a';
+  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'a'}>); // okay
+  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+}
