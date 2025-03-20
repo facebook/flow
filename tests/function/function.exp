@@ -43,8 +43,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1865:11
-   1865| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1906:11
+   1906| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -111,8 +111,8 @@ argument `A`. [prop-missing]
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1879:40
-   1879| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1920:40
+   1920| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:362:29
     362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
@@ -242,8 +242,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1865:11
-   1865| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1906:11
+   1906| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 

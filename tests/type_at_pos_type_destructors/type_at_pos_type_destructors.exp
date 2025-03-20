@@ -62,7 +62,7 @@ type T5 = string extends {bar: String, foo: infer String, ...} ? string : number
 = number
 
 'String' defined at conditional-types.js:17:37
-'String' defined at (lib) core.js:1167:14
+'String' defined at (lib) core.js:1208:14
 'T5' defined at conditional-types.js:17:5
 
 conditional-types.js:17:6,17:7

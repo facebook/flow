@@ -7,8 +7,8 @@ Cannot cast `a` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:11:7
      11|   (a: number);  // Error: string ~> number
@@ -24,8 +24,8 @@ Cannot cast `b` to boolean because number [1] is incompatible with boolean [2]. 
             ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:12:7
      12|   (b: boolean); // Error: number ~> boolean
@@ -41,8 +41,8 @@ Cannot cast `c` to string because boolean [1] is incompatible with string [2]. [
             ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:13:7
      13|   (c: string);  // Error: boolean ~> string
@@ -58,8 +58,8 @@ Cannot cast `x` to undefined because boolean [1] is incompatible with undefined 
               ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:17:9
      17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -75,8 +75,8 @@ Cannot cast `x` to undefined because number [1] is incompatible with undefined [
               ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:17:9
      17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -92,8 +92,8 @@ Cannot cast `x` to undefined because string [1] is incompatible with undefined [
               ^
 
 References:
-   <BUILTINS>/core.js:2165:58
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2206:58
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    all.js:17:9
      17|     (x: void);  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -109,12 +109,12 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2164:5
+   <BUILTINS>/core.js:2205:5
              v----------------------------------------------------
-   2164|     static all<T: Iterable<mixed>>(promises: T): Promise<
-   2165|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
-   2166|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
-   2167|     >;
+   2205|     static all<T: Iterable<mixed>>(promises: T): Promise<
+   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   2207|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
+   2208|     >;
              ^ [1]
 
 
@@ -142,12 +142,12 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2174:5
+   <BUILTINS>/core.js:2215:5
              v-----------------------------------------------------------
-   2174|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<
-   2175|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
-   2176|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
-   2177|     >;
+   2215|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<
+   2216|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   2217|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
+   2218|     >;
              ^ [1]
 
 
@@ -176,8 +176,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2199:12
-   2199|   +status: 'rejected',
+   <BUILTINS>/core.js:2240:12
+   2240|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:34:22
      34|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -193,8 +193,8 @@ Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [
                                       ^^^
 
 References:
-   <BUILTINS>/core.js:2175:80
-   2175|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   <BUILTINS>/core.js:2216:80
+   2216|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
                                                                                         ^^^^^^^^^^^^^ [1]
 
 
@@ -207,8 +207,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2192:15
-   2192|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2233:15
+   2233|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -221,8 +221,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2192:5
-   2192|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2233:5
+   2233|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -235,8 +235,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2192:15
-   2192|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2233:15
+   2233|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -251,8 +251,8 @@ an interface. [incompatible-type]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2192:51
-   2192|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2233:51
+   2233|     static any<T, Elem: Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                                                            ^^^^^^^^^^^^^^ [2]
 
 
@@ -637,8 +637,8 @@ References:
    resolve_void.js:1:29
       1| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:2102:24
-   2102| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2143:24
+   2143| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -655,8 +655,8 @@ References:
    resolve_void.js:3:38
       3| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:2102:24
-   2102| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2143:24
+   2143| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

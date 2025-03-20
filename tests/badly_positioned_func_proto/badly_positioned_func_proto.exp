@@ -8,8 +8,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:1865:11
-   1865| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1906:11
+   1906| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -23,8 +23,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^ [1]
 
 References:
-   <BUILTINS>/core.js:1865:11
-   1865| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1906:11
+   1906| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 

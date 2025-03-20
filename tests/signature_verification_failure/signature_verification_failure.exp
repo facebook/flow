@@ -176,8 +176,8 @@ References:
    misc.js:5:32
       5| export const c = {['a' + 'b']: 42};
                                         ^^ [1]
-   <BUILTINS>/core.js:1866:5
-   1866|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:1907:5
+   1907|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

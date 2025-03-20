@@ -66,8 +66,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1382:114
-   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+   <BUILTINS>/core.js:1423:114
+   1423|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
                                                                                                                           ^^^^^^ [1]
    tagged_template.js:34:7
      34|   (x: empty); // ERROR
@@ -85,8 +85,8 @@ subtype of an interface. [incompatible-type]
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1382:28
-   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+   <BUILTINS>/core.js:1423:28
+   1423|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -99,8 +99,8 @@ Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [inc
             ^
 
 References:
-   <BUILTINS>/core.js:1382:114
-   1382|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+   <BUILTINS>/core.js:1423:114
+   1423|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
                                                                                                                           ^^^^^^ [1]
    tagged_template.js:45:7
      45|   (x: empty); // ERROR

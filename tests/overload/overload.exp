@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                       ^
 
 References:
-   <BUILTINS>/core.js:1249:58
-   1249|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1290:58
+   1290|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -62,11 +62,11 @@ Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-call]
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1249:19
-   1249|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1290:19
+   1290|     match(regexp: string | RegExp): RegExp$matchResult | null;
                            ^^^^^^ [2]
-   <BUILTINS>/core.js:1249:28
-   1249|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1290:28
+   1290|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                     ^^^^^^ [3]
 
 
@@ -96,8 +96,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                               ^
 
 References:
-   <BUILTINS>/core.js:1249:58
-   1249|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1290:58
+   1290|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -110,8 +110,8 @@ Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1322:63
-   1322|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/core.js:1363:63
+   1363|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

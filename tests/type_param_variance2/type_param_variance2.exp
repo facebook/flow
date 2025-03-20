@@ -8,8 +8,8 @@ surprising behaviors. [libdef-override]
                        ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2102:15
-   2102| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2143:15
+   2143| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
 
 
