@@ -47,7 +47,7 @@ and reason_of_use_t = function
   | CallElemT (_, reason, _, _, _) -> reason
   | CallT { reason; _ } -> reason
   | ConstructorT { reason; _ } -> reason
-  | ElemT (_, reason, _, _) -> reason
+  | ElemT { reason; _ } -> reason
   | EnumCastT { enum = (reason, _); _ } -> reason
   | EnumExhaustiveCheckT { reason; _ } -> reason
   | GetEnumT { reason; _ } -> reason
@@ -213,7 +213,8 @@ let rec util_use_op_of_use_t :
   | HasOwnPropT (op, r, t) -> util op (fun op -> HasOwnPropT (op, r, t))
   | GetKeysT (r, u2) -> nested_util u2 (fun u2 -> GetKeysT (r, u2))
   | GetDictValuesT (r, u2) -> nested_util u2 (fun u2 -> GetDictValuesT (r, u2))
-  | ElemT (op, r, t, a) -> util op (fun op -> ElemT (op, r, t, a))
+  | ElemT { use_op; reason; obj; action } ->
+    util use_op (fun use_op -> ElemT { use_op; reason; obj; action })
   | ObjKitT (op, r, x, y, t) -> util op (fun op -> ObjKitT (op, r, x, y, t))
   | ReactKitT (op, r, t) -> util op (fun op -> ReactKitT (op, r, t))
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))

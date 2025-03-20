@@ -143,7 +143,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | GetKeysT (_, use) -> default_resolve_touts ~flow cx loc use
   | HasOwnPropT _ -> ()
   | GetValuesT (_, t) -> resolve t
-  | ElemT (_, _, _, action) -> resolve_elem_action action
+  | ElemT { action; _ } -> resolve_elem_action action
   | MapTypeT (_, _, _, t)
   | ObjKitT (_, _, _, _, t) ->
     resolve t

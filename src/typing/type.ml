@@ -742,7 +742,12 @@ module rec TypeTerm : sig
     (* Values of a dictionary, `mixed` otherwise. *)
     | GetDictValuesT of reason * use_t
     (* Element access *)
-    | ElemT of use_op * reason * t * elem_action
+    | ElemT of {
+        use_op: use_op;
+        reason: reason;
+        obj: t;
+        action: elem_action;
+      }
     (* Map a FunT over a structure *)
     | MapTypeT of use_op * reason * type_map * t_out
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out

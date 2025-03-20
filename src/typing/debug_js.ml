@@ -658,7 +658,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | CallT { use_op; reason = _; call_action = ConcretizeCallee _; return_hint = _ } ->
       p ~extra:(spf "%s ConcretizeCallee" (string_of_use_op use_op)) t
     | ConstructorT _ -> p t
-    | ElemT (_use_op, _reason, obj, _access) -> p ~extra:(spf "obj: %s" (kid obj)) t
+    | ElemT { obj; _ } -> p ~extra:(spf "obj: %s" (kid obj)) t
     | ConditionalT
         {
           distributive_tparam_name;

@@ -1636,11 +1636,12 @@ struct
         (* Shortcut for indexed accesses with the same type as the dict key. *)
         | ( UnionT _,
             ElemT
-              ( use_op,
-                reason,
-                (DefT (_, ObjT { flags = { react_dro; _ } as flags; _ }) as _obj),
-                ReadElem { id = _; from_annot = _; access_iterables = _; tout }
-              )
+              {
+                use_op;
+                reason;
+                obj = DefT (_, ObjT { flags = { react_dro; _ } as flags; _ }) as _obj;
+                action = ReadElem { id = _; from_annot = _; access_iterables = _; tout };
+              }
           )
           when let dict = Obj_type.get_dict_opt flags.obj_kind in
                match dict with
@@ -1656,7 +1657,13 @@ struct
           in
           rec_flow_t cx trace ~use_op:unknown_use (value, OpenT tout)
         | ( UnionT (_, rep),
-            ElemT (use_op, reason, obj, ReadElem { id; from_annot = true; access_iterables; tout })
+            ElemT
+              {
+                use_op;
+                reason;
+                obj;
+                action = ReadElem { id; from_annot = true; access_iterables; tout };
+              }
           ) ->
           let reason = update_desc_reason invalidate_rtype_alias reason in
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
@@ -1667,11 +1674,12 @@ struct
                   trace
                   ( t,
                     ElemT
-                      ( use_op,
-                        reason,
-                        obj,
-                        ReadElem { id; from_annot = true; access_iterables; tout = tvar }
-                      )
+                      {
+                        use_op;
+                        reason;
+                        obj;
+                        action = ReadElem { id; from_annot = true; access_iterables; tout = tvar };
+                      }
                   )
             )
           in
@@ -3732,48 +3740,50 @@ struct
         (* objects/arrays may have their properties/elements written and read *)
         (**********************************************************************)
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
-            SetElemT (use_op, reason_op, key, mode, tin, tout)
+            SetElemT (use_op, reason, key, mode, tin, tout)
           ) ->
-          rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem { tin; tout; mode }))
+          let action = WriteElem { tin; tout; mode } in
+          rec_flow cx trace (key, ElemT { use_op; reason; obj = l; action })
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
-            GetElemT { use_op; reason = reason_op; id; from_annot; access_iterables; key_t; tout }
+            GetElemT { use_op; reason; id; from_annot; access_iterables; key_t; tout }
           ) ->
-          rec_flow
-            cx
-            trace
-            ( key_t,
-              ElemT (use_op, reason_op, l, ReadElem { id; from_annot; access_iterables; tout })
-            )
+          let action = ReadElem { id; from_annot; access_iterables; tout } in
+          rec_flow cx trace (key_t, ElemT { use_op; reason; obj = l; action })
         | ( (DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _),
             CallElemT (use_op, reason_call, reason_lookup, key, action)
           ) ->
           let action = CallElem (reason_call, action) in
-          rec_flow cx trace (key, ElemT (use_op, reason_lookup, l, action))
+          rec_flow cx trace (key, ElemT { use_op; reason = reason_lookup; obj = l; action })
         (* If we are accessing `Iterable<T>` with a number, and have `access_iterables = true`,
            then output `T`. *)
         | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
             ElemT
-              ( use_op,
-                _,
-                DefT
-                  ( _,
-                    InstanceT
-                      { super = _; inst = { class_id; type_args = (_, _, t, _) :: _; _ }; _ }
-                  ),
-                ReadElem { access_iterables = true; tout; _ }
-              )
+              {
+                use_op;
+                obj =
+                  DefT
+                    ( _,
+                      InstanceT
+                        { super = _; inst = { class_id; type_args = (_, _, t, _) :: _; _ }; _ }
+                    );
+                action = ReadElem { access_iterables = true; tout; _ };
+                _;
+              }
           )
           when is_builtin_iterable_class_id class_id cx ->
           rec_flow_t cx trace ~use_op (t, OpenT tout)
-        | (_, ElemT (use_op, reason_op, (DefT (_, (ObjT _ | InstanceT _)) as obj), action)) ->
-          elem_action_on_obj cx trace ~use_op l obj reason_op action
-        | (_, ElemT (use_op, reason_op, (AnyT (_, src) as obj), action)) ->
-          let value = AnyT.why src reason_op in
-          perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op obj value action
+        | (_, ElemT { use_op; reason; obj = DefT (_, (ObjT _ | InstanceT _)) as obj; action }) ->
+          elem_action_on_obj cx trace ~use_op l obj reason action
+        | (_, ElemT { use_op; reason; obj = AnyT (_, src) as obj; action }) ->
+          let value = AnyT.why src reason in
+          perform_elem_action cx trace ~use_op ~restrict_deletes:false reason obj value action
         (* It is not safe to write to an unknown index in a tuple. However, any is
          * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
          * error when `tup[0] = 123` does not. *)
-        | (AnyT _, ElemT (use_op, reason_op, (DefT (reason_tup, ArrT arrtype) as arr), action)) ->
+        | ( AnyT _,
+            ElemT
+              { use_op; reason = reason_op; obj = DefT (reason_tup, ArrT arrtype) as arr; action }
+          ) ->
           let react_dro =
             match (action, arrtype) with
             | ( WriteElem _,
@@ -3803,7 +3813,7 @@ struct
           in
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-            ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action)
+            ElemT { use_op; reason; obj = DefT (reason_tup, ArrT arrtype) as arr; action }
           ) ->
           let (write_action, read_action, never_union_void_on_computed_prop_access) =
             match action with
