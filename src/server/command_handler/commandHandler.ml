@@ -266,13 +266,13 @@ let mk_module_system_info =
   let is_package_file ~options ~reader ~module_path ~module_name =
     let dependency =
       match
-        Haste_namespaces.namespaces_bitset_of_path
+        Flow_projects.projects_bitset_of_path
           ~opts:(Options.haste_namespaces_options options)
           module_path
       with
       | None -> None
       | Some ns ->
-        let namespace_bitset = Haste_namespaces.to_bitset ns in
+        let namespace_bitset = Flow_projects.to_bitset ns in
         Parsing_heaps.get_dependency
           (Modulename.Haste (Haste_module_info.mk ~module_name ~namespace_bitset))
     in

@@ -113,7 +113,7 @@ type t = {
   opt_haste_module_ref_prefix: string option;
   opt_haste_module_ref_prefix_LEGACY_INTEROP: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
-  opt_haste_namespaces_options: Haste_namespaces.options;
+  opt_haste_namespaces_enabled: bool;
   opt_haste_paths_excludes: string list;
   opt_haste_paths_includes: string list;
   opt_ignore_non_literal_requires: bool;
@@ -142,6 +142,7 @@ type t = {
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
   opt_profile: bool;
+  opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
   opt_react_ref_as_prop: ReactRefAsProp.t;
@@ -268,7 +269,11 @@ let haste_module_ref_prefix_LEGACY_INTEROP opts = opts.opt_haste_module_ref_pref
 
 let haste_name_reducers opts = opts.opt_haste_name_reducers
 
-let haste_namespaces_options opts = opts.opt_haste_namespaces_options
+let haste_namespaces_options opts =
+  if opts.opt_haste_namespaces_enabled then
+    opts.opt_projects_options
+  else
+    Flow_projects.default_options
 
 let haste_paths_excludes opts = opts.opt_haste_paths_excludes
 
@@ -322,6 +327,8 @@ let node_package_export_conditions opts = opts.opt_node_package_export_condition
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
+
+let projects_options opts = opts.opt_projects_options
 
 let react_custom_jsx_typing opts = opts.opt_react_custom_jsx_typing
 

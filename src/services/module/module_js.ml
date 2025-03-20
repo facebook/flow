@@ -649,11 +649,11 @@ module Haste : MODULE_SYSTEM = struct
 
   let exported_module options =
     let is_haste_file = is_haste_file options in
-    let haste_namespaces_options = Options.haste_namespaces_options options in
+    let projects_options = Options.haste_namespaces_options options in
     let namespace_of_path path =
-      match path |> Haste_namespaces.namespaces_bitset_of_path ~opts:haste_namespaces_options with
+      match path |> Flow_projects.projects_bitset_of_path ~opts:projects_options with
       | None -> failwith ("Path " ^ path ^ " doesn't match any Haste namespace.")
-      | Some bitset -> Haste_namespaces.to_bitset bitset
+      | Some bitset -> Flow_projects.to_bitset bitset
     in
     let is_within_node_modules = is_within_node_modules options in
     fun file ~package_info ->
@@ -740,14 +740,12 @@ module Haste : MODULE_SYSTEM = struct
     in
     let haste_namespace_bitset_candidates =
       let opts = Options.haste_namespaces_options options in
-      match
-        Haste_namespaces.namespaces_bitset_of_path ~opts (File_key.to_string importing_file)
-      with
+      match Flow_projects.projects_bitset_of_path ~opts (File_key.to_string importing_file) with
       | None -> []
       | Some bitset ->
         bitset
-        |> Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset ~opts
-        |> List.map Haste_namespaces.to_bitset
+        |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts
+        |> List.map Flow_projects.to_bitset
     in
     let mname_of_bitset namespace_bitset =
       Modulename.Haste (Haste_module_info.mk ~module_name:name ~namespace_bitset)

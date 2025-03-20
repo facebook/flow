@@ -1,9 +1,10 @@
 [options]
 all=true
 module.system=haste
-module.system.haste.experimental.namespaces=web
-module.system.haste.experimental.namespaces=native
-module.system.haste.experimental.namespace_path_mapping='<PROJECT_ROOT>/common/web' -> 'web'
-module.system.haste.experimental.namespace_path_mapping='<PROJECT_ROOT>/common/' -> 'web,native'
-module.system.haste.experimental.namespace_path_mapping='<PROJECT_ROOT>/web/' -> 'web'
-module.system.haste.experimental.namespace_path_mapping='<PROJECT_ROOT>/native/' -> 'native'
+module.system.haste.experimental.namespaces=true
+experimental.projects=web
+experimental.projects=native
+experimental.projects_path_mapping='<PROJECT_ROOT>/common/web' -> 'web'
+experimental.projects_path_mapping='<PROJECT_ROOT>/common/' -> 'web,native'
+experimental.projects_path_mapping='<PROJECT_ROOT>/web/' -> 'web'
+experimental.projects_path_mapping='<PROJECT_ROOT>/native/' -> 'native'

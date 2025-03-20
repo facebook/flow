@@ -1445,13 +1445,7 @@ let make_options
     opt_haste_module_ref_prefix_LEGACY_INTEROP =
       FlowConfig.haste_module_ref_prefix_LEGACY_INTEROP flowconfig;
     opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
-    opt_haste_namespaces_options =
-      Haste_namespaces.mk_options
-        ~haste_namespaces:(FlowConfig.haste_namespaces flowconfig)
-        ~haste_overlapping_namespaces_mapping:
-          (FlowConfig.haste_overlapping_namespaces_mapping flowconfig)
-        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
-        ~haste_namespaces_path_mapping:(FlowConfig.haste_namespaces_path_mapping flowconfig);
+    opt_haste_namespaces_enabled = FlowConfig.haste_namespaces_enabled flowconfig;
     opt_haste_paths_excludes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
@@ -1480,6 +1474,12 @@ let make_options
         ~f:(fun (applicable_dir_opt, dirname) ->
           (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
       );
+    opt_projects_options =
+      Flow_projects.mk_options
+        ~projects:(FlowConfig.projects flowconfig)
+        ~projects_overlap_mapping:(FlowConfig.projects_overlap_mapping flowconfig)
+        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
+        ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig);
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
     opt_use_mixed_in_catch_variables =

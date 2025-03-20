@@ -81,9 +81,7 @@ module Opts = struct
     haste_module_ref_prefix: string option;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_name_reducers: (Str.regexp * string) list;
-    haste_namespaces: string list;
-    haste_overlapping_namespaces_mapping: SSet.t SMap.t;
-    haste_namespaces_path_mapping: (string * string list) list;
+    haste_namespaces_enabled: bool;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
     hook_compatibility: bool;
@@ -122,6 +120,9 @@ module Opts = struct
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: (string option * string) list;
     pattern_matching: bool option;
+    projects: string list;
+    projects_overlap_mapping: SSet.t SMap.t;
+    projects_path_mapping: (string * string list) list;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
@@ -219,9 +220,7 @@ module Opts = struct
       haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
-      haste_namespaces = ["default"];
-      haste_overlapping_namespaces_mapping = SMap.empty;
-      haste_namespaces_path_mapping = [];
+      haste_namespaces_enabled = false;
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       hook_compatibility = true;
@@ -260,6 +259,9 @@ module Opts = struct
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [(None, "")];
       pattern_matching = None;
+      projects = ["default"];
+      projects_overlap_mapping = SMap.empty;
+      projects_path_mapping = [];
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
       react_rules = [];
@@ -483,50 +485,49 @@ module Opts = struct
         Ok (pattern, template))
       (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
 
-  let haste_namespaces_parser =
+  let projects_parser =
     string
-      ~init:(fun opts -> { opts with haste_namespaces = [] })
+      ~init:(fun opts -> { opts with projects = [] })
       ~multiple:true
       (fun opts v ->
-        if List.mem v opts.haste_namespaces then
+        if List.mem v opts.projects then
           Ok opts
         else
-          Ok { opts with haste_namespaces = v :: opts.haste_namespaces })
+          Ok { opts with projects = v :: opts.projects })
 
-  let haste_namespaces_path_mapping_parser =
+  let projects_path_mapping_parser =
     mapping
       ~init:(fun opts -> opts)
       ~multiple:true
-      (fun (path, namespaces) ->
-        let namespaces = Base.String.split ~on:',' namespaces |> Base.List.map ~f:String.trim in
-        Ok (path, namespaces))
-      (fun opts (path, namespaces) ->
+      (fun (path, projects) ->
+        let projects = Base.String.split ~on:',' projects |> Base.List.map ~f:String.trim in
+        Ok (path, projects))
+      (fun opts (path, projects) ->
         let open Base.Result.Let_syntax in
         let%bind () =
-          match Base.List.find namespaces ~f:(fun n -> not (List.mem n opts.haste_namespaces)) with
+          match Base.List.find projects ~f:(fun n -> not (List.mem n opts.projects)) with
           | Some n ->
-            Error
-              (n
-              ^ " is not a known Haste namespace name configured in `module.system.haste.experimental.namespaces`."
-              )
+            Error (n ^ " is not a known project name configured in `experimental.projects`.")
           | None -> return ()
         in
-        (* The validation and tracking below ensures that a namespace never appears in more than
+        (* The validation and tracking below ensures that a project never appears in more than
          * one unique overlapping pattern.
-         * This enables us to have very simple lookup for reachable namespaces.
+         *
+         * This is especially useful when the project configuration is used for haste namespacing
+         * with very simple lookup for reachable namespaces.
          * e.g. given A, it can know that it needs to look up only A and A+B, instead of all possible
          * namespace set combinations that include A.
          *
-         * See Haste_namespaces.reachable_namespace_bitsets_from_namespace_bitset for implementation
+         * See Flow_projects.reachable_projects_bitsets_from_projects_bitset for implementation
          * that relies on the fact. *)
-        let%bind haste_overlapping_namespaces_mapping =
-          if List.length namespaces <= 1 then
-            return opts.haste_overlapping_namespaces_mapping
+        let%bind projects_overlap_mapping =
+          if List.length projects <= 1 then
+            return opts.projects_overlap_mapping
           else
-            let ns_set = SSet.of_list namespaces in
+            let ns_set = SSet.of_list projects in
             Base.List.fold_until
-              namespaces
-              ~init:opts.haste_overlapping_namespaces_mapping
+              projects
+              ~init:opts.projects_overlap_mapping
               ~f:(fun acc ns ->
                 match SMap.find_opt ns acc with
                 | None -> Base.Continue_or_stop.Continue (SMap.add ns ns_set acc)
@@ -536,18 +537,16 @@ module Opts = struct
                   else
                     Base.Continue_or_stop.Stop
                       (Error
-                         ("Namespace "
+                         ("Project "
                          ^ ns
-                         ^ " appears in multiple overlapping Haste namespace path mapping. "
+                         ^ " appears in multiple overlapping project path mappings. "
                          ^ "This is unsupported."
                          )
                       ))
               ~finish:(fun acc -> Base.Result.Ok acc)
         in
-        let haste_namespaces_path_mapping =
-          (path, namespaces) :: opts.haste_namespaces_path_mapping
-        in
-        Ok { opts with haste_overlapping_namespaces_mapping; haste_namespaces_path_mapping })
+        let projects_path_mapping = (path, projects) :: opts.projects_path_mapping in
+        Ok { opts with projects_overlap_mapping; projects_path_mapping })
 
   let haste_paths_excludes_parser =
     string
@@ -1057,6 +1056,8 @@ module Opts = struct
       ( "experimental.pattern_matching",
         boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
       );
+      ("experimental.projects", projects_parser);
+      ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.type_expansion_recursion_limit",
@@ -1111,9 +1112,8 @@ module Opts = struct
         haste_module_ref_prefix_LEGACY_INTEROP_parser
       );
       ("module.system.haste.name_reducers", haste_name_reducers_parser);
-      ("module.system.haste.experimental.namespaces", haste_namespaces_parser);
-      ( "module.system.haste.experimental.namespace_path_mapping",
-        haste_namespaces_path_mapping_parser
+      ( "module.system.haste.experimental.namespaces",
+        boolean (fun opts v -> Ok { opts with haste_namespaces_enabled = v })
       );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
@@ -1837,11 +1837,7 @@ let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_p
 
 let haste_name_reducers c = c.options.Opts.haste_name_reducers
 
-let haste_namespaces c = Nel.of_list_exn c.options.Opts.haste_namespaces
-
-let haste_overlapping_namespaces_mapping c = c.options.Opts.haste_overlapping_namespaces_mapping
-
-let haste_namespaces_path_mapping c = c.options.Opts.haste_namespaces_path_mapping
+let haste_namespaces_enabled c = c.options.Opts.haste_namespaces_enabled
 
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
@@ -1923,6 +1919,12 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
 let pattern_matching c = c.options.Opts.pattern_matching
+
+let projects c = Nel.of_list_exn c.options.Opts.projects
+
+let projects_overlap_mapping c = c.options.Opts.projects_overlap_mapping
+
+let projects_path_mapping c = c.options.Opts.projects_path_mapping
 
 let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 
