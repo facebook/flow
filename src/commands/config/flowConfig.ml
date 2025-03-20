@@ -1408,17 +1408,29 @@ let parse_libs lines config : (config * warning list, error) result =
         (fun seen_scoped -> function
           | (line_no, None, _) ->
             if seen_scoped then
-              Base.Continue_or_stop.Stop (Error line_no)
+              Base.Continue_or_stop.Stop
+                (Error (line_no, "All non-scoped libdefs must come before scoped ones"))
             else
               Base.Continue_or_stop.Continue seen_scoped
-          | (_, Some _, _) -> Base.Continue_or_stop.Continue true)
+          | (line_no, Some scoped_project, _) ->
+            if List.mem scoped_project config.options.Opts.projects then
+              Base.Continue_or_stop.Continue seen_scoped
+            else
+              Base.Continue_or_stop.Stop
+                (Error
+                   ( line_no,
+                     "Unknown project. "
+                     ^ "If you want to configure scoped libdefs, "
+                     ^ "you need to put [options] section before the [libs] section."
+                   )
+                ))
   with
   | Ok () ->
     let libs =
       Base.List.map libs ~f:(fun (_line_no, scoped_dir_opt, file) -> (scoped_dir_opt, file))
     in
     Ok ({ config with libs }, [])
-  | Error line_no -> Error (line_no, "All non-scoped libdefs must come before scoped ones")
+  | Error e -> Error e
 
 let parse_ignores lines config =
   let raw_ignores = trim_lines lines in

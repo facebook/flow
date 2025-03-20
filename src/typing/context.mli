@@ -67,7 +67,7 @@ type master_context =
   | NonEmptyMasterContext of {
       builtin_leader_file_key: File_key.t;
       unscoped_builtins: builtins_group;
-      scoped_builtins: (string * builtins_group) list;
+      scoped_builtins: (Flow_projects.t * builtins_group) list;
     }
 
 type metadata = {
@@ -109,6 +109,7 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
   no_unchecked_indexed_access: bool;
+  projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -160,7 +161,7 @@ val make :
   File_key.t ->
   ALoc.table Lazy.t ->
   resolve_require ->
-  (t -> Builtins.t * (string * Builtins.t) list) ->
+  (t -> Builtins.t * (Flow_projects.t * Builtins.t) list) ->
   t
 
 val metadata_of_options : Options.t -> metadata

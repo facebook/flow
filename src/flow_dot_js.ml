@@ -83,7 +83,9 @@ let load_lib_files files =
       locs_to_dirtify = [];
     }
   in
-  let (_, master_cx) = Merge_js.merge_lib_files ~sig_opts asts in
+  let (_, master_cx) =
+    Merge_js.merge_lib_files ~project_opts:Flow_projects.default_options ~sig_opts asts
+  in
   master_cx
 
 let stub_metadata ~root ~checked =
@@ -127,6 +129,7 @@ let stub_metadata ~root ~checked =
     missing_module_generators = [];
     natural_inference_local_primitive_literals = Options.NaturalInferenceLevel.Off;
     no_unchecked_indexed_access = false;
+    projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
     react_runtime = Options.ReactRuntimeAutomatic;

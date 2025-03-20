@@ -59,6 +59,7 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
   no_unchecked_indexed_access: bool;
+  projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;
@@ -135,12 +136,12 @@ type master_context =
   | NonEmptyMasterContext of {
       builtin_leader_file_key: File_key.t;
       unscoped_builtins: builtins_group;
-      scoped_builtins: (string * builtins_group) list;
+      scoped_builtins: (Flow_projects.t * builtins_group) list;
     }
 
 type component_t = {
   mutable sig_cx: sig_t;
-  mutable builtins: (Builtins.t * (string * Builtins.t) list) lazy_t;
+  mutable builtins: (Builtins.t * (Flow_projects.t * Builtins.t) list) lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   mutable synthesis_produced_placeholders: bool;
@@ -294,6 +295,7 @@ let metadata_of_options options =
     natural_inference_local_primitive_literals =
       Options.natural_inference_local_primitive_literals options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
+    projects_options = Options.projects_options options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
     react_runtime = Options.react_runtime options;
@@ -481,8 +483,13 @@ let active_global_builtins cx =
   let (unscoped_builtins, scoped_builtins) = Lazy.force cx.ccx.builtins in
   Base.Option.value
     ~default:unscoped_builtins
-    (Base.List.find_map scoped_builtins ~f:(fun (scoped_dir, builtins) ->
-         if Base.String.is_prefix ~prefix:scoped_dir (File_key.to_string (file cx)) then
+    (Base.List.find_map scoped_builtins ~f:(fun (scoped_project, builtins) ->
+         if
+           Flow_projects.projects_bitset_of_path
+             ~opts:cx.metadata.projects_options
+             (File_key.to_string (file cx))
+           = Some scoped_project
+         then
            Some builtins
          else
            None

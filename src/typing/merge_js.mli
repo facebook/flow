@@ -26,9 +26,13 @@ val copy_into :
   (Type.moduletype, Type.t) result
 
 val merge_lib_files :
+  project_opts:Flow_projects.options ->
   sig_opts:Type_sig_options.t ->
   (string option * (Loc.t, Loc.t) Flow_ast.Program.t) list ->
   Flow_error.ErrorSet.t * Context.master_context
 
 val mk_builtins :
-  Context.metadata -> Context.master_context -> Context.t -> Builtins.t * (string * Builtins.t) list
+  Context.metadata ->
+  Context.master_context ->
+  Context.t ->
+  Builtins.t * (Flow_projects.t * Builtins.t) list

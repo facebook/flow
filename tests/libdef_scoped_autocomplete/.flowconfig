@@ -1,7 +1,11 @@
-[libs]
-common_lib.js
-'<PROJECT_ROOT>/foo' -> 'foo_lib.js'
-'<PROJECT_ROOT>/bar' -> 'bar_lib.js'
-
 [options]
 all=true
+experimental.projects=foo
+experimental.projects=bar
+experimental.projects_path_mapping='<PROJECT_ROOT>/foo' -> 'foo'
+experimental.projects_path_mapping='<PROJECT_ROOT>/bar' -> 'bar'
+
+[libs]
+common_lib.js
+'foo' -> 'foo_lib.js'
+'bar' -> 'bar_lib.js'

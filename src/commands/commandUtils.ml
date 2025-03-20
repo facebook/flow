@@ -682,19 +682,14 @@ let file_options =
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
       Base.List.fold_right
-        ~f:(fun (scoped_dir_opt, lib) abs_libs ->
-          let scoped_dir_opt =
-            Base.Option.map scoped_dir_opt ~f:(fun f ->
-                f |> Files.expand_project_root_token ~root |> File_path.make |> File_path.to_string
-            )
-          in
+        ~f:(fun (scoped_project_opt, lib) abs_libs ->
           let abs_lib = Files.make_path_absolute root lib in
           (*
            * "flow-typed" is always included in the libs list for convenience,
            * but there's no guarantee that it exists on the filesystem.
            *)
           if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
-          (scoped_dir_opt, abs_lib) :: abs_libs)
+          (scoped_project_opt, abs_lib) :: abs_libs)
         (FlowConfig.libs flowconfig)
         ~init:[]
     in

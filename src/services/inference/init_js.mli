@@ -10,7 +10,7 @@ type init_result = {
   errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   suppressions: Error_suppressions.t;
-  exports: Exports.t * (string * Exports.t) list;
+  exports: Exports.t * (Flow_projects.t * Exports.t) list;
   master_cx: Context.master_context;
 }
 

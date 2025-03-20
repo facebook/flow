@@ -45,7 +45,12 @@ let load_lib_files ~ccx ~options ~reader files =
   let (builtin_exports, master_cx, cx_opt) =
     if ok then (
       let sig_opts = Type_sig_options.builtin_options options in
-      let (builtin_errors, master_cx) = Merge_js.merge_lib_files ~sig_opts ordered_asts in
+      let (builtin_errors, master_cx) =
+        Merge_js.merge_lib_files
+          ~project_opts:(Options.projects_options options)
+          ~sig_opts
+          ordered_asts
+      in
       match master_cx with
       | Context.EmptyMasterContext -> ((Exports.empty, []), Context.EmptyMasterContext, None)
       | Context.NonEmptyMasterContext
@@ -99,7 +104,7 @@ type init_result = {
   errors: ErrorSet.t FilenameMap.t;
   warnings: ErrorSet.t FilenameMap.t;
   suppressions: Error_suppressions.t;
-  exports: Exports.t * (string * Exports.t) list;
+  exports: Exports.t * (Flow_projects.t * Exports.t) list;
   master_cx: Context.master_context;
 }
 

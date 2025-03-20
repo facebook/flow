@@ -883,34 +883,39 @@ let merge_libs_from_ordered_asts ~sig_opts ordered_asts =
   in
   (builtin_errors, builtin_locs, builtins)
 
-let merge_lib_files ~sig_opts ordered_asts_with_scoped_dirs =
+let merge_lib_files ~project_opts ~sig_opts ordered_asts_with_scoped_projects =
   let builtin_leader_file_key =
-    match ordered_asts_with_scoped_dirs with
+    match ordered_asts_with_scoped_projects with
     | [] -> None
     | (_, fst_ast) :: _ -> fst_ast |> fst |> Loc.source
   in
-  let scoped_dir_key_equal = Base.Option.equal Base.String.equal in
-  let scoped_dir_of_ordered_ast =
-    let scoped_dir_of_ordered_ast =
+  let scoped_project_key_equal = Base.Option.equal Flow_projects.equal in
+  let scoped_project_of_ordered_ast =
+    let scoped_project_of_ordered_ast =
       Base.List.fold_right
-        ordered_asts_with_scoped_dirs
+        ordered_asts_with_scoped_projects
         ~init:[]
-        ~f:(fun (scoped_dir_key, ast) acc ->
-          match Base.List.Assoc.find acc ~equal:scoped_dir_key_equal scoped_dir_key with
-          | None -> Base.List.Assoc.add ~equal:scoped_dir_key_equal acc scoped_dir_key [ast]
+        ~f:(fun (scoped_project_key, ast) acc ->
+          let scoped_project_key =
+            Base.Option.map
+              scoped_project_key
+              ~f:(Flow_projects.bitset_of_project_string ~opts:project_opts)
+          in
+          match Base.List.Assoc.find acc ~equal:scoped_project_key_equal scoped_project_key with
+          | None -> Base.List.Assoc.add ~equal:scoped_project_key_equal acc scoped_project_key [ast]
           | Some exisiting_list ->
             Base.List.Assoc.add
-              ~equal:scoped_dir_key_equal
+              ~equal:scoped_project_key_equal
               acc
-              scoped_dir_key
+              scoped_project_key
               (ast :: exisiting_list)
       )
     in
     let non_scoped_asts =
-      Base.List.Assoc.find scoped_dir_of_ordered_ast ~equal:scoped_dir_key_equal None
+      Base.List.Assoc.find scoped_project_of_ordered_ast ~equal:scoped_project_key_equal None
     in
     (* Make every scoped asts include all of non-scoped asts at the end *)
-    Base.List.map scoped_dir_of_ordered_ast ~f:(function
+    Base.List.map scoped_project_of_ordered_ast ~f:(function
         | (Some scoped_dir, ast_list) ->
           (match non_scoped_asts with
           | None -> (Some scoped_dir, ast_list)
@@ -920,8 +925,8 @@ let merge_lib_files ~sig_opts ordered_asts_with_scoped_dirs =
   in
   let (scoped_builtins, builtin_errors) =
     let all_errors_ref = ref Flow_error.ErrorSet.empty in
-    let scoped_dir_builtins =
-      Base.List.Assoc.map scoped_dir_of_ordered_ast ~f:(fun ordered_asts ->
+    let scoped_builtins =
+      Base.List.Assoc.map scoped_project_of_ordered_ast ~f:(fun ordered_asts ->
           let (builtin_errors, builtin_locs, builtins) =
             merge_libs_from_ordered_asts ~sig_opts ordered_asts
           in
@@ -929,7 +934,7 @@ let merge_lib_files ~sig_opts ordered_asts_with_scoped_dirs =
           Context.BuiltinGroup { builtin_locs; builtins }
       )
     in
-    (scoped_dir_builtins, !all_errors_ref)
+    (scoped_builtins, !all_errors_ref)
   in
   let (unscoped_builtins, scoped_builtins) =
     Base.List.partition_map scoped_builtins ~f:(fun (scoped_dir_opt, builtins) ->
