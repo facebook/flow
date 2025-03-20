@@ -101,11 +101,9 @@ and any_error_kind =
 
 and unsoundness_kind =
   | BoundFunctionThis
-  | ComputedNonLiteralKey
   | Constructor
   | DummyStatic
   | Exports
-  | FunctionPrototype
   | InferenceHooks
   | InstanceOfRefinement
   | Merged
@@ -649,11 +647,9 @@ class ['A] comparator_ty =
     method tag_of_unsoundness_kind _ =
       function
       | BoundFunctionThis -> 0
-      | ComputedNonLiteralKey -> 1
       | Constructor -> 2
       | DummyStatic -> 3
       | Exports -> 5
-      | FunctionPrototype -> 6
       | InferenceHooks -> 7
       | InstanceOfRefinement -> 8
       | Merged -> 9

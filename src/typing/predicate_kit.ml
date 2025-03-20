@@ -523,7 +523,10 @@ and intersect =
   let module C = ConcretizedType in
   let is_any cx t =
     let ts = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
-    List.exists Type.is_any ts
+    Base.List.exists ts ~f:(function
+        | AnyT _ -> true
+        | _ -> false
+        )
   in
   let is_null t =
     match C.unwrap t with

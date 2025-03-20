@@ -1079,11 +1079,9 @@ module rec TypeTerm : sig
      your use case, make one *)
   and unsoundness_kind =
     | BoundFunctionThis
-    | ComputedNonLiteralKey
     | Constructor
     | DummyStatic
     | Exports
-    | FunctionPrototype
     | InferenceHooks
     | InstanceOfRefinement
     | Merged
@@ -3812,18 +3810,10 @@ module AnyT = struct
   let placeholder = why Placeholder
 
   let locationless source = desc source |> locationless_reason |> make source
-
-  let source = function
-    | AnyT (_, s) -> s
-    | _ -> failwith "not an any type"
 end
 
 module Unsoundness = struct
   let constructor = Unsound Constructor
-
-  let computed_nonlit_key = Unsound ComputedNonLiteralKey
-
-  let function_proto = Unsound FunctionPrototype
 
   let merged = Unsound Merged
 
@@ -3852,10 +3842,6 @@ module Unsoundness = struct
   let resolve_spread_any = AnyT.make resolve_spread
 
   let constructor_any = AnyT.make constructor
-
-  let function_proto_any = AnyT.make function_proto
-
-  let computed_nonlit_key_any = AnyT.make computed_nonlit_key
 
   let unimplemented_any = AnyT.make unimplemented
 
@@ -3918,28 +3904,7 @@ end
 
 let hint_unavailable : lazy_hint_t = (false, (fun _ ~expected_only:_ -> NoHint))
 
-(* lift an operation on Type.t to an operation on Type.use_t *)
-let lift_to_use f = function
-  | UseT (_, t) -> f t
-  | _ -> ()
-
-(* def types vs. use types *)
-let is_use = function
-  | UseT _ -> false
-  | _ -> true
-
 (* convenience *)
-let is_bot = function
-  | DefT (_, EmptyT) -> true
-  | _ -> false
-
-let is_top = function
-  | DefT (_, MixedT _) -> true
-  | _ -> false
-
-let is_any = function
-  | AnyT _ -> true
-  | _ -> false
 
 let drop_generic = function
   | GenericT { bound; _ } -> bound
@@ -3973,25 +3938,6 @@ let rec root_of_use_op = function
   | Op use_op -> use_op
   | Frame (_, use_op) -> root_of_use_op use_op
 
-let replace_speculation_root_use_op =
-  let rec loop new_parent_use_op = function
-    | Op (Speculation _) -> Ok new_parent_use_op
-    | Op _ -> Error new_parent_use_op
-    | Frame (frame, parent_use_op) as use_op ->
-      let parent_use_op' = loop new_parent_use_op parent_use_op in
-      (match parent_use_op' with
-      | Error _ as error -> error
-      | Ok parent_use_op' ->
-        if parent_use_op' == parent_use_op then
-          Ok use_op
-        else
-          Ok (Frame (frame, parent_use_op')))
-  in
-  fun new_parent_use_op use_op ->
-    match loop new_parent_use_op use_op with
-    | Ok use_op -> use_op
-    | Error use_op -> use_op
-
 (* Printing some types in parseable form relies on particular formats in
    corresponding reason descriptions. The following module formalizes the
    relevant conventions.
@@ -4017,8 +3963,6 @@ module DescFormat = struct
 end
 
 (* printing *)
-let string_of_defer_use_ctor = function
-  | TypeDestructorT _ -> "TypeDestructorT"
 
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"

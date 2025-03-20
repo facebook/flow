@@ -9210,10 +9210,9 @@ struct
       let rl = reason_of_t lower in
       let ru = reason_of_use_t upper in
       let reasons =
-        if is_use upper then
-          (ru, rl)
-        else
-          FlowError.ordered_reasons (rl, ru)
+        match upper with
+        | UseT _ -> (ru, rl)
+        | _ -> FlowError.ordered_reasons (rl, ru)
       in
       add_output cx (Error_message.ERecursionLimit reasons)
     | ex ->

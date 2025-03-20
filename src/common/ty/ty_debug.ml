@@ -63,11 +63,9 @@ let dump_any_error_kind = function
 
 let dump_any_unsoundness_kind = function
   | BoundFunctionThis -> "BoundFunctionThis"
-  | ComputedNonLiteralKey -> "ComputedNonLiteralKey"
   | Constructor -> "Constructor"
   | DummyStatic -> "DummyStatic"
   | Exports -> "Exports"
-  | FunctionPrototype -> "FunctionPrototype"
   | InferenceHooks -> "InferenceHooks"
   | InstanceOfRefinement -> "InstanceOfRefinement"
   | Merged -> "Merged"

@@ -955,11 +955,9 @@ module Make (I : INPUT) : S = struct
 
     and unsoundness_any_t = function
       | T.BoundFunctionThis -> Ty.BoundFunctionThis
-      | T.ComputedNonLiteralKey -> Ty.ComputedNonLiteralKey
       | T.Constructor -> Ty.Constructor
       | T.DummyStatic -> Ty.DummyStatic
       | T.Exports -> Ty.Exports
-      | T.FunctionPrototype -> Ty.FunctionPrototype
       | T.InferenceHooks -> Ty.InferenceHooks
       | T.InstanceOfRefinement -> Ty.InstanceOfRefinement
       | T.Merged -> Ty.Merged

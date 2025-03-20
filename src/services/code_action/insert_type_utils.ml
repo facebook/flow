@@ -464,9 +464,9 @@ module Validator = struct
           Ty.explicit_any
         | Ty.Any
             (Ty.Unsound
-              ( ( Ty.Constructor | Ty.DummyStatic | Ty.Exports | Ty.FunctionPrototype
-                | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread
-                | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType ) as kind
+              ( ( Ty.Constructor | Ty.DummyStatic | Ty.Exports | Ty.InferenceHooks
+                | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread | Ty.Unchecked
+                | Ty.Unimplemented | Ty.UnresolvedType ) as kind
               )
               ) ->
           env := Any_Unsound kind :: !env;
