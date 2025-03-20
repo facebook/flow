@@ -1135,7 +1135,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! function_param (loc, _) = fail loc "Should be visited by visit_function_param"
 
-    method private visit_function_param ~hints ~effect (param : ('loc, 'loc) Ast.Function.Param.t) =
+    method private visit_function_param ~hints ~effect_ (param : ('loc, 'loc) Ast.Function.Param.t)
+        =
       let open Ast.Function.Param in
       let (loc, { argument; default = default_expression }) = param in
       let optional =
@@ -1161,7 +1162,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               optional;
               has_default_expression = Base.Option.is_some default_expression;
               react_deep_read_only =
-                ( if effect = Ast.Function.Hook then
+                ( if effect_ = Ast.Function.Hook then
                   Some Hook
                 else
                   None
@@ -1215,7 +1216,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       ignore @@ super#function_param (loc, { argument; default = None })
 
     method private visit_function_rest_param
-        ~hints ~effect (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
+        ~hints ~effect_ (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
       let (_, { argument; comments = _ }) = expr in
       let (param_loc, _) = argument in
@@ -1228,7 +1229,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               optional = false;
               has_default_expression = false;
               react_deep_read_only =
-                ( if effect = Ast.Function.Hook then
+                ( if effect_ = Ast.Function.Hook then
                   Some Hook
                 else
                   None
@@ -1694,7 +1695,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             body;
             async;
             generator;
-            effect;
+            effect_;
             predicate;
             return;
             tparams = fun_tparams;
@@ -1710,13 +1711,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param
-                ~effect
+                ~effect_
                 ~hints:(decompose_hints (Decomp_FuncParam (param_str_list, i, pred)) func_hints))
             params_list;
           Base.Option.iter
             ~f:
               (this#visit_function_rest_param
-                 ~effect
+                 ~effect_
                  ~hints:(decompose_hints (Decomp_FuncRest (param_str_list, pred)) func_hints)
               )
             rest;

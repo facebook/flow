@@ -1033,7 +1033,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         return;
         tparams;
         comments = func_comments;
-        effect;
+        effect_;
       } =
         ft
       in
@@ -1051,7 +1051,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               );
             return = return';
             tparams = tparams';
-            effect;
+            effect_;
             comments = func_comments';
           }
       )
@@ -1609,7 +1609,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         body;
         async;
         generator;
-        effect;
+        effect_;
         predicate;
         return;
         tparams;
@@ -1633,7 +1633,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             body = body';
             async;
             generator;
-            effect;
+            effect_;
             predicate = predicate';
             tparams = tparams';
             sig_loc = sig_loc';

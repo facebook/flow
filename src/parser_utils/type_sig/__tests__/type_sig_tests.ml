@@ -374,7 +374,7 @@ let%expect_test "export_function_literal" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [1:27-33]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [1:36-42]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -400,7 +400,7 @@ let%expect_test "export_function_literal_check1" =
                  params = [FunParam {name = (Some "x"); t = (Err [1:24-25])}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [1:28-34]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -429,7 +429,7 @@ let%expect_test "export_function_literal_check2" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [1:27-33]))}];
                  rest_param = None; this_param = None;
                  return = (Err [1:34]);
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -467,7 +467,7 @@ let%expect_test "export_function_reference" =
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:25-31]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -495,7 +495,7 @@ let%expect_test "export_function_reference_check1" =
          FunSig {tparams = Mono; params = [FunParam {name = (Some "x"); t = (Err [1:13-14])}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:17-23]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -527,7 +527,7 @@ let%expect_test "export_function_reference_check2" =
            params = [FunParam {name = (Some "x"); t = (Annot (Number [1:16-22]))}];
            rest_param = None; this_param = None;
            return = (Err [1:23]); type_guard = None;
-           effect = ArbitraryEffect};
+           effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -553,7 +553,7 @@ let%expect_test "function_param_optional" =
                  [FunParam {name = (Some "p"); t = (Annot (Optional (Annot (String [1:28-34]))))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:37-41]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -579,7 +579,7 @@ let%expect_test "function_param_default" =
                  [FunParam {name = (Some "p"); t = (Annot (Optional (Annot (String [1:27-33]))))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:44-48]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -604,7 +604,7 @@ let%expect_test "function_param_default_check" =
                  params = [FunParam {name = (Some "p"); t = (Annot (Optional (Err [1:24-25])))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [1:34]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -666,7 +666,7 @@ let%expect_test "function_param_typeof_reference" =
                    ];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [2:83]));
-                 type_guard = None; effect = ArbitraryEffect};
+                 type_guard = None; effect_ = ArbitraryEffect};
                statics = {}})}
         |];
       info =
@@ -883,7 +883,7 @@ let%expect_test "export_class_reference" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:16-22]));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
   |}]
@@ -923,7 +923,7 @@ let%expect_test "export_class_reference_check1" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:16-22]));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) }}}
@@ -964,7 +964,7 @@ let%expect_test "export_class_reference_check2" =
                  params = [FunParam {name = (Some "x"); t = (Err [3:4-5])}];
                  rest_param = None; this_param = None;
                  return = (Annot (Number [3:8-14]));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
@@ -1007,7 +1007,7 @@ let%expect_test "export_class_reference_check3" =
                  params = [FunParam {name = (Some "x"); t = (Annot (Number [3:7-13]))}];
                  rest_param = None; this_param = None;
                  return = (Err [3:14]);
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
 
@@ -1060,7 +1060,7 @@ let%expect_test "type_alias_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [6:12-14]; index = 2}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([5:2-3],
@@ -1114,7 +1114,7 @@ let%expect_test "class_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1170,7 +1170,7 @@ let%expect_test "class_dependencies_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1224,7 +1224,7 @@ let%expect_test "export_new_typecast" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1280,7 +1280,7 @@ let%expect_test "export_new_typecast_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [4:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1325,7 +1325,7 @@ let%expect_test "recursive_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3],
@@ -1370,7 +1370,7 @@ let%expect_test "recursive_dependencies_check" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) }}}
 
     Errors:
@@ -1553,7 +1553,7 @@ let%expect_test "void_function" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -1581,7 +1581,7 @@ let%expect_test "void_generator" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Err [1:15]); type_guard = None;
-           effect = ArbitraryEffect};
+           effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -1673,7 +1673,7 @@ let%expect_test "import_type_dependencies" =
                    ];
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified RemoteRef {ref_loc = [4:12-14]; index = 2}));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
@@ -1737,7 +1737,7 @@ let%expect_test "qualified_references" =
                       id_loc = [4:17-18];
                       name = "T";
                       qualification = (Unqualified RemoteRef {ref_loc = [4:14-16]; index = 1})});
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props = {}}}
 
     Remote refs:
@@ -2035,7 +2035,7 @@ let%expect_test "report_all_errors" =
                              this_param = None;
                              return = (Err [6:16]);
                              type_guard = None;
-                             effect = ArbitraryEffect};
+                             effect_ = ArbitraryEffect};
                            statics = {}}),
                       Polarity.Neutral)) }}));
       info =
@@ -2063,7 +2063,7 @@ let%expect_test "report_all_errors" =
                        this_param = None;
                        return = (Err [2:17]);
                        type_guard = None;
-                       effect = ArbitraryEffect};
+                       effect_ = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) }}}
 
@@ -2134,7 +2134,7 @@ let%expect_test "munged_methods_not_ignored" =
                FunSig {tparams = Mono;
                  params = []; rest_param = None;
                  this_param = None; return = (Err [2:11]);
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props = {}}}
 
     Errors:
@@ -2206,7 +2206,7 @@ let%expect_test "munged_fields_not_ignored" =
                        this_param = None;
                        return = (Err [2:14]);
                        type_guard = None;
-                       effect = ArbitraryEffect};
+                       effect_ = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) }}}
 
@@ -2480,7 +2480,7 @@ let%expect_test "named_function_expression" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:31]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -2559,7 +2559,7 @@ let%expect_test "bound_coverage" =
                  [FunParam {name = None; t = (Annot Bound {ref_loc = [2:26-27]; name = "X"})}];
                  rest_param = None; this_param = None;
                  return = (Annot (Void [2:32-36]));
-                 type_guard = None; effect = ArbitraryEffect}
+                 type_guard = None; effect_ = ArbitraryEffect}
                )))}
   |}]
 
@@ -2768,7 +2768,7 @@ let%expect_test "function_return" =
            [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [2:36-37]; name = "X"})}];
            rest_param = None; this_param = None;
            return = (Err [2:38]); type_guard = None;
-           effect = ArbitraryEffect};
+           effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -2817,12 +2817,12 @@ let%expect_test "function_return_2" =
                       this_param = None;
                       return = (Annot (Void [2:37-41]));
                       type_guard = None;
-                      effect = ArbitraryEffect}
+                      effect_ = ArbitraryEffect}
                     )))}
              ];
            rest_param = None; this_param = None;
            return = (Err [2:42]); type_guard = None;
-           effect = ArbitraryEffect};
+           effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -2856,7 +2856,7 @@ let%expect_test "function_statics" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:16-20]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = { "x" -> ([3:4-5], (Ref LocalRef {ref_loc = [3:8-9]; index = 1})) }}
     1. Variable {id_loc = [2:6-7]; name = "x"; def = (Value (NumberLit ([2:10-12], 42., "42")))}
   |}]
@@ -2884,7 +2884,7 @@ let%expect_test "function_statics_conditional" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:23-27]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -2911,7 +2911,7 @@ let%expect_test "function_predicates" =
            params = [FunParam {name = (Some "x"); t = (Annot (Mixed [2:23-28]))}];
            rest_param = None; this_param = None;
            return = (Annot (Boolean [2:31-38]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "async_function_1" =
@@ -2935,7 +2935,7 @@ let%expect_test "async_function_1" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (AsyncVoidReturn [1:20]);
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
   |}]
 
@@ -2960,7 +2960,7 @@ let%expect_test "async_function_2" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Err [1:20]); type_guard = None;
-           effect = ArbitraryEffect};
+           effect_ = ArbitraryEffect};
          statics = {}}
 
     Errors:
@@ -2984,7 +2984,7 @@ let%expect_test "async_function_3" =
                    this_param = None;
                    return = (Err [1:25]);
                    type_guard = None;
-                   effect = ArbitraryEffect};
+                   effect_ = ArbitraryEffect};
                  statics = {}}));
       info =
       CJSModuleInfo {type_export_keys = [||];
@@ -3154,7 +3154,7 @@ let%expect_test "interface_method" =
                     this_param = None;
                     return = (Annot (Void [1:26-30]));
                     type_guard = None;
-                    effect = ArbitraryEffect}),
+                    effect_ = ArbitraryEffect}),
                  [])) };
            calls = []; dict = None}}
   |}]
@@ -3212,7 +3212,7 @@ let%expect_test "object_annot_method" =
                     this_param = None;
                     return = (Annot (Void [1:23-27]));
                     type_guard = None;
-                    effect = ArbitraryEffect}} };
+                    effect_ = ArbitraryEffect}} };
               proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "object_annot_call_poly" =
@@ -3263,7 +3263,7 @@ let%expect_test "object_annot_call_poly" =
                             (Unqualified
                                BuiltinRef {ref_loc = [1:26-27]; type_ref = true; name = "X"}));
                          type_guard = None;
-                         effect = ArbitraryEffect}
+                         effect_ = ArbitraryEffect}
                        ))),
                  [])}})} |}]
 
@@ -3298,7 +3298,7 @@ let%expect_test "object_annot_multiple_call" =
                          this_param = None;
                          return = (Annot (String [1:34-40]));
                          type_guard = None;
-                         effect = ArbitraryEffect}
+                         effect_ = ArbitraryEffect}
                        ))),
                  [(Annot
                      (FunAnnot ([1:18-28],
@@ -3308,7 +3308,7 @@ let%expect_test "object_annot_multiple_call" =
                           this_param = None;
                           return = (Annot (Number [1:22-28]));
                           type_guard = None;
-                          effect = ArbitraryEffect}
+                          effect_ = ArbitraryEffect}
                         )))
                    ])}})}
   |}]
@@ -3745,7 +3745,7 @@ let%expect_test "class_this" =
                FunSig {tparams = Mono;
                  params = []; rest_param = None;
                  this_param = None; return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props = {}}} |}]
 
 let%expect_test "declare_class_this" =
@@ -3778,7 +3778,7 @@ let%expect_test "declare_class_this" =
                     this_param = None;
                     return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
                     type_guard = None;
-                    effect = ArbitraryEffect}),
+                    effect_ = ArbitraryEffect}),
                  [])) };
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
@@ -3942,7 +3942,7 @@ let%expect_test "cjs_export_fun_expr_props" =
                    this_param = None;
                    return = (Annot (Void [1:27]));
                    type_guard = None;
-                   effect = ArbitraryEffect};
+                   effect_ = ArbitraryEffect};
                  statics =
                  { "bar" -> ([3:8-11], (Value (NumberLit ([3:14-15], 1., "1"))));
                    "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }}));
@@ -3973,7 +3973,7 @@ let%expect_test "cjs_export_fun_binding_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:31]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics =
          { "bar" -> ([3:8-11], (Value (NumberLit ([3:14-15], 1., "1"))));
            "foo" -> ([2:15-18], (Value (NumberLit ([2:21-22], 0., "0")))) }} |}]
@@ -3998,7 +3998,7 @@ let%expect_test "es_export_named_fun_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:21]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
 
 let%expect_test "es_export_default_fun_props" =
@@ -4022,7 +4022,7 @@ let%expect_test "es_export_default_fun_props" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 1., "1")))) }} |}]
 
 let%expect_test "fun_binding_assign" =
@@ -4047,7 +4047,7 @@ let%expect_test "fun_binding_assign" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:14]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }} |}]
 
 let%expect_test "fun_const_assign" =
@@ -4074,7 +4074,7 @@ let%expect_test "fun_const_assign" =
               FunSig {tparams = Mono;
                 params = []; rest_param = None;
                 this_param = None; return = (Annot (Void [1:22]));
-                type_guard = None; effect = ArbitraryEffect};
+                type_guard = None; effect_ = ArbitraryEffect};
               statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }})} |}]
 
 let%expect_test "ref_const_assign" =
@@ -4099,7 +4099,7 @@ let%expect_test "ref_const_assign" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:24]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = { "bar" -> ([2:4-7], (Value (NumberLit ([2:10-11], 0., "0")))) }}
     1. Variable {id_loc = [1:6-9]; name = "foo";
          def = (Ref LocalRef {ref_loc = [1:21-22]; index = 0})} |}]
@@ -4241,7 +4241,7 @@ let%expect_test "export_default_function_binding" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:29-33]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "export_default_class_binding" =
@@ -4283,7 +4283,7 @@ let%expect_test "declared_export_default_function_binding" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [1:37-41]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          tail = []} |}]
 
 let%expect_test "declared_export_default_class_binding" =
@@ -4809,7 +4809,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (Void [7:24-28]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          tail = []}
     4. DeclareClassBinding {id_loc = [8:16-17];
          name = "Y";
@@ -5056,13 +5056,13 @@ let%expect_test "builtin_declare_namespace" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = None;
            return = (Annot (String [5:24-30]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          tail =
          [([6:19-20], [6:20-30],
            FunSig {tparams = Mono; params = [];
              rest_param = None; this_param = None;
              return = (Annot (Number [6:24-30]));
-             type_guard = None; effect = ArbitraryEffect})
+             type_guard = None; effect_ = ArbitraryEffect})
            ]}
     4. TypeAlias {id_loc = [7:15-18];
          name = "Baz"; tparams = Mono;
@@ -5252,7 +5252,7 @@ let%expect_test "this_param_1" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = (Some (Annot (Mixed [1:27-32])));
            return = (Annot (Void [1:36-40]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          statics = {}} |}]
 
 let%expect_test "this_param_2" =
@@ -5284,7 +5284,7 @@ let%expect_test "this_param_2" =
                  params = []; rest_param = None;
                  this_param = (Some (Annot (Mixed [2:13-18])));
                  return = (Annot (Void [2:22-26]));
-                 type_guard = None; effect = ArbitraryEffect}} };
+                 type_guard = None; effect_ = ArbitraryEffect}} };
            own_props = {}}} |}]
 
 let%expect_test "this_param_3" =
@@ -5305,7 +5305,7 @@ let%expect_test "this_param_3" =
          FunSig {tparams = Mono; params = [];
            rest_param = None; this_param = (Some (Annot (Mixed [1:35-40])));
            return = (Annot (Void [1:44-48]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          tail = []} |}]
 
 let%expect_test "this_param_4" =
@@ -5338,7 +5338,7 @@ let%expect_test "this_param_4" =
                     this_param = (Some (Annot (Mixed [2:13-18])));
                     return = (Annot (Void [2:22-26]));
                     type_guard = None;
-                    effect = ArbitraryEffect}),
+                    effect_ = ArbitraryEffect}),
                  [])) };
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
@@ -5365,7 +5365,7 @@ let%expect_test "this_param_5" =
                  params = []; rest_param = None;
                  this_param = (Some (Annot (Mixed [1:26-31])));
                  return = (Annot (Void [1:36-40]));
-                 type_guard = None; effect = ArbitraryEffect}
+                 type_guard = None; effect_ = ArbitraryEffect}
                )))} |}]
 
 let%expect_test "this_param_6" =
@@ -5399,7 +5399,7 @@ let%expect_test "this_param_6" =
                            this_param = (Some (Annot (Mixed [1:30-35])));
                            return = (Annot (Void [1:40-44]));
                            type_guard = None;
-                           effect = ArbitraryEffect}
+                           effect_ = ArbitraryEffect}
                          ))),
                    Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})} |}]
@@ -5549,14 +5549,14 @@ let%expect_test "fun_shadow_declare_fun" =
            params = [FunParam {name = (Some "x"); t = (Annot (String [1:22-28]))}];
            rest_param = None; this_param = None;
            return = (Annot (Number [1:31-37]));
-           type_guard = None; effect = ArbitraryEffect};
+           type_guard = None; effect_ = ArbitraryEffect};
          tail =
          [([2:17-18], [2:18-37],
            FunSig {tparams = Mono;
              params = [FunParam {name = (Some "x"); t = (Annot (Number [2:22-28]))}];
              rest_param = None; this_param = None;
              return = (Annot (String [2:31-37]));
-             type_guard = None; effect = ArbitraryEffect})
+             type_guard = None; effect_ = ArbitraryEffect})
            ]} |}]
 
 let%expect_test "optional_tuple_elements" =

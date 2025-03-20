@@ -99,7 +99,7 @@ type ('loc, 'a) fun_sig =
       this_param: 'a option;
       return: 'a;
       type_guard: ('loc, 'a) type_guard option;
-      effect: 'loc react_effect;
+      effect_: 'loc react_effect;
     }
 [@@deriving iter, map, show { with_path = false }]
 

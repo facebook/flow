@@ -895,16 +895,16 @@ struct
                 (r, InstanceT { instance with inst = { inst with inst_react_dro = Some react_dro } }),
               OpenT tout
             )
-        | (DefT (r, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))), HooklikeT tout) ->
+        | (DefT (r, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))), HooklikeT tout) ->
           rec_flow_t
             ~use_op:unknown_use
             cx
             trace
-            (DefT (r, FunT (s, { funtype with effect = AnyEffect })), OpenT tout)
+            (DefT (r, FunT (s, { funtype with effect_ = AnyEffect })), OpenT tout)
         | ( DefT
               ( rp,
                 PolyT
-                  ( { t_out = DefT (r, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))); _ }
+                  ( { t_out = DefT (r, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))); _ }
                   as poly
                   )
               ),
@@ -917,22 +917,22 @@ struct
             ( DefT
                 ( rp,
                   PolyT
-                    { poly with t_out = DefT (r, FunT (s, { funtype with effect = AnyEffect })) }
+                    { poly with t_out = DefT (r, FunT (s, { funtype with effect_ = AnyEffect })) }
                 ),
               OpenT tout
             )
         | (DefT (r, ObjT ({ call_t = Some id; _ } as obj)), HooklikeT tout) ->
           let t =
             match Context.find_call cx id with
-            | DefT (rf, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype))) ->
-              let call = DefT (rf, FunT (s, { funtype with effect = AnyEffect })) in
+            | DefT (rf, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))) ->
+              let call = DefT (rf, FunT (s, { funtype with effect_ = AnyEffect })) in
               let id = Context.make_call_prop cx call in
               DefT (r, ObjT { obj with call_t = Some id })
             | DefT
                 ( rp,
                   PolyT
                     ( {
-                        t_out = DefT (rf, FunT (s, ({ effect = ArbitraryEffect; _ } as funtype)));
+                        t_out = DefT (rf, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype)));
                         _;
                       } as poly
                     )
@@ -941,7 +941,10 @@ struct
                 DefT
                   ( rp,
                     PolyT
-                      { poly with t_out = DefT (rf, FunT (s, { funtype with effect = AnyEffect })) }
+                      {
+                        poly with
+                        t_out = DefT (rf, FunT (s, { funtype with effect_ = AnyEffect }));
+                      }
                   )
               in
               let id = Context.make_call_prop cx call in
@@ -5702,7 +5705,7 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t = (this, _); params; rest_param; return_t; type_guard; def_reason = _; effect = _ }
+      { this_t = (this, _); params; rest_param; return_t; type_guard; def_reason = _; effect_ = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
@@ -8740,7 +8743,7 @@ struct
         | Some trace -> trace
         | None -> failwith "All multiflows show have a trace"
       in
-      let { params; rest_param; return_t; def_reason; type_guard; effect; _ } = ft in
+      let { params; rest_param; return_t; def_reason; type_guard; effect_; _ } = ft in
       let (args, spread_arg) = flatten_call_arg cx ~use_op reason_op resolved in
       let (params, rest_param) =
         multiflow_partial
@@ -8774,7 +8777,7 @@ struct
                   ~rest_param
                   ~def_reason
                   ~params_names
-                  ~effect
+                  ~effect_
               )
           )
       in

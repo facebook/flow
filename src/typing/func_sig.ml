@@ -188,7 +188,7 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = Annotated (VoidT.why reason);
-      effect = ArbitraryEffect;
+      effect_ = ArbitraryEffect;
       ret_annot_loc = Reason.loc_of_reason reason;
       statics = None;
     }
@@ -201,13 +201,13 @@ struct
       fparams = F.empty (fun _ _ _ -> None);
       body = None;
       return_t = return_annot_or_inferred;
-      effect = ArbitraryEffect;
+      effect_ = ArbitraryEffect;
       ret_annot_loc = annot_loc;
       statics = None;
     }
 
   let functiontype cx ~arrow func_loc this_default x =
-    let { T.reason; kind; tparams; fparams; return_t; statics; effect; _ } = x in
+    let { T.reason; kind; tparams; fparams; return_t; statics; effect_; _ } = x in
     let this_type = F.this fparams |> Base.Option.value ~default:this_default in
     let return_t =
       match return_t with
@@ -218,7 +218,7 @@ struct
       | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t
     in
     let return_t =
-      match effect with
+      match effect_ with
       | HookDecl _
       | HookAnnot ->
         if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
@@ -248,7 +248,7 @@ struct
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t;
-        effect;
+        effect_;
         type_guard;
         def_reason = reason;
       }
@@ -263,7 +263,7 @@ struct
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 
   let methodtype
-      cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; effect; _ } =
+      cx method_this_loc this_default { T.reason; kind; tparams; fparams; return_t; effect_; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -284,7 +284,7 @@ struct
             ( dummy_static reason,
               mk_boundfunctiontype
                 ~this:param_this_t
-                ~effect
+                ~effect_
                 params_tlist
                 ~rest_param
                 ~def_reason

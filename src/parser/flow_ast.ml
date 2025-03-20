@@ -211,7 +211,7 @@ and Type : sig
       params: ('M, 'T) Params.t;
       return: ('M, 'T) return_annotation;
       comments: ('M, unit) Syntax.t option;
-      effect: Function.effect;
+      effect_: Function.effect_;
     }
 
     and ('M, 'T) return_annotation =
@@ -2377,7 +2377,7 @@ and Function : sig
     [@@deriving show]
   end
 
-  type effect =
+  type effect_ =
     | Hook
     | Arbitrary
     | Idempotent
@@ -2390,7 +2390,7 @@ and Function : sig
     body: ('M, 'T) body;
     async: bool;
     generator: bool;
-    effect: effect;
+    effect_: effect_;
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) ReturnAnnot.t;
     tparams: ('M, 'T) Type.TypeParams.t option;

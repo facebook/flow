@@ -1028,8 +1028,8 @@ module Make
     (* [declare] export [type] * from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, None) -> E.ExportBatchSpecifier (specifier_loc, None)
 
-  let hook_check cx effect (loc, { Ast.Identifier.name; _ }) =
-    if effect = Ast.Function.Hook && not (Flow_ast_utils.hook_name name) then
+  let hook_check cx effect_ (loc, { Ast.Identifier.name; _ }) =
+    if effect_ = Ast.Function.Hook && not (Flow_ast_utils.hook_name name) then
       Flow.add_output cx Error_message.(EHookNaming loc)
 
   (************)
@@ -1145,12 +1145,12 @@ module Make
     in
     let declare_function cx f =
       let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
-      let effect =
+      let effect_ =
         match annot with
-        | (_, (_, Ast.Type.Function { Ast.Type.Function.effect; _ })) -> effect
+        | (_, (_, Ast.Type.Function { Ast.Type.Function.effect_; _ })) -> effect_
         | _ -> Ast.Function.Arbitrary
       in
-      hook_check cx effect (id_loc, id_name);
+      hook_check cx effect_ (id_loc, id_name);
       let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       let t =
         Type_env.get_var_declared_type
@@ -8053,7 +8053,7 @@ module Make
         id;
         async;
         generator;
-        effect;
+        effect_;
         sig_loc;
         comments = _;
       } =
@@ -8096,7 +8096,7 @@ module Make
         in
         let from_generic_function = Base.Option.is_some tparams in
         let require_return_annot = require_return_annot || from_generic_function in
-        Base.Option.iter id ~f:(hook_check cx effect);
+        Base.Option.iter id ~f:(hook_check cx effect_);
         let (return_t, return, type_guard_opt) =
           match (return, type_guard_incompatible) with
           | (Ast.Function.ReturnAnnot.TypeGuard (_, (loc, _)), Some kind) ->
@@ -8232,8 +8232,8 @@ module Make
           in
           Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Type.Inexact ~props
         in
-        let effect =
-          match effect with
+        let effect_ =
+          match effect_ with
           | Ast.Function.Hook -> HookDecl (Context.make_aloc_id cx loc)
           | Ast.Function.Arbitrary -> ArbitraryEffect
           | Ast.Function.Idempotent -> IdempotentEffect
@@ -8249,7 +8249,7 @@ module Make
             return_t;
             ret_annot_loc = ret_loc;
             statics = Some statics_t;
-            effect;
+            effect_;
           }
         in
         let reconstruct_ast params_tast body fun_type =

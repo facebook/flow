@@ -295,14 +295,14 @@ let type_ options =
     let return = fun_return_t f.fun_return in
     let params = fun_params f.fun_params f.fun_rest_param in
     let tparams = Base.Option.map ~f:type_params f.fun_type_params in
-    let effect =
+    let effect_ =
       match f.fun_effect with
       | Ty.Arbitrary -> Ast.Function.Arbitrary
       | Ty.Hook -> Ast.Function.Hook
       | Ty.Parametric n -> Ast.Function.Parametric n
       | Ty.Idempotent -> Ast.Function.Idempotent
     in
-    { T.Function.params; return; tparams; effect; comments = None }
+    { T.Function.params; return; tparams; effect_; comments = None }
   and fun_params params rest_param =
     let params = Base.List.map ~f:fun_param params in
     let rest = Base.Option.map ~f:fun_rest_param rest_param in

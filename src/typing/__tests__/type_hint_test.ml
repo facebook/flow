@@ -233,7 +233,7 @@ let fun_t ~params ~return_t =
             return_t;
             type_guard = None;
             def_reason = dummy_reason;
-            effect = AnyEffect;
+            effect_ = AnyEffect;
           }
         )
     )

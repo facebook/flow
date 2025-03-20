@@ -1678,7 +1678,7 @@ and merge_fun
     env
     file
     reason
-    (FunSig { tparams; params; rest_param; this_param; return; type_guard; effect })
+    (FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ })
     statics =
   let t (env, _) =
     let open Type in
@@ -1736,7 +1736,7 @@ and merge_fun
       else
         Type.This_Function
     in
-    let (effect, return_t) =
+    let (effect_, return_t) =
       let dro_return_t () =
         EvalT
           ( return_t,
@@ -1748,7 +1748,7 @@ and merge_fun
             Eval.generate_id ()
           )
       in
-      match effect with
+      match effect_ with
       | HookDecl l -> (Type.HookDecl (Context.make_aloc_id file.cx l), dro_return_t ())
       | HookAnnot -> (Type.HookAnnot, dro_return_t ())
       | ArbitraryEffect -> (Type.ArbitraryEffect, return_t)
@@ -1764,7 +1764,7 @@ and merge_fun
         return_t;
         type_guard;
         def_reason = reason;
-        effect;
+        effect_;
       }
     in
     DefT (reason, FunT (statics, funtype))

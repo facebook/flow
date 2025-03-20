@@ -179,7 +179,7 @@ module Object
             body;
             generator;
             async;
-            effect = Function.Arbitrary;
+            effect_ = Function.Arbitrary;
             predicate = None;
             (* setters/getter are not predicates *)
             return;
@@ -274,7 +274,7 @@ module Object
               params;
               body;
               generator;
-              effect = Function.Arbitrary;
+              effect_ = Function.Arbitrary;
               async;
               (* TODO: add support for object method predicates *)
               predicate = None;
@@ -850,7 +850,7 @@ module Object
                 body;
                 generator;
                 async;
-                effect = Function.Arbitrary;
+                effect_ = Function.Arbitrary;
                 (* TODO: add support for method predicates *)
                 predicate = None;
                 return;

@@ -101,9 +101,10 @@ let hook_callee cx t =
     let recur = recur_id seen in
     let open Type in
     match t with
-    | DefT (r, FunT (_, { effect = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
-    | DefT (_, FunT (_, { effect = AnyEffect; _ })) -> AnyCallee
-    | DefT (r, FunT (_, { effect = ArbitraryEffect | IdempotentEffect | ParametricEffect _; _ })) ->
+    | DefT (r, FunT (_, { effect_ = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
+    | DefT (_, FunT (_, { effect_ = AnyEffect; _ })) -> AnyCallee
+    | DefT (r, FunT (_, { effect_ = ArbitraryEffect | IdempotentEffect | ParametricEffect _; _ }))
+      ->
       NotHookCallee (set_of_reason r)
     | OpaqueT (_, { underlying_t; super_t; _ }) -> begin
       match (underlying_t, super_t) with
@@ -426,8 +427,8 @@ let effect_visitor cx is_hook rrid tast =
     if ALocSet.mem loc seen then
       []
     else
-      let visit_func { Ast.Function.body; effect; _ } =
-        if effect = Ast.Function.Hook then
+      let visit_func { Ast.Function.body; effect_; _ } =
+        if effect_ = Ast.Function.Hook then
           []
         else
           let visitor = visitor (ALocSet.add loc seen) in
@@ -786,7 +787,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
         body;
         async;
         generator;
-        effect;
+        effect_;
         predicate;
         return;
         tparams;
@@ -804,7 +805,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
         && List.length params_list <= 2 (* Props and ref *)
         && Base.Option.is_none rest
       in
-      let hook = effect = Ast.Function.Hook in
+      let hook = effect_ = Ast.Function.Hook in
       if (Context.react_rules_always cx && is_probably_function_component) || hook then (
         let effects =
           (effect_visitor cx hook rrid tast)#function_entry
@@ -828,7 +829,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
               body = body';
               async;
               generator;
-              effect;
+              effect_;
               predicate = predicate';
               tparams = tparams';
               sig_loc = sig_loc';

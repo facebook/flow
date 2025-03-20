@@ -1105,7 +1105,7 @@ module rec TypeTerm : sig
     return_t: t;
     type_guard: type_guard option;
     def_reason: Reason.t;
-    effect: react_effect_type;
+    effect_: react_effect_type;
   }
 
   and react_effect_type =
@@ -4375,7 +4375,7 @@ let default_obj_assign_kind = ObjAssign { assert_exact = false }
 let mk_methodtype
     this_t
     ?(subtyping = This_Function)
-    ?(effect = ArbitraryEffect)
+    ?(effect_ = ArbitraryEffect)
     tins
     ~rest_param
     ~def_reason
@@ -4392,7 +4392,7 @@ let mk_methodtype
     return_t = tout;
     type_guard;
     def_reason;
-    effect;
+    effect_;
   }
 
 let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) tout =

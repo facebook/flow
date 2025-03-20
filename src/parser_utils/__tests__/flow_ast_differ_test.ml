@@ -686,7 +686,7 @@ class insert_function_annot_mapper =
                       }
                     );
                   return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
-                  effect = Ast.Function.Arbitrary;
+                  effect_ = Ast.Function.Arbitrary;
                   comments = None;
                 }
             )
@@ -715,7 +715,7 @@ class insert_function_annot_mapper =
                       }
                     );
                   return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
-                  effect = Ast.Function.Arbitrary;
+                  effect_ = Ast.Function.Arbitrary;
                   comments = None;
                 }
             )
@@ -746,7 +746,7 @@ class insert_import_and_annot_mapper =
                       }
                     );
                   return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
-                  effect = Ast.Function.Arbitrary;
+                  effect_ = Ast.Function.Arbitrary;
                   comments = None;
                 }
             )
@@ -775,7 +775,7 @@ class insert_import_and_annot_mapper =
                       }
                     );
                   return = Ast.Type.Function.TypeAnnotation (loc, Type.Number None);
-                  effect = Ast.Function.Arbitrary;
+                  effect_ = Ast.Function.Arbitrary;
                   comments = None;
                 }
             )

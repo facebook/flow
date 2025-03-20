@@ -288,7 +288,7 @@ module Make (I : INPUT) : S = struct
 
   let mk_fun
       ?(params = [])
-      ?(effect = Ty.Arbitrary)
+      ?(effect_ = Ty.Arbitrary)
       ?rest
       ?tparams
       ?(static = Ty.(TypeOf (FunProto, None)))
@@ -301,7 +301,7 @@ module Make (I : INPUT) : S = struct
           fun_return = ret;
           fun_type_params = tparams;
           fun_static = static;
-          fun_effect = effect;
+          fun_effect = effect_;
         }
     )
 
@@ -971,9 +971,9 @@ module Make (I : INPUT) : S = struct
 
     and fun_ty ~env static f fun_type_params =
       let%bind fun_static = type__ ~env static in
-      let { T.params; rest_param; return_t; type_guard; effect; _ } = f in
+      let { T.params; rest_param; return_t; type_guard; effect_; _ } = f in
       let fun_effect =
-        match effect with
+        match effect_ with
         | T.HookAnnot
         | T.HookDecl _ ->
           Ty.Hook

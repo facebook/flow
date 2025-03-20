@@ -299,7 +299,7 @@ and type_of_hint_decomposition cx op reason t =
         return_t;
         type_guard;
         def_reason = reason;
-        effect = AnyEffect;
+        effect_ = AnyEffect;
       }
     in
     DefT (reason, FunT (statics, func))
@@ -323,7 +323,7 @@ and type_of_hint_decomposition cx op reason t =
       | DefT
           ( reason,
             FunT
-              (static, { this_t; params; rest_param; return_t = _; type_guard; def_reason; effect })
+              (static, { this_t; params; rest_param; return_t = _; type_guard; def_reason; effect_ })
           ) ->
         DefT
           ( reason,
@@ -336,7 +336,7 @@ and type_of_hint_decomposition cx op reason t =
                   return_t = instance_type;
                   type_guard;
                   def_reason;
-                  effect;
+                  effect_;
                 }
               )
           )
