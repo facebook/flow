@@ -604,6 +604,9 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
                   false
                 else
                   synthesizable value
+              | Property.Computed _ ->
+                (* We will need hints for all computed property values *)
+                false
               | _ -> synthesizable value)
             | (_, Get { key = _; value = (_, fn); comments = _ })
             | (_, Set { key = _; value = (_, fn); comments = _ })
@@ -729,6 +732,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method record_hint loc hint =
       this#update_acc (fun (env_map, hint_map) -> (env_map, ALocMap.add loc hint hint_map))
+
+    method has_hint loc =
+      let (_, hint_map) = this#acc in
+      ALocMap.mem loc hint_map
 
     method force_add_binding kind_and_loc reason src =
       this#update_acc (fun (env_map, hint_map) ->
@@ -3155,7 +3162,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             | (_, Init { key; value; shorthand = _ }) ->
               let hints = visit_object_key_and_compute_hint key in
               this#visit_expression ~hints ~cond:NonConditionalContext value;
-              ()
+              (match key with
+              | Ast.Expression.Object.Property.Computed _ ->
+                (* We will be using this as hint for computed values.
+                 * See Statement.create_computed_prop. *)
+                let (loc, _) = value in
+                if not (this#has_hint loc) then this#record_hint loc hints
+              | _ -> ())
             | (loc, Method { key; value = (_, fn) })
             | (loc, Get { key; value = (_, fn); comments = _ })
             | (loc, Set { key; value = (_, fn); comments = _ }) ->

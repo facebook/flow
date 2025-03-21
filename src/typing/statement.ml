@@ -84,7 +84,7 @@ module Make
         | NonLiteralKey of {
             key_loc: ALoc.t;
             key: Type.t;
-            value: Type.t;
+            value: ALoc.t * Type.t;
             named_set_opt: NameUtils.Set.t option;
             reason_obj: Reason.t;
           }
@@ -132,7 +132,8 @@ module Make
       match computed with
       | ComputedProp.Named { name; prop } -> add_prop (NameUtils.Map.add name prop) acc
       | ComputedProp.IgnoredInvalidNonLiteralKey -> acc
-      | ComputedProp.NonLiteralKey { key_loc; key; value; named_set_opt; reason_obj = _ } ->
+      | ComputedProp.NonLiteralKey
+          { key_loc; key; value = (value_loc, value); named_set_opt; reason_obj = _ } ->
         let overlapping_name_map =
           match named_set_opt with
           | None -> acc.obj_pmap
@@ -142,6 +143,20 @@ module Make
         if NameUtils.Map.is_empty overlapping_name_map then (
           match acc.computed_props with
           | None ->
+            let value =
+              let (has_hint, lazy_hint) = Type_env.get_hint cx value_loc in
+              if not has_hint then
+                value
+              else
+                let reason = reason_of_t key in
+                match lazy_hint ~expected_only:true ~skip_optional:true reason with
+                | HintAvailable (t, _) when Speculation_flow.is_subtyping_successful cx value t ->
+                  (* If a hint on this key exists and is a supertype of the value
+                   * type of the first computed element, then use that as target
+                   * for all subsequent computed elements. *)
+                  t
+                | _ -> value
+            in
             {
               acc with
               computed_props =
@@ -151,8 +166,11 @@ module Make
             let use_op =
               Op (ObjectAddComputedProperty { op = mk_reason (RProperty None) key_loc })
             in
-            Flow.flow cx (key, UseT (use_op, existing_key));
-            Flow.flow cx (value, UseT (use_op, existing_value));
+            if Context.typing_mode cx = Context.CheckingMode then (
+              (* These checks should not affect synthesis results *)
+              Flow.flow cx (key, UseT (use_op, existing_key));
+              Flow.flow cx (value, UseT (use_op, existing_value))
+            );
             acc
         ) else
           let overwritten_locs =
@@ -2429,7 +2447,7 @@ module Make
             {
               preferred_def_locs = None;
               key_loc = Some key_loc;
-              type_ = value;
+              type_ = snd value;
               polarity = Polarity.object_literal_polarity (as_const || frozen);
             }
         in
@@ -2507,7 +2525,7 @@ module Make
                   }
               ) ->
             let (((_, kt), _) as k') = expression cx ~encl_ctx:IndexContext k in
-            let (((_, vt), _) as v') = expression cx ~as_const ~has_hint v in
+            let ((vt, _) as v') = expression cx ~as_const ~has_hint v in
             let computed = mk_computed k kt vt in
             ( ObjectExpressionAcc.add_computed cx computed acc,
               Property
@@ -2530,7 +2548,7 @@ module Make
                   }
               ) ->
             let (((_, kt), _) as k') = expression cx ~encl_ctx:IndexContext k in
-            let ((_, vt), v') = expression cx (fn_loc, Ast.Expression.Function fn) in
+            let (vt, v') = expression cx (fn_loc, Ast.Expression.Function fn) in
             let fn =
               match v' with
               | Ast.Expression.Function fn -> fn

@@ -10,6 +10,8 @@ val try_custom :
 
 val is_flow_successful : Context.t -> Type.t -> Type.use_t -> bool
 
+val is_subtyping_successful : Context.t -> Type.t -> Type.t -> bool
+
 val get_method_type_opt : Context.t -> Type.t -> Reason.reason -> Type.propref -> Type.t option
 
 (* NOTE The unsafe functions below may throw SpeculationSingletonError exception *)

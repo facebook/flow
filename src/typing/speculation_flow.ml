@@ -18,6 +18,8 @@ let is_flow_successful cx t u =
   | exception Flow_js_utils.SpeculationSingletonError -> false
   | () -> true
 
+let is_subtyping_successful cx l u = is_flow_successful cx l (UseT (unknown_use, u))
+
 let resolved_lower_flow_unsafe cx r (l, u) =
   match Flow_js.possible_concrete_types_for_inspection cx r l with
   | [] -> ()
