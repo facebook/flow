@@ -23,7 +23,10 @@ exception UnconstrainedTvarException
 exception DecompFuncParamOutOfBoundsException
 
 module HintOptions = struct
-  type t = { expected_only: bool }
+  type t = {
+    expected_only: bool;
+    skip_optional: bool;
+  }
 end
 
 let in_sandbox_cx cx t ~f =
@@ -384,7 +387,7 @@ and type_of_hint_decomposition cx opts op reason t =
                   reason;
                   id = None;
                   from_annot = true;
-                  skip_optional = false;
+                  skip_optional = opts.HintOptions.skip_optional;
                   access_iterables = true;
                   key_t = DefT (reason, num);
                   tout;
@@ -553,7 +556,7 @@ and type_of_hint_decomposition cx opts op reason t =
                   reason;
                   id = Some (Reason.mk_id ());
                   from_annot = false;
-                  skip_optional = false;
+                  skip_optional = opts.HintOptions.skip_optional;
                   propref = mk_named_prop ~reason (OrdinaryName name);
                   tout;
                   hint = hint_unavailable;
@@ -571,7 +574,7 @@ and type_of_hint_decomposition cx opts op reason t =
                   reason;
                   id = None;
                   from_annot = true;
-                  skip_optional = false;
+                  skip_optional = opts.HintOptions.skip_optional;
                   access_iterables = false;
                   key_t;
                   tout;
@@ -735,10 +738,10 @@ and evaluate_hints cx opts reason hints =
       );
   result
 
-let evaluate_hint cx ~expected_only reason hint =
-  let opts = { HintOptions.expected_only } in
+let evaluate_hint cx ~expected_only ?(skip_optional = false) reason hint =
+  let opts = { HintOptions.expected_only; skip_optional } in
   evaluate_hint cx opts reason hint
 
-let evaluate_hints cx ~expected_only reason hints =
-  let opts = { HintOptions.expected_only } in
+let evaluate_hints cx ~expected_only ?(skip_optional = false) reason hints =
+  let opts = { HintOptions.expected_only; skip_optional } in
   evaluate_hints cx opts reason hints

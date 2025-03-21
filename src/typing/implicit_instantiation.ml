@@ -1505,9 +1505,10 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
        );
     reposition cx ~trace (loc_of_reason reason_tapp) (Type_subst.subst cx ~use_op subst_map poly_t)
 
-  let run_call cx check ~return_hint:(_, lazy_hint) trace ~use_op ~reason_op ~reason_tapp =
+  let run_call cx check ~(return_hint : lazy_hint_t) trace ~use_op ~reason_op ~reason_tapp =
+    let (_, lazy_hint) = return_hint in
     let (allow_underconstrained, return_hint) =
-      match lazy_hint reason_op ~expected_only:false with
+      match lazy_hint ~expected_only:false reason_op with
       | HintAvailable (t, kind) -> (true, Some (t, kind))
       | DecompositionError -> (true, None)
       | NoHint

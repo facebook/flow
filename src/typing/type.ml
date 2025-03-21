@@ -318,7 +318,9 @@ module rec TypeTerm : sig
     | EncounteredPlaceholder
     | DecompositionError
 
-  and lazy_hint_t = bool * (reason -> expected_only:bool -> hint_eval_result)
+  and lazy_hint_compute = expected_only:bool -> ?skip_optional:bool -> reason -> hint_eval_result
+
+  and lazy_hint_t = bool * lazy_hint_compute
 
   and defer_use_t =
     (* destructors that extract parts of various kinds of types *)
@@ -3919,7 +3921,7 @@ module Locationless = struct
   module NullT = LocationLess (NullT)
 end
 
-let hint_unavailable : lazy_hint_t = (false, (fun _ ~expected_only:_ -> NoHint))
+let hint_unavailable : lazy_hint_t = (false, (fun ~expected_only:_ ?skip_optional:_ _ -> NoHint))
 
 (* convenience *)
 

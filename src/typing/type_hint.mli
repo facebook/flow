@@ -16,7 +16,17 @@ type concr_hint =
 val with_hint_result : ok:(Type.t -> 'a) -> error:(unit -> 'a) -> Type.hint_eval_result -> 'a
 
 val evaluate_hint :
-  Context.t -> expected_only:bool -> Reason.t -> concr_hint -> Type.hint_eval_result
+  Context.t ->
+  expected_only:bool ->
+  ?skip_optional:bool ->
+  Reason.t ->
+  concr_hint ->
+  Type.hint_eval_result
 
 val evaluate_hints :
-  Context.t -> expected_only:bool -> Reason.t -> concr_hint list -> Type.hint_eval_result
+  Context.t ->
+  expected_only:bool ->
+  ?skip_optional:bool ->
+  Reason.t ->
+  concr_hint list ->
+  Type.hint_eval_result

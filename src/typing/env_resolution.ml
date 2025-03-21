@@ -338,8 +338,8 @@ let resolve_hints cx loc = Base.List.map ~f:(resolve_hint cx loc)
 
 let lazily_resolve_hints cx loc hints =
   let has_hint = not @@ Base.List.is_empty hints in
-  let lazy_hint reason ~expected_only =
-    resolve_hints cx loc hints |> Type_hint.evaluate_hints cx ~expected_only reason
+  let lazy_hint ~expected_only ?skip_optional reason =
+    resolve_hints cx loc hints |> Type_hint.evaluate_hints cx ~expected_only ?skip_optional reason
   in
   (has_hint, lazy_hint)
 

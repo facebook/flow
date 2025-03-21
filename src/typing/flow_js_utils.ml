@@ -2377,10 +2377,11 @@ end
 (* GetPropT helper *)
 (*******************)
 
-let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~hint p =
+let check_method_unbinding cx ~use_op ~method_accessible ~reason_op ~propref ~(hint : lazy_hint_t) p
+    =
   match p with
   | Method { key_loc; type_ = t } when not method_accessible ->
-    let hint_result = (snd hint) reason_op ~expected_only:false in
+    let hint_result = (snd hint) ~expected_only:false reason_op in
     let valid_hint_t =
       match hint_result with
       | HintAvailable (t, _) ->
