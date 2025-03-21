@@ -1984,5 +1984,22 @@ References:
                                                       ^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:482:5
 
-Found 118 errors
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   local.js:482:5
+   482|     x as number; // error string ~> number
+            ^
+
+References:
+   local.js:478:52
+   478|   declare function foo<X: "a" | "b">(x: X, cb: (x: string) => void): void;
+                                                           ^^^^^^ [1]
+   local.js:482:10
+   482|     x as number; // error string ~> number
+                 ^^^^^^ [2]
+
+
+
+Found 119 errors

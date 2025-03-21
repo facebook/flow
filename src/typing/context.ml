@@ -144,7 +144,7 @@ type component_t = {
   mutable builtins: (Builtins.t * (Flow_projects.t * Builtins.t) list) lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
-  mutable synthesis_produced_placeholders: bool;
+  mutable synthesis_produced_uncacheable_result: bool;
   mutable errors: Flow_error.ErrorSet.t;
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -386,7 +386,7 @@ let make_ccx () =
     sig_cx = empty_sig_cx;
     builtins = lazy (Builtins.empty (), []);
     aloc_tables = Utils_js.FilenameMap.empty;
-    synthesis_produced_placeholders = false;
+    synthesis_produced_uncacheable_result = false;
     matching_props = [];
     literal_subtypes = [];
     delayed_forcing_tvars = ISet.empty;
@@ -772,12 +772,13 @@ let add_tvar cx id bounds =
   let graph = IMap.add id bounds cx.ccx.sig_cx.graph in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
+let set_synthesis_produced_uncacheable_result cx =
+  match Nel.hd cx.typing_mode with
+  | SynthesisMode { target_loc = _ } -> cx.ccx.synthesis_produced_uncacheable_result <- true
+  | _ -> ()
+
 let mk_placeholder cx reason =
-  begin
-    match Nel.hd cx.typing_mode with
-    | SynthesisMode { target_loc = _ } -> cx.ccx.synthesis_produced_placeholders <- true
-    | _ -> ()
-  end;
+  set_synthesis_produced_uncacheable_result cx;
   Type.AnyT.placeholder reason
 
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
@@ -949,27 +950,27 @@ let run_and_rolled_back_cache cx f =
 
 let run_in_synthesis_mode cx ?(reset_forcing_state = false) ~target_loc f =
   let old_typing_mode = cx.typing_mode in
-  let old_produced_placeholders = cx.ccx.synthesis_produced_placeholders in
+  let old_synthesis_produced_uncacheable_result = cx.ccx.synthesis_produced_uncacheable_result in
   let old_delayed_forcing_tvars = cx.ccx.delayed_forcing_tvars in
   let old_post_component_tvar_forcing_states = cx.ccx.post_component_tvar_forcing_states in
-  cx.ccx.synthesis_produced_placeholders <- false;
+  cx.ccx.synthesis_produced_uncacheable_result <- false;
   cx.typing_mode <- Nel.cons (SynthesisMode { target_loc }) cx.typing_mode;
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
-  let produced_placeholders = ref false in
+  let synthesis_produced_uncacheable_result = ref false in
   let result =
     Exception.protect ~f ~finally:(fun () ->
         restore_cache_snapshot cx cache_snapshot;
         cx.typing_mode <- old_typing_mode;
-        produced_placeholders := cx.ccx.synthesis_produced_placeholders;
-        cx.ccx.synthesis_produced_placeholders <- old_produced_placeholders;
+        synthesis_produced_uncacheable_result := cx.ccx.synthesis_produced_uncacheable_result;
+        cx.ccx.synthesis_produced_uncacheable_result <- old_synthesis_produced_uncacheable_result;
         if reset_forcing_state then (
           cx.ccx.delayed_forcing_tvars <- old_delayed_forcing_tvars;
           cx.ccx.post_component_tvar_forcing_states <- old_post_component_tvar_forcing_states
         )
     )
   in
-  (!produced_placeholders, result)
+  (!synthesis_produced_uncacheable_result, result)
 
 let run_in_synthesis_mode_with_errors cx ~target_loc ~f =
   (* Since this mode resets errors, we make sure to reset_forcing_state so that

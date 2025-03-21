@@ -202,7 +202,9 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
   | Context.SynthesisMode { target_loc = Some target_loc }
     when aloc_contains ~outer:target_loc ~inner:loc ->
     Context.mk_placeholder cx reason
-  | Context.SynthesisMode { target_loc = _ } -> general ()
+  | Context.SynthesisMode { target_loc = _ } ->
+    Context.set_synthesis_produced_uncacheable_result cx;
+    general ()
   | Context.CheckingMode
   | Context.HintEvaluationMode ->
     if needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc then

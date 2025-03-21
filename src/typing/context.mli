@@ -377,6 +377,8 @@ val add_export_map : t -> Type.Exports.id -> Type.Exports.t -> unit
 
 val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 
+val set_synthesis_produced_uncacheable_result : t -> unit
+
 val mk_placeholder : t -> Reason.t -> Type.t
 
 val add_matching_props : t -> string * Type.t * Type.t -> unit

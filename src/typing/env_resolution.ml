@@ -30,11 +30,9 @@ let try_cache ~target_loc ~check ~cache cx =
   if Context.typing_mode cx <> Context.CheckingMode then begin
     let original_errors = Context.errors cx in
     Context.reset_errors cx Flow_error.ErrorSet.empty;
-    let (produced_placeholders, e) = Context.run_in_synthesis_mode ~target_loc cx check in
+    let (produced_uncacheable_result, e) = Context.run_in_synthesis_mode ~target_loc cx check in
     let can_cache =
-      (* If we didn't introduce new placeholders and synthesis doesn't introduce new errors,
-         we can cache the result *)
-      (not produced_placeholders) && Flow_error.ErrorSet.is_empty (Context.errors cx)
+      (not produced_uncacheable_result) && Flow_error.ErrorSet.is_empty (Context.errors cx)
     in
     Context.reset_errors cx original_errors;
     if can_cache then cache e;

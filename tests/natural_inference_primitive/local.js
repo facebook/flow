@@ -473,3 +473,12 @@ function test_computed_prop_hint() {
   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'a'}>); // okay
   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
 }
+
+function test_synthesis_produced_uncacheable_result() {
+  declare function foo<X: "a" | "b">(x: X, cb: (x: string) => void): void;
+  const k = "a";
+  foo(k, x => { // okay k is "a"
+    x as string; // okay
+    x as number; // error string ~> number
+  });
+}
