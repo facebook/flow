@@ -770,6 +770,28 @@
           }
         },
         {
+          "begin": "\\s*(if)\\s*(\\()",
+          "end": "\\)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.conditional.js"
+            },
+            "2": {
+              "name": "meta.brace.round.js"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "meta.brace.round.js"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
           "include": "#literal-number"
         },
         {
@@ -816,6 +838,10 @@
           ]
         },
         {
+          "match": "\\|",
+          "name": "keyword.operator.or.js"
+        },
+        {
           "include": "#comments"
         }
       ]
@@ -847,11 +873,11 @@
               "include": "#match-pattern"
             },
             {
-              "begin": "\\s*(:)(?!:)\\s*",
+              "begin": "\\s*(=>)\\s*",
               "end": "\\s*(,|;)",
               "beginCaptures": {
                 "1": {
-                  "name": "punctuation.colon.js"
+                  "name": "storage.type.function.arrow.js"
                 }
               },
               "endCaptures": [
