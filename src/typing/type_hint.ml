@@ -22,6 +22,10 @@ exception UnconstrainedTvarException
 
 exception DecompFuncParamOutOfBoundsException
 
+module HintOptions = struct
+  type t = { expected_only: bool }
+end
+
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
       let original_errors = Context.errors cx in
@@ -122,7 +126,7 @@ type concr_hint =
   )
   Hint.hint
 
-let rec instantiate_callee cx target_reason fn instantiation_hint =
+let rec instantiate_callee cx opts target_reason fn instantiation_hint =
   let { Hint.reason; targs; arg_list; return_hints; arg_index } = instantiation_hint in
   let rec handle_poly = function
     | DefT (_, ObjT { call_t = Some id; _ })
@@ -184,7 +188,7 @@ let rec instantiate_callee cx target_reason fn instantiation_hint =
           loop 0 ((Lazy.force arg_list) ~target_loc:(Some (Reason.loc_of_reason target_reason)))
         in
         let return_hint =
-          match evaluate_hints cx ~expected_only:false reason (Lazy.force return_hints) with
+          match evaluate_hints cx opts reason (Lazy.force return_hints) with
           | HintAvailable (t, k) -> Some (t, k)
           | _ -> None
         in
@@ -234,7 +238,7 @@ let rec instantiate_callee cx target_reason fn instantiation_hint =
   | UnionT (_, rep) -> UnionT (reason, UnionRep.ident_map resolve_overload_and_targs rep)
   | fn -> resolve_overload_and_targs fn
 
-and instantiate_component cx component instantiation_hint =
+and instantiate_component cx opts component instantiation_hint =
   match get_t cx component with
   | DefT (_, PolyT { tparams_loc; tparams; t_out; id = _ }) when Context.jsx cx = Options.Jsx_react
     ->
@@ -242,7 +246,7 @@ and instantiate_component cx component instantiation_hint =
       instantiation_hint
     in
     let return_hint =
-      match evaluate_hints cx ~expected_only:false reason (Lazy.force jsx_hints) with
+      match evaluate_hints cx opts reason (Lazy.force jsx_hints) with
       | HintAvailable (t, k) -> Some (t, k)
       | _ -> None
     in
@@ -267,11 +271,11 @@ and instantiate_component cx component instantiation_hint =
   | DefT (_, ObjT { call_t = Some id; _ }) as t ->
     (match Context.find_call cx id with
     | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) as poly_fun_t ->
-      instantiate_component cx poly_fun_t instantiation_hint
+      instantiate_component cx opts poly_fun_t instantiation_hint
     | _ -> t)
   | t -> t
 
-and type_of_hint_decomposition cx op reason t =
+and type_of_hint_decomposition cx opts op reason t =
   let fun_t ~params ~rest_param ~return_t ~type_guard =
     let statics_reason =
       Reason.func_reason ~async:false ~generator:false (Reason.loc_of_reason reason)
@@ -638,8 +642,10 @@ and type_of_hint_decomposition cx op reason t =
         | MaybeT (_, t) -> simplify t
         | OptionalT { type_; _ } -> simplify type_
         | fn -> fn)
-      | Instantiate_Callee instantiation_hint -> instantiate_callee cx reason t instantiation_hint
-      | Instantiate_Component instantiation_hint -> instantiate_component cx t instantiation_hint
+      | Instantiate_Callee instantiation_hint ->
+        instantiate_callee cx opts reason t instantiation_hint
+      | Instantiate_Component instantiation_hint ->
+        instantiate_component cx opts t instantiation_hint
       | Decomp_Promise ->
         Tvar.mk_where cx reason (fun inner_t ->
             SpeculationFlow.resolved_lower_flow_t_unsafe
@@ -662,7 +668,7 @@ and fully_resolve_final_result cx t kind =
     | exception UnconstrainedTvarException -> DecompositionError
     | t -> HintAvailable (t, kind)
 
-and evaluate_hint_ops cx reason t kind ops =
+and evaluate_hint_ops cx opts reason t kind ops =
   let rec loop t = function
     | [] -> Some t
     | (id, op) :: ops ->
@@ -670,7 +676,7 @@ and evaluate_hint_ops cx reason t kind ops =
         match Context.hint_eval_cache_find_opt cx id with
         | Some result -> result
         | None ->
-          let result = type_of_hint_decomposition cx op reason t in
+          let result = type_of_hint_decomposition cx opts op reason t in
           Context.add_hint_eval_cache_entry cx id result;
           result
       in
@@ -685,20 +691,20 @@ and evaluate_hint_ops cx reason t kind ops =
   | None -> DecompositionError
   | Some t -> fully_resolve_final_result cx t kind
 
-and evaluate_hint cx ~expected_only reason hint =
+and evaluate_hint cx opts reason hint =
   match hint with
   | Hint_Placeholder
   | Hint_t (_, BestEffortHint)
   | Hint_Decomp (_, _, BestEffortHint)
-    when expected_only ->
+    when opts.HintOptions.expected_only ->
     DecompositionError
   | Hint_Placeholder ->
     HintAvailable (AnyT.annot (mk_reason RAnyImplicit ALoc.none), ExpectedTypeHint)
   | Hint_t (t, kind) -> fully_resolve_final_result cx t kind
   | Hint_Decomp (ops, t, kind) ->
-    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx reason t kind
+    ops |> Nel.to_list |> List.rev |> evaluate_hint_ops cx opts reason t kind
 
-and evaluate_hints cx ~expected_only reason hints =
+and evaluate_hints cx opts reason hints =
   Debug_js.Verbose.print_if_verbose_lazy
     cx
     (lazy [spf "Evaluating hint %s" (string_of_hints ~on_hint:(Debug_js.dump_t cx ~depth:3) hints)]);
@@ -708,7 +714,7 @@ and evaluate_hints cx ~expected_only reason hints =
       ~init:NoHint
       ~finish:(fun r -> r)
       ~f:(fun _ hint ->
-        match evaluate_hint cx ~expected_only reason hint with
+        match evaluate_hint cx opts reason hint with
         | HintAvailable (t, kind) -> Base.Continue_or_stop.Stop (HintAvailable (t, kind))
         | r -> Base.Continue_or_stop.Continue r)
   in
@@ -728,3 +734,11 @@ and evaluate_hints cx ~expected_only reason hints =
       ]
       );
   result
+
+let evaluate_hint cx ~expected_only reason hint =
+  let opts = { HintOptions.expected_only } in
+  evaluate_hint cx opts reason hint
+
+let evaluate_hints cx ~expected_only reason hints =
+  let opts = { HintOptions.expected_only } in
+  evaluate_hints cx opts reason hints
