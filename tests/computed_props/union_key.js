@@ -22,3 +22,9 @@ const test3 = <T: 'a' | 'b'>(
 ): Params => {
   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params
 };
+
+const test4 = (
+  key: 'a' | 'b',
+): {[string]: boolean, ...} => {
+  return {[key]: true}; // okay
+}

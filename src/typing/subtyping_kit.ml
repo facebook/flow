@@ -170,32 +170,33 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( Some { key = lk; value = lv; dict_polarity = lpolarity; _ },
         Some { key = uk; value = uv; dict_polarity = upolarity; _ }
       ) ->
-      (* Don't report polarity errors when checking the indexer key. We would
-       * report these errors again a second time when checking values. *)
-      rec_flow_p
-        cx
-        ~trace
-        ~report_polarity:false
-        ~use_op:(Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op))
-        lreason
-        ureason
-        (Computed uk)
-        ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
-          OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
-        );
+      let use_op_k = Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op) in
       if lit then
-        rec_flow_t
+        rec_flow_t cx trace ~use_op:use_op_k (mod_t None ldro lk, mod_t None udro uk)
+      else
+        (* Don't report polarity errors when checking the indexer key. We would
+         * report these errors again a second time when checking values. *)
+        rec_flow_p
           cx
-          trace
-          ~use_op:
-            (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
-          (mod_t None ldro lv, mod_t None udro uv)
+          ~trace
+          ~report_polarity:false
+          ~use_op:use_op_k
+          lreason
+          ureason
+          (Computed uk)
+          ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
+            OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
+          );
+      let use_op_v =
+        Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
+      in
+      if lit then
+        rec_flow_t cx trace ~use_op:use_op_v (mod_t None ldro lv, mod_t None udro uv)
       else
         rec_flow_p
           cx
           ~trace
-          ~use_op:
-            (Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op))
+          ~use_op:use_op_v
           lreason
           ureason
           (Computed uv)
