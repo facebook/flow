@@ -183,7 +183,8 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
   | [t] -> t
   | t1 :: t2 :: ts when intersect ->
     IntersectionT (mk_reason (RCustom "providers") def_loc, InterRep.make t1 t2 ts)
-  | t1 :: t2 :: ts -> UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make t1 t2 ts)
+  | t1 :: t2 :: ts ->
+    UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make ~synthetic:true t1 t2 ts)
 
 (*************)
 (*  Reading  *)
@@ -798,7 +799,8 @@ let constraining_type ~default cx name loc =
       default
     | Some [t] -> t
     | Some (t1 :: t2 :: ts) ->
-      UnionT (mk_reason (RIdentifier (OrdinaryName name)) loc, UnionRep.make t1 t2 ts))
+      UnionT
+        (mk_reason (RIdentifier (OrdinaryName name)) loc, UnionRep.make ~synthetic:true t1 t2 ts))
 
 (*************)
 (*  Writing  *)

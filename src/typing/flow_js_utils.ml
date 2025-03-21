@@ -65,7 +65,7 @@ let merge_tvar_opt ?(filter_empty = false) cx r id =
   in
   match lowers with
   | [t] -> Some t
-  | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make t0 t1 ts))
+  | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make ~synthetic:true t0 t1 ts))
   | [] -> None
 
 let merge_tvar ?(filter_empty = false) ~no_lowers cx r id =
@@ -654,7 +654,13 @@ let union_optimization_guard =
             Base.List.exists ~f:guard uts
           then
             UnionOptimizationGuardResult.True
-          else if union_compare cx comparator lts uts then
+          else if
+            (* `union_compare` is potentially very expensive as it flattens the
+             * input unions. Do not perform this check on synthetic unions.
+             * Instead, allow the unfolding of the LHS union which might enable
+             * other optimized path. *)
+            (not (UnionRep.is_synthetic rep1)) && union_compare cx comparator lts uts
+          then
             UnionOptimizationGuardResult.True
           else
             UnionOptimizationGuardResult.Maybe

@@ -213,7 +213,7 @@ let resolve_hint cx loc hint : Type_hint.concr_hint =
             Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
         )
       in
-      UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
+      UnionT (mk_reason (RCustom "providers") loc, UnionRep.make ~synthetic:true t1 t2 ts)
     | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
       DefT

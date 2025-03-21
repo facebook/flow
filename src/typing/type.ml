@@ -2340,7 +2340,8 @@ and UnionRep : sig
   val same_structure : t -> t -> bool
 
   (** build a rep from list of members *)
-  val make : ?source_aloc:ALoc.id -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
+  val make :
+    ?source_aloc:ALoc.id -> ?synthetic:bool -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
   (** members in declaration order *)
   val members : t -> TypeTerm.t list
@@ -2350,6 +2351,8 @@ and UnionRep : sig
   val cons : TypeTerm.t -> t -> t
 
   val rev_append : t -> t -> t
+
+  val is_synthetic : t -> bool
 
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
@@ -2494,6 +2497,10 @@ end = struct
     (* if union is an enum (set of singletons over a common base) then Some (base, set)
      * (additional specializations probably to come) *)
     specialization: finally_optimized_rep option ref;
+    (* A union is synthetic roughly when it does not emerge from an annotation,
+     * e.g. when it emerges as the collection of lower bounds during implicit
+     * instantiation. *)
+    synthetic: bool;
   }
 
   let same_source { source_aloc = s1; _ } { source_aloc = s2; _ } =
@@ -2529,6 +2536,8 @@ end = struct
     | DefT (_, NullT) -> Some NullTag
     | _ -> None
 
+  let is_synthetic { synthetic; _ } = synthetic
+
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
   let make =
@@ -2542,14 +2551,14 @@ end = struct
         | _ -> None
       end
     in
-    fun ?source_aloc t0 t1 ts ->
+    fun ?source_aloc ?(synthetic = false) t0 t1 ts ->
       let enum =
         Base.Option.(
           mk_enum (UnionEnumSet.empty, tag_of_member t0) (t0 :: t1 :: ts) >>| fun (tset, tag) ->
           EnumUnion (tset, tag)
         )
       in
-      { t0; t1; ts; source_aloc; specialization = ref enum }
+      { t0; t1; ts; source_aloc; specialization = ref enum; synthetic }
 
   let members { t0; t1; ts; _ } = t0 :: t1 :: ts
 
