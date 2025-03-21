@@ -629,6 +629,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                       reason;
                       id = None;
                       from_annot = true;
+                      skip_optional = false;
                       access_iterables = false;
                       key_t = NumModuleT.make reason;
                       tout;

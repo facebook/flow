@@ -380,6 +380,7 @@ and type_of_hint_decomposition cx op reason t =
                   reason;
                   id = None;
                   from_annot = true;
+                  skip_optional = false;
                   access_iterables = true;
                   key_t = DefT (reason, num);
                   tout;
@@ -548,6 +549,7 @@ and type_of_hint_decomposition cx op reason t =
                   reason;
                   id = Some (Reason.mk_id ());
                   from_annot = false;
+                  skip_optional = false;
                   propref = mk_named_prop ~reason (OrdinaryName name);
                   tout;
                   hint = hint_unavailable;
@@ -565,6 +567,7 @@ and type_of_hint_decomposition cx op reason t =
                   reason;
                   id = None;
                   from_annot = true;
+                  skip_optional = false;
                   access_iterables = false;
                   key_t;
                   tout;

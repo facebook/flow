@@ -2553,6 +2553,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       ~super
       ~lookup_kind
       ~hint
+      ~skip_optional:_
       inst
       propref
       reason_op =
@@ -2625,7 +2626,8 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
    * e.g. indexed access type or write `obj[foo] = ...`
    *
    * never_union_void_on_computed_prop_access is the flag to disable the union void behavior. *)
-  let get_obj_prop cx trace use_op ~never_union_void_on_computed_prop_access o propref reason_op =
+  let get_obj_prop
+      cx trace use_op ~skip_optional ~never_union_void_on_computed_prop_access o propref reason_op =
     let named_prop =
       match propref with
       | Named { name; _ } -> Context.get_prop cx o.props_tmap name
@@ -2642,7 +2644,13 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     match (propref, named_prop, dict_t) with
     | (_, Some prop, _) ->
       (* Property exists on this property map *)
-      Some (Property.type_ prop, PropertyMapProperty)
+      let field =
+        match Property.type_ prop with
+        | OrdinaryField { type_ = OptionalT { type_; _ }; polarity } when skip_optional ->
+          OrdinaryField { type_; polarity }
+        | field -> field
+      in
+      Some (field, PropertyMapProperty)
     | (Named { name; _ }, None, Some { key; value; dict_polarity; _ })
       when not (is_dictionary_exempt name) ->
       (* Dictionaries match all property reads *)
@@ -2663,13 +2671,15 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       Some (OrdinaryField { type_; polarity = dict_polarity }, IndexerProperty)
     | _ -> None
 
-  let read_obj_prop cx trace ~use_op ~from_annot o propref reason_obj reason_op lookup_info =
+  let read_obj_prop
+      cx trace ~use_op ~from_annot ~skip_optional o propref reason_obj reason_op lookup_info =
     let l = DefT (reason_obj, ObjT o) in
     match
       get_obj_prop
         cx
         trace
         use_op
+        ~skip_optional
         ~never_union_void_on_computed_prop_access:from_annot
         o
         propref

@@ -693,6 +693,7 @@ and dump_use_t_ (depth, tvars) cx t =
           reason = _;
           id = _;
           from_annot;
+          skip_optional = _;
           access_iterables;
           key_t;
           tout = (preason, ptvar);
@@ -717,6 +718,7 @@ and dump_use_t_ (depth, tvars) cx t =
           reason = _;
           id = _;
           from_annot = _;
+          skip_optional = _;
           propref = prop;
           tout = (preason, ptvar);
           hint = _;

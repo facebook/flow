@@ -615,6 +615,7 @@ module rec TypeTerm : sig
         reason: reason;
         id: ident option;
         from_annot: bool;
+        skip_optional: bool;
         propref: propref;
         tout: tvar;
         hint: lazy_hint_t;
@@ -640,6 +641,7 @@ module rec TypeTerm : sig
         reason: reason;
         id: ident option;
         from_annot: bool;
+        skip_optional: bool;
         access_iterables: bool;
         key_t: t;
         tout: tvar;
@@ -1395,6 +1397,7 @@ module rec TypeTerm : sig
     | ReadElem of {
         id: ident option;
         from_annot: bool;
+        skip_optional: bool;
         access_iterables: bool;
         tout: tvar;
       }
@@ -4460,12 +4463,23 @@ let apply_opt_use opt_use t_out =
   | OptCallT { use_op; reason; opt_funcalltype = f; return_hint } ->
     CallT { use_op; reason; call_action = apply_opt_funcalltype f t_out; return_hint }
   | OptGetPropT { use_op; reason; id; propref; hint } ->
-    GetPropT { use_op; reason; id; from_annot = false; propref; tout = t_out; hint }
+    GetPropT
+      { use_op; reason; id; from_annot = false; skip_optional = false; propref; tout = t_out; hint }
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
   | OptTestPropT (use_op, reason, id, propref, hint) ->
     TestPropT { use_op; reason; id; propref; tout = t_out; hint }
   | OptGetElemT (use_op, reason, id, from_annot, key_t) ->
-    GetElemT { use_op; reason; id; from_annot; access_iterables = false; key_t; tout = t_out }
+    GetElemT
+      {
+        use_op;
+        reason;
+        id;
+        from_annot;
+        skip_optional = false;
+        access_iterables = false;
+        key_t;
+        tout = t_out;
+      }
   | OptCallElemT (u, r1, r2, elt, call) -> CallElemT (u, r1, r2, elt, apply_opt_action call t_out)
 
 let mk_enum_type reason enum_info =

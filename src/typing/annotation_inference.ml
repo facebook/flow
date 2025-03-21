@@ -925,7 +925,8 @@ module rec ConsGen : S = struct
          GetPropTKit.get_obj_prop
            cx
            dummy_trace
-           (* TODO: make `no_unchecked_indexed_access=true` work in deeper prototypes. *)
+           ~skip_optional:false
+             (* TODO: make `no_unchecked_indexed_access=true` work in deeper prototypes. *)
            ~never_union_void_on_computed_prop_access:true
            unknown_use
            o
@@ -1038,6 +1039,7 @@ module rec ConsGen : S = struct
         ~super
         ~lookup_kind:(Strict reason_instance)
         ~hint:hint_unavailable
+        ~skip_optional:false
         inst
         propref
         reason_op
@@ -1061,6 +1063,7 @@ module rec ConsGen : S = struct
         dummy_trace
         ~use_op
         ~from_annot
+        ~skip_optional:false
         o
         prop_ref
         reason_obj

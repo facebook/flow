@@ -106,7 +106,17 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     map_opt resolve topt
   | GetTypeFromNamespaceT { tout = tvar; _ }
   | GetPrivatePropT (_, _, _, _, _, tvar)
-  | GetPropT { use_op = _; reason = _; id = _; from_annot = _; propref = _; tout = tvar; hint = _ }
+  | GetPropT
+      {
+        use_op = _;
+        reason = _;
+        id = _;
+        from_annot = _;
+        skip_optional = _;
+        propref = _;
+        tout = tvar;
+        hint = _;
+      }
   | TestPropT { use_op = _; reason = _; id = _; propref = _; tout = tvar; hint = _ } ->
     resolve_tvar tvar
   | SetElemT (_, _, _, _, _, topt) -> map_opt resolve topt

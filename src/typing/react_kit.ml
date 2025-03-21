@@ -98,6 +98,17 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Get the intrinsic from the map. *)
     let intrinsic =
       Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+          let propref =
+            match literal with
+            | `Literal name ->
+              let reason =
+                replace_desc_reason
+                  (RReactElement { name_opt = Some name; from_component_syntax = false })
+                  reason
+              in
+              mk_named_prop ~reason name
+            | `General _ -> Computed (DefT (reason, StrGeneralT AnyLiteral))
+          in
           rec_flow
             cx
             trace
@@ -108,16 +119,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   reason;
                   id = None;
                   from_annot = false;
-                  propref =
-                    (match literal with
-                    | `Literal name ->
-                      let reason =
-                        replace_desc_reason
-                          (RReactElement { name_opt = Some name; from_component_syntax = false })
-                          reason
-                      in
-                      mk_named_prop ~reason name
-                    | `General _ -> Computed (DefT (reason, StrGeneralT AnyLiteral)));
+                  skip_optional = false;
+                  propref;
                   tout;
                   hint = hint_unavailable;
                 }
