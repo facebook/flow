@@ -1042,6 +1042,7 @@ let resolve_chain_expression cx ~cond exp =
     match cond with
     | NonConditionalContext -> NoContext
     | OtherConditionalTest -> OtherTest
+    | ComputedIndexContext -> IndexContext
   in
   let (t, _, exp) = Statement.optional_chain ~encl_ctx cx exp in
   Node_cache.set_expression cache exp;
@@ -1052,6 +1053,7 @@ let resolve_write_expression cx ~cond exp =
     match cond with
     | NonConditionalContext -> NoContext
     | OtherConditionalTest -> OtherTest
+    | ComputedIndexContext -> IndexContext
   in
   synthesizable_expression cx ~encl_ctx exp
 

@@ -467,7 +467,7 @@ function test_destructure_computed() {
   one as 2; // error 1 ~> 2
 }
 
-function test_computed_prop_hint() {
+function test_computed_prop_hint_1() {
   type Name = 'a'| 'b' | 'c';
   const KeyName = 'a';
   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'a'}>); // okay
@@ -481,4 +481,20 @@ function test_synthesis_produced_uncacheable_result() {
     x as string; // okay
     x as number; // error string ~> number
   });
+}
+
+function test_computed_prop_hint_2() {
+  const A = 'a';
+  const B = 'b';
+
+  type T = {
+    a: number,
+    b: string,
+  };
+
+  declare function foo<X>(): X;
+  const x: T = {
+    [A]: foo(), // okay - inferred number as return
+    [B]: foo(), // okay - inferred string as return
+  };
 }

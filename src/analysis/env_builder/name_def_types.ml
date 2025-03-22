@@ -13,6 +13,7 @@ open Loc_collections
 type cond_context =
   | NonConditionalContext
   | OtherConditionalTest
+  | ComputedIndexContext
 
 type scope_kind =
   | Ordinary (* function or module *)

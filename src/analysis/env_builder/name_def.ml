@@ -3151,7 +3151,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | Ast.Expression.Object.Property.PrivateName _ -> [] (* Illegal syntax *)
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
-          this#visit_expression ~hints:[] ~cond:NonConditionalContext expression;
+          this#visit_expression ~hints:[] ~cond:ComputedIndexContext expression;
           decompose_hints (Decomp_ObjComputed (mk_expression_reason expression)) object_hints
       in
       Base.List.iter properties ~f:(fun prop ->
