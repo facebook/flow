@@ -2399,15 +2399,34 @@ References:
 
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
 
-Cannot assign `Foo` to `a` because mixed [1] is incompatible with props of component Foo [2]. [incompatible-type]
+Cannot assign `Foo` to `a` because inexact object type [1] is incompatible with exact props of component Foo [2].
+[incompatible-exact]
 
    props_reason.js:6:39
-   6| const a: React.ComponentType<mixed> = Foo; // ERROR
+   6| const a: React.ComponentType<{...}> = Foo; // ERROR
                                             ^^^
 
 References:
    props_reason.js:6:30
-   6| const a: React.ComponentType<mixed> = Foo; // ERROR
+   6| const a: React.ComponentType<{...}> = Foo; // ERROR
+                                   ^^^^^ [1]
+   props_reason.js:3:1
+   3| component Foo(x: number) { return null; }
+      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
+
+Cannot assign `Foo` to `a` because property `x` is missing in object type [1] but exists in props of component Foo [2].
+[prop-missing]
+
+   props_reason.js:6:39
+   6| const a: React.ComponentType<{...}> = Foo; // ERROR
+                                            ^^^
+
+References:
+   props_reason.js:6:30
+   6| const a: React.ComponentType<{...}> = Foo; // ERROR
                                    ^^^^^ [1]
    props_reason.js:3:1
    3| component Foo(x: number) { return null; }
@@ -3676,7 +3695,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 238 errors
+Found 239 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

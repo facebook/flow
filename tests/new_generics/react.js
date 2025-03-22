@@ -18,11 +18,11 @@ type DefaultProps = {|
   b: string,
 |};
 
-function connect<TProps: {...}, SProps: TProps>(): React.ComponentType<SProps> {
+function connect<TProps: {...}, SProps: TProps>(): component(...SProps) {
   return class extends React.Component<TProps> {};
 }
 
-function hoc<Props, Component: React.ComponentType<Props>>(
+function hoc<Props: {...}, Component: component(...Props)>(
   WrappedComponent: Component,
 ): React.ComponentType<React.ElementConfig<Component>> {
   return (props: Props) => <WrappedComponent {...props} />;
@@ -47,9 +47,9 @@ function WrapInDivWithExtraProp<Props: {...}, Instance>(
   return C;
 }
 
-function mapProps<InputProps, SubInputProps: InputProps, OutputProps>(
+function mapProps<InputProps: {...}, SubInputProps: InputProps, OutputProps: {...}>(
   mapperFn: InputProps => OutputProps,
-): (React.ComponentType<OutputProps>) => React.ComponentType<SubInputProps> {
+): (component(...OutputProps)) => component(...SubInputProps) {
   return Component => props => <Component {...mapperFn(props)} />;
 }
 
@@ -59,8 +59,8 @@ export type PCCP = {
 };
 
 export function withCommentsConfig<TProps: PCCP>(
-  Component: React.ComponentType<TProps>,
-): React.ComponentType<$Diff<TProps, PCCP>> {
+  Component: component(...TProps),
+): component(...$Diff<TProps, PCCP>) {
   return function (props) {
     return <Component {...props} commentsConfig={42} />;
   };

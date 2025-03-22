@@ -556,10 +556,6 @@ type ('loc, 'a) annot =
     }
   | ClassT of 'loc * 'a
   | Function_bind of 'loc
-  | ReactAbstractComponent of {
-      loc: 'loc;
-      config: 'a;
-    }
   | ReactCreateClass of 'loc
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a

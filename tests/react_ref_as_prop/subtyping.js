@@ -12,7 +12,7 @@ FnWithOptionalRefProp as React.ComponentType<{+foo: string}>; // ok
 FnWithOptionalRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
 
 FnWithRequiredRefProp as component(foo: string); // error: missing ref prop
-FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // ok
+FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // error: missing ref prop
 FnWithRequiredRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
 
 CompWithoutRefProp as component(foo: string); // ok

@@ -183,7 +183,6 @@ module Eval = struct
     | Value x -> Value (x, name)
     | Annot (Typeof { qname = [typeof_name]; _ } as x) ->
       Annot (x, Some (Base.Option.value ~default:typeof_name name))
-    | Annot (ReactAbstractComponent _ as x)
     | Annot (ComponentAnnot _ as x) ->
       (match name with
       | Some name -> ComponentDecl name

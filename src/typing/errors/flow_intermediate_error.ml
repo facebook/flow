@@ -2947,13 +2947,6 @@ let to_printable_error :
       ]
     | MessageInternalType (DollarUtilityTypeWithNonDollarAliases name) ->
       [code ("$" ^ name); text " is an internal Flow type. Use "; code name; text " instead."]
-    | MessageInternalType ReactDollarAbstractComponent ->
-      [
-        code "React$AbstractComponent";
-        text " is an internal Flow type used to model React components. ";
-        text "You should use component type instead. See ";
-        text "https://flow.org/en/docs/react/component-types/.";
-      ]
     | MessageInternalType ReactDollarElement ->
       [
         code "React$Element";

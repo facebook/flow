@@ -1,6 +1,6 @@
 //@flow
 
-function test(x: React$AbstractComponent<any>) {
+function test(x: component(...any)) {
   return;
 }
 

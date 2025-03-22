@@ -15,7 +15,7 @@ export default (compose(
     buz: buz * 2,
     qux,
   })),
-  withProps(({ buz }: {|buz: number, foo: string, qux: number|}) => ({
+  withProps<{|buz: number, foo: string, qux: number|}, _>(({ buz }) => ({
     bar: buz,
   })),
 )(Good): React.ComponentType<{|foo: number, buz: number, qux: number|}>);

@@ -23,23 +23,23 @@ References:
     19| React.cloneElement(); // Error: Needs a minimum of two arguments.
         ^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:180:6
-             v------------------------------------------------------------------
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+             v-----------------------------------------------------------
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
    181|     element: E,
    182|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    183|   ) => E)
           -----^ [3]
    <BUILTINS>/react.js:184:6
-             v------------------------------------------------------------------
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+             v-----------------------------------------------------------
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
    185|     element: E,
    186|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    187|     children: NoInfer<Props>['children']
    188|   ) => E)
           -----^ [4]
    <BUILTINS>/react.js:189:6
-             v------------------------------------------------------------------
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+             v-----------------------------------------------------------
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
    190|     element: E,
    191|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    192|     firstChild: NoInfer<Props>['children'][0],
@@ -68,15 +68,15 @@ References:
    <BUILTINS>/react.js:175:36
    175|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:180:48
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:184:48
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:189:48
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:180:41
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:184:41
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:189:41
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
@@ -98,15 +98,15 @@ References:
    <BUILTINS>/react.js:175:36
    175|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:180:48
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:184:48
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:189:48
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:180:41
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:184:41
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:189:41
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:8
@@ -263,8 +263,8 @@ References:
      67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                             ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:180:6
-              v------------------------------------------------------------------
-    180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+              v-----------------------------------------------------------
+    180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
     181|     element: E,
     182|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
     183|   ) => E)
@@ -292,8 +292,8 @@ References:
     67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:180:6
-             v------------------------------------------------------------------
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+             v-----------------------------------------------------------
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
    181|     element: E,
    182|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    183|   ) => E)
@@ -321,8 +321,8 @@ References:
     67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:180:6
-             v------------------------------------------------------------------
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
+             v-----------------------------------------------------------
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
    181|     element: E,
    182|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    183|   ) => E)
@@ -500,10 +500,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
- - Either `React.ComponentType` [1] is incompatible with key set [2] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [4] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [5] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [6] in type argument `ElementType` [3].
+ - Either component [1] is incompatible with key set [2] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [4] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [5] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [6] in type argument `ElementType` [3].
 
    test.js:92:9
     92|   React.cloneElement(el); // ERROR
@@ -520,23 +520,23 @@ References:
     67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:180:17
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                        ^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:184:17
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                        ^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/react.js:189:17
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                        ^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:93:9
 
 Cannot call `React.cloneElement` because: [incompatible-call]
- - Either `React.ComponentType` [1] is incompatible with string [2] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [4] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [5] in type argument `ElementType` [3].
- - Or string [1] is incompatible with `React.ComponentType` [6] in type argument `ElementType` [3].
+ - Either component [1] is incompatible with string [2] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [4] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [5] in type argument `ElementType` [3].
+ - Or string [1] is incompatible with component [6] in type argument `ElementType` [3].
 
    test.js:93:9
      93|   React.cloneElement(el, {}); // ERROR
@@ -553,14 +553,14 @@ References:
      67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                             ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:180:17
-    180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:184:17
-    184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/react.js:189:17
-    189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+    189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:9
@@ -582,15 +582,15 @@ References:
    <BUILTINS>/react.js:175:36
    175|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:180:48
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:184:48
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:189:48
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:180:41
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:184:41
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:189:41
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:100:9
@@ -612,15 +612,15 @@ References:
    <BUILTINS>/react.js:175:36
    175|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:180:48
-   180|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:184:48
-   184|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:189:48
-   189|   & (<Props, C: React$ComponentType<empty>, E: React$Element<C, Props>>(
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:180:41
+   180|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:184:41
+   184|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:189:41
+   189|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 

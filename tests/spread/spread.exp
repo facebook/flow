@@ -42,8 +42,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
 
-Cannot call `foo` with `bar(...)` bound to the first parameter because `React.ComponentType` [1] is incompatible with
-class `C` [2]. [incompatible-call]
+Cannot call `foo` with `bar(...)` bound to the first parameter because `ComponentType` [1] is incompatible with class
+`C` [2]. [incompatible-call]
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call

@@ -253,7 +253,7 @@ References:
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
 Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
- - Either module `./foo` [1] is incompatible with `React.ComponentType` [2].
+ - Either module `./foo` [1] is incompatible with component [2].
  - Or module `./foo` [1] is incompatible with string [3].
 
    import_star_invalid_use.js:9:2
@@ -264,8 +264,8 @@ References:
    foo.js
    ^^^^^^ [1]
    <BUILTINS>/react.js:53:5
-   53|   | React$ComponentType<empty>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   53|   | component(...empty);
+           ^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:52:5
    52|   | string
            ^^^^^^ [3]

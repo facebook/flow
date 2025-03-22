@@ -18,10 +18,10 @@ function TrivialHOC<Props: {...}, Instance>(
 const TrivialWrap = TrivialHOC(Component);
 TrivialWrap as component(ref: React.RefSetter<Component>, bar: number, foo?: number); // All ok!
 
-function WrapInDivWithExtraProp<Props>(
+function WrapInDivWithExtraProp<Props: {...}>(
   X: React.ComponentType<Props>,
-): React.ComponentType<{|...Props, baz: number|}> {
-  class C extends React.Component<{|...Props, baz: number|}> {
+): React.ComponentType<{|...$Exact<Props>, baz: number|}> {
+  class C extends React.Component<{|...$Exact<Props>, baz: number|}> {
     static defaultProps: {} = {};
     render(): React.Node {
       const props = this.props;
@@ -41,10 +41,10 @@ WrappedInDivWithExtraProp as React.ComponentType<
   {|foo?: number, bar: number, baz: number|},
 >;
 
-function AddPropWithDefault<Props>(
+function AddPropWithDefault<Props: {...}>(
   X: React.ComponentType<Props>,
-): React.ComponentType<{|...Props, baz?: number|}> {
-  class C extends React.Component<{|...Props, baz?: number|}> {
+): React.ComponentType<{|...$Exact<Props>, baz?: number|}> {
+  class C extends React.Component<{|...$Exact<Props>, baz?: number|}> {
     static defaultProps: {baz: 3} = {baz: 3};
     render(): React.Node {
       const props = this.props;

@@ -1175,47 +1175,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               let reason = mk_annot_reason RFunctionType loc in
               reconstruct_ast (FunProtoBindT reason) None
           )
-        | "React$AbstractComponent" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 (loc, Flow_intermediate_error_types.ReactDollarAbstractComponent)
-              );
-          let reason = mk_reason (RCustom "AbstractComponent") loc in
-          (match targs with
-          | None
-          | Some (_, { Ast.Type.TypeArgs.arguments = []; comments = _ }) ->
-            error_type cx loc (Error_message.ETypeParamMinArity (loc, 1)) t_ast
-          | Some (_, { Ast.Type.TypeArgs.arguments; comments = _ }) when List.length arguments > 1
-            ->
-            error_type
-              cx
-              loc
-              (Error_message.ETooManyTypeArgs
-                 { reason_tapp = reason; arity_loc = loc; maximum_arity = 3 }
-              )
-              t_ast
-          | _ ->
-            let (ts, targs) = convert_type_params () in
-            let config = List.nth ts 0 in
-            let instance = ComponentInstanceTopType reason in
-            let renders =
-              let reason =
-                Reason.update_desc_new_reason
-                  (fun _ -> RIdentifier (OrdinaryName "React.Node"))
-                  reason
-              in
-              DefT (reason, RendersT DefaultRenders)
-            in
-            reconstruct_ast
-              (DefT
-                 ( reason,
-                   ReactAbstractComponentT
-                     { config; instance; renders; component_kind = Structural }
-                 )
-              )
-              targs)
         | "React$ElementProps" ->
           if not (Context.is_lib_file cx) then
             Flow_js_utils.add_output

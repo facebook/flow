@@ -4,7 +4,7 @@ import * as React from 'react';
 const any: any = null;
 
 // Utility. We want to be able to enhance some components.
-function hoc<Props, Component: React.ComponentType<Props>>(
+function hoc<Props: {...}, Component: React.ComponentType<Props>>(
   WrappedComponent: Component,
 ): React.ComponentType<React.ElementConfig<Component>> {
   return (props: Props) => <WrappedComponent {...props} />;

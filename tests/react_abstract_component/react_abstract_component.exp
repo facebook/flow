@@ -24,32 +24,15 @@ References:
    strict.js:4:11
     4| const c = <Component f = {3}/>;
                  ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:53:25
-   53|   | React$ComponentType<empty>;
-                               ^^^^^ [2]
+   <BUILTINS>/react.js:53:14
+   53|   | component(...empty);
+                    ^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
 Cannot call `foo` with `ref` bound to `a` because `CommonInstance` [1] is incompatible with `Component` [2].
 [incompatible-call]
-
-   strict.js:9:5
-   9| foo(ref);
-          ^^^
-
-References:
-   strict.js:8:19
-   8| declare var ref: ?React.ElementRef<React$ElementType>;
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   strict.js:7:26
-   7| declare function foo(a: ?React.Component<any, any>): void;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
-
-Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with `Component` [2]. [incompatible-call]
 
    strict.js:9:5
    9| foo(ref);
@@ -75,9 +58,9 @@ Cannot get `x.notOnEitherSFCOrClass` because property `notOnEitherSFCOrClass` is
 
 References:
    test_prop.js:3:18
-   3| function test(x: React$ComponentType<any>) {
+   3| function test(x: React.ComponentType<any>) {
                        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 5 errors
+Found 4 errors

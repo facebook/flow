@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:3
 
-Cannot cast `foo` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because props of component [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:12:3
    12|   foo as empty; // error

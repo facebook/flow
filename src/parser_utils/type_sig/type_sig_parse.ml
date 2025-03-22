@@ -2575,15 +2575,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ObjKeyMirror { loc; obj })
     | _ -> Err (loc, CheckError)
   end
-  | "React$AbstractComponent" -> begin
-    match targs with
-    | Some (_, { arguments = config :: targs; _ }) ->
-      let config = annot opts scope tbls xs config in
-      (match targs with
-      | [] -> Annot (ReactAbstractComponent { loc; config })
-      | _ -> Err (loc, CheckError))
-    | _ -> Err (loc, CheckError)
-  end
   | "React$ElementProps" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

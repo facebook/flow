@@ -12,7 +12,7 @@ export default (compose(
   mapProps(({ buz }: { buz: string }) => ({ // Error: Missing foo
     buz: (buz * 2).toString(), // Error: string ~> number
   })),
-  withProps(({ buz }: {| buz: string |}) => ({
+  withProps<{| buz: string |}, _>(({ buz }) => ({
     bar: buz,
   })),
 )(Bad): React.ComponentType<any>);

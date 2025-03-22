@@ -29,4 +29,4 @@ React.default.PropTypes;
 React.default.Component;
 
 React.Fragment
-declare var react_ct: React.ComponentType<number>;
+declare var react_ct: component(...number);

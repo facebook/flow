@@ -94,10 +94,7 @@ Flags: --lsp
 recursive.js:11:6
 Flags: --pretty
 {
-  "result":[
-    {"name":"ab","type":"number"},
-    {"name":"ac","type":"React$ComponentType<Props>"}
-  ]
+  "result":[{"name":"ab","type":"number"},{"name":"ac","type":"ComponentType<Props>"}]
 }
 
 string_literal.js:5:16

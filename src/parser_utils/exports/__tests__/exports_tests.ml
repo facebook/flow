@@ -770,32 +770,25 @@ let%expect_test "lib_value" =
     [(Named "globalThis"); (Named "foo")]
   |}]
 
-let%expect_test "react_dollar_ac" =
-  print_module {|
-    const x: React$AbstractComponent<{}> = null;
-    export default x;
-  |};
-  [%expect{| [(Default (Some "x")); (DefaultType (Some "x"))] |}]
-
-let%expect_test "react_dot_ac_1" =
+let%expect_test "react_dot_ct_1" =
   print_module {|
     import * as React from 'react';
-    export const x: React.AbstractComponent<{}> = null;
-    export const y: React.AbstractComponent<{}> = null;
+    export const x: React.ComponentType<{}> = null;
+    export const y: React.ComponentType<{}> = null;
   |};
   [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
 
-let%expect_test "react_dot_ac_2" =
+let%expect_test "react_dot_ct_2" =
   print_module {|
     import React from 'react';
-    export const x: React.AbstractComponent<{}> = null;
-    export const y: React.AbstractComponent<{}> = null;
+    export const x: React.ComponentType<{}> = null;
+    export const y: React.ComponentType<{}> = null;
   |};
   [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]
 
-let%expect_test "react_builtin_ac_1" =
+let%expect_test "react_builtin_ct_1" =
   print_module {|
-    export const x: React.AbstractComponent<{}> = null;
-    export const y: React.AbstractComponent<{}> = null;
+    export const x: React.ComponentType<{}> = null;
+    export const y: React.ComponentType<{}> = null;
   |};
   [%expect{| [(Named "y"); (NamedType "y"); (Named "x"); (NamedType "x")] |}]

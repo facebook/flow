@@ -2,7 +2,7 @@ const React = require('react');
 type PropsType = { }
 
 class Child extends React.Component<PropsType> {}
-const HocChild: React.ComponentType<PropsType> = (null: any);
+const HocChild: component(ref: React.RefSetter<mixed>, ...PropsType) = (null: any);
 
 class OkParent extends React.Component<void> {
   render = (): React.Node => <Child ref={this._handleChild} />;

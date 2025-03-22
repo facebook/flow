@@ -25,13 +25,13 @@ exists in `Props` [2]. [prop-missing]
          ^^^
 
 References:
-   hocs.js:16:25
-                               v-
-   16| ): (React.ComponentType<{|
-   17|   ...Props,
-   18|   ...ExtraProps,
-   19| |}>) => React.ComponentType<Props> {
-       -^ [1]
+   hocs.js:16:13
+                   v-----
+   16| ): component(...{|
+   17|   ...$Exact<Props>,
+   18|   ...$Exact<ExtraProps>,
+   19| |}) => component(...$Exact<Props>) {
+       --^ [1]
    Bad.js:9:21
     9| const Bad = (props: Props) => null;
                            ^^^^^ [2]
@@ -47,9 +47,9 @@ property `bar`. [incompatible-call]
          ^^^
 
 References:
-   Bad.js:15:31
-   15|   withProps(({ buz }: {| buz: string |}) => ({
-                                     ^^^^^^ [1]
+   Bad.js:15:21
+   15|   withProps<{| buz: string |}, _>(({ buz }) => ({
+                           ^^^^^^ [1]
    Bad.js:6:8
     6|   bar: number,
               ^^^^^^ [2]

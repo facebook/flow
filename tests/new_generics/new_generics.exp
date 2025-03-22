@@ -1032,7 +1032,7 @@ References:
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
                                    ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:262:38
-   262|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   262|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [3]
 
 

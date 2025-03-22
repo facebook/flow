@@ -3292,10 +3292,10 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo?: number & boolean & string',
+                  label: 'foo: boolean & string',
                   parameters: [
                     {
-                      label: 'foo?: number & boolean & string',
+                      label: 'foo: boolean & string',
                     },
                   ],
                 },
@@ -3332,10 +3332,10 @@ module.exports = (suite(
                   ],
                 },
                 {
-                  label: 'foo?: boolean & string',
+                  label: 'foo: boolean & string',
                   parameters: [
                     {
-                      label: 'foo?: boolean & string',
+                      label: 'foo: boolean & string',
                     },
                   ],
                 },
@@ -3364,12 +3364,12 @@ module.exports = (suite(
             result: {
               signatures: [
                 {
-                  label: 'foo?: number & (boolean | string)',
-                  parameters: [
-                    {
-                      label: 'foo?: number & (boolean | string)',
-                    },
-                  ],
+                  label: 'foo?: string',
+                  parameters: [{label: 'foo?: string'}],
+                },
+                {
+                  label: 'foo: boolean',
+                  parameters: [{label: 'foo: boolean'}],
                 },
               ],
               activeSignature: 0,

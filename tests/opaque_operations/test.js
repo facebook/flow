@@ -6,9 +6,9 @@
 }
 
 {
-  declare opaque type T2: React.ComponentType<{foo: string}>;
+  declare opaque type T2: component(foo: string);
   declare const foo: React.ElementConfig<T2>;
-  foo as {foo: string}; // ok
+  foo as {+foo: string}; // ok
   foo as empty; // error
 }
 

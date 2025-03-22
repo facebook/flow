@@ -906,32 +906,6 @@ and merge_annot env file = function
   | Function_bind loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoBindT reason
-  | ReactAbstractComponent { loc; config } ->
-    let reason = Reason.(mk_reason (RCustom "AbstractComponent") loc) in
-    let config = merge env file config in
-    let mk_default_type_argument_reason_at_position desc_default position =
-      Reason.(
-        update_desc_new_reason (fun desc_type ->
-            RDefaultTypeArgumentAtIndex { desc_type; desc_default; position }
-        )
-      )
-        reason
-    in
-    let instance =
-      Type.ComponentInstanceTopType (mk_default_type_argument_reason_at_position Reason.REmpty 2)
-    in
-    let renders =
-      let reason =
-        mk_default_type_argument_reason_at_position
-          Reason.(RIdentifier (OrdinaryName "React.Node"))
-          3
-      in
-      Type.(DefT (reason, RendersT DefaultRenders))
-    in
-    Type.(
-      DefT
-        (reason, ReactAbstractComponentT { config; instance; renders; component_kind = Structural })
-    )
   | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in

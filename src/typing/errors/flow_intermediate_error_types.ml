@@ -55,7 +55,6 @@ type context_dependent_unsupported_statement =
 type internal_type =
   | DollarReactDeepReadOnly
   | DollarUtilityTypeWithNonDollarAliases of string
-  | ReactDollarAbstractComponent
   | ReactDollarElement
   | ReactDollarUtilityTypesWithNonDollarAliases of string
 

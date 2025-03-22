@@ -959,17 +959,16 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
 
-Cannot use `React.Node` (default type argument for AbstractComponent's 3rd position) [1] as the type argument of renders
-type. [invalid-render]
+Cannot use renders `React.Node` [1] as the type argument of renders type. [invalid-render]
 
    renders_to_renders.js:60:25
    60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:41:45
-   41| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:53:24
+   53|   | component(...empty);
+                               [1]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25

@@ -133,17 +133,22 @@ react_component.js:32:13 = {
   "types":{
     "unevaluated":{
       "expanded":{
-        "kind":"Generic",
-        "typeArgs":[{"kind":"Num"}],
-        "type":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:262:23-35"},
-          "name":"ComponentType"
-        },
-        "generic_kind":"type alias"
+        "kind":"Component",
+        "regularProps":{"kind":"unflattened","type":{"kind":"Num"}},
+        "refProp":null,
+        "renders":null
       },
-      "type":"ComponentType<number>"
+      "type":"component(...number)"
     },
-    "evaluated":null
+    "evaluated":{
+      "expanded":{
+        "kind":"Component",
+        "regularProps":{"kind":"unflattened","type":{"kind":"Implicit Any","any":"implicit"}},
+        "refProp":null,
+        "renders":null
+      },
+      "type":"component(...any)"
+    }
   },
   "reasons":[],
   "loc":{
@@ -159,41 +164,19 @@ react_component.js:32:13 = {
   "end":20
 }
 react_component.js:32:29 = {
-  "types":{
-    "unevaluated":{
-      "expanded":{
-        "kind":"TypeAlias",
-        "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:262:23-35"},
-          "name":"ComponentType"
-        },
-        "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
-        "body":{
-          "kind":"Generic",
-          "typeArgs":[{"kind":"Bound","bound":"P"}],
-          "type":{
-            "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:41:14-32"},
-            "name":"React$ComponentType"
-          },
-          "generic_kind":"type alias"
-        }
-      },
-      "type":"type ComponentType<-P> = React$ComponentType<P>"
-    },
-    "evaluated":null
-  },
+  "types":null,
   "reasons":[],
   "loc":{
-    "source":"react_component.js",
-    "type":"SourceFile",
-    "start":{"line":32,"column":29,"offset":491},
-    "end":{"line":32,"column":41,"offset":504}
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
   },
-  "path":"react_component.js",
-  "line":32,
-  "endline":32,
-  "start":29,
-  "end":41
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
 }
 react.js:4:7
 Flags:
@@ -207,7 +190,8 @@ React$CreateElement
 
 react.js:4:7,4:19
 
-react_abstract_component.js:3:15 = component(ref: empty, ...any)
+react_abstract_component.js:3:15 = component(...any)
+= component(...any)
 react_abstract_component.js:3:15,3:15
 react_abstract_component.js:8:15 = type RendersFoo = renders Foo
 

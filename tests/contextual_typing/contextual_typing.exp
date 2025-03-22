@@ -828,16 +828,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-cast]
 
    react_tests.js:19:6
-   19|     (props: empty); // error
-            ^^^^^
+    19|     (props: empty); // error
+             ^^^^^
 
 References:
-   react_tests.js:17:32
-   17|   const _: React.ComponentType<{foo: string}> = (props) => {
-                                      ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:262:59
+   262|   declare export type ComponentType<-P: {...}> = component(...P);
+                                                                  ^^^^^^ [1]
    react_tests.js:19:13
-   19|     (props: empty); // error
-                   ^^^^^ [2]
+    19|     (props: empty); // error
+                    ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- react_tests.js:37:24

@@ -13,9 +13,9 @@ References:
    test1.js:14:27
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
                                   ^^^^^^^^ [1]
-   <BUILTINS>/react.js:41:45
-    41| declare type React$ComponentType<-Config> = React$AbstractComponent<Config>;
-                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   test1.js:5:48
+     5| const HocChild: component(ref: React.RefSetter<mixed>, ...PropsType) = (null: any);
+                                                       ^^^^^ [2]
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]

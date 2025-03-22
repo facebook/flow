@@ -17,7 +17,7 @@ type ConcretizedPolyComponent = Poly<string> extends React$RendersExactly<infer 
 type RendersExactlyFoo = Foo;
 //                        ^
 
-declare const x: React$AbstractComponent<{}>;
+declare const x: component();
 
 type xRendersExactly= x;
 //                    ^
