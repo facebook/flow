@@ -8,8 +8,8 @@ lead to surprising behaviors. [libdef-override]
                             ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:172:21
-   172| declare opaque type React$CreateElement;
+   <BUILTINS>/react.js:163:21
+   163| declare opaque type React$CreateElement;
                             ^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -28,11 +28,11 @@ References:
    test.js:5:1
     5| React.createElement(); // Error: Needs a minimum of two arguments.
        ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:52:5
-   52|   | string
+   <BUILTINS>/react.js:43:5
+   43|   | string
            ^^^^^^ [2]
-   <BUILTINS>/react.js:53:5
-   53|   | component(...empty);
+   <BUILTINS>/react.js:44:5
+   44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [3]
    lib.js:33:6
             v
@@ -58,11 +58,11 @@ References:
    test.js:7:21
     7| React.createElement(42); // Error: Number is not a valid component type.
                            ^^ [1]
-   <BUILTINS>/react.js:52:5
-   52|   | string
+   <BUILTINS>/react.js:43:5
+   43|   | string
            ^^^^^^ [2]
-   <BUILTINS>/react.js:53:5
-   53|   | component(...empty);
+   <BUILTINS>/react.js:44:5
+   44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -86,8 +86,8 @@ References:
    test.js:9:21
     9| React.createElement(42, {}); // Error: Number is not a valid component type.
                            ^^ [3]
-   <BUILTINS>/react.js:52:5
-   52|   | string
+   <BUILTINS>/react.js:43:5
+   43|   | string
            ^^^^^^ [4]
 
 
@@ -111,8 +111,8 @@ References:
    test.js:10:21
    10| React.createElement({}, {}); // Error: Object is not a valid component type.
                            ^^ [3]
-   <BUILTINS>/react.js:53:5
-   53|   | component(...empty);
+   <BUILTINS>/react.js:44:5
+   44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -355,8 +355,8 @@ References:
    test.js:34:89
    34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
                                                                                                ^^^^^^^ [4]
-   <BUILTINS>/react.js:67:69
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:69
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                            ^ [5]
 
 
@@ -383,8 +383,8 @@ References:
    test.js:35:89
    35| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
                                                                                                ^^^^^^^ [4]
-   <BUILTINS>/react.js:67:69
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:69
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                            ^ [5]
 
 

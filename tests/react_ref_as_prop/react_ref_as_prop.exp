@@ -341,8 +341,8 @@ in object type [2]. [prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:140:44
-   140|   type ComponentType<-P: {...}> = component(...P);
+   <BUILTINS>/react.js:131:44
+   131|   type ComponentType<-P: {...}> = component(...P);
                                                    ^^^^^^ [1]
    fn_components.js:3:54
      3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;

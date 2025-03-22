@@ -1330,17 +1330,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                  )
               );
           local_generic_type ()
-        | "React$ComponentType" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "ComponentType"
-                 )
-              );
-          local_generic_type ()
         | "React$Context" ->
           if not (Context.is_lib_file cx) then
             Flow_js_utils.add_output

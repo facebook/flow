@@ -48,8 +48,8 @@ References:
    class_to_component_type.js:3:15
      3| declare class Foo extends React.Component<{bar: string}> {}
                       ^^^ [2]
-   <BUILTINS>/react.js:278:34
-   278|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:269:34
+   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [3]
 
 
@@ -69,11 +69,11 @@ References:
    class_to_component_type.js:15:10
     15|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:104:5
+   104|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:105:6
+   105|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -147,8 +147,8 @@ References:
    classes_lower.js:11:7
     11| class ComponentNarrower extends React.Component<{foo: number, bar: number, ...}> {
               ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:278:34
-   278|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:269:34
+   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [3]
 
 
@@ -168,8 +168,8 @@ References:
    classes_lower.js:5:7
      5| class Component extends React.Component<{...}> {}
               ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:278:34
-   278|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:269:34
+   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [3]
 
 
@@ -206,8 +206,8 @@ References:
    component_to_component.js:26:37
     26|   x: component(ref: React.RefSetter<Component>, ...{...}),
                                             ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:278:34
-   278|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:269:34
+   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [3]
 
 
@@ -311,14 +311,14 @@ Cannot create `C` element because in property `ref`: [incompatible-type]
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:611:8
-   611|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:602:8
+   602|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:105:6
+   105|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:115:5
-   115|   | null
+   <BUILTINS>/react.js:106:5
+   106|   | null
             ^^^^ [3]
 
 
@@ -329,16 +329,16 @@ Cannot create `C` element because in property `key`: [incompatible-type]
  - Or object literal [1] is incompatible with number [3].
 
    create_element.js:25:49
-    25| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
-                                                        ^^^^^^^^ [1]
+   25| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
+                                                       ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:104:26
-   104| declare type React$Key = string | number;
-                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:104:35
-   104| declare type React$Key = string | number;
-                                          ^^^^^^ [3]
+   <BUILTINS>/react.js:95:26
+   95| declare type React$Key = string | number;
+                                ^^^^^^ [2]
+   <BUILTINS>/react.js:95:35
+   95| declare type React$Key = string | number;
+                                         ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:9:13
@@ -460,8 +460,8 @@ References:
    <BUILTINS>/core.js:2101:19
    2101| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
-   <BUILTINS>/react.js:148:19
-    148|   type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:139:19
+    139|   type RefSetter<-T> = React$RefSetter<T>;
                            ^ [4]
 
 
@@ -516,8 +516,8 @@ References:
    function_lower.js:12:29
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
                                     ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:112:31
-   112| declare type React$RefSetter<-T> =
+   <BUILTINS>/react.js:103:31
+   103| declare type React$RefSetter<-T> =
                                       ^ [3]
 
 
@@ -623,8 +623,8 @@ References:
    function_to_component_type.js:10:10
     10|     ref: React.RefSetter<string>
                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:112:31
-   112| declare type React$RefSetter<-T> =
+   <BUILTINS>/react.js:103:31
+   103| declare type React$RefSetter<-T> =
                                       ^ [3]
 
 
@@ -644,11 +644,11 @@ References:
    function_to_component_type.js:14:10
     14|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:113:5
-   113|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:104:5
+   104|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:114:6
-   114|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:105:6
+   105|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -804,8 +804,8 @@ References:
    <BUILTINS>/core.js:2101:19
    2101| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
-   <BUILTINS>/react.js:148:19
-    148|   type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:139:19
+    139|   type RefSetter<-T> = React$RefSetter<T>;
                            ^ [4]
 
 

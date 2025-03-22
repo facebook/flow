@@ -263,11 +263,11 @@ Cannot instantiate `React.Element` because in type argument `ElementType`: [inco
 References:
    foo.js
    ^^^^^^ [1]
-   <BUILTINS>/react.js:53:5
-   53|   | component(...empty);
+   <BUILTINS>/react.js:44:5
+   44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:52:5
-   52|   | string
+   <BUILTINS>/react.js:43:5
+   43|   | string
            ^^^^^^ [3]
 
 

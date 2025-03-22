@@ -4,15 +4,15 @@ lazy_ref.js:14:9 = {
   default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
 }
 
-'RefSetter' defined at (lib) react.js:1008:9
+'RefSetter' defined at (lib) react.js:999:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
   {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
 >
 
-'ExactReactElement_DEPRECATED' defined at (lib) react.js:96:13
-'Node' defined at (lib) react.js:279:22
+'ExactReactElement_DEPRECATED' defined at (lib) react.js:87:13
+'Node' defined at (lib) react.js:270:22
 'Promise' defined at (lib) core.js:2143:14
 'Props' defined at exports-component.js:5:5
 
@@ -30,7 +30,7 @@ We recommend defining components as functions instead of classes.
 **@see** https://react.dev/reference/react/Component
 class Component<Props, State = void>
 
-'Component' defined at (lib) react.js:635:18
+'Component' defined at (lib) react.js:626:18
 
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
@@ -45,7 +45,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:733:5,735:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:724:5,726:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -82,7 +82,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:733:5,735:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:724:5,726:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -186,7 +186,7 @@ It serves as an alternative to writing JSX.
 **@see** https://react.dev/reference/react/createElement
 React$CreateElement
 
-'React$CreateElement' defined at (lib) react.js:172:20
+'React$CreateElement' defined at (lib) react.js:163:20
 
 react.js:4:7,4:19
 

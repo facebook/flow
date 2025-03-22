@@ -566,7 +566,7 @@ React$Element<typeof MonoComponent, Props>
 
 'MonoComponent' defined at opaque.js:72:6
 'Props' defined at opaque.js:71:5
-'React$Element' defined at (lib) react.js:67:20
+'React$Element' defined at (lib) react.js:58:20
 
 opaque.js:73:7,73:17
 
@@ -680,7 +680,7 @@ subst.js:25:7,25:8
 At subst.js:27:7
 React$Element<any, any>
 
-'React$Element' defined at (lib) react.js:67:20
+'React$Element' defined at (lib) react.js:58:20
 
 subst.js:27:7,27:8
 

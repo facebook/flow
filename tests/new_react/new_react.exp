@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:635:28
-   635|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:626:28
+   626|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:635:28
-   635|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:626:28
+   626|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -74,8 +74,8 @@ References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:644:23
-   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:635:23
+   635|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -92,8 +92,8 @@ References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:644:53
-   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:635:53
+   635|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -171,11 +171,11 @@ References:
    classes.js:39:15
    39| var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ [1]
-   <BUILTINS>/react.js:52:5
-   52|   | string
+   <BUILTINS>/react.js:43:5
+   43|   | string
            ^^^^^^ [2]
-   <BUILTINS>/react.js:53:5
-   53|   | component(...empty);
+   <BUILTINS>/react.js:44:5
+   44|   | component(...empty);
            ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -195,8 +195,8 @@ References:
    classes.js:39:15
    39| var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ [2]
-   <BUILTINS>/react.js:67:36
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:36
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                           ^^^^^^^^^^^ [3]
 
 
@@ -338,8 +338,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                               ^
 
 References:
-   <BUILTINS>/react.js:635:44
-   635|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:626:44
+   626|     declare class Component<Props, State = void> {
                                                    ^^^^ [1]
 
 
@@ -363,8 +363,8 @@ References:
    state6.js:5:34
      5| type State = {|foo: number, bar: number|};
                                          ^^^^^^ [2]
-   <BUILTINS>/react.js:644:23
-   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:635:23
+   635|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -413,8 +413,8 @@ References:
    state6.js:11:59
     11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                   ^^^^^ [2]
-   <BUILTINS>/react.js:644:23
-   644|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:635:23
+   635|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

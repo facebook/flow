@@ -198,8 +198,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:757:44
-   757|       count(children: ChildrenArray<any>): number,
+   <BUILTINS>/react.js:748:44
+   748|       count(children: ChildrenArray<any>): number,
                                                    ^^^^^^ [1]
    api.js:32:15
     32| function s(x: string) {}
@@ -1156,8 +1156,8 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:67:36
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:36
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                           ^^^^^^^^^^^ [3]
    tabs.js:16:5
    16|   | boolean
@@ -1181,8 +1181,8 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:67:36
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:36
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                           ^^^^^^^^^^^ [3]
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1215,8 +1215,8 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:67:36
-   67| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   <BUILTINS>/react.js:58:36
+   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                           ^^^^^^^^^^^ [3]
    tabs.js:73:3
    73|   <NotTab/>

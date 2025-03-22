@@ -68,7 +68,7 @@ type ConcretizedPolyComponent = Poly<string> extends React$RendersExactly<
 'C' defined at component.js:15:80
 'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
-'React$RendersExactly' defined at (lib) react.js:82:20
+'React$RendersExactly' defined at (lib) react.js:73:20
 
 component.js:15:6,15:29
 
@@ -143,7 +143,7 @@ type V = renders Foo | React$RendersExactly<typeof Bar>
 
 'Bar' defined at render_types.js:6:0
 'Foo' defined at render_types.js:5:10
-'React$RendersExactly' defined at (lib) react.js:82:20
+'React$RendersExactly' defined at (lib) react.js:73:20
 'V' defined at render_types.js:12:5
 
 render_types.js:12:6,12:6

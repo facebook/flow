@@ -37,17 +37,17 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:566:24
+   <BUILTINS>/react.js:557:24
                                v-------
-   566|       component: () => Promise<
-   567|         $ReadOnly<{
-   568|           default: component(
-   569|             ref: React.RefSetter<Instance>,
-   570|             ...Config
-   571|           ) renders Renders,
-   572|           ...
-   573|         }>,
-   574|       >,
+   557|       component: () => Promise<
+   558|         $ReadOnly<{
+   559|           default: component(
+   560|             ref: React.RefSetter<Instance>,
+   561|             ...Config
+   562|           ) renders Renders,
+   563|           ...
+   564|         }>,
+   565|       >,
               ^ [2]
 
 
@@ -64,17 +64,17 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:566:24
+   <BUILTINS>/react.js:557:24
                                v-------
-   566|       component: () => Promise<
-   567|         $ReadOnly<{
-   568|           default: component(
-   569|             ref: React.RefSetter<Instance>,
-   570|             ...Config
-   571|           ) renders Renders,
-   572|           ...
-   573|         }>,
-   574|       >,
+   557|       component: () => Promise<
+   558|         $ReadOnly<{
+   559|           default: component(
+   560|             ref: React.RefSetter<Instance>,
+   561|             ...Config
+   562|           ) renders Renders,
+   563|           ...
+   564|         }>,
+   565|       >,
               ^ [2]
 
 
@@ -92,15 +92,15 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:567:19
+   <BUILTINS>/react.js:558:19
                            v
-    567|         $ReadOnly<{
-    568|           default: component(
-    569|             ref: React.RefSetter<Instance>,
-    570|             ...Config
-    571|           ) renders Renders,
-    572|           ...
-    573|         }>,
+    558|         $ReadOnly<{
+    559|           default: component(
+    560|             ref: React.RefSetter<Instance>,
+    561|             ...Config
+    562|           ) renders Renders,
+    563|           ...
+    564|         }>,
                  ^ [2]
    <BUILTINS>/core.js:2143:24
    2143| declare class Promise<+R = mixed> {
@@ -120,15 +120,15 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:567:19
+   <BUILTINS>/react.js:558:19
                            v
-    567|         $ReadOnly<{
-    568|           default: component(
-    569|             ref: React.RefSetter<Instance>,
-    570|             ...Config
-    571|           ) renders Renders,
-    572|           ...
-    573|         }>,
+    558|         $ReadOnly<{
+    559|           default: component(
+    560|             ref: React.RefSetter<Instance>,
+    561|             ...Config
+    562|           ) renders Renders,
+    563|           ...
+    564|         }>,
                  ^ [2]
    <BUILTINS>/core.js:2143:24
    2143| declare class Promise<+R = mixed> {
@@ -364,8 +364,8 @@ Cannot call `React.forwardRef` with `Demo` bound to `render` because in the seco
                                                  ^^^^
 
 References:
-   <BUILTINS>/react.js:724:36
-   724|       render: (props: Config, ref: React$RefSetter<Instance>) => Renders,
+   <BUILTINS>/react.js:715:36
+   715|       render: (props: Config, ref: React$RefSetter<Instance>) => Renders,
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {
