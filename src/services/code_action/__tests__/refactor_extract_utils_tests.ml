@@ -149,14 +149,12 @@ let dummy_context () =
       (fun () -> Error (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
   in
   Context.make ccx metadata dummy_filename aloc_table resolve_require (fun _ ->
-      ( Builtins.of_name_map
-          ~type_mapper:Base.Fn.id
-          ~module_type_mapper:Base.Fn.id
-          ~values:builtins_values
-          ~types:builtin_types
-          ~modules:SMap.empty,
-        []
-      )
+      Builtins.of_name_map
+        ~type_mapper:Base.Fn.id
+        ~module_type_mapper:Base.Fn.id
+        ~values:builtins_values
+        ~types:builtin_types
+        ~modules:SMap.empty
   )
 
 let typed_ast_of_ast cx ast =

@@ -542,7 +542,7 @@ let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
-  let exclude_syms = cx |> Context.active_global_builtins |> Builtins.builtin_ordinary_name_set in
+  let exclude_syms = cx |> Context.builtins |> Builtins.builtin_ordinary_name_set in
   initialize_env ~exclude_syms cx filtered_aloc_ast;
   let (severity_cover, suppressions, suppression_errors) =
     scan_for_suppressions ~in_libdef:true lint_severities [(file_key, loc_comments)]

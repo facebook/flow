@@ -141,7 +141,6 @@ type master_context =
 
 type component_t = {
   mutable sig_cx: sig_t;
-  mutable builtins: (Builtins.t * (Flow_projects.t * Builtins.t) list) lazy_t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   mutable synthesis_produced_uncacheable_result: bool;
@@ -239,6 +238,7 @@ type t = {
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   resolve_require: resolve_require;
+  builtins: Builtins.t lazy_t;
   hint_map_arglist_cache: (ALoc.t * ALoc.t option, (ALoc.t * Type.call_arg) list) Hashtbl.t;
   hint_map_jsx_cache: (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
@@ -384,7 +384,6 @@ let empty_sig_cx =
 let make_ccx () =
   {
     sig_cx = empty_sig_cx;
-    builtins = lazy (Builtins.empty (), []);
     aloc_tables = Utils_js.FilenameMap.empty;
     synthesis_produced_uncacheable_result = false;
     matching_props = [];
@@ -428,26 +427,27 @@ let make_ccx () =
 
 let make ccx metadata file aloc_table resolve_require mk_builtins =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
-  let cx =
-    {
-      ccx;
-      file;
-      aloc_table;
-      metadata;
-      resolve_require;
-      hint_map_arglist_cache = Hashtbl.create 0;
-      hint_map_jsx_cache = Hashtbl.create 0;
-      hint_eval_cache = IMap.empty;
-      environment = Loc_env.empty Name_def.Global;
-      typing_mode = Nel.one CheckingMode;
-      reachable_deps = Utils_js.FilenameSet.empty;
-      node_cache = Node_cache.mk_empty ();
-      refined_locations = ALocMap.empty;
-      aggressively_invalidated_locations = ALocMap.empty;
-    }
+  let rec cx_lazy =
+    lazy
+      {
+        ccx;
+        builtins = lazy (mk_builtins (Lazy.force cx_lazy));
+        file;
+        aloc_table;
+        metadata;
+        resolve_require;
+        hint_map_arglist_cache = Hashtbl.create 0;
+        hint_map_jsx_cache = Hashtbl.create 0;
+        hint_eval_cache = IMap.empty;
+        environment = Loc_env.empty Name_def.Global;
+        typing_mode = Nel.one CheckingMode;
+        reachable_deps = Utils_js.FilenameSet.empty;
+        node_cache = Node_cache.mk_empty ();
+        refined_locations = ALocMap.empty;
+        aggressively_invalidated_locations = ALocMap.empty;
+      }
   in
-  ccx.builtins <- lazy (mk_builtins cx);
-  cx
+  Lazy.force cx_lazy
 
 let sig_cx cx = cx.ccx.sig_cx
 
@@ -477,30 +477,13 @@ let in_dirlist cx dirs =
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
 
-(** With the scoped libdef feature, the set of libdefs active for a given file might be different.
-  * This function computes the set based on directory prefix. *)
-let active_global_builtins cx =
-  let (unscoped_builtins, scoped_builtins) = Lazy.force cx.ccx.builtins in
-  Base.Option.value
-    ~default:unscoped_builtins
-    (Base.List.find_map scoped_builtins ~f:(fun (scoped_project, builtins) ->
-         if
-           Flow_projects.projects_bitset_of_path
-             ~opts:cx.metadata.projects_options
-             (File_key.to_string (file cx))
-           = Some scoped_project
-         then
-           Some builtins
-         else
-           None
-     )
-    )
+let builtins cx = Lazy.force cx.builtins
 
-let builtin_value_opt cx = Builtins.get_builtin_value_opt (active_global_builtins cx)
+let builtin_value_opt cx = Builtins.get_builtin_value_opt (builtins cx)
 
-let builtin_type_opt cx n = Builtins.get_builtin_type_opt (active_global_builtins cx) n
+let builtin_type_opt cx n = Builtins.get_builtin_type_opt (builtins cx) n
 
-let builtin_module_opt cx = Builtins.get_builtin_module_opt (active_global_builtins cx)
+let builtin_module_opt cx = Builtins.get_builtin_module_opt (builtins cx)
 
 let casting_syntax cx = cx.metadata.casting_syntax
 

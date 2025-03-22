@@ -10,7 +10,7 @@ open Lsp_module_system_info
 
 let is_available_autoimport_result cx =
   let (available_globals, available_modules) =
-    let builtins = Context.active_global_builtins cx in
+    let builtins = Context.builtins cx in
     (Builtins.builtin_ordinary_name_set builtins, Builtins.builtin_modules_set builtins)
   in
   fun ~name ~source ->

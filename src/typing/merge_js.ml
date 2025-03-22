@@ -957,19 +957,19 @@ let merge_lib_files ~project_opts ~sig_opts ordered_asts_with_scoped_projects =
 
 let mk_builtins metadata master_cx =
   match master_cx with
-  | Context.EmptyMasterContext -> (fun _ -> (Builtins.empty (), []))
+  | Context.EmptyMasterContext -> (fun _ -> Builtins.empty ())
   | Context.NonEmptyMasterContext { builtin_leader_file_key; unscoped_builtins; scoped_builtins } ->
-    let builtins_ref = ref (Builtins.empty (), []) in
-    let cx =
-      Context.make
-        (Context.make_ccx ())
-        { metadata with Context.checked = false }
-        builtin_leader_file_key
-        (lazy (ALoc.empty_table builtin_leader_file_key))
-        (fun mref -> Context.MissingModule mref)
-        (fun _ -> !builtins_ref)
-    in
-    let create_original_and_mapped_builtins (Context.BuiltinGroup { builtin_locs; builtins }) =
+    let create_mapped_builtins (Context.BuiltinGroup { builtin_locs; builtins }) =
+      let builtins_ref = ref (Builtins.empty ()) in
+      let cx =
+        Context.make
+          (Context.make_ccx ())
+          { metadata with Context.checked = false }
+          builtin_leader_file_key
+          (lazy (ALoc.empty_table builtin_leader_file_key))
+          (fun mref -> Context.MissingModule mref)
+          (fun _ -> !builtins_ref)
+      in
       let (values, types, modules) =
         Type_sig_merge.merge_builtins cx builtin_leader_file_key builtin_locs builtins
       in
@@ -981,6 +981,7 @@ let mk_builtins metadata master_cx =
           ~types
           ~modules
       in
+      builtins_ref := original_builtins;
       let mapped_builtins dst_cx =
         Builtins.of_name_map
           ~type_mapper:(copied dst_cx cx)
@@ -989,17 +990,26 @@ let mk_builtins metadata master_cx =
           ~types
           ~modules
       in
-      (original_builtins, mapped_builtins)
+      mapped_builtins
     in
-    let (original_unscoped_builtins, mapped_unscoped_builtins) =
-      create_original_and_mapped_builtins unscoped_builtins
-    in
-    let original_and_mapped_scoped_builtins =
-      Base.List.Assoc.map scoped_builtins ~f:create_original_and_mapped_builtins
-    in
-    builtins_ref :=
-      (original_unscoped_builtins, Base.List.Assoc.map original_and_mapped_scoped_builtins ~f:fst);
+    let mapped_unscoped_builtins = create_mapped_builtins unscoped_builtins in
+    let mapped_scoped_builtins = Base.List.Assoc.map scoped_builtins ~f:create_mapped_builtins in
     fun dst_cx ->
-      ( mapped_unscoped_builtins dst_cx,
-        Base.List.Assoc.map original_and_mapped_scoped_builtins ~f:(fun (_, f) -> f dst_cx)
-      )
+      let project =
+        Flow_projects.projects_bitset_of_path
+          ~opts:metadata.Context.projects_options
+          (File_key.to_string (Context.file dst_cx))
+      in
+      (match
+         (* With the scoped libdef feature,
+          * the set of libdefs active for a given file might be different.
+          * The correct set of builtins is chosen here. *)
+         Base.List.find_map mapped_scoped_builtins ~f:(fun (scoped_project, mapped_builtins) ->
+             if project = Some scoped_project then
+               Some (mapped_builtins dst_cx)
+             else
+               None
+         )
+       with
+      | None -> mapped_unscoped_builtins dst_cx
+      | Some builtins -> builtins)

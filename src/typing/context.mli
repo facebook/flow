@@ -161,7 +161,7 @@ val make :
   File_key.t ->
   ALoc.table Lazy.t ->
   resolve_require ->
-  (t -> Builtins.t * (Flow_projects.t * Builtins.t) list) ->
+  (t -> Builtins.t) ->
   t
 
 val metadata_of_options : Options.t -> metadata
@@ -188,7 +188,7 @@ val casting_syntax : t -> Options.CastingSyntax.t
 
 val component_syntax : t -> bool
 
-val active_global_builtins : t -> Builtins.t
+val builtins : t -> Builtins.t
 
 val hook_compatibility : t -> bool
 

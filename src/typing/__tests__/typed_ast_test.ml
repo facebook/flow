@@ -102,7 +102,7 @@ let before_and_after_stmts file_name =
         ~types:SMap.empty
         ~modules:SMap.empty
     in
-    (builtins, [])
+    builtins
   in
   let cx =
     let aloc_table = lazy (ALoc.empty_table file_key) in

@@ -247,9 +247,9 @@ let mk_cx ~verbose () =
     else
       { metadata with Context.verbose = None }
   in
-  let builtins_ref = ref (Builtins.empty (), []) in
+  let builtins_ref = ref (Builtins.empty ()) in
   let resolve_require mref =
-    match Builtins.get_builtin_module_opt (fst !builtins_ref) mref with
+    match Builtins.get_builtin_module_opt !builtins_ref mref with
     | Some m ->
       Context.TypedModule
         (fun () ->

@@ -61,7 +61,6 @@ let load_lib_files ~ccx ~options ~reader files =
             { metadata with checked = false }
           )
         in
-        let mk_builtins = Merge_js.mk_builtins metadata master_cx in
         let cx =
           Context.make
             ccx
@@ -69,7 +68,7 @@ let load_lib_files ~ccx ~options ~reader files =
             builtin_leader_file_key
             (lazy (ALoc.empty_table builtin_leader_file_key))
             (fun mref -> Context.MissingModule mref)
-            mk_builtins
+            (fun _ -> Builtins.empty ())
         in
         let (severity_cover, suppressions, suppression_errors) =
           Type_inference_js.scan_for_suppressions

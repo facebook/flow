@@ -31,8 +31,4 @@ val merge_lib_files :
   (string option * (Loc.t, Loc.t) Flow_ast.Program.t) list ->
   Flow_error.ErrorSet.t * Context.master_context
 
-val mk_builtins :
-  Context.metadata ->
-  Context.master_context ->
-  Context.t ->
-  Builtins.t * (Flow_projects.t * Builtins.t) list
+val mk_builtins : Context.metadata -> Context.master_context -> Context.t -> Builtins.t
