@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:780:38
+   <BUILTINS>/react.js:766:38
                                              v
-   780|     declare const Profiler: component(
-   781|       children?: React$Node,
-   782|       id: string,
-   783|       onRender: ProfilerOnRenderFnType,
-   784|     );
+   766|     declare const Profiler: component(
+   767|       children?: React$Node,
+   768|       id: string,
+   769|       onRender: ProfilerOnRenderFnType,
+   770|     );
             ^ [2]
 
 
@@ -49,13 +49,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:780:38
+   <BUILTINS>/react.js:766:38
                                              v
-   780|     declare const Profiler: component(
-   781|       children?: React$Node,
-   782|       id: string,
-   783|       onRender: ProfilerOnRenderFnType,
-   784|     );
+   766|     declare const Profiler: component(
+   767|       children?: React$Node,
+   768|       id: string,
+   769|       onRender: ProfilerOnRenderFnType,
+   770|     );
             ^ [2]
 
 

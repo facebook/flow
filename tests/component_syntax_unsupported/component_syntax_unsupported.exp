@@ -16,11 +16,11 @@ Cannot cast `3` to indexed access because number [1] is incompatible with compon
          ^ [1]
 
 References:
-   <BUILTINS>/react.js:724:5
+   <BUILTINS>/react.js:710:5
             v------------------------------------------------------
-   724|     declare component Fragment<Renders: React$Node = void>(
-   725|       children?: Renders,
-   726|     ) renders Renders;
+   710|     declare component Fragment<Renders: React$Node = void>(
+   711|       children?: Renders,
+   712|     ) renders Renders;
             -----------------^ [2]
 
 
