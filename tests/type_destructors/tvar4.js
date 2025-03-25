@@ -1,11 +1,11 @@
 // @flow
 
-function fn1<T: {p: any}>(a: T, b: T => void): $PropertyType<T, 'p'> {
+function fn1<T: {p: any}>(a: T, b: T => void): T['p'] {
   b(a);
   return a.p;
 }
 
-function fn2<T: {p: any}>(a: T, b: T => void): ($PropertyType<T, 'p'>) => void {
+function fn2<T: {p: any}>(a: T, b: T => void): T['p'] => void {
   return p => {
     a.p = p;
     return b(a);
@@ -37,7 +37,7 @@ fn3((x: {foo: string, p: number}) => {})({foo: 42});
 // to accept.
 fn3((x: {foo: number}) => {})({foo: 42});
 
-function fn4<T: {|p: any|}>(a: T => void): ($PropertyType<T, 'p'>) => void {
+function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
   // We error here because the implementation of {p: empty} ~> empty currently
   // errors, but it would be a sound subtyping rule to allow.
   return p => a({p});

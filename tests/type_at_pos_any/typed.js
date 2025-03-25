@@ -13,7 +13,7 @@ let u = untyped.f1; // implicit
 let v = untyped; // implicit
 
 let unsound1 = (() => {}).constructor; // implicit
-let unsound2 : $ElementType<{f1 : number}, string> = 1; // implicit
+let unsound2 : {f1 : number}[string] = 1; // implicit
 
 let num : number = 3;
 //$Broken

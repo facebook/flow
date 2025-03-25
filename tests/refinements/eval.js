@@ -4,7 +4,7 @@ type A = {|
   |}
 |};
 
-type Foo = $PropertyType<A, 'f'>;
+type Foo = A['f'];
 
 type B = {|
   +f: ?{|
@@ -12,7 +12,7 @@ type B = {|
   |}
 |};
 
-type Bar = $PropertyType<B, 'f'>;
+type Bar = B['f'];
 
 const _ = (arg: Foo | Bar) => {
   if (arg == null) {

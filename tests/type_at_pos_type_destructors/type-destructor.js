@@ -74,18 +74,13 @@ type RestObjPoly<X> = $Rest<{| y: X |}, {| [string]: X |}>;
 type RestObjPoly2<X, Y> = $Rest<{| x: X, y: Y |}, {| x: X |}>;
 //   ^
 
-// $PropertyType<T, k>
-type PropertyTypeProps = $PropertyType<Props, "name">;
+type ElementTypeProps = Props["name"];
 //   ^
-
-// $ElementType<T, K>
-type ElementTypeProps = $ElementType<Props, "name">;
+type ElementTypePropsPoly<K> = Props[K];
 //   ^
-type ElementTypePropsPoly<K> = $ElementType<Props, K>;
+type ElementTypePropsPolyBounded<K: "name" | "age"> = Props[K];
 //   ^
-type ElementTypePropsPolyBounded<K: "name" | "age"> = $ElementType<Props, K>;
-//   ^
-type ElementTypePropsPolyBoundedEmpty<K: "phone"> = $ElementType<Props, K>;
+type ElementTypePropsPolyBoundedEmpty<K: "phone"> = Props[K];
 //   ^
 
 // $NonMaybeType<T>
@@ -142,26 +137,26 @@ type ExportsM = $Exports<"lib_m">;
 //   ^
 
 // Multi-params (ordering)
-declare function right_order<T: {}, K: T>(): $ElementType<T, K>;
+declare function right_order<T: {}, K: T>(): T[K];
 //               ^
-declare function wrong_order<K: T, T: {}>(): $ElementType<T, K>;
+declare function wrong_order<K: T, T: {}>(): T[K];
 //               ^
 
 // Recursive
 type RecursiveTypeDestructor = {|
 //   ^
   f: {|
-    g: $PropertyType<RecursiveTypeDestructor, "f">
+    g: RecursiveTypeDestructor['f']
   |}
 |};
 
 type RecursiveTypeDestructorPoly<X> = {|
 //   ^
-  f: {| h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f"> |} | X // TODO
+  f: {| h: RecursiveTypeDestructorPoly<X>['f'] |} | X // TODO
 |};
 
 // Nested
-type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>;
+type $Pick<O: {}, K: $Keys<O>> = $NonMaybeType<O>[K];
 //   ^
 
 // ReadOnly+destructuring

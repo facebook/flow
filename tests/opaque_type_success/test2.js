@@ -10,7 +10,7 @@ type CB = {|
 
 export opaque type C = CA | CB;
 
-function t(applicationType: $PropertyType<C, '__type'>): number {
+function t(applicationType: C['__type']): number {
   switch (applicationType) {
     case 'A':
       return 42;

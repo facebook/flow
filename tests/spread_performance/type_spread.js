@@ -13,7 +13,7 @@ var x: {a?: ?{[string]: number}} = {};
 // Wrapping the last type in something that isn't an explicit union
 // type is usually enough to trigger the error on just two spread
 // operands.
-declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
+declare var b: {...A, ...(typeof x)['a']}; // Error
 
 // Error, since the bounds come in separately instead of as a union, we end up
 // computing one of the types before we realize the exponential blowup.

@@ -54,7 +54,7 @@ export type {OpaqueMyNum};
 
 hideCJS(0);
 
-function t(applicationType: $PropertyType<C, '__type'>): number {
+function t(applicationType: C['__type']): number {
   switch (applicationType) {
     case 'A':
       return 42;

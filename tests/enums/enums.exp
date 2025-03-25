@@ -4409,115 +4409,115 @@ Error --------------------------------------------------------------------------
 Cannot access `X` because `X` is not a member of enum `E` [1]. [invalid-enum-access]
 
    utility-types.js:12:12
-   12| trigger as $PropertyType<typeof E, 'X'>; // Error: `X` is not a member of enum `E`
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   12| trigger as (typeof E)['X']; // Error: `X` is not a member of enum `E`
+                  ^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:12:26
-   12| trigger as $PropertyType<typeof E, 'X'>; // Error: `X` is not a member of enum `E`
-                                ^^^^^^^^ [1]
+   utility-types.js:12:13
+   12| trigger as (typeof E)['X']; // Error: `X` is not a member of enum `E`
+                   ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:15:35
+Error ------------------------------------------------------------------------------------------- utility-types.js:13:23
 
 Cannot access string on enum `E` [1] because computed access is not allowed on enums. [invalid-enum-access]
 
-   utility-types.js:15:35
-   15| trigger as $ElementType<typeof E, string>; // Error: computed access is not allowed on enums
-                                         ^^^^^^
+   utility-types.js:13:23
+   13| trigger as (typeof E)[string]; // Error: computed access is not allowed on enums
+                             ^^^^^^
 
 References:
-   utility-types.js:15:25
-   15| trigger as $ElementType<typeof E, string>; // Error: computed access is not allowed on enums
-                               ^^^^^^^^ [1]
+   utility-types.js:13:13
+   13| trigger as (typeof E)[string]; // Error: computed access is not allowed on enums
+                   ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:18:18
+Error ------------------------------------------------------------------------------------------- utility-types.js:16:18
 
 Cannot instantiate `$Diff` because enum `E` [1] is not an object. [not-an-object]
 
-   18| trigger as $Diff<typeof E, {A: E}>; // Error: enum  `E` is not an object
+   16| trigger as $Diff<typeof E, {A: E}>; // Error: enum  `E` is not an object
                         ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:21:22
+Error ------------------------------------------------------------------------------------------- utility-types.js:19:22
 
 Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object. [not-an-object]
 
-   21| trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
+   19| trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
                             ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- utility-types.js:24:1
+Error -------------------------------------------------------------------------------------------- utility-types.js:22:1
 
 Cannot cast `'A'` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
 
-   utility-types.js:24:1
-   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   utility-types.js:22:1
+   22| 'A' as $Keys<typeof E>; // Error: TODO: improve error
        ^^^
 
 References:
-   utility-types.js:24:14
-   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   utility-types.js:22:14
+   22| 'A' as $Keys<typeof E>; // Error: TODO: improve error
                     ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- utility-types.js:24:8
+Error -------------------------------------------------------------------------------------------- utility-types.js:22:8
 
 enum `E` [1] is not an object. [not-an-object]
 
-   utility-types.js:24:8
-   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   utility-types.js:22:8
+   22| 'A' as $Keys<typeof E>; // Error: TODO: improve error
               ^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:24:14
-   24| 'A' as $Keys<typeof E>; // Error: TODO: improve error
+   utility-types.js:22:14
+   22| 'A' as $Keys<typeof E>; // Error: TODO: improve error
                     ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:27:12
+Error ------------------------------------------------------------------------------------------- utility-types.js:25:12
 
 Cannot instantiate `$Values` because enum `E` [1] is not an object. You can use the enum's name `E` as the type of its
 members. [not-an-object]
 
-   utility-types.js:27:12
-   27| trigger as $Values<typeof E>; // Error
+   utility-types.js:25:12
+   25| trigger as $Values<typeof E>; // Error
                   ^^^^^^^^^^^^^^^^^
 
 References:
-   utility-types.js:27:20
-   27| trigger as $Values<typeof E>; // Error
+   utility-types.js:25:20
+   25| trigger as $Values<typeof E>; // Error
                           ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:30:13
+Error ------------------------------------------------------------------------------------------- utility-types.js:28:13
 
 Cannot create exact type from enum `E` [1]. [invalid-exact]
 
-   30| E as $Exact<typeof E>; // Error: TODO: improve error
+   28| E as $Exact<typeof E>; // Error: TODO: improve error
                    ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:33:18
+Error ------------------------------------------------------------------------------------------- utility-types.js:31:18
 
 Cannot instantiate `$Rest` because enum `E` [1] is not an object. [not-an-object]
 
-   33| trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
+   31| trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
                         ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:36:25
+Error ------------------------------------------------------------------------------------------- utility-types.js:34:25
 
 Cannot instantiate mapped type [1] because enum `E` [2] is not an object. [not-an-object]
 
-   utility-types.js:36:25
-   36| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+   utility-types.js:34:25
+   34| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
                                ^^^^^^^^ [2]
 
 References:
-   utility-types.js:36:12
-   36| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+   utility-types.js:34:12
+   34| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

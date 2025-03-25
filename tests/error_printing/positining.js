@@ -5,7 +5,7 @@
 const React = require('react');
 
 type $FragmentRef<T> = {
-  $fragmentRefs: $PropertyType<T, '$refType'>,
+  $fragmentRefs: T['$refType'],
 };
 
 type X = $NonMaybeType<{|

@@ -5,4 +5,4 @@ type T = {
     n: string,
 }
 
-export type A = $PropertyType<T, 'n'>;
+export type A = T['n'];

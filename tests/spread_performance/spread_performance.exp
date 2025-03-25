@@ -65,8 +65,8 @@ overwrite properties with explicit keys in a way that Flow cannot track. Try spr
 the indexer. [cannot-spread-indexer]
 
    type_spread.js:16:16
-   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   16| declare var b: {...A, ...(typeof x)['a']}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    type_spread.js:12:14
@@ -87,8 +87,8 @@ Cannot cast `b` to null because object type [1] is incompatible with null [2]. [
 
 References:
    type_spread.js:16:16
-   16| declare var b: {...A, ...$ElementType<typeof x, 'a'>}; // Error
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   16| declare var b: {...A, ...(typeof x)['a']}; // Error
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_spread.js:20:6
    20| b as null;
             ^^^^ [2]

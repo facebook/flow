@@ -1,15 +1,15 @@
-Error -------------------------------------------------------------------------------------------------- errors.js:12:10
+Error -------------------------------------------------------------------------------------------------- errors.js:12:13
 
-Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
+Cannot access string literal `p` on object type because property `p` is missing in object type [1]. [prop-missing]
 
-   errors.js:12:10
-   12| type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-                ^^^^^^^^^^^^^^^^^^^^^^
+   errors.js:12:13
+   12| type A = {}['p']; // We should get an error on this line.
+                   ^^^
 
 References:
-   errors.js:12:24
-   12| type A = $PropertyType<{}, 'p'>; // We should get an error on this line.
-                              ^^ [1]
+   errors.js:12:10
+   12| type A = {}['p']; // We should get an error on this line.
+                ^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- errors.js:15:10
@@ -42,7 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:19:1
 
-Cannot call `fn1` because null [1] does not have properties. [incompatible-use]
+Cannot call `fn1` because property `p` is missing in null [1]. [incompatible-use]
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because null [1] does not have properties. [incompatible-use]
+Cannot call `fn2` because property `p` is missing in null [1]. [incompatible-use]
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
@@ -138,32 +138,32 @@ References:
            ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- errors2.js:6:9
+Error -------------------------------------------------------------------------------------------------- errors2.js:6:12
 
-Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
+Cannot access string literal `p` on object type because property `p` is missing in object type [1]. [prop-missing]
 
+   errors2.js:6:12
+   6| null as {}['p']; // Error should point here.
+                 ^^^
+
+References:
    errors2.js:6:9
-   6| null as $PropertyType<{}, 'p'>; // Error should point here.
-              ^^^^^^^^^^^^^^^^^^^^^^
+   6| null as {}['p']; // Error should point here.
+              ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- errors2.js:8:13
+
+Cannot access string literal `p` on object type because property `p` is missing in object type [1]. [prop-missing]
+
+   errors2.js:8:13
+   8| type A = {}['p']; // Error should point here.
+                  ^^^
 
 References:
-   errors2.js:6:23
-   6| null as $PropertyType<{}, 'p'>; // Error should point here.
-                            ^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- errors2.js:8:10
-
-Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
-
    errors2.js:8:10
-   8| type A = $PropertyType<{}, 'p'>; // Error should point here.
-               ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors2.js:8:24
-   8| type A = $PropertyType<{}, 'p'>; // Error should point here.
-                             ^^ [1]
+   8| type A = {}['p']; // Error should point here.
+               ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- errors2.js:12:10
@@ -180,18 +180,18 @@ References:
                   ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- errors2.js:15:31
+Error ------------------------------------------------------------------------------------------------- errors2.js:15:34
 
-Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
+Cannot access string literal `p` on object type because property `p` is missing in object type [1]. [prop-missing]
 
-   errors2.js:15:31
-   15| declare function f1<O>(o: O): $PropertyType<{}, 'p'>; // Error should point here.
-                                     ^^^^^^^^^^^^^^^^^^^^^^
+   errors2.js:15:34
+   15| declare function f1<O>(o: O): {}['p']; // Error should point here.
+                                        ^^^
 
 References:
-   errors2.js:15:45
-   15| declare function f1<O>(o: O): $PropertyType<{}, 'p'>; // Error should point here.
-                                                   ^^ [1]
+   errors2.js:15:31
+   15| declare function f1<O>(o: O): {}['p']; // Error should point here.
+                                     ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- errors2.js:17:31

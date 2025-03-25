@@ -47,7 +47,7 @@ export type Info<
     }
   : empty;
 
-type Bar<T> = $ElementType<T, 'bar'>;
+type Bar<T> = T['bar'];
 
 type BarOne = $DeepReadOnly<{|
   type: 'one',

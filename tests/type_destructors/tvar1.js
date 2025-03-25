@@ -1,6 +1,6 @@
 // @flow
 
-declare function fn<T>(x: T): $PropertyType<T, 'foo'>;
+declare function fn<T>(x: T): T['foo'];
 
 declare var c: {foo: {bar: any}};
 const x = fn(c);

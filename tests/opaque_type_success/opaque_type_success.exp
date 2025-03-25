@@ -1,15 +1,15 @@
-Error ---------------------------------------------------------------------------------------------- testimport.js:57:29
+Error ---------------------------------------------------------------------------------------------- testimport.js:57:31
 
-Cannot instantiate `$PropertyType` because property `__type` is missing in `C` [1]. [incompatible-use]
+Cannot access string literal `__type` on `C` because property `__type` is missing in `C` [1]. [incompatible-use]
 
-   testimport.js:57:29
-   57| function t(applicationType: $PropertyType<C, '__type'>): number {
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   testimport.js:57:31
+   57| function t(applicationType: C['__type']): number {
+                                     ^^^^^^^^
 
 References:
-   testimport.js:57:43
-   57| function t(applicationType: $PropertyType<C, '__type'>): number {
-                                                 ^ [1]
+   testimport.js:57:29
+   57| function t(applicationType: C['__type']): number {
+                                   ^ [1]
 
 
 

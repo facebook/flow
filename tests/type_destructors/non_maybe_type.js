@@ -10,14 +10,14 @@ function foo(x: ?string): $NonMaybeType<?string> {
 0 as $NonMaybeType<null>; // error
 0 as $NonMaybeType<?number>; // ok
 0 as $NonMaybeType<number | null>; // ok
-0 as $NonMaybeType<$PropertyType<{p?: number}, 'p'>>; // ok
+0 as $NonMaybeType<{p?: number}['p']>; // ok
 
 'str' as $NonMaybeType<mixed>;
 0 as $NonMaybeType<mixed>;
 null as $NonMaybeType<mixed>;
 undefined as $NonMaybeType<mixed>;
 
-type Foo = $NonMaybeType<$PropertyType<Obj, 'foo'>>;
+type Foo = $NonMaybeType<Obj['foo']>;
 
 type Enum = 'A' | 'B' | 'C';
 

@@ -5,7 +5,7 @@ import * as React from 'react';
 type ElementProp<
   T: React.ElementType,
   P: $Keys<React.ElementConfig<T>>,
-> = $ElementType<React.ElementConfig<T>, P>;
+> = React.ElementConfig<T>[P];
 
 type BaseProps = $ReadOnly<{|
   theme?: ElementProp<typeof TimeoutFn, 'theme'>,
