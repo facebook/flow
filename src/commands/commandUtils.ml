@@ -1454,7 +1454,7 @@ let make_options
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
-    opt_natural_inference_exports_primitive_const =
+    opt_natural_inference_local_primitive_literals =
       FlowConfig.natural_inference_local_primitive_literals flowconfig;
     opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
     opt_saved_state_fetcher;
