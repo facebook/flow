@@ -498,3 +498,12 @@ function test_computed_prop_hint_2() {
     [B]: foo(), // okay - inferred string as return
   };
 }
+
+function test_conditional_pass_flag() {
+  const prop = 'prop';
+  const obj = { prop: {} };
+
+  declare var cond: boolean;
+  obj[cond ? prop : 'prop']; // okay access of prop
+  obj[cond ? 'prop' : prop]; // okay access of prop
+}

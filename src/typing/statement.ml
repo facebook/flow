@@ -3280,12 +3280,12 @@ module Make
       let test = condition ~encl_ctx:OtherTest cx test in
       let ((((_, t1), _) as consequent), then_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ?decl ~has_hint consequent
+            expression cx ~encl_ctx ?decl ~has_hint consequent
         )
       in
       let ((((_, t2), _) as alternate), else_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            expression cx ?decl ~has_hint alternate
+            expression cx ~encl_ctx ?decl ~has_hint alternate
         )
       in
       let combined_type =
