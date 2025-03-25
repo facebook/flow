@@ -316,7 +316,6 @@ class virtual ['a] t =
         let instance' =
           match instance with
           | ComponentInstanceOmitted (_ : Reason.reason) -> instance
-          | ComponentInstanceTopType (_ : Reason.reason) -> instance
           | ComponentInstanceAvailableAsRefSetterProp t ->
             let t' = self#type_ cx map_cx t in
             if t' == t then

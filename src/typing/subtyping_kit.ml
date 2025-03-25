@@ -554,27 +554,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* Easy cases: LHS and RHS have the same kind of instance information,
        * we can still directly flow the type to each other *)
       | (ComponentInstanceOmitted _, ComponentInstanceOmitted _) -> ()
-      | (ComponentInstanceTopType _, ComponentInstanceTopType _) -> ()
       (* component(ref: l) ~> component(ref: r) *)
       | (ComponentInstanceAvailableAsRefSetterProp l, ComponentInstanceAvailableAsRefSetterProp r)
         ->
         (* ref prop is contravariantly typed. We need to flip the flow. *)
         rec_flow_t cx trace ~use_op (r, l)
-      (* component() (treated as component(ref?: empty))
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty)) *)
-      | (ComponentInstanceOmitted _, ComponentInstanceTopType _) -> ()
-      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component()
-       *
-       * If `component()` is treated as component(ref?: React.RefSetter<void>), it will fail due to
-       * `mixed ~> void`. However, this treatement is temporary while we are moving to full ref-as-prop
-       * model, in the ref as prop model, the subtyping behavior should be
-       *
-       * React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component()
-       * -> component(ref?: empty) ~> component()
-       *   -> {} ~> {+ref?: empty}
-       *      -> OK!
-       * *)
-      | (ComponentInstanceTopType _, ComponentInstanceOmitted _) -> ()
       (* The most tricky cases: LHS and RHS have different kinds of instance information,
        * and one side is ComponentInstanceAvailableAsRefSetterProp. We need to wrap the side
        * that's not ComponentInstanceAvailableAsRefSetterProp with React.RefSetter *)
@@ -583,14 +567,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* component(ref?: ref_prop) ~> component().
        * Allowed since ``{} ~> {+ref?: ref_prop} *)
       | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceOmitted _) -> ()
-      (* component(ref: ref_prop)
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty)) *)
-      | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceTopType _) -> ()
       (* component() (equivalent to component(ref?: empty))
        * ~> component(ref: ref_prop) *)
-      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop)
-      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component(ref: ref_prop) *)
-      | (ComponentInstanceTopType r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
+      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
         rec_flow_t cx trace ~use_op (ref_prop, VoidT.why r)
     in
     subtyping_check

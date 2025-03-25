@@ -242,13 +242,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Flow_intermediate_error_types.ReactModuleForReactRefSetterType
         [instance]
       |> Option.some
-    | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceTopType r; _ }) ->
-      get_builtin_react_typeapp
-        cx
-        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-        [MixedT.why r]
-      |> Option.some
     | DefT (_, FunT _)
     | DefT (_, ObjT _)
     | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
@@ -612,22 +605,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 trace
                 ~use_op:(Frame (ReactConfigCheck, use_op))
                 (ref_t, fn_component_ref);
-              Object.ReactConfig.FilterRef
-          | Some (ComponentInstanceTopType r) ->
-            (* This is mostly a special case for the above case,
-             * where ref prop has type `React.RefSetter<mixed>` *)
-            if definitely_has_ref_in_props cx r props then
-              Object.ReactConfig.AddRef
-                (get_builtin_react_typeapp
-                   cx
-                   (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                   Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-                   [MixedT.why r]
-                )
-            else
-              (* e.g. The top instance type should accept all ref props,
-               * including the absense of one, so we can skip the check and just
-               * filter away the ref prop. *)
               Object.ReactConfig.FilterRef)
       in
       (* Use object spread to add children to config (if we have children)
@@ -892,9 +869,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
       | DefT (r, ObjT { call_t = Some _; _ }) ->
         rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
-      (* Abstract components. *)
-      | DefT (_, ReactAbstractComponentT { instance = ComponentInstanceTopType r; _ }) ->
-        rec_flow_t ~use_op:unknown_use cx trace (MixedT.why r, tout)
       | DefT
           ( _,
             ReactAbstractComponentT
