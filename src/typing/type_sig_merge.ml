@@ -906,7 +906,6 @@ and merge_annot env file = function
   | Function_bind loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoBindT reason
-  | ReactCreateClass loc -> Type.AnyT.at Type.Untyped loc
   | ReactElementProps (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
