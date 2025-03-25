@@ -1,8 +1,10 @@
 declare class Element {}
 declare class HTMLElement extends Element {}
+declare class Event {}
 
 type ReactDOM$HTMLElementProps = {
   id?: ?string,
+  onClick?: ?(Event) => mixed,
 };
 
 type ReactDOM$divProps = ReactDOM$HTMLElementProps;

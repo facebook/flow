@@ -749,7 +749,7 @@ struct
       in
       let rec depends_of_hint_node state = function
         | AnnotationHint (tparams_map, anno) -> depends_of_annotation tparams_map anno state
-        | ValueHint e -> depends_of_expression e state
+        | ValueHint (_, e) -> depends_of_expression e state
         | ProvidersHint providers ->
           Nel.fold_left
             (fun state loc ->

@@ -1974,15 +1974,17 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           when not is_function_statics_assignment ->
           (match property with
           | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
-            decompose_hints (Decomp_ObjProp name) [Hint_t (ValueHint _object, ExpectedTypeHint)]
+            decompose_hints
+              (Decomp_ObjProp name)
+              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
           | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name; _ }) ->
             decompose_hints
               (Decomp_PrivateProp (name, class_stack))
-              [Hint_t (ValueHint _object, ExpectedTypeHint)]
+              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
           | Ast.Expression.Member.PropertyExpression expr ->
             decompose_hints
               (Decomp_ObjComputed (mk_expression_reason expr))
-              [Hint_t (ValueHint _object, ExpectedTypeHint)])
+              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)])
         | (_, Ast.Expression.Member _) -> []
         | _ -> [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
       in
@@ -2449,7 +2451,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               )
               when (* Use the type of the callee directly as hint if the member access is refined *)
                    not (Loc_sig.ALocS.LMap.mem loc env_info.Env_api.env_values) ->
-              let base_hint = [Hint_t (ValueHint _object, ExpectedTypeHint)] in
+              let base_hint =
+                [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
+              in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
                 ->
@@ -2460,8 +2464,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               | Ast.Expression.Member.PropertyExpression _ ->
                 decompose_hints Decomp_MethodElem base_hint)
             | (_, Ast.Expression.Super _) ->
-              decompose_hints Decomp_CallSuper [Hint_t (ValueHint callee, ExpectedTypeHint)]
-            | _ -> [Hint_t (ValueHint callee, ExpectedTypeHint)]
+              decompose_hints
+                Decomp_CallSuper
+                [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
+            | _ -> [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
           in
           let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
           this#visit_call_arguments
@@ -2525,7 +2531,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#visit_expression ~hints:[] ~cond:NonConditionalContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hints =
-        decompose_hints Decomp_CallNew [Hint_t (ValueHint callee, ExpectedTypeHint)]
+        decompose_hints
+          Decomp_CallNew
+          [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
       in
       let arg_list =
         Base.Option.value
@@ -2637,7 +2645,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               [
                 Hint_t
                   ( ValueHint
-                      (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments })),
+                      ( JsxNameContext,
+                        (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments }))
+                      ),
                     ExpectedTypeHint
                   );
               ]
@@ -2672,7 +2682,12 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                   }
               )
             in
-            [Hint_t (ValueHint (jsx_title_member_to_expression member), ExpectedTypeHint)]
+            [
+              Hint_t
+                ( ValueHint (NonConditionalContext, jsx_title_member_to_expression member),
+                  ExpectedTypeHint
+                );
+            ]
         else
           []
       in
@@ -3006,14 +3021,22 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       if expression_is_definitely_synthesizable ~autocomplete_hooks alternate then (
         (* Special-case for expressions like `cond ? [] : [exp]` *)
         this#visit_expression
-          ~hints:(Base.List.append hints [Hint_t (ValueHint alternate, BestEffortHint)])
+          ~hints:
+            (Base.List.append
+               hints
+               [Hint_t (ValueHint (NonConditionalContext, alternate), BestEffortHint)]
+            )
           ~cond:NonConditionalContext
           consequent;
         this#visit_expression ~hints ~cond:NonConditionalContext alternate
       ) else (
         this#visit_expression ~hints ~cond:NonConditionalContext consequent;
         this#visit_expression
-          ~hints:(Base.List.append hints [Hint_t (ValueHint consequent, BestEffortHint)])
+          ~hints:
+            (Base.List.append
+               hints
+               [Hint_t (ValueHint (NonConditionalContext, consequent), BestEffortHint)]
+            )
           ~cond:NonConditionalContext
           alternate
       )
@@ -3071,12 +3094,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | Or ->
           ( OtherConditionalTest,
             decompose_hints Comp_MaybeT hints,
-            Base.List.append hints [Hint_t (ValueHint left, BestEffortHint)]
+            Base.List.append
+              hints
+              [Hint_t (ValueHint (NonConditionalContext, left), BestEffortHint)]
           )
         | NullishCoalesce ->
           ( cond,
             decompose_hints Comp_MaybeT hints,
-            Base.List.append hints [Hint_t (ValueHint left, BestEffortHint)]
+            Base.List.append
+              hints
+              [Hint_t (ValueHint (NonConditionalContext, left), BestEffortHint)]
           )
       in
       this#visit_expression ~hints:left_hints ~cond:left_cond left;
@@ -3200,7 +3227,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       Base.List.iter cases ~f:(fun case ->
           match case with
           | (_, { Case.test = Some (test_loc, _); _ }) ->
-            this#record_hint test_loc [Hint_t (ValueHint discriminant, ExpectedTypeHint)]
+            this#record_hint
+              test_loc
+              [Hint_t (ValueHint (NonConditionalContext, discriminant), ExpectedTypeHint)]
           | _ -> ()
       );
       res
@@ -3224,7 +3253,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let value_hints =
         Base.List.foldi cases ~init:IMap.empty ~f:(fun i acc (_, { Case.body; _ }) ->
             if expression_is_definitely_synthesizable ~autocomplete_hooks body then
-              let hint = Hint_t (ValueHint body, BestEffortHint) in
+              let hint = Hint_t (ValueHint (NonConditionalContext, body), BestEffortHint) in
               IMap.add i hint acc
             else
               acc
