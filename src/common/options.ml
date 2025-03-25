@@ -136,6 +136,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_natural_inference_local_primitive_literals: NaturalInferenceLevel.t;
+  opt_natural_inference_local_primitive_literals_full_includes: string list;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
@@ -317,6 +318,9 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let natural_inference_local_primitive_literals opts =
   opts.opt_natural_inference_local_primitive_literals
+
+let natural_inference_local_primitive_literals_full_includes opts =
+  opts.opt_natural_inference_local_primitive_literals_full_includes
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 

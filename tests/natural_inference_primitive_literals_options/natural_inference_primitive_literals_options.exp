@@ -1,0 +1,38 @@
+Error ------------------------------------------------------------------------------------------------- full/full.js:4:1
+
+Cannot cast `obj.x` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   full/full.js:4:1
+   4| obj.x as 1; // error in full mode
+      ^^^^^
+
+References:
+   full/full.js:3:17
+   3| const obj = {x: 1};
+                      ^ [1]
+   full/full.js:4:10
+   4| obj.x as 1; // error in full mode
+               ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- partial/partial.js:6:1
+
+Cannot cast `obj2.x` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   partial/partial.js:6:1
+   6| obj2.x as 1; // error in partial mode
+      ^^^^^^
+
+References:
+   partial/partial.js:4:11
+   4| const x = 1;
+                ^ [1]
+   partial/partial.js:6:11
+   6| obj2.x as 1; // error in partial mode
+                ^ [2]
+
+
+
+Found 2 errors

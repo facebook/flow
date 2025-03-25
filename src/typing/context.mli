@@ -107,7 +107,8 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
+  natural_inference_local_primitive_literals_global: Options.NaturalInferenceLevel.t;
+  natural_inference_local_primitive_literals_full_includes: string list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
