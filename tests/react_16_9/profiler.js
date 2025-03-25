@@ -23,7 +23,6 @@ function F(props: {||}) { return null }
 const _c: ExactReactElement_DEPRECATED<
   // Ok, instance type is void.
   component(
-    ref: React.RefSetter<void>,
     ...React.ElementConfig<typeof React.Profiler>
   )
 >

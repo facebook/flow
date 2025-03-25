@@ -17,9 +17,7 @@ FnWithRequiredRefProp as component(foo: string, ref: React.RefSetter<mixed>); //
 
 CompWithoutRefProp as component(foo: string); // ok
 CompWithoutRefProp as React.ComponentType<{+foo: string}>; // ok
-// temporarily allowed, should be banned in the full ref-as-prop support,
-// since {ref: React.RefSetter<mixed>} ~> {} should be an error
-CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
+CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void
 
 CompWithOptionalRefProp as component(foo: string); // ok
 CompWithOptionalRefProp as React.ComponentType<{+foo: string}>; // ok

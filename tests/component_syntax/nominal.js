@@ -21,4 +21,3 @@ component Baz(foo: number) renders null { // invalid-render
 }
 
 Baz as component(foo: number) renders Baz; // OK
-Baz as component(ref: React.RefSetter<mixed>, foo: number); // OK

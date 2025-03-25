@@ -14,6 +14,6 @@ type PolyNoTargs = Poly; // ERROR
 
 export type AliasedFoo = Foo;
 
-export const MemoFoo = (React.memo(Foo): component(ref: React.RefSetter<React.RefOf<Foo>>, ...React.PropsOf<Foo>) renders Foo);
+export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
 const rendersFoo: renders Foo = <MemoFoo />;
 const rendersMemoFoo: renders MemoFoo = <MemoFoo />;

@@ -1374,25 +1374,25 @@ Cannot cast `Baz` to component because indexed props of component [1] is incompa
 Baz [2]. [incompatible-indexer]
 
    errors.js:51:2
-   51| (Baz: component(ref: React.RefSetter<empty>, ...mixed));
+   51| (Baz: component(...mixed));
         ^^^
 
 References:
    errors.js:51:7
-   51| (Baz: component(ref: React.RefSetter<empty>, ...mixed));
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   51| (Baz: component(...mixed));
+             ^^^^^^^^^^^^^^^^^^^ [1]
    errors.js:6:1
     6| component Baz() {
        ^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- errors.js:51:49
+Error -------------------------------------------------------------------------------------------------- errors.js:51:20
 
 Cannot use mixed [1] as a component rest param. Component rest params must use an object type and cannot be optional.
 [incompatible-type]
 
-   51| (Baz: component(ref: React.RefSetter<empty>, ...mixed));
-                                                       ^^^^^ [1]
+   51| (Baz: component(...mixed));
+                          ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- exhaust.js:4:5
@@ -1952,9 +1952,9 @@ Cannot assign `3` to `errRendersMFoo` because number [1] does not render `Foo` [
                                                    ^ [1]
 
 References:
-   component_in_type_position.js:17:115
-   17| export const MemoFoo = (React.memo(Foo): component(ref: React.RefSetter<React.RefOf<Foo>>, ...React.PropsOf<Foo>) renders Foo);
-                                                                                                                         ^^^^^^^^^^^ [2]
+   component_in_type_position.js:17:56
+   17| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
+                                                              ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------- import_component_in_type_position.js:26:49
@@ -1966,9 +1966,9 @@ Cannot assign `3` to `errRendersMFooType` because number [1] does not render `Fo
                                                        ^ [1]
 
 References:
-   component_in_type_position.js:17:115
-   17| export const MemoFoo = (React.memo(Foo): component(ref: React.RefSetter<React.RefOf<Foo>>, ...React.PropsOf<Foo>) renders Foo);
-                                                                                                                         ^^^^^^^^^^^ [2]
+   component_in_type_position.js:17:56
+   17| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
+                                                              ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:4:36

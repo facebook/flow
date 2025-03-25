@@ -353,15 +353,14 @@ References:
    destructors.js:9:12
    9| const _b = <C baz={3} />; // Error, bar missing
                  ^^^^^^^^^^^^^ [1]
-   destructors.js:5:56
-   5| declare var C: component(bar: number, foo?: number, ...{...});
-                                                             ^^^^^ [2]
+   destructors.js:5:85
+   5| declare var C: component(bar: number, foo?: number, ref?: React.RefSetter<void>, ...{...});
+                                                                                          ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:1
 
-Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with instance of component [2].
-[incompatible-cast]
+Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    destructors.js:14:1
    14| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.

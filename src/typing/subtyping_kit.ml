@@ -550,39 +550,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
     rec_flow cx trace (uproto, ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
 
   let flow_react_component_instance_to_instance =
-    let react_ref_setter_of cx t =
-      get_builtin_react_typeapp
-        cx
-        ~use_desc:true
-        (replace_desc_reason
-           (RTypeAppImplicit
-              (RTypeAlias ("React.RefSetter", None, RType (OrdinaryName "React.$RefSetter")))
-           )
-           (reason_of_t t)
-        )
-        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-        [t]
-    in
-    (* Before we start to do React.RefSetter, we make our last attempt to generate good
-     * errors in the most common case. On resolved inputs, we can run the extractor to
-     * get us back to instance ~> instance checks. *)
-    let try_extract_instance_of_ref_setter cx trace ref_prop =
-      if TvarVisitors.has_unresolved_tvars cx ref_prop then
-        None
-      else
-        let r = reason_of_t ref_prop in
-        let r = replace_desc_reason (RInstanceOfComponent (desc_of_reason r)) r in
-        let tout = Tvar.mk cx r in
-        match
-          SpeculationKit.try_singleton_throw_on_failure
-            cx
-            trace
-            ref_prop
-            (ExtractReactRefT (r, tout))
-        with
-        | exception Flow_js_utils.SpeculationSingletonError -> None
-        | _ -> Some (Tvar_resolver.resolved_t cx tout)
-    in
     let subtyping_check cx trace use_op = function
       (* Easy cases: LHS and RHS have the same kind of instance information,
        * we can still directly flow the type to each other *)
@@ -593,11 +560,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ->
         (* ref prop is contravariantly typed. We need to flip the flow. *)
         rec_flow_t cx trace ~use_op (r, l)
-      (* component() (treated as component(ref?: React.RefSetter<void>))
-       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty))
-       *
-       * Technically `{+ref?: empty} ~> {}` should banned, but it's relatively benign,
-       * so we allow it for now. *)
+      (* component() (treated as component(ref?: empty))
+       * ~> React.ComponentType<{}> (equivalent to component(ref?: empty)) *)
       | (ComponentInstanceOmitted _, ComponentInstanceTopType _) -> ()
       (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component()
        *
@@ -622,25 +586,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* component(ref: ref_prop)
        * ~> React.ComponentType<{}> (equivalent to component(ref?: empty)) *)
       | (ComponentInstanceAvailableAsRefSetterProp _, ComponentInstanceTopType _) -> ()
-      (* component() (equivalent to component(ref?: React.RefSetter<void>))
+      (* component() (equivalent to component(ref?: empty))
        * ~> component(ref: ref_prop) *)
-      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
-        (match try_extract_instance_of_ref_setter cx trace ref_prop with
-        | Some t -> rec_flow_t cx trace ~use_op (VoidT.make r, t)
-        | None ->
-          (* RefSetter is contravariantly typed. We need to flip the flow. *)
-          rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx (DefT (r, VoidT))))
-      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component(ref: ref_prop)
-       *
-       * Should be banned since ref_prop ~> empty will almost always fail, but we allow it for now
-       * since it's needed for incremental migration and it's relatively harmless. *)
-      | (ComponentInstanceTopType r_mixed, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
-        let instance = MixedT.why r_mixed in
-        (match try_extract_instance_of_ref_setter cx trace ref_prop with
-        | Some t -> rec_flow_t cx trace ~use_op (instance, t)
-        | None ->
-          (* RefSetter is contravariantly typed. We need to flip the flow. *)
-          rec_flow_t cx trace ~use_op (ref_prop, react_ref_setter_of cx instance))
+      | (ComponentInstanceOmitted r, ComponentInstanceAvailableAsRefSetterProp ref_prop)
+      (* React.ComponentType<{}> (equivalent to component(ref?: empty)) ~> component(ref: ref_prop) *)
+      | (ComponentInstanceTopType r, ComponentInstanceAvailableAsRefSetterProp ref_prop) ->
+        rec_flow_t cx trace ~use_op (ref_prop, VoidT.why r)
     in
     subtyping_check
 

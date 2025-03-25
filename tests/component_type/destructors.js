@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-declare var C: component(bar: number, foo?: number, ...{...});
+declare var C: component(bar: number, foo?: number, ref?: React.RefSetter<void>, ...{...});
 
 // Create element tests props_to_tin
 const _a = <C bar={3} />;
