@@ -1,5 +1,3 @@
-type BadArity = $ElementType<number, number, number>;
-
 type Arr = Array<number>;
 type Arr_Elem = Arr[number];
 

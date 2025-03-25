@@ -490,7 +490,6 @@ type 'loc message =
   | MessageCannotUseComputedPropertyWithUnion of 'loc virtual_reason
   | MessageCannotUseDefaultImportWithDestrucuturing
   | MessageCannotUseDollarExports
-  | MessageCannotUseDollarPropertyType
   | MessageCannotUseEnumMemberUsedAsType of {
       description: 'loc virtual_reason_desc;
       enum_reason: 'loc virtual_reason;

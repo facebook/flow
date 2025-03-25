@@ -2084,13 +2084,6 @@ let to_printable_error :
         text " because the first type ";
         text "argument must be a string literal.";
       ]
-    | MessageCannotUseDollarPropertyType ->
-      [
-        text "Cannot use ";
-        code "$PropertyType";
-        text " because the second ";
-        text "type argument must be a string literal.";
-      ]
     | MessageCannotUseEnumMemberUsedAsType { description; enum_reason } ->
       [
         text "Cannot use ";

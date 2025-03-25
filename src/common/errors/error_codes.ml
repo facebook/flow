@@ -94,7 +94,6 @@ type error_code =
   | InvalidLhs
   | InvalidMappedType
   | InvalidModule
-  | InvalidPropertyTypeArg
   | InvalidPropType
   | InvalidReactCreateElement
   | InvalidRendersTypeArgument
@@ -314,7 +313,6 @@ let string_of_code : error_code -> string = function
   | InvalidLhs -> "invalid-lhs"
   | InvalidMappedType -> "invalid-mapped-type"
   | InvalidModule -> "invalid-module"
-  | InvalidPropertyTypeArg -> "invalid-property-type-arg"
   | InvalidPropType -> "invalid-prop-type"
   | InvalidReactCreateElement -> "invalid-react-create-element"
   | InvalidRendersTypeArgument -> "invalid-render"

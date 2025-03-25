@@ -2454,24 +2454,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (ReadOnlyArray (loc, t))
     | _ -> Err (loc, CheckError)
   end
-  | "$PropertyType" -> begin
-    match targs with
-    | Some (_, { arguments = [obj; (_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
-      let obj = annot opts scope tbls xs obj in
-      Annot (PropertyType { loc; obj; prop = value })
-    | Some (_, { arguments = [_; (loc, _)]; _ }) ->
-      let loc = push_loc tbls loc in
-      Err (loc, CheckError)
-    | _ -> Err (loc, CheckError)
-  end
-  | "$ElementType" -> begin
-    match targs with
-    | Some (_, { arguments = [obj; elem]; _ }) ->
-      let obj = annot opts scope tbls xs obj in
-      let elem = annot opts scope tbls xs elem in
-      Annot (ElementType { loc; obj; elem })
-    | _ -> Err (loc, CheckError)
-  end
   | "$EnumValue" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

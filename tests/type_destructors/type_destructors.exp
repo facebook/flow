@@ -1,50 +1,42 @@
-Error --------------------------------------------------------------------------------------------- element_type.js:1:17
-
-Cannot use type without exactly 2 type arguments. [nonpolymorphic-type-app]
-
-   1| type BadArity = $ElementType<number, number, number>;
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- element_type.js:7:2
+Error ---------------------------------------------------------------------------------------------- element_type.js:5:2
 
 Cannot cast `'hello world'` to `Arr_Elem` because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   element_type.js:7:2
-   7| ('hello world': Arr_Elem);
+   element_type.js:5:2
+   5| ('hello world': Arr_Elem);
        ^^^^^^^^^^^^^ [1]
 
 References:
-   element_type.js:7:17
-   7| ('hello world': Arr_Elem);
+   element_type.js:5:17
+   5| ('hello world': Arr_Elem);
                       ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- element_type.js:18:2
+Error --------------------------------------------------------------------------------------------- element_type.js:16:2
 
 Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   element_type.js:18:2
-   18| ('hello world': Obj_Elem);
+   element_type.js:16:2
+   16| ('hello world': Obj_Elem);
         ^^^^^^^^^^^^^ [1]
 
 References:
-   element_type.js:18:17
-   18| ('hello world': Obj_Elem);
+   element_type.js:16:17
+   16| ('hello world': Obj_Elem);
                        ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- element_type.js:26:7
+Error --------------------------------------------------------------------------------------------- element_type.js:24:7
 
 Cannot access string literal `c` on `Z` because property `c` is missing in null or undefined [1]. [incompatible-use]
 
-   element_type.js:26:7
-   26| (1: Z['c']); // Error - access 'c' on `void`/`null`
+   element_type.js:24:7
+   24| (1: Z['c']); // Error - access 'c' on `void`/`null`
              ^^^
 
 References:
-   element_type.js:26:5
-   26| (1: Z['c']); // Error - access 'c' on `void`/`null`
+   element_type.js:24:5
+   24| (1: Z['c']); // Error - access 'c' on `void`/`null`
            ^ [1]
 
 
@@ -606,4 +598,4 @@ References:
 
 
 
-Found 39 errors
+Found 38 errors

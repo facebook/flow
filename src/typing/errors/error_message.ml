@@ -224,7 +224,6 @@ and 'loc t' =
   | EInvalidInfer of 'loc
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
-  | EPropertyTypeAnnot of 'loc
   | EStrUtilTypeNonLiteralArg of 'loc
   | EExportsAnnot of 'loc
   | EInvalidConstructor of 'loc virtual_reason
@@ -1088,7 +1087,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
   | EInvalidInfer l -> EInvalidInfer (f l)
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
-  | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
   | EStrUtilTypeNonLiteralArg loc -> EStrUtilTypeNonLiteralArg (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
   | EUnsupportedKeyInObject { loc; obj_kind; key_error_kind } ->
@@ -1655,7 +1653,6 @@ let util_use_op_of_msg nope util = function
   | EInvalidInfer _
   | EInvalidExtends _
   | EInvalidReactCreateElement _
-  | EPropertyTypeAnnot _
   | EStrUtilTypeNonLiteralArg _
   | EExportsAnnot _
   | EUnsupportedKeyInObject _
@@ -1948,7 +1945,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EHookRuleViolation { call_loc = loc; _ }
   | EHookNaming loc
   | EExportsAnnot loc
-  | EPropertyTypeAnnot loc
   | EStrUtilTypeNonLiteralArg loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
@@ -2534,7 +2530,6 @@ let friendly_message_of_msg = function
       }
   | EUnsupportedExact (_, lower) -> Normal (MessageCannotCreateExactType lower)
   | EUnexpectedThisType _ -> Normal MessageUnexpectedUseOfThisType
-  | EPropertyTypeAnnot _ -> Normal MessageCannotUseDollarPropertyType
   | EStrUtilTypeNonLiteralArg _ -> Normal MessageCannotUseStrUtilType
   | EExportsAnnot _ -> Normal MessageCannotUseDollarExports
   | EUnsupportedKeyInObject { key_error_kind; obj_kind; _ } ->
@@ -3249,7 +3244,6 @@ let error_code_of_message err : error_code option =
   | EPolarityMismatch _ -> Some IncompatibleVariance
   | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
-  | EPropertyTypeAnnot _ -> Some InvalidPropertyTypeArg
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFound { use_op; _ } -> react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EIndexerCheckFailed { use_op; _ } ->

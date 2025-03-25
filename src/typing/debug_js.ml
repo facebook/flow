@@ -1405,7 +1405,6 @@ let dump_error_message =
       spf "EInvalidReactCreateElement(%s)" (string_of_aloc create_element_loc)
     | EInvalidInfer loc -> spf "EInvalidInfer (%s)" (string_of_aloc loc)
     | EInvalidExtends reason -> spf "EInvalidExtends (%s)" (dump_reason cx reason)
-    | EPropertyTypeAnnot loc -> spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
     | EStrUtilTypeNonLiteralArg loc -> spf "EStrUtilTypeNonLiteralArg (%s)" (string_of_aloc loc)
     | EExportsAnnot loc -> spf "EExportsAnnot (%s)" (string_of_aloc loc)
     | EInvalidRendersTypeArgument

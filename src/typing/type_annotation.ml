@@ -821,43 +821,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 (DefT (mk_annot_reason RROArrayType loc, ArrT (ROArrayAT (elemt, None))))
                 targs
           )
-        (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
-        | "$PropertyType" ->
-          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-              match convert_type_params () with
-              | ([t; DefT (_, SingletonStrT { value = key; _ })], targs) ->
-                let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
-                reconstruct_ast
-                  (mk_type_destructor
-                     cx
-                     (use_op reason)
-                     reason
-                     t
-                     (PropertyType { name = key })
-                     (mk_eval_id cx loc)
-                  )
-                  targs
-              | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast
-          )
-        (* $ElementType<T, string> acts as the type of the string elements in object
-           type T *)
-        | "$ElementType" ->
-          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-              match convert_type_params () with
-              | ([t; e], targs) ->
-                let reason = mk_reason (RType (OrdinaryName "$ElementType")) loc in
-                reconstruct_ast
-                  (mk_type_destructor
-                     cx
-                     (use_op reason)
-                     reason
-                     t
-                     (ElementType { index_type = e })
-                     (mk_eval_id cx loc)
-                  )
-                  targs
-              | _ -> assert false
-          )
         (* $NonMaybeType<T> acts as the type T without null and void *)
         | "$NonMaybeType" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
