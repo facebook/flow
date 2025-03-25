@@ -4998,7 +4998,8 @@ module Make
         | OtherTest ->
           BoolModuleT.at loc
         | NoContext
-        | IndexContext ->
+        | IndexContext
+        | JsxTitleNameContext ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5100,7 +5101,8 @@ module Make
     let check ~encl_ctx = expression cx ~encl_ctx in
     match encl_ctx with
     | NoContext
-    | IndexContext ->
+    | IndexContext
+    | JsxTitleNameContext ->
       check ~encl_ctx
     | SwitchTest _
     | OtherTest ->
@@ -5170,7 +5172,8 @@ module Make
       begin
         match encl_ctx with
         | NoContext
-        | IndexContext ->
+        | IndexContext
+        | JsxTitleNameContext ->
           ()
         | SwitchTest _
         | OtherTest ->
@@ -5857,7 +5860,10 @@ module Make
           in
           let c =
             if name = String.capitalize_ascii name then
-              identifier cx empty_syntactic_flags (mk_ident ~comments:None name) loc
+              let syntactic_flags =
+                Primitive_literal.mk_syntactic_flags ~encl_ctx:JsxTitleNameContext ()
+              in
+              identifier cx syntactic_flags (mk_ident ~comments:None name) loc
             else begin
               Type_env.intrinsic_ref cx (OrdinaryName name) loc
               |> Base.Option.iter ~f:(fun (t, def_loc) ->
@@ -6504,7 +6510,8 @@ module Make
     | OtherTest ->
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
     | NoContext
-    | IndexContext ->
+    | IndexContext
+    | JsxTitleNameContext ->
       OptGetPropT
         {
           use_op;

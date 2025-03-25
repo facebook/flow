@@ -906,6 +906,8 @@ module rec TypeTerm : sig
     | OtherTest
     (* `o[C]`, `o[C]=e`, `{[C]:e}`, `o[C]()` *)
     | IndexContext
+    (* `<C />` *)
+    | JsxTitleNameContext
 
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,

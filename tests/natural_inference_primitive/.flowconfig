@@ -3,6 +3,7 @@
 [include]
 
 [libs]
+jsx-intrinsics-mini.js
 
 [lints]
 
