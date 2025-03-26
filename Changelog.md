@@ -1,3 +1,21 @@
+### 0.266.0
+
+Likely to cause new Flow errors:
+* Support for `$PropertyType` and `$ElementType` has been removed. Now referencing these types will just resolve to a global type if you have your own definition for them, and result in a `cannot-resolve-name` error otherwise. These types have been replaced by index access types for a long time. You can migrate to index access types by enabling use-indexed-access-type from https://www.npmjs.com/package/eslint-plugin-fb-flow and running the quickfixes. If you are unable to migrate, you can add the following to your global libdefs:
+```
+type $PropertyType<T, K> = T[K];
+type $ElementType<T, K> = T[K];
+```
+* Now given the subtyping check `component()<: component(ref?: ref_prop)`, Flow will ensure that `ref_prop` is a subtype of `void` instead of a subtype of `React.RefSetter<void>`.
+* `React$ComponentType`, which was previously given `[internal-type]` error on every usage, is now removed.
+* `React.ComponentType<Props>` is now only an alias of `component(...Props)`, instead of some special cased types. This comes with stricter checks and conversions, such as making Props readonly, erroring on the presence the ref prop instead of silently ignoring them, and ensures that `Props` is a subtype of `{...}`. In addition, the `React$AbstractComponent` type is removed.
+
+Notable bug fixes:
+* fixed a subtle unsoundness in the inference of computed-property dictionary object creation (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABIDOfJkJz7KYoAgANwAHSgbNwHO5VE5tH5goqoolEts9k5EDQACsAIz84AAbSVwoAuvzdfTOQBeTnACWczmG+Tmzm63gOp20V0AZl4nIA9AHOQB3ODHTkmSgQSgS+ki3IgBomEhwaBJBoABisACYAGwAVisPpA9KAA))
+
+Library Definitions:
+* `React.lazy` and `React.memo` is now generic over the presence or absence of ref prop.
+
 ### 0.265.3
 
 * Make `@flowtyped` resolution support work on Windows.
