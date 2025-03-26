@@ -89,7 +89,11 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     check_expression:
-      (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
+      (?encl_ctx:Type.enclosing_context ->
+      Context.t ->
+      (ALoc.t, ALoc.t) Ast.Expression.t ->
+      (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
+      ) ->
     collapse_children:
       (Context.t ->
       ALoc.t * (ALoc.t, ALoc.t) Ast.JSX.child list ->

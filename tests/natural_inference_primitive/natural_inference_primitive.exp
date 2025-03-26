@@ -1,3 +1,47 @@
+Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:13
+
+Cannot create `Foo` element because number [1] is incompatible with number literal `42` [2] in property `bar`.
+[incompatible-type]
+
+   custom-jsx.js:16:13
+   16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
+                   ^^ [1]
+
+References:
+   custom-jsx.js:4:59
+    4| declare function customJsx(c: any, props: {foo: "a", bar: 42}, children: 42): void;
+                                                                 ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:43
+
+Cannot create `Foo` element because string [1] is incompatible with string literal `a` [2] in property `foo`.
+[incompatible-type]
+
+   custom-jsx.js:16:43
+   16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
+                                                 ^^^ [1]
+
+References:
+   custom-jsx.js:4:49
+    4| declare function customJsx(c: any, props: {foo: "a", bar: 42}, children: 42): void;
+                                                       ^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- custom-jsx.js:17:6
+
+Cannot create `Foo` element because number [1] is incompatible with number literal `42` [2]. [incompatible-type]
+
+   custom-jsx.js:17:6
+   17|     {43 /* error 43 ~> 42 */}
+            ^^ [1]
+
+References:
+   custom-jsx.js:4:74
+    4| declare function customJsx(c: any, props: {foo: "a", bar: 42}, children: 42): void;
+                                                                                ^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- imported.js:40:3
 
 Cannot cast `abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
@@ -2047,4 +2091,4 @@ References:
 
 
 
-Found 122 errors
+Found 125 errors

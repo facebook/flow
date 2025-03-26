@@ -4999,7 +4999,8 @@ module Make
           BoolModuleT.at loc
         | NoContext
         | IndexContext
-        | JsxTitleNameContext ->
+        | JsxTitleNameContext
+        | JsxAttrOrChildrenContext ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5102,7 +5103,8 @@ module Make
     match encl_ctx with
     | NoContext
     | IndexContext
-    | JsxTitleNameContext ->
+    | JsxTitleNameContext
+    | JsxAttrOrChildrenContext ->
       check ~encl_ctx
     | SwitchTest _
     | OtherTest ->
@@ -5173,7 +5175,8 @@ module Make
         match encl_ctx with
         | NoContext
         | IndexContext
-        | JsxTitleNameContext ->
+        | JsxTitleNameContext
+        | JsxAttrOrChildrenContext ->
           ()
         | SwitchTest _
         | OtherTest ->
@@ -5830,7 +5833,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:expression
+            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
             ~collapse_children
             name
             attributes
@@ -5878,7 +5881,7 @@ module Make
             jsx_mk_props
               cx
               reason
-              ~check_expression:expression
+              ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
               ~collapse_children
               name
               attributes
@@ -5918,7 +5921,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:expression
+            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
             ~collapse_children
             name
             attributes
@@ -5942,7 +5945,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:expression
+            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
             ~collapse_children
             el_name
             attributes
@@ -5959,7 +5962,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:expression
+            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
             ~collapse_children
             el_name
             attributes
@@ -6020,8 +6023,7 @@ module Make
         MemberExpression (match_member_expressions o_mexp c_mexp)
       | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
-  and jsx_mk_props
-      cx reason ~(check_expression : _ -> _ -> _) ~collapse_children name attributes children =
+  and jsx_mk_props cx reason ~check_expression ~collapse_children name attributes children =
     let open Ast.JSX in
     let is_builtin_react =
       Context.jsx cx = Options.Jsx_react && not (Context.react_custom_jsx_typing cx)
@@ -6057,7 +6059,10 @@ module Make
               match value with
               (* <element name="literal" /> *)
               | Some (Attribute.StringLiteral (loc, lit)) ->
-                let t = string_literal cx empty_syntactic_flags loc lit in
+                let syntactic_flags =
+                  Primitive_literal.mk_syntactic_flags ~encl_ctx:JsxAttrOrChildrenContext ()
+                in
+                let t = string_literal cx syntactic_flags loc lit in
                 (t, Some (Attribute.StringLiteral ((loc, t), lit)))
               (* <element name={expression} /> *)
               | Some
@@ -6069,7 +6074,9 @@ module Make
                       }
                     )
                     ) ->
-                let (((_, t), _) as e) = check_expression cx (loc, e) in
+                let (((_, t), _) as e) =
+                  check_expression ~encl_ctx:JsxAttrOrChildrenContext cx (loc, e)
+                in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
@@ -6120,7 +6127,7 @@ module Make
             (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-            let (((_, spread), _) as argument) = check_expression cx argument in
+            let (((_, spread), _) as argument) = check_expression ~encl_ctx:NoContext cx argument in
             let acc = ObjectExpressionAcc.add_spread spread acc in
             let att =
               Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments })
@@ -6388,7 +6395,7 @@ module Make
         let (unresolved_param, ex, t) =
           match ex with
           | Expression e ->
-            let (((loc, t), _) as e) = expression cx e in
+            let (((loc, t), _) as e) = expression ~encl_ctx:JsxAttrOrChildrenContext cx e in
             let reason = mk_reason RJSXChild loc in
             (Some (UnresolvedArg (mk_tuple_element reason t, None)), Expression e, t)
           | EmptyExpression -> (None, EmptyExpression, AnyT.at Untyped loc)
@@ -6511,7 +6518,8 @@ module Make
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
     | NoContext
     | IndexContext
-    | JsxTitleNameContext ->
+    | JsxTitleNameContext
+    | JsxAttrOrChildrenContext ->
       OptGetPropT
         {
           use_op;

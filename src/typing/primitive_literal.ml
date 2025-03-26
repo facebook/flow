@@ -163,7 +163,8 @@ let enclosing_context_needs_precise = function
   | SwitchTest _
   | OtherTest
   | IndexContext
-  | JsxTitleNameContext ->
+  | JsxTitleNameContext
+  | JsxAttrOrChildrenContext ->
     true
 
 (* When do we need to preserve a precise primitive literal type?
