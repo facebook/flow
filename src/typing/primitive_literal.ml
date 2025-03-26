@@ -86,6 +86,7 @@ let generalize_singletons =
         | OpenT _ -> super#type_ cx force_general t
         | DefT (r, ArrT _) when is_literal_array_reason r -> super#type_ cx force_general t
         | DefT (r, ObjT _) when is_literal_object_reason r -> super#type_ cx force_general t
+        | DefT (r, FunT _) when is_literal_function_reason r -> super#type_ cx force_general t
         | UnionT (r, _) when is_literal_union_reason r -> super#type_ cx force_general t
         | DefT (r, SingletonStrT { from_annot = false; value }) ->
           if force_general || Context.natural_inference_local_primitive_literals_full cx then

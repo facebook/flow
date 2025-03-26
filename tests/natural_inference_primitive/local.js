@@ -507,3 +507,14 @@ function test_conditional_pass_flag() {
   obj[cond ? prop : 'prop']; // okay access of prop
   obj[cond ? 'prop' : prop]; // okay access of prop
 }
+
+function test_generalize_function_literal() {
+  type GenericFnType<TReturn> = () => TReturn;
+  declare function memo<TReturn, Fn: GenericFnType<TReturn>>(f: Fn): Fn;
+  const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
+
+  const obj = memoized();
+  obj.prop = 0; // okay
+  obj.prop = 1; // okay
+  obj.prop = "a"; // error string ~> number
+}

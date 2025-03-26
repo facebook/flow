@@ -838,6 +838,11 @@ let is_literal_array_reason r =
     true
   | _ -> false
 
+let is_literal_function_reason r =
+  match desc_of_reason r with
+  | RFunction _ -> true
+  | _ -> false
+
 let is_literal_union_reason r =
   match desc_of_reason r with
   | RInferredUnionElemArray _
