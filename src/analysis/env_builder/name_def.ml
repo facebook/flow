@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Enclosing_context
 open Hint
 open Reason
 open Flow_ast_visitor
@@ -762,7 +763,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       Destructure.pattern
         ~record_identifier
         ~record_destructuring_intermediate:this#add_destructure_binding
-        ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+        ~visit_default_expression:(this#visit_expression ~cond:NoContext)
         (Root root)
         pattern
 
@@ -861,7 +862,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                                 (mk_pattern_reason left)
                                 (ExpressionDef
                                    {
-                                     cond_context = NonConditionalContext;
+                                     cond_context = NoContext;
                                      hints = [];
                                      chain = false;
                                      expr = init;
@@ -1096,9 +1097,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       in
       Base.Option.iter ~f:(fun acc -> this#add_destructure_bindings acc id) source;
       ignore @@ this#variable_declarator_pattern ~kind id;
-      Base.Option.iter init ~f:(fun init ->
-          this#visit_expression ~hints ~cond:NonConditionalContext init
-      );
+      Base.Option.iter init ~f:(fun init -> this#visit_expression ~hints ~cond:NoContext init);
       decl
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
@@ -1161,7 +1160,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ~f:
               (this#visit_expression
                  ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-                 ~cond:NonConditionalContext
+                 ~cond:NoContext
               );
           Annotation
             {
@@ -1179,9 +1178,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               concrete = None;
             }
         | None ->
-          Base.Option.iter
-            default_expression
-            ~f:(this#visit_expression ~hints:[] ~cond:NonConditionalContext);
+          Base.Option.iter default_expression ~f:(this#visit_expression ~hints:[] ~cond:NoContext);
           let reason =
             match argument with
             | ( _,
@@ -1207,7 +1204,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
            (Destructure.fold_pattern
               ~record_identifier
               ~record_destructuring_intermediate:this#add_destructure_binding
-              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+              ~visit_default_expression:(this#visit_expression ~cond:NoContext)
               ~default:false
               ~join:( || )
               (Root source)
@@ -1396,7 +1393,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ~f:
               (this#visit_expression
                  ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-                 ~cond:NonConditionalContext
+                 ~cond:NoContext
               );
           Annotation
             {
@@ -1409,9 +1406,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               concrete = None;
             }
         | None ->
-          Base.Option.iter
-            default_expression
-            ~f:(this#visit_expression ~hints:[] ~cond:NonConditionalContext);
+          Base.Option.iter default_expression ~f:(this#visit_expression ~hints:[] ~cond:NoContext);
           let reason =
             match local with
             | ( _,
@@ -1436,7 +1431,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
            (Destructure.fold_pattern
               ~record_identifier
               ~record_destructuring_intermediate:this#add_destructure_binding
-              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+              ~visit_default_expression:(this#visit_expression ~cond:NoContext)
               ~default:false
               ~join:( || )
               (Root source)
@@ -1500,7 +1495,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
            (Destructure.fold_pattern
               ~record_identifier
               ~record_destructuring_intermediate:this#add_destructure_binding
-              ~visit_default_expression:(this#visit_expression ~cond:NonConditionalContext)
+              ~visit_default_expression:(this#visit_expression ~cond:NoContext)
               ~default:false
               ~join:( || )
               (Root source)
@@ -1763,7 +1758,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               ignore @@ this#block loc block;
               loc
             | Ast.Function.BodyExpression ((loc, _) as expr) ->
-              this#visit_expression ~hints:return_hint ~cond:NonConditionalContext expr;
+              this#visit_expression ~hints:return_hint ~cond:NoContext expr;
               loc
           in
           return_hint_stack <- old_stack;
@@ -1785,7 +1780,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->
               match kind with
               | Ast.Type.Predicate.Declared expr ->
-                this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
+                this#visit_expression ~hints:[] ~cond:NoContext expr
               | _ -> ()
           ))
         scope_kind
@@ -1903,7 +1898,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       match value with
       | Declared -> ()
       | Uninitialized -> ()
-      | Initialized x -> this#visit_expression ~cond:NonConditionalContext ~hints x
+      | Initialized x -> this#visit_expression ~cond:NoContext ~hints x
 
     method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
@@ -1976,15 +1971,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
             decompose_hints
               (Decomp_ObjProp name)
-              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
+              [Hint_t (ValueHint (NoContext, _object), ExpectedTypeHint)]
           | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name; _ }) ->
             decompose_hints
               (Decomp_PrivateProp (name, class_stack))
-              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
+              [Hint_t (ValueHint (NoContext, _object), ExpectedTypeHint)]
           | Ast.Expression.Member.PropertyExpression expr ->
             decompose_hints
               (Decomp_ObjComputed (mk_expression_reason expr))
-              [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)])
+              [Hint_t (ValueHint (NoContext, _object), ExpectedTypeHint)])
         | (_, Ast.Expression.Member _) -> []
         | _ -> [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
       in
@@ -2059,15 +2054,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           member_loc
           (mk_pattern_reason left)
           (MemberAssign { member_loc; member; rhs = right });
-        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (None, Ast.Pattern.Expression e) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
         this#add_destructure_bindings (Value { hints = []; expr = right; decl_kind = None }) left;
-        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (None, _) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
         this#add_destructure_bindings (Value { hints = []; expr = right; decl_kind = None }) left;
-        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NoContext right
       | ( Some operator,
           Ast.Pattern.Identifier
             { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
@@ -2076,28 +2071,28 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           id_loc
           (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
           (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
-        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NoContext right
       | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
         (* In op_assign, the LHS will also be read. *)
         let cond =
           match operator with
           | AndAssign
           | OrAssign ->
-            OtherConditionalTest
-          | _ -> NonConditionalContext
+            OtherTestContext
+          | _ -> NoContext
         in
         this#visit_expression ~cond ~hints:[] e;
         this#add_ordinary_binding
           def_loc
           (mk_pattern_reason left)
           (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
-        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (Some _operator, (Ast.Pattern.Array _ | Ast.Pattern.Object _)) ->
         (* [a] += 1;
            ({b} += 1);
            will have invalid-lhs errors, we shouldn't visit the LHS pattern.
         *)
-        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NonConditionalContext right
+        this#visit_expression ~hints:(other_pattern_hints left) ~cond:NoContext right
 
     method! update_expression loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in
@@ -2119,7 +2114,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       Base.Option.iter argument ~f:(fun argument ->
           this#visit_expression
             ~hints:(Base.Option.value ~default:[] (Base.List.hd return_hint_stack))
-            ~cond:NonConditionalContext
+            ~cond:NoContext
             argument
       );
       stmt
@@ -2200,15 +2195,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Statement.For in
       let { init; test; update; body; comments = _ } = stmt in
       Base.Option.iter init ~f:(fun init -> ignore @@ this#for_statement_init init);
-      Base.Option.iter test ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest);
-      Base.Option.iter update ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest);
+      Base.Option.iter test ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
+      Base.Option.iter update ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
       ignore @@ this#statement body;
       stmt
 
     method! while_ _loc (stmt : ('loc, 'loc) Ast.Statement.While.t) =
       let open Ast.Statement.While in
       let { test; body; comments = _ } = stmt in
-      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherTestContext test;
       ignore @@ this#statement body;
       stmt
 
@@ -2216,13 +2211,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Statement.DoWhile in
       let { body; test; comments = _ } = stmt in
       ignore @@ this#statement body;
-      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherTestContext test;
       stmt
 
     method! if_statement _ (stmt : ('loc, 'loc) Ast.Statement.If.t) =
       let open Ast.Statement.If in
       let { test; consequent; alternate; comments = _ } = stmt in
-      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherTestContext test;
       ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent;
       Base.Option.iter alternate ~f:(fun (loc, alternate) ->
           ignore @@ this#if_alternate_statement loc alternate
@@ -2404,16 +2399,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | Ast.Expression.Expression expr ->
             let cond =
               if i = 0 then
-                OtherConditionalTest
+                OtherTestContext
               else
-                NonConditionalContext
+                NoContext
             in
             (* In invariant(...) call, the first argument is under conditional context. *)
             this#visit_expression ~hints:[] ~cond expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
               ~hints:[]
-              ~cond:NonConditionalContext
+              ~cond:NoContext
               spread.Ast.Expression.SpreadElement.argument
         )
       else
@@ -2424,16 +2419,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           this#visit_expression ~hints:[] ~cond expr
         | [Ast.Expression.Expression expr] when Flow_ast_utils.is_call_to_object_dot_freeze callee
           ->
-          this#visit_expression ~hints ~cond:NonConditionalContext expr
+          this#visit_expression ~hints ~cond:NoContext expr
         | _ when Flow_ast_utils.is_call_to_object_static_method callee ->
           Base.List.iter arguments ~f:(fun arg ->
               match arg with
               | Ast.Expression.Expression expr ->
-                this#visit_expression ~hints:[] ~cond:NonConditionalContext expr
+                this#visit_expression ~hints:[] ~cond:NoContext expr
               | Ast.Expression.Spread (_, spread) ->
                 this#visit_expression
                   ~hints:[]
-                  ~cond:NonConditionalContext
+                  ~cond:NoContext
                   spread.Ast.Expression.SpreadElement.argument
           )
         | _ ->
@@ -2451,9 +2446,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               )
               when (* Use the type of the callee directly as hint if the member access is refined *)
                    not (Loc_sig.ALocS.LMap.mem loc env_info.Env_api.env_values) ->
-              let base_hint =
-                [Hint_t (ValueHint (NonConditionalContext, _object), ExpectedTypeHint)]
-              in
+              let base_hint = [Hint_t (ValueHint (NoContext, _object), ExpectedTypeHint)] in
               (match property with
               | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ })
                 ->
@@ -2466,8 +2459,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             | (_, Ast.Expression.Super _) ->
               decompose_hints
                 Decomp_CallSuper
-                [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
-            | _ -> [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
+                [Hint_t (ValueHint (NoContext, callee), ExpectedTypeHint)]
+            | _ -> [Hint_t (ValueHint (NoContext, callee), ExpectedTypeHint)]
           in
           let call_reason = mk_expression_reason (loc, Ast.Expression.Call expr) in
           this#visit_call_arguments
@@ -2504,11 +2497,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                    )
               |> decompose_hints (Decomp_FuncParam (param_str_list, i, None))
             in
-            this#visit_expression ~hints ~cond:NonConditionalContext expr
+            this#visit_expression ~hints ~cond:NoContext expr
           | Ast.Expression.Spread (_, spread) ->
             this#visit_expression
               ~hints:[]
-              ~cond:NonConditionalContext
+              ~cond:NoContext
               spread.Ast.Expression.SpreadElement.argument
       )
 
@@ -2522,18 +2515,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         call
         ~hints
         ~cond
-        ~visit_callee:(this#visit_expression ~cond:NonConditionalContext)
+        ~visit_callee:(this#visit_expression ~cond:NoContext)
 
     method! new_ loc _ = fail loc "Should be visited by visit_new_expression"
 
     method visit_new_expression ~hints loc expr =
       let { Ast.Expression.New.callee; targs; arguments; comments = _ } = expr in
-      this#visit_expression ~hints:[] ~cond:NonConditionalContext callee;
+      this#visit_expression ~hints:[] ~cond:NoContext callee;
       Base.Option.iter targs ~f:(fun targs -> ignore @@ this#call_type_args targs);
       let call_argumemts_hints =
-        decompose_hints
-          Decomp_CallNew
-          [Hint_t (ValueHint (NonConditionalContext, callee), ExpectedTypeHint)]
+        decompose_hints Decomp_CallNew [Hint_t (ValueHint (NoContext, callee), ExpectedTypeHint)]
       in
       let arg_list =
         Base.Option.value
@@ -2590,7 +2581,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method private cast annot expression =
       this#visit_expression
         ~hints:[Hint_t (AnnotationHint (ALocMap.empty, annot), ExpectedTypeHint)]
-        ~cond:NonConditionalContext
+        ~cond:NoContext
         expression;
       ignore @@ this#type_annotation annot
 
@@ -2611,9 +2602,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let { argument; operator; comments = _ } = expr in
       let (hints, cond) =
         match operator with
-        | Not -> ([], OtherConditionalTest)
-        | Await -> (decompose_hints Decomp_Await hints, NonConditionalContext)
-        | _ -> ([], NonConditionalContext)
+        | Not -> ([], OtherTestContext)
+        | Await -> (decompose_hints Decomp_Await hints, NoContext)
+        | _ -> ([], NoContext)
       in
       this#visit_expression ~hints ~cond argument
 
@@ -2645,7 +2636,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               [
                 Hint_t
                   ( ValueHint
-                      ( JsxNameContext,
+                      ( JsxTitleNameContext,
                         (loc, Ast.Expression.Identifier (loc, { Ast.Identifier.name; comments }))
                       ),
                     ExpectedTypeHint
@@ -2683,10 +2674,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               )
             in
             [
-              Hint_t
-                ( ValueHint (NonConditionalContext, jsx_title_member_to_expression member),
-                  ExpectedTypeHint
-                );
+              Hint_t (ValueHint (NoContext, jsx_title_member_to_expression member), ExpectedTypeHint);
             ]
         else
           []
@@ -2776,7 +2764,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | Opening.SpreadAttribute (_, { SpreadAttribute.argument; comments = _ }) ->
             this#visit_expression
               ~hints:(decompose_hints Decomp_ObjSpread hints)
-              ~cond:NonConditionalContext
+              ~cond:NoContext
               argument
           );
       this#visit_jsx_children ~hints:(decompose_hints (Decomp_ObjProp "children") hints) children;
@@ -2786,7 +2774,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.JSX.ExpressionContainer in
       let { expression; comments = _ } = expr in
       match expression with
-      | Expression expr -> this#visit_expression ~hints ~cond:NonConditionalContext expr
+      | Expression expr -> this#visit_expression ~hints ~cond:NoContext expr
       | EmptyExpression -> ()
 
     method! jsx_fragment _loc expr =
@@ -2835,7 +2823,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       )
 
     method! expression expr =
-      this#visit_expression ~hints:[] ~cond:NonConditionalContext expr;
+      this#visit_expression ~hints:[] ~cond:NoContext expr;
       expr
 
     method private visit_expression ~hints ~cond ((loc, expr) as exp) =
@@ -2932,7 +2920,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
       | Ast.Expression.Logical expr -> this#visit_logical_expression ~hints ~cond expr
       | Ast.Expression.Call expr ->
-        let visit_callee = this#visit_expression ~cond:NonConditionalContext in
+        let visit_callee = this#visit_expression ~cond:NoContext in
         this#visit_call_expression ~hints ~cond ~visit_callee loc expr
       | Ast.Expression.OptionalCall expr ->
         this#visit_optional_call_expression ~hints ~cond loc expr
@@ -2987,10 +2975,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                 else
                   Some i
               in
-              this#visit_expression
-                ~hints:(mk_hints (Decomp_ArrElement index))
-                ~cond:NonConditionalContext
-                expr;
+              this#visit_expression ~hints:(mk_hints (Decomp_ArrElement index)) ~cond:NoContext expr;
               seen_spread
             | Ast.Expression.Array.Spread (_, spread) ->
               let hints =
@@ -3001,7 +2986,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               in
               this#visit_expression
                 ~hints
-                ~cond:NonConditionalContext
+                ~cond:NoContext
                 spread.Ast.Expression.SpreadElement.argument;
               true
             | Ast.Expression.Array.Hole _ -> seen_spread
@@ -3017,27 +3002,20 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method visit_conditional ~hints expr =
       let open Ast.Expression.Conditional in
       let { test; consequent; alternate; comments = _ } = expr in
-      this#visit_expression ~hints:[] ~cond:OtherConditionalTest test;
+      this#visit_expression ~hints:[] ~cond:OtherTestContext test;
       if expression_is_definitely_synthesizable ~autocomplete_hooks alternate then (
         (* Special-case for expressions like `cond ? [] : [exp]` *)
         this#visit_expression
-          ~hints:
-            (Base.List.append
-               hints
-               [Hint_t (ValueHint (NonConditionalContext, alternate), BestEffortHint)]
-            )
-          ~cond:NonConditionalContext
+          ~hints:(Base.List.append hints [Hint_t (ValueHint (NoContext, alternate), BestEffortHint)])
+          ~cond:NoContext
           consequent;
-        this#visit_expression ~hints ~cond:NonConditionalContext alternate
+        this#visit_expression ~hints ~cond:NoContext alternate
       ) else (
-        this#visit_expression ~hints ~cond:NonConditionalContext consequent;
+        this#visit_expression ~hints ~cond:NoContext consequent;
         this#visit_expression
           ~hints:
-            (Base.List.append
-               hints
-               [Hint_t (ValueHint (NonConditionalContext, consequent), BestEffortHint)]
-            )
-          ~cond:NonConditionalContext
+            (Base.List.append hints [Hint_t (ValueHint (NoContext, consequent), BestEffortHint)])
+          ~cond:NoContext
           alternate
       )
 
@@ -3047,10 +3025,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Expression.Binary in
       let { operator; left; right; comments = _ } = expr in
       match (operator, cond) with
-      | (Instanceof, OtherConditionalTest) ->
+      | (Instanceof, OtherTestContext) ->
         this#visit_expression ~hints:[] ~cond left;
         ignore @@ this#expression right
-      | ((Equal | NotEqual | StrictEqual | StrictNotEqual), OtherConditionalTest) ->
+      | ((Equal | NotEqual | StrictEqual | StrictNotEqual), OtherTestContext) ->
         Eq_test.visit_eq_test
           ~on_type_of_test:(fun _ expr value _ _ ->
             this#visit_expression ~hints:[] ~cond expr;
@@ -3090,20 +3068,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let { operator; left; right; comments = _ } = expr in
       let (left_cond, left_hints, right_hints) =
         match operator with
-        | And -> (OtherConditionalTest, hints, hints)
+        | And -> (OtherTestContext, hints, hints)
         | Or ->
-          ( OtherConditionalTest,
+          ( OtherTestContext,
             decompose_hints Comp_MaybeT hints,
-            Base.List.append
-              hints
-              [Hint_t (ValueHint (NonConditionalContext, left), BestEffortHint)]
+            Base.List.append hints [Hint_t (ValueHint (NoContext, left), BestEffortHint)]
           )
         | NullishCoalesce ->
           ( cond,
             decompose_hints Comp_MaybeT hints,
-            Base.List.append
-              hints
-              [Hint_t (ValueHint (NonConditionalContext, left), BestEffortHint)]
+            Base.List.append hints [Hint_t (ValueHint (NoContext, left), BestEffortHint)]
           )
       in
       this#visit_expression ~hints:left_hints ~cond:left_cond left;
@@ -3178,7 +3152,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | Ast.Expression.Object.Property.PrivateName _ -> [] (* Illegal syntax *)
         | Ast.Expression.Object.Property.Computed computed ->
           let (_, { Ast.ComputedKey.expression; comments = _ }) = computed in
-          this#visit_expression ~hints:[] ~cond:ComputedIndexContext expression;
+          this#visit_expression ~hints:[] ~cond:IndexContext expression;
           decompose_hints (Decomp_ObjComputed (mk_expression_reason expression)) object_hints
       in
       Base.List.iter properties ~f:(fun prop ->
@@ -3188,7 +3162,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             (match p with
             | (_, Init { key; value; shorthand = _ }) ->
               let hints = visit_object_key_and_compute_hint key in
-              this#visit_expression ~hints ~cond:NonConditionalContext value;
+              this#visit_expression ~hints ~cond:NoContext value;
               (match key with
               | Ast.Expression.Object.Property.Computed _ ->
                 (* We will be using this as hint for computed values.
@@ -3215,7 +3189,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
             this#visit_expression
               ~hints:(decompose_hints Decomp_ObjSpread object_hints)
-              ~cond:NonConditionalContext
+              ~cond:NoContext
               argument
       )
 
@@ -3229,7 +3203,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | (_, { Case.test = Some (test_loc, _); _ }) ->
             this#record_hint
               test_loc
-              [Hint_t (ValueHint (NonConditionalContext, discriminant), ExpectedTypeHint)]
+              [Hint_t (ValueHint (NoContext, discriminant), ExpectedTypeHint)]
           | _ -> ()
       );
       res
@@ -3237,7 +3211,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! switch_case case =
       let open Ast.Statement.Switch.Case in
       let (_loc, { test; consequent; comments = _ }) = case in
-      Base.Option.iter ~f:(this#visit_expression ~hints:[] ~cond:OtherConditionalTest) test;
+      Base.Option.iter ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext) test;
       ignore @@ this#statement_list consequent;
       case
 
@@ -3253,7 +3227,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let value_hints =
         Base.List.foldi cases ~init:IMap.empty ~f:(fun i acc (_, { Case.body; _ }) ->
             if expression_is_definitely_synthesizable ~autocomplete_hooks body then
-              let hint = Hint_t (ValueHint (NonConditionalContext, body), BestEffortHint) in
+              let hint = Hint_t (ValueHint (NoContext, body), BestEffortHint) in
               IMap.add i hint acc
             else
               acc
@@ -3272,7 +3246,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
              Hints are ordered as the cases are in source, top to bottom. *)
           let value_hints = value_hints |> IMap.remove i |> IMap.values |> List.rev in
           let hints = Base.List.append hints value_hints in
-          this#visit_expression ~hints ~cond:NonConditionalContext body
+          this#visit_expression ~hints ~cond:NoContext body
       )
 
     method! match_statement _ x =
@@ -3305,7 +3279,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       in
       MatchPattern.visit_pattern
         ~visit_binding
-        ~visit_expression:(this#visit_expression ~hints:[] ~cond:NonConditionalContext)
+        ~visit_expression:(this#visit_expression ~hints:[] ~cond:NoContext)
         ~visit_intermediate:this#add_destructure_binding
         (Root root)
         pattern

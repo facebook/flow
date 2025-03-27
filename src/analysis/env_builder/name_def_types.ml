@@ -6,15 +6,10 @@
  *)
 
 module Ast = Flow_ast
+open Enclosing_context
 open Hint
 open Reason
 open Loc_collections
-
-type cond_context =
-  | NonConditionalContext
-  | OtherConditionalTest
-  | ComputedIndexContext
-  | JsxNameContext
 
 type scope_kind =
   | Ordinary (* function or module *)
@@ -40,7 +35,7 @@ type tparams_map = string ALocMap.t
 
 type hint_node =
   | AnnotationHint of tparams_map * (ALoc.t, ALoc.t) Ast.Type.annotation
-  | ValueHint of (cond_context * (ALoc.t, ALoc.t) Ast.Expression.t)
+  | ValueHint of (enclosing_context * (ALoc.t, ALoc.t) Ast.Expression.t)
   | ProvidersHint of ALoc.t Nel.t
   | WriteLocHint of Env_api.With_ALoc.def_loc_type * ALoc.t
   | StringLiteralType of string
@@ -156,7 +151,7 @@ type generator_annot = {
 }
 
 type expression_def = {
-  cond_context: cond_context;
+  cond_context: enclosing_context;
   chain: bool;
   expr: (ALoc.t, ALoc.t) Ast.Expression.t;
   hints: ast_hints;

@@ -199,16 +199,10 @@ let synth_arg_list ~target_loc cx (_loc, { Ast.Expression.ArgList.arguments; com
         (loc, SpreadArg t)
       )
 
-let convert_encl_ctx = function
-  | NonConditionalContext -> NoContext
-  | OtherConditionalTest -> OtherTestContext
-  | ComputedIndexContext -> IndexContext
-  | JsxNameContext -> JsxTitleNameContext
-
 let resolve_hint cx loc hint : Type_hint.concr_hint =
   let rec resolve_hint_node = function
     | AnnotationHint (tparams_locs, anno) -> resolve_annotation cx tparams_locs anno
-    | ValueHint (ctx, exp) -> expression cx ~encl_ctx:(convert_encl_ctx ctx) exp
+    | ValueHint (encl_ctx, exp) -> expression cx ~encl_ctx exp
     | ProvidersHint (loc, []) -> Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
     | ProvidersHint (l1, l2 :: rest) ->
       let t1 = Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc l1 in
@@ -1046,12 +1040,11 @@ let resolve_type_param cx id_loc =
 
 let resolve_chain_expression cx ~cond exp =
   let cache = Context.node_cache cx in
-  let (t, _, exp) = Statement.optional_chain ~encl_ctx:(convert_encl_ctx cond) cx exp in
+  let (t, _, exp) = Statement.optional_chain ~encl_ctx:cond cx exp in
   Node_cache.set_expression cache exp;
   t
 
-let resolve_write_expression cx ~cond exp =
-  synthesizable_expression cx ~encl_ctx:(convert_encl_ctx cond) exp
+let resolve_write_expression cx ~cond exp = synthesizable_expression cx ~encl_ctx:cond exp
 
 let resolve_generator_next cx reason gen =
   let open TypeUtil in
