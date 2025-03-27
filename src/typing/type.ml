@@ -892,25 +892,6 @@ module rec TypeTerm : sig
       }
     | EnumExhaustiveCheckInvalid of ALoc.t list
 
-  (* Information about the enclosing syntactic context of an expression. Each
-   * one of these variants corresponds to the context of `C` in the expression
-   * or statement shown in comment above it. *)
-  and enclosing_context =
-    | NoContext
-    (* `switch(C){...}` *)
-    | SwitchTest of {
-        case_test_loc: ALoc.t;
-        switch_discriminant_loc: ALoc.t;
-      }
-    (* `if(C){}`, `while(C){}`, `C?e1:e2`, `invariant(C)`, ... *)
-    | OtherTest
-    (* `o[C]`, `o[C]=e`, `{[C]:e}`, `o[C]()` *)
-    | IndexContext
-    (* `<C />` *)
-    | JsxTitleNameContext
-    (* `<Foo bar={C}>{C}</Foo>` *)
-    | JsxAttrOrChildrenContext
-
   (* Bindings created from destructuring annotations should themselves act like
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
    * because `p` should behave like a `string` annotation.

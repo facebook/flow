@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Enclosing_context
 open Type
 module Ast = Flow_ast
 
 type syntactic_flags = {
-  encl_ctx: Type.enclosing_context;
+  encl_ctx: enclosing_context;
   decl: Ast.Variable.kind option;
   as_const: bool;
   frozen: Type.frozen_kind;
@@ -18,7 +19,7 @@ type syntactic_flags = {
 
 let empty_syntactic_flags =
   {
-    encl_ctx = Type.NoContext;
+    encl_ctx = NoContext;
     decl = None;
     as_const = false;
     frozen = Type.NotFrozen;
@@ -26,7 +27,7 @@ let empty_syntactic_flags =
   }
 
 let mk_syntactic_flags
-    ?(encl_ctx = Type.NoContext)
+    ?(encl_ctx = NoContext)
     ?decl
     ?(as_const = false)
     ?(frozen = Type.NotFrozen)
@@ -160,8 +161,8 @@ let loc_has_hint cx loc =
 
 let enclosing_context_needs_precise = function
   | NoContext -> false
-  | SwitchTest _
-  | OtherTest
+  | SwitchTestContext _
+  | OtherTestContext
   | IndexContext
   | JsxTitleNameContext
   | JsxAttrOrChildrenContext ->

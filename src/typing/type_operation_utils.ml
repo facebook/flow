@@ -7,6 +7,7 @@
 
 module Flow = Flow_js
 module Ast = Flow_ast
+open Enclosing_context
 open Reason
 open Type
 
@@ -241,7 +242,7 @@ module Operators = struct
         let open TypeUtil in
         lazy
           (match encl_ctx with
-          | SwitchTest { case_test_loc; switch_discriminant_loc } ->
+          | SwitchTestContext { case_test_loc; switch_discriminant_loc } ->
             let use_op =
               Op
                 (SwitchRefinementCheck
@@ -257,7 +258,7 @@ module Operators = struct
               }
           | NoContext
           | IndexContext
-          | OtherTest
+          | OtherTestContext
           | JsxTitleNameContext
           | JsxAttrOrChildrenContext ->
             let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
@@ -283,10 +284,10 @@ module Operators = struct
       | (DefT (_, EnumValueT _), DefT (_, (NullT | VoidT)))
       | (DefT (_, (NullT | VoidT)), DefT (_, EnumValueT _)) -> begin
         match encl_ctx with
-        | SwitchTest _ -> Some (Lazy.force comparison_error)
+        | SwitchTestContext _ -> Some (Lazy.force comparison_error)
         | NoContext
         | IndexContext
-        | OtherTest
+        | OtherTestContext
         | JsxTitleNameContext
         | JsxAttrOrChildrenContext ->
           None

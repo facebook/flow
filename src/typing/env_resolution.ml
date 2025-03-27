@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Enclosing_context
 open Name_def
 open Type
 open Reason
@@ -105,7 +106,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
   if Context.typing_mode cx = Context.CheckingMode then Node_cache.set_annotation cache anno;
   t
 
-let rec synthesizable_expression cx ?(encl_ctx = Type.NoContext) exp =
+let rec synthesizable_expression cx ?(encl_ctx = NoContext) exp =
   let open Ast.Expression in
   match exp with
   | (loc, Identifier (_, name)) -> Statement.identifier cx ~encl_ctx name loc
@@ -164,7 +165,7 @@ let mk_selector_reason_has_default cx loc = function
     (* TODO: eveyrthing after a computed prop should be optional *)
     (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc, false)
   | Selector.Computed { expression = exp; has_default } ->
-    let t = expression cx ~encl_ctx:Type.IndexContext exp in
+    let t = expression cx ~encl_ctx:IndexContext exp in
     (Type.Elem t, mk_reason (RProperty None) loc, has_default)
   | Selector.Default -> (Type.Default, mk_reason RDefaultValue loc, false)
 
@@ -200,7 +201,7 @@ let synth_arg_list ~target_loc cx (_loc, { Ast.Expression.ArgList.arguments; com
 
 let convert_encl_ctx = function
   | NonConditionalContext -> NoContext
-  | OtherConditionalTest -> OtherTest
+  | OtherConditionalTest -> OtherTestContext
   | ComputedIndexContext -> IndexContext
   | JsxNameContext -> JsxTitleNameContext
 
@@ -811,7 +812,7 @@ let rec resolve_binding cx reason loc b =
       AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
   | Root (For (kind, exp)) ->
     let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
-    let right_t = expression cx ~encl_ctx:OtherTest exp in
+    let right_t = expression cx ~encl_ctx:OtherTestContext exp in
     (match kind with
     | In ->
       TypeAssertions.assert_for_in_rhs cx right_t;

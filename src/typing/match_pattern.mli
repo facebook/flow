@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Enclosing_context
 module Ast = Flow_ast
 
 val pattern :
   Context.t ->
   on_identifier:
-    (encl_ctx:Type.enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t) ->
+    (encl_ctx:enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t) ->
   on_expression:
     (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
   on_binding:
@@ -22,7 +23,7 @@ val pattern :
 val type_of_member_pattern :
   Context.t ->
   on_identifier:
-    (encl_ctx:Type.enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t) ->
+    (encl_ctx:enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t) ->
   on_expression:
     (Context.t -> (ALoc.t, ALoc.t) Ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t) ->
   (ALoc.t, ALoc.t) Ast.MatchPattern.MemberPattern.t ->

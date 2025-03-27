@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Func_class_sig_types
+open Enclosing_context
 
 module type S = sig
   module Anno : Type_annotation_sig.S
@@ -73,7 +74,7 @@ module type S = sig
     Context.t -> (ALoc.t, ALoc.t) Ast.Expression.CallTypeArgs.t option -> Type.targ list option
 
   val expression :
-    ?encl_ctx:Type.enclosing_context ->
+    ?encl_ctx:enclosing_context ->
     ?decl:Ast.Variable.kind ->
     ?as_const:bool ->
     Context.t ->
@@ -89,7 +90,7 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     check_expression:
-      (?encl_ctx:Type.enclosing_context ->
+      (?encl_ctx:enclosing_context ->
       Context.t ->
       (ALoc.t, ALoc.t) Ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
@@ -234,24 +235,24 @@ module type S = sig
     Type.enum_concrete_info
 
   val optional_chain :
-    encl_ctx:Type.enclosing_context ->
+    encl_ctx:enclosing_context ->
     Context.t ->
     (ALoc.t, ALoc.t) Ast.Expression.t ->
     Type.t * Type.t list * (ALoc.t, ALoc.t * Type.t) Ast.Expression.t
 
   val string_literal :
-    Context.t -> encl_ctx:Type.enclosing_context -> ALoc.t -> ALoc.t Ast.StringLiteral.t -> Type.t
+    Context.t -> encl_ctx:enclosing_context -> ALoc.t -> ALoc.t Ast.StringLiteral.t -> Type.t
 
   val boolean_literal :
-    Context.t -> encl_ctx:Type.enclosing_context -> ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
+    Context.t -> encl_ctx:enclosing_context -> ALoc.t -> ALoc.t Ast.BooleanLiteral.t -> Type.t
 
   val null_literal : ALoc.t -> Type.t
 
   val number_literal :
-    Context.t -> encl_ctx:Type.enclosing_context -> ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
+    Context.t -> encl_ctx:enclosing_context -> ALoc.t -> ALoc.t Ast.NumberLiteral.t -> Type.t
 
   val bigint_literal :
-    Context.t -> encl_ctx:Type.enclosing_context -> ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
+    Context.t -> encl_ctx:enclosing_context -> ALoc.t -> ALoc.t Ast.BigIntLiteral.t -> Type.t
 
   val regexp_literal : Context.t -> ALoc.t -> Type.t
 
@@ -262,10 +263,10 @@ module type S = sig
     Type.t * (ALoc.t, ALoc.t * Type.t) Ast.ModuleRefLiteral.t
 
   val identifier :
-    encl_ctx:Type.enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t
+    encl_ctx:enclosing_context -> Context.t -> ALoc.t Ast.Identifier.t' -> ALoc.t -> Type.t
 
   val get_prop :
-    encl_ctx:Type.enclosing_context ->
+    encl_ctx:enclosing_context ->
     Context.t ->
     Reason.t ->
     use_op:Type.use_op ->

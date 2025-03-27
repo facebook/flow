@@ -38,7 +38,8 @@ module Operators : sig
 
   val check_eq : Context.t -> Type.t * Type.t -> unit
 
-  val check_strict_eq : encl_ctx:Type.enclosing_context -> Context.t -> Type.t * Type.t -> unit
+  val check_strict_eq :
+    encl_ctx:Enclosing_context.enclosing_context -> Context.t -> Type.t * Type.t -> unit
 
   val logical_and : Context.t -> reason -> Type.t -> Type.t -> Type.t
 

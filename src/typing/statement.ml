@@ -13,6 +13,7 @@ module Tast_utils = Typed_ast_utils
    Flow_js. *)
 
 module Flow = Flow_js
+open Enclosing_context
 open Utils_js
 open Reason
 open FlowSymbol
@@ -1202,7 +1203,7 @@ module Make
       );
       (loc, Expression { Expression.expression = expr; directive; comments })
     | (loc, If { If.test; consequent; alternate; comments }) ->
-      let test_ast = condition ~encl_ctx:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTestContext cx test in
       let then_ast = statement cx consequent in
       let else_ast =
         Base.Option.map alternate ~f:(fun (loc, { If.Alternate.body; comments }) ->
@@ -1317,7 +1318,7 @@ module Make
                      condition
                        cx
                        ~encl_ctx:
-                         (SwitchTest
+                         (SwitchTestContext
                             { case_test_loc = fst expr; switch_discriminant_loc = fst discriminant }
                          )
                        fake
@@ -1399,12 +1400,12 @@ module Make
           }
       )
     | (loc, While { While.test; body; comments }) ->
-      let test_ast = condition ~encl_ctx:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTestContext cx test in
       let body_ast = statement cx body in
       (loc, While { While.test = test_ast; body = body_ast; comments })
     | (loc, DoWhile { DoWhile.body; test; comments }) ->
       let body_ast = statement cx body in
-      let test_ast = condition ~encl_ctx:OtherTest cx test in
+      let test_ast = condition ~encl_ctx:OtherTestContext cx test in
       (loc, DoWhile { DoWhile.body = body_ast; test = test_ast; comments })
     | (loc, For { For.init; test; update; body; comments }) ->
       let init_ast =
@@ -1419,7 +1420,7 @@ module Make
         match test with
         | None -> None
         | Some expr ->
-          let expr_ast = condition ~encl_ctx:OtherTest cx expr in
+          let expr_ast = condition ~encl_ctx:OtherTestContext cx expr in
           Some expr_ast
       in
       let body_ast = statement cx body in
@@ -1429,7 +1430,7 @@ module Make
       )
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let eval_right () =
-        let (((_, _), _) as right_ast) = condition ~encl_ctx:OtherTest cx right in
+        let (((_, _), _) as right_ast) = condition ~encl_ctx:OtherTestContext cx right in
         right_ast
       in
       let (left_ast, right_ast) =
@@ -1539,7 +1540,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let (((_, t), _) as right_ast) = condition ~encl_ctx:OtherTest cx right in
+        let (((_, t), _) as right_ast) = condition ~encl_ctx:OtherTestContext cx right in
         let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
@@ -3277,7 +3278,7 @@ module Make
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
       let reason = mk_reason RConditional loc in
-      let test = condition ~encl_ctx:OtherTest cx test in
+      let test = condition ~encl_ctx:OtherTestContext cx test in
       let ((((_, t1), _) as consequent), then_throws) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
             expression cx ~encl_ctx ?decl ~has_hint consequent
@@ -4177,7 +4178,7 @@ module Make
             let arguments =
               Base.List.map ~f:(Base.Fn.compose snd (expression_or_spread cx)) arguments
             in
-            let (((_, cond_t), _) as cond) = condition ~encl_ctx:OtherTest cx cond in
+            let (((_, cond_t), _) as cond) = condition ~encl_ctx:OtherTestContext cx cond in
             let concretized_cond_t =
               Flow.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t cond_t) cond_t
             in
@@ -4991,11 +4992,11 @@ module Make
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
-      let (((_, arg), _) as argument) = expression cx ~encl_ctx:OtherTest argument in
+      let (((_, arg), _) as argument) = expression cx ~encl_ctx:OtherTestContext argument in
       let tout =
         match encl_ctx with
-        | SwitchTest _
-        | OtherTest ->
+        | SwitchTestContext _
+        | OtherTestContext ->
           BoolModuleT.at loc
         | NoContext
         | IndexContext
@@ -5106,9 +5107,9 @@ module Make
     | JsxTitleNameContext
     | JsxAttrOrChildrenContext ->
       check ~encl_ctx
-    | SwitchTest _
-    | OtherTest ->
-      let reconstruct_ast = check ~encl_ctx:OtherTest in
+    | SwitchTestContext _
+    | OtherTestContext ->
+      let reconstruct_ast = check ~encl_ctx:OtherTestContext in
       Eq_test.visit_eq_test
       (* Strict and sense don't influence whether we should propagate cond context. *)
         ~sense:false
@@ -5122,7 +5123,7 @@ module Make
         ~on_other_eq_test:(fun _ _ -> check ~encl_ctx:NoContext)
         ~is_switch_cond_context:
           (match encl_ctx with
-          | SwitchTest _ -> true
+          | SwitchTestContext _ -> true
           | _ -> false)
         loc
         left
@@ -5178,13 +5179,13 @@ module Make
         | JsxTitleNameContext
         | JsxAttrOrChildrenContext ->
           ()
-        | SwitchTest _
-        | OtherTest ->
+        | SwitchTestContext _
+        | OtherTestContext ->
           matching_prop_check cx left right;
           (* If this is a switch statement only consider the case where the object
            * access in the discriminant. *)
           (match encl_ctx with
-          | SwitchTest _ -> ()
+          | SwitchTestContext _ -> ()
           | _ -> matching_prop_check cx right left)
       end;
       Operators.check_strict_eq ~encl_ctx cx (t1, t2);
@@ -5240,7 +5241,7 @@ module Make
       match operator with
       | Or ->
         let () = check_default_pattern cx left right in
-        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
+        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTestContext ?decl ~has_hint cx left in
         let ((((_, t2), _) as right), right_throws) =
           Abnormal.catch_expr_control_flow_exception (fun () ->
               expression cx ~encl_ctx ?decl ~has_hint right
@@ -5255,7 +5256,7 @@ module Make
         let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
         (Operators.logical_or cx reason t1 t2, { operator = Or; left; right; comments })
       | And ->
-        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTest ?decl ~has_hint cx left in
+        let (((_, t1), _) as left) = condition ~encl_ctx:OtherTestContext ?decl ~has_hint cx left in
         let ((((_, t2), _) as right), right_throws) =
           Abnormal.catch_expr_control_flow_exception (fun () ->
               expression cx ~encl_ctx ?decl ~has_hint right
@@ -5614,7 +5615,7 @@ module Make
           let () = update_env result_t in
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.AndAssign ->
-          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTestContext cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
@@ -5629,7 +5630,7 @@ module Make
           (lhs_t, lhs_pattern_ast, rhs_ast)
         | Assignment.OrAssign ->
           let () = check_default_pattern cx left_expr rhs in
-          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTest cx left_expr in
+          let ((_, lhs_t), _) = condition ~encl_ctx:OtherTestContext cx left_expr in
           let ((((_, rhs_t), _) as rhs_ast), right_throws) =
             Abnormal.catch_expr_control_flow_exception (fun () -> expression cx rhs)
           in
@@ -6513,8 +6514,8 @@ module Make
     let id = mk_id () in
     let prop_name = OrdinaryName name in
     match encl_ctx with
-    | SwitchTest _
-    | OtherTest ->
+    | SwitchTestContext _
+    | OtherTestContext ->
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
     | NoContext
     | IndexContext

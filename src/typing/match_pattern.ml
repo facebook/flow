@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module Tast_utils = Typed_ast_utils
 open Reason
 open Type
+open Enclosing_context
 
 let array_element acc i loc =
   ( loc,
@@ -98,7 +99,7 @@ let rec member cx ~on_identifier ~on_expression mem =
     match base with
     | BaseIdentifier (loc, id) ->
       let exp = (loc, Ast.Expression.Identifier (loc, id)) in
-      (exp, BaseIdentifier ((loc, on_identifier ~encl_ctx:Type.OtherTest cx id loc), id))
+      (exp, BaseIdentifier ((loc, on_identifier ~encl_ctx:OtherTestContext cx id loc), id))
     | BaseMember mem ->
       let (exp, mem) = member cx ~on_identifier ~on_expression mem in
       (exp, BaseMember mem)
@@ -185,7 +186,7 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       in
       AsPattern { AsPattern.pattern = p; target; comments }
     | IdentifierPattern (loc, x) ->
-      let t = on_identifier ~encl_ctx:Type.OtherTest cx x loc in
+      let t = on_identifier ~encl_ctx:OtherTestContext cx x loc in
       IdentifierPattern ((loc, t), x)
     | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~in_or_pattern ~loc acc x)
     | WildcardPattern x -> WildcardPattern x

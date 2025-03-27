@@ -968,7 +968,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
       let obj_type () =
         match base with
         | BaseIdentifier (loc, id) ->
-          Inference.type_of_identifier ~encl_ctx:Type.NoContext cx loc id
+          Inference.type_of_identifier ~encl_ctx:Enclosing_context.NoContext cx loc id
         | BaseMember (loc, mem) -> Inference.type_of_match_member_pattern cx loc mem
       in
       (match property with
