@@ -3880,7 +3880,8 @@ let to_printable_error :
         text "The ";
         code "as const";
         text " assertion can only be used on string, numeric, boolean, object, ";
-        text "or array literals.";
+        text "or array literals, ";
+        text "or const-variables initialized with primitive literals.";
       ]
     | MessageUnsupportedSyntax CatchParameterDeclaration ->
       [text "Unsupported catch parameter declaration."]

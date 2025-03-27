@@ -119,3 +119,9 @@ function test_obj10() {
   _ as 1 as typeof obj10.g.h; // okay
   _ as 2 as typeof obj10.g.h; // error 2 ~> 1
 }
+
+function test_obj11() {
+  const f = 42;
+  const obj = { f: f as const }; // no error
+  obj.f as 42; // okay
+}

@@ -873,7 +873,7 @@ module Make
     let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.def_loc_opt })
 
-  let check_const_assertion cx (loc, e) =
+  let check_const_assertion cx ((loc, t), e) =
     let open Ast.Expression in
     if
       match e with
@@ -886,6 +886,7 @@ module Make
       | Object _
       | Unary { Unary.operator = Unary.Minus; argument = (_, NumberLiteral _); _ } ->
         false
+      | Identifier _ -> not (Primitive_literal.is_generalization_candidate cx t)
       | _ -> true
     then
       Flow.add_output
@@ -2948,8 +2949,8 @@ module Make
         let t = AnyT.at (AnyError None) loc in
         ((loc, t), AsExpression (Tast_utils.error_mapper#as_expression cast)))
     | AsConstExpression { AsConstExpression.expression = e; comments } ->
-      check_const_assertion cx e;
       let (((_, t), _) as e) = expression cx ~as_const:true e in
+      check_const_assertion cx e;
       ((loc, t), AsConstExpression { AsConstExpression.expression = e; comments })
     | TSSatisfies cast ->
       Flow_js_utils.add_output
