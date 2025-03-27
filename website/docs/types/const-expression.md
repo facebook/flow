@@ -3,7 +3,7 @@ title: Const Expressions
 slug: /types/const-expression
 ---
 
-Sometimes it is useful to specifiy that a literal expression is expected to be immutable.
+Sometimes it is useful to specify that a literal expression is expected to be immutable.
 In such cases, you can annotate the expression with the `as const` modifier. We
 refer to these expressions as const-expressions.
 
