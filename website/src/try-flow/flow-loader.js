@@ -77,18 +77,23 @@ export function load(
   if (cached) {
     return Promise.resolve(cached);
   }
+  const majorVersion =
+    version === 'master' ? Infinity : parseInt(version.split('.')[1], 10);
   const libs =
     version === 'master'
-      ? [
-          `/flow/master/flowlib/core.js`,
-          `/flow/master/flowlib/react.js`,
-          `/flow/master/flowlib/intl.js`,
-        ].map(withBaseUrl)
-      : [
-          `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
-          `${versionedUnpkgComUrl(version)}/flowlib/intl.js`,
-        ];
+      ? [`/flow/master/flowlib/core.js`, `/flow/master/flowlib/react.js`].map(
+          withBaseUrl,
+        )
+      : majorVersion >= 266
+        ? [
+            `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
+            `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
+          ]
+        : [
+            `${versionedUnpkgComUrl(version)}/flowlib/core.js`,
+            `${versionedUnpkgComUrl(version)}/flowlib/react.js`,
+            `${versionedUnpkgComUrl(version)}/flowlib/intl.js`,
+          ];
   const flowLoader = new Promise<[string, string]>(resolve => {
     requirejs(
       [
