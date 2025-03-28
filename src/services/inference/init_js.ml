@@ -27,20 +27,20 @@ module ErrorSet = Flow_error.ErrorSet
    returns (success, parse and signature errors, exports)
 *)
 let load_lib_files ~ccx ~options ~reader files =
-  let%lwt (ok, errors, ordered_asts) =
+  let%lwt (ok, ordered_asts) =
     files
     |> Lwt_list.fold_left_s
-         (fun (ok_acc, errors_acc, asts_with_scoped_dir_opt_acc) (scoped_dir_opt, file) ->
+         (fun (ok_acc, asts_with_scoped_dir_opt_acc) (scoped_dir_opt, file) ->
            let lib_file = File_key.LibFile file in
            match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
            | Some ast ->
              (* construct ast list in reverse override order *)
              let asts_acc = (scoped_dir_opt, ast) :: asts_with_scoped_dir_opt_acc in
-             Lwt.return (ok_acc, errors_acc, asts_acc)
+             Lwt.return (ok_acc, asts_acc)
            | None ->
              Hh_logger.info "Failed to find %s in parsing heap." (File_key.show lib_file);
-             Lwt.return (false, errors_acc, asts_with_scoped_dir_opt_acc))
-         (true, ErrorSet.empty, [])
+             Lwt.return (false, asts_with_scoped_dir_opt_acc))
+         (true, [])
   in
   let (builtin_exports, master_cx, cx_opt) =
     if ok then (
@@ -96,7 +96,7 @@ let load_lib_files ~ccx ~options ~reader files =
     ) else
       ((Exports.empty, []), Context.EmptyMasterContext, None)
   in
-  Lwt.return (ok, master_cx, cx_opt, errors, builtin_exports)
+  Lwt.return (ok, master_cx, cx_opt, builtin_exports)
 
 type init_result = {
   ok: bool;
@@ -127,9 +127,7 @@ let error_set_to_filemap err_set =
 let init ~options ~reader lib_files =
   let ccx = Context.make_ccx () in
 
-  let%lwt (ok, master_cx, cx_opt, parse_and_sig_errors, exports) =
-    load_lib_files ~ccx ~options ~reader lib_files
-  in
+  let%lwt (ok, master_cx, cx_opt, exports) = load_lib_files ~ccx ~options ~reader lib_files in
 
   let (errors, warnings, suppressions) =
     match cx_opt with
@@ -154,7 +152,6 @@ let init ~options ~reader lib_files =
   (* store master signature context to heap *)
   Context_heaps.add_master master_cx;
 
-  let errors = ErrorSet.union parse_and_sig_errors errors in
   let (errors, warnings, suppressions) =
     (error_set_to_filemap errors, error_set_to_filemap warnings, suppressions)
   in
