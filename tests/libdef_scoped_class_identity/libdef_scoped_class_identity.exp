@@ -13,39 +13,5 @@ References:
                     ^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- common.js:6:1
 
-Cannot cast `foo` to `CommonFoo` because `Foo` [1] is incompatible with `Foo` [2]. [incompatible-cast]
-
-   common.js:6:1
-   6| foo as CommonFoo;
-      ^^^
-
-References:
-   common.js:5:20
-   5| declare const foo: ScopedFoo;
-                         ^^^^^^^^^ [1]
-   common.js:6:8
-   6| foo as CommonFoo;
-             ^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- foo/foo.js:6:1
-
-Cannot cast `foo` to `ScopedFoo` because `Foo` [1] is incompatible with `Foo` [2]. [incompatible-cast]
-
-   foo/foo.js:6:1
-   6| foo as ScopedFoo;
-      ^^^
-
-References:
-   foo/foo.js:5:20
-   5| declare const foo: CommonFoo;
-                         ^^^^^^^^^ [1]
-   foo/foo.js:6:8
-   6| foo as ScopedFoo;
-             ^^^^^^^^^ [2]
-
-
-
-Found 3 errors
+Found 1 error

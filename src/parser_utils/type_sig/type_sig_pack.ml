@@ -321,10 +321,11 @@ and pack_local_binding cx = function
     let id_loc = pack_loc id_loc in
     let def = pack_class cx (Lazy.force def) in
     ClassBinding { id_loc; name; def }
-  | P.DeclareClassBinding { id_loc; name; def } ->
+  | P.DeclareClassBinding { id_loc; nominal_id_loc; name; def } ->
     let id_loc = pack_loc id_loc in
+    let nominal_id_loc = pack_loc nominal_id_loc in
     let def = pack_declare_class cx (Lazy.force def) in
-    DeclareClassBinding { id_loc; name; def }
+    DeclareClassBinding { id_loc; nominal_id_loc; name; def }
   | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics } ->
     let id_loc = pack_loc id_loc in
     let fn_loc = pack_loc fn_loc in

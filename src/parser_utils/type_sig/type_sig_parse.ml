@@ -211,6 +211,7 @@ and 'loc local_binding =
     }
   | DeclareClassBinding of {
       id_loc: 'loc loc_node;
+      nominal_id_loc: 'loc loc_node;
       name: string;
       def: ('loc loc_node, 'loc parsed) declare_class_sig Lazy.t;
     }
@@ -796,8 +797,35 @@ module Scope = struct
   let bind_class scope tbls id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (ClassBinding { id_loc; name; def })
 
-  let bind_declare_class scope tbls id_loc name def =
-    bind_local ~type_only:false scope tbls name id_loc (DeclareClassBinding { id_loc; name; def })
+  let bind_declare_class scope tbls id_loc name def k =
+    bind ~type_only:false scope tbls name id_loc (fun binding_opt ->
+        match binding_opt with
+        | None ->
+          let def : _ local_binding =
+            DeclareClassBinding { id_loc; nominal_id_loc = id_loc; name; def }
+          in
+          let node = push_local_def tbls def in
+          k name node;
+          (Some (LocalBinding node), true)
+        | Some (RemoteBinding _) -> (binding_opt, false)
+        | Some (LocalBinding node) ->
+          (* In libdefs, earlier definitions override later ones. Consider a `declare class` that's
+           * present in both common and scoped libdefs. Normally, they will have different identity,
+           * which can cause surprising subtyping errors when different versions of the class interact.
+           * See the `libdef_scoped_class_identity` test suite.
+           *
+           * To avoid the issue, we always take identity from the last definition, which should
+           * always come from the common libdefs. *)
+          (match scope with
+          | Global _ ->
+            Local_defs.modify node (function
+                | DeclareClassBinding { id_loc = old_id_loc; nominal_id_loc = _; name; def } ->
+                  DeclareClassBinding { id_loc = old_id_loc; nominal_id_loc = id_loc; name; def }
+                | def -> def
+                )
+          | _ -> ());
+          (binding_opt, false)
+    )
 
   let bind_enum scope tbls id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (EnumBinding { id_loc; name; def })

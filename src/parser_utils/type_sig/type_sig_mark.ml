@@ -119,8 +119,9 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
   | P.ClassBinding { id_loc; name = _; def } ->
     mark_loc ~visit_loc id_loc;
     mark_class ~locs_to_dirtify ~visit_loc (Lazy.force def)
-  | P.DeclareClassBinding { id_loc; name = _; def } ->
+  | P.DeclareClassBinding { id_loc; nominal_id_loc; name = _; def } ->
     mark_loc ~visit_loc id_loc;
+    mark_loc ~visit_loc nominal_id_loc;
     mark_declare_class ~locs_to_dirtify ~visit_loc (Lazy.force def)
   | P.DeclareFunBinding { name = _; defs_rev } ->
     Nel.iter
