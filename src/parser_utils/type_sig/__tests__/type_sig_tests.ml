@@ -2509,6 +2509,7 @@ let%expect_test "interface_coverage" =
             []));
          def = InterfaceSig {extends = []; props = {}; calls = []; dict = None}}
     1. DeclareClassBinding {id_loc = [2:21-22];
+         nominal_id_loc = [2:21-22];
          name = "C";
          def =
          DeclareClassSig {tparams = Mono;
@@ -3659,6 +3660,7 @@ let%expect_test "class_extends" =
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:14-15];
+         nominal_id_loc = [1:14-15];
          name = "C";
          def =
          DeclareClassSig {tparams = Mono;
@@ -3695,6 +3697,7 @@ let%expect_test "class_extends" =
            implements = []; static_props = {};
            proto_props = {}; own_props = {}}}
     4. DeclareClassBinding {id_loc = [5:21-23];
+         nominal_id_loc = [5:21-23];
          name = "C3";
          def =
          DeclareClassSig {tparams = Mono;
@@ -3706,6 +3709,7 @@ let%expect_test "class_extends" =
            proto_props = {}; static_calls = [];
            calls = []; dict = None; static_dict = None}}
     5. DeclareClassBinding {id_loc = [6:21-23];
+         nominal_id_loc = [6:21-23];
          name = "C4";
          def =
          DeclareClassSig {tparams = Mono;
@@ -3763,6 +3767,7 @@ let%expect_test "declare_class_this" =
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
+         nominal_id_loc = [1:21-22];
          name = "C";
          def =
          DeclareClassSig {tparams = Mono;
@@ -4300,6 +4305,7 @@ let%expect_test "declared_export_default_class_binding" =
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:29-30];
+         nominal_id_loc = [1:29-30];
          name = "C";
          def =
          DeclareClassSig {tparams = Mono;
@@ -4579,6 +4585,7 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
                     proto = ObjAnnotImplicitProto})
                )))}
     2. DeclareClassBinding {id_loc = [3:14-19];
+         nominal_id_loc = [3:14-19];
          name = "Array";
          def =
          DeclareClassSig {tparams = Mono;
@@ -4812,6 +4819,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            type_guard = None; effect_ = ArbitraryEffect};
          tail = []}
     4. DeclareClassBinding {id_loc = [8:16-17];
+         nominal_id_loc = [8:16-17];
          name = "Y";
          def =
          DeclareClassSig {tparams = Mono;
@@ -5323,6 +5331,7 @@ let%expect_test "this_param_4" =
 
     Local defs:
     0. DeclareClassBinding {id_loc = [1:21-22];
+         nominal_id_loc = [1:21-22];
          name = "A";
          def =
          DeclareClassSig {tparams = Mono;

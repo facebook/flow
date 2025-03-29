@@ -305,6 +305,7 @@ type ('loc, 'a) def =
     }
   | DeclareClassBinding of {
       id_loc: 'loc;
+      nominal_id_loc: 'loc;
       name: string;
       def: ('loc, 'a) declare_class_sig;
     }

@@ -1978,9 +1978,9 @@ let merge_def ~const_decl file reason = function
   | ClassBinding { id_loc; name; def } ->
     let id = Context.make_aloc_id file.cx id_loc in
     merge_class (mk_merge_env SMap.empty) file reason (Some name) id def
-  | DeclareClassBinding { id_loc; name; def } ->
-    let id = Context.make_aloc_id file.cx id_loc in
-    merge_declare_class file reason name id def
+  | DeclareClassBinding { id_loc = _; nominal_id_loc; name; def } ->
+    let nominal_id = Context.make_aloc_id file.cx nominal_id_loc in
+    merge_declare_class file reason name nominal_id def
   | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
     let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason statics in
     merge_fun (mk_merge_env SMap.empty) file reason def statics
