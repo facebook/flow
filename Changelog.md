@@ -1,3 +1,7 @@
+### 0.266.1
+
+* Fix a bug that causes fixed `libdef-override` error to stick around after an incremental recheck.
+
 ### 0.266.0
 
 Likely to cause new Flow errors:
