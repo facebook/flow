@@ -1,0 +1,10 @@
+[options]
+all=true
+experimental.projects=foo
+experimental.projects=bar
+experimental.projects_path_mapping='<PROJECT_ROOT>/foo' -> 'foo'
+experimental.projects_path_mapping='<PROJECT_ROOT>/foo_lib.js' -> 'foo'
+
+[libs]
+common_lib.js
+'foo' -> 'foo_lib.js'
