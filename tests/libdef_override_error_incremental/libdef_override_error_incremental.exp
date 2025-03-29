@@ -1,0 +1,26 @@
+No errors!
+
+Prepend whitespace
+No errors!
+
+Remove suppression
+Error -------------------------------------------------------------------------------------------- flow-typed/lib.js:1:6
+
+This name declaration overrides an existing binding `Foo` [1]. Overriding in library definitions can lead to surprising
+behaviors. [libdef-override]
+
+   flow-typed/lib.js:1:6
+   1| type Foo = string;
+           ^^^
+
+References:
+   flow-typed/lib.js:2:6
+   2| type Foo = string;
+           ^^^ [1]
+
+
+
+Found 1 error
+
+Fix libdef override errors
+No errors!
