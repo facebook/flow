@@ -107,7 +107,7 @@ type init_result = {
   master_cx: Context.master_context;
 }
 
-let error_set_to_filemap err_set =
+let error_set_to_filemap ~init err_set =
   ErrorSet.fold
     (fun error map ->
       let file = Flow_error.source_file error in
@@ -118,7 +118,7 @@ let error_set_to_filemap err_set =
           | Some set -> Some (ErrorSet.add error set))
         map)
     err_set
-    FilenameMap.empty
+    init
 
 (* initialize builtins:
    parse and do local inference on library files, and set up master context.
@@ -131,7 +131,7 @@ let init ~options ~reader lib_files =
 
   let (errors, warnings, suppressions) =
     match cx_opt with
-    | None -> (ErrorSet.empty, ErrorSet.empty, Error_suppressions.empty)
+    | None -> (FilenameMap.empty, FilenameMap.empty, Error_suppressions.empty)
     | Some cx ->
       let errors = Context.errors cx in
       let suppressions = Context.error_suppressions cx in
@@ -146,14 +146,11 @@ let init ~options ~reader lib_files =
           aloc_tables
           severity_cover
       in
-      (errors, warnings, suppressions)
+      let init = FilenameMap.map (fun _ -> ErrorSet.empty) aloc_tables in
+      (error_set_to_filemap ~init errors, error_set_to_filemap ~init warnings, suppressions)
   in
 
   (* store master signature context to heap *)
   Context_heaps.add_master master_cx;
-
-  let (errors, warnings, suppressions) =
-    (error_set_to_filemap errors, error_set_to_filemap warnings, suppressions)
-  in
 
   Lwt.return { ok; errors; warnings; suppressions; exports; master_cx }
