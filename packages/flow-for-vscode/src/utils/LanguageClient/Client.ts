@@ -10,7 +10,7 @@
 // 2) Status
 // 3) ConfigureCompletionSnippetSupport
 
-import { LanguageClient as VscodeLanguageClient } from 'vscode-languageclient';
+import { LanguageClient as VscodeLanguageClient } from 'vscode-languageclient/node';
 import { type ServerOptions, type LanguageClientOptions } from './types';
 
 import TypeCoverageFeature from './TypeCoverageFeature';

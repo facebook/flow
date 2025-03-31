@@ -7,16 +7,15 @@
 
 /* eslint-disable no-empty-function */
 import {
+  FeatureState,
+  RegistrationType,
   type ClientCapabilities,
   type DynamicFeature,
-  type RPCMessageType,
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 import { type ILanguageClient } from './types';
 
 class ConfigureCompletionSnippetSupport implements DynamicFeature<void> {
   _enableSnippetSupport: boolean;
-
-  messages: Array<RPCMessageType> = [];
 
   constructor(client: ILanguageClient) {
     const { initializationOptions } = client.clientOptions;
@@ -24,6 +23,19 @@ class ConfigureCompletionSnippetSupport implements DynamicFeature<void> {
       ? Boolean(initializationOptions.useCodeSnippetOnFunctionSuggest)
       : false;
   }
+
+  getState(): FeatureState {
+    return {
+      kind: 'document',
+      id: 'completion-snippet',
+      registrations: false,
+      matches: false,
+    };
+  }
+
+  registrationType: RegistrationType<void> = new RegistrationType(
+    'textDocument/completion',
+  );
 
   fillClientCapabilities(capabilities: ClientCapabilities): void {
     if (
@@ -39,6 +51,7 @@ class ConfigureCompletionSnippetSupport implements DynamicFeature<void> {
   register(): void {}
   unregister(): void {}
   initialize(): void {}
+  clear(): void {}
   dispose(): void {}
 }
 

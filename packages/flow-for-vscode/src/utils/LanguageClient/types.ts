@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from 'vscode-languageclient';
+export * from 'vscode-languageclient/node';
 
-import * as lsp from 'vscode-languageclient';
+import * as lsp from 'vscode-languageclient/node';
 import * as vscode from 'vscode';
 
 import {

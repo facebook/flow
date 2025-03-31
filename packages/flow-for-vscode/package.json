@@ -175,7 +175,7 @@
     "fs-extra": "^11.2.0",
     "rimraf": "^3.0.2",
     "semver": "^7.6.3",
-    "vscode-languageclient": "^5.2.1",
+    "vscode-languageclient": "^9.0.1",
     "which": "5.0.0"
   },
   "devDependencies": {

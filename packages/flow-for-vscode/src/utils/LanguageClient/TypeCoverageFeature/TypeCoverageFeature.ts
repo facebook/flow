@@ -6,23 +6,58 @@
  */
 
 // add support using "textDocument/typeCoverage" lsp extension
-import * as lsp from 'vscode-languageclient';
+import * as lsp from 'vscode-languageclient/node';
 import * as vscode from 'vscode';
-import * as UUID from 'vscode-languageclient/lib/utils/uuid';
-
+import * as UUID from 'vscode-languageclient/lib/common/utils/uuid';
 import TypeCoverage from './TypeCoverage';
 import { type ILanguageClient } from '../types';
-import TypeCoverageProvider, {
-  TypeCoverageRequest,
-} from './TypeCoverageProvider';
+import TypeCoverageProvider from './TypeCoverageProvider';
 
-export default class TypeCoverageFeature extends lsp.TextDocumentFeature<lsp.TextDocumentRegistrationOptions> {
+export default class TypeCoverageFeature extends lsp.DynamicDocumentFeature<
+  lsp.TextDocumentRegistrationOptions,
+  {}
+> {
   readonly _client: ILanguageClient;
+  private coverage: TypeCoverage | null = null;
 
   constructor(client: ILanguageClient) {
-    super(client, TypeCoverageRequest.type);
+    super(client);
     this._client = client;
   }
+  registrationType: lsp.RegistrationType<lsp.TextDocumentRegistrationOptions> =
+    new lsp.RegistrationType('textDocument/didSave');
+
+  register(
+    data: lsp.RegistrationData<lsp.TextDocumentRegistrationOptions>,
+  ): void {
+    const provider = new TypeCoverageProvider(this._client);
+    this.coverage = new TypeCoverage(
+      data.registerOptions.documentSelector,
+      provider,
+      this._client.clientOptions.extensions.typeCoverage,
+    );
+  }
+
+  unregister(): void {
+    this.coverage = null;
+  }
+
+  protected getDocumentSelectors(): IterableIterator<vscode.DocumentSelector> {
+    const selector = this.coverage?._documentSelector;
+    const selectors = selector == null ? [] : [selector];
+    return selectors.values();
+  }
+
+  getState(): lsp.FeatureState {
+    return {
+      kind: 'document',
+      id: 'completion-snippet',
+      registrations: this.coverage != null,
+      matches: true,
+    };
+  }
+
+  clear(): void {}
 
   fillClientCapabilities(capabilities: lsp.ClientCapabilities): void {
     // @ts-ignore
@@ -40,7 +75,7 @@ export default class TypeCoverageFeature extends lsp.TextDocumentFeature<lsp.Tex
       return;
     }
 
-    this.register(this.messages, {
+    this.register({
       id: UUID.generateUuid(),
       registerOptions: { documentSelector },
     });

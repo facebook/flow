@@ -18,7 +18,7 @@ import { type ILanguageClient } from '../types';
 type StatusListener = (status: StatusData) => void;
 
 const ShowStatusRequest = {
-  type: new RequestType<ShowStatusParams, MessageActionItem | null, void, void>(
+  type: new RequestType<ShowStatusParams, MessageActionItem | null, void>(
     'window/showStatus',
   ),
 };

@@ -23,7 +23,7 @@ import { promises as fs } from 'fs';
 import StatusBarWidget from './StatusBarWidget';
 import createMiddleware from './createMiddleware';
 import ClientCommands from './ClientCommands';
-import * as UUID from 'vscode-languageclient/lib/utils/uuid';
+import * as UUID from 'vscode-languageclient/lib/common/utils/uuid';
 
 import getFlowPath from '../utils/getFlowPath';
 import getFlowVersion from '../utils/getFlowVersion';
@@ -230,66 +230,6 @@ export default class FlowLanguageClient {
         this._handleInitError(error);
         // don't initialize again let user decide what to do
         return false;
-      },
-
-      errorHandler: {
-        // called when `flow lsp` connection throws error
-        // eslint-disable-next-line handle-callback-err
-        error: (_error, _message, count) => {
-          if (count && count <= 3) {
-            return ErrorAction.Continue;
-          }
-
-          // throw error and let user decide what to do next
-          this._setStatus({
-            state: 'error',
-            message:
-              'Connection to flow server is erroring. Shutting down server. See the output for more information.',
-            actions: [
-              {
-                title: 'Go to output',
-                command: () => {
-                  this.commands.runShowOutputCommand();
-                },
-              },
-              {
-                title: 'Restart Client',
-                command: () => {
-                  this.commands.runRestartClientCommand();
-                },
-              },
-            ],
-          });
-
-          return ErrorAction.Shutdown;
-        },
-
-        // Can we find the reason here somehow ??
-        // For now adding 'Go to output' action. Maybe 'flow lsp' connection logged some error in output panel.
-        closed: () => {
-          this._setStatus({
-            state: 'error',
-            message:
-              'Connection to flow server got closed. See the output for more information.',
-            actions: [
-              {
-                title: 'Go to output',
-                command: () => {
-                  this.commands.runShowOutputCommand();
-                },
-              },
-              {
-                title: 'Restart Client',
-                command: () => {
-                  this.commands.runRestartClientCommand();
-                },
-              },
-            ],
-          });
-
-          // DoNotRestart: user will decide what to do
-          return CloseAction.DoNotRestart;
-        },
       },
 
       // NOTE: we want client rootPath & cwd to be flowconfigPath

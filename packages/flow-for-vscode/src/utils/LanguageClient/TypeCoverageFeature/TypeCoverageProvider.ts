@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import * as lsp from 'vscode-languageclient';
+import * as lsp from 'vscode-languageclient/node';
 import {
   type TypeCoverageResult,
   type TypeCoverageParams,
@@ -17,7 +17,6 @@ import { type ILanguageClient } from '../types';
 type TypeCoverageRequestType = lsp.RequestType<
   TypeCoverageParams,
   TypeCoverageResult | void,
-  void,
   lsp.TextDocumentRegistrationOptions
 >;
 
@@ -25,13 +24,12 @@ export const TypeCoverageRequest = {
   type: new lsp.RequestType<
     TypeCoverageParams,
     TypeCoverageResult | void,
-    void,
     lsp.TextDocumentRegistrationOptions
   >('textDocument/typeCoverage') as TypeCoverageRequestType,
 };
 
 const ConnectionStatusNotification = {
-  type: new lsp.NotificationType<ConnectionStatusParams, void>(
+  type: new lsp.NotificationType<ConnectionStatusParams>(
     'telemetry/connectionStatus',
   ),
 };
@@ -89,7 +87,7 @@ export default class TypeCoverageProvider {
       .then(
         (coverage) => coverage ?? null,
         (error) => {
-          client.logFailedRequest(TypeCoverageRequest.type, error);
+          console.error(TypeCoverageRequest.type, error);
           return Promise.resolve(null);
         },
       );

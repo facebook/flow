@@ -6,7 +6,7 @@
  */
 
 // add support using "window/showStatus" lsp extension
-import * as lsp from 'vscode-languageclient';
+import * as lsp from 'vscode-languageclient/node';
 import StatusProvider from './StatusProvider';
 import Status from './Status';
 import { type ILanguageClient } from '../types';
@@ -18,6 +18,10 @@ export default class StatusFeature implements StaticFeature {
 
   constructor(client: ILanguageClient) {
     this._client = client;
+  }
+
+  getState(): lsp.FeatureState {
+    return { kind: 'static' };
   }
 
   fillClientCapabilities(capabilities: lsp.ClientCapabilities): void {
@@ -34,4 +38,6 @@ export default class StatusFeature implements StaticFeature {
       this._client.clientOptions.extensions.status,
     );
   }
+
+  clear(): void {}
 }
