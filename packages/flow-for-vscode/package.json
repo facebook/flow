@@ -97,6 +97,16 @@
           "default": "info",
           "description": "Log level for output panel logs"
         },
+        "flow.detailedErrorRenderingCodeAction": {
+          "type": "boolean",
+          "description": "Enable code action to quickly open detailed Flow errors",
+          "default": true
+        },
+        "flow.semanticDecorations": {
+          "type": "boolean",
+          "description": "Enable additional decorations in the editor based on type checking results. Right now it will only highlight refined values when this is on",
+          "default": true
+        },
         "flow.trace.server": {
           "scope": "window",
           "anyOf": [

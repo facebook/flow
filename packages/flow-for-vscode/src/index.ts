@@ -14,15 +14,47 @@ import * as handlers from './handlers';
 
 import checkRelativePatternSupported from './utils/checkRelativePatternSupported';
 import Logger from './utils/Logger';
+import {
+  AnsiDecorationProvider,
+  DIAGNOSTICS_URI_SCHEME,
+  ErrorLinkProvider,
+  TextDocumentProvider,
+} from './FlowLanguageClient/DetailedDiagnostics';
+import { SemanticDecorationProvider } from './FlowLanguageClient/SemanticDecorations';
+import FlowconfigCache from './utils/FlowconfigCache';
 
 export function activate(context: vscode.ExtensionContext): void {
   const outputChannel = vscode.window.createOutputChannel('Flow');
   const logger = new Logger('', outputChannel, 'error');
   const clients = new FlowClients(logger);
+  const flowconfigCache = new FlowconfigCache('.flowconfig');
   const commands = new PluginCommands(clients, outputChannel);
   const canUseRelativePattern = checkRelativePatternSupported(context);
 
   logger.info('Open javascript or flowconfig to start flow.');
+
+  const textDocumentProvider = new TextDocumentProvider(
+    clients,
+    flowconfigCache,
+  );
+  const errorLinkProvider = new ErrorLinkProvider(clients, flowconfigCache);
+  const ansiDecorationProvider = new AnsiDecorationProvider(
+    clients,
+    flowconfigCache,
+  );
+  const semanticDecorationProvider = new SemanticDecorationProvider(
+    clients,
+    flowconfigCache,
+  );
+
+  const decorateVisibleEditors = (document: vscode.TextDocument) => {
+    for (const editor of vscode.window.visibleTextEditors) {
+      if (document === editor.document) {
+        ansiDecorationProvider.provideDecorations(editor);
+        semanticDecorationProvider.provideDecorations(editor);
+      }
+    }
+  };
 
   context.subscriptions.push(
     clients,
@@ -51,6 +83,34 @@ export function activate(context: vscode.ExtensionContext): void {
         handlers.onDidChangeConfiguration();
       }
     }),
+
+    vscode.languages.registerDocumentLinkProvider(
+      { scheme: DIAGNOSTICS_URI_SCHEME },
+      errorLinkProvider,
+    ),
+    vscode.workspace.registerTextDocumentContentProvider(
+      DIAGNOSTICS_URI_SCHEME,
+      textDocumentProvider,
+    ),
+    vscode.workspace.onDidChangeTextDocument((event) =>
+      decorateVisibleEditors(event.document),
+    ),
+    vscode.workspace.onDidOpenTextDocument(decorateVisibleEditors),
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        textDocumentProvider.triggerUpdate(editor.document.uri);
+        decorateVisibleEditors(editor.document);
+      }
+    }),
+    vscode.window.onDidChangeVisibleTextEditors((visibleEditors) => {
+      visibleEditors.forEach(async (editor) => {
+        textDocumentProvider.triggerUpdate(editor.document.uri);
+        await ansiDecorationProvider.provideDecorations(editor);
+        await semanticDecorationProvider.provideDecorations(editor);
+      });
+    }),
+    textDocumentProvider,
+    ansiDecorationProvider,
     commands,
     outputChannel,
   );

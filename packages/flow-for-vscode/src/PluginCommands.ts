@@ -7,6 +7,7 @@
 
 import * as vscode from 'vscode';
 import FlowClients from './FlowClients';
+import { OPEN_DOCUMENT_CLIENT_COMMAND } from './FlowLanguageClient/DetailedDiagnostics';
 
 export default class PluginCommands {
   _clients: FlowClients;
@@ -34,6 +35,7 @@ export default class PluginCommands {
       vscode.commands.registerCommand('flow.restartClient', () => this.restartClient(), this),
       vscode.commands.registerCommand('flow.logClientDebugInfo', () => this.logClientDebugInfo(), this),
       vscode.commands.registerCommand('flow.showOutputChannel', () => this.showOutputChannel(), this),
+      vscode.commands.registerCommand(OPEN_DOCUMENT_CLIENT_COMMAND, (argument) => this.showDetailedErrors(argument), this),
     );
   }
 
@@ -71,5 +73,13 @@ export default class PluginCommands {
 
   showOutputChannel(): void {
     this._outputChannel.show(true);
+  }
+
+  showDetailedErrors(argument: any): void {
+    if (argument == null || typeof argument !== 'object') {
+      return;
+    }
+    const { uri } = argument;
+    vscode.window.showTextDocument(uri);
   }
 }

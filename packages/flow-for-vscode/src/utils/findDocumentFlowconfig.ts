@@ -11,13 +11,13 @@ import findFlowconfig from './findFlowconfig';
 
 export default function findDocumentFlowconfig(
   flowconfigName: string,
-  document: vscode.TextDocument,
+  documentUri: vscode.Uri,
 ): Promise<null | string> {
-  const workspace = vscode.workspace.getWorkspaceFolder(document.uri);
+  const workspace = vscode.workspace.getWorkspaceFolder(documentUri);
   if (!workspace) {
     return Promise.resolve(null);
   }
-  const startDir = path.dirname(document.uri.fsPath);
+  const startDir = path.dirname(documentUri.fsPath);
   const rootPath = workspace.uri.fsPath;
   return findFlowconfig(flowconfigName, startDir, rootPath);
 }

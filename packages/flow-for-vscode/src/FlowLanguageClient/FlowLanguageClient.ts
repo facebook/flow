@@ -63,6 +63,8 @@ export default class FlowLanguageClient {
   _client: ILanguageClient | null = null;
   _id: string;
 
+  private hiddenDiagnostics: Map<string, vscode.Diagnostic[]> = new Map();
+
   commands: ClientCommands;
 
   constructor(options: Options) {
@@ -127,6 +129,10 @@ export default class FlowLanguageClient {
 
   getLogger(): Logger {
     return this._logger;
+  }
+
+  getHiddenDiagnosticsForFile(file: vscode.Uri): readonly vscode.Diagnostic[] {
+    return this.hiddenDiagnostics.get(file.toString()) ?? [];
   }
 
   async _reinit(): Promise<void> {
@@ -207,7 +213,7 @@ export default class FlowLanguageClient {
         { scheme: 'file', language: 'javascript', pattern },
         { scheme: 'file', language: 'javascriptreact', pattern },
       ],
-      middleware: createMiddleware(flowconfigPath, flowVersion),
+      middleware: createMiddleware(flowconfigPath, this.hiddenDiagnostics),
 
       uriConverters: {
         code2Protocol: uriToString,
@@ -223,6 +229,13 @@ export default class FlowLanguageClient {
 
       initializationOptions: {
         liveSyntaxErrors: true,
+        detailedErrorRendering: true,
+        semanticDecorations: vscode.workspace
+          .getConfiguration('flow')
+          .get<boolean>('semanticDecorations', true),
+        refinementInformationOnHover: vscode.workspace
+          .getConfiguration('flow')
+          .get<boolean>('refinementInformationOnHover', true),
         useCodeSnippetOnFunctionSuggest: config.useCodeSnippetOnFunctionSuggest,
       },
 

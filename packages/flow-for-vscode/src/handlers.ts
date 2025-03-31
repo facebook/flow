@@ -41,7 +41,7 @@ export function onDidChangeActiveTextEditor(
     return;
   }
 
-  findDocumentFlowconfig('.flowconfig', activeTextEditor.document).then(
+  findDocumentFlowconfig('.flowconfig', activeTextEditor.document.uri).then(
     (flowconfigPath) => {
       if (
         flowconfigPath &&

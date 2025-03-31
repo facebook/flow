@@ -17,7 +17,11 @@ export default class FlowconfigCache {
   }
 
   async get(document: vscode.TextDocument): Promise<null | string> {
-    const docPath = document.uri.fsPath;
+    return this.getWithUri(document.uri);
+  }
+
+  async getWithUri(uri: vscode.Uri): Promise<null | string> {
+    const docPath = uri.fsPath;
     const val = this._cache.get(docPath);
     if (val !== undefined) {
       return Promise.resolve(val);
@@ -25,7 +29,7 @@ export default class FlowconfigCache {
     // compute
     const flowconfigPath = await findDocumentFlowconfig(
       this._flowconfigName,
-      document,
+      uri,
     );
     this._cache.set(docPath, flowconfigPath);
     return flowconfigPath;
