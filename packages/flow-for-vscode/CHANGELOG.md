@@ -1,5 +1,12 @@
 # Changelog
 
+### 3.1.0 (2025-03-31)
+
+#### Features
+
+* The extension now highlights refined values in green background. This can be disabled by `"flow.semanticDecorations": false`.
+* Provides a way to see detailed errors like those from the CLI. You can either click on `See full errors` in the error message on hover, or trigger the code action "See detailed error" at the error location.
+
 ### 3.0.0 (2024-12-19)
 
 * Bumped bundled flow-bin version.
