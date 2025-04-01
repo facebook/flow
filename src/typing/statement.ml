@@ -5002,7 +5002,8 @@ module Make
         | NoContext
         | IndexContext
         | JsxTitleNameContext
-        | JsxAttrOrChildrenContext ->
+        | JsxAttrOrChildrenContext
+        | LiteralTestContext ->
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5106,7 +5107,8 @@ module Make
     | NoContext
     | IndexContext
     | JsxTitleNameContext
-    | JsxAttrOrChildrenContext ->
+    | JsxAttrOrChildrenContext
+    | LiteralTestContext ->
       check ~encl_ctx
     | SwitchTestContext _
     | OtherTestContext ->
@@ -5178,7 +5180,8 @@ module Make
         | NoContext
         | IndexContext
         | JsxTitleNameContext
-        | JsxAttrOrChildrenContext ->
+        | JsxAttrOrChildrenContext
+        | LiteralTestContext ->
           ()
         | SwitchTestContext _
         | OtherTestContext ->
@@ -6521,7 +6524,8 @@ module Make
     | NoContext
     | IndexContext
     | JsxTitleNameContext
-    | JsxAttrOrChildrenContext ->
+    | JsxAttrOrChildrenContext
+    | LiteralTestContext ->
       OptGetPropT
         {
           use_op;

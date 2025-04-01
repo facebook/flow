@@ -35,3 +35,5 @@ type enclosing_context =
   | JsxTitleNameContext
   (* <Foo bar={C}>{C}</Foo> *)
   | JsxAttrOrChildrenContext
+  (* if (x ==/=== C) {} when C is literal expression *)
+  | LiteralTestContext

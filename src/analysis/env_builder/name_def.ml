@@ -3036,7 +3036,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             ignore @@ this#expression value)
           ~on_literal_test:(fun ~strict:_ ~sense:_ _ expr _ value ->
             this#visit_expression ~hints:[] ~cond expr;
-            ignore @@ this#expression value)
+            this#visit_expression ~hints:[] ~cond:LiteralTestContext value)
           ~on_null_test:(fun ~sense:_ ~strict:_ _ expr value ->
             this#visit_expression ~hints:[] ~cond expr;
             ignore @@ this#expression value)

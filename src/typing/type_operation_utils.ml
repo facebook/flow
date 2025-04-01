@@ -260,7 +260,8 @@ module Operators = struct
           | IndexContext
           | OtherTestContext
           | JsxTitleNameContext
-          | JsxAttrOrChildrenContext ->
+          | JsxAttrOrChildrenContext
+          | LiteralTestContext ->
             let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
             Error_message.EComparison reasons)
       in
@@ -289,7 +290,8 @@ module Operators = struct
         | IndexContext
         | OtherTestContext
         | JsxTitleNameContext
-        | JsxAttrOrChildrenContext ->
+        | JsxAttrOrChildrenContext
+        | LiteralTestContext ->
           None
       end
       (* We don't allow the comparison of enums and other types in general. *)
