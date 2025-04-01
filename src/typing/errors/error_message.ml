@@ -3318,6 +3318,7 @@ let error_code_of_message err : error_code option =
     Some ReactRuleHookIncompatible
   | EIncompatibleReactDeepReadOnly _ -> Some ReactRuleImmutableIncompatible
   | EHookNaming _ -> Some ReactRuleHookNamingConvention
+  | EHookRuleViolation { hook_rule = ConditionalHook; _ } -> Some ReactRuleHookConditional
   | EHookRuleViolation _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
