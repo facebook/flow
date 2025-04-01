@@ -3,4 +3,4 @@ short_literals=100% on, 0% off
 
 [options]
 exact_by_default=false
-(short_literals=on) max_literal_length=10
+(short_literals=on) no_unchecked_indexed_access=true

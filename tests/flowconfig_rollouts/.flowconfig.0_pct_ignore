@@ -6,4 +6,4 @@ ignore_everything=0% true, 100% false
 
 [options]
 exact_by_default=false
-max_literal_length=10
+no_unchecked_indexed_access=true
