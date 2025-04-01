@@ -289,6 +289,19 @@ let is_call_to_object_static_method callee =
     true
   | _ -> false
 
+let is_module_dot_exports callee =
+  match callee with
+  | ( _,
+      E.Member
+        {
+          E.Member._object = (_, E.Identifier (_, { I.name = "module"; comments = _ }));
+          property = E.Member.PropertyIdentifier (_, { I.name = "exports"; comments = _ });
+          comments = _;
+        }
+    ) ->
+    true
+  | _ -> false
+
 let get_call_to_jest_module_mocking_fn callee arguments =
   match (callee, arguments) with
   | ( ( _,

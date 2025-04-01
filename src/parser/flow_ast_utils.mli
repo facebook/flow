@@ -49,6 +49,8 @@ val get_call_to_object_dot_freeze_arg :
 
 val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val is_module_dot_exports : ('a, 'b) Flow_ast.Expression.t -> bool
+
 val get_call_to_jest_module_mocking_fn :
   ('loc, 'annot) Flow_ast.Expression.t ->
   ('loc, 'annot) Flow_ast.Expression.ArgList.t ->

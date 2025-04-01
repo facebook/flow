@@ -1965,8 +1965,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Expression.Assignment in
       let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
       let expression_pattern_hints = function
-        | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ })
-          when not is_function_statics_assignment ->
+        | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ }) as e
+          when (not is_function_statics_assignment) && not (Flow_ast_utils.is_module_dot_exports e)
+          ->
           (match property with
           | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name; comments = _ }) ->
             decompose_hints

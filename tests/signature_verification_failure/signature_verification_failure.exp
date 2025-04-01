@@ -43,6 +43,14 @@ annotation at array pattern: [signature-verification-failure]
                         ^^^^^^
 
 
+Error -------------------------------------------------------------------------------------------- array-pattern.js:1:19
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   1| module.exports = ([x, y]) => {};
+                        ^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- class.js:6:3
 
 Literal properties not yet supported. [unsupported-syntax]
@@ -106,6 +114,14 @@ Error --------------------------------------------------------------------------
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at identifier: [signature-verification-failure]
+
+   7|     set x(x) { }
+                ^
+
+
+Error --------------------------------------------------------------------------------------------------- getset.js:7:11
+
+Missing an annotation on `x`. [missing-local-annot]
 
    7|     set x(x) { }
                 ^
@@ -248,6 +264,14 @@ annotation at object pattern: [signature-verification-failure]
                         ^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
+
+Missing an annotation on destructuring. [missing-local-annot]
+
+   3| module.exports = ({x, y}) => {};
+                        ^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- obj_decl.js:3:15
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -279,6 +303,14 @@ Error --------------------------------------------------------------------------
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at identifier: [signature-verification-failure]
+
+   3| module.exports = (x: number, ...z) => {};
+                                      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- rest.js:3:33
+
+Missing an annotation on rest parameter `z`. [missing-local-annot]
 
    3| module.exports = (x: number, ...z) => {};
                                       ^
@@ -330,4 +362,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 33 errors
+Found 37 errors
