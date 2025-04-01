@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ bad_names.js:1:14
 
-Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-naming-convention]
 
    1| declare hook notAHook(): void;
                    ^^^^^^^^
@@ -8,7 +9,8 @@ Hooks must have names that begin with `use`. (https://react.dev/reference/rules/
 
 Error ------------------------------------------------------------------------------------------------- bad_names.js:2:6
 
-Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-naming-convention]
 
    2| hook alsoNotAHook() { }
            ^^^^^^^^^^^^
@@ -16,7 +18,8 @@ Hooks must have names that begin with `use`. (https://react.dev/reference/rules/
 
 Error ------------------------------------------------------------------------------------------------ bad_names.js:3:21
 
-Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Hooks must have names that begin with `use`. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-naming-convention]
 
    3| export default hook extremelyNotAHook() { }
                           ^^^^^^^^^^^^^^^^^

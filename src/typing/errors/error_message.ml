@@ -3317,8 +3317,8 @@ let error_code_of_message err : error_code option =
   | EHookUniqueIncompatible _ ->
     Some ReactRuleHookIncompatible
   | EIncompatibleReactDeepReadOnly _ -> Some ReactRuleImmutableIncompatible
+  | EHookNaming _ -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation _ -> Some ReactRuleHook
-  | EHookNaming _ -> Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
   | ETrivialRecursiveDefinition _ -> Some RecursiveDefinition

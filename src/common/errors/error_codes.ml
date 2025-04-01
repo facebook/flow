@@ -9,6 +9,7 @@ type error_code =
   | AmbiguousObjectType
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
+  | ReactRuleHookNamingConvention
   | ReactRuleHookIncompatible
   | ReactRuleImmutableIncompatible
   | ReactRuleHook
@@ -215,6 +216,7 @@ let require_specific : error_code -> bool = function
   | LibdefOverride
   | ReactRuleUnsafeMutation
   | ReactRuleHookMutation
+  | ReactRuleHookNamingConvention
   | ReactRuleHookIncompatible
   | ReactRuleImmutableIncompatible
   | ReactRuleHook
@@ -227,6 +229,7 @@ let require_specific : error_code -> bool = function
 let string_of_code : error_code -> string = function
   | ReactRuleUnsafeMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
+  | ReactRuleHookNamingConvention -> "react-rule-hook-naming-convention"
   | ReactRuleHookIncompatible -> "react-rule-hook-incompatible"
   | ReactRuleImmutableIncompatible -> "react-rule-immutable-incompatible"
   | ReactRuleHook -> "react-rule-hook"
