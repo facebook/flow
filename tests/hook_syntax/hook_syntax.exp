@@ -128,7 +128,7 @@ References:
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:34:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    declare_hook_tests.js:34:5
    34|     badName([], (42: any)); // error
@@ -195,7 +195,7 @@ References:
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:56:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    declare_hook_tests.js:56:5
    56|     badName([], (42: any)); // error
@@ -490,7 +490,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:62:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_tests.js:62:5
    62|     badName([], (42: any)); // error
@@ -557,7 +557,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:84:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_tests.js:84:5
    84|     badName([], (42: any)); // error
@@ -919,7 +919,7 @@ References:
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:34:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_type_tests.js:34:5
    34|     badName([], (42: any)); // error
@@ -986,7 +986,7 @@ References:
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:56:5
 
 Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
-followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
 
    hook_type_tests.js:56:5
    56|     badName([], (42: any)); // error

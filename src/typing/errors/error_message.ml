@@ -3319,7 +3319,10 @@ let error_code_of_message err : error_code option =
   | EIncompatibleReactDeepReadOnly _ -> Some ReactRuleImmutableIncompatible
   | EHookNaming _ -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation { hook_rule = ConditionalHook; _ } -> Some ReactRuleHookConditional
-  | EHookRuleViolation _ -> Some ReactRuleHook
+  | EHookRuleViolation { hook_rule = HookHasIllegalName; _ } -> Some ReactRuleHookNamingConvention
+  | EHookRuleViolation
+      { hook_rule = NonHookHasIllegalName | MaybeHook _ | HookNotInComponentOrHook; _ } ->
+    Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
   | ETrivialRecursiveDefinition _ -> Some RecursiveDefinition
