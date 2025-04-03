@@ -371,8 +371,16 @@ module Operators = struct
           t
     )
 
+  let mk_tvar_and_resolve_to_logical_union cx reason f =
+    let id = Tvar.mk_no_wrap cx reason in
+    let tout = (reason, id) in
+    f tout;
+    match Flow_js_utils.merge_tvar_opt ~filter_empty:true cx reason id with
+    | Some t -> t
+    | None -> Tvar_resolver.default_no_lowers reason
+
   let logical_and cx reason left right =
-    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+    mk_tvar_and_resolve_to_logical_union cx reason (fun tout ->
         Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
         |> Base.List.iter ~f:(fun left ->
                begin
@@ -403,7 +411,7 @@ module Operators = struct
     )
 
   let logical_or cx reason left right =
-    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+    mk_tvar_and_resolve_to_logical_union cx reason (fun tout ->
         Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
         |> Base.List.iter ~f:(fun left ->
                (* a truthy || b ~> a
@@ -425,7 +433,7 @@ module Operators = struct
     )
 
   let logical_nullish_coalesce cx reason left right =
-    Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+    mk_tvar_and_resolve_to_logical_union cx reason (fun tout ->
         Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t left) left
         |> Base.List.iter ~f:(fun left ->
                match Type_filter.maybe cx left with
