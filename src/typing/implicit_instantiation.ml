@@ -602,7 +602,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           match tuple_ts with
           | [] -> EmptyT.why reason
           | [t] -> t
-          | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+          | t0 :: t1 :: ts ->
+            UnionT (reason, UnionRep.make ~kind:UnionRep.ImplicitInstiationKind t0 t1 ts)
         in
         let len = Base.List.length tuple_ts in
         let t =
@@ -775,7 +776,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           |> union_flatten_list
           |> generalize_singletons cx
           |> Base.List.filter ~f:(fun t -> not @@ Flow_js_utils.TvarVisitors.has_placeholders cx t)
-          |> TypeUtil.union_of_ts_opt r)
+          |> TypeUtil.union_of_ts_opt ~kind:UnionRep.ImplicitInstiationKind r)
     | t -> Some t
 
   let on_missing_bounds cx ~use_op tparam ~default_bound ~tparam_binder_reason ~instantiation_reason

@@ -91,9 +91,9 @@ val type_t_of_annotated_or_inferred : Type.annotated_or_inferred -> Type.t
 val map_annotated_or_inferred :
   (Type.t -> Type.t) -> Type.annotated_or_inferred -> Type.annotated_or_inferred
 
-val union_of_ts : reason -> Type.t list -> Type.t
+val union_of_ts : ?kind:Type.UnionRep.union_kind -> reason -> Type.t list -> Type.t
 
-val union_of_ts_opt : reason -> Type.t list -> Type.t option
+val union_of_ts_opt : ?kind:Type.UnionRep.union_kind -> reason -> Type.t list -> Type.t option
 
 val annotated_or_inferred_of_option : default:Type.t -> Type.t option -> Type.annotated_or_inferred
 

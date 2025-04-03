@@ -375,7 +375,9 @@ module Operators = struct
     let id = Tvar.mk_no_wrap cx reason in
     let tout = (reason, id) in
     f tout;
-    match Flow_js_utils.merge_tvar_opt ~filter_empty:true cx reason id with
+    match
+      Flow_js_utils.merge_tvar_opt ~filter_empty:true ~union_kind:UnionRep.LogicalKind cx reason id
+    with
     | Some t -> t
     | None -> Tvar_resolver.default_no_lowers reason
 

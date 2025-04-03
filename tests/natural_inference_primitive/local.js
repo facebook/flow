@@ -527,3 +527,17 @@ function test_async() {
   const x = new AsyncSelector(async () => ({title: ''}));
   x as AsyncSelector<Promise<{title: string}>>; // okay '' has generalized to string
 }
+
+function test_logical_nullish() {
+  declare const x: ?('a' | 'b');
+  declare var arr: Array<void>;
+  const mappedArr = arr.map(_ => ({
+    prop: x ?? 'c',
+  }));
+  mappedArr[0].prop = 'd'; // okay - 'c' causes generalization to string
+}
+function test_array_elem_union() {
+  declare function foo<T>(create: T): T;
+  const strings = foo(['a', 'b']);
+  strings.push("c"); // okay
+}

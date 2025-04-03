@@ -765,21 +765,21 @@ let map_annotated_or_inferred f = function
 (* Creates a union from a list of types. Since unions require a minimum of two
    types this function will return an empty type when there are no types in the
    list, or the list head when there is one type in the list. *)
-let union_of_ts reason ts =
+let union_of_ts ?(kind = UnionRep.UnknownKind) reason ts =
   match ts with
   (* If we have no types then this is an error. *)
   | [] -> DefT (reason, EmptyT)
   (* If we only have one type then only that should be used. *)
   | [t0] -> t0
   (* If we have more than one type then we make a union type. *)
-  | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make t0 t1 ts)
+  | t0 :: t1 :: ts -> UnionT (reason, UnionRep.make ~kind t0 t1 ts)
 
-let union_of_ts_opt reason ts =
+let union_of_ts_opt ?(kind = UnionRep.UnknownKind) reason ts =
   match ts with
   | [] -> None
   | [t0] -> Some t0
   (* If we have more than one type then we make a union type. *)
-  | t0 :: t1 :: ts -> Some (UnionT (reason, UnionRep.make t0 t1 ts))
+  | t0 :: t1 :: ts -> Some (UnionT (reason, UnionRep.make ~kind t0 t1 ts))
 
 let annotated_or_inferred_of_option ~default = function
   | Some t -> Annotated t

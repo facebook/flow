@@ -2323,13 +2323,21 @@ end
 and UnionRep : sig
   type t
 
+  type union_kind =
+    | ProvidersKind
+    | ConditionalKind
+    | ImplicitInstiationKind
+    | ResolvedKind
+    | LogicalKind
+    | UnknownKind
+
   val same_source : t -> t -> bool
 
   val same_structure : t -> t -> bool
 
   (** build a rep from list of members *)
   val make :
-    ?source_aloc:ALoc.id -> ?synthetic:bool -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
+    ?source_aloc:ALoc.id -> ?kind:union_kind -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
   (** members in declaration order *)
   val members : t -> TypeTerm.t list
@@ -2341,6 +2349,8 @@ and UnionRep : sig
   val rev_append : t -> t -> t
 
   val is_synthetic : t -> bool
+
+  val union_kind : t -> union_kind
 
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
@@ -2475,6 +2485,14 @@ end = struct
     | NoCandidateMembers
     | NoCommonKeys
 
+  type union_kind =
+    | ProvidersKind
+    | ConditionalKind
+    | ImplicitInstiationKind
+    | ResolvedKind
+    | LogicalKind
+    | UnknownKind
+
   type t = {
     t0: TypeTerm.t;
     t1: TypeTerm.t;
@@ -2488,7 +2506,7 @@ end = struct
     (* A union is synthetic roughly when it does not emerge from an annotation,
      * e.g. when it emerges as the collection of lower bounds during implicit
      * instantiation. *)
-    synthetic: bool;
+    kind: union_kind;
   }
 
   let same_source { source_aloc = s1; _ } { source_aloc = s2; _ } =
@@ -2524,7 +2542,12 @@ end = struct
     | DefT (_, NullT) -> Some NullTag
     | _ -> None
 
-  let is_synthetic { synthetic; _ } = synthetic
+  let is_synthetic { kind; _ } =
+    match kind with
+    | UnknownKind -> false
+    | _ -> true
+
+  let union_kind { kind; _ } = kind
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
@@ -2539,14 +2562,14 @@ end = struct
         | _ -> None
       end
     in
-    fun ?source_aloc ?(synthetic = false) t0 t1 ts ->
+    fun ?source_aloc ?(kind = UnknownKind) t0 t1 ts ->
       let enum =
         Base.Option.(
           mk_enum (UnionEnumSet.empty, tag_of_member t0) (t0 :: t1 :: ts) >>| fun (tset, tag) ->
           EnumUnion (tset, tag)
         )
       in
-      { t0; t1; ts; source_aloc; specialization = ref enum; synthetic }
+      { t0; t1; ts; source_aloc; specialization = ref enum; kind }
 
   let members { t0; t1; ts; _ } = t0 :: t1 :: ts
 
@@ -2559,7 +2582,8 @@ end = struct
     | t0 :: t1 :: ts -> make t0 t1 ts
     | _ -> failwith "impossible"
 
-  let ident_map ?(always_keep_source = false) f ({ t0; t1; ts; source_aloc = source; _ } as rep) =
+  let ident_map
+      ?(always_keep_source = false) f ({ t0; t1; ts; source_aloc = source; kind; _ } as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
     let ts_ = ListUtils.ident_map f ts in
@@ -2571,7 +2595,7 @@ end = struct
         else
           None
       in
-      make ?source_aloc t0_ t1_ ts_
+      make ?source_aloc ~kind t0_ t1_ ts_
     else
       rep
 

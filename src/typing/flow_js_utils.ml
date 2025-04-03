@@ -58,14 +58,14 @@ let rec collect_lowers ~filter_empty cx seen acc = function
     (* Everything else becomes part of the merge typed *)
     | _ -> collect_lowers ~filter_empty cx seen (t :: acc) ts)
 
-let merge_tvar_opt ?(filter_empty = false) cx r id =
+let merge_tvar_opt ?(filter_empty = false) ?(union_kind = UnionRep.ResolvedKind) cx r id =
   let lowers =
     let seen = ISet.singleton id in
     collect_lowers cx seen [] (possible_types cx id) ~filter_empty
   in
   match lowers with
   | [t] -> Some t
-  | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make ~synthetic:true t0 t1 ts))
+  | t0 :: t1 :: ts -> Some (UnionT (r, UnionRep.make ~kind:union_kind t0 t1 ts))
   | [] -> None
 
 let merge_tvar ?(filter_empty = false) ~no_lowers cx r id =

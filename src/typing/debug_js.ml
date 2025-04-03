@@ -302,10 +302,20 @@ let rec dump_t_ (depth, tvars) cx t =
     | IntersectionT (_, rep) ->
       p ~extra:(spf "[%s]" (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
+      let kind_str =
+        match UnionRep.union_kind rep with
+        | UnionRep.ProvidersKind -> "ProvidersKind"
+        | UnionRep.ConditionalKind -> "ConditionalKind"
+        | UnionRep.ImplicitInstiationKind -> "ImplicitInstiationKind"
+        | UnionRep.ResolvedKind -> "ResolvedKind"
+        | UnionRep.LogicalKind -> "LogicalKind"
+        | UnionRep.UnknownKind -> "UnknownKind"
+      in
       p
         ~extra:
           (spf
-             "[%s]%s"
+             "(kind=%s)[%s]%s"
+             kind_str
              (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep)
           )

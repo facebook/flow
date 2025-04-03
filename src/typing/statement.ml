@@ -3296,7 +3296,7 @@ module Make
         | (false, true) -> t1
         (* Both sides threw--see below for where we re-raise *)
         | (true, true) -> EmptyT.at loc
-        | (false, false) -> UnionT (reason, UnionRep.make ~synthetic:true t1 t2 [])
+        | (false, false) -> UnionT (reason, UnionRep.make ~kind:UnionRep.ConditionalKind t1 t2 [])
         (* NOTE: In general it is dangerous to express the least upper bound of
            some types as a union: it might pin down the least upper bound
            prematurely (before all the types have been inferred), and when the

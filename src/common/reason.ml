@@ -843,14 +843,6 @@ let is_literal_function_reason r =
   | RFunction _ -> true
   | _ -> false
 
-let is_literal_union_reason r =
-  match desc_of_reason r with
-  | RInferredUnionElemArray _
-  | RConditional
-  | RLogical _ ->
-    true
-  | _ -> false
-
 let is_lib_reason r =
   r.loc |> ALoc.source |> Base.Option.value_map ~default:false ~f:File_key.is_lib_file
 

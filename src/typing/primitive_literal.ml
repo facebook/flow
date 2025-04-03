@@ -53,6 +53,21 @@ let is_builtin_promise =
   in
   (fun cx t -> loop cx ISet.empty t)
 
+let is_literal_union r rep =
+  let open UnionRep in
+  match union_kind rep with
+  | ConditionalKind
+  | ImplicitInstiationKind
+  | LogicalKind ->
+    true
+  | ProvidersKind
+  | ResolvedKind
+  | UnknownKind ->
+    let open Reason in
+    (match desc_of_reason r with
+    | RInferredUnionElemArray _ -> true
+    | _ -> false)
+
 (**
  * [generalize_singletons cx ~force_general t] walks a `t` and replacing instances
  * of singleton types that originate from literals with the general version of the
@@ -109,7 +124,7 @@ let generalize_singletons =
         | TypeAppT { type_; _ } when is_builtin_promise cx type_ ->
           (* async expressions will wrap result in Promise<>, so we need to descend here *)
           super#type_ cx force_general t
-        | UnionT (r, _) when is_literal_union_reason r -> super#type_ cx force_general t
+        | UnionT (r, rep) when is_literal_union r rep -> super#type_ cx force_general t
         | DefT (r, SingletonStrT { from_annot = false; value }) ->
           if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
