@@ -30,11 +30,11 @@ and union_flatten = function
  * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
  * the rather impractical `42` (resp. `(42)=>void`).
  *)
-let generalize_singletons cx ts =
+let generalize_singleton cx t =
   if Context.natural_inference_local_primitive_literals_partial cx then
-    Base.List.map ~f:(Primitive_literal.generalize_singletons cx ~force_general:false) ts
+    Primitive_literal.generalize_singletons cx ~force_general:false t
   else
-    ts
+    t
 
 type inferred_targ = {
   tparam: Type.typeparam;
@@ -1058,47 +1058,38 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         Subst_name.Map.empty
         inferred_targ_list
     in
-    let soln =
-      List.fold_right
-        (fun (name, t, bound, is_inferred) acc ->
-          let tparam = Subst_name.Map.find name tparams_map in
-          let polarity =
-            if allow_underconstrained then
-              None
-            else
-              Marked.get name marked_tparams
-          in
-          let result =
-            if is_inferred then
-              let default_bound =
-                if has_new_errors then
-                  match Context.typing_mode cx with
-                  | Context.CheckingMode -> Some (AnyT.error (TypeUtil.reason_of_t t))
-                  | Context.SynthesisMode _
-                  | Context.HintEvaluationMode ->
-                    Some (AnyT.placeholder (TypeUtil.reason_of_t t))
-                else
-                  None
-              in
-              pin_type cx ~use_op tparam polarity ~default_bound instantiation_reason t
-            else
-              Observer.on_pinned_tparam cx tparam t
-          in
-          let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
-          Flow.flow_t cx (t, bound_t);
-          let result =
-            let t = result.inferred in
-            {
-              result with
-              inferred =
-                generalize_singletons cx [t] |> TypeUtil.union_of_ts (TypeUtil.reason_of_t t);
-            }
-          in
-          Subst_name.Map.add name result acc)
-        inferred_targ_list
-        Subst_name.Map.empty
-    in
-    (soln, Base.List.map ~f:(fun (name, t, _, _) -> (t, name)) inferred_targ_list)
+    List.fold_right
+      (fun (name, t, bound, is_inferred) (acc, inferred_targ_list_acc) ->
+        let tparam = Subst_name.Map.find name tparams_map in
+        let polarity =
+          if allow_underconstrained then
+            None
+          else
+            Marked.get name marked_tparams
+        in
+        let result =
+          if is_inferred then
+            let default_bound =
+              if has_new_errors then
+                match Context.typing_mode cx with
+                | Context.CheckingMode -> Some (AnyT.error (TypeUtil.reason_of_t t))
+                | Context.SynthesisMode _
+                | Context.HintEvaluationMode ->
+                  Some (AnyT.placeholder (TypeUtil.reason_of_t t))
+              else
+                None
+            in
+            pin_type cx ~use_op tparam polarity ~default_bound instantiation_reason t
+          else
+            Observer.on_pinned_tparam cx tparam t
+        in
+        let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
+        Flow.flow_t cx (t, bound_t);
+        let generalized_t = generalize_singleton cx result.inferred in
+        let result = { result with inferred = generalized_t } in
+        (Subst_name.Map.add name result acc, (generalized_t, name) :: inferred_targ_list_acc))
+      inferred_targ_list
+      (Subst_name.Map.empty, [])
 
   let check_fun cx ~tparams ~tparams_map ~return_t ~implicit_instantiation =
     (* Visit the return type *)
