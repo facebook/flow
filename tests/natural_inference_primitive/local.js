@@ -541,3 +541,15 @@ function test_array_elem_union() {
   const strings = foo(['a', 'b']);
   strings.push("c"); // okay
 }
+
+function test_generalize_under_intersection() {
+  declare function foo<V>(
+    v: $Exact<V>,
+    cb: (data: $Exact<V>) => void,
+  ): void;
+
+  foo(
+    {f:1},
+    (x: {f: number}) => {}, // okay, type of `1` should generalize
+  );
+}

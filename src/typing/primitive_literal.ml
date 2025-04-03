@@ -125,6 +125,11 @@ let generalize_singletons =
           (* async expressions will wrap result in Promise<>, so we need to descend here *)
           super#type_ cx force_general t
         | UnionT (r, rep) when is_literal_union r rep -> super#type_ cx force_general t
+        | IntersectionT (_, rep)
+          when match InterRep.inter_kind rep with
+               | InterRep.ImplicitInstiationKind -> true
+               | InterRep.UnknownKind -> false ->
+          super#type_ cx force_general t
         | DefT (r, SingletonStrT { from_annot = false; value }) ->
           if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)

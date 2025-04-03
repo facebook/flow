@@ -708,22 +708,39 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  | (UpperT t', UpperT t) ->
                    (match (t', t) with
                    | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
-                     UpperT (IntersectionT (upper_r, InterRep.append (InterRep.members rep2) rep1))
+                     UpperT
+                       (IntersectionT
+                          ( upper_r,
+                            InterRep.append
+                              ~kind:InterRep.ImplicitInstiationKind
+                              (InterRep.members rep2)
+                              rep1
+                          )
+                       )
                    | (_, IntersectionT (_, rep)) ->
                      if Base.List.mem (InterRep.members rep) t' ~equal then
                        UpperT t
                      else
-                       UpperT (IntersectionT (upper_r, InterRep.append [t'] rep))
+                       UpperT
+                         (IntersectionT
+                            (upper_r, InterRep.append ~kind:InterRep.ImplicitInstiationKind [t'] rep)
+                         )
                    | (IntersectionT (_, rep), _) ->
                      if Base.List.mem (InterRep.members rep) t ~equal then
                        UpperT t'
                      else
-                       UpperT (IntersectionT (upper_r, InterRep.append [t] rep))
+                       UpperT
+                         (IntersectionT
+                            (upper_r, InterRep.append ~kind:InterRep.ImplicitInstiationKind [t] rep)
+                         )
                    | (t', t) ->
                      if equal t' t then
                        UpperT t
                      else
-                       UpperT (IntersectionT (upper_r, InterRep.make t' t [])))
+                       UpperT
+                         (IntersectionT
+                            (upper_r, InterRep.make ~kind:InterRep.ImplicitInstiationKind t' t [])
+                         ))
                  | (UpperT _, UpperEmpty) -> acc
                  | (UpperEmpty, UpperEmpty) -> acc)
                UpperEmpty)

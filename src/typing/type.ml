@@ -2925,8 +2925,12 @@ end
 and InterRep : sig
   type t
 
+  type inter_kind =
+    | ImplicitInstiationKind
+    | UnknownKind
+
   (** build rep from list of members *)
-  val make : TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
+  val make : ?kind:inter_kind -> TypeTerm.t -> TypeTerm.t -> TypeTerm.t list -> t
 
   (** member list in declaration order *)
   val members : t -> TypeTerm.t list
@@ -2936,33 +2940,39 @@ and InterRep : sig
   (** map rep r to rep r' along type mapping f. drops history *)
   val map : (TypeTerm.t -> TypeTerm.t) -> t -> t
 
-  val append : TypeTerm.t list -> t -> t
+  val append : ?kind:inter_kind -> TypeTerm.t list -> t -> t
 
   (** map rep r to rep r' along type mapping f. drops history. if nothing would
       be changed, returns the physically-identical rep. *)
   val ident_map : (TypeTerm.t -> TypeTerm.t) -> t -> t
+
+  val inter_kind : t -> inter_kind
 end = struct
+  type inter_kind =
+    | ImplicitInstiationKind
+    | UnknownKind
+
   (** intersection rep is:
       - member list in declaration order
    *)
-  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list
+  type t = TypeTerm.t * TypeTerm.t * TypeTerm.t list * inter_kind
 
-  let make t0 t1 ts = (t0, t1, ts)
+  let make ?(kind = UnknownKind) t0 t1 ts = (t0, t1, ts, kind)
 
-  let members (t0, t1, ts) = t0 :: t1 :: ts
+  let members (t0, t1, ts, _) = t0 :: t1 :: ts
 
-  let members_nel (t0, t1, ts) = (t0, (t1, ts))
+  let members_nel (t0, t1, ts, _) = (t0, (t1, ts))
 
-  let map f (t0, t1, ts) = make (f t0) (f t1) (Base.List.map ~f ts)
+  let map f (t0, t1, ts, kind) = make ~kind (f t0) (f t1) (Base.List.map ~f ts)
 
-  let mem t (t0, t1, ts) = t = t0 || t = t1 || Base.List.mem ts t ~equal:( = )
+  let mem t (t0, t1, ts, _) = t = t0 || t = t1 || Base.List.mem ts t ~equal:( = )
 
-  let append ts2 rep =
+  let append ?(kind = UnknownKind) ts2 rep =
     let ts2 = Base.List.filter ts2 ~f:(fun t -> not (mem t rep)) in
-    let (t0, t1, ts1) = rep in
-    make t0 t1 (Base.List.append ts1 ts2)
+    let (t0, t1, ts1, _) = rep in
+    make ~kind t0 t1 (Base.List.append ts1 ts2)
 
-  let ident_map f ((t0, t1, ts) as rep) =
+  let ident_map f ((t0, t1, ts, kind) as rep) =
     let t0_ = f t0 in
     let t1_ = f t1 in
     let changed = t0_ != t0 || t1_ != t1 in
@@ -2975,9 +2985,11 @@ end = struct
         ts
     in
     if changed then
-      make t0_ t1_ (List.rev rev_ts)
+      make ~kind t0_ t1_ (List.rev rev_ts)
     else
       rep
+
+  let inter_kind (_, _, _, kind) = kind
 end
 
 and Object : sig
