@@ -64,8 +64,18 @@ let projects_bitset_of_path ~opts path =
     | Some (_, bitset) -> Some bitset
     | None -> None)
 
+(**
+ * Suppose we have web and native project, and some paths that can be part of both web and native.
+ * Then this function will return which projects' files can be accessed by the given project.
+ *
+ * This is used to enforce that web code can use both web and web+native code, while web+native code
+ * can only import web+native code. However, the latter is temporarily allowed for experimentation.
+ *)
 let reachable_projects_bitsets_from_projects_bitset ~opts p =
   let size = Nel.length opts.projects in
+  (* 1-project code can reach into common code.
+   * e.g. Suppose that we have two projects web and native.
+   * Web code can use common code (web+native). *)
   let additional =
     Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
         if Bitset.equal p (Bitset.set i (Bitset.all_zero size)) then
@@ -74,6 +84,12 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
           None
     )
   in
+  (* Temporary hack: common code can reach into 1-project code.
+   * e.g. Suppose that we have two projects web and native.
+   * We temporarily allow common code (web+native) to use web-only code.
+   * This is of course incorrect, and we should move these web-only code into common code instead.
+   * However, the temporary measure exists so that we can still have good type coverage during
+   * experimentation before we can lock down the boundary. *)
   let additional =
     match additional with
     | Some _ -> additional
