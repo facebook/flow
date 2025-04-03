@@ -791,7 +791,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           TypeMap.keys lowers
           |> Flow_js_utils.collect_lowers cx (ISet.singleton id) [] ~filter_empty:false
           |> union_flatten_list
-          |> generalize_singletons cx
           |> Base.List.filter ~f:(fun t -> not @@ Flow_js_utils.TvarVisitors.has_placeholders cx t)
           |> TypeUtil.union_of_ts_opt ~kind:UnionRep.ImplicitInstiationKind r)
     | t -> Some t
@@ -1087,6 +1086,14 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           in
           let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
           Flow.flow_t cx (t, bound_t);
+          let result =
+            let t = result.inferred in
+            {
+              result with
+              inferred =
+                generalize_singletons cx [t] |> TypeUtil.union_of_ts (TypeUtil.reason_of_t t);
+            }
+          in
           Subst_name.Map.add name result acc)
         inferred_targ_list
         Subst_name.Map.empty
