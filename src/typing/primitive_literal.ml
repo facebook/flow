@@ -35,6 +35,24 @@ let mk_syntactic_flags
     () =
   { encl_ctx; decl; as_const; frozen; has_hint }
 
+let is_builtin_promise =
+  let rec loop cx seen = function
+    | OpenT (_, id) ->
+      let (root_id, constraints) = Context.find_constraints cx id in
+      if ISet.mem root_id seen then
+        false
+      else (
+        match constraints with
+        | Type.Constraint.FullyResolved s ->
+          let t = Context.force_fully_resolved_tvar cx s in
+          loop cx (ISet.add root_id seen) t
+        | _ -> false
+      )
+    | DefT (_, PolyT { t_out = DefT (r, ClassT _); _ }) when Reason.is_promise_reason r -> true
+    | _ -> false
+  in
+  (fun cx t -> loop cx ISet.empty t)
+
 (**
  * [generalize_singletons cx ~force_general t] walks a `t` and replacing instances
  * of singleton types that originate from literals with the general version of the
@@ -88,6 +106,9 @@ let generalize_singletons =
         | DefT (r, ArrT _) when is_literal_array_reason r -> super#type_ cx force_general t
         | DefT (r, ObjT _) when is_literal_object_reason r -> super#type_ cx force_general t
         | DefT (r, FunT _) when is_literal_function_reason r -> super#type_ cx force_general t
+        | TypeAppT { type_; _ } when is_builtin_promise cx type_ ->
+          (* async expressions will wrap result in Promise<>, so we need to descend here *)
+          super#type_ cx force_general t
         | UnionT (r, _) when is_literal_union_reason r -> super#type_ cx force_general t
         | DefT (r, SingletonStrT { from_annot = false; value }) ->
           if force_general || Context.natural_inference_local_primitive_literals_full cx then

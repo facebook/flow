@@ -859,6 +859,13 @@ let is_lib_reason_def r =
 
 let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 
+let is_promise_reason r =
+  is_lib_reason r
+  &&
+  match desc_of_reason r with
+  | RClass (RType (OrdinaryName "Promise")) -> true
+  | _ -> false
+
 (* reason transformers: *)
 
 (* returns reason with new description and position of original *)

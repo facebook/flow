@@ -287,6 +287,8 @@ val is_lib_reason : reason -> bool
 
 val is_lib_reason_def : reason -> bool
 
+val is_promise_reason : reason -> bool
+
 val is_blamable_reason : reason -> bool
 
 val string_of_source : ?strip_root:File_path.t option -> File_key.t -> string

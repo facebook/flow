@@ -518,3 +518,12 @@ function test_generalize_function_literal() {
   obj.prop = 1; // okay
   obj.prop = "a"; // error string ~> number
 }
+
+function test_async() {
+  class AsyncSelector<T>  {
+    constructor(getState: () => T) {}
+  }
+
+  const x = new AsyncSelector(async () => ({title: ''}));
+  x as AsyncSelector<Promise<{title: string}>>; // okay '' has generalized to string
+}
