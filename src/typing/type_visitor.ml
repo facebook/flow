@@ -126,7 +126,7 @@ class ['a] t =
         let acc = self#nel (self#type_param cx pole) acc tparams in
         let acc = self#type_ cx pole acc t_out in
         acc
-      | ReactAbstractComponentT { config; instance; renders; component_kind = _ } ->
+      | ReactAbstractComponentT { config; instance; renders; component_kind } ->
         let acc = self#type_ cx (P.inv pole) acc config in
         let acc =
           match instance with
@@ -134,6 +134,11 @@ class ['a] t =
           | ComponentInstanceAvailableAsRefSetterProp t -> self#type_ cx pole acc t
         in
         let acc = self#type_ cx pole acc renders in
+        let acc =
+          match component_kind with
+          | Structural -> acc
+          | Nominal (_, _, ts) -> self#opt (self#list (self#type_ cx pole)) acc ts
+        in
         acc
       | RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super }) ->
         self#type_ cx pole acc renders_super

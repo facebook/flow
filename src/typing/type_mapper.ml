@@ -324,11 +324,31 @@ class virtual ['a] t =
               ComponentInstanceAvailableAsRefSetterProp t'
         in
         let renders' = self#type_ cx map_cx renders in
-        if config' == config && instance' == instance && renders' == renders then
+        let component_kind' =
+          match component_kind with
+          | Structural -> component_kind
+          | Nominal (id, s, ts) ->
+            let ts' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) ts in
+            if ts == ts' then
+              component_kind
+            else
+              Nominal (id, s, ts')
+        in
+        if
+          config' == config
+          && instance' == instance
+          && renders' == renders
+          && component_kind' == component_kind
+        then
           t
         else
           ReactAbstractComponentT
-            { config = config'; instance = instance'; renders = renders'; component_kind }
+            {
+              config = config';
+              instance = instance';
+              renders = renders';
+              component_kind = component_kind';
+            }
       | RendersT canonical_form ->
         let canonical_form' = self#canonical_renders_form cx map_cx canonical_form in
         if canonical_form' == canonical_form then
