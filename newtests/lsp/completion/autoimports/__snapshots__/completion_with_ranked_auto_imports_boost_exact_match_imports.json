@@ -5,8 +5,8 @@
     "items": [
       {
         "label": "actors",
-        "kind": 6,
-        "detail": "number",
+        "kind": 12,
+        "detail": "3",
         "sortText": "00000000000000000000",
         "insertTextFormat": 1,
         "textEdit": {
@@ -143,8 +143,8 @@
       },
       {
         "label": "actoooooooor",
-        "kind": 6,
-        "detail": "number",
+        "kind": 12,
+        "detail": "3",
         "sortText": "00000000000000000003",
         "insertTextFormat": 1,
         "textEdit": {

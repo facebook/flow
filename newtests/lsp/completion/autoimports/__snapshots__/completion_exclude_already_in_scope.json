@@ -5,8 +5,8 @@
     "items": [
       {
         "label": "foobar",
-        "kind": 6,
-        "detail": "string",
+        "kind": 12,
+        "detail": "\"\"",
         "sortText": "00000000000000000000",
         "insertTextFormat": 1,
         "textEdit": {

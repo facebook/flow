@@ -1111,20 +1111,6 @@ References:
               ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- inferred.js:79:3
-
-Cannot cast `3` to `typeof t2` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
-
-   inferred.js:79:3
-   79|   3 as typeof t2; // error: not ideal, but this is an implicit instantiation issue
-         ^ [1]
-
-References:
-   inferred.js:79:8
-   79|   3 as typeof t2; // error: not ideal, but this is an implicit instantiation issue
-              ^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- inferred.js:81:3
 
 Cannot cast `u2` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
@@ -1143,20 +1129,6 @@ References:
                ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- inferred.js:83:3
-
-Cannot cast `3` to `typeof u2` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
-
-   inferred.js:83:3
-   83|   3 as typeof u2; // error we infer a sound singleton type for u2
-         ^ [1]
-
-References:
-   inferred.js:83:8
-   83|   3 as typeof u2; // error we infer a sound singleton type for u2
-              ^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- inferred.js:94:3
 
 Cannot cast `u1` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
@@ -1173,20 +1145,6 @@ References:
    inferred.js:94:9
    94|   u1 as 3; // error 4 ~> 3
                ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- inferred.js:96:3
-
-Cannot cast `3` to `typeof u1` because number [1] is incompatible with number literal `4` [2]. [incompatible-cast]
-
-   inferred.js:96:3
-   96|   3 as typeof u1; // error we infer a sound singleton type for u1
-         ^ [1]
-
-References:
-   inferred.js:96:8
-   96|   3 as typeof u1; // error we infer a sound singleton type for u1
-              ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:99:3
@@ -3684,7 +3642,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 222 errors
+Found 219 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

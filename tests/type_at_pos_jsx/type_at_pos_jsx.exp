@@ -33,7 +33,7 @@ test.js:22:7,22:9
 
 test.js:27:8
 Flags:
-number
+0
 test.js:27:8,27:8
 
 jsx_instantiation.js:3:19

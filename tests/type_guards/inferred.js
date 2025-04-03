@@ -76,11 +76,11 @@ function test7() {
   const [t1, u1] = takesPolyGuard<number, 4>((value) => value === 4); // okay
   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
   t2 as number;
-  3 as typeof t2; // error: not ideal, but this is an implicit instantiation issue
+  3 as typeof t2; // okay
   u2 as 4; // okay
   u2 as 3; // error 4 ~> 3
   4 as typeof u2; // okay
-  3 as typeof u2; // error we infer a sound singleton type for u2
+  3 as typeof u2; // TODO error force this to be 4
 }
 
 function test8() {
@@ -93,7 +93,7 @@ function test8() {
   u1 as 4; // okay
   u1 as 3; // error 4 ~> 3
   4 as typeof u1; // okay
-  3 as typeof u1; // error we infer a sound singleton type for u1
+  3 as typeof u1; // TODO error force this to be 4
 
   const [t2, u2] = takesOverloadedPolyGuard(value, (x): boolean => x === 4); // picks the second overload
   u2 as 4; // error number ~> 4

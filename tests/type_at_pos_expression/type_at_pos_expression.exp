@@ -99,7 +99,7 @@ jsx.js:7:29 = {
   "end":32
 }
 jsx.js:7:35 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "types":{"unevaluated":{"type":"\"literal\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",
@@ -264,7 +264,7 @@ jsx.js:18:24 = {
   "end":24
 }
 literals.js:6:7 = {
-  "types":{"unevaluated":{"type":"string"},"evaluated":null},
+  "types":{"unevaluated":{"type":"\"A\""},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -279,7 +279,7 @@ literals.js:6:7 = {
   "end":7
 }
 literals.js:7:7 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -294,7 +294,7 @@ literals.js:7:7 = {
   "end":7
 }
 literals.js:8:7 = {
-  "types":{"unevaluated":{"type":"number"},"evaluated":null},
+  "types":{"unevaluated":{"type":"1.01"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",
@@ -309,7 +309,7 @@ literals.js:8:7 = {
   "end":7
 }
 literals.js:9:7 = {
-  "types":{"unevaluated":{"type":"boolean"},"evaluated":null},
+  "types":{"unevaluated":{"type":"true"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"literals.js",

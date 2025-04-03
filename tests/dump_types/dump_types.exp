@@ -225,7 +225,7 @@
     "end":6
   },
   {
-    "type":"number",
+    "type":"0",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -1053,7 +1053,7 @@
     "end":9
   },
   {
-    "type":"string",
+    "type":"\"\"",
     "reasons":[],
     "loc":{
       "source":"predicates.js",
@@ -1143,7 +1143,7 @@
     "end":9
   },
   {
-    "type":"string",
+    "type":"\"\"",
     "reasons":[],
     "loc":{
       "source":"predicates.js",
@@ -1533,7 +1533,7 @@ elem_call.js:13:1-10: (string) => string
 elem_call.js:13:1-14: string
 elem_call.js:13:7-9: string
 elem_call.js:13:7-9: string
-elem_call.js:13:12-13: string
+elem_call.js:13:12-13: ""
 elem_call.js:17:1-5: {[key: "a"]: () => {...}} | void
 elem_call.js:17:1-5: {[key: "a"]: () => {...}} | void
 elem_call.js:17:1-8: any (implicit)
@@ -1545,7 +1545,7 @@ optional_calls.js:7:3: void | F
 optional_calls.js:7:3: void | F
 optional_calls.js:7:3-12: void
 optional_calls.js:7:3-12: void
-optional_calls.js:7:7-11: string
+optional_calls.js:7:7-11: "abc"
 optional_calls.js:12:3: ?{m: F, ...}
 optional_calls.js:12:3: ?{m: F, ...}
 optional_calls.js:12:3-6: F
@@ -1553,15 +1553,15 @@ optional_calls.js:12:3-6: ?{m: F, ...}
 optional_calls.js:12:3-13: void
 optional_calls.js:12:3-13: void
 optional_calls.js:12:6: F
-optional_calls.js:12:8-12: string
+optional_calls.js:12:8-12: "abc"
 optional_calls.js:17:3: ?{[key: string]: F}
 optional_calls.js:17:3: ?{[key: string]: F}
 optional_calls.js:17:3-12: F
 optional_calls.js:17:3-12: ?{[key: string]: F}
 optional_calls.js:17:3-19: void
 optional_calls.js:17:3-19: void
-optional_calls.js:17:7-11: string
-optional_calls.js:17:14-18: string
+optional_calls.js:17:7-11: "abc"
+optional_calls.js:17:14-18: "abc"
 optional_calls.js:22:3: ?{m: {n: F, ...}, ...}
 optional_calls.js:22:3: ?{m: {n: F, ...}, ...}
 optional_calls.js:22:3-6: void | {n: F, ...}
@@ -1572,17 +1572,17 @@ optional_calls.js:22:3-15: void
 optional_calls.js:22:3-15: void
 optional_calls.js:22:6: void | {n: F, ...}
 optional_calls.js:22:8: F
-optional_calls.js:22:10-14: string
+optional_calls.js:22:10-14: "abc"
 optional_calls.js:27:3: {m: ?F, ...}
 optional_calls.js:27:3: {m: ?F, ...}
 optional_calls.js:27:3-5: ?F
 optional_calls.js:27:3-14: void
 optional_calls.js:27:3-14: void
 optional_calls.js:27:5: ?F
-optional_calls.js:27:9-13: string
+optional_calls.js:27:9-13: "abc"
 optional_calls.js:33:5: {f: F, ...}
 optional_calls.js:33:5: {f: F, ...}
 optional_calls.js:33:5-7: F
 optional_calls.js:33:5-14: void
 optional_calls.js:33:7: F
-optional_calls.js:33:9-13: string
+optional_calls.js:33:9-13: "abc"

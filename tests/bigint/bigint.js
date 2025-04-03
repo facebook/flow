@@ -44,7 +44,7 @@ if (b) {} // error
   declare const x: 0n | 1n;
   x as bigint; // OK
   const b = 1n; // OK
-  x as typeof b; // OK - `typeof 1n` is `bigint`
+  x as typeof b; // ERROR typeof b is `1n`
   x as 1n | 0n; // OK
   x as 2n | 3n; // ERROR
 }

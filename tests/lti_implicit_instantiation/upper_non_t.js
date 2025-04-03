@@ -149,7 +149,7 @@ function Diffs() {
   const d1 = Diff1({bar: 3});
   d1.foo as string;
   d1.bar as number;
-  d1 as {|foo: string, bar: number|};
+  d1 as {|foo: string, bar: number|}; // error T is inferred as {foo: string, bar: 3}
   d1 as {|foo: string | number, bar: number|}; // error
   d1.bad; // error
   d1 as empty; // error

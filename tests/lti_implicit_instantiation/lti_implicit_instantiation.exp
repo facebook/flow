@@ -972,6 +972,44 @@ References:
           ^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:152:3
+
+Cannot cast `d1` to object type because number [1] is incompatible with number [2] in property `bar`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
+
+   upper_non_t.js:152:3
+   152|   d1 as {|foo: string, bar: number|}; // error T is inferred as {foo: string, bar: 3}
+          ^^
+
+References:
+   upper_non_t.js:152:29
+   152|   d1 as {|foo: string, bar: number|}; // error T is inferred as {foo: string, bar: 3}
+                                    ^^^^^^ [1]
+   upper_non_t.js:149:26
+   149|   const d1 = Diff1({bar: 3});
+                                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:153:3
+
+Cannot cast `d1` to object type because number [1] is incompatible with number [2] in property `bar`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
+
+   upper_non_t.js:153:3
+   153|   d1 as {|foo: string | number, bar: number|}; // error
+          ^^
+
+References:
+   upper_non_t.js:153:38
+   153|   d1 as {|foo: string | number, bar: number|}; // error
+                                             ^^^^^^ [1]
+   upper_non_t.js:149:26
+   149|   const d1 = Diff1({bar: 3});
+                                 ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:153:3
 
 Cannot cast `d1` to object type because number [1] is incompatible with string [2] in property `foo`. This property is
@@ -1102,6 +1140,25 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:168:3
+
+Cannot cast `d3` to object type because number [1] is incompatible with number [2] in property `bar`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
+
+   upper_non_t.js:168:3
+   168|   d3 as {|foo: string, bar: number|}; // error
+          ^^
+
+References:
+   upper_non_t.js:168:29
+   168|   d3 as {|foo: string, bar: number|}; // error
+                                    ^^^^^^ [1]
+   upper_non_t.js:163:26
+   163|   const d3 = Diff3({bar: 3});
+                                 ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- upper_non_t.js:171:15
 
 Cannot call `Diff4` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -1116,5 +1173,24 @@ References:
                                                         ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- upper_non_t.js:176:3
 
-Found 72 errors
+Cannot cast `d4` to object type because number [1] is incompatible with number [2] in property `bar`. This property is
+invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+[incompatible-cast]
+
+   upper_non_t.js:176:3
+   176|   d4 as {|[string]: number, bar: number|};
+          ^^
+
+References:
+   upper_non_t.js:176:34
+   176|   d4 as {|[string]: number, bar: number|};
+                                         ^^^^^^ [1]
+   upper_non_t.js:170:26
+   170|   const d4 = Diff4({bar: 3});
+                                 ^ [2]
+
+
+
+Found 76 errors

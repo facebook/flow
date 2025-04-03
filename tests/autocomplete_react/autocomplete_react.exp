@@ -140,7 +140,7 @@ Flags: --pretty --imports
 
 components.js:21:16
 Flags: --pretty --imports
-{"result":[{"name":"xaaa","type":"number"},{"name":"xbbb","type":"string"}]}
+{"result":[{"name":"xaaa","type":"42"},{"name":"xbbb","type":"string"}]}
 
 react_type_namespace.js:3:18
 Flags: --pretty

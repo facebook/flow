@@ -126,11 +126,11 @@ ill-formed.js:5:7,5:7
 
 implicit-instantiation.js
 At implicit-instantiation.js:5:10
-number
+3
 implicit-instantiation.js:5:10,5:10
 
 At implicit-instantiation.js:7:10
-string
+"string"
 implicit-instantiation.js:7:10,7:10
 
 At implicit-instantiation.js:12:41

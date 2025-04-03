@@ -1476,8 +1476,8 @@ module.exports = (suite(
                 },
                 {
                   label: 'x',
-                  kind: 6,
-                  detail: 'number',
+                  kind: 12,
+                  detail: '15',
                   sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
@@ -3483,8 +3483,8 @@ b.te
                 },
                 {
                   label: 'x',
-                  kind: 6,
-                  detail: 'number',
+                  kind: 12,
+                  detail: '15',
                   sortText: '00000000000000000042',
                   insertTextFormat: 1,
                   textEdit: {
@@ -4996,8 +4996,8 @@ b.te
                 },
                 {
                   label: 'x',
-                  kind: 6,
-                  detail: 'number',
+                  kind: 12,
+                  detail: '15',
                   sortText: '00000000000000000040',
                   insertTextFormat: 1,
                   textEdit: {

@@ -1,21 +1,21 @@
 >>> test.js (#changes: 7)
 // @flow
 
-let x: {| foo?: number |} = {}; // add annot
+let x: {| foo?: 3 |} = {}; // add annot
 x.foo = 3;
 
-let y: {| foo?: string |} = {}; // add annot
+let y: {| foo?: "" |} = {}; // add annot
 if (x) {
   y.foo = '';
 }
 
-let z: {| bar?: string, foo?: number |} = {}; // add annot
+let z: {| bar?: "", foo?: 3 |} = {}; // add annot
 z.foo = 3;
 if (x) {
   z.bar = '';
 }
 
-let q: {| bar?: string, foo: number |} = {foo: 3}; // add annot
+let q: {| bar?: "", foo: number |} = {foo: 3}; // add annot
 if (x) {
   q.bar = '';
 }
@@ -26,14 +26,14 @@ if (x) {
   s.bar = '';
 }
 
-let d: {| foo?: string | number |} = {}; // should only annot foo once
+let d: {| foo?: "" | 3 |} = {}; // should only annot foo once
 if (x) {
   d.foo = 3;
 } else {
   d.foo = '';
 }
 
-let e: {| foo?: string |} = {}; // should only annot foo once
+let e: {| foo?: "" |} = {}; // should only annot foo once
 if (x) {
   e.foo = '';
 } else {
