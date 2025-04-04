@@ -233,11 +233,11 @@ function test_useState_8() {
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
+  const [o, set] = useStateWithBound({f: one}); // infer specific type due to check against bound
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // TODO error 2 ~> 1
-  set({f: 3}); // TODO error 3 ~> 1
+  set({f: 2}); // error 2 ~> 1
+  set({f: 3}); // error 3 ~> 1
 }
 
 function test_useState_10() {
@@ -322,18 +322,18 @@ function test_logical() {
   function fn2() { return one || ""; }
   let x2 = fn2();
   x2 = 5; // okay
-  x2 as 5; // TODO error number ~> 5
+  x2 as 5; // TODO(?) error number ~> 5
 }
 
 function test_hint_passes_through_arrow() {
   declare function foo<T>(x: () => T): T;
-  foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo(() => abc) as 'abc'; // okay - contextual type is used to infer 'abc'
   foo(() => abc) as 'def'; // error "abc" ~> "def"
 }
 
 function test_hint_passes_through_array() {
   declare function foo<T>(x: Array<T>): T;
-  foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo([abc]) as 'abc'; // okay - contextual type is used to infer 'abc'
   foo([abc]) as 'def'; // error "abc" ~> "def"
 }
 
@@ -370,6 +370,6 @@ function test_reduce() {
   x2[0] = 42; // okay x2 inferred as Array<number>
   x2[0] = "a"; // error string ~> number
 
-  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
+  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay
+  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // okay
 }

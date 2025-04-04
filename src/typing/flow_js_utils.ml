@@ -276,10 +276,20 @@ let is_dictionary_exempt = function
   | x when is_object_prototype_method x -> true
   | _ -> false
 
+let update_lit_type_from_annot cx = function
+  | DefT (r, SingletonStrT { from_annot = false; _ })
+  | DefT (r, SingletonNumT { from_annot = false; _ })
+  | DefT (r, SingletonBoolT { from_annot = false; _ })
+  | DefT (r, SingletonBigIntT { from_annot = false; _ }) ->
+    if Context.in_implicit_instantiation cx then
+      Context.record_primitive_literal_check cx (Reason.loc_of_reason r)
+  | _ -> ()
+
 (* NOTE: The following function looks similar to TypeUtil.quick_subtype, but is in fact more
    complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
    simplify this function later. *)
-let ground_subtype = function
+let ground_subtype cx (l, u) =
+  match (l, u) with
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _)
   | (_, UseT (_, OpenT _)) ->
@@ -310,6 +320,7 @@ let ground_subtype = function
       UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
     )
     when String.starts_with ~prefix s ->
+    update_lit_type_from_annot cx l;
     true
   | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
       UseT (_, StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None })
@@ -320,6 +331,7 @@ let ground_subtype = function
       UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
     )
     when String.ends_with ~suffix s ->
+    update_lit_type_from_annot cx l;
     true
   | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
       UseT (_, DefT (_, StrGeneralT Truthy))

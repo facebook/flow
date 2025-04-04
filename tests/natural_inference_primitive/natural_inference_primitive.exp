@@ -861,10 +861,25 @@ References:
                          ^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- imported.js:222:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
+
+   imported.js:222:11
+   222|   set({f: 2}); // okay
+                  ^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- imported.js:223:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
 
    imported.js:223:11
    223|   set({f: "blah"}); // error "blah" ~> number
@@ -891,32 +906,44 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:236:42
-
-Cannot call `useStateWithBound` because number [1] is incompatible with union type [2] in property `f` of type argument
-`T`. [incompatible-call]
-
-   imported.js:236:42
-   236|   const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
-                                                 ^^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   imported.js:235:44
-   235|   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-                                                   ^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- imported.js:237:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
 
    imported.js:237:11
    237|   set({f: "blah"}); // error "blah" ~> 1
                   ^^^^^^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:239:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
+
+   imported.js:239:11
+   239|   set({f: 2}); // error 2 ~> 1
+                  ^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:240:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
+
+   imported.js:240:11
+   240|   set({f: 3}); // error 3 ~> 1
+                  ^ [1]
 
 References:
    local.js:5:20
@@ -942,24 +969,6 @@ References:
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:330:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:330:3
-   330|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:330:21
-   330|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                            ^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ imported.js:331:3
 
 Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
@@ -976,24 +985,6 @@ References:
    imported.js:331:21
    331|   foo(() => abc) as 'def'; // error "abc" ~> "def"
                             ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:336:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:336:3
-   336|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:336:17
-   336|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                        ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:337:3
@@ -1112,56 +1103,6 @@ References:
    local.js:5:20
      5| export const one = 1;
                            ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- imported.js:373:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `0` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   imported.js:373:28
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                    ^^^^^^
-
-References:
-   imported.js:373:53
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                                             ^ [1]
-   imported.js:373:19
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- imported.js:374:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `1` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   imported.js:374:28
-    374|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:5:20
-      5| export const one = 1;
-                            ^ [1]
-   imported.js:374:19
-    374|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:35:3
@@ -2051,6 +1992,21 @@ References:
                          ^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- local.js:234:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
+[incompatible-call]
+
+   local.js:234:11
+   234|   set({f: 2}); // TODO(?) okay the type of `one` is checked against a general bound
+                  ^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- local.js:235:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
@@ -2081,24 +2037,6 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:248:42
-
-Cannot call `useStateWithBound` because number [1] is incompatible with union type [2] in property `f` of type argument
-`T`. [incompatible-call]
-
-   local.js:248:42
-   248|   const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
-                                                 ^^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   local.js:247:44
-   247|   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-                                                   ^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- local.js:249:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
@@ -2107,6 +2045,36 @@ Cannot call `set` with object literal bound to `y` because string [1] is incompa
    local.js:249:11
    249|   set({f: "blah"}); // error "blah" ~> 1
                   ^^^^^^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- local.js:251:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
+[incompatible-call]
+
+   local.js:251:11
+   251|   set({f: 2}); // error 2 ~> 1
+                  ^ [1]
+
+References:
+   local.js:5:20
+     5| export const one = 1;
+                           ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- local.js:252:11
+
+Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
+[incompatible-call]
+
+   local.js:252:11
+   252|   set({f: 3}); // error 3 ~> 1
+                  ^ [1]
 
 References:
    local.js:5:20
@@ -2132,31 +2100,13 @@ References:
                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:388:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:388:3
-   388|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:388:21
-   388|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                            ^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:389:3
 
 Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
    local.js:389:3
-   389|   foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
+   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
@@ -2164,26 +2114,8 @@ References:
      3| export const abc = "abc";
                            ^^^^^ [1]
    local.js:389:21
-   389|   foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
+   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
                             ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:394:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:394:3
-   394|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:394:17
-   394|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:395:3
@@ -2192,7 +2124,7 @@ Cannot cast `foo(...)` to string literal `def` because string [1] is incompatibl
 [incompatible-cast]
 
    local.js:395:3
-   395|   foo([abc]) as 'def'; // TODO error "abc" ~> "def"
+   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^
 
 References:
@@ -2200,7 +2132,7 @@ References:
      3| export const abc = "abc";
                            ^^^^^ [1]
    local.js:395:17
-   395|   foo([abc]) as 'def'; // TODO error "abc" ~> "def"
+   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
                         ^^^^^ [2]
 
 
@@ -2312,39 +2244,6 @@ References:
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:436:9
-
-Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
-[incompatible-call]
-
-   local.js:436:9
-   436|   c.set(a); // TODO okay
-                ^
-
-References:
-   local.js:434:13
-   434|   const a = 'a';
-                    ^^^ [1]
-   local.js:431:12
-   431|     set<K: 'a'>(k: K) {}
-                   ^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:437:9
-
-Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
-[incompatible-call]
-
-   local.js:437:9
-   437|   c.set('a'); // TODO okay
-                ^^^ [1]
-
-References:
-   local.js:431:12
-   431|     set<K: 'a'>(k: K) {}
-                   ^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:438:9
 
 Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
@@ -2386,56 +2285,6 @@ References:
    local.js:5:20
      5| export const one = 1;
                            ^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- local.js:451:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `0` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   local.js:451:28
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:451:53
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                                             ^ [1]
-   local.js:451:19
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
-
-
-Error -------------------------------------------------------------------------------------------------- local.js:452:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `1` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   local.js:452:28
-    452|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:5:20
-      5| export const one = 1;
-                            ^ [1]
-   local.js:452:19
-    452|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:460:3
@@ -2509,41 +2358,6 @@ References:
                                                       ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:480:7
-
-Cannot call `foo` because string [1] is incompatible with union type [2] in type argument `X`. [incompatible-call]
-
-   local.js:480:7
-   480|   foo(k, x => { // TODO okay k is "a"
-              ^
-
-References:
-   local.js:479:13
-   479|   const k = "a";
-                    ^^^ [1]
-   local.js:478:27
-   478|   declare function foo<X: "a" | "b">(x: X, cb: (x: X) => void): void;
-                                  ^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:482:5
-
-Cannot cast `x` to string literal `a` because string [1] is incompatible with string literal `a` [2].
-[incompatible-cast]
-
-   local.js:482:5
-   482|     x as "a"; // TODO okay
-            ^
-
-References:
-   local.js:479:13
-   479|   const k = "a";
-                    ^^^ [1]
-   local.js:482:10
-   482|     x as "a"; // TODO okay
-                 ^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:483:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -2607,7 +2421,7 @@ References:
 
 
 
-Found 152 errors
+Found 144 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

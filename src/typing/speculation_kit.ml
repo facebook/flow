@@ -19,6 +19,7 @@ end
 module type OUTPUT = sig
   val try_union :
     Context.t ->
+    ?on_success:(unit -> unit) ->
     Type.DepthTrace.t ->
     Type.use_op ->
     Type.t ->
@@ -52,6 +53,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         l: Type.t;
         union_rep: UnionRep.t;
         us: Type.t list;
+        on_success: (unit -> unit) option;
       }
     | IntersectionCases of {
         intersection_reason: reason;
@@ -182,9 +184,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
   (* Every choice-making process on a union or intersection type is assigned a
      unique identifier, called the speculation_id. This identifier keeps track of
      unresolved tvars encountered when trying to fully resolve types. *)
-  let rec try_union cx trace use_op l reason_op rep =
+  let rec try_union cx ?on_success trace use_op l reason_op rep =
     let ts = UnionRep.members rep in
-    speculative_matches cx trace (UnionCases { use_op; reason_op; l; union_rep = rep; us = ts })
+    speculative_matches
+      cx
+      trace
+      (UnionCases { use_op; reason_op; l; union_rep = rep; us = ts; on_success })
 
   and try_intersection cx trace use_t intersection_reason rep =
     let ls = InterRep.members rep in
@@ -303,7 +308,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * error found for each alternative *)
       (* Add the error. *)
       match spec with
-      | UnionCases { use_op; reason_op = r; l; union_rep = _; us } ->
+      | UnionCases { use_op; reason_op = r; l; union_rep = _; us; _ } ->
         let reason = reason_of_t l in
         assert (List.length us = List.length msgs);
         add_output
@@ -349,7 +354,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     loop [] trials
 
   and trials_of_spec = function
-    | UnionCases { use_op; reason_op = _; l; union_rep = _; us } ->
+    | UnionCases { use_op; reason_op = _; l; union_rep = _; us; on_success = _ } ->
       (* NB: Even though we know the use_op for the original constraint, don't
          embed it in the nested constraints to avoid unnecessary verbosity. We
          will unwrap the original use_op once in EUnionSpeculationFailed. *)
@@ -384,6 +389,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           l = OpaqueT (reason, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ });
           union_rep = rep;
           us = _;
+          on_success;
         } ->
       let specialization =
         UnionRep.optimize_
@@ -418,8 +424,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
               )
         | Ok _ -> ()
       end;
+      Base.Option.iter on_success ~f:(fun f -> f ());
       true
-    | UnionCases { use_op; reason_op; l; union_rep = rep; us = _ } ->
+    | UnionCases { use_op; reason_op; l; union_rep = rep; us = _; on_success } ->
       if not (UnionRep.is_optimized_finally rep) then
         UnionRep.optimize
           rep
@@ -428,7 +435,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~flatten:(Type_mapper.union_flatten cx)
           ~find_resolved:(Context.find_resolved cx)
           ~find_props:(Context.find_props cx);
-      begin
+      let result =
         match l with
         | DefT
             ( _,
@@ -455,13 +462,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  explanation = None;
                }
             );
+
           true
         | DefT (_, ObjT _) -> shortcut_disjoint_union cx trace reason_op use_op l rep
         | _ -> false
-      end
-    | IntersectionCases _ -> false
-    | CustomCases _ -> false
-    | SingletonCase _ -> false
+      in
+      if result then Base.Option.iter on_success ~f:(fun f -> f ());
+      result
+    | IntersectionCases _
+    | CustomCases _
+    | SingletonCase _ ->
+      false
 
   and shortcut_enum cx trace reason_op use_op l rep =
     let quick_subtype = TypeUtil.quick_subtype in

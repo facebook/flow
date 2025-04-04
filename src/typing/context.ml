@@ -220,6 +220,9 @@ type component_t = {
   mutable union_opt: Type.t ALocMap.t;
   (* Natural inference (enables SingletonStrT ~> StrT_UNSOUND coercions) *)
   mutable allow_unsound_literal_coercsion: bool;
+  (* Natural inference (records checks on primitive literal types during
+   * implicit instantiation) *)
+  mutable primitive_literal_checks: ALocSet.t;
 }
 [@@warning "-69"]
 
@@ -431,6 +434,7 @@ let make_ccx () =
     ctor_callee = ALocMap.empty;
     union_opt = ALocMap.empty;
     allow_unsound_literal_coercsion = true;
+    primitive_literal_checks = ALocSet.empty;
   }
 
 (* When only "experimental.natural_inference.local_primitive_literals" is provided,
@@ -884,6 +888,13 @@ let get_signature_help_callee cx loc = ALocMap.find_opt loc cx.ccx.signature_hel
 let set_ctor_callee cx loc t = cx.ccx.ctor_callee <- ALocMap.add loc t cx.ccx.ctor_callee
 
 let get_ctor_callee cx loc = ALocMap.find_opt loc cx.ccx.ctor_callee
+
+let record_primitive_literal_check cx loc =
+  cx.ccx.primitive_literal_checks <- ALocSet.add loc cx.ccx.primitive_literal_checks
+
+let reset_primitive_literal_checks cx = cx.ccx.primitive_literal_checks <- ALocSet.empty
+
+let is_primitive_literal_checked cx loc = ALocSet.mem loc cx.ccx.primitive_literal_checks
 
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
 

@@ -28,7 +28,8 @@ val mk_syntactic_flags :
 
 val is_generalization_candidate : Context.t -> Type.t -> bool
 
-val generalize_singletons : Context.t -> force_general:bool -> Type.t -> Type.t
+val generalize_singletons :
+  Context.t -> force_general:bool -> keep_singleton:(ALoc.t -> bool) -> Type.t -> Type.t
 
 val loc_has_hint : Context.t -> ALoc.t -> bool
 

@@ -69,9 +69,13 @@ let is_literal_union r rep =
     | _ -> false)
 
 (**
- * [generalize_singletons cx ~force_general t] walks a `t` and replacing instances
- * of singleton types that originate from literals with the general version of the
- * type.
+ * [generalize_singletons cx ~force_general ~keep_singleton t] walks a `t` and
+ * replaces instances of singleton types that originate from literals with the
+ * general version of the type.
+ *
+ * The `keep_singleton` predicate is used to determine whether a singleton type
+ * should be kept. This is used to avoid generalizing singleton types that are
+ * checked against annotations and so the added precision is useful.
  *
  * A key assumption is that `t` is the type inferred for a literal expression
  * (object, array, primitive literal) or the result of a conditional or logical
@@ -83,14 +87,14 @@ let generalize_singletons =
   let open Reason in
   let mapper =
     object (self)
-      inherit [bool] Type_mapper.t as super
+      inherit [bool * (ALoc.t -> bool)] Type_mapper.t as super
 
       method exports _cx _map_cx id = id
 
-      method props cx force_general id =
+      method props cx map_cx id =
         let props_map = Context.find_props cx id in
         let props_map' =
-          NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx force_general)) props_map
+          NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map
         in
         let id' =
           if props_map == props_map' then
@@ -104,56 +108,65 @@ let generalize_singletons =
 
       method call_prop _cx _map_cx id = id
 
-      method tvar cx force_general _r id =
+      method tvar cx map_cx _r id =
         match Context.find_constraints cx id with
         | (_, Type.Constraint.FullyResolved s) ->
           let t = Context.force_fully_resolved_tvar cx s in
-          let t' = self#type_ cx force_general t in
+          let t' = self#type_ cx map_cx t in
           if t == t' then
             id
           else
             Tvar.mk_fully_resolved_no_wrap cx t'
         | _ -> id
 
-      method! type_ cx force_general t =
+      method! type_ cx map_cx t =
+        let (force_general, keep_singleton) = map_cx in
         match t with
-        | OpenT _ -> super#type_ cx force_general t
-        | DefT (r, ArrT _) when is_literal_array_reason r -> super#type_ cx force_general t
-        | DefT (r, ObjT _) when is_literal_object_reason r -> super#type_ cx force_general t
-        | DefT (r, FunT _) when is_literal_function_reason r -> super#type_ cx force_general t
+        | OpenT _ -> super#type_ cx map_cx t
+        | DefT (r, ArrT _) when is_literal_array_reason r -> super#type_ cx map_cx t
+        | DefT (r, ObjT _) when is_literal_object_reason r -> super#type_ cx map_cx t
+        | DefT (r, FunT _) when is_literal_function_reason r -> super#type_ cx map_cx t
         | TypeAppT { type_; _ } when is_builtin_promise cx type_ ->
           (* async expressions will wrap result in Promise<>, so we need to descend here *)
-          super#type_ cx force_general t
-        | UnionT (r, rep) when is_literal_union r rep -> super#type_ cx force_general t
+          super#type_ cx map_cx t
+        | UnionT (r, rep) when is_literal_union r rep -> super#type_ cx map_cx t
         | IntersectionT (_, rep)
           when match InterRep.inter_kind rep with
                | InterRep.ImplicitInstiationKind -> true
                | InterRep.UnknownKind -> false ->
-          super#type_ cx force_general t
+          super#type_ cx map_cx t
         | DefT (r, SingletonStrT { from_annot = false; value }) ->
-          if force_general || Context.natural_inference_local_primitive_literals_full cx then
+          if keep_singleton (loc_of_reason r) then
+            t
+          else if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
           else
             DefT (r, StrT_UNSOUND (None, value))
         | DefT (r, SingletonNumT { from_annot = false; value }) ->
-          if force_general || Context.natural_inference_local_primitive_literals_full cx then
+          if keep_singleton (loc_of_reason r) then
+            t
+          else if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RNumber r, NumGeneralT AnyLiteral)
           else
             DefT (r, NumT_UNSOUND (None, value))
         | DefT (r, SingletonBoolT { from_annot = false; value }) ->
-          if force_general || Context.natural_inference_local_primitive_literals_full cx then
+          if keep_singleton (loc_of_reason r) then
+            t
+          else if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RBoolean r, BoolGeneralT)
           else
             DefT (r, BoolT_UNSOUND value)
         | DefT (r, SingletonBigIntT { from_annot = false; value }) ->
-          if force_general || Context.natural_inference_local_primitive_literals_full cx then
+          if keep_singleton (loc_of_reason r) then
+            t
+          else if force_general || Context.natural_inference_local_primitive_literals_full cx then
             DefT (replace_desc_reason RBigInt r, BigIntGeneralT AnyLiteral)
           else
             DefT (r, BigIntT_UNSOUND (None, value))
         | _ -> t
     end
   in
-  (fun cx ~force_general t -> mapper#type_ cx force_general t)
+  (fun cx ~force_general ~keep_singleton t -> mapper#type_ cx (force_general, keep_singleton) t)
 
 let aloc_contains ~outer ~inner =
   try
@@ -261,7 +274,9 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
 let try_generalize cx syntactic_flags loc t =
   if Context.natural_inference_local_primitive_literals_partial cx then
     if is_generalization_candidate cx t then
-      let general () = generalize_singletons cx ~force_general:true t in
+      let general () =
+        generalize_singletons cx ~force_general:true ~keep_singleton:(fun _ -> false) t
+      in
       let precise () = t in
       adjust_precision cx (TypeUtil.reason_of_t t) syntactic_flags ~precise ~general loc
     else

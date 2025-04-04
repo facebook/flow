@@ -988,7 +988,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (ru, SingletonStrT { value = expected; _ })
       ) ->
       if expected = actual then
-        ()
+        Flow_js_utils.update_lit_type_from_annot cx l
       else
         (* TODO: ordered_reasons should not be necessary *)
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
@@ -1005,7 +1005,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (ru, SingletonNumT { value = (expected, _); _ })
       ) ->
       if expected = actual then
-        ()
+        Flow_js_utils.update_lit_type_from_annot cx l
       else
         (* TODO: ordered_reasons should not be necessary *)
         let (rl, ru) = FlowError.ordered_reasons (rl, ru) in
@@ -1064,6 +1064,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             } ),
         KeysT (reason_op, o)
       ) ->
+      Flow_js_utils.update_lit_type_from_annot cx l;
       let reason_next = replace_desc_new_reason (RProperty (Some x)) reason_s in
       (* check that o has key x *)
       let u = HasOwnPropT (use_op, reason_next, l) in
@@ -1209,11 +1210,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  );
              true
            | _ -> false ->
-      ()
+      Flow_js_utils.update_lit_type_from_annot cx l
     | (_, UnionT (_, rep))
       when let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
            List.exists (TypeUtil.quick_subtype l) ts ->
-      ()
+      Flow_js_utils.update_lit_type_from_annot cx l
     | (DefT (renders_r, RendersT _), UnionT (r, rep)) ->
       (* This is a tricky case because there are multiple ways that it could pass. Either
        * the union contains a supertype of the LHS, or the Union itself is a super type of
@@ -1274,7 +1275,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (* Try the branches of the union in turn, with the goal of selecting the
        * correct branch. This process is reused for intersections as well. See
        * comments on try_union and try_intersection. *)
-      SpeculationKit.try_union cx trace use_op l r rep
+      let on_success () = Flow_js_utils.update_lit_type_from_annot cx l in
+      SpeculationKit.try_union cx ~on_success trace use_op l r rep
     (* maybe and optional types are just special union types *)
     | (t1, MaybeT (r2, t2)) ->
       let t2 = push_type_alias_reason r2 t2 in
@@ -1335,6 +1337,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         StrUtilT { reason = _; op = StrPrefix prefix; remainder }
       )
       when String.starts_with ~prefix s ->
+      Flow_js_utils.update_lit_type_from_annot cx l;
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_prefix_exn ~prefix s in
           let reason = replace_desc_reason (RStringWithoutPrefix { prefix }) reason in
@@ -1360,6 +1363,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         StrUtilT { reason = _; op = StrSuffix suffix; remainder }
       )
       when String.ends_with ~suffix s ->
+      Flow_js_utils.update_lit_type_from_annot cx l;
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_suffix_exn ~suffix s in
           let reason = replace_desc_reason (RStringWithoutSuffix { suffix }) reason in

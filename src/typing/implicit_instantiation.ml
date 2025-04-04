@@ -29,10 +29,22 @@ and union_flatten = function
  * We would like the type of `st` and `setSt` to use the general form of the type
  * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
  * the rather impractical `42` (resp. `(42)=>void`).
+ *
+ * The predicate `keep_singleton` is used to determine whether the singleton type
+ * inferred for a location `loc` should be kept or not. We keep singleton types
+ * that are checked against other precise types, which is recorded by calling
+ * `Flow_js_utils.update_lit_type_from_annot`.
  *)
 let generalize_singleton cx t =
-  if Context.natural_inference_local_primitive_literals_partial cx then
-    Primitive_literal.generalize_singletons cx ~force_general:false t
+  if Context.natural_inference_local_primitive_literals_full cx then
+    let keep_singleton loc = Context.is_primitive_literal_checked cx loc in
+    Primitive_literal.generalize_singletons cx ~keep_singleton ~force_general:false t
+  else if Context.natural_inference_local_primitive_literals_partial cx then
+    Primitive_literal.generalize_singletons
+      cx
+      ~keep_singleton:(fun _ -> false)
+      ~force_general:false
+      t
   else
     t
 
@@ -1241,6 +1253,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               tparams_map
               check)
           ~finally:(fun () ->
+            Context.reset_primitive_literal_checks cx;
             let implicit_instantiation_errors =
               Context.errors cx
               |> Flow_error.ErrorSet.filter (fun error ->

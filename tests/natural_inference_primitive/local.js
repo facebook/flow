@@ -231,7 +231,7 @@ function test_useState_7() {
   declare function useStateWithBound<T: {f:number|string}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
-  set({f: 2}); // okay
+  set({f: 2}); // TODO(?) okay the type of `one` is checked against a general bound
   set({f: "blah"}); // error
 }
 
@@ -245,11 +245,11 @@ function test_useState_8() {
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
+  const [o, set] = useStateWithBound({f: one}); // infer specific type due to check against bound
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // TODO error 2 ~> 1
-  set({f: 3}); // TODO error 3 ~> 1
+  set({f: 2}); // error 2 ~> 1
+  set({f: 3}); // error 3 ~> 1
 }
 
 function test_useState_10() {
@@ -334,7 +334,7 @@ function test_logical() {
   function fn2() { return one || ""; }
   let x2 = fn2();
   x2 = 5; // okay
-  x2 as 5; // TODO error number ~> 5
+  x2 as 5; // TODO(?)  error number ~> 5 (for now we use the local type)
 
   declare var maybeOne: ?1;
   const two = 2;
@@ -362,7 +362,7 @@ function test_logical_literals() {
   function fn2() { return 42 || ""; }
   let x2 = fn2();
   x2 = 5; // okay
-  x2 as 5; // TODO error number ~> 5
+  x2 as 5; // TODO(?) error number ~> 5
 }
 
 function test_synthesis_literals_1() {
@@ -385,14 +385,14 @@ function test_synthesis_literals_3() {
 
 function test_hint_passes_through_arrow() {
   declare function foo<T>(x: () => T): T;
-  foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-  foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
+  foo(() => abc) as 'abc'; // okay - contextual type is used to infer 'abc'
+  foo(() => abc) as 'def'; // error "abc" ~> "def"
 }
 
 function test_hint_passes_through_array() {
   declare function foo<T>(x: Array<T>): T;
-  foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-  foo([abc]) as 'def'; // TODO error "abc" ~> "def"
+  foo([abc]) as 'abc'; // okay - contextual type is used to infer 'abc'
+  foo([abc]) as 'def'; // error "abc" ~> "def"
 }
 
 function test_pattern_match() {
@@ -433,8 +433,8 @@ function test_class_bound() {
 
   const a = 'a';
   const c = new C();
-  c.set(a); // TODO okay
-  c.set('a'); // TODO okay
+  c.set(a); // okay
+  c.set('a'); // okay
   c.set('b'); // error "b" ~> "a"
 }
 
@@ -448,8 +448,8 @@ function test_reduce() {
   x2[0] = 42; // okay x2 inferred as Array<number>
   x2[0] = "a"; // error string ~> number
 
-  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
+  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay
+  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // okay
 }
 
 function test_logical_instantiation() {
@@ -477,9 +477,9 @@ function test_computed_prop_hint_1() {
 function test_synthesis_produced_uncacheable_result() {
   declare function foo<X: "a" | "b">(x: X, cb: (x: X) => void): void;
   const k = "a";
-  foo(k, x => { // TODO okay k is "a"
+  foo(k, x => { // okay k is "a"
     x as string; // okay
-    x as "a"; // TODO okay
+    x as "a"; // okay
     x as number; // error string ~> number
   });
 }
