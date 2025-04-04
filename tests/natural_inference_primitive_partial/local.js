@@ -1,35 +1,30 @@
 // @flow
 
-import {
-  abc,
-  def,
-  one,
-  tru,
-  bigOne,
-  abcRef,
-  oneRef,
-  truRef,
-  bigOneRef,
-  as_const,
-  prop1,
-  prop2,
-  prop3,
-  obj,
-  spread,
-  objRefs,
-  spreadObjRefs,
-  asConst,
-} from "./local";
-
-import type {
-  Abc,
-  One,
-  Tru,
-  BigOne,
-  ObjRefs,
-  SpreadObjRefs,
-  ObjWithTypeofAbc,
-} from './local';
+export const abc = "abc";
+export const def = "def";
+export const one = 1;
+export const tru = true;
+export const bigOne = 1n;
+export const abcRef = abc;
+export const oneRef = one;
+export const truRef = tru;
+export const bigOneRef = bigOne;
+export const as_const = "as_const" as const;
+export const prop1 = 'prop1';
+export const prop2 = 'prop2';
+export const prop3 = 'prop3';
+export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+export const spread = { ...obj };
+export const objRefs = { abc, abcRef };
+export const spreadObjRefs = { ...objRefs };
+export const asConst = { abc, abcRef } as const;
+export type Abc = typeof abc;
+export type One = typeof one;
+export type Tru = typeof tru;
+export type BigOne = typeof bigOne;
+export type ObjRefs = typeof objRefs;
+export type SpreadObjRefs = typeof spreadObjRefs;
+export type ObjWithTypeofAbc = { f: typeof abc };
 
 // Local checks
 
@@ -92,17 +87,17 @@ function test_bigint_ref() {
 }
 
 function test_obj() {
-  obj.abc as "abc"; // error string ~> "abc"
-  obj.one as 1; // error number ~> 1
-  obj.tru as true; // error boolean ~> true
-  obj.bigOne as 1n; // error bigint ~> 1n
+  obj.abc as "abc"; // TODO error string ~> "abc"
+  obj.one as 1; // TODO error number ~> 1
+  obj.tru as true; // TODO error boolean ~> true
+  obj.bigOne as 1n; // TODO error bigint ~> 1n
 }
 
 function test_spread() {
-  spread.abc as "abc"; // error string ~> "abc"
-  spread.one as 1; // error number ~> 1
-  spread.tru as true; // error boolean ~> true
-  spread.bigOne as 1n; // error bigint ~> 1n
+  spread.abc as "abc"; // TODO error string ~> "abc"
+  spread.one as 1; // TODO error number ~> 1
+  spread.tru as true; // TODO error boolean ~> true
+  spread.bigOne as 1n; // TODO error bigint ~> 1n
 }
 
 function test_obj_refs() {
@@ -171,11 +166,28 @@ function test_objlit_nullish() {
   2 as typeof obj2.f; // okay 2 ~> number
 }
 
-function test_conditional() {
+function test_conditional_1() {
   declare var cond: boolean;
-  const x: 'abc' | 'def' = cond ? abc : def; // okay
+  const x: 'abc'|'def' = cond ? abc : def; // okay
   const y = cond ? abc : def;
   ({y} as $ReadOnly<{y: 'abc'|'def'}>); // okay
+}
+
+function test_conditional_2() {
+  declare var cond: boolean;
+  declare var foo: () => "foo";
+
+  const x1 = cond ? "a" : "b";
+  const o1 = {f: x1};
+  o1.f as "a" | "b"; // error string ~> "a" | "b"
+
+  const x2 = cond ? foo() : "a";
+  const o2 = {f: x2};
+  o2.f as "foo" | "a"; // error string ~> "foo" | "a"
+
+  const x3 = cond ? {a: 'a'} : foo();
+  const o3 = {f: x3};
+  o3.f as {a: 'a'} | "foo"; // okay ('a' is still inferred as StrT_UNSOUND)
 }
 
 declare function useState<T>(x: T): [T, (y: T) => void];
@@ -197,7 +209,7 @@ function test_useState_2() {
 
 function test_useState_4() {
   const [n_, set] = useState(one);
-  n_ as 1; // error number ~> 1
+  n_ as 1; // TODO error number ~> 1 (infers NumT_UNSOUND now)
   set(2); // okay
 }
 
@@ -220,7 +232,7 @@ function test_useState_7() {
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
   set({f: 2}); // okay
-  set({f: "blah"}); // error "blah" ~> number
+  set({f: "blah"}); // error
 }
 
 function test_useState_8() {
@@ -233,15 +245,15 @@ function test_useState_8() {
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
+  const [o, set] = useStateWithBound({f: one}); // infers general type
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // TODO error 2 ~> 1
-  set({f: 3}); // TODO error 3 ~> 1
+  set({f: 2}); // okay
+  set({f: 3}); // okay
 }
 
 function test_useState_10() {
-  const [o, set] = useStateWithDefault({f: one});
+  const [o, set] = useStateWithDefault({f: one}); // infers general type
   set({f: 1}); // okay
   set({f: 2}); // okay
 }
@@ -323,29 +335,83 @@ function test_logical() {
   let x2 = fn2();
   x2 = 5; // okay
   x2 as 5; // TODO error number ~> 5
+
+  declare var maybeOne: ?1;
+  const two = 2;
+
+  const nullish = maybeOne ?? two;
+  nullish as 1 | 2; // okay
+
+  const or_ = maybeOne || two;
+  or_ as 1 | 2; // okay
+
+  const and_ = maybeOne && two;
+  and_ as ?(1 | 2); // okay
+}
+
+function test_logical_literals() {
+  const x1 = 42 || "hello";
+  x1 as 42; // okay
+  let y1 = x1;
+  y1 = 5; // okay
+
+  // use hint to preserve precise type
+  function fn1(): 42 { return 42 || ""; } // okay
+
+  // generalize at return
+  function fn2() { return 42 || ""; }
+  let x2 = fn2();
+  x2 = 5; // okay
+  x2 as 5; // TODO error number ~> 5
+}
+
+function test_synthesis_literals_1() {
+  declare function optional<P>({p: P}): P;
+  let o = optional({p: 3});
+  o = 1; // ok
+}
+
+function test_synthesis_literals_2() {
+  declare function optional<P>({p: P}): P;
+  const o = optional({p: {bar: 3}}); // ok
+  o.bar = 1; // ok
+}
+
+function test_synthesis_literals_3() {
+  declare var cp: {bar: number};
+  declare function optional<P>($ReadOnly<{|cp: P, ...P|}>): P;
+  const o = optional({cp, bar: 3}); // ok
 }
 
 function test_hint_passes_through_arrow() {
   declare function foo<T>(x: () => T): T;
-  foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo(() => abc) as 'abc';
   foo(() => abc) as 'def'; // error "abc" ~> "def"
 }
 
 function test_hint_passes_through_array() {
   declare function foo<T>(x: Array<T>): T;
-  foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo([abc]) as 'abc';
   foo([abc]) as 'def'; // error "abc" ~> "def"
 }
 
 function test_pattern_match() {
   declare var n: number;
-  const m = match (n) {
+  const m1 = match (n) {
+    1 => 'a',
+    _ => 'b',
+  };
+  m1 as 'a' | 'b'; // okay
+  m1 as 'a'; // error 'b' ~> 'a'
+  m1 as 'b'; // error 'a' ~> 'b'
+
+  const m2 = match (n) {
     1 => abc,
     _ => def,
   };
-  m as 'abc' | 'def'; // okay
-  m as 'abc'; // error 'def' ~> 'abc'
-  m as 'def'; // error 'abc' ~> 'def'
+  m2 as 'abc' | 'def'; // okay
+  m2 as 'abc'; // error 'def' ~> 'abc'
+  m2 as 'def'; // error 'abc' ~> 'def'
 }
 
 function test_assign() {
@@ -360,6 +426,18 @@ function test_assign() {
   const o3: {f: string} = {f: x}; // okay
 }
 
+function test_class_bound() {
+  class C {
+    set<K: 'a'>(k: K) {}
+  }
+
+  const a = 'a';
+  const c = new C();
+  c.set(a); // okay
+  c.set('a'); // okay
+  c.set('b'); // error "b" ~> "a"
+}
+
 function test_reduce() {
   declare var arr: Array<void>;
   const x1 = arr.reduce((acc, _) => acc, [0]);
@@ -370,6 +448,108 @@ function test_reduce() {
   x2[0] = 42; // okay x2 inferred as Array<number>
   x2[0] = "a"; // error string ~> number
 
-  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
+  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay
+  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // okay
+}
+
+function test_logical_instantiation() {
+  declare var zerOrOne: 0|1;
+  const x = zerOrOne || 2;
+
+  const [arr, _] = useState([x]);
+  arr[0] as 1|2; // TODO error number ~> 1|2
+}
+
+function test_destructure_computed() {
+  const PROP = 'prop';
+  const {[PROP]: one} =  {prop: 1};
+  one as 1; // okay
+  one as 2; // error 1 ~> 2
+}
+
+function test_computed_prop_hint_1() {
+  type Name = 'a'| 'b' | 'c';
+  const KeyName = 'a';
+  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'a'}>); // okay
+  ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+}
+
+function test_synthesis_produced_uncacheable_result() {
+  declare function foo<X: "a" | "b">(x: X, cb: (x: string) => void): void;
+  const k = "a";
+  foo(k, x => { // okay k is "a"
+    x as string; // okay
+    x as number; // error string ~> number
+  });
+}
+
+function test_computed_prop_hint_2() {
+  const A = 'a';
+  const B = 'b';
+
+  type T = {
+    a: number,
+    b: string,
+  };
+
+  declare function foo<X>(): X;
+  const x: T = {
+    [A]: foo(), // okay - inferred number as return
+    [B]: foo(), // okay - inferred string as return
+  };
+}
+
+function test_conditional_pass_flag() {
+  const prop = 'prop';
+  const obj = { prop: {} };
+
+  declare var cond: boolean;
+  obj[cond ? prop : 'prop']; // okay access of prop
+  obj[cond ? 'prop' : prop]; // okay access of prop
+}
+
+function test_generalize_function_literal() {
+  type GenericFnType<TReturn> = () => TReturn;
+  declare function memo<TReturn, Fn: GenericFnType<TReturn>>(f: Fn): Fn;
+  const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
+
+  const obj = memoized();
+  obj.prop = 0; // okay
+  obj.prop = 1; // okay
+  obj.prop = "a"; // error string ~> number
+}
+
+function test_async() {
+  class AsyncSelector<T>  {
+    constructor(getState: () => T) {}
+  }
+
+  const x = new AsyncSelector(async () => ({title: ''}));
+  x as AsyncSelector<Promise<{title: string}>>; // okay '' has generalized to string
+}
+
+function test_logical_nullish() {
+  declare const x: ?('a' | 'b');
+  declare var arr: Array<void>;
+  const mappedArr = arr.map(_ => ({
+    prop: x ?? 'c',
+  }));
+  mappedArr[0].prop = 'd'; // okay - 'c' causes generalization to string
+}
+function test_array_elem_union() {
+  declare function foo<T>(create: T): T;
+  const strings = foo(['a', 'b']);
+  strings.push("c"); // okay
+}
+
+function test_generalize_under_intersection() {
+  declare function foo<V>(
+    v: $Exact<V>,
+    cb: (data: $Exact<V>) => void,
+  ): void;
+
+  foo(
+    {f:1},
+    (x: {f: number}) => {}, // okay, type of `1` should generalize
+  );
 }

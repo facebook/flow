@@ -87,17 +87,17 @@ function test_bigint_ref() {
 }
 
 function test_obj() {
-  obj.abc as "abc"; // TODO error string ~> "abc"
-  obj.one as 1; // TODO error number ~> 1
-  obj.tru as true; // TODO error boolean ~> true
-  obj.bigOne as 1n; // TODO error bigint ~> 1n
+  obj.abc as "abc"; // error string ~> "abc"
+  obj.one as 1; // error number ~> 1
+  obj.tru as true; // error boolean ~> true
+  obj.bigOne as 1n; // error bigint ~> 1n
 }
 
 function test_spread() {
-  spread.abc as "abc"; // TODO error string ~> "abc"
-  spread.one as 1; // TODO error number ~> 1
-  spread.tru as true; // TODO error boolean ~> true
-  spread.bigOne as 1n; // TODO error bigint ~> 1n
+  spread.abc as "abc"; // error string ~> "abc"
+  spread.one as 1; // error number ~> 1
+  spread.tru as true; // error boolean ~> true
+  spread.bigOne as 1n; // error bigint ~> 1n
 }
 
 function test_obj_refs() {
@@ -187,7 +187,7 @@ function test_conditional_2() {
 
   const x3 = cond ? {a: 'a'} : foo();
   const o3 = {f: x3};
-  o3.f as {a: 'a'} | "foo"; // okay ('a' is still inferred as StrT_UNSOUND)
+  o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
 }
 
 declare function useState<T>(x: T): [T, (y: T) => void];
@@ -209,7 +209,7 @@ function test_useState_2() {
 
 function test_useState_4() {
   const [n_, set] = useState(one);
-  n_ as 1; // TODO error number ~> 1 (infers NumT_UNSOUND now)
+  n_ as 1; // error number ~> 1
   set(2); // okay
 }
 
@@ -245,11 +245,11 @@ function test_useState_8() {
 
 function test_useState_9() {
   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-  const [o, set] = useStateWithBound({f: one}); // infers general type
+  const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
   set({f: "blah"}); // error "blah" ~> 1
   set({f: 1}); // okay
-  set({f: 2}); // okay
-  set({f: 3}); // okay
+  set({f: 2}); // TODO error 2 ~> 1
+  set({f: 3}); // TODO error 3 ~> 1
 }
 
 function test_useState_10() {
@@ -385,14 +385,14 @@ function test_synthesis_literals_3() {
 
 function test_hint_passes_through_arrow() {
   declare function foo<T>(x: () => T): T;
-  foo(() => abc) as 'abc';
-  foo(() => abc) as 'def'; // error "abc" ~> "def"
+  foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
 }
 
 function test_hint_passes_through_array() {
   declare function foo<T>(x: Array<T>): T;
-  foo([abc]) as 'abc';
-  foo([abc]) as 'def'; // error "abc" ~> "def"
+  foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
+  foo([abc]) as 'def'; // TODO error "abc" ~> "def"
 }
 
 function test_pattern_match() {
@@ -433,8 +433,8 @@ function test_class_bound() {
 
   const a = 'a';
   const c = new C();
-  c.set(a); // okay
-  c.set('a'); // okay
+  c.set(a); // TODO okay
+  c.set('a'); // TODO okay
   c.set('b'); // error "b" ~> "a"
 }
 
@@ -448,8 +448,8 @@ function test_reduce() {
   x2[0] = 42; // okay x2 inferred as Array<number>
   x2[0] = "a"; // error string ~> number
 
-  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // okay
-  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // okay
+  const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
+  const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
 }
 
 function test_logical_instantiation() {
@@ -457,14 +457,14 @@ function test_logical_instantiation() {
   const x = zerOrOne || 2;
 
   const [arr, _] = useState([x]);
-  arr[0] as 1|2; // TODO error number ~> 1|2
+  arr[0] as 1|2; // error number ~> 1|2
 }
 
 function test_destructure_computed() {
   const PROP = 'prop';
   const {[PROP]: one} =  {prop: 1};
-  one as 1; // okay
-  one as 2; // error 1 ~> 2
+  one as 1; // error number ~> 1
+  one as 2; // error number ~> 2
 }
 
 function test_computed_prop_hint_1() {
@@ -475,10 +475,11 @@ function test_computed_prop_hint_1() {
 }
 
 function test_synthesis_produced_uncacheable_result() {
-  declare function foo<X: "a" | "b">(x: X, cb: (x: string) => void): void;
+  declare function foo<X: "a" | "b">(x: X, cb: (x: X) => void): void;
   const k = "a";
-  foo(k, x => { // okay k is "a"
+  foo(k, x => { // TODO okay k is "a"
     x as string; // okay
+    x as "a"; // TODO okay
     x as number; // error string ~> number
   });
 }

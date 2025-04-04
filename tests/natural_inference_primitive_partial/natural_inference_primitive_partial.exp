@@ -813,24 +813,6 @@ References:
                                        ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:200:3
-
-Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   imported.js:200:3
-   200|   n_ as 1; // error number ~> 1
-          ^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   imported.js:200:9
-   200|   n_ as 1; // error number ~> 1
-                ^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ imported.js:208:7
 
 Cannot call `set` with `2` bound to `y` because number [1] is incompatible with number literal `1` [2].
@@ -863,8 +845,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:223:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
 
    imported.js:223:11
    223|   set({f: "blah"}); // error "blah" ~> number
@@ -878,8 +860,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:231:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
 
    imported.js:231:11
    231|   set({f: "blah"}); // error "blah" ~> number
@@ -891,28 +873,10 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:236:42
-
-Cannot call `useStateWithBound` because number [1] is incompatible with union type [2] in property `f` of type argument
-`T`. [incompatible-call]
-
-   imported.js:236:42
-   236|   const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
-                                                 ^^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   imported.js:235:44
-   235|   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-                                                   ^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- imported.js:237:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
+property `f`. [incompatible-call]
 
    imported.js:237:11
    237|   set({f: "blah"}); // error "blah" ~> 1
@@ -942,28 +906,10 @@ References:
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:330:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:330:3
-   330|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:330:21
-   330|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                            ^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ imported.js:331:3
 
-Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    imported.js:331:3
    331|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -978,28 +924,10 @@ References:
                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:336:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:336:3
-   336|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:336:17
-   336|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                        ^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ imported.js:337:3
 
-Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    imported.js:337:3
    337|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -1102,7 +1030,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:371:11
 
-Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number literal `1` [2]. [incompatible-type]
 
    imported.js:371:11
    371|   x2[0] = "a"; // error string ~> number
@@ -1112,56 +1040,6 @@ References:
    local.js:5:20
      5| export const one = 1;
                            ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- imported.js:373:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `0` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   imported.js:373:28
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                    ^^^^^^
-
-References:
-   imported.js:373:53
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                                             ^ [1]
-   imported.js:373:19
-    373|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------- imported.js:374:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `1` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   imported.js:374:28
-    374|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:5:20
-      5| export const one = 1;
-                            ^ [1]
-   imported.js:374:19
-    374|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:35:3
@@ -1421,150 +1299,6 @@ References:
    local.js:86:14
    86|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
                     ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:90:3
-
-Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:90:3
-   90|   obj.abc as "abc"; // error string ~> "abc"
-         ^^^^^^^
-
-References:
-   local.js:16:27
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                 ^^^^^ [1]
-   local.js:90:14
-   90|   obj.abc as "abc"; // error string ~> "abc"
-                    ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:91:3
-
-Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:91:3
-   91|   obj.one as 1; // error number ~> 1
-         ^^^^^^^
-
-References:
-   local.js:16:39
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                             ^ [1]
-   local.js:91:14
-   91|   obj.one as 1; // error number ~> 1
-                    ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:92:3
-
-Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   local.js:92:3
-   92|   obj.tru as true; // error boolean ~> true
-         ^^^^^^^
-
-References:
-   local.js:16:47
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                     ^^^^ [1]
-   local.js:92:14
-   92|   obj.tru as true; // error boolean ~> true
-                    ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:93:3
-
-Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   local.js:93:3
-   93|   obj.bigOne as 1n; // error bigint ~> 1n
-         ^^^^^^^^^^
-
-References:
-   local.js:16:61
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                                   ^^ [1]
-   local.js:93:17
-   93|   obj.bigOne as 1n; // error bigint ~> 1n
-                       ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:97:3
-
-Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:97:3
-   97|   spread.abc as "abc"; // error string ~> "abc"
-         ^^^^^^^^^^
-
-References:
-   local.js:16:27
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                 ^^^^^ [1]
-   local.js:97:17
-   97|   spread.abc as "abc"; // error string ~> "abc"
-                       ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:98:3
-
-Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:98:3
-   98|   spread.one as 1; // error number ~> 1
-         ^^^^^^^^^^
-
-References:
-   local.js:16:39
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                             ^ [1]
-   local.js:98:17
-   98|   spread.one as 1; // error number ~> 1
-                       ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:99:3
-
-Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   local.js:99:3
-   99|   spread.tru as true; // error boolean ~> true
-         ^^^^^^^^^^
-
-References:
-   local.js:16:47
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                     ^^^^ [1]
-   local.js:99:17
-   99|   spread.tru as true; // error boolean ~> true
-                       ^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:100:3
-
-Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   local.js:100:3
-   100|   spread.bigOne as 1n; // error bigint ~> 1n
-          ^^^^^^^^^^^^^
-
-References:
-   local.js:16:61
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                                    ^^ [1]
-   local.js:100:20
-   100|   spread.bigOne as 1n; // error bigint ~> 1n
-                           ^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:104:3
@@ -1964,31 +1698,6 @@ References:
                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:190:3
-
-Cannot cast `o3.f` to union type because: [incompatible-cast]
- - Either string [1] is incompatible with string literal `a` [2] in property `a`.
- - Or object literal [3] is incompatible with string literal `foo` [4].
-
-   local.js:190:3
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
-          ^^^^
-
-References:
-   local.js:188:25
-   188|   const x3 = cond ? {a: 'a'} : foo();
-                                ^^^ [1]
-   local.js:190:15
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
-                      ^^^ [2]
-   local.js:188:21
-   188|   const x3 = cond ? {a: 'a'} : foo();
-                            ^^^^^^^^ [3]
-   local.js:190:22
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
-                             ^^^^^ [4]
-
-
 Error -------------------------------------------------------------------------------------------------- local.js:207:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with union type [2] in property
@@ -2002,24 +1711,6 @@ References:
    local.js:204:32
    204|   const [o, set] = useState<{f:1|2}>({f: one}); // okay
                                        ^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:212:3
-
-Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:212:3
-   212|   n_ as 1; // error number ~> 1
-          ^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   local.js:212:9
-   212|   n_ as 1; // error number ~> 1
-                ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:220:7
@@ -2081,24 +1772,6 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:248:42
-
-Cannot call `useStateWithBound` because number [1] is incompatible with union type [2] in property `f` of type argument
-`T`. [incompatible-call]
-
-   local.js:248:42
-   248|   const [o, set] = useStateWithBound({f: one}); // TODO infer specific type due to check against bound
-                                                 ^^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   local.js:247:44
-   247|   declare function useStateWithBound<T: {f:1|2}>(x: T): [T, (y: T) => void];
-                                                   ^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- local.js:249:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
@@ -2132,31 +1805,13 @@ References:
                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:388:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:388:3
-   388|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:388:21
-   388|   foo(() => abc) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                            ^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:389:3
 
 Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
    local.js:389:3
-   389|   foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
+   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
@@ -2164,26 +1819,8 @@ References:
      3| export const abc = "abc";
                            ^^^^^ [1]
    local.js:389:21
-   389|   foo(() => abc) as 'def'; // TODO error "abc" ~> "def"
+   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
                             ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:394:3
-
-Cannot cast `foo(...)` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:394:3
-   394|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-          ^^^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:394:17
-   394|   foo([abc]) as 'abc'; // TODO okay - contextual type should be used to infer 'abc'
-                        ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:395:3
@@ -2192,7 +1829,7 @@ Cannot cast `foo(...)` to string literal `def` because string [1] is incompatibl
 [incompatible-cast]
 
    local.js:395:3
-   395|   foo([abc]) as 'def'; // TODO error "abc" ~> "def"
+   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^
 
 References:
@@ -2200,7 +1837,7 @@ References:
      3| export const abc = "abc";
                            ^^^^^ [1]
    local.js:395:17
-   395|   foo([abc]) as 'def'; // TODO error "abc" ~> "def"
+   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
                         ^^^^^ [2]
 
 
@@ -2312,39 +1949,6 @@ References:
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:436:9
-
-Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
-[incompatible-call]
-
-   local.js:436:9
-   436|   c.set(a); // TODO okay
-                ^
-
-References:
-   local.js:434:13
-   434|   const a = 'a';
-                    ^^^ [1]
-   local.js:431:12
-   431|     set<K: 'a'>(k: K) {}
-                   ^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:437:9
-
-Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
-[incompatible-call]
-
-   local.js:437:9
-   437|   c.set('a'); // TODO okay
-                ^^^ [1]
-
-References:
-   local.js:431:12
-   431|     set<K: 'a'>(k: K) {}
-                   ^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:438:9
 
 Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
@@ -2388,98 +1992,13 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:451:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `0` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   local.js:451:28
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:451:53
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                                                             ^ [1]
-   local.js:451:19
-    451|   const x3: Array<0> = arr.reduce((acc, _) => acc, [0]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
-
-
-Error -------------------------------------------------------------------------------------------------- local.js:452:28
-
-Cannot call `arr.reduce` because: [incompatible-call]
- - Either number [1] is incompatible with number literal `1` [2] in array element of the return value.
- - Or no more than 1 argument is expected by function type [3].
-
-   local.js:452:28
-    452|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                                    ^^^^^^
-
-References:
-   local.js:5:20
-      5| export const one = 1;
-                            ^ [1]
-   local.js:452:19
-    452|   const x4: Array<1> = arr.reduce((acc, _) => acc, [one]); // TODO okay
-                           ^ [2]
-   <BUILTINS>/core.js:1055:5
-             v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
-             ---^ [3]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:460:3
-
-Cannot cast `arr[0]` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
-
-   local.js:460:3
-   460|   arr[0] as 1|2; // error number ~> 1|2
-          ^^^^^^
-
-References:
-   local.js:457:25
-   457|   const x = zerOrOne || 2;
-                                ^ [1]
-   local.js:460:13
-   460|   arr[0] as 1|2; // error number ~> 1|2
-                    ^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:466:3
-
-Cannot cast `one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:466:3
-   466|   one as 1; // error number ~> 1
-          ^^^
-
-References:
-   local.js:465:33
-   465|   const {[PROP]: one} =  {prop: 1};
-                                        ^ [1]
-   local.js:466:10
-   466|   one as 1; // error number ~> 1
-                 ^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:467:3
 
 Cannot cast `one` to number literal `2` because number [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
    local.js:467:3
-   467|   one as 2; // error number ~> 2
+   467|   one as 2; // error 1 ~> 2
           ^^^
 
 References:
@@ -2487,7 +2006,7 @@ References:
    465|   const {[PROP]: one} =  {prop: 1};
                                         ^ [1]
    local.js:467:10
-   467|   one as 2; // error number ~> 2
+   467|   one as 2; // error 1 ~> 2
                  ^ [2]
 
 
@@ -2509,69 +2028,34 @@ References:
                                                       ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:480:7
-
-Cannot call `foo` because string [1] is incompatible with union type [2] in type argument `X`. [incompatible-call]
-
-   local.js:480:7
-   480|   foo(k, x => { // TODO okay k is "a"
-              ^
-
-References:
-   local.js:479:13
-   479|   const k = "a";
-                    ^^^ [1]
-   local.js:478:27
-   478|   declare function foo<X: "a" | "b">(x: X, cb: (x: X) => void): void;
-                                  ^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- local.js:482:5
-
-Cannot cast `x` to string literal `a` because string [1] is incompatible with string literal `a` [2].
-[incompatible-cast]
-
-   local.js:482:5
-   482|     x as "a"; // TODO okay
-            ^
-
-References:
-   local.js:479:13
-   479|   const k = "a";
-                    ^^^ [1]
-   local.js:482:10
-   482|     x as "a"; // TODO okay
-                 ^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:483:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   local.js:483:5
-   483|     x as number; // error string ~> number
+   local.js:482:5
+   482|     x as number; // error string ~> number
             ^
 
 References:
-   local.js:479:13
-   479|   const k = "a";
-                    ^^^ [1]
-   local.js:483:10
-   483|     x as number; // error string ~> number
+   local.js:478:52
+   478|   declare function foo<X: "a" | "b">(x: X, cb: (x: string) => void): void;
+                                                           ^^^^^^ [1]
+   local.js:482:10
+   482|     x as number; // error string ~> number
                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:520:14
+Error -------------------------------------------------------------------------------------------------- local.js:519:14
 
 Cannot assign `"a"` to `obj.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   local.js:520:14
-   520|   obj.prop = "a"; // error string ~> number
+   local.js:519:14
+   519|   obj.prop = "a"; // error string ~> number
                      ^^^ [1]
 
 References:
-   local.js:515:39
-   515|   const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
+   local.js:514:39
+   514|   const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
                                               ^ [2]
 
 
@@ -2607,7 +2091,4 @@ References:
 
 
 
-Found 152 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 125 errors
