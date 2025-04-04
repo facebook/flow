@@ -488,27 +488,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- dro.js:104:27
 
-Cannot call `useMyReducerWithNoState` with `badReducer` bound to `reducer` because in the first parameter:
-[incompatible-call]
- - Either array type [1] is managed by the React runtime and cannot be mutated, while array type [2] may allow mutations
-   (possibly in nested values). Consider using `React.Immutable<>`.
- - Or array type [3] is managed by the React runtime [1] and cannot be mutated, while array type [2] may allow mutations
-   (possibly in nested values). Consider using `React.Immutable<>`.
+Cannot call `useMyReducerWithNoState` with `badReducer` bound to `reducer` because array type [1] is managed by the
+React runtime [2] and cannot be mutated, while array type [3] may allow mutations (possibly in nested values) in the
+first parameter. Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:104:27
    104|   useMyReducerWithNoState(badReducer); // error
                                   ^^^^^^^^^^
 
 References:
-   dro.js:94:13
-    94|   reducer: (React$Immutable<S>, A) => React$Immutable<S>,
-                    ^^^^^^^^^^^^^^^^^^ [1]
-   dro.js:98:36
-    98| declare function badReducer(state: Array<number>, action: any): Array<number>;
-                                           ^^^^^^^^^^^^^ [2]
    dro.js:98:65
     98| declare function badReducer(state: Array<number>, action: any): Array<number>;
-                                                                        ^^^^^^^^^^^^^ [3]
+                                                                        ^^^^^^^^^^^^^ [1]
+   dro.js:94:13
+    94|   reducer: (React$Immutable<S>, A) => React$Immutable<S>,
+                    ^^^^^^^^^^^^^^^^^^ [2]
+   dro.js:98:36
+    98| declare function badReducer(state: Array<number>, action: any): Array<number>;
+                                           ^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- dro.js:109:37

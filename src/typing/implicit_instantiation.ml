@@ -130,6 +130,11 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   module Flow = Flow
   module SpeculationKit = Speculation_kit.Make (Flow)
 
+  let speculative_subtyping_succeeds cx trace use_op l u =
+    match SpeculationKit.try_singleton_throw_on_failure cx trace l (UseT (use_op, u)) with
+    | exception Flow_js_utils.SpeculationSingletonError -> false
+    | _ -> true
+
   (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each
    * type parameter as well, since some type params are only used in the bounds of another.
    *)
@@ -736,6 +741,16 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                    | (t', t) ->
                      if equal t' t then
                        UpperT t
+                     else if
+                       TypeUtil.quick_subtype t t'
+                       || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t t'
+                     then
+                       UpperT t
+                     else if
+                       TypeUtil.quick_subtype t' t
+                       || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t' t
+                     then
+                       UpperT t'
                      else
                        UpperT
                          (IntersectionT
@@ -1256,13 +1271,10 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           )
       )
     in
-    let speculative_subtyping_succeeds use_op l u =
-      match SpeculationKit.try_singleton_throw_on_failure cx trace l (UseT (use_op, u)) with
-      | exception Flow_js_utils.SpeculationSingletonError -> false
-      | _ -> true
-    in
     if
       speculative_subtyping_succeeds
+        cx
+        trace
         use_op
         check_t
         (Type_subst.subst cx ~use_op:unknown_use subst_map extends_t)
@@ -1291,7 +1303,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           let { inferred; _ } =
             pin_type cx ~use_op tparam polarity ~default_bound:(Some bound) reason targ
           in
-          if speculative_subtyping_succeeds unknown_use inferred bound then
+          if speculative_subtyping_succeeds cx trace unknown_use inferred bound then
             Base.Continue_or_stop.Continue (Subst_name.Map.add name inferred map)
           else
             Base.Continue_or_stop.Stop None)
