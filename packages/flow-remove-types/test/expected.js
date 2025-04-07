@@ -14,6 +14,12 @@ import {
                        
 } from 'some-module';
 
+// Mixed default and named type only imports
+import DefaultImport,{
+                
+                       
+} from 'some-module';
+
 // Import types
                                             
 
