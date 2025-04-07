@@ -28,6 +28,10 @@ var vlq = require('vlq');
  *     completely rather than only removing the type. THIS IS NOT SPEC
  *     COMPLIANT! Instead, use `declare foo: string;` for type-only fields.
  *
+ *   - removeEmptyImports: (default: false)
+ *     If true, removes empty import statements that remain after removing
+ *     all type and typeof imports (e.g. `import {} from 'some-module'`).
+ *
  * Returns an object with two methods:
  *
  *   - .toString()
@@ -69,6 +73,7 @@ module.exports = function flowRemoveTypes(source, options) {
     ignoreUninitializedFields: Boolean(
       options && options.ignoreUninitializedFields,
     ),
+    removeEmptyImports: Boolean(options && options.removeEmptyImports),
   };
 
   // Remove the flow pragma.
@@ -238,6 +243,55 @@ var removeFlowVisitor = {
   ImportDeclaration: function (context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
+    }
+
+    if (
+      context.removeEmptyImports &&
+      node.importKind === 'value' &&
+      node.specifiers.length > 0
+    ) {
+      if (node.specifiers[0].type !== 'ImportDefaultSpecifier') {
+        // Remove import declaration if all specifiers are type imports
+        for (var i = 0; i < node.specifiers.length; i++) {
+          if (
+            node.specifiers[i].importKind !== 'type' &&
+            node.specifiers[i].importKind !== 'typeof'
+          ) {
+            return;
+          }
+        }
+        return removeNode(context, node);
+      } else if (node.specifiers.length > 1) {
+        // Remove non-default specifiers completely
+        // if all non-default specifiers are type imports
+        for (var i = 1; i < node.specifiers.length; i++) {
+          if (
+            node.specifiers[i].importKind !== 'type' &&
+            node.specifiers[i].importKind !== 'typeof'
+          ) {
+            return;
+          }
+        }
+
+        var defaultSpecifier = node.specifiers[0];
+        var firstSpecifier = node.specifiers[1];
+        var lastSpecifier = node.specifiers[node.specifiers.length - 1];
+
+        var idxStart = findTokenIndexAtStartOfNode(
+          context.ast.tokens,
+          firstSpecifier,
+        );
+        var idxEnd = findTokenIndexAtEndOfNode(
+          context.ast.tokens,
+          lastSpecifier,
+        );
+
+        removeTrailingCommaNode(context, defaultSpecifier);
+        // remove opening brace
+        removeNode(context, context.ast.tokens[idxStart - 1]);
+        // remove closing brace
+        removeNode(context, context.ast.tokens[idxEnd + 1]);
+      }
     }
   },
 

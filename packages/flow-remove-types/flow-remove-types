@@ -28,6 +28,9 @@ var usage = 'Usage: flow-remove-types [options] [sources] \n' +
 '                    completely rather than only removing the type. THIS IS NOT\n' +
 '                    SPEC COMPLIANT! Instead, use `declare foo: string;` for\n' +
 '                    type-only fields.\n' +
+'      --remove-empty-imports\n' +
+'                    If true, removes empty import statements that remain after removing\n' +
+'                    all type and typeof imports (e.g. `import {} from \'some-module\'`).\n' +
 '  -m, --sourcemaps  Also output source map files. Optionally pass "inline"\n' +
 '  -q, --quiet       Does not produce any output concerning successful progress.\n' +
 
@@ -85,6 +88,7 @@ var outFile;
 var all;
 var pretty;
 var ignoreUninitializedFields;
+var removeEmptyImports;
 var sourceMaps;
 var inlineSourceMaps;
 var quiet;
@@ -112,6 +116,8 @@ while (i < process.argv.length) {
     pretty = true;
   } else if (arg === '--ignore-uninitialized-fields') {
     ignoreUninitializedFields = true;
+  } else if (arg === '--remove-empty-imports') {
+    removeEmptyImports = true;
   } else if (arg === '-m' || arg === '--sourcemaps') {
     sourceMaps = true;
     if (process.argv[i] === 'inline') {
@@ -254,6 +260,7 @@ function transformSource(content, filepath) {
       all: all,
       pretty: pretty,
       ignoreUninitializedFields: ignoreUninitializedFields,
+      removeEmptyImports: removeEmptyImports,
     });
   } catch (error) {
     if (error.loc) {

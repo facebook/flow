@@ -9,16 +9,16 @@ import {
 } from 'some-module';
 
 // Regular import with types only
-import {
+        
                 
                        
-} from 'some-module';
+                     
 
 // Mixed default and named type only imports
-import DefaultImport, {
+import DefaultImport   
                 
                        
-} from 'some-module';
+  from 'some-module';
 
 // Import types
                                             
@@ -55,10 +55,10 @@ class Bar extends Other            /*.*/                 {
    covariant         = 42;
 
   // Class Property
-            
+  prop     ;
 
   // Class Property with variance
-                  
+   propCo        ;
 
   method()        {
     return;
@@ -67,7 +67,7 @@ class Bar extends Other            /*.*/                 {
 
 // Class expression implements interface
 var SomeClass = class Baz                {
-            
+  prop     ;
 
   method()        {
     return;
@@ -145,7 +145,7 @@ import SomeClass from 'some-module'
 
 export class MyClass    extends SomeClass                          {
 
-          
+  value   
 
   constructor(value   ) {
     this.value = value
