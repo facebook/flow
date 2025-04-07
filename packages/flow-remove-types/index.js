@@ -29,8 +29,8 @@ var vlq = require('vlq');
  *     COMPLIANT! Instead, use `declare foo: string;` for type-only fields.
  * 
  *   - removeEmptyImports: (default: false)
- *     If true, removes empty imports (`import {} from 'some-module'`) that
- *     are a result of removing all type and typeof imports.
+ *     If true, removes empty import statements that remain after removing
+ *     all type and typeof imports (e.g. `import {} from 'some-module'`).
  *
  * Returns an object with two methods:
  *

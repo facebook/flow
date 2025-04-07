@@ -29,8 +29,8 @@ var usage = 'Usage: flow-remove-types [options] [sources] \n' +
 '                    SPEC COMPLIANT! Instead, use `declare foo: string;` for\n' +
 '                    type-only fields.\n' +
 '      --remove-empty-imports\n' +
-'                    If true, removes empty imports (`import {} from \'some-module\'`)\n' +
-'                    that are a result of removing all type and typeof imports.\n' +
+'                    If true, removes empty import statements that remain after removing\n' +
+'                    all type and typeof imports (e.g. `import {} from \'some-module\'`).\n' +
 '  -m, --sourcemaps  Also output source map files. Optionally pass "inline"\n' +
 '  -q, --quiet       Does not produce any output concerning successful progress.\n' +
 
