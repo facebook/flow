@@ -236,7 +236,7 @@ var removeFlowVisitor = {
     }
   },
 
-ExportAllDeclaration: function (context, node) {
+  ExportAllDeclaration: function (context, node) {
     if (node.exportKind === 'type') {
       return removeNode(context, node);
     }
@@ -246,52 +246,48 @@ ExportAllDeclaration: function (context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
     }
-
-    // Remove non-empty import if all specifiers are type imports
-    // We check if there is at least one specifier inside to prevent 
-    // removing empty imports like `import {} from 'some-module'`
+    
     if (
       context.removeEmptyImports &&
       node.importKind === 'value' &&
-      node.specifiers.length > 0 &&
-      node.specifiers[0].type !== 'ImportDefaultSpecifier'
+      node.specifiers.length > 0
     ) {
-      for (var i = 0; i < node.specifiers.length; i++) {
-        if (
-          node.specifiers[i].importKind !== 'type' &&
-          node.specifiers[i].importKind !== 'typeof'
-        ) {
-          return;
+      if (node.specifiers[0].type !== 'ImportDefaultSpecifier') {
+        // Remove import declaration if all specifiers are type imports
+        for (var i = 0; i < node.specifiers.length; i++) {
+          if (
+            node.specifiers[i].importKind !== 'type' &&
+            node.specifiers[i].importKind !== 'typeof'
+          ) {
+            return;
+          }
         }
-      }
-      return removeNode(context, node);
-    }
+        return removeNode(context, node);
+      } else if (node.specifiers.length > 1) {
+        // Remove non-default specifiers completely 
+        // if all non-default specifiers are type imports
+        for (var i = 1; i < node.specifiers.length; i++) {
+          if (
+            node.specifiers[i].importKind !== 'type' &&
+            node.specifiers[i].importKind !== 'typeof'
+          ) {
+            return;
+          }
+        }
 
-    if (
-      context.removeEmptyImports &&
-      node.importKind === 'value' &&
-      node.specifiers.length > 1 &&
-      node.specifiers[0].type === 'ImportDefaultSpecifier'
-    ) {
-      for (var i = 1; i < node.specifiers.length; i++) {
-        if (
-          node.specifiers[i].importKind !== 'type' &&
-          node.specifiers[i].importKind !== 'typeof'
-        ) {
-          return;
-        }
+        var defaultSpecifier = node.specifiers[0];
+        var firstSpecifier = node.specifiers[1];
+        var lastSpecifier = node.specifiers[node.specifiers.length - 1];
+        
+        var idxStart = findTokenIndexAtStartOfNode(context.ast.tokens, firstSpecifier);
+        var idxEnd = findTokenIndexAtEndOfNode(context.ast.tokens, lastSpecifier);
+        
+        removeTrailingCommaNode(context, defaultSpecifier);
+        // remove opening brace
+        removeNode(context, context.ast.tokens[idxStart - 1]);
+        // remove closing brace
+        removeNode(context, context.ast.tokens[idxEnd + 1]);
       }
-      
-      var idxStart = findTokenIndexAtStartOfNode(context.ast.tokens, node.specifiers[1]);
-      var idxEnd = findTokenIndexAtEndOfNode(context.ast.tokens, node.specifiers[node.specifiers.length - 1]);
-      // remove trailing comma after default import
-      removeTrailingCommaNode(context, node.specifiers[0]);
-      // remove leading `{`
-      removeNode(context, context.ast.tokens[idxStart - 1]);
-      // remove trailing `}`
-      removeNode(context, context.ast.tokens[idxEnd + 1]);
-      
-      return;
     }
   },
 
