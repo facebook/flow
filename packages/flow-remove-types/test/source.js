@@ -15,7 +15,7 @@ import {
 } from 'some-module';
 
 // Mixed default and named type only imports
-import DefaultImport,{
+import DefaultImport, {
   type SomeType,
   typeof SomeOtherThing
 } from 'some-module';
