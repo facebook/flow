@@ -236,7 +236,7 @@ var removeFlowVisitor = {
     }
   },
 
-  ExportAllDeclaration: function (context, node) {
+ExportAllDeclaration: function (context, node) {
     if (node.exportKind === 'type') {
       return removeNode(context, node);
     }
@@ -253,7 +253,8 @@ var removeFlowVisitor = {
     if (
       context.removeEmptyImports &&
       node.importKind === 'value' &&
-      node.specifiers.length > 0
+      node.specifiers.length > 0 &&
+      node.specifiers[0].type !== 'ImportDefaultSpecifier'
     ) {
       for (var i = 0; i < node.specifiers.length; i++) {
         if (
@@ -264,6 +265,33 @@ var removeFlowVisitor = {
         }
       }
       return removeNode(context, node);
+    }
+
+    if (
+      context.removeEmptyImports &&
+      node.importKind === 'value' &&
+      node.specifiers.length > 1 &&
+      node.specifiers[0].type === 'ImportDefaultSpecifier'
+    ) {
+      for (var i = 1; i < node.specifiers.length; i++) {
+        if (
+          node.specifiers[i].importKind !== 'type' &&
+          node.specifiers[i].importKind !== 'typeof'
+        ) {
+          return;
+        }
+      }
+      
+      var idxStart = findTokenIndexAtStartOfNode(context.ast.tokens, node.specifiers[1]);
+      var idxEnd = findTokenIndexAtEndOfNode(context.ast.tokens, node.specifiers[node.specifiers.length - 1]);
+      // remove trailing comma after default import
+      removeTrailingCommaNode(context, node.specifiers[0]);
+      // remove leading `{`
+      removeNode(context, context.ast.tokens[idxStart - 1]);
+      // remove trailing `}`
+      removeNode(context, context.ast.tokens[idxEnd + 1]);
+      
+      return;
     }
   },
 

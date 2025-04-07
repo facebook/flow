@@ -15,10 +15,10 @@ import {
                      
 
 // Mixed default and named type only imports
-import DefaultImport, {
+import DefaultImport   
                 
                        
-} from 'some-module';
+  from 'some-module';
 
 // Import types
                                             
