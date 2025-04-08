@@ -13,12 +13,6 @@ type SourceObj = { foo: string, bar: number };
 }
 
 {
-  declare const obj: $Rest<SourceObj, {bar: number}>;
-  obj.foo;
-//     ^
-}
-
-{
   declare const obj: {[K in keyof SourceObj]: string};
   obj.foo;
 //     ^

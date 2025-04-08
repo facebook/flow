@@ -945,15 +945,29 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
 
-Cannot instantiate `$Rest` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot instantiate `$Diff` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:21:38
-   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
                                             ^ [1]
 
 References:
    tparams.js:21:45
-   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
+                                                   ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
+
+Cannot instantiate `$Diff` because undefined [1] is incompatible with `B` [2]. [incompatible-type]
+
+   tparams.js:21:38
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
+                                            ^ [1]
+
+References:
+   tparams.js:21:45
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
                                                    ^ [2]
 
 
@@ -967,7 +981,7 @@ Property `p` is missing in mixed [1]. [incompatible-use]
 
 References:
    tparams.js:21:27
-   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
                                  ^ [1]
 
 
@@ -981,44 +995,8 @@ mixed [1] is not an object. [not-an-object]
 
 References:
    tparams.js:21:27
-   21| function removex<A, B>(a: A): [$Rest<A, {p: B}>, B] {
+   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
                                  ^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- tparams.js:27:1
-
-Cannot cast `ox` to object type because property `p` is missing in object type [1] but exists in object literal [2].
-[prop-missing]
-
-   tparams.js:27:1
-   27| ox as {|x: string|};
-       ^^
-
-References:
-   tparams.js:27:7
-   27| ox as {|x: string|};
-             ^^^^^^^^^^^^^ [1]
-   tparams.js:26:37
-   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
-                                           ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- tparams.js:27:1
-
-Cannot cast `ox` to object type because undefined [1] is incompatible with string [2] in property `x`.
-[incompatible-cast]
-
-   tparams.js:27:1
-   27| ox as {|x: string|};
-       ^^
-
-References:
-   tparams.js:26:41
-   26| const [ox, px] = removex<_, number>({x: 'foo', p: 42});
-                                               ^^^^^ [1]
-   tparams.js:27:12
-   27| ox as {|x: string|};
-                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:45:11
@@ -1178,4 +1156,4 @@ undefined. [incompatible-return]
 
 
 
-Found 81 errors
+Found 80 errors

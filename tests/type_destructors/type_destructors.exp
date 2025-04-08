@@ -400,7 +400,7 @@ Cannot call `fn3` because undefined property `p` [1] is incompatible with number
 
 References:
    tvar4.js:27:57
-   27| function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
+   27| function fn3<T: {p: any}>(a: T => void): ($Diff<T, {|p: number|}>) => void {
                                                                ^^^^^^ [2]
 
 
@@ -415,7 +415,7 @@ Cannot call `fn3` because property `p` is missing in object type [1] but exists 
 
 References:
    tvar4.js:27:17
-   27| function fn3<T: {p: any}>(a: T => void): ($Rest<T, {|p: number|}>) => void {
+   27| function fn3<T: {p: any}>(a: T => void): ($Diff<T, {|p: number|}>) => void {
                        ^^^^^^^^ [2]
 
 

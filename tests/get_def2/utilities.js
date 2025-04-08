@@ -21,12 +21,6 @@ f = () => {
 }
 
 f = () => {
-  declare const Comp: React.ComponentType<$Rest<SourceObj, {bar: number}>>;
-  <Comp foo={''} />;
-//       ^
-}
-
-f = () => {
   declare const Comp: React.ComponentType<{+[key in keyof SourceObj]: SourceObj[key]}>;
   <Comp foo={''} bar={3} />;
 //       ^
@@ -52,13 +46,6 @@ f = () => {
 
 f = () => {
   type MapType<T> = $Diff<T, {bar: number}>;
-  declare const Comp: React.ComponentType<MapType<SourceObj>>;
-  <Comp foo={''} />;
-//       ^
-}
-
-f = () => {
-  type MapType<T> = $Rest<T, {bar: number}>;
   declare const Comp: React.ComponentType<MapType<SourceObj>>;
   <Comp foo={''} />;
 //       ^

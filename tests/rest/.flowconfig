@@ -1,4 +1,0 @@
-[options]
-no_flowlib=true
-all=true
-exact_by_default=false

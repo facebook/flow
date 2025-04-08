@@ -27,8 +27,5 @@ trigger as $Values<typeof E>; // Error
 // $Exact
 E as $Exact<typeof E>; // Error: TODO: improve error
 
-// $Rest
-trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
-
 // mapped type
 trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object

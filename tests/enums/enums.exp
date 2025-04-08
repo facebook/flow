@@ -4500,25 +4500,17 @@ Cannot create exact type from enum `E` [1]. [invalid-exact]
                    ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- utility-types.js:31:18
-
-Cannot instantiate `$Rest` because enum `E` [1] is not an object. [not-an-object]
-
-   31| trigger as $Rest<typeof E, {A: E}>; // Error: enum  `E` is not an object
-                        ^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------- utility-types.js:34:25
+Error ------------------------------------------------------------------------------------------- utility-types.js:31:25
 
 Cannot instantiate mapped type [1] because enum `E` [2] is not an object. [not-an-object]
 
-   utility-types.js:34:25
-   34| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+   utility-types.js:31:25
+   31| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
                                ^^^^^^^^ [2]
 
 References:
-   utility-types.js:34:12
-   34| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
+   utility-types.js:31:12
+   31| trigger as {[K in keyof typeof E]: E[K]}; // Error: enum `E` is not an object
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -4574,7 +4566,7 @@ References:
 
 
 
-Found 270 errors
+Found 269 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

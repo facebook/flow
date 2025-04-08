@@ -63,17 +63,6 @@ type DiffObjPoly3<X, Y> = $Diff<{| x: X, y: Y |}, ?{| x: X |}>;
 type DiffObjPoly4<X, Y> = $Diff<{| x: X, y: Y |}, {| x?: X |}>;
 //   ^
 
-// $Rest<A, B>
-type RestProps = $Rest<Props, {| age: number |}>;
-//   ^
-
-type RestObj = $Rest<{| y: O1 |}, {| [string]: O2 |}>;
-//   ^
-type RestObjPoly<X> = $Rest<{| y: X |}, {| [string]: X |}>;
-//   ^
-type RestObjPoly2<X, Y> = $Rest<{| x: X, y: Y |}, {| x: X |}>;
-//   ^
-
 type ElementTypeProps = Props["name"];
 //   ^
 type ElementTypePropsPoly<K> = Props[K];

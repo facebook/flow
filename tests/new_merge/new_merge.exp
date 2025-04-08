@@ -689,241 +689,139 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:134:1
 
-Cannot cast `d23` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:134:1
-   134| d23 as empty; // error string ~> empty
-        ^^^
-
-References:
-   eval_rest.js:5:24
-     5| declare export var d_: typeof d.g;
-                               ^^^^^^^^^^ [1]
-   main.js:134:8
-   134| d23 as empty; // error string ~> empty
-               ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:135:1
-
-Cannot cast `r1_23` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:135:1
-   135| r1_23 as empty; // error string ~> empty
-        ^^^^^
-
-References:
-   eval_rest.js:9:25
-     9| declare export var r1_: typeof r1.g;
-                                ^^^^^^^^^^^ [1]
-   main.js:135:10
-   135| r1_23 as empty; // error string ~> empty
-                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:136:1
-
-Cannot cast `r2_23` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:136:1
-   136| r2_23 as empty; // error string and undefined ~> empty
-        ^^^^^
-
-References:
-   eval_rest.js:13:25
-    13| declare export var r2_: typeof r2.g;
-                                ^^^^^^^^^^^ [1]
-   main.js:136:10
-   136| r2_23 as empty; // error string and undefined ~> empty
-                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:136:1
-
-Cannot cast `r2_23` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:136:1
-   136| r2_23 as empty; // error string and undefined ~> empty
-        ^^^^^
-
-References:
-   eval_rest.js:13:25
-    13| declare export var r2_: typeof r2.g;
-                                ^^^^^^^^^^^ [1]
-   main.js:136:10
-   136| r2_23 as empty; // error string and undefined ~> empty
-                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:137:1
-
-Cannot cast `r3_23` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:137:1
-   137| r3_23 as empty; // error string and undefined ~> empty
-        ^^^^^
-
-References:
-   eval_rest.js:17:25
-    17| declare export var r3_: typeof r3.g;
-                                ^^^^^^^^^^^ [1]
-   main.js:137:10
-   137| r3_23 as empty; // error string and undefined ~> empty
-                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:137:1
-
-Cannot cast `r3_23` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
-
-   main.js:137:1
-   137| r3_23 as empty; // error string and undefined ~> empty
-        ^^^^^
-
-References:
-   eval_rest.js:17:25
-    17| declare export var r3_: typeof r3.g;
-                                ^^^^^^^^^^^ [1]
-   main.js:137:10
-   137| r3_23 as empty; // error string and undefined ~> empty
-                 ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- main.js:141:1
-
 Cannot cast `t24` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   main.js:141:1
-   141| t24 as empty; // error number (length) ~> empty
+   main.js:134:1
+   134| t24 as empty; // error number (length) ~> empty
         ^^^
 
 References:
-   main.js:140:18
-   140| declare var t24: T24;
+   main.js:133:18
+   133| declare var t24: T24;
                          ^^^ [1]
-   main.js:141:8
-   141| t24 as empty; // error number (length) ~> empty
+   main.js:134:8
+   134| t24 as empty; // error number (length) ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:144:1
+Error ---------------------------------------------------------------------------------------------------- main.js:137:1
 
 Cannot cast `x25` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   main.js:144:1
-   144| x25 as empty; // error number ~> empty
+   main.js:137:1
+   137| x25 as empty; // error number ~> empty
         ^^^
 
 References:
    obj_rest.js:3:18
      3| const obj = { f: 1 };
                          ^ [1]
-   main.js:144:8
-   144| x25 as empty; // error number ~> empty
+   main.js:137:8
+   137| x25 as empty; // error number ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:156:1
+Error ---------------------------------------------------------------------------------------------------- main.js:149:1
 
 Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because `FrozenSuiteValues` [1] is incompatible with
 `IndirectFrozenSuiteValues` [2]. Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not included in
 type `IndirectFrozenSuiteValues` [2]. [incompatible-cast]
 
-   main.js:156:1
-   156| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
+   main.js:149:1
+   149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
         ^^^^^^^^^^^^^^^^^
 
 References:
-   main.js:155:32
-   155| declare var frozenSuitevalues: FrozenSuiteValues;
+   main.js:148:32
+   148| declare var frozenSuitevalues: FrozenSuiteValues;
                                        ^^^^^^^^^^^^^^^^^ [1]
-   main.js:156:22
-   156| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
+   main.js:149:22
+   149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:162:1
+Error ---------------------------------------------------------------------------------------------------- main.js:155:1
 
 Cannot cast `S26.getState()` to empty because `RecordInstance` [1] is incompatible with empty [2]. [incompatible-cast]
 
-   main.js:162:1
-   162| S26.getState() as empty; // error RecordInstance ~> empty
+   main.js:155:1
+   155| S26.getState() as empty; // error RecordInstance ~> empty
         ^^^^^^^^^^^^^^
 
 References:
    type_of_typeapp.js:11:31
     11| class Store extends BaseStore<State> {}
                                       ^^^^^ [1]
-   main.js:162:19
-   162| S26.getState() as empty; // error RecordInstance ~> empty
+   main.js:155:19
+   155| S26.getState() as empty; // error RecordInstance ~> empty
                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:168:1
+Error ---------------------------------------------------------------------------------------------------- main.js:161:1
 
 Cannot cast `C27.Q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   main.js:168:1
-   168| C27.Q as string; // error
+   main.js:161:1
+   161| C27.Q as string; // error
         ^^^^^
 
 References:
    recursive.js:8:13
      8|   static Q: typeof (C.P);
                     ^^^^^^^^^^^^ [1]
-   main.js:168:10
-   168| C27.Q as string; // error
+   main.js:161:10
+   161| C27.Q as string; // error
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:170:1
+Error ---------------------------------------------------------------------------------------------------- main.js:163:1
 
 Cannot cast `x27.q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   main.js:170:1
-   170| x27.q as string; // error
+   main.js:163:1
+   163| x27.q as string; // error
         ^^^^^
 
 References:
    recursive.js:13:6
     13|   q: typeof (x.p);
              ^^^^^^^^^^^^ [1]
-   main.js:170:10
-   170| x27.q as string; // error
+   main.js:163:10
+   163| x27.q as string; // error
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:174:1
+Error ---------------------------------------------------------------------------------------------------- main.js:167:1
 
 Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   main.js:174:1
-   174| t28 as empty; // error number (length) ~> empty
+   main.js:167:1
+   167| t28 as empty; // error number (length) ~> empty
         ^^^
 
 References:
-   main.js:173:18
-   173| declare var t28: T28;
+   main.js:166:18
+   166| declare var t28: T28;
                          ^^^ [1]
-   main.js:174:8
-   174| t28 as empty; // error number (length) ~> empty
+   main.js:167:8
+   167| t28 as empty; // error number (length) ~> empty
                ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- main.js:178:1
+Error ---------------------------------------------------------------------------------------------------- main.js:171:1
 
 Cannot cast `instance_named` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   main.js:178:1
-   178| instance_named as empty; // ERROR
+   main.js:171:1
+   171| instance_named as empty; // ERROR
         ^^^^^^^^^^^^^^
 
 References:
    get_prop_instance.js:5:6
      5|   s: number;
              ^^^^^^ [1]
-   main.js:178:19
-   178| instance_named as empty; // ERROR
+   main.js:171:19
+   171| instance_named as empty; // ERROR
                           ^^^^^ [2]
 
 
@@ -937,4 +835,4 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 59 errors
+Found 53 errors

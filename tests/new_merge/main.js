@@ -129,13 +129,6 @@ p2_22 as {|f: string, g: string|}; // error incompatible exact
 p3_22 as {|f: string, g: string|};
 p4_22 as {|f: string, g: string|};
 
-import {d_ as d23, r1_ as r1_23, r2_ as r2_23, r3_ as r3_23} from './eval_rest';
-
-d23 as empty; // error string ~> empty
-r1_23 as empty; // error string ~> empty
-r2_23 as empty; // error string and undefined ~> empty
-r3_23 as empty; // error string and undefined ~> empty
-
 import type {T as T24} from './keys';
 declare var t24: T24;
 t24 as empty; // error number (length) ~> empty
