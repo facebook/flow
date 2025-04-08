@@ -764,10 +764,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                      then
                        UpperT t'
                      else
-                       UpperT
-                         (IntersectionT
-                            (upper_r, InterRep.make ~kind:InterRep.ImplicitInstiationKind t' t [])
-                         ))
+                       UpperT t')
                  | (UpperT _, UpperEmpty) -> acc
                  | (UpperEmpty, UpperEmpty) -> acc)
                UpperEmpty)
