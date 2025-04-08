@@ -376,73 +376,6 @@ const user = {name: 'John Wilkes Booth'};
 const a: ExactUser = user;
 ```
 
-## `$Diff<A, B>` {#toc-diff}
-
-As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [object types](../objects/). Here's an example:
-
-```js flow-check
-type Props = {name: string, age: number, ...};
-type DefaultProps = {age: number};
-type RequiredProps = $Diff<Props, DefaultProps>;
-
-function setProps(props: RequiredProps) {
-  // ...
-}
-
-setProps({name: 'foo'}); // Works
-setProps({name: 'foo', age: 42, baz: false}); // Works, you can pass extra props too
-setProps({age: 42}); // Error! `name` is required
-```
-
-As you may have noticed, the example is not a random one.
-`$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
-
-Note that `$Diff<A, B>` will error if the object you are removing properties from does not have the property being removed, i.e. if `B` has a key that doesn't exist in `A`:
-
-```js flow-check
-type Props = {name: string, age: number};
-type DefaultProps = {age: number, other: string};
-type RequiredProps = $Diff<Props, DefaultProps>; // Error!
-
-function setProps(props: RequiredProps) {
-  props.name;
-  // ...
-}
-```
-
-As a workaround, you can specify the property not present in `A` as optional. For example:
-
-```js flow-check
-type A = $Diff<{}, {nope: number}>; // Error!
-type B = $Diff<{}, {nope: number | void}>; // Works
-
-const a: A = {};
-const b: B = {};
-```
-
-## `$Rest<A, B>` {#toc-rest}
-
-`$Rest<A, B>` is the type that represents the runtime object rest operation, e.g.: `const {foo, ...rest} = obj`, where `A` and `B` are both [object types](../objects/).
-The resulting type from this operation will be an object type containing `A`'s *own* properties that are not *own* properties in `B`.
-In flow, we treat all properties on [exact object types](../objects/#exact-and-inexact-object-types) as [own](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty).
-For inexact objects, a property may or may not be own.
-
-For example:
-
-```js flow-check
-type Props = {name: string, age: number};
-
-const props: Props = {name: 'Jon', age: 42};
-const {age, ...otherProps} = props;
-otherProps as $Rest<Props, {age: number}>;
-otherProps.age;  // Error!
-```
-
-The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation,
-which implies that exact object types are treated differently in `$Rest<A, B>`.
-For example, `$Rest<{n: number}, {...}>` will result in `{n?: number}` because an in-exact empty object may have an `n` property,
-while `$Diff<{n: number}, {...}>` will result in `{n: number}`.
-
 ## `$NonMaybeType<T>` {#toc-nonmaybe}
 
 `$NonMaybeType<T>` converts a type `T` to a non-[maybe type](../maybe).
@@ -581,21 +514,92 @@ When not specified, the type of the remainder is just `string`.
 
 ## Deprecated utility types
 
-### `$PropertyType<T, k>` {#toc-propertytype}
+## `$Diff<A, B>` {#toc-diff}
 
-**WARNING:** `$PropertyType` is deprecated as of Flow version 0.155, and will be removed in a future version of Flow.
+NOTE: Please use `Omit` type instead.
 
-`$PropertyType<T, 'k'>` is equivalent to the `T['k']` [indexed access type](../indexed-access).
+As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [object types](../objects/). Here's an example:
 
-### `$ElementType<T, K>` {#toc-elementtype}
+```js flow-check
+type Props = {name: string, age: number, ...};
+type DefaultProps = {age: number};
+type RequiredProps = $Diff<Props, DefaultProps>;
 
-**WARNING:** `$ElementType` is deprecated as of Flow version 0.155, and will be removed in a future version of Flow.
+function setProps(props: RequiredProps) {
+  // ...
+}
 
-`$ElementType<T, K>` is equivalent to the `T[K]` [indexed access type](../indexed-access).
+setProps({name: 'foo'}); // Works
+setProps({name: 'foo', age: 42, baz: false}); // Works, you can pass extra props too
+setProps({age: 42}); // Error! `name` is required
+```
+
+As you may have noticed, the example is not a random one.
+`$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
+
+Note that `$Diff<A, B>` will error if the object you are removing properties from does not have the property being removed, i.e. if `B` has a key that doesn't exist in `A`:
+
+```js flow-check
+type Props = {name: string, age: number};
+type DefaultProps = {age: number, other: string};
+type RequiredProps = $Diff<Props, DefaultProps>; // Error!
+
+function setProps(props: RequiredProps) {
+  props.name;
+  // ...
+}
+```
+
+As a workaround, you can specify the property not present in `A` as optional. For example:
+
+```js flow-check
+type A = $Diff<{}, {nope: number}>; // Error!
+type B = $Diff<{}, {nope: number | void}>; // Works
+
+const a: A = {};
+const b: B = {};
+```
 
 ## To-be-removed utility types
 
-### `$TupleMap<T, F>` {#toc-tuplemap}
+## `$Rest<A, B>` <UntilVersion version="0.266" /> {#toc-rest}
+
+NOTE: Please use `Omit` type instead.
+
+`$Rest<A, B>` is the type that represents the runtime object rest operation, e.g.: `const {foo, ...rest} = obj`, where `A` and `B` are both [object types](../objects/).
+The resulting type from this operation will be an object type containing `A`'s *own* properties that are not *own* properties in `B`.
+In flow, we treat all properties on [exact object types](../objects/#exact-and-inexact-object-types) as [own](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty).
+For inexact objects, a property may or may not be own.
+
+For example:
+
+```js flow-check
+type Props = {name: string, age: number};
+
+const props: Props = {name: 'Jon', age: 42};
+const {age, ...otherProps} = props;
+otherProps as $Rest<Props, {age: number}>;
+otherProps.age;  // Error!
+```
+
+The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation,
+which implies that exact object types are treated differently in `$Rest<A, B>`.
+For example, `$Rest<{n: number}, {...}>` will result in `{n?: number}` because an in-exact empty object may have an `n` property,
+while `$Diff<{n: number}, {...}>` will result in `{n: number}`.
+
+## Removed utility types
+
+These utility types used to exist, but no longer exist in latest version of Flow.
+
+### `$PropertyType<T, k>` <UntilVersion version="0.265" /> {#toc-propertytype}
+
+`$PropertyType<T, 'k'>` is equivalent to the `T['k']` [indexed access type](../indexed-access).
+
+### `$ElementType<T, K>` <UntilVersion version="0.265" /> {#toc-elementtype}
+
+`$ElementType<T, K>` is equivalent to the `T[K]` [indexed access type](../indexed-access).
+
+### `$TupleMap<T, F>` <UntilVersion version="0.247" /> {#toc-tuplemap}
 
 `$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`,
 and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`.
@@ -616,10 +620,6 @@ run(arr)[0] as string; // Works
 run(arr)[1] as string; // Works
 run(arr)[1] as boolean; // Error!
 ```
-
-## Removed utility types
-
-These utility types used to exist, but no longer exist in latest version of Flow.
 
 ### `$Call<F, T...>` <UntilVersion version="0.247" /> {#toc-call}
 
