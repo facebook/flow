@@ -815,13 +815,6 @@ and merge_annot env file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ExactType), id))
-  | Rest (loc, t1, t2) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "$Rest")) loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let t1 = merge env file t1 in
-    let t2 = merge env file t2 in
-    let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Sound, t2)), id))
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in

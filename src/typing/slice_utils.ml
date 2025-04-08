@@ -860,20 +860,10 @@ let object_rest
            * optionality. If p2 is maybe-own then sometimes it may not be
            * subtracted and so is optional. If props2 is not exact then we may
            * optionally have some undocumented prop. *)
-          | ( (Sound | IgnoreExactAndOwn),
+          | ( IgnoreExactAndOwn,
               Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
               Some { Object.prop_t = OptionalT _ as t2; _ },
               _
-            )
-          | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
-              Some { Object.prop_t = t2; is_own = false; is_method = _; polarity = _; key_loc = _ },
-              _
-            )
-          | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
-              Some { Object.prop_t = t2; _ },
-              false
             ) ->
             subt_check ~use_op cx (t1, optional t2);
             let p =
@@ -892,43 +882,17 @@ let object_rest
           (* Otherwise if the object we are using to subtract has a non-optional own
            * property and the object is exact then we never add that property to our
            * source object. *)
-          | ((Sound | IgnoreExactAndOwn), None, Some { Object.prop_t = t2; _ }, _) ->
+          | (IgnoreExactAndOwn, None, Some { Object.prop_t = t2; _ }, _) ->
             let reason = replace_desc_reason (RUndefinedProperty k) r1 in
             subt_check ~use_op cx (VoidT.make reason, t2);
             None
-          | ( (Sound | IgnoreExactAndOwn),
-              Some { Object.prop_t = t1; _ },
-              Some { Object.prop_t = t2; _ },
-              _
-            ) ->
+          | (IgnoreExactAndOwn, Some { Object.prop_t = t1; _ }, Some { Object.prop_t = t2; _ }, _)
+            ->
             subt_check ~use_op cx (t1, t2);
             None
-          (* If we have some property in our first object and none in our second
-           * object, but our second object is inexact then we want to make our
-           * property optional and flow that type to mixed. *)
-          | ( Sound,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
-              None,
-              false
-            ) ->
-            subt_check ~use_op cx (t1, MixedT.make r2);
-            let p =
-              if is_method then
-                Method { key_loc; type_ = optional t1 }
-              else
-                Field
-                  {
-                    preferred_def_locs = None;
-                    key_loc;
-                    type_ = optional t1;
-                    polarity = Polarity.Neutral;
-                  }
-            in
-            Some p
           (* If neither object has the prop then we don't add a prop to our
            * result here. *)
-          | ((Sound | IgnoreExactAndOwn | SpreadReversal | Omit | ReactConfigMerge _), None, None, _)
-            ->
+          | ((IgnoreExactAndOwn | SpreadReversal | Omit | ReactConfigMerge _), None, None, _) ->
             None
           (* If our first object has a prop and our second object does not have that
            * prop then we will copy over that prop. If the first object's prop is
@@ -965,36 +929,6 @@ let object_rest
                 Method { key_loc; type_ = t }
               else
                 Field { preferred_def_locs = None; key_loc; type_ = t; polarity }
-            in
-            Some p
-          | ( Sound,
-              Some { Object.prop_t = t; is_own = true; is_method; polarity = _; key_loc },
-              None,
-              _
-            ) ->
-            let p =
-              if is_method then
-                Method { key_loc; type_ = t }
-              else
-                Field { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Neutral }
-            in
-            Some p
-          | ( Sound,
-              Some { Object.prop_t = t; is_own = false; is_method; polarity = _; key_loc },
-              None,
-              _
-            ) ->
-            let p =
-              if is_method then
-                Method { key_loc; type_ = optional t }
-              else
-                Field
-                  {
-                    preferred_def_locs = None;
-                    key_loc;
-                    type_ = optional t;
-                    polarity = Polarity.Neutral;
-                  }
             in
             Some p
           | ((SpreadReversal | Omit), Some _, Some _, _) -> None

@@ -3087,7 +3087,6 @@ and Object : sig
       | Done of resolved
 
     type merge_mode =
-      | Sound
       | IgnoreExactAndOwn
       | SpreadReversal
       | ReactConfigMerge of Polarity.t

@@ -1004,25 +1004,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 (mk_type_destructor cx (use_op reason) reason t ExactType (mk_eval_id cx loc))
                 targs
           )
-        | "$Rest" ->
-          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-              let (t1, t2, targs) =
-                match convert_type_params () with
-                | ([t1; t2], targs) -> (t1, t2, targs)
-                | _ -> assert false
-              in
-              let reason = mk_reason (RType (OrdinaryName "$Rest")) loc in
-              reconstruct_ast
-                (mk_type_destructor
-                   cx
-                   (use_op reason)
-                   reason
-                   t1
-                   (RestType (Type.Object.Rest.Sound, t2))
-                   (mk_eval_id cx loc)
-                )
-                targs
-          )
         (* $Exports<'M'> is the type of the exports of module 'M' *)
         (* TODO: use `import typeof` instead when that lands **)
         | "$Exports" ->

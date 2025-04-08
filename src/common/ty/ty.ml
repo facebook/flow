@@ -274,7 +274,6 @@ and utility =
   | Exact of t
   | Diff of t * t
   | Omit of t * t
-  | Rest of t * t
   | ElementType of t * t
   | Enum of t
   | NonMaybeType of t
@@ -686,7 +685,6 @@ class ['A] comparator_ty =
       | ReadOnly _ -> 2
       | Exact _ -> 3
       | Diff _ -> 4
-      | Rest _ -> 5
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
       | Class _ -> 13
@@ -852,7 +850,6 @@ let string_of_utility_ctor = function
   | Enum _ -> "Enum"
   | Diff _ -> "$Diff"
   | Omit _ -> "Omit"
-  | Rest _ -> "$Rest"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjKeyMirror _ -> "$KeyMirror"
@@ -871,7 +868,6 @@ let types_of_utility = function
   | Exact t -> Some [t]
   | Diff (t1, t2) -> Some [t1; t2]
   | Omit (t1, t2) -> Some [t1; t2]
-  | Rest (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | Enum t -> Some [t]
   | NonMaybeType t -> Some [t]

@@ -782,33 +782,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$Diff",
-  "kind":3,
-  "detail":"$Diff",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
-    "newText":"$Diff"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":22,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$Diff",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
   "label":"$Exact",
   "kind":3,
   "detail":"$Exact",
@@ -826,7 +799,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":23,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -853,7 +826,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -880,7 +853,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -907,7 +880,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -934,7 +907,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
@@ -961,37 +934,10 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
-  "label":"$Rest",
-  "kind":3,
-  "detail":"$Rest",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":7,"character":11},"end":{"line":7,"character":11}},
-    "newText":"$Rest"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":29,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$Rest",
         "ac_type":"Acmem"
       }
     ]
@@ -1015,7 +961,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -1042,7 +988,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -1069,7 +1015,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -1096,7 +1042,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -1123,7 +1069,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -1150,7 +1096,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",
@@ -1900,33 +1846,6 @@ Flags: --lsp
   }
 }
 {
-  "label":"$Diff",
-  "kind":3,
-  "detail":"$Diff",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
-    "newText":"$Diff"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":22,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$Diff",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
   "label":"$Exact",
   "kind":3,
   "detail":"$Exact",
@@ -1944,7 +1863,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":23,
+        "index":22,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -1971,7 +1890,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":24,
+        "index":23,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -1998,7 +1917,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":25,
+        "index":24,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -2025,7 +1944,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":26,
+        "index":25,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -2052,7 +1971,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":26,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
@@ -2079,37 +1998,10 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":27,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
-        "ac_type":"Acmem"
-      }
-    ]
-  }
-}
-{
-  "label":"$Rest",
-  "kind":3,
-  "detail":"$Rest",
-  "sortText":"00000000000000000300",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
-    "newText":"$Rest"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "token":null,
-        "index":29,
-        "session_requests":null,
-        "typed_length":null,
-        "completion":"$Rest",
         "ac_type":"Acmem"
       }
     ]
@@ -2133,7 +2025,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -2160,7 +2052,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
@@ -2187,7 +2079,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
@@ -2214,7 +2106,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -2241,7 +2133,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -2268,7 +2160,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",

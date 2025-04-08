@@ -1292,14 +1292,12 @@ let utility_types =
     "Class";
     "Partial";
     "Required";
-    "$Diff";
     "$Exact";
     "$Exports";
     "$KeyMirror";
     "$Keys";
     "$NonMaybeType";
     "$ReadOnly";
-    "$Rest";
     "$Values";
     "StringPrefix";
     "StringSuffix";

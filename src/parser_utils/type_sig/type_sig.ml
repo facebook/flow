@@ -540,7 +540,6 @@ type ('loc, 'a) annot =
   | ComponentMissingRenders of 'loc
   | Values of 'loc * 'a
   | Exact of 'loc * 'a
-  | Rest of 'loc * 'a * 'a
   | ExportsT of 'loc * string
   | Conditional of {
       loc: 'loc;
