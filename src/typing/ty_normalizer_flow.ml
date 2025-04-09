@@ -135,4 +135,8 @@ let debug_string_of_t cx t =
   let genv = mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
   match from_type genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
-  | Ok elt -> Ty_printer.string_of_elt_single_line ~exact_by_default:true elt
+  | Ok elt ->
+    Ty_printer.string_of_elt_single_line
+      ~exact_by_default:true
+      ~ts_syntax:(Context.ts_syntax cx)
+      elt

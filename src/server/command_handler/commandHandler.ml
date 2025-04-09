@@ -695,6 +695,7 @@ let infer_type_to_response
     ~json
     ~expanded
     ~exact_by_default
+    ~ts_syntax
     ~strip_root
     loc
     refining_locs
@@ -709,7 +710,11 @@ let infer_type_to_response
       let open Hh_json in
       let type_json t =
         let json_obj =
-          [("type", JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default t))]
+          [
+            ( "type",
+              JSON_String (Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax t)
+            );
+          ]
         in
         let json_obj =
           if expanded then
@@ -730,7 +735,9 @@ let infer_type_to_response
     else
       ServerProt.Response.InferType.Friendly
         (Base.Option.map tys ~f:(fun r ->
-             let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~exact_by_default r in
+             let (type_str, refs) =
+               Ty_printer.string_of_type_at_pos_result ~exact_by_default ~ts_syntax r
+             in
              { ServerProt.Response.InferType.type_str; refs }
          )
         )
@@ -891,6 +898,7 @@ let infer_type
             ~json
             ~expanded
             ~exact_by_default
+            ~ts_syntax:(Options.ts_syntax options)
             ~strip_root
             loc
             refining_locs
@@ -969,6 +977,7 @@ let inlay_hint
                   let (type_str, refs) =
                     Ty_printer.string_of_type_at_pos_result
                       ~exact_by_default:(Options.exact_by_default options)
+                      ~ts_syntax:(Options.ts_syntax options)
                       r
                   in
                   { ServerProt.Response.InferType.type_str; refs }

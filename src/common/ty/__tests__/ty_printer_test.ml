@@ -30,7 +30,7 @@ let tests =
                  obj_props = [getter];
                }
            in
-           let str = Ty_printer.string_of_t ~exact_by_default:true obj in
+           let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str
          );
          ( "type_object_property_set" >:: fun ctxt ->
@@ -53,12 +53,12 @@ let tests =
                  obj_props = [setter];
                }
            in
-           let str = Ty_printer.string_of_t ~exact_by_default:true obj in
+           let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str
          );
          ( "empty_inexact_tuple" >:: fun ctxt ->
            let tup = Ty.Tup { elements = []; inexact = true } in
-           let str = Ty_printer.string_of_t tup in
+           let str = Ty_printer.string_of_t ~ts_syntax:false tup in
            assert_equal ~ctxt ~printer:(fun x -> x) "[...]" str
          );
          ( "inexact_tuple" >:: fun ctxt ->
@@ -69,7 +69,7 @@ let tests =
              ]
            in
            let tup = Ty.Tup { elements; inexact = true } in
-           let str = Ty_printer.string_of_t tup in
+           let str = Ty_printer.string_of_t ~ts_syntax:false tup in
            assert_equal ~ctxt ~printer:(fun x -> x) "[number, ...]" str
          );
        ]

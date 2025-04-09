@@ -155,15 +155,19 @@ let text_edit ?insert_text name (insert, replace) =
   let newText = Base.Option.value ~default:name insert_text in
   { ServerProt.Response.newText; insert; replace }
 
-let detail_of_ty ~exact_by_default ~optional ty =
-  let type_ = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
+let detail_of_ty ~exact_by_default ~optional ~ts_syntax ty =
+  let type_ =
+    Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ~ts_syntax ty
+  in
   let detail = Utils_js.ite optional "?" "" ^ ": " ^ type_ in
   (* [detail] is rendered immediately after the name, with no space.
      We add a [:] so it renders like an annotation *)
   (Some type_, Some detail)
 
-let detail_of_ty_decl ~exact_by_default d =
-  let type_ = Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default d in
+let detail_of_ty_decl ~exact_by_default ~ts_syntax d =
+  let type_ =
+    Ty_printer.string_of_decl_single_line ~with_comments:false ~exact_by_default ~ts_syntax d
+  in
   let detail =
     (* this is rendered immediately after the name, with no space.
        for most of these, there's nothing to show because the "kind" icon
@@ -180,7 +184,7 @@ let detail_of_ty_decl ~exact_by_default d =
          and could include the RHS too like we do for variables. *)
       None
     | Ty.VariableDecl (_, ty) ->
-      let (_, detail) = detail_of_ty ~exact_by_default ~optional:false ty in
+      let (_, detail) = detail_of_ty ~exact_by_default ~optional:false ~ts_syntax ty in
       detail
   in
   (Some type_, detail)
@@ -246,11 +250,12 @@ let autocomplete_create_result
     ?(snippet = false)
     ~documentation_and_tags
     ~exact_by_default
+    ~ts_syntax
     ~log_info
     (name, edit_locs)
     ?(optional = false)
     ty =
-  let (itemDetail, labelDetail) = detail_of_ty ~exact_by_default ~optional ty in
+  let (itemDetail, labelDetail) = detail_of_ty ~exact_by_default ~optional ~ts_syntax ty in
   let kind = Some (lsp_completion_of_type ty) in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
@@ -282,11 +287,12 @@ let autocomplete_create_result_decl
     ?(snippet = false)
     ~documentation_and_tags
     ~exact_by_default
+    ~ts_syntax
     ~log_info
     (name, edit_locs)
     d =
   let kind = Some (lsp_completion_of_decl d) in
-  let (itemDetail, labelDetail) = detail_of_ty_decl ~exact_by_default d in
+  let (itemDetail, labelDetail) = detail_of_ty_decl ~exact_by_default ~ts_syntax d in
   let text_edit = Some (text_edit ?insert_text name edit_locs) in
   let sort_text = sort_text_of_rank rank in
   let insert_text_format =
@@ -316,6 +322,7 @@ let autocomplete_create_result_elt
     ?preselect
     ~documentation_and_tags
     ~exact_by_default
+    ~ts_syntax
     ~log_info
     (name, edit_locs)
     elt =
@@ -327,6 +334,7 @@ let autocomplete_create_result_elt
       ?preselect
       ~documentation_and_tags
       ~exact_by_default
+      ~ts_syntax
       ~log_info
       (name, edit_locs)
       t
@@ -337,6 +345,7 @@ let autocomplete_create_result_elt
       ?preselect
       ~documentation_and_tags
       ~exact_by_default
+      ~ts_syntax
       ~log_info
       (name, edit_locs)
       d
@@ -653,6 +662,7 @@ let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~expected_t
           ~prefer_single_quotes
           ~with_comments:false
           ~exact_by_default
+          ~ts_syntax:(Context.ts_syntax cx)
           ty
       in
       (* TODO: if we had both the expanded and unexpanded type alias, we'd
@@ -663,6 +673,7 @@ let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~edit_locs ~expected_t
         ~preselect:true
         ~documentation_and_tags:AcCompletion.empty_documentation_and_tags
         ~exact_by_default
+        ~ts_syntax:(Context.ts_syntax cx)
         ~log_info:"literal from upper bound"
         (name, edit_locs)
         ty
@@ -894,6 +905,7 @@ let autocomplete_id
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"local value identifier"
                  (name, edit_locs)
                  elt
@@ -1005,7 +1017,12 @@ let autocomplete_id
   { result; errors_to_log }
 
 let exports_of_module_ty
-    ~edit_locs ~exact_by_default ~documentation_and_tags_of_module_member ~kind ?filter_name =
+    ~edit_locs
+    ~exact_by_default
+    ~ts_syntax
+    ~documentation_and_tags_of_module_member
+    ~kind
+    ?filter_name =
   let open AcCompletion in
   let open Ty in
   let is_kind export_kind = kind = `Either || export_kind = `Either || export_kind = kind in
@@ -1034,6 +1051,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified type alias"
                (sym_name, edit_locs)
                d
@@ -1046,6 +1064,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified interface"
                (sym_name, edit_locs)
                d
@@ -1058,6 +1077,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified class"
                (sym_name, edit_locs)
                d
@@ -1070,6 +1090,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified enum"
                (sym_name, edit_locs)
                d
@@ -1081,6 +1102,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags:AcCompletion.empty_documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified variable"
                (name, edit_locs)
                d
@@ -1094,6 +1116,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified component"
                (Reason.display_string_of_name name.Ty_symbol.sym_name, edit_locs)
                d
@@ -1107,6 +1130,7 @@ let exports_of_module_ty
                ~rank:0
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax
                ~log_info:"qualified namespace"
                (Reason.display_string_of_name name.Ty_symbol.sym_name, edit_locs)
                d
@@ -1370,6 +1394,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"unqualified type: local type identifier"
                  (name, edit_locs)
                  elt
@@ -1400,6 +1425,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"unqualified type: class or enum"
                  (name, edit_locs)
                  elt
@@ -1410,6 +1436,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"unqualified type: react element shorthand"
                  (name, edit_locs)
                  (Ty_utils.reinterpret_elt_as_type_identifier elt)
@@ -1420,6 +1447,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"unqualified type: react element shorthand"
                  (name, edit_locs)
                  t
@@ -1429,6 +1457,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
              when exports_of_module_ty
                     ~edit_locs
                     ~exact_by_default
+                    ~ts_syntax:(Context.ts_syntax cx)
                     ~documentation_and_tags_of_module_member:(fun _ ->
                       AcCompletion.empty_documentation_and_tags)
                     ~kind:`Type
@@ -1438,6 +1467,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"unqualified type -> qualified type"
                  (name, edit_locs)
                  (Ty.Decl decl)
@@ -1612,6 +1642,7 @@ let autocomplete_member
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"member"
                  (name, edit_locs)
                  ~optional
@@ -1626,6 +1657,7 @@ let autocomplete_member
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"bracket syntax member"
                  (insert_text, edit_locs)
                  ~optional
@@ -1639,6 +1671,7 @@ let autocomplete_member
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"dot-member switched to bracket-syntax member"
                  (insert_text, (edit_loc, edit_loc))
                  ~optional
@@ -1657,6 +1690,7 @@ let autocomplete_member
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax:(Context.ts_syntax cx)
                  ~log_info:"start optional chain"
                  (opt_chain_name, (edit_loc, edit_loc))
                  ~optional
@@ -1892,6 +1926,7 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
                ~insert_text
                ~documentation_and_tags
                ~exact_by_default
+               ~ts_syntax:(Context.ts_syntax cx)
                ~log_info:"jsx attribute"
                (name, edit_locs)
                ~optional
@@ -1916,6 +1951,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
         ( exports_of_module_ty
             ~edit_locs
             ~exact_by_default
+            ~ts_syntax:(Context.ts_syntax cx)
             ~documentation_and_tags_of_module_member
             ~kind
             ?filter_name
@@ -1930,6 +1966,7 @@ let autocomplete_module_exports ~typing ~edit_locs ~token ~kind ?filter_name mod
         ( exports_of_module_ty
             ~edit_locs
             ~exact_by_default
+            ~ts_syntax:(Context.ts_syntax cx)
             ~documentation_and_tags_of_module_member
             ~kind
             ?filter_name
@@ -2012,6 +2049,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
   let edit_locs = fix_locs_of_string_token token edit_locs in
   let (insert_loc, _replace_loc) = edit_locs in
   let exact_by_default = Context.exact_by_default typing.cx in
+  let ts_syntax = Context.ts_syntax typing.cx in
   let exclude_keys =
     Base.List.fold ~init:used_keys spreads ~f:(fun acc (spread_loc, spread_type) ->
         (* Only exclude the keys of spreads after our prop. If the spread is before our
@@ -2055,6 +2093,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax
                  ~log_info:"object key"
                  (name, edit_locs)
                  ~optional
@@ -2068,6 +2107,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
                  ~rank
                  ~documentation_and_tags
                  ~exact_by_default
+                 ~ts_syntax
                  ~log_info:"bracket syntax object key"
                  (insert_text, edit_locs)
                  ~optional

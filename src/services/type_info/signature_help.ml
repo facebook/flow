@@ -18,8 +18,9 @@ let parameter_name is_opt name =
 
 let string_of_ty = Ty_printer.string_of_t_single_line ~with_comments:false
 
-let string_of_return_t ~exact_by_default = function
-  | Ty.ReturnType t -> Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t
+let string_of_return_t ~exact_by_default ~ts_syntax = function
+  | Ty.ReturnType t ->
+    Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false ~ts_syntax t
   | Ty.TypeGuard (impl, x, t) ->
     let impl =
       if impl then
@@ -27,7 +28,9 @@ let string_of_return_t ~exact_by_default = function
       else
         ""
     in
-    let t = Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false t in
+    let t =
+      Ty_printer.string_of_t_single_line ~exact_by_default ~with_comments:false ~ts_syntax t
+    in
     Utils_js.spf "%s%s is %s" impl x t
 
 let documentation_of_param_infos name : Jsdoc.Param.t -> string =
@@ -57,7 +60,7 @@ let documentation_of_param_infos name : Jsdoc.Param.t -> string =
   in
   Base.List.map ~f:documentation_of_param_info %> String.concat "\n"
 
-let func_details ~jsdoc ~exact_by_default params rest_param return =
+let func_details ~jsdoc ~exact_by_default ~ts_syntax params rest_param return =
   let documentation_of_param name_opt =
     let open Base.Option.Let_syntax in
     let%bind name = name_opt in
@@ -69,7 +72,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
     Base.List.map
       ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.Ty.prm_optional n in
-        let param_ty = string_of_ty ~exact_by_default t in
+        let param_ty = string_of_ty ~exact_by_default ~ts_syntax t in
         let param_documentation = documentation_of_param n in
         { ServerProt.Response.param_name; param_ty; param_documentation })
       params
@@ -111,17 +114,17 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
         | Some (_, els) ->
           Base.List.rev els
           |> Base.List.map ~f:(fun (param_name, t) ->
-                 let param_ty = string_of_ty ~exact_by_default t in
+                 let param_ty = string_of_ty ~exact_by_default ~ts_syntax t in
                  { ServerProt.Response.param_name; param_ty; param_documentation }
              )
         | None ->
           let param_name = "..." ^ parameter_name false rest_param_name in
-          let param_ty = string_of_ty ~exact_by_default t in
+          let param_ty = string_of_ty ~exact_by_default ~ts_syntax t in
           [{ ServerProt.Response.param_name; param_ty; param_documentation }]
       in
       param_tys @ rest
   in
-  let return_ty = string_of_return_t ~exact_by_default return in
+  let return_ty = string_of_return_t ~exact_by_default ~ts_syntax return in
   let func_documentation = Base.Option.bind jsdoc ~f:Find_documentation.documentation_of_jsdoc in
   ServerProt.Response.SigHelpFunc { param_tys; return_ty; func_documentation }
 
@@ -407,7 +410,15 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
       match ty with
       | Ok (Ty.Type (Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ })) ->
         let exact_by_default = Context.exact_by_default cx in
-        Some (func_details ~jsdoc ~exact_by_default fun_params fun_rest_param fun_return)
+        Some
+          (func_details
+             ~jsdoc
+             ~exact_by_default
+             ~ts_syntax:(Context.ts_syntax cx)
+             fun_params
+             fun_rest_param
+             fun_return
+          )
       | _ -> None
     in
     let funs =
@@ -466,7 +477,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
           match Ty_normalizer_flow.from_type genv t with
           | Ok (Ty.Type ty) ->
             let exact_by_default = Context.exact_by_default cx in
-            let ty = string_of_ty ~exact_by_default ty in
+            let ty = string_of_ty ~exact_by_default ~ts_syntax:(Context.ts_syntax cx) ty in
             let loc = loc_of_aloc (TypeUtil.loc_of_t t) in
             let jsdoc = Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem loc in
             let documentation = Base.Option.value_map ~default:None ~f:Jsdoc.description jsdoc in
