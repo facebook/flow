@@ -121,6 +121,7 @@ module Opts = struct
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: (string option * string) list;
     pattern_matching: bool option;
+    pattern_matching_includes: string list;
     projects: string list;
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
@@ -261,6 +262,7 @@ module Opts = struct
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [(None, "")];
       pattern_matching = None;
+      pattern_matching_includes = [];
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
@@ -1074,6 +1076,13 @@ module Opts = struct
       );
       ( "experimental.pattern_matching",
         boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
+      );
+      ( "experimental.pattern_matching.includes",
+        string
+          ~init:(fun opts -> { opts with pattern_matching_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
       );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
@@ -1956,6 +1965,8 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
 let pattern_matching c = c.options.Opts.pattern_matching
+
+let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 

@@ -142,6 +142,7 @@ type t = {
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
+  opt_pattern_matching_includes: string list;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -235,6 +236,8 @@ let enable_const_params opts = opts.opt_enable_const_params
 let enable_jest_integration opts = opts.opt_enable_jest_integration
 
 let enable_pattern_matching opts = opts.opt_enable_pattern_matching
+
+let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

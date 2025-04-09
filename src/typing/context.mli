@@ -97,6 +97,7 @@ type metadata = {
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
+  pattern_matching_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
