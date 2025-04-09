@@ -222,6 +222,8 @@ val node_resolver_dirnames : config -> string list
 
 val pattern_matching : config -> bool option
 
+val pattern_matching_includes : config -> string list
+
 val projects : config -> string Nel.t
 
 val projects_overlap_mapping : config -> SSet.t SMap.t

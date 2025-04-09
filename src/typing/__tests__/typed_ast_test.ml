@@ -49,6 +49,7 @@ let metadata =
     natural_inference_local_primitive_literals_global = Options.NaturalInferenceLevel.Off;
     natural_inference_local_primitive_literals_full_includes = [];
     no_unchecked_indexed_access = false;
+    pattern_matching_includes = [];
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;

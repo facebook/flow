@@ -1,0 +1,24 @@
+Error ----------------------------------------------------------------------------------------------- error/error.js:1:1
+
+`match` statements are not supported. [unsupported-syntax]
+
+      v-------------------
+   1| match (3) { // ERROR
+   2|   3 => {}
+   3| }
+      ^
+
+
+Error ---------------------------------------------------------------------------------------------- error/error.js:5:11
+
+`match` expressions are not supported. [unsupported-syntax]
+
+                v-------------------
+   5| const e = match (4) { // ERROR
+   6|   4 => 0,
+   7| };
+      ^
+
+
+
+Found 2 errors
