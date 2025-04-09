@@ -193,11 +193,7 @@ let infer_type_guard_from_read ~infer_expr cx name return_expr return_reason rea
   else if is_inferable_type_guard_read cx read then
     let return_loc = Reason.loc_of_reason return_reason in
     let param_t = Type_env.find_write cx Env_api.OrdinaryNameLoc param_reason in
-    let guard_t =
-      Context.with_disallowed_unsound_literal_coercion cx ~f:(fun () ->
-          Type_env.inferred_type_guard_at_return cx param_reason ~return_loc ~write_locs
-      )
-    in
+    let guard_t = Type_env.inferred_type_guard_at_return cx param_reason ~return_loc ~write_locs in
     (* Only keep the type guard if the function is actually refining the input
      * and is returning a boolean expression. *)
     if Flow_js.FlowJs.speculative_subtyping_succeeds cx param_t guard_t || not (returns_bool ())

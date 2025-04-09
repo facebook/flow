@@ -218,8 +218,6 @@ type component_t = {
   mutable ctor_callee: Type.t ALocMap.t;
   (* Union optimization checks *)
   mutable union_opt: Type.t ALocMap.t;
-  (* Natural inference (enables SingletonStrT ~> StrT_UNSOUND coercions) *)
-  mutable allow_unsound_literal_coercsion: bool;
   (* Natural inference (records checks on primitive literal types during
    * implicit instantiation) *)
   mutable primitive_literal_checks: ALocSet.t;
@@ -433,7 +431,6 @@ let make_ccx () =
     signature_help_callee = ALocMap.empty;
     ctor_callee = ALocMap.empty;
     union_opt = ALocMap.empty;
-    allow_unsound_literal_coercsion = true;
     primitive_literal_checks = ALocSet.empty;
   }
 
@@ -899,15 +896,6 @@ let is_primitive_literal_checked cx loc = ALocSet.mem loc cx.ccx.primitive_liter
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
 
 let iter_union_opt cx ~f = ALocMap.iter f cx.ccx.union_opt
-
-let allow_unsound_literal_coercsion cx = cx.ccx.allow_unsound_literal_coercsion
-
-let with_disallowed_unsound_literal_coercion cx ~f =
-  let old_allow_unsound_literal_coercsion = cx.ccx.allow_unsound_literal_coercsion in
-  cx.ccx.allow_unsound_literal_coercsion <- false;
-  Exception.protect ~f ~finally:(fun () ->
-      cx.ccx.allow_unsound_literal_coercsion <- old_allow_unsound_literal_coercsion
-  )
 
 let add_exists_check cx loc t =
   let tset =
