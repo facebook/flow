@@ -428,7 +428,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           (* This logic is very similar to the statement parser but omits the component name *)
           let leading = Peek.comments env in
           Expect.identifier env "component";
-          let tparams = type_params_remove_trailing env (type_params env) in
+          let tparams =
+            type_params_remove_trailing env ~kind:Flow_ast_mapper.ComponentTypeTP (type_params env)
+          in
           let params = component_param_list env in
           let (params, renders) =
             if Peek.is_renders_ident env then
@@ -1075,7 +1077,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let tparams = type_params_remove_trailing env (type_params env) in
+    let tparams =
+      type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTP (type_params env)
+    in
     let params = function_param_list env in
     function_with_params ~effect_:Function.Arbitrary env start_loc tparams params
 
@@ -1092,7 +1096,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   and hook env =
     let start_loc = Peek.loc env in
     Eat.token env;
-    let tparams = type_params_remove_trailing env (type_params env) in
+    let tparams =
+      type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTP (type_params env)
+    in
     let params = function_param_list env in
     function_with_params ~effect_:Function.Hook env start_loc tparams params
 
@@ -1153,7 +1159,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     in
     let method_property env start_loc static key ~leading =
       let key = object_key_remove_trailing env key in
-      let tparams = type_params_remove_trailing env (type_params env) in
+      let tparams =
+        type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
+      in
       let value = methodish env start_loc tparams in
       let value = (fst value, Type.Function (snd value)) in
       Type.Object.(
@@ -1178,7 +1186,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~start_loc
           (fun env ->
             let start_loc = Peek.loc env in
-            let tparams = type_params_remove_trailing env (type_params env) in
+            let tparams =
+              type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
+            in
             let value = methodish env start_loc tparams in
             Type.Object.CallProperty.
               {
@@ -1374,7 +1384,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
-                let tparams = type_params_remove_trailing env (type_params env) in
+                let tparams =
+                  type_params_remove_trailing
+                    env
+                    ~kind:Flow_ast_mapper.FunctionTypeTP
+                    (type_params env)
+                in
                 let value =
                   let (fn_loc, fn) = methodish env start_loc tparams in
                   (fn_loc, Type.Function fn)

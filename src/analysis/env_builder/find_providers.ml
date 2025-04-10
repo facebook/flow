@@ -620,7 +620,7 @@ end = struct
             run this#function_return_annotation return;
             run this#function_body_any body;
             run_opt this#predicate predicate;
-            run_opt this#type_params tparams;
+            run_opt (this#type_params ~kind:Flow_ast_mapper.FunctionTP) tparams;
             expr)
           loc
           expr
@@ -634,7 +634,7 @@ end = struct
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            run_opt this#type_params tparams;
+            run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams;
             run this#component_params params;
             run this#component_body body;
             run this#component_renders_annotation renders;
@@ -905,7 +905,7 @@ end = struct
             run this#function_return_annotation return;
             run this#function_body_any body;
             run_opt this#predicate predicate;
-            run_opt this#type_params tparams;
+            run_opt (this#type_params ~kind:Flow_ast_mapper.FunctionTP) tparams;
             expr)
           loc
           expr
@@ -941,7 +941,7 @@ end = struct
         run this#function_return_annotation return;
         run this#function_body_any body;
         run_opt this#predicate predicate;
-        run_opt this#type_params tparams;
+        run_opt (this#type_params ~kind:Flow_ast_mapper.FunctionTP) tparams;
         expr
 
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
@@ -955,7 +955,7 @@ end = struct
           ~is_polymorphic:(Option.is_some tparams)
           ~kind:Var
           (fun _ _ ->
-            run_opt this#type_params tparams;
+            run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams;
             run this#component_params params;
             run this#component_body body;
             run this#component_renders_annotation renders;

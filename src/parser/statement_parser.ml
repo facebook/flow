@@ -997,7 +997,11 @@ module Statement
       | (Implicit { remove_trailing; _ }, Some tparams, None, None) ->
         ( [],
           id,
-          Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams)),
+          Some
+            (remove_trailing tparams (fun remover tparams ->
+                 remover#type_params ~kind:Flow_ast_mapper.OpaqueTypeTP tparams
+             )
+            ),
           None,
           None
         )
@@ -1046,7 +1050,7 @@ module Statement
       if Peek.token env = T_EXTENDS then
         tparams
       else
-        type_params_remove_trailing env tparams
+        type_params_remove_trailing env ~kind:Flow_ast_mapper.InterfaceTP tparams
     in
     let (extends, body) = Type.interface_helper env in
     let { remove_trailing; _ } = statement_end_trailing_comments env in
@@ -1106,7 +1110,7 @@ module Statement
       let tparams =
         let tparams = Type.type_params env in
         match Peek.token env with
-        | T_LCURLY -> type_params_remove_trailing env tparams
+        | T_LCURLY -> type_params_remove_trailing env ~kind:Flow_ast_mapper.DeclareClassTP tparams
         | _ -> tparams
       in
       let extends =
@@ -1163,7 +1167,9 @@ module Statement
         (* Components should have at least the same strictness as functions *)
         (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
     in
-    let tparams = type_params_remove_trailing env (Type.type_params env) in
+    let tparams =
+      type_params_remove_trailing env ~kind:Flow_ast_mapper.DeclareComponentTP (Type.type_params env)
+    in
     let params = Type.component_param_list env in
     let (params, renders) =
       if Peek.is_renders_ident env then
@@ -1227,7 +1233,12 @@ module Statement
     let annot =
       with_loc
         (fun env ->
-          let tparams = type_params_remove_trailing env (Type.type_params env) in
+          let tparams =
+            type_params_remove_trailing
+              env
+              ~kind:Flow_ast_mapper.DeclareFunctionTP
+              (Type.type_params env)
+          in
           let params = Type.function_param_list env in
           Expect.token env T_COLON;
           Eat.push_lex_mode env Lex_mode.TYPE;

@@ -161,9 +161,9 @@ class selection_range_finder ~position =
 
     method! type_args x = this#test super#type_args x
 
-    method! type_params x = this#test super#type_params x
+    method! type_params ~kind x = this#test (super#type_params ~kind) x
 
-    method! type_param x = this#test super#type_param x
+    method! type_param ~kind x = this#test (super#type_param ~kind) x
 
     method! type_ x = this#test super#type_ x
 

@@ -435,18 +435,18 @@ struct
             run this#function_params params;
             run_opt this#predicate predicate
           );
-          run_opt this#type_params tparams
+          run_opt (this#type_params ~kind:Flow_ast_mapper.FunctionTP) tparams
 
         method component_def (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
           let { Ast.Statement.ComponentDeclaration.params; renders; tparams; _ } = expr in
           run this#component_renders_annotation renders;
           run this#component_params_annotated params;
-          run_opt this#type_params tparams
+          run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams
 
         method! declare_component _ (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
           let { Ast.Statement.DeclareComponent.params; renders; tparams; _ } = expr in
           run this#component_renders_annotation renders;
-          run_opt this#type_params tparams;
+          run_opt (this#type_params ~kind:Flow_ast_mapper.DeclareComponentTP) tparams;
           run this#component_type_params params;
           expr
 
@@ -880,7 +880,7 @@ struct
             Base.Option.iter ~f:visitor#class_extends_sig extends;
             run_opt visitor#class_implements implements;
             run_list visitor#class_decorator class_decorators;
-            run_opt visitor#type_params tparams;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.ClassTP) tparams;
             ())
           EnvMap.empty
       in
@@ -896,7 +896,7 @@ struct
           } =
         depends_of_node
           (fun visitor ->
-            run_opt visitor#type_params tparams;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
             run_loc visitor#object_type body;
             run_loc_opt visitor#generic_type extends;
             Base.List.iter ~f:(run_loc visitor#generic_type) mixins;
@@ -924,7 +924,7 @@ struct
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
           (fun visitor ->
-            run_opt visitor#type_params tparams;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.TypeAliasTP) tparams;
             run visitor#type_ right;
             ())
           EnvMap.empty
@@ -932,7 +932,7 @@ struct
       let depends_of_opaque { Ast.Statement.OpaqueType.tparams; impltype; supertype; _ } =
         depends_of_node
           (fun visitor ->
-            run_opt visitor#type_params tparams;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.OpaqueTypeTP) tparams;
             run_opt visitor#type_ impltype;
             run_opt visitor#type_ supertype;
             ())
@@ -950,7 +950,7 @@ struct
       let depends_of_interface { Ast.Statement.Interface.tparams; extends; body; _ } =
         depends_of_node
           (fun visitor ->
-            run_opt visitor#type_params tparams;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.InterfaceTP) tparams;
             Base.List.iter ~f:(run_loc visitor#generic_type) extends;
             run_loc visitor#object_type body;
             ())
