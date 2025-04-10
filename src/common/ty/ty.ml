@@ -262,6 +262,7 @@ and type_param = {
   tp_bound: t option;
   tp_polarity: polarity;
   tp_default: t option;
+  tp_const: bool;
 }
 
 and utility =

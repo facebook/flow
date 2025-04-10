@@ -60,6 +60,7 @@ react_component.js:31:7 = {
               "generic_kind":"type alias"
             },
             "polarity":"Neutral",
+            "const":false,
             "default":{"kind":"Void"}
           }
         ],
@@ -97,6 +98,7 @@ react_component.js:31:7 = {
               "generic_kind":"type alias"
             },
             "polarity":"Neutral",
+            "const":false,
             "default":{"kind":"Void"}
           }
         ],

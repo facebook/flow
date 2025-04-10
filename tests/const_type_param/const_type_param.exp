@@ -1,0 +1,258 @@
+Error ------------------------------------------------------------------------------------------------------ file.js:5:3
+
+Cannot cast `2` to `typeof x1` because number [1] is incompatible with number [2]. [incompatible-cast]
+
+   file.js:5:3
+   5|   2 as typeof x1; // error 2 ~> 1
+        ^ [1]
+
+References:
+   file.js:5:8
+   5|   2 as typeof x1; // error 2 ~> 1
+             ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:30:3
+
+Cannot cast `x1.b` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   file.js:30:3
+   30|   x1.b as 1; // error number ~> 1, 'b' does not get converted
+         ^^^^
+
+References:
+   file.js:29:29
+   29|   const x1 = f({a: 1, b: id(2)});
+                                   ^ [1]
+   file.js:30:11
+   30|   x1.b as 1; // error number ~> 1, 'b' does not get converted
+                 ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:33:3
+
+Cannot cast `x2.b.f` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   file.js:33:3
+   33|   x2.b.f as 2; // error number ~> 2, 'b.f' does not get converted
+         ^^^^^^
+
+References:
+   file.js:32:33
+   32|   const x2 = f({a: 1, b: id({f: 2})});
+                                       ^ [1]
+   file.js:33:13
+   33|   x2.b.f as 2; // error number ~> 2, 'b.f' does not get converted
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:36:3
+
+Cannot cast `x3.b.c` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   file.js:36:3
+   36|   x3.b.c as 1; // error number ~> 1, 'b.c' does not get converted
+         ^^^^^^
+
+References:
+   file.js:35:34
+   35|   const x3 = f({a: 1, b: {...{c: 3}}});
+                                        ^ [1]
+   file.js:36:13
+   36|   x3.b.c as 1; // error number ~> 1, 'b.c' does not get converted
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:60:18
+
+Cannot call `C` because `X` [1] is underconstrained by new `C` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   file.js:60:18
+   60|   const c2 = new C(2); // unrelated implicit-instantiation error, c2: C<2>
+                        ^
+
+References:
+   file.js:53:25
+   53|   declare class C<const X> {
+                               ^ [1]
+   file.js:60:14
+   60|   const c2 = new C(2); // unrelated implicit-instantiation error, c2: C<2>
+                    ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:62:3
+
+Cannot cast `c1` to `C` because number [1] is incompatible with number literal `1` [2] in property `f` of type argument
+`X` [3]. [incompatible-cast]
+
+   file.js:62:3
+   62|   c1 as C<{f:1}>; // error number ~> 1
+         ^^
+
+References:
+   file.js:59:23
+   59|   const c1 = new C<{f:number}>();
+                             ^^^^^^ [1]
+   file.js:62:14
+   62|   c1 as C<{f:1}>; // error number ~> 1
+                    ^ [2]
+   file.js:53:25
+   53|   declare class C<const X> {
+                               ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:68:3
+
+Cannot cast `x1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+[incompatible-cast]
+
+   file.js:68:3
+   68|   x1 as {+f:1}; // error number ~> 1, const has no effect
+         ^^
+
+References:
+   file.js:66:23
+   66|   declare var c: C<{f:number}>;
+                             ^^^^^^ [1]
+   file.js:68:13
+   68|   x1 as {+f:1}; // error number ~> 1, const has no effect
+                   ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:79:14
+
+Cannot assign `2` to `obj.prop` because number [1] is incompatible with number [2]. [incompatible-type]
+
+   file.js:79:14
+   79|   obj.prop = 2; // error 2 ~> 1
+                    ^ [1]
+
+References:
+   file.js:76:20
+   76|   const x = f({ a: 1});
+                          ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file.js:87:3
+
+Cannot cast `x1` to object type because number [1] is incompatible with number literal `1` [2] in property `a`.
+[incompatible-cast]
+
+   file.js:87:3
+   87|   x1 as {+a: 1}; // error number ~> 1
+         ^^
+
+References:
+   file.js:85:20
+   85|   const obj1 = {a: 1}; // infers {a:number}
+                          ^ [1]
+   file.js:87:14
+   87|   x1 as {+a: 1}; // error number ~> 1
+                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:98:14
+
+Cannot call `f1` because rest array [1] is incompatible with array type [2] in type argument `T`. [incompatible-call]
+
+   file.js:98:14
+   98|   const x1 = f1(...[1]); // error inferred const array is readonly which is not compatible with Array<mixed>
+                    ^^
+
+References:
+   file.js:98:14
+   98|   const x1 = f1(...[1]); // error inferred const array is readonly which is not compatible with Array<mixed>
+                    ^^^^^^^^^^ [1]
+   file.js:97:32
+   97|   declare function f1<const T: Array<mixed>>(...args: T): T;
+                                      ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- file.js:104:21
+
+Cannot call `f3` because number [1] is incompatible with union type [2]. [incompatible-call]
+
+   file.js:104:21
+   104|   const x3 = f3(...[1, 'a']); // TODO okay - this still requires proper hint
+                            ^ [1]
+
+References:
+   file.js:103:47
+   103|   declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;
+                                                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- file.js:104:24
+
+Cannot call `f3` because string [1] is incompatible with union type [2]. [incompatible-call]
+
+   file.js:104:24
+   104|   const x3 = f3(...[1, 'a']); // TODO okay - this still requires proper hint
+                               ^^^ [1]
+
+References:
+   file.js:103:47
+   103|   declare function f3<const T: $ReadOnlyArray<1|'a'>>(...args: T): T;
+                                                      ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:122:3
+
+Cannot cast `polyFn` to `PolyFnWithConst` because type parameters `X` [1] and `X` [2] do not have matching
+const-modifier values. [incompatible-type-param-const]
+
+   file.js:122:3
+   122|   polyFn as PolyFnWithConst; // error const incompatible
+          ^^^^^^
+
+References:
+   file.js:115:18
+   115|   type PolyFn = <X>(x: X) => X;
+                         ^ [1]
+   file.js:116:33
+   116|   type PolyFnWithConst = <const X>(x: X) => X;
+                                        ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:123:3
+
+Cannot cast `polyFnWithConst` to `PolyFn` because type parameters `X` [1] and `X` [2] do not have matching
+const-modifier values. [incompatible-type-param-const]
+
+   file.js:123:3
+   123|   polyFnWithConst as PolyFn; // error const incompatible
+          ^^^^^^^^^^^^^^^
+
+References:
+   file.js:116:33
+   116|   type PolyFnWithConst = <const X>(x: X) => X;
+                                        ^ [1]
+   file.js:115:18
+   115|   type PolyFn = <X>(x: X) => X;
+                         ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- file.js:128:22
+
+Type parameter `T` [1] cannot be declared as 'const'. 'const' modifier can only appear on a function or method type
+parameter. [incompatible-type-param-const]
+
+   128|   interface I1<const T> { x: T }  // error, modifier cannot appear here
+                             ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- file.js:129:16
+
+Type parameter `X` [1] cannot be declared as 'const'. 'const' modifier can only appear on a function or method type
+parameter. [incompatible-type-param-const]
+
+   129|   type T<const X> = X; // error, modifier cannot appear here
+                       ^ [1]
+
+
+
+Found 16 errors

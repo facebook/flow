@@ -59,6 +59,7 @@ type ('loc, 'a) tparam =
       polarity: Polarity.t;
       bound: 'a option;
       default: 'a option;
+      is_const: bool;
     }
 [@@deriving iter, map, show { with_path = false }]
 

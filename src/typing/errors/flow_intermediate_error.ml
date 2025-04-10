@@ -4135,6 +4135,21 @@ let to_printable_error :
         code "}";
         text ".";
       ]
+    | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
+      [
+        text "type parameters ";
+        ref lower;
+        text " and ";
+        ref upper;
+        text " do not have matching const-modifier values";
+      ]
+    | MessageTypeParamConstInvalidPosition reason ->
+      [
+        text "Type parameter ";
+        ref reason;
+        text " cannot be declared as 'const'. ";
+        text "'const' modifier can only appear on a function or method type parameter.";
+      ]
   in
   let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
       =

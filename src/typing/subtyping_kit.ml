@@ -1451,6 +1451,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~f:(fun (prev_map1, prev_map2) param1 param2 ->
             let bound2 = Type_subst.subst cx ~use_op prev_map2 param2.bound in
             rec_flow cx trace (bound2, UseT (use_op, param1.bound));
+            if param1.is_const <> param2.is_const then
+              add_output
+                cx
+                (Error_message.ETypeParamConstIncompatibility
+                   { use_op; lower = param1.reason; upper = param2.reason }
+                );
             let (gen, map1) = Flow_js_utils.generic_bound cx prev_map1 param1 in
             let map2 = Subst_name.Map.add param2.name gen prev_map2 in
             (map1, map2)

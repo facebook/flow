@@ -1386,7 +1386,7 @@ and merge_tparams_targs env file reason t = function
     Type.(DefT (poly_reason, PolyT { tparams_loc; tparams; t_out; id }))
 
 and merge_tparam ~from_infer env file tp =
-  let (TParam { name_loc; name; polarity; bound; default }) = tp in
+  let (TParam { name_loc; name; polarity; bound; default; is_const }) = tp in
   let reason = Reason.(mk_reason (RType (OrdinaryName name)) name_loc) in
   let bound =
     match bound with
@@ -1408,7 +1408,9 @@ and merge_tparam ~from_infer env file tp =
     else
       Subst_name.Name name
   in
-  let tp = { Type.reason; name = subst_name; polarity; bound; default; is_this = false } in
+  let tp =
+    { Type.reason; name = subst_name; polarity; bound; default; is_this = false; is_const }
+  in
   let t = Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) tp in
   (tp, (Subst_name.Name name, reason, t, polarity), { env with tps = SMap.add name t env.tps })
 
@@ -1550,6 +1552,7 @@ and merge_class env file reason class_name id def =
           polarity = Polarity.Positive;
           default = None;
           is_this = true;
+          is_const = false;
         }
       in
       Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) this_tp
@@ -1859,6 +1862,7 @@ let merge_declare_class file reason class_name id def =
           polarity = Polarity.Positive;
           default = None;
           is_this = true;
+          is_const = false;
         }
       in
       Flow_js_utils.generic_of_tparam file.cx ~f:(fun x -> x) this_tp

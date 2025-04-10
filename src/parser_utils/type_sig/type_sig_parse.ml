@@ -2120,6 +2120,7 @@ and object_type =
               polarity = Polarity.Neutral;
               bound = None;
               default = None;
+              is_const = false;
             },
           SSet.add key_name xs
         )
@@ -2679,7 +2680,7 @@ and tparam opts scope tbls xs tp =
           bound_kind = _;
           variance = v;
           default = d;
-          const = _;
+          const;
         }
       ) =
     tp
@@ -2687,7 +2688,8 @@ and tparam opts scope tbls xs tp =
   let name_loc = push_loc tbls name_loc in
   let bound = bound opts scope tbls xs b in
   let default = default opts scope tbls xs d in
-  TParam { name_loc; name; polarity = polarity v; bound; default }
+  let is_const = Base.Option.is_some const in
+  TParam { name_loc; name; polarity = polarity v; bound; default; is_const }
 
 and tparams =
   let rec loop opts scope tbls tparams_loc xs acc = function
@@ -2723,7 +2725,14 @@ and conditional_type
       (* If check type is a bound type, then this is a distributive conditional type. *)
       Some
         (TParam
-           { name_loc; name; polarity = Polarity.Neutral; bound = Some check_type; default = None }
+           {
+             name_loc;
+             name;
+             polarity = Polarity.Neutral;
+             bound = Some check_type;
+             default = None;
+             is_const = false;
+           }
         )
     | _ -> None
   in

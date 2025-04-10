@@ -1525,11 +1525,17 @@ module Make (I : INPUT) : S = struct
       | _ -> return None
 
     and type_param ~env tp =
-      let { T.name; bound; polarity; default; _ } = tp in
+      let { T.name; bound; polarity; default; is_const; _ } = tp in
       let tp_polarity = type_polarity polarity in
       let%bind tp_bound = param_bound ~env bound in
       let%map tp_default = default_t ~env default in
-      { Ty.tp_name = Subst_name.string_of_subst_name name; tp_bound; tp_polarity; tp_default }
+      {
+        Ty.tp_name = Subst_name.string_of_subst_name name;
+        tp_bound;
+        tp_polarity;
+        tp_default;
+        tp_const = is_const;
+      }
 
     and opt_t ~env t =
       let (t, opt) =

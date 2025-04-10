@@ -549,6 +549,7 @@ module Make
         polarity = Polarity.Positive;
         default = None;
         is_this = true;
+        is_const = false;
       }
     in
     (this_tp, Flow_js_utils.generic_of_tparam cx ~f:(fun x -> x) this_tp)

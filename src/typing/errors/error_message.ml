@@ -270,6 +270,12 @@ and 'loc t' =
       return_reason: 'loc virtual_reason;
       type_reason: 'loc virtual_reason;
     }
+  | ETypeParamConstIncompatibility of {
+      use_op: 'loc virtual_use_op;
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | ETypeParamConstInvalidPosition of 'loc virtual_reason
   | EInternal of 'loc * internal_error
   | EUnsupportedSyntax of 'loc * unsupported_syntax
   | EUseArrayLiteral of 'loc
@@ -1131,6 +1137,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         return_reason = map_reason return_reason;
         type_reason = map_reason type_reason;
       }
+  | ETypeParamConstIncompatibility { use_op; lower; upper } ->
+    ETypeParamConstIncompatibility
+      { use_op = map_use_op use_op; lower = map_reason lower; upper = map_reason upper }
+  | ETypeParamConstInvalidPosition reason -> ETypeParamConstInvalidPosition (map_reason reason)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
   | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
@@ -1777,6 +1787,8 @@ let util_use_op_of_msg nope util = function
   | ETypeGuardIncompatibleWithFunctionKind _
   | ETypeGuardFunctionInvalidWrites _
   | ENegativeTypeGuardConsistency _
+  | ETypeParamConstIncompatibility _
+  | ETypeParamConstInvalidPosition _
   | EDuplicateComponentProp _
   | ERefComponentProp _
   | EKeySpreadProp _
@@ -1839,7 +1851,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | ETemporaryHardcodedErrorForPrototyping (reason, _)
-  | EComputedPropertyWithUnion reason ->
+  | EComputedPropertyWithUnion reason
+  | ETypeParamConstInvalidPosition reason ->
     Some (loc_of_reason reason)
   | EObjectComputedPropertyPotentialOverwrite { key_loc = loc; overwritten_locs = _ }
   | EEnumAllMembersAlreadyChecked { loc; _ }
@@ -2065,7 +2078,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPrimitiveAsInterface _
   | ETypeGuardFuncIncompatibility _
   | ETypeGuardIndexMismatch _
-  | ETypeGuardImpliesMismatch _ ->
+  | ETypeGuardImpliesMismatch _
+  | ETypeParamConstIncompatibility _ ->
     None
 
 let kind_of_msg =
@@ -2567,6 +2581,15 @@ let friendly_message_of_msg = function
     Normal (MessageInvalidTypeGuardFunctionWritten { type_guard_reason; write_locs })
   | ENegativeTypeGuardConsistency { reason; return_reason; type_reason } ->
     Normal (MessageNegativeTypeGuardConsistency { reason; return_reason; type_reason })
+  | ETypeParamConstIncompatibility { use_op; lower; upper } ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        message = MessageIncompatiblETypeParamConstIncompatibility { lower; upper };
+        use_op;
+        explanation = None;
+      }
+  | ETypeParamConstInvalidPosition reason -> Normal (MessageTypeParamConstInvalidPosition reason)
   | ETypeGuardFunctionParamHavoced { type_guard_reason; param_reason; call_locs } ->
     Normal
       (MessageCannotUseTypeGuardWithFunctionParamHavoced
@@ -3191,6 +3214,9 @@ let error_code_of_message err : error_code option =
   | ETypeGuardIncompatibleWithFunctionKind _ ->
     Some FunctionPredicate
   | ENegativeTypeGuardConsistency _ -> Some IncompatibleTypeGuard
+  | ETypeParamConstIncompatibility _
+  | ETypeParamConstInvalidPosition _ ->
+    Some TypeParamConstCode
   | EImportTypeAsTypeof (_, _) -> Some InvalidImportType
   | EImportTypeAsValue (_, _) -> Some ImportTypeAsValue
   | EImportValueAsType (_, _) -> Some ImportValueAsType

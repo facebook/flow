@@ -714,7 +714,7 @@ type-utils.js:5:13 {
       "expanded":{
         "kind":"ClassDecl",
         "name":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-        "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"P","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"class C<P>"
     },

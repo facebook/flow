@@ -34,11 +34,24 @@ type singleton_action =
       (** Keep singleton type and `from_annot` value to `false`. This is used to
           avoid generalizing singleton types that are checked against annotations
           where the added precision is useful. *)
+  | KeepAsConst
+      (** Keep singleton type, but change `from_annot` to `true`.
+          Used for 'const' type parameter conversion. *)
 
 (** Walk a literal type and replaces singleton types that originate from literals
     according to `singleton_action`. *)
 val convert_literal_type :
   Context.t -> singleton_action:(ALoc.t -> singleton_action) -> Type.t -> Type.t
+
+(** [convert_literal_type_to_const ~loc_range cx t] converts a type `t` inferred
+    for a literal expression to its 'const' form. This is the form expected for
+    const type parameters (for example). It only descends down literal array and
+    object containers that are defined within the `loc_range` parameter, and
+    converts them to readonly array and object types. If `keep_container_reasons`
+    is true it also converts their reasons to non-literal ones. For primitive
+    values it applies the `KeepAsConst` action. *)
+val convert_literal_type_to_const :
+  loc_range:ALoc.t -> keep_container_reasons:bool -> Context.t -> Type.t -> Type.t
 
 val loc_has_hint : Context.t -> ALoc.t -> bool
 

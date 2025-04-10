@@ -255,6 +255,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           polarity = Polarity.Neutral;
           default = None;
           is_this = false;
+          is_const = false;
         }
       in
       let tparams_map =
@@ -2562,14 +2563,30 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
-      if not (Context.enable_const_type_params cx) then
-        Base.Option.iter const ~f:(fun (loc, _) ->
-            Flow_js_utils.add_output
-              env.cx
-              (Error_message.EUnsupportedSyntax
-                 (loc, Flow_intermediate_error_types.ConstTypeParameter)
-              )
-        );
+      let is_const =
+        if Context.enable_const_type_params cx then
+          let open Flow_ast_mapper in
+          match (const, kind) with
+          | ( Some _,
+              ( ClassTP | FunctionTP | DeclareFunctionTP | DeclareClassTP | DeclareComponentTP
+              | ComponentDeclarationTP | ComponentTypeTP | FunctionTypeTP )
+            ) ->
+            true
+          | (Some _, _) ->
+            Flow_js_utils.add_output env.cx (Error_message.ETypeParamConstInvalidPosition reason);
+            false
+          | (None, _) -> false
+        else (
+          Base.Option.iter const ~f:(fun (loc, _) ->
+              Flow_js_utils.add_output
+                env.cx
+                (Error_message.EUnsupportedSyntax
+                   (loc, Flow_intermediate_error_types.ConstTypeParameter)
+                )
+          );
+          false
+        )
+      in
       (match bound_kind with
       | Ast.Type.TypeParam.Extends when not (kind = Flow_ast_mapper.InferTP || Context.ts_syntax cx)
         ->
@@ -2585,6 +2602,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             polarity;
             default = None;
             is_this = false;
+            is_const;
           }
         in
         let ast = Tast_utils.error_mapper#type_param (loc, type_param) in
@@ -2625,7 +2643,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           else
             Subst_name.Name name
         in
-        let tparam = { reason; name = subst_name; bound; polarity; default; is_this = false } in
+        let tparam =
+          { reason; name = subst_name; bound; polarity; default; is_this = false; is_const }
+        in
         let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
         let name_ast =
           let (loc, id_name) = id in

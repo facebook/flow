@@ -1302,6 +1302,7 @@ let resolve_component_type_params cx graph component =
           polarity = Polarity.Neutral;
           default = None;
           is_this = false;
+          is_const = false;
         }
       in
       let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
@@ -1322,6 +1323,7 @@ let resolve_component_type_params cx graph component =
           polarity = Polarity.Neutral;
           default = None;
           is_this = true;
+          is_const = false;
         }
       in
       let ({ Loc_env.tparams; _ } as env) = Context.environment cx in

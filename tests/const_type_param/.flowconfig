@@ -8,8 +8,7 @@
 
 [options]
 all=true
-exact_by_default=false
-no_flowlib=false
 experimental.const_type_params=true
+experimental.natural_inference.local_primitive_literals=full
 
 [strict]
