@@ -202,7 +202,7 @@ type def =
   | OpaqueType of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.OpaqueType.t
   | TypeParam of {
       tparams_map: tparams_map;
-      from_infer_type: bool;
+      kind: Flow_ast_mapper.type_params_context;
       tparam: (ALoc.t, ALoc.t) Ast.Type.TypeParam.t;
     }
   | Interface of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Interface.t

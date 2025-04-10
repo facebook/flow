@@ -518,7 +518,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             let (tparam_tast, tparam, t) =
               mk_type_param
                 { env with infer_tparams_map = ALocMap.empty }
-                ~from_infer_type:true
+                ~kind:Flow_ast_mapper.InferTP
                 tparam
             in
             let (tparams_rev, additional_true_type_tparams_map, infer_tparams_map, infer_bounds_map)
@@ -1315,7 +1315,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         params
       in
       error_on_unsupported_variance_annotation env.cx ~kind:"function type" tparams;
-      let (tparams, env, tparams_ast) = mk_type_param_declarations env tparams in
+      let (tparams, env, tparams_ast) =
+        mk_type_param_declarations env ~kind:Flow_ast_mapper.FunctionTypeTP tparams
+      in
       let cx = env.cx in
       let (rev_params, rev_param_asts) =
         List.fold_left
@@ -1537,7 +1539,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         | MakeOptional
         | KeepOptionality ->
           let (tparam_ast, ({ name; _ } as tparam), tparam_t) =
-            mk_type_param env ~from_infer_type:false key_tparam
+            mk_type_param env ~kind:Flow_ast_mapper.ObjectMappedTypeTP key_tparam
           in
           let env = { env with tparams_map = Subst_name.Map.add name tparam_t tparams_map } in
           let ((prop_loc, prop_type), prop_type_ast) = convert env prop_type in
@@ -2425,7 +2427,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let { Ast.Type.Function.params; effect_; tparams = func_tparams; return = func_return; _ } =
         func
       in
-      let (tparams, env, tparams_ast) = mk_type_param_declarations env func_tparams in
+      let (tparams, env, tparams_ast) =
+        mk_type_param_declarations env ~kind:Flow_ast_mapper.FunctionTypeTP func_tparams
+      in
       let (fparams, params_ast) = convert_params env params in
       let (return_t, return_ast, type_guard) =
         convert_return_annotation
@@ -2540,7 +2544,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       );
       (t, Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }))
 
-  and mk_type_param env ~from_infer_type (loc, type_param) =
+  and mk_type_param env ~kind (loc, type_param) =
     let { cx; tparams_map; _ } = env in
     let node_cache = Context.node_cache cx in
     match Node_cache.get_tparam node_cache loc with
@@ -2565,7 +2569,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             )
       );
       (match bound_kind with
-      | Ast.Type.TypeParam.Extends when not (from_infer_type || Context.ts_syntax cx) ->
+      | Ast.Type.TypeParam.Extends when not (kind = Flow_ast_mapper.InferTP || Context.ts_syntax cx)
+        ->
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc });
@@ -2610,7 +2615,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             (Some t, default_ast)
         in
         let subst_name =
-          if from_infer_type && Subst_name.Map.mem (Subst_name.Name name) tparams_map then
+          if kind = Flow_ast_mapper.InferTP && Subst_name.Map.mem (Subst_name.Name name) tparams_map
+          then
             Type_subst.new_name
               (Subst_name.Name name)
               (tparams_map |> Subst_name.Map.keys |> Subst_name.Set.of_list)
@@ -2639,11 +2645,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   (* take a list of AST type param declarations,
      do semantic checking and create types for them. *)
-  and mk_type_param_declarations env tparams =
+  and mk_type_param_declarations env ~kind tparams =
     let add_type_param (tparams, env, bounds_map, rev_asts) (loc, type_param) =
-      let (ast, ({ name; bound; _ } as tparam), t) =
-        mk_type_param env ~from_infer_type:false (loc, type_param)
-      in
+      let (ast, ({ name; bound; _ } as tparam), t) = mk_type_param env ~kind (loc, type_param) in
 
       let tparams = tparam :: tparams in
       ( tparams,
@@ -3010,7 +3014,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       (cparams, Component_type_params.eval env.cx cparams)
     in
     fun env reason ~id_opt tparams params renders ->
-      let (tparams, env, tparam_asts) = mk_type_param_declarations env tparams in
+      let (tparams, env, tparam_asts) =
+        mk_type_param_declarations env ~kind:Flow_ast_mapper.ComponentDeclarationTP tparams
+      in
       let (cparams, params_ast) = mk_params env params in
       let (ren_loc, renders_t, renders_ast) =
         match renders with
@@ -3061,7 +3067,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       decl
     in
     let env = mk_convert_env cx Subst_name.Map.empty in
-    let (tparams, env, tparams_ast) = mk_type_param_declarations env tparams in
+    let (tparams, env, tparams_ast) =
+      mk_type_param_declarations env ~kind:Flow_ast_mapper.InterfaceTP tparams
+    in
     let (iface_sig, extends_ast) =
       let class_name = id_name.Ast.Identifier.name in
       let id = Context.make_aloc_id cx id_loc in
@@ -3162,7 +3170,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         decl
       in
       let env = mk_convert_env cx Subst_name.Map.empty in
-      let (tparams, env, tparam_asts) = mk_type_param_declarations env tparams in
+      let (tparams, env, tparam_asts) =
+        mk_type_param_declarations env ~kind:Flow_ast_mapper.DeclareClassTP tparams
+      in
       let (this_tparam, this_t) = Class_type_sig.mk_this ~self cx reason in
       let (iface_sig, extends_ast, mixins_ast, implements_ast) =
         let id = Context.make_aloc_id cx id_loc in
@@ -3297,9 +3307,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   let mk_type_param cx tparams_map = mk_type_param (mk_convert_env cx tparams_map)
 
-  let mk_type_param_declarations cx ?(tparams_map = Subst_name.Map.empty) tparams =
+  let mk_type_param_declarations cx ~kind ?(tparams_map = Subst_name.Map.empty) tparams =
     let (tparams, env, t_ast) =
-      mk_type_param_declarations (mk_convert_env cx tparams_map) tparams
+      mk_type_param_declarations (mk_convert_env cx tparams_map) ~kind tparams
     in
     (tparams, env.tparams_map, t_ast)
 end

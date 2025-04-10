@@ -2247,26 +2247,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         (OpaqueType (loc, otype));
       this#in_new_tparams_env (fun () -> super#opaque_type loc otype)
 
-    method private visit_type_param
-        ~from_infer_type ~kind (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
+    method! type_param ~kind (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (_, { name = (name_loc, { Ast.Identifier.name; _ }); _ }) = tparam in
       this#force_add_binding
         (Env_api.OrdinaryNameLoc, name_loc)
         (mk_reason (RType (OrdinaryName name)) name_loc)
-        (TypeParam { tparams_map = tparams; from_infer_type; tparam });
+        (TypeParam { tparams_map = tparams; kind; tparam });
       this#add_tparam name_loc name;
       super#type_param ~kind tparam
-
-    method! infer_type t =
-      let open Ast.Type.Infer in
-      let { tparam; comments } = t in
-      {
-        tparam = this#visit_type_param ~from_infer_type:true ~kind:Flow_ast_mapper.InferTP tparam;
-        comments;
-      }
-
-    method! type_param ~kind = this#visit_type_param ~from_infer_type:false ~kind
 
     method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
