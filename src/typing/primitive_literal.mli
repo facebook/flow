@@ -28,8 +28,17 @@ val mk_syntactic_flags :
 
 val is_generalization_candidate : Context.t -> Type.t -> bool
 
-val generalize_singletons :
-  Context.t -> force_general:bool -> keep_singleton:(ALoc.t -> bool) -> Type.t -> Type.t
+type singleton_action =
+  | DoNotKeep of { use_sound_type: bool }  (** Generalize singleton type *)
+  | KeepAsIs
+      (** Keep singleton type and `from_annot` value to `false`. This is used to
+          avoid generalizing singleton types that are checked against annotations
+          where the added precision is useful. *)
+
+(** Walk a literal type and replaces singleton types that originate from literals
+    according to `singleton_action`. *)
+val convert_literal_type :
+  Context.t -> singleton_action:(ALoc.t -> singleton_action) -> Type.t -> Type.t
 
 val loc_has_hint : Context.t -> ALoc.t -> bool
 

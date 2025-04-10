@@ -29,22 +29,21 @@ and union_flatten = function
  * We would like the type of `st` and `setSt` to use the general form of the type
  * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
  * the rather impractical `42` (resp. `(42)=>void`).
- *
- * The predicate `keep_singleton` is used to determine whether the singleton type
- * inferred for a location `loc` should be kept or not. We keep singleton types
- * that are checked against other precise types, which is recorded by calling
- * `Flow_js_utils.update_lit_type_from_annot`.
  *)
-let generalize_singleton cx t =
+let generalize_singletons cx t =
   if Context.natural_inference_local_primitive_literals_full cx then
-    let keep_singleton loc = Context.is_primitive_literal_checked cx loc in
-    Primitive_literal.generalize_singletons cx ~keep_singleton ~force_general:false t
+    let singleton_action loc =
+      if Context.is_primitive_literal_checked cx loc then
+        (* Keep singleton types that are checked against other precise types, which
+         * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
+        Primitive_literal.KeepAsIs
+      else
+        Primitive_literal.DoNotKeep { use_sound_type = false }
+    in
+    Primitive_literal.convert_literal_type cx ~singleton_action t
   else if Context.natural_inference_local_primitive_literals_partial cx then
-    Primitive_literal.generalize_singletons
-      cx
-      ~keep_singleton:(fun _ -> false)
-      ~force_general:false
-      t
+    let singleton_action _ = Primitive_literal.DoNotKeep { use_sound_type = false } in
+    Primitive_literal.convert_literal_type cx ~singleton_action t
   else
     t
 
@@ -1109,7 +1108,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         in
         let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
-        let generalized_t = generalize_singleton cx result.inferred in
+        let generalized_t = generalize_singletons cx result.inferred in
         let result = { result with inferred = generalized_t } in
         (Subst_name.Map.add name result acc, (generalized_t, name) :: inferred_targ_list_acc))
       inferred_targ_list
