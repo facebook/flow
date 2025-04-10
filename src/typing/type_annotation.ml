@@ -2562,12 +2562,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
-      Base.Option.iter const ~f:(fun (loc, _) ->
-          Flow_js_utils.add_output
-            env.cx
-            (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ConstTypeParameter)
-            )
-      );
+      if not (Context.enable_const_type_params cx) then
+        Base.Option.iter const ~f:(fun (loc, _) ->
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.ConstTypeParameter)
+              )
+        );
       (match bound_kind with
       | Ast.Type.TypeParam.Extends when not (kind = Flow_ast_mapper.InferTP || Context.ts_syntax cx)
         ->

@@ -56,6 +56,7 @@ module Opts = struct
     component_syntax: bool;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
+    enable_const_type_params: bool;
     enable_const_params: bool option;
     enums: bool;
     estimate_recheck_time: bool option;
@@ -196,6 +197,7 @@ module Opts = struct
       component_syntax = false;
       dev_only_refinement_info_as_errors = false;
       emoji = None;
+      enable_const_type_params = false;
       enable_const_params = None;
       enums = false;
       estimate_recheck_time = None;
@@ -1028,6 +1030,9 @@ module Opts = struct
       ( "dev_only.refinement_info_as_errors",
         boolean (fun opts v -> Ok { opts with dev_only_refinement_info_as_errors = v })
       );
+      ( "experimental.const_type_params",
+        boolean (fun opts v -> Ok { opts with enable_const_type_params = v })
+      );
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
@@ -1829,6 +1834,8 @@ let component_syntax c = c.options.Opts.component_syntax
 let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 
 let emoji c = c.options.Opts.emoji
+
+let enable_const_type_params c = c.options.Opts.enable_const_type_params
 
 let enable_const_params c = c.options.Opts.enable_const_params
 
