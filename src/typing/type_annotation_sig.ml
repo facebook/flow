@@ -115,12 +115,13 @@ module type S = sig
   val mk_type_param :
     Context.t ->
     Type.t Subst_name.Map.t ->
-    from_infer_type:bool ->
+    kind:Flow_ast_mapper.type_params_context ->
     (ALoc.t, ALoc.t) Flow_ast.Type.TypeParam.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeParam.t * Type.typeparam * Type.t
 
   val mk_type_param_declarations :
     Context.t ->
+    kind:Flow_ast_mapper.type_params_context ->
     ?tparams_map:Type.t Subst_name.Map.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.TypeParams.t option ->
     Type.typeparams

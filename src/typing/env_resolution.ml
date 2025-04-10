@@ -1233,10 +1233,10 @@ let init_type_param =
     let (def, _, _, reason) = EnvMap.find_ordinary def_loc graph in
     let tparam_entry =
       match def with
-      | TypeParam { tparams_map = tparams_locs; from_infer_type; tparam } ->
+      | TypeParam { tparams_map = tparams_locs; kind; tparam } ->
         let tparams_map = mk_tparams_map cx graph tparams_locs in
         let ((_, ({ name; _ } as tparam), t) as info) =
-          Anno.mk_type_param cx tparams_map ~from_infer_type tparam
+          Anno.mk_type_param cx tparams_map ~kind tparam
         in
         let cache = Context.node_cache cx in
         Node_cache.set_tparam cache info;

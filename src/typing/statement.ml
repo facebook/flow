@@ -916,7 +916,9 @@ module Make
       info
     | None ->
       let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (tparams, tparams_map, tparams_ast) =
+        Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.OpaqueTypeTP tparams
+      in
       let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
       let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
       begin
@@ -2023,7 +2025,9 @@ module Make
       info
     | None ->
       let r = DescFormat.type_reason (OrdinaryName name) name_loc in
-      let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+      let (tparams, tparams_map, tparams_ast) =
+        Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.TypeAliasTP tparams
+      in
       let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
       let t =
         mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc))) t
@@ -7273,7 +7277,9 @@ module Make
         let class_decorators_ast =
           Base.List.map ~f:Tast_utils.error_mapper#class_decorator class_decorators
         in
-        let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
+        let (tparams, tparams_map, tparams_ast) =
+          Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.ClassTP tparams
+        in
         let (this_tparam, this_t) = Class_stmt_sig.mk_this ~self cx reason in
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
@@ -7932,7 +7938,11 @@ module Make
       | Some x -> x
       | None ->
         let (tparams, tparams_map, tparams_ast) =
-          Anno.mk_type_param_declarations cx ~tparams_map tparams
+          Anno.mk_type_param_declarations
+            cx
+            ~kind:Flow_ast_mapper.ComponentDeclarationTP
+            ~tparams_map
+            tparams
         in
         let cparams = mk_params cx tparams_map params in
         let (ret_loc, renders_t, renders_ast) =
@@ -8113,7 +8123,7 @@ module Make
         let kind = function_kind ~constructor ~async ~generator ~ret_loc in
         Anno.error_on_unsupported_variance_annotation cx ~kind:"function" tparams;
         let (tparams, tparams_map, tparams_ast) =
-          Anno.mk_type_param_declarations cx ~tparams_map tparams
+          Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.FunctionTP ~tparams_map tparams
         in
         let fparams = mk_params cx tparams_map params in
         let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
