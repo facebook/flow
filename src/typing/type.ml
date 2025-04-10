@@ -1548,6 +1548,7 @@ module rec TypeTerm : sig
     polarity: Polarity.t;
     default: t option;
     is_this: bool;
+    is_const: bool;
   }
 
   and typeparams_nonempty = ALoc.t * typeparam Nel.t

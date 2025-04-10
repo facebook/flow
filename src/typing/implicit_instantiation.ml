@@ -1074,7 +1074,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       marked_tparams
       tparams_map
       implicit_instantiation =
-    let { Check.operation = (_, instantiation_reason, _); _ } = implicit_instantiation in
+    let { Check.operation = (_, instantiation_reason, op); _ } = implicit_instantiation in
     let subst_map =
       List.fold_left
         (fun acc (name, t, _, _) -> Subst_name.Map.add name t acc)
@@ -1108,9 +1108,24 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         in
         let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
-        let generalized_t = generalize_singletons cx result.inferred in
-        let result = { result with inferred = generalized_t } in
-        (Subst_name.Map.add name result acc, (generalized_t, name) :: inferred_targ_list_acc))
+        let inferred =
+          match op with
+          | Check.Call _ when tparam.is_const ->
+            (* Adjust 'const' type parameters *)
+            let loc_range = loc_of_reason instantiation_reason in
+            (* Keeping container reasons for compatibility with existing code. *)
+            let keep_container_reasons = true in
+            Primitive_literal.convert_literal_type_to_const
+              ~loc_range
+              ~keep_container_reasons
+              cx
+              result.inferred
+          | _ ->
+            (* Prevent leaking of precise singleton types *)
+            generalize_singletons cx result.inferred
+        in
+        let result = { result with inferred } in
+        (Subst_name.Map.add name result acc, (inferred, name) :: inferred_targ_list_acc))
       inferred_targ_list
       (Subst_name.Map.empty, [])
 
@@ -1367,6 +1382,7 @@ module PinTypes (Flow : Flow_common.S) = struct
         polarity;
         default = None;
         is_this = false;
+        is_const = false;
       }
     in
     let { inferred; _ } =
@@ -1605,6 +1621,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         polarity = Polarity.Positive;
         default = None;
         is_this = false;
+        is_const = false;
       }
     in
     match
@@ -1655,6 +1672,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         polarity = Polarity.Positive;
         default = None;
         is_this = false;
+        is_const = false;
       }
     in
     match

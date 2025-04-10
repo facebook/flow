@@ -116,6 +116,10 @@ At generics.js:40:5
 X
 generics.js:40:5,40:5
 
+At generics.js:44:18
+<const X>(x: X) => X
+generics.js:44:18,44:18
+
 ill-formed.js
 At ill-formed.js:5:7
 Foo

@@ -882,6 +882,11 @@ type 'loc message =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
+  | MessageIncompatiblETypeParamConstIncompatibility of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageTypeParamConstInvalidPosition of 'loc virtual_reason
   | MessageUnclearType
   | MessageUnderconstrainedImplicitInstantiaton of {
       reason_call: 'loc virtual_reason;

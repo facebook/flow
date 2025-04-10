@@ -71,6 +71,7 @@ let is_literal_union r rep =
 type singleton_action =
   | DoNotKeep of { use_sound_type: bool }
   | KeepAsIs
+  | KeepAsConst
 
 (* `literal_type_mapper` walks a literal type and replaces singleton types that
  * originate from literals according to `singleton_action`.
@@ -86,6 +87,7 @@ class literal_type_mapper ~singleton_action =
   let singleton_str cx t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
+    | KeepAsConst -> DefT (r, SingletonStrT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
       if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
         DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
@@ -95,6 +97,7 @@ class literal_type_mapper ~singleton_action =
   let singleton_num cx t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
+    | KeepAsConst -> DefT (r, SingletonNumT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
       if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
         DefT (replace_desc_reason RNumber r, NumGeneralT AnyLiteral)
@@ -104,6 +107,7 @@ class literal_type_mapper ~singleton_action =
   let singleton_bool cx t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
+    | KeepAsConst -> DefT (r, SingletonBoolT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
       if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
         DefT (replace_desc_reason RBoolean r, BoolGeneralT)
@@ -113,6 +117,7 @@ class literal_type_mapper ~singleton_action =
   let singleton_bigint cx t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
+    | KeepAsConst -> DefT (r, SingletonBigIntT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
       if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
         DefT (replace_desc_reason RBigInt r, BigIntGeneralT AnyLiteral)
@@ -185,6 +190,75 @@ let aloc_contains ~outer ~inner =
     Loc.contains outer inner
   with
   | _ -> false
+
+let convert_literal_type_to_const ~loc_range ~keep_container_reasons =
+  let open Reason in
+  let reason_def_loc_within_call reason =
+    aloc_contains ~outer:loc_range ~inner:(Reason.def_loc_of_reason reason)
+  in
+  let singleton_action _ = KeepAsConst in
+  let mapper =
+    object (self)
+      inherit literal_type_mapper ~singleton_action as super
+
+      method! type_ cx map_cx t =
+        match t with
+        | DefT
+            (r, ArrT (ArrayAT { elem_t; tuple_view = Some (TupleView { elements; arity; _ }); _ }))
+          ->
+          if is_literal_array_reason r && reason_def_loc_within_call r then
+            let elem_t = self#type_ cx map_cx elem_t in
+            let elements =
+              Base.List.map
+                elements
+                ~f:(fun (TupleElement { reason; name; t; polarity = _; optional }) ->
+                  let t = self#type_ cx map_cx t in
+                  TupleElement { reason; name; t; polarity = Polarity.Positive; optional }
+              )
+            in
+            let r =
+              if keep_container_reasons then
+                r
+              else
+                replace_desc_reason RConstArrayLit r
+            in
+            DefT (r, ArrT (TupleAT { elem_t; elements; react_dro = None; arity; inexact = false }))
+          else
+            t
+        | DefT (r, ObjT _) ->
+          if is_literal_object_reason r && reason_def_loc_within_call r then
+            let t = super#type_ cx map_cx t in
+            if keep_container_reasons then
+              t
+            else
+              TypeUtil.mod_reason_of_t (replace_desc_reason RConstObjectLit) t
+          else
+            t
+        | _ -> super#type_ cx map_cx t
+
+      (* This method is only reachable through a literal object argument to this call. *)
+      method! props cx map_cx id =
+        let props_map = Context.find_props cx id in
+        let props_map' =
+          NameUtils.Map.ident_map
+            (fun p ->
+              match p with
+              | Field { preferred_def_locs; key_loc; type_; polarity = _ } ->
+                let type_ = self#type_ cx map_cx type_ in
+                Field { preferred_def_locs; key_loc; type_; polarity = Polarity.Positive }
+              | _ -> p)
+            props_map
+        in
+        let id' =
+          if props_map == props_map' then
+            id
+          else
+            Context.generate_property_map cx props_map'
+        in
+        id'
+    end
+  in
+  (fun cx t -> mapper#type_ cx () t)
 
 let rec is_generalization_candidate cx t =
   match t with

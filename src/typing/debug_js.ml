@@ -1932,6 +1932,10 @@ let dump_error_message =
       spf "EDevOnlyInvalidatedRefinementInfo {read_loc=%s}" (string_of_aloc read_loc)
     | ETemporaryHardcodedErrorForPrototyping (reason, _) ->
       spf "ETemporaryHardcodedErrorForPrototyping (%s, _)" (dump_reason cx reason)
+    | ETypeParamConstIncompatibility { lower = reason; _ } ->
+      spf "ETypeParamConstIncompatibility (%s)" (dump_reason cx reason)
+    | ETypeParamConstInvalidPosition reason ->
+      spf "ETypeParamConstInvalidPosition (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy

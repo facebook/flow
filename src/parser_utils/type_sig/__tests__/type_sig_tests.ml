@@ -1764,7 +1764,8 @@ let%expect_test "invalid_qualified_references" =
          (Poly ([1:13-16],
             TParam {name_loc = [1:14-15];
               name = "U"; polarity = Polarity.Neutral;
-              bound = None; default = None},
+              bound = None; default = None;
+              is_const = false},
             []));
          body = (Err [1:19-20])}
 
@@ -2505,7 +2506,8 @@ let%expect_test "interface_coverage" =
          (Poly ([1:21-24],
             TParam {name_loc = [1:22-23];
               name = "X"; polarity = Polarity.Neutral;
-              bound = None; default = None},
+              bound = None; default = None;
+              is_const = false},
             []));
          def = InterfaceSig {extends = []; props = {}; calls = []; dict = None}}
     1. DeclareClassBinding {id_loc = [2:21-22];
@@ -2554,7 +2556,8 @@ let%expect_test "bound_coverage" =
                       name = "X"; polarity = Polarity.Neutral;
                       bound =
                       (Some (TyRef (Unqualified LocalRef {ref_loc = [2:20-23]; index = 0})));
-                      default = None},
+                      default = None;
+                      is_const = false},
                     []));
                  params =
                  [FunParam {name = None; t = (Annot Bound {ref_loc = [2:26-27]; name = "X"})}];
@@ -2763,7 +2766,7 @@ let%expect_test "function_return" =
                            qname = ["n"];
                            t = (Ref LocalRef {ref_loc = [2:30-31]; index = 0});
                            targs = None}));
-                default = None},
+                default = None; is_const = false},
               []));
            params =
            [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [2:36-37]; name = "X"})}];
@@ -3248,7 +3251,8 @@ let%expect_test "object_annot_call_poly" =
                               name = "T";
                               polarity = Polarity.Neutral;
                               bound = None;
-                              default = None},
+                              default = None;
+                              is_const = false},
                             []));
                          params =
                          [FunParam {name = None;
@@ -3818,7 +3822,8 @@ let%expect_test "existential" =
            (Poly ([1:7-10],
               TParam {name_loc = [1:8-9];
                 name = "T"; polarity = Polarity.Neutral;
-                bound = None; default = None},
+                bound = None; default = None;
+                is_const = false},
               []));
            extends = ClassImplicitExtends;
            implements = []; static_props = {};
@@ -5692,7 +5697,8 @@ let%expect_test "mapped_types" =
               key_tparam =
               TParam {name_loc = [2:19-22];
                 name = "key"; polarity = Polarity.Neutral;
-                bound = None; default = None};
+                bound = None; default = None;
+                is_const = false};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
@@ -5710,7 +5716,8 @@ let%expect_test "mapped_types" =
               key_tparam =
               TParam {name_loc = [3:19-22];
                 name = "key"; polarity = Polarity.Neutral;
-                bound = None; default = None};
+                bound = None; default = None;
+                is_const = false};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
@@ -5728,7 +5735,8 @@ let%expect_test "mapped_types" =
               key_tparam =
               TParam {name_loc = [4:20-23];
                 name = "key"; polarity = Polarity.Neutral;
-                bound = None; default = None};
+                bound = None; default = None;
+                is_const = false};
               variance = Polarity.Positive;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
@@ -5746,7 +5754,8 @@ let%expect_test "mapped_types" =
               key_tparam =
               TParam {name_loc = [5:20-23];
                 name = "key"; polarity = Polarity.Neutral;
-                bound = None; default = None};
+                bound = None; default = None;
+                is_const = false};
               variance = Polarity.Negative;
               optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
@@ -5764,7 +5773,8 @@ let%expect_test "mapped_types" =
               key_tparam =
               TParam {name_loc = [6:19-22];
                 name = "key"; polarity = Polarity.Neutral;
-                bound = None; default = None};
+                bound = None; default = None;
+                is_const = false};
               variance = Polarity.Neutral;
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = false})} |}]
@@ -6004,7 +6014,8 @@ let%expect_test "component4" =
            (Poly ([1:13-16],
               TParam {name_loc = [1:14-15];
                 name = "T"; polarity = Polarity.Neutral;
-                bound = None; default = None},
+                bound = None; default = None;
+                is_const = false},
               []));
            params =
            [ComponentParam {name = "prop";
@@ -6199,7 +6210,8 @@ let%expect_test "component_type" =
          (Poly ([7:16-23],
             TParam {name_loc = [7:17-22];
               name = "Props"; polarity = Polarity.Neutral;
-              bound = None; default = None},
+              bound = None; default = None;
+              is_const = false},
             []));
          body =
          (Annot
@@ -6394,3 +6406,35 @@ let%expect_test "render_maybe_types" =
                 arg = (Annot (Number [6:32-38]));
                 variant = Flow_ast.Type.Renders.Maybe;
                 allow_generic_t = true})}} |}]
+
+let%expect_test "function_const_type_param" =
+  print_sig {|
+    export function foo<const X>(x: X): X { return x; };
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"foo"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-19];
+         name = "foo"; async = false;
+         generator = false; fn_loc = [1:7-37];
+         def =
+         FunSig {
+           tparams =
+           (Poly ([1:19-28],
+              TParam {name_loc = [1:26-27];
+                name = "X"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = true},
+              []));
+           params =
+           [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [1:32-33]; name = "X"})}];
+           rest_param = None; this_param = None;
+           return = (Annot Bound {ref_loc = [1:36-37]; name = "X"});
+           type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}}
+  |}]

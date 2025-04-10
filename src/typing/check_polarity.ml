@@ -267,7 +267,10 @@ end = struct
     check_polarity cx ?trace seen tparams polarity t
 
   and check_polarity_typeparam cx ?trace seen tparams polarity tp =
-    let { reason = _; name = _; bound; polarity = tp_polarity; default; is_this = _ } = tp in
+    let { reason = _; name = _; bound; polarity = tp_polarity; default; is_this = _; is_const = _ }
+        =
+      tp
+    in
     let check_mult =
       let polarity = Polarity.mult (polarity, tp_polarity) in
       check_polarity cx ?trace seen tparams polarity

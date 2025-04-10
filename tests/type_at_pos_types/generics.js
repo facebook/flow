@@ -40,3 +40,6 @@ function f<X>(x: X) {
     x;
 //  ^?
 }
+
+declare function g<const X>(x: X): X;
+//               ^?

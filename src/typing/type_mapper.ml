@@ -536,7 +536,8 @@ class virtual ['a] t =
       else
         { static = static'; super = super'; implements = implements'; inst = inst' }
 
-    method type_param cx map_cx ({ reason; name; bound; polarity; default; is_this } as t) =
+    method type_param cx map_cx t =
+      let { reason; name; bound; polarity; default; is_this; is_const } = t in
       let bound' = self#type_ cx map_cx bound in
       let default' = OptionUtils.ident_map (self#type_ cx map_cx) default in
       if bound == bound' && default == default' then
@@ -544,7 +545,7 @@ class virtual ['a] t =
       else
         let bound = bound' in
         let default = default' in
-        { reason; name; bound; polarity; default; is_this }
+        { reason; name; bound; polarity; default; is_this; is_const }
 
     method selector cx map_cx t =
       match t with

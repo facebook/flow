@@ -725,14 +725,14 @@ struct
         | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:json_of_t targs))]
         | None -> []
       )
-    and json_of_typeparam
-        { tp_name : string; tp_bound : t option; tp_polarity : polarity; tp_default : t option } =
+    and json_of_typeparam { tp_name; tp_bound; tp_polarity; tp_default; tp_const } =
       Hh_json.(
         JSON_Object
           ([
              ("name", JSON_String tp_name);
              ("bound", Base.Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
              ("polarity", json_of_polarity tp_polarity);
+             ("const", JSON_Bool tp_const);
            ]
           @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)])
           )

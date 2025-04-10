@@ -546,9 +546,14 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       ~sep:(Atom ",")
       ~trailing:false
       (counted_map (type_param ~depth) params)
-  and type_param ~depth { tp_name; tp_bound; tp_polarity; tp_default } =
+  and type_param ~depth { tp_name; tp_bound; tp_polarity; tp_default; tp_const } =
     fuse
       [
+        ( if tp_const then
+          fuse [Atom "const"; space]
+        else
+          Empty
+        );
         variance_ tp_polarity;
         Atom tp_name;
         option ~f:(type_annotation ~depth) tp_bound;

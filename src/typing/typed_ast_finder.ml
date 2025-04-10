@@ -165,7 +165,7 @@ class type_parameter_mapper =
 
     method private make_typeparam tparam =
       let open Ast.Type.TypeParam in
-      let (_, { name = id; bound; bound_kind = _; variance; default; const = _ }) = tparam in
+      let (_, { name = id; bound; bound_kind = _; variance; default; const }) = tparam in
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let reason = Reason.mk_annot_reason (Reason.RType (Reason.OrdinaryName name)) name_loc in
       let bound =
@@ -179,8 +179,15 @@ class type_parameter_mapper =
         | None -> None
         | Some ((_, t), _) -> Some t
       in
-      let polarity = Typed_ast_utils.polarity variance in
-      { Type.reason; name = Subst_name.Name name; bound; polarity; default; is_this = false }
+      {
+        Type.reason;
+        name = Subst_name.Name name;
+        bound;
+        polarity = Typed_ast_utils.polarity variance;
+        default;
+        is_this = false;
+        is_const = Base.Option.is_some const;
+      }
 
     method private make_class_this cls =
       let open Reason in
@@ -199,6 +206,7 @@ class type_parameter_mapper =
         polarity = Polarity.Positive;
         default = None;
         is_this = true;
+        is_const = false;
       }
 
     method private make_declare_class_this decl =
@@ -212,6 +220,7 @@ class type_parameter_mapper =
         polarity = Polarity.Positive;
         default = None;
         is_this = true;
+        is_const = false;
       }
   end
 

@@ -45,7 +45,7 @@ Flags: --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
@@ -107,7 +107,7 @@ Flags: --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
@@ -138,7 +138,7 @@ Flags: --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
@@ -1231,7 +1231,7 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
@@ -1293,7 +1293,7 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
@@ -1324,7 +1324,7 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
           "provenance":{"kind":"Imported as `Listener` (type)","loc":"exports-interface.js:9:18-25"},
           "name":"Listener"
         },
-        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
+        "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral","const":false}]
       },
       "type":"interface Listener<TFields>"
     },
