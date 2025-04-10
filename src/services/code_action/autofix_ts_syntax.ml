@@ -31,7 +31,7 @@ class mapper target_loc kind =
         Ast_builder.Types.unqualified_generic ?comments ~targs "$ReadOnly"
       | _ -> super#type_ t
 
-    method! type_param (loc, tparam) =
+    method! type_param ~kind:k (loc, tparam) =
       let open Flow_ast.Type.TypeParam in
       match tparam with
       | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
@@ -39,7 +39,7 @@ class mapper target_loc kind =
       | { variance = Some (v_loc, Flow_ast.Variance.{ kind = InOut; _ }); _ }
         when kind = `InOutVariance && this#is_target v_loc ->
         (Loc.none, { tparam with variance = None })
-      | _ -> super#type_param (loc, tparam)
+      | _ -> super#type_param ~kind:k (loc, tparam)
 
     method! variance variance =
       let open Flow_ast.Variance in

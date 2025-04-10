@@ -1863,7 +1863,7 @@ and arrow_function
       in
       fuse
         [
-          option (type_parameter ~opts) tparams;
+          option (type_parameter ~opts ~kind:Flow_ast_mapper.FunctionTP) tparams;
           group [params; function_return ~opts ~arrow:true return predicate];
         ]
   in
@@ -1955,7 +1955,7 @@ and function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~
   @@ fuse
        [
          prefix;
-         option (type_parameter ~opts) tparams;
+         option (type_parameter ~opts ~kind:Flow_ast_mapper.FunctionTP) tparams;
          group
            [
              layout_node_with_comments_opt
@@ -2164,7 +2164,7 @@ and component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments 
   @@ fuse
        [
          prefix;
-         option (type_parameter ~opts) tparams;
+         option (type_parameter ~opts ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams;
          group
            [
              layout_node_with_comments_opt
@@ -2470,7 +2470,13 @@ and class_base
       Atom "class";
       begin
         match id with
-        | Some ident -> fuse [space; identifier ident; option (type_parameter ~opts) tparams]
+        | Some ident ->
+          fuse
+            [
+              space;
+              identifier ident;
+              option (type_parameter ~opts ~kind:Flow_ast_mapper.ClassTP) tparams;
+            ]
         | None -> Empty
       end;
     ]
@@ -3520,7 +3526,7 @@ and type_param
       end;
     ]
 
-and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
+and type_parameter ~opts ~kind (loc, { Ast.Type.TypeParams.params; comments }) =
   let num_params = List.length params in
   let internal_comments =
     match internal_comments comments with
@@ -3542,7 +3548,7 @@ and type_parameter ~opts (loc, { Ast.Type.TypeParams.params; comments }) =
           else
             param_layout
         in
-        let comment_bounds = Comment_attachment.type_param_comment_bounds param in
+        let comment_bounds = Comment_attachment.type_param_comment_bounds ~kind param in
         (loc, comment_bounds, param_layout))
       params
   in
@@ -3718,7 +3724,7 @@ and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; 
                 Atom "type";
                 space;
                 identifier id;
-                option (type_parameter ~opts) tparams;
+                option (type_parameter ~opts ~kind:Flow_ast_mapper.TypeAliasTP) tparams;
                 pretty_space;
                 Atom "=";
                 right_separator;
@@ -3741,7 +3747,7 @@ and opaque_type
              Atom "opaque type";
              space;
              identifier id;
-             option (type_parameter ~opts) tparams;
+             option (type_parameter ~opts ~kind:Flow_ast_mapper.OpaqueTypeTP) tparams;
            ]
           @ (match supertype with
             | Some t -> [Atom ":"; pretty_space; type_ ~opts t]
@@ -3921,7 +3927,7 @@ and type_function
          else
            Empty
          );
-         option (type_parameter ~opts) tparams;
+         option (type_parameter ~opts ~kind:Flow_ast_mapper.FunctionTypeTP) tparams;
          type_function_params ~opts params;
          sep;
          pretty_space;
@@ -4443,7 +4449,7 @@ and interface_declaration_base
        [
          def;
          identifier id;
-         option (type_parameter ~opts) tparams;
+         option (type_parameter ~opts ~kind:Flow_ast_mapper.InterfaceTP) tparams;
          interface_extends ~opts extends;
          pretty_space;
          source_location_with_comments (body_loc, type_object ~opts ~sep:(Atom ",") body_loc obj);
@@ -4480,7 +4486,7 @@ and declare_class
       Atom "class";
       space;
       identifier id;
-      option (type_parameter ~opts) tparams;
+      option (type_parameter ~opts ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
     ]
   in
   let extends_parts =
@@ -4559,7 +4565,7 @@ and declare_component
             Atom "component";
             space;
             identifier id;
-            option (type_parameter ~opts) tparams;
+            option (type_parameter ~opts ~kind:Flow_ast_mapper.DeclareComponentTP) tparams;
             group
               [
                 layout_node_with_comments_opt
@@ -4586,7 +4592,7 @@ and type_component
           [
             Atom "component";
             space;
-            option (type_parameter ~opts) tparams;
+            option (type_parameter ~opts ~kind:Flow_ast_mapper.ComponentTypeTP) tparams;
             group
               [
                 layout_node_with_comments_opt

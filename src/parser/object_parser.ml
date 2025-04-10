@@ -250,7 +250,12 @@ module Object
             let (sig_loc, (tparams, params, return)) =
               with_loc
                 (fun env ->
-                  let tparams = type_params_remove_trailing env (Type.type_params env) in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      ~kind:Flow_ast_mapper.FunctionTP
+                      (Type.type_params env)
+                  in
                   let params =
                     let params = Declaration.function_params ~await:async ~yield:generator env in
                     if Peek.token env = T_COLON then
@@ -814,7 +819,12 @@ module Object
               let (sig_loc, (tparams, params, return)) =
                 with_loc
                   (fun env ->
-                    let tparams = type_params_remove_trailing env (Type.type_params env) in
+                    let tparams =
+                      type_params_remove_trailing
+                        env
+                        ~kind:Flow_ast_mapper.FunctionTP
+                        (Type.type_params env)
+                    in
                     let params =
                       let params = Declaration.function_params ~await:async ~yield:generator env in
                       let params =
@@ -1114,7 +1124,11 @@ module Object
       | None -> None
       | Some tparams ->
         let { remove_trailing; _ } = trailing_and_remover env in
-        Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams))
+        Some
+          (remove_trailing tparams (fun remover tparams ->
+               remover#type_params ~kind:Flow_ast_mapper.ClassTP tparams
+           )
+          )
     in
     let (extends, implements) = class_heritage env in
     let body = class_body env ~expression in

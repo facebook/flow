@@ -346,9 +346,9 @@ class insert_variance_mapper =
   object (this)
     inherit useless_mapper as super
 
-    method! type_param (tparam : (Loc.t, Loc.t) Ast.Type.TypeParam.t) =
+    method! type_param ~kind (tparam : (Loc.t, Loc.t) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
-      let ((loc, tparam') as orig) = super#type_param tparam in
+      let ((loc, tparam') as orig) = super#type_param ~kind tparam in
       let { variance; _ } = tparam' in
       let variance' = this#variance_opt_ loc variance in
       if variance == variance' then

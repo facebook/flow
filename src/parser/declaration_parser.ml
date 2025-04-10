@@ -331,7 +331,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                 match (in_export_default env, Peek.token env) with
                 | (true, T_LPAREN) -> (None, None)
                 | (true, T_LESS_THAN) ->
-                  let tparams = type_params_remove_trailing env (Type.type_params env) in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      ~kind:Flow_ast_mapper.DeclareFunctionTP
+                      (Type.type_params env)
+                  in
                   let id =
                     if Peek.token env = T_LPAREN then
                       None
@@ -356,7 +361,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                       (Peek.loc env, { Identifier.name = ""; comments = None })
                     )
                   in
-                  let tparams = type_params_remove_trailing env (Type.type_params env) in
+                  let tparams =
+                    type_params_remove_trailing
+                      env
+                      ~kind:Flow_ast_mapper.DeclareFunctionTP
+                      (Type.type_params env)
+                  in
                   (tparams, Some id)
               in
               let params =
@@ -596,7 +606,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                   (* Components should have at least the same strictness as functions *)
                   (Parse.identifier ~restricted_error:Parse_error.StrictFunctionName env)
               in
-              let tparams = type_params_remove_trailing env (Type.type_params env) in
+              let tparams =
+                type_params_remove_trailing
+                  env
+                  ~kind:Flow_ast_mapper.DeclareComponentTP
+                  (Type.type_params env)
+              in
               let params =
                 let params = component_params env in
                 if Peek.is_renders_ident env then

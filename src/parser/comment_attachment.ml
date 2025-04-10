@@ -335,7 +335,7 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
 
-    method! type_params tparams =
+    method! type_params ~kind:_ tparams =
       let open Ast.Type.TypeParams in
       let (loc, { params; comments }) = tparams in
       id this#syntax_opt comments tparams (fun comments' -> (loc, { params; comments = comments' }))
@@ -437,12 +437,12 @@ let block_remove_trailing env block =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing block (fun remover (loc, str) -> (loc, remover#block loc str))
 
-let type_params_remove_trailing env tparams =
+let type_params_remove_trailing env ~kind tparams =
   match tparams with
   | None -> None
   | Some tparams ->
     let { remove_trailing; _ } = trailing_and_remover env in
-    Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams))
+    Some (remove_trailing tparams (fun remover tparams -> remover#type_params ~kind tparams))
 
 let type_remove_trailing env ty =
   let { remove_trailing; _ } = trailing_and_remover env in
@@ -830,9 +830,9 @@ let call_type_arg_comment_bounds loc arg =
   ignore (collector#call_type_arg arg);
   collect_without_trailing_line_comment collector
 
-let type_param_comment_bounds (loc, param) =
+let type_param_comment_bounds ~kind (loc, param) =
   let collector = new comment_bounds_collector ~loc in
-  ignore (collector#type_param (loc, param));
+  ignore (collector#type_param ~kind (loc, param));
   collect_without_trailing_line_comment collector
 
 let function_body_comment_bounds body =
