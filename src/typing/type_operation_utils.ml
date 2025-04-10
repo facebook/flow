@@ -387,7 +387,7 @@ module Operators = struct
         |> Base.List.iter ~f:(fun left ->
                begin
                  match left with
-                 | DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)) ->
+                 | DefT (reason, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)) ->
                    Flow_js_utils.add_output
                      cx
                      (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))

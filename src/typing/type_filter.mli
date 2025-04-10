@@ -31,27 +31,27 @@ val undefined : Type.t -> filter_result
 
 val not_undefined : Context.t -> Type.t -> filter_result
 
-val string_literal : Context.t -> ALoc.t -> bool -> Reason.name -> Type.t -> filter_result
+val string_literal : ALoc.t -> bool -> Reason.name -> Type.t -> filter_result
 
 val not_string_literal : Reason.name -> Type.t -> filter_result
 
-val number_literal : Context.t -> ALoc.t -> bool -> Type.number_literal -> Type.t -> filter_result
+val number_literal : ALoc.t -> bool -> Type.number_literal -> Type.t -> filter_result
 
 val not_number_literal : Type.number_literal -> Type.t -> filter_result
 
-val bigint_literal : Context.t -> ALoc.t -> bool -> Type.bigint_literal -> Type.t -> filter_result
+val bigint_literal : ALoc.t -> bool -> Type.bigint_literal -> Type.t -> filter_result
 
 val not_bigint_literal : Type.bigint_literal -> Type.t -> filter_result
 
-val true_ : Context.t -> Type.t -> filter_result
+val true_ : Type.t -> filter_result
 
-val not_true : Context.t -> Type.t -> filter_result
+val not_true : Type.t -> filter_result
 
-val false_ : Context.t -> Type.t -> filter_result
+val false_ : Type.t -> filter_result
 
-val not_false : Context.t -> Type.t -> filter_result
+val not_false : Type.t -> filter_result
 
-val boolean : Context.t -> ALoc.t -> Type.t -> filter_result
+val boolean : ALoc.t -> Type.t -> filter_result
 
 val not_boolean : Type.t -> filter_result
 

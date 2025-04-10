@@ -578,10 +578,6 @@ val is_primitive_literal_checked : t -> ALoc.t -> bool
 
 val iter_union_opt : t -> f:(ALocMap.key -> Type.t -> unit) -> unit
 
-val allow_unsound_literal_coercsion : t -> bool
-
-val with_disallowed_unsound_literal_coercion : t -> f:(unit -> 'a) -> 'a
-
 val remove_avar : t -> int -> unit
 
 val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit

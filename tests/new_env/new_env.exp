@@ -436,7 +436,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refi.js:24:3
 
-Cannot cast `y` to empty because number literal `42` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    refi.js:24:3
    24|   y as empty;

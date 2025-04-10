@@ -121,7 +121,8 @@ let rec truthy cx t =
     | UnionT (r, rep) -> recurse_into_union cx truthy (r, UnionRep.members rep)
     | MaybeT (_, t) -> changed_result t
     | OptionalT { reason = _; type_ = t; use_desc = _ } -> truthy cx t
-    | DefT (r, BoolGeneralT) -> DefT (r, BoolT_UNSOUND true) |> changed_result
+    | DefT (r, BoolGeneralT) ->
+      DefT (r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
     | DefT (r, StrGeneralT AnyLiteral) -> DefT (r, StrGeneralT Truthy) |> changed_result
     | DefT (r, NumGeneralT AnyLiteral) -> DefT (r, NumGeneralT Truthy) |> changed_result
     | DefT (r, MixedT _) -> DefT (r, MixedT Mixed_truthy) |> changed_result
@@ -175,8 +176,9 @@ let rec not_truthy cx t =
         { type_ = UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [t]); changed }
     | DefT (r, BoolGeneralT) -> DefT (r, BoolT_UNSOUND false) |> changed_result
     | DefT (r, StrGeneralT AnyLiteral) ->
-      DefT (r, StrT_UNSOUND (None, OrdinaryName "")) |> changed_result
-    | DefT (r, NumGeneralT AnyLiteral) -> DefT (r, NumT_UNSOUND (None, (0., "0"))) |> changed_result
+      DefT (r, SingletonStrT { from_annot = false; value = OrdinaryName "" }) |> changed_result
+    | DefT (r, NumGeneralT AnyLiteral) ->
+      DefT (r, SingletonNumT { from_annot = false; value = (0., "0") }) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
       recurse_into_intersection cx (not_truthy cx) (r, InterRep.members rep)
@@ -269,13 +271,7 @@ let rec not_undefined cx = function
   | DefT (r, MixedT Mixed_non_null) -> DefT (r, MixedT Mixed_non_maybe) |> changed_result
   | t -> unchanged_result t
 
-let mk_str_literal cx expected =
-  if Context.allow_unsound_literal_coercsion cx then
-    StrT_UNSOUND (None, expected)
-  else
-    SingletonStrT { from_annot = false; value = expected }
-
-let string_literal cx expected_loc sense expected t =
+let string_literal expected_loc sense expected t =
   let expected_desc = RStringLit expected in
   let lit_reason = replace_desc_new_reason expected_desc in
   match t with
@@ -292,10 +288,11 @@ let string_literal cx expected_loc sense expected t =
       DefT (mk_reason expected_desc expected_loc, StrT_UNSOUND (Some sense, expected))
       |> changed_result
   | DefT (r, StrGeneralT Truthy) when expected <> OrdinaryName "" ->
-    DefT (lit_reason r, mk_str_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonStrT { from_annot = false; value = expected }) |> changed_result
   | DefT (r, StrGeneralT AnyLiteral) ->
-    DefT (lit_reason r, mk_str_literal cx expected) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, mk_str_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonStrT { from_annot = false; value = expected }) |> changed_result
+  | DefT (r, MixedT _) ->
+    DefT (lit_reason r, SingletonStrT { from_annot = false; value = expected }) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
@@ -307,13 +304,7 @@ let not_string_literal expected = function
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
-let mk_num_literal cx expected =
-  if Context.allow_unsound_literal_coercsion cx then
-    NumT_UNSOUND (None, expected)
-  else
-    SingletonNumT { from_annot = false; value = expected }
-
-let number_literal cx expected_loc sense expected t =
+let number_literal expected_loc sense expected t =
   let (_, expected_raw) = expected in
   let expected_desc = RNumberLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
@@ -331,10 +322,11 @@ let number_literal cx expected_loc sense expected t =
       DefT (mk_reason expected_desc expected_loc, NumT_UNSOUND (Some sense, expected))
       |> changed_result
   | DefT (r, NumGeneralT Truthy) when snd expected <> "0" ->
-    DefT (lit_reason r, mk_num_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonNumT { from_annot = false; value = expected }) |> changed_result
   | DefT (r, NumGeneralT AnyLiteral) ->
-    DefT (lit_reason r, mk_num_literal cx expected) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, mk_num_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonNumT { from_annot = false; value = expected }) |> changed_result
+  | DefT (r, MixedT _) ->
+    DefT (lit_reason r, SingletonNumT { from_annot = false; value = expected }) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
@@ -345,13 +337,7 @@ let not_number_literal expected = function
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
-let mk_bigint_literal cx expected =
-  if Context.allow_unsound_literal_coercsion cx then
-    BigIntT_UNSOUND (None, expected)
-  else
-    SingletonBigIntT { from_annot = false; value = expected }
-
-let bigint_literal cx expected_loc sense expected t =
+let bigint_literal expected_loc sense expected t =
   let (_, expected_raw) = expected in
   let expected_desc = RBigIntLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
@@ -369,10 +355,11 @@ let bigint_literal cx expected_loc sense expected t =
       DefT (mk_reason expected_desc expected_loc, BigIntT_UNSOUND (Some sense, expected))
       |> changed_result
   | DefT (r, BigIntGeneralT Truthy) when snd expected <> "0n" ->
-    DefT (lit_reason r, mk_bigint_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonBigIntT { from_annot = false; value = expected }) |> changed_result
   | DefT (r, BigIntGeneralT AnyLiteral) ->
-    DefT (lit_reason r, mk_bigint_literal cx expected) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, mk_bigint_literal cx expected) |> changed_result
+    DefT (lit_reason r, SingletonBigIntT { from_annot = false; value = expected }) |> changed_result
+  | DefT (r, MixedT _) ->
+    DefT (lit_reason r, SingletonBigIntT { from_annot = false; value = expected }) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
@@ -383,56 +370,60 @@ let not_bigint_literal expected = function
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
-let mk_bool_literal cx expected =
-  if Context.allow_unsound_literal_coercsion cx then
-    BoolT_UNSOUND expected
-  else
-    SingletonBoolT { from_annot = false; value = expected }
-
-let true_ cx t =
+let true_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
   | DefT (r, SingletonBoolT { from_annot; value = true }) ->
     DefT (lit_reason r, SingletonBoolT { from_annot; value = true }) |> unchanged_result
   | DefT (r, BoolT_UNSOUND true) -> DefT (lit_reason r, BoolT_UNSOUND true) |> unchanged_result
-  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
+  | DefT (r, BoolGeneralT) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
+  | DefT (r, MixedT _) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
-let not_true cx t =
+let not_true t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
   | DefT (r, SingletonBoolT { value = true; _ })
   | DefT (r, BoolT_UNSOUND true) ->
     DefT (r, EmptyT) |> changed_result
-  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
+  | DefT (r, BoolGeneralT) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = false }) |> changed_result
   | t -> unchanged_result t
 
-let false_ cx t =
+let false_ t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
   | DefT (r, SingletonBoolT { from_annot; value = false }) ->
     DefT (lit_reason r, SingletonBoolT { from_annot; value = false }) |> unchanged_result
   | DefT (r, BoolT_UNSOUND false) -> DefT (lit_reason r, BoolT_UNSOUND false) |> unchanged_result
-  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
-  | DefT (r, MixedT _) -> DefT (lit_reason r, mk_bool_literal cx false) |> changed_result
+  | DefT (r, BoolGeneralT) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = false }) |> changed_result
+  | DefT (r, MixedT _) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = false }) |> changed_result
   | AnyT _ as t -> unchanged_result t
   | t -> DefT (reason_of_t t, EmptyT) |> changed_result
 
-let not_false cx t =
+let not_false t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
   | DefT (r, SingletonBoolT { value = false; _ })
   | DefT (r, BoolT_UNSOUND false) ->
     DefT (r, EmptyT) |> changed_result
-  | DefT (r, BoolGeneralT) -> DefT (lit_reason r, mk_bool_literal cx true) |> changed_result
+  | DefT (r, BoolGeneralT) ->
+    DefT (lit_reason r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
   | t -> unchanged_result t
 
-let boolean cx loc t =
+let boolean loc t =
   match t with
   | DefT (r, MixedT Mixed_truthy) ->
-    DefT (replace_desc_new_reason BoolModuleT.desc r, mk_bool_literal cx true) |> changed_result
+    DefT
+      ( replace_desc_new_reason BoolModuleT.desc r,
+        SingletonBoolT { from_annot = false; value = true }
+      )
+    |> changed_result
   | AnyT _
   | DefT (_, MixedT _) ->
     DefT (mk_reason RBoolean loc, BoolGeneralT) |> changed_result
