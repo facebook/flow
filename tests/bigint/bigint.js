@@ -67,3 +67,33 @@ if (b) {} // error
   String(b) as string; // OK
   `${b}` as string; // OK
 }
+
+{
+  declare const b: 1n;
+  const x = -b; // okay
+  x as -1n; // OK
+  x as 1n; // ERROR
+  x as bigint; // OK
+}
+
+{
+  declare const cond: boolean;
+  const x = cond ? 1n : 2n;
+  x as 1n; // ERROR
+  x as 1n | 2n; // OK
+  const y = -x;
+  y as -1n; // ERROR
+  y as -1n | -2n; // OK
+}
+
+{
+  declare const cond: boolean;
+  declare const b1: 1n;
+  declare const b2: 2n;
+  const x = cond ? b1 : b2;
+  x as 1n; // ERROR
+  x as 1n | 2n; // OK
+  const y = -x;
+  y as -1n; // ERROR
+  y as -1n | -2n; // OK
+}
