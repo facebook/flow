@@ -5020,22 +5020,8 @@ module Make
       )
     | { operator = Minus; argument; comments } ->
       let (((_, argt), _) as argument) = expression cx ~as_const ~frozen argument in
-      ( begin
-          match argt with
-          | DefT (reason, NumT_UNSOUND (sense, lit)) ->
-            (* special case for negative number literals, to avoid creating an unnecessary tvar. not
-               having a tvar allows other special cases that match concrete lower bounds to proceed
-               (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
-               make a negative number not look like a literal.) *)
-            let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
-            DefT (reason, NumT_UNSOUND (sense, lit))
-          | DefT (reason, SingletonNumT { from_annot; value = lit }) ->
-            let (reason, lit) = Flow_js_utils.unary_negate_lit ~annot_loc:loc reason lit in
-            DefT (reason, SingletonNumT { from_annot; value = lit })
-          | arg ->
-            let reason = mk_reason (desc_of_t arg) loc in
-            Operators.unary_arith cx reason UnaryArithKind.Minus arg
-        end,
+      let reason = mk_reason (desc_of_t argt) loc in
+      ( Operators.unary_arith cx reason UnaryArithKind.Minus argt,
         { operator = Minus; argument; comments }
       )
     | { operator = BitNot; argument; comments } ->

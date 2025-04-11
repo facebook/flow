@@ -3015,6 +3015,18 @@ let unary_negate_lit ~annot_loc reason (value, raw) =
   in
   (reason, (value, raw))
 
+let unary_negate_bigint_lit ~annot_loc reason (value, raw) =
+  let reason = annot_reason ~annot_loc @@ repos_reason annot_loc reason in
+  let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
+  let reason =
+    Reason.update_desc_reason
+      (function
+        | RBigIntLit _ -> RBigIntLit raw
+        | d -> d)
+      reason
+  in
+  (reason, (value, raw))
+
 let flow_unary_arith cx l reason kind =
   let open UnaryArithKind in
   match (kind, l) with
@@ -3025,9 +3037,14 @@ let flow_unary_arith cx l reason kind =
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
     DefT (reason, SingletonNumT { from_annot; value = lit })
   | (Minus, DefT (_, NumGeneralT _)) -> l
-  | (Minus, DefT (_, BigIntT_UNSOUND (_, (value, raw)))) ->
-    let (value, raw) = Flow_ast_utils.negate_bigint_literal (value, raw) in
-    DefT (replace_desc_reason RBigInt reason, BigIntT_UNSOUND (None, (value, raw)))
+  | (Minus, DefT (lreason, BigIntT_UNSOUND (_, (value, raw)))) ->
+    let (reason, lit) =
+      unary_negate_bigint_lit ~annot_loc:(loc_of_reason reason) lreason (value, raw)
+    in
+    DefT (reason, BigIntT_UNSOUND (None, lit))
+  | (Minus, DefT (lreason, SingletonBigIntT { from_annot; value = lit })) ->
+    let (reason, lit) = unary_negate_bigint_lit ~annot_loc:(loc_of_reason reason) lreason lit in
+    DefT (reason, SingletonBigIntT { from_annot; value = lit })
   | (Minus, DefT (_, BigIntGeneralT _)) -> l
   | (Plus, DefT (reason_bigint, (BigIntGeneralT _ | BigIntT_UNSOUND _))) ->
     add_output cx (Error_message.EBigIntNumCoerce reason_bigint);
