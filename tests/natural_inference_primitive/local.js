@@ -554,3 +554,35 @@ function test_generalize_under_intersection() {
     (x: {f: number}) => {}, // okay, type of `1` should generalize
   );
 }
+
+function tests_unary_negation() {
+  const x1: -1 = -1; // okay
+  const x2 = -2;
+  x2 as -2; // okay
+  x2 as -3; // error -2 ~> -3
+  const x3 = -x2;
+  x3 as 2; // okay
+  x3 as -2; // error 2 ~> -2
+
+  const objx1 = {x1};
+  objx1.x1 as -1; // okay - comes from annotation
+
+  const objx2 = {x2};
+  objx2.x2 as -2; // error number ~> -2
+  objx2.x2 as number; // okay
+
+  const b1: -1n = -1n; // okay
+  const b2 = -2n;
+  b2 as -2n; // okay
+  b2 as -3n; // error -2n ~> -3n
+  const b3 = -b2;
+  b3 as 2n; // okay
+  b3 as -2n; // error 2n ~> -2n
+
+  const objb1 = {b1};
+  objb1.b1 as -1n; // okay
+
+  const objb2 = {b2};
+  objb2.b2 as -2n; // error bigint ~> -2n
+  objb2.b2 as bigint; // okay
+}

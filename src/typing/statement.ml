@@ -4993,7 +4993,7 @@ module Make
 
   (* traverse a unary expression, return result type *)
   and unary cx syntactic_flags loc =
-    let { Primitive_literal.encl_ctx; as_const; frozen; _ } = syntactic_flags in
+    let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint; _ } = syntactic_flags in
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -5019,7 +5019,8 @@ module Make
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx ~as_const ~frozen argument in
+      let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+      let (((_, argt), _) as argument) = expression cx ?decl ~has_hint ~as_const ~frozen argument in
       let reason = mk_reason (desc_of_t argt) loc in
       ( Operators.unary_arith cx reason UnaryArithKind.Minus argt,
         { operator = Minus; argument; comments }
