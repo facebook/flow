@@ -2389,6 +2389,96 @@ References:
                                               ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:562:3
+
+Cannot cast `x2` to number literal `-3` because number [1] is incompatible with number literal `-3` [2].
+[incompatible-cast]
+
+   local.js:562:3
+   562|   x2 as -3; // error -2 ~> -3
+          ^^
+
+References:
+   local.js:560:14
+   560|   const x2 = -2;
+                     ^^ [1]
+   local.js:562:9
+   562|   x2 as -3; // error -2 ~> -3
+                ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:565:3
+
+Cannot cast `x3` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
+[incompatible-cast]
+
+   local.js:565:3
+   565|   x3 as -2; // error 2 ~> -2
+          ^^
+
+References:
+   local.js:563:14
+   563|   const x3 = -x2;
+                     ^^^ [1]
+   local.js:565:9
+   565|   x3 as -2; // error 2 ~> -2
+                ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:571:3
+
+Cannot cast `objx2.x2` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
+[incompatible-cast]
+
+   local.js:571:3
+   571|   objx2.x2 as -2; // error number ~> -2
+          ^^^^^^^^
+
+References:
+   local.js:560:14
+   560|   const x2 = -2;
+                     ^^ [1]
+   local.js:571:15
+   571|   objx2.x2 as -2; // error number ~> -2
+                      ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:577:3
+
+Cannot cast `b2` to bigint literal `-3n` because bigint [1] is incompatible with bigint literal `-3n` [2].
+[incompatible-cast]
+
+   local.js:577:3
+   577|   b2 as -3n; // error -2n ~> -3n
+          ^^
+
+References:
+   local.js:575:14
+   575|   const b2 = -2n;
+                     ^^^ [1]
+   local.js:577:9
+   577|   b2 as -3n; // error -2n ~> -3n
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:580:3
+
+Cannot cast `b3` to bigint literal `-2n` because bigint [1] is incompatible with bigint literal `-2n` [2].
+[incompatible-cast]
+
+   local.js:580:3
+   580|   b3 as -2n; // error 2n ~> -2n
+          ^^
+
+References:
+   local.js:578:14
+   578|   const b3 = -b2;
+                     ^^^ [1]
+   local.js:580:9
+   580|   b3 as -2n; // error 2n ~> -2n
+                ^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- react.js:7:9
 
 Cannot create `MyDiv` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
@@ -2421,7 +2511,7 @@ References:
 
 
 
-Found 144 errors
+Found 149 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
