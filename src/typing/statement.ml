@@ -4999,15 +4999,9 @@ module Make
     | { operator = Not; argument; comments } ->
       let (((_, arg), _) as argument) = expression cx ~encl_ctx:OtherTestContext argument in
       let tout =
-        match encl_ctx with
-        | SwitchTestContext _
-        | OtherTestContext ->
+        if is_conditional_test_context encl_ctx then
           BoolModuleT.at loc
-        | NoContext
-        | IndexContext
-        | JsxTitleNameContext
-        | JsxAttrOrChildrenContext
-        | LiteralTestContext ->
+        else
           let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
           Operators.unary_not cx reason arg
       in
@@ -5094,15 +5088,7 @@ module Make
   (* Returns a function that type check LHS or RHS of eq_test under correct conditional context. *)
   and visit_eq_test cx ~encl_ctx loc left right =
     let check ~encl_ctx = expression cx ~encl_ctx in
-    match encl_ctx with
-    | NoContext
-    | IndexContext
-    | JsxTitleNameContext
-    | JsxAttrOrChildrenContext
-    | LiteralTestContext ->
-      check ~encl_ctx
-    | SwitchTestContext _
-    | OtherTestContext ->
+    if is_conditional_test_context encl_ctx then
       let reconstruct_ast = check ~encl_ctx:OtherTestContext in
       Eq_test.visit_eq_test
       (* Strict and sense don't influence whether we should propagate cond context. *)
@@ -5122,6 +5108,8 @@ module Make
         loc
         left
         right
+    else
+      check ~encl_ctx
 
   and matching_prop_check cx left right =
     let open Ast.Expression in
@@ -5166,22 +5154,13 @@ module Make
       let reconstruct_ast = visit_eq_test cx ~encl_ctx loc left right in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
-      begin
+      if is_conditional_test_context encl_ctx then begin
+        matching_prop_check cx left right;
+        (* If this is a switch statement only consider the case where the object
+         * access in the discriminant. *)
         match encl_ctx with
-        | NoContext
-        | IndexContext
-        | JsxTitleNameContext
-        | JsxAttrOrChildrenContext
-        | LiteralTestContext ->
-          ()
-        | SwitchTestContext _
-        | OtherTestContext ->
-          matching_prop_check cx left right;
-          (* If this is a switch statement only consider the case where the object
-           * access in the discriminant. *)
-          (match encl_ctx with
-          | SwitchTestContext _ -> ()
-          | _ -> matching_prop_check cx right left)
+        | SwitchTestContext _ -> ()
+        | _ -> matching_prop_check cx right left
       end;
       Operators.check_strict_eq ~encl_ctx cx (t1, t2);
       (BoolModuleT.at loc, { operator; left; right; comments })
@@ -6508,15 +6487,9 @@ module Make
   and get_prop_opt_use ~encl_ctx reason ~use_op ~hint (prop_reason, name) =
     let id = mk_id () in
     let prop_name = OrdinaryName name in
-    match encl_ctx with
-    | SwitchTestContext _
-    | OtherTestContext ->
+    if is_conditional_test_context encl_ctx then
       OptTestPropT (use_op, reason, id, mk_named_prop ~reason:prop_reason prop_name, hint)
-    | NoContext
-    | IndexContext
-    | JsxTitleNameContext
-    | JsxAttrOrChildrenContext
-    | LiteralTestContext ->
+    else
       OptGetPropT
         {
           use_op;
