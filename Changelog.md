@@ -1,3 +1,18 @@
+### 0.267.0
+
+Likely to cause new Flow errors:
+* We have updated the way type parameters are instantiated in generic calls, specifically when using upper bounds:
+  - We will no longer infer synthetic intersection types.
+  - If multiple upper bounds are available, we pick the smallest type based on subtyping ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABDAHso4NBOYwIIMADwAFQAfAAKGAARmQnKlYoAlJyALwSzkNCBwNi8bkAJgVStVGq1OrYyoVYoA3AAdKBs3AcznskgkTkAQSgZm4nOA9IdTpdbo9ABEIAhOQoFo6Pd7fbh-YHHtB7JyWCRtBJ1YLhbQpVKGgqExlcKbNQH9UWFRGEBXk8qHbkQA0TCR+VAkhl7CYQPSgA)).
+* Support for `$Rest` is removed. `Omit` should be used instead. If you still have many instances of `$Rest`, you can replace them with `$Diff` as a temporary measure, but note that we intend to eventually remove `$Diff` as well.
+
+* React-rule hook errors related to conditional hook calls will now have `react-rule-hook-conditional` error code.
+* React-rule hook errors related to naming convention issues will now have `react-rule-hook-naming-convention` error code.
+
+Notable bug fixes:
+* We are rolling out the initial phase of a fix to a fundamental soundness issue related to primitive literal type inference. This unsoundness has allowed invalid code like: `const x = 'a'; 'b' as typeof x as 'a';` ([try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SVs9gABBh2QBedkAcgwfIA3AAdR7QDloZD8wU8-loPmckjslbGCAwTmiqC5EANEwkODQJINAAMVgATAA2S1WACMIHpQA)) to type check without errors. With this fix, Flow will infer [singleton literal types](https://flow.org/en/docs/types/literals/) for primitive literals in contexts where such precision is required. Examples of this are: const-declarations (e.g. in `const x = 42` will infer the type `42` for `x`), annotation positions (e.g. `typeof x` is equivalent to the type `42`), conditionals (e.g. in `if (x.tag === 42) {}` Flow will infer the type `42` for the value `42`, instead of `number`). In this part of the rollout, whenever this precision is not required Flow will infer the unsound type it used to infer before (a hybrid between the singleton and general type). Eliminating this unsound type completely will be done soon.
+* `flow-remove-types` now handles the removal of empty imports after removing type/typeof imports (thanks @jbroma)
+
 ### 0.266.1
 
 * Fix a bug that causes fixed `libdef-override` error to stick around after an incremental recheck.
