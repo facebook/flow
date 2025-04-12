@@ -763,7 +763,7 @@ let do_initialize params : Initialize.result =
       else
         supported_code_action_kinds
     in
-    if not (List.is_empty supported_code_action_kinds) then
+    if not (Base.List.is_empty supported_code_action_kinds) then
       CodeActionOptions { codeActionKinds = supported_code_action_kinds }
     else
       CodeActionBool false

@@ -519,7 +519,7 @@ let is_start_of_type_guard env =
 
 let reparse_arguments_as_match_argument env (args_loc, args) =
   let { Expression.ArgList.arguments; _ } = args in
-  if List.is_empty arguments then Parser_env.error_at env (args_loc, Parse_error.MatchEmptyArgument);
+  if Base.List.is_empty arguments then Parser_env.error_at env (args_loc, Parse_error.MatchEmptyArgument);
   let filtered_args =
     List.filter_map
       (function

@@ -86,7 +86,7 @@ let main path filename () =
     Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
   in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  if List.is_empty errors then
+  if Base.List.is_empty errors then
     (* Compute read -> write edges *)
     let (_, env) = Name_resolver.program_with_scope () ast in
     (* Compute write -> read edges *)

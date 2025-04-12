@@ -3033,7 +3033,7 @@ module Make
             Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments }
           )
         in
-        if (not (List.is_empty cases)) && all_throws then
+        if (not (Base.List.is_empty cases)) && all_throws then
           Abnormal.throw_expr_control_flow_exception loc ast
         else
           ast

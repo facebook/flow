@@ -81,7 +81,7 @@ let name_of_attribute attribute =
 let get_existing_attributes_names cx ~tast attributes children =
   let open Ast.JSX in
   let init_set =
-    if List.is_empty (snd children) then
+    if Base.List.is_empty (snd children) then
       SSet.empty
     else
       SSet.singleton "children"
@@ -162,7 +162,7 @@ class mapper cx ~snippets_enabled ~tast target_loc =
             |> Base.List.sort ~compare:String.compare
             |> Base.List.mapi ~f:(mk_attribute ~snippets_enabled)
           in
-          if not (List.is_empty new_attrs) then
+          if not (Base.List.is_empty new_attrs) then
             raise
               (Found
                  (concat_and_sort_attrs
