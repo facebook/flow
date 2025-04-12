@@ -289,8 +289,13 @@ var removeFlowVisitor = {
         removeTrailingCommaNode(context, defaultSpecifier);
         // remove opening brace
         removeNode(context, context.ast.tokens[idxStart - 1]);
-        // remove closing brace
-        removeNode(context, context.ast.tokens[idxEnd + 1]);
+        // remove trailing brace
+        if (getLabel(context.ast.tokens[idxEnd + 1]) === '}') {
+          removeNode(context, context.ast.tokens[idxEnd + 1]);
+        } else {
+          // last specifier has a trailing comma, skip it
+          removeNode(context, context.ast.tokens[idxEnd + 2]);
+        }
       }
     }
   },
