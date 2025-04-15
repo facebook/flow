@@ -71,3 +71,11 @@ hook useC() {
     const useBadName = nonHook;
     useBadName(); // error
 }
+
+{
+  hook useFoo() {
+    Bar?.useFoo(); // should be react-rule-hook-conditional error instead of react-rule-hook-naming-convention
+  }
+
+  declare const Bar: ?{useFoo: typeof useFoo}
+}

@@ -994,7 +994,13 @@ and component_ast_visitor tast cx rrid =
       begin
         match hook_callee cx callee_ty with
         | HookCallee _ -> begin
-          if Flow_ast_utils.hook_call expr then begin
+          if
+            match callee_exp with
+            | Ast.Expression.OptionalMember _ -> true
+            | _ -> false
+          then
+            hook_error Error_message.ConditionalHook
+          else if Flow_ast_utils.hook_call expr then begin
             if ConditionalState.conditional conditional_state && not (bare_use expr) then
               hook_error Error_message.ConditionalHook
           end else

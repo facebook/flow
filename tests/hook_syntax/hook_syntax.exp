@@ -259,6 +259,21 @@ References:
            ^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- declare_hook_tests.js:77:5
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
+
+   declare_hook_tests.js:77:5
+   77|     Bar?.useFoo(); // should be react-rule-hook-conditional error instead of react-rule-hook-naming-convention
+           ^^^^^^^^^^^^^
+
+References:
+   declare_hook_tests.js:77:5
+   77|     Bar?.useFoo(); // should be react-rule-hook-conditional error instead of react-rule-hook-naming-convention
+           ^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -2515,4 +2530,4 @@ References:
 
 
 
-Found 163 errors
+Found 164 errors
