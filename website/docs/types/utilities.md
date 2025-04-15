@@ -573,7 +573,7 @@ For inexact objects, a property may or may not be own.
 
 For example:
 
-```js flow-check
+```js
 type Props = {name: string, age: number};
 
 const props: Props = {name: 'Jon', age: 42};
@@ -607,7 +607,7 @@ This is analogous to the JavaScript function `map`.
 
 Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate its return type like this:
 
-```js flow-check
+```js
 // Function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V
 
@@ -629,7 +629,7 @@ NOTE: Please use [Conditional Types](../conditional) or [Indexed Access Types](.
 This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
 
 Let's see a couple of examples:
-```js flow-check
+```js
 // Takes an object type, returns the type of its `prop` key
 type ExtractPropType = <T>({prop: T, ...}) => T;
 type Obj = {prop: number};
@@ -640,7 +640,7 @@ type Nope = $Call<ExtractPropType, {nope: number}>;  // Error! Argument doesn't 
 true as PropType;  // Error! PropType is a number
 ```
 
-```js flow-check
+```js
 // Takes a function type, and returns its return type
 type ExtractReturnType = <R>(() => R) => R;
 type Fn = () => number;
@@ -653,7 +653,7 @@ true as ReturnType;  // Error! ReturnType is a number
 `$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime.
 The type-land calls happen statically and will be erased at runtime.
 
-```js flow-check
+```js
 // Getting return types:
 function getFirstValue<V>(map: Map<string, V>): ?V {
   for (const [key, value] of map.entries()) {
@@ -685,7 +685,7 @@ NOTE: Please use [Mapped Types](../mapped-types) instead.
 
 Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
 
-```js flow-check
+```js
 function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $FlowFixMe {
   return Object.keys(o).reduce<{[string]: (...$ReadOnlyArray<mixed>) => mixed}>(
     (acc, k) => ({...acc, [(k: string)]: o[k]()}),
@@ -725,7 +725,7 @@ which is like `Promise.all` but takes an object as input.
 
 Here's a possible declaration of this function, which is very similar to our first example:
 
-```js flow-check
+```js
 declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, <T>(p: Promise<T> | T) => T>>>;
 
 const promises = {a: Promise.resolve(42)};
@@ -743,7 +743,7 @@ NOTE: Please use [Mapped Types](../mapped-types) instead.
 type `F` will be [called](#toc-call) with both the key and value types of the elements of
 the object type `T`, instead of just the value types. For example:
 
-```js flow-check
+```js
 const o = {
   a: () => true,
   b: () => 'foo'
@@ -767,7 +767,7 @@ NOTE: Please use [Mapped Types](../mapped-types) instead.
 `$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
 function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
 can write `$ObjMapConst<Obj, T>`. For example:
-```js flow-check
+```js
 const obj = {
   a: true,
   b: 'foo'
