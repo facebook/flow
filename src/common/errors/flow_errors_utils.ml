@@ -946,6 +946,27 @@ let loc_of_printable_error_for_compare ((_, err) : 'a printable_error) =
     | { loc; _ } -> loc
   )
 
+let patch_unsuppressable_error ((error_kind, friendly) : 'loc printable_error) =
+  let open Friendly in
+  let { message; _ } = friendly in
+  let new_explanation =
+    [[Inline [Text "Errors with this error code are configured to be unsuppressable"]]]
+  in
+  let message =
+    match message with
+    | Normal ({ explanations; _ } as normal) ->
+      let explanations =
+        match explanations with
+        | None -> Some new_explanation
+        | Some explanations -> Some (explanations @ new_explanation)
+      in
+      Normal { normal with explanations }
+    | Speculation { frames; explanations; branches } ->
+      let explanations = explanations @ new_explanation in
+      Speculation { frames; explanations; branches }
+  in
+  (error_kind, { friendly with message })
+
 let patch_misplaced_error ~strip_root source_file ((error_kind, friendly) : 'loc printable_error) =
   let open Friendly in
   let { message; _ } = friendly in

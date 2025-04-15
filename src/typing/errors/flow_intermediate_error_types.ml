@@ -938,6 +938,7 @@ type 'loc intermediate_error = {
   root: (Loc.t * 'loc root_message) option;
   message: 'loc error_message;
   misplaced_source_file: File_key.t option;
+  unsuppressable: bool;
 }
 
 and 'loc error_message =

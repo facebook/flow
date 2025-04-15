@@ -342,6 +342,14 @@ let filter_suppressed_errors
         | Off -> (errors, (error, used) :: suppressed, unused)
         | _ ->
           let error =
+            let open Flow_intermediate_error_types in
+            match error.error_code with
+            | Some code when SSet.mem (Error_codes.string_of_code code) unsuppressable_error_codes
+              ->
+              { error with unsuppressable = true }
+            | _ -> error
+          in
+          let error =
             Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:(Some root) error
           in
           (Flow_errors_utils.ConcreteLocPrintableErrorSet.add error errors, suppressed, unused)))

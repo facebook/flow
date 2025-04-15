@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:4:21
 
-Cannot assign `true` to `foo` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `true` to `foo` because boolean [1] is incompatible with string [2]. Errors with this error code are
+configured to be unsuppressable. [incompatible-type]
 
    test.js:4:21
    4| const foo: string = true; // not suppressed without speculation
@@ -17,6 +18,8 @@ Error --------------------------------------------------------------------------
 Cannot assign `true` to `foo2` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with number [3].
+
+Errors with this error code are configured to be unsuppressable.
 
    test.js:6:31
    6| const foo2: string | number = true; // not suppressed with speculation

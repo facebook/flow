@@ -340,6 +340,7 @@ let mk_error
     error_code;
     message = SingletonMessage { message; frames; explanations };
     misplaced_source_file = None;
+    unsuppressable = false;
   }
 
 let mk_speculation_error
@@ -357,6 +358,7 @@ let mk_speculation_error
     error_code;
     message = SpeculationMessage { frames; explanations; branches = speculation_errors };
     misplaced_source_file = None;
+    unsuppressable = false;
   }
 
 let rec make_intermediate_error :
@@ -4151,8 +4153,8 @@ let to_printable_error :
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
   in
-  let rec convert_error_message { kind; loc; error_code; root; message; misplaced_source_file = _ }
-      =
+  let rec convert_error_message
+      { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =
     let root = Base.Option.map root ~f:(fun (loc, msg) -> (loc, root_msg_to_friendly_msgs msg)) in
     match message with
     | SingletonMessage { message; frames; explanations } ->
@@ -4170,9 +4172,18 @@ let to_printable_error :
         (Base.List.map branches ~f:(fun (i, e) -> (i, convert_error_message e)))
   in
   let printable_error = convert_error_message intermediate_error in
-  match intermediate_error.misplaced_source_file with
-  | None -> printable_error
-  | Some source_file -> patch_misplaced_error ~strip_root source_file printable_error
+  let printable_error =
+    if intermediate_error.unsuppressable then
+      patch_unsuppressable_error printable_error
+    else
+      printable_error
+  in
+  let printable_error =
+    match intermediate_error.misplaced_source_file with
+    | None -> printable_error
+    | Some source_file -> patch_misplaced_error ~strip_root source_file printable_error
+  in
+  printable_error
 
 let make_errors_printable ~loc_of_aloc ~strip_root errors =
   let f err acc =
