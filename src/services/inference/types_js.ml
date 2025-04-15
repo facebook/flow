@@ -330,6 +330,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
+  let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   (* We will keep track of seen errors/warnings to avoid sending the same thing twice. *)
   let seen_errors = ref ConcreteLocPrintableErrorSet.empty in
   let seen_warnings = ref ConcreteLocPrintableErrorSet.empty in
@@ -339,6 +340,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions
         errors
@@ -348,6 +350,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options:None
+        ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions
         warnings

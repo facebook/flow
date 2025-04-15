@@ -1486,6 +1486,7 @@ let make_options
         ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig);
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
+    opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;
     opt_use_mixed_in_catch_variables =
       Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
     opt_ban_spread_key_props =

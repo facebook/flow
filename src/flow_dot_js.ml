@@ -318,6 +318,7 @@ let check_content ~filename ~content ~js_config_object =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
           suppressions
           errors
@@ -327,6 +328,7 @@ let check_content ~filename ~content ~js_config_object =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
           suppressions
           warnings

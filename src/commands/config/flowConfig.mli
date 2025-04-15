@@ -276,6 +276,8 @@ val type_expansion_recursion_limit : config -> int
 
 val this_type_guards : config -> bool
 
+val unsuppressable_error_codes : config -> SSet.t
+
 val use_mixed_in_catch_variables : config -> bool option
 
 val wait_for_recheck : config -> bool

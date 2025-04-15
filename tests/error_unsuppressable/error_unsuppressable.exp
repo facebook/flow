@@ -1,0 +1,35 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:21
+
+Cannot assign `true` to `foo` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:4:21
+   4| const foo: string = true; // not suppressed without speculation
+                          ^^^^ [1]
+
+References:
+   test.js:4:12
+   4| const foo: string = true; // not suppressed without speculation
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:6:31
+
+Cannot assign `true` to `foo2` because: [incompatible-type]
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   test.js:6:31
+   6| const foo2: string | number = true; // not suppressed with speculation
+                                    ^^^^ [1]
+
+References:
+   test.js:6:13
+   6| const foo2: string | number = true; // not suppressed with speculation
+                  ^^^^^^ [2]
+   test.js:6:22
+   6| const foo2: string | number = true; // not suppressed with speculation
+                           ^^^^^^ [3]
+
+
+
+Found 2 errors

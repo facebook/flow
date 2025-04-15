@@ -228,14 +228,33 @@ let remove_suppression_from_map loc specific_codes (suppressions_map : t) =
 let remove_lint_suppression_from_map loc (suppressions_map : t) =
   update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
+type error_code_kind =
+  | ErrorCodeUnsuppressable
+  | ErrorCodeRequireSpecific
+  | ErrorCodeGeneral
+
 let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
   let suppression_applies codes2 =
     match codes2 with
-    | All _ -> CodeMap.for_all (fun _ require_specific -> not require_specific) specific_codes
-    | Specific specific_codes2 -> CodeSet.subset (Lazy.force specific_codes_set) specific_codes2
+    | All _ ->
+      CodeMap.for_all
+        (fun _code -> function
+          | ErrorCodeUnsuppressable
+          | ErrorCodeRequireSpecific ->
+            false
+          | ErrorCodeGeneral -> true)
+        specific_codes
+    | Specific specific_codes2 ->
+      CodeMap.for_all
+        (fun code -> function
+          | ErrorCodeUnsuppressable -> false
+          | ErrorCodeRequireSpecific
+          | ErrorCodeGeneral ->
+            CodeSet.mem code specific_codes2)
+        specific_codes
   in
   match suppression_at_loc loc suppressions with
   | Some (locs, codes') when suppression_applies codes' ->
@@ -257,13 +276,23 @@ let in_declarations ~file_options loc =
 let check
     ~root
     ~file_options
+    ~unsuppressable_error_codes
     (err : 'loc Flow_intermediate_error_types.intermediate_error)
     (suppressions : t)
     (unused : t) =
   let loc = err.Flow_intermediate_error_types.loc in
   let code_opt =
     Base.Option.map err.Flow_intermediate_error_types.error_code ~f:(fun code ->
-        CodeMap.singleton (Error_codes.string_of_code code, loc) (Error_codes.require_specific code)
+        let string_code = Error_codes.string_of_code code in
+        let kind =
+          if SSet.mem string_code unsuppressable_error_codes then
+            ErrorCodeUnsuppressable
+          else if Error_codes.require_specific code then
+            ErrorCodeRequireSpecific
+          else
+            ErrorCodeGeneral
+        in
+        CodeMap.singleton (string_code, loc) kind
     )
   in
   (* Ignore lint errors from node modules, and all errors from declarations directories. *)
@@ -300,12 +329,13 @@ let universally_suppressed_codes map =
     map
     CodeLocSet.empty
 
-let filter_suppressed_errors ~root ~file_options ~loc_of_aloc suppressions errors ~unused =
+let filter_suppressed_errors
+    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
       let error = Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error in
-      match check ~root ~file_options error suppressions unused with
+      match check ~root ~file_options ~unsuppressable_error_codes error suppressions unused with
       | None -> acc
       | Some (severity, used, unused) ->
         (match severity with

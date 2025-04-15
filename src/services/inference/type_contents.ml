@@ -118,11 +118,13 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
   in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
+  let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   (* Filter out suppressed errors *)
   let (errors, _, _) =
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions
       errors
@@ -134,6 +136,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions
       warnings

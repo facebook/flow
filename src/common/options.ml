@@ -171,6 +171,7 @@ type t = {
   opt_ts_syntax: bool;
   opt_type_expansion_recursion_limit: int;
   opt_this_type_guards: bool;
+  opt_unsuppressable_error_codes: SSet.t;
   opt_use_mixed_in_catch_variables: bool;
   opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
@@ -396,6 +397,8 @@ let ts_syntax opts = opts.opt_ts_syntax
 let type_expansion_recursion_limit opts = opts.opt_type_expansion_recursion_limit
 
 let this_type_guards opts = opts.opt_this_type_guards
+
+let unsuppressable_error_codes opts = opts.opt_unsuppressable_error_codes
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 

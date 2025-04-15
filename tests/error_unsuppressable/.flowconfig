@@ -1,0 +1,4 @@
+[options]
+all=true
+unsuppressable_error_codes=incompatible-type
+unsuppressable_error_codes=random

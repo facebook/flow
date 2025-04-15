@@ -145,6 +145,7 @@ module Opts = struct
     ts_syntax: bool;
     type_expansion_recursion_limit: int;
     this_type_guards: bool;
+    unsuppressable_error_codes: SSet.t;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
@@ -287,6 +288,7 @@ module Opts = struct
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
       this_type_guards = false;
+      unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
       watchman_defer_states = [];
@@ -989,6 +991,13 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with suppress_types = SSet.add v opts.suppress_types })
 
+  let unsuppressable_error_codes_parser =
+    string
+      ~init:(fun opts -> { opts with unsuppressable_error_codes = SSet.empty })
+      ~multiple:true
+      (fun opts v ->
+        Ok { opts with unsuppressable_error_codes = SSet.add v opts.unsuppressable_error_codes })
+
   let use_mixed_in_catch_variables_parser =
     boolean (fun opts v -> Ok { opts with use_mixed_in_catch_variables = Some v })
 
@@ -1202,6 +1211,7 @@ module Opts = struct
       ("suppress_type", suppress_types_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
+      ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
@@ -2023,6 +2033,8 @@ let ts_syntax c = c.options.Opts.ts_syntax
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 
 let this_type_guards c = c.options.Opts.this_type_guards
+
+let unsuppressable_error_codes c = c.options.Opts.unsuppressable_error_codes
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
 
