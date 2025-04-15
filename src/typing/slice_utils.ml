@@ -851,65 +851,9 @@ let object_rest
               Obj_type.is_exact flags2.obj_kind
             )
           with
-          (* If the object we are using to subtract has an optional property, non-own
-           * property, or is inexact then we should add this prop to our result, but
-           * make it optional as we cannot know for certain whether or not at runtime
-           * the property would be subtracted.
-           *
-           * Sound subtraction also considers exactness and owness to determine
-           * optionality. If p2 is maybe-own then sometimes it may not be
-           * subtracted and so is optional. If props2 is not exact then we may
-           * optionally have some undocumented prop. *)
-          | ( IgnoreExactAndOwn,
-              Some { Object.prop_t = t1; is_method; is_own = _; polarity = _; key_loc },
-              Some { Object.prop_t = OptionalT _ as t2; _ },
-              _
-            ) ->
-            subt_check ~use_op cx (t1, optional t2);
-            let p =
-              if is_method then
-                Method { key_loc; type_ = optional t1 }
-              else
-                Field
-                  {
-                    preferred_def_locs = None;
-                    key_loc;
-                    type_ = optional t1;
-                    polarity = Polarity.Neutral;
-                  }
-            in
-            Some p
-          (* Otherwise if the object we are using to subtract has a non-optional own
-           * property and the object is exact then we never add that property to our
-           * source object. *)
-          | (IgnoreExactAndOwn, None, Some { Object.prop_t = t2; _ }, _) ->
-            let reason = replace_desc_reason (RUndefinedProperty k) r1 in
-            subt_check ~use_op cx (VoidT.make reason, t2);
-            None
-          | (IgnoreExactAndOwn, Some { Object.prop_t = t1; _ }, Some { Object.prop_t = t2; _ }, _)
-            ->
-            subt_check ~use_op cx (t1, t2);
-            None
           (* If neither object has the prop then we don't add a prop to our
            * result here. *)
-          | ((IgnoreExactAndOwn | SpreadReversal | Omit | ReactConfigMerge _), None, None, _) ->
-            None
-          (* If our first object has a prop and our second object does not have that
-           * prop then we will copy over that prop. If the first object's prop is
-           * non-own then sometimes we may not copy it over so we mark it
-           * as optional. *)
-          | ( IgnoreExactAndOwn,
-              Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc },
-              None,
-              _
-            ) ->
-            let p =
-              if is_method then
-                Method { key_loc; type_ = t }
-              else
-                Field { preferred_def_locs = None; key_loc; type_ = t; polarity = Polarity.Neutral }
-            in
-            Some p
+          | ((SpreadReversal | Omit | ReactConfigMerge _), None, None, _) -> None
           | ( (SpreadReversal | ReactConfigMerge _),
               Some { Object.prop_t = t; is_method; is_own = _; polarity = _; key_loc },
               None,

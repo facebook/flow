@@ -742,15 +742,6 @@ and merge_annot env file = function
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.NonMaybeType), id))
-  | Diff (loc, t1, t2) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "$Diff")) loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let t1 = merge env file t1 in
-    let t2 = merge env file t2 in
-    let id = eval_id_of_aloc file loc in
-    Type.(
-      EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id)
-    )
   | Omit (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "Omit")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

@@ -2505,14 +2505,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | _ -> Err (loc, CheckError)
   end
   | "$Shape" -> Annot (Any loc)
-  | "$Diff" -> begin
-    match targs with
-    | Some (_, { arguments = [t1; t2]; _ }) ->
-      let t1 = annot opts scope tbls xs t1 in
-      let t2 = annot opts scope tbls xs t2 in
-      Annot (Diff (loc, t1, t2))
-    | _ -> Err (loc, CheckError)
-  end
   | "$Omit" -> begin
     match targs with
     | Some (_, { arguments = [t1; t2]; _ }) ->

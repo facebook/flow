@@ -870,26 +870,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                { loc; kind = Flow_intermediate_error_types.IncorrectType.Shape }
             )
             t_ast
-        (* $Diff<T, S> *)
-        | "$Diff" ->
-          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-              let (t1, t2, targs) =
-                match convert_type_params () with
-                | ([t1; t2], targs) -> (t1, t2, targs)
-                | _ -> assert false
-              in
-              let reason = mk_reason (RType (OrdinaryName "$Diff")) loc in
-              reconstruct_ast
-                (mk_type_destructor
-                   cx
-                   (use_op reason)
-                   reason
-                   t1
-                   (RestType (Type.Object.Rest.IgnoreExactAndOwn, t2))
-                   (mk_eval_id cx loc)
-                )
-                targs
-          )
         | "$Omit" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =

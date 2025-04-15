@@ -1744,9 +1744,6 @@ module Make (I : INPUT) : S = struct
       | T.PropertyType { name } ->
         let index = Ty.StrLit name in
         return @@ Ty.IndexedAccess { _object = ty; index; optional = false }
-      | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
-        let%map ty' = type__ ~env t' in
-        Ty.Utility (Ty.Diff (ty, ty'))
       | T.RestType (T.Object.Rest.Omit, t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.Omit (ty, ty'))

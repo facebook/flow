@@ -273,7 +273,6 @@ and utility =
   | Partial of t
   | Required of t
   | Exact of t
-  | Diff of t * t
   | Omit of t * t
   | ElementType of t * t
   | Enum of t
@@ -685,7 +684,6 @@ class ['A] comparator_ty =
       | Values _ -> 1
       | ReadOnly _ -> 2
       | Exact _ -> 3
-      | Diff _ -> 4
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
       | Class _ -> 13
@@ -849,7 +847,6 @@ let string_of_utility_ctor = function
   | Required _ -> "Required"
   | Exact _ -> "$Exact"
   | Enum _ -> "Enum"
-  | Diff _ -> "$Diff"
   | Omit _ -> "Omit"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
@@ -867,7 +864,6 @@ let types_of_utility = function
   | Partial t -> Some [t]
   | Required t -> Some [t]
   | Exact t -> Some [t]
-  | Diff (t1, t2) -> Some [t1; t2]
   | Omit (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | Enum t -> Some [t]

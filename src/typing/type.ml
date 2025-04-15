@@ -3088,7 +3088,6 @@ and Object : sig
       | Done of resolved
 
     type merge_mode =
-      | IgnoreExactAndOwn
       | SpreadReversal
       | ReactConfigMerge of Polarity.t
       | Omit

@@ -526,7 +526,6 @@ type ('loc, 'a) annot =
       void_loc: 'loc;
     }
   | NonMaybeType of 'loc * 'a
-  | Diff of 'loc * 'a * 'a
   | Omit of 'loc * 'a * 'a
   | ReadOnly of 'loc * 'a
   | Partial of 'loc * 'a
