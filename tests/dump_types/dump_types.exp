@@ -1489,21 +1489,15 @@
   }
 ]
 === type-destructors.js ===
-type-destructors.js:7:13-16: $Diff<Props, DefaultProps>
-type-destructors.js:7:19-23: $Diff<Props, DefaultProps>
-type-destructors.js:7:19-44: $Diff<Props, DefaultProps>
-type-destructors.js:7:25-29: Props
-type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
-type-destructors.js:7:32-43: DefaultProps
-type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
+type-destructors.js:7:1-4: Omit<Props, "age">
+type-destructors.js:7:1-4: Omit<Props, "age">
+type-destructors.js:7:1-9: string
+type-destructors.js:7:6-9: string
 === type-destructors.js (--evaluate-type-destructors) ===
-type-destructors.js:7:13-16: {name: string, ...}
-type-destructors.js:7:19-23: {name: string, ...}
-type-destructors.js:7:19-44: {name: string, ...}
-type-destructors.js:7:25-29: Props
-type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
-type-destructors.js:7:32-43: DefaultProps
-type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
+type-destructors.js:7:1-4: Omit<Props, "age">
+type-destructors.js:7:1-4: Omit<Props, "age">
+type-destructors.js:7:1-9: string
+type-destructors.js:7:6-9: string
 === elem_call.js ===
 elem_call.js:4:1-5: {[key: string]: () => T}
 elem_call.js:4:1-5: {[key: string]: () => T}

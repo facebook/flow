@@ -4,27 +4,27 @@ declare opaque type T;
 type Props = {t: T};
 declare var props: Props;
 
-type D<Context, Props> = $Diff<
+type D<Context: {+context: mixed, ...}, Props> = Omit<
   Props,
-  {context: Context}
+  'context'
 >;
-type X<Context, Props> = {
+type X<Context: {+context: mixed, ...}, Props> = {
   x: D<Context, Props>,
 };
 class Foo<
   Props: {},
-  Context: {},
+  Context: {+context: mixed, ...},
 > extends React.Component<
   X<Context, Props>
 > {}
 //Error: cannot create Foo
 <Foo x={props.t} />;
 
-type Y<Context, Props> = {
-  y: $Diff<Props, { context: Context }>;
+type Y<Context: {+context: mixed, ...}, Props> = {
+  y: Omit<Props, 'context'>;
 };
 class Bar<
-  Props: {},
+  Props: {+context: mixed, ...},
   Context: {},
 > extends React.Component<
   Y<Context, Props>

@@ -6,7 +6,7 @@ declare var ro: $ReadOnly<O>;
 
 type O1 = {p: number};
 type O2 = {p: number; q: string};
-declare var diff: $Diff<O2, O1>;
+declare var diff: Omit<O2, $Keys<O1>>;
 (diff.q: string);
 
 declare var spread: { ...O2 };

@@ -550,13 +550,16 @@ object-resolution.js:5:2 = {
   "end":3
 }
 object-resolution.js:10:2 = {
-  "types":{"unevaluated":{"type":"{q: string, ...}"},"evaluated":null},
+  "types":{
+    "unevaluated":{"type":"Omit<O2, $Keys<O1>>"},
+    "evaluated":{"type":"Omit<O2, \"p\">"}
+  },
   "reasons":[],
   "loc":{
     "source":"object-resolution.js",
     "type":"SourceFile",
-    "start":{"line":10,"column":2,"offset":172},
-    "end":{"line":10,"column":5,"offset":176}
+    "start":{"line":10,"column":2,"offset":178},
+    "end":{"line":10,"column":5,"offset":182}
   },
   "path":"object-resolution.js",
   "line":10,
@@ -570,8 +573,8 @@ object-resolution.js:13:5 = {
   "loc":{
     "source":"object-resolution.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":5,"offset":225},
-    "end":{"line":13,"column":10,"offset":231}
+    "start":{"line":13,"column":5,"offset":231},
+    "end":{"line":13,"column":10,"offset":237}
   },
   "path":"object-resolution.js",
   "line":13,

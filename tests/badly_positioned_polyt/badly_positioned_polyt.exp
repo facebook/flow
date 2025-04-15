@@ -48,7 +48,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    test.js:16:3
-   16|   Context: {},
+   16|   Context: {+context: mixed, ...},
          ^^^^^^^ [1]
    test.js:21:1
    21| <Foo x={props.t} />;

@@ -1,8 +1,8 @@
 import * as React from 'react';
 
-function connect<TProps: {}>(
+function connect<TProps: {+prop: mixed, ...}>(
   Component: React.ComponentType<TProps>,
-): React.ComponentType<$Diff<TProps, {prop?: number}>> {
+): React.ComponentType<Omit<TProps, 'prop'>> {
   return (null: any);
 }
 

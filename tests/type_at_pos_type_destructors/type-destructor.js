@@ -46,23 +46,7 @@ type ReadOnlyObj = $ReadOnly<{
 // $Exact<T>
 // see exact.js
 
-// $Diff<A, B>
-type RequiredProps = $Diff<Props, DefaultProps>;
-//   ^
-
-type DiffFromEmptyObjectError = $Diff<{}, { nope: number }>; // Error
-//   ^
-type DiffFromEmptyObjectOkay = $Diff<{}, { nope: number | void }>;
-//   ^
-type DiffObjPoly<X> = $Diff<{| y: X |}, {| [string]: X |}>;
-//   ^
-type DiffObjPoly2<X, Y> = $Diff<{| x: X, y: Y |}, {| x: X |}>;
-//   ^
-type DiffObjPoly3<X, Y> = $Diff<{| x: X, y: Y |}, ?{| x: X |}>;
-//   ^
-type DiffObjPoly4<X, Y> = $Diff<{| x: X, y: Y |}, {| x?: X |}>;
-//   ^
-
+// Indexed Access
 type ElementTypeProps = Props["name"];
 //   ^
 type ElementTypePropsPoly<K> = Props[K];

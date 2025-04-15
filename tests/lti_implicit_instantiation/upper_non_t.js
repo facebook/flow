@@ -142,40 +142,6 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   f4 as empty; // error: tuple ~> empty
 }
 
-function Diffs() {
-  declare function Diff0<T>(): $Diff<T, {foo: number}>;
-  Diff0(); // error
-  declare function Diff1<T>($Diff<T, {|foo: string|}>): T;
-  const d1 = Diff1({bar: 3});
-  d1.foo as string;
-  d1.bar as number;
-  d1 as {|foo: string, bar: number|}; // error T is inferred as {foo: string, bar: 3}
-  d1 as {|foo: string | number, bar: number|}; // error
-  d1.bad; // error
-  d1 as empty; // error
-  declare function Diff2<T>($Diff<T, {|foo?: string|}>): T;
-  const d2 = Diff2({bar: 3});
-  d2.foo as ?string;
-  d2.bar as number;
-  d2.bad; // error
-  d2 as empty; // error
-  declare function Diff3<T>($Diff<T, {foo: string, ...}>): T;
-  const d3 = Diff3({bar: 3});
-  d3.foo as string;
-  d3.bar as number;
-  d3.bad; // error
-  d3 as empty; // error
-  d3 as {|foo: string, bar: number|}; // error
-  declare function Diff4<T>($Diff<T, {[string]: number}>): T;
-  const d4 = Diff4({bar: 3});
-  Diff4({bar: ''}); // error: number is incompatible with string
-  d4.foo as number;
-  d4.boz as number;
-  d4.bar as number;
-  d4[0]; // ok: treated like `d4['0']`, valid for `string` key indexer
-  d4 as {|[string]: number, bar: number|};
-}
-
 type BaseProps<T> = {|v: T|};
 declare function ResolveUnion<T: React$Key>({|
   ...BaseProps<T>,

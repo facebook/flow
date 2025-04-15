@@ -15,12 +15,6 @@ f = () => {
 }
 
 f = () => {
-  declare const Comp: React.ComponentType<$Diff<SourceObj, {bar: number}>>;
-  <Comp foo={''} />;
-//       ^
-}
-
-f = () => {
   declare const Comp: React.ComponentType<{+[key in keyof SourceObj]: SourceObj[key]}>;
   <Comp foo={''} bar={3} />;
 //       ^
@@ -30,7 +24,7 @@ f = () => {
   declare const BaseComp: React.ComponentType<SourceObj>;
   type MapProps<O> = {[K in keyof O]: O[K] extends { +$fragmentType: empty, ... } ? O[K] : O[K]};
   type $RelayProps<T> = MapProps<
-    $Diff<T, {relayProp: string | void}>,
+    Omit<T, empty>,
   >;
   declare const Comp: React.ComponentType<$RelayProps<React.ElementConfig<typeof BaseComp>>>;
   <Comp foo={''} bar={3} />;
@@ -41,13 +35,6 @@ f = () => {
   type MapType<T> = $ReadOnly<T>
   declare const Comp: React.ComponentType<MapType<SourceObj>>;
   <Comp foo={''} bar={3} />;
-//       ^
-}
-
-f = () => {
-  type MapType<T> = $Diff<T, {bar: number}>;
-  declare const Comp: React.ComponentType<MapType<SourceObj>>;
-  <Comp foo={''} />;
 //       ^
 }
 

@@ -9,7 +9,7 @@ declare function HOC<
 >(
   Component: TComponent,
 ): React.ComponentType<
-   $Diff<React.ElementConfig<TComponent>, {foo: void}>
+   Omit<React.ElementConfig<TComponent>, 'foo'>
 >;
 type MockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,

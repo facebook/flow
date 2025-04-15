@@ -887,7 +887,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:24:2
 
-Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in object type [2].
+Cannot create `MyEnhancedComponent` element because property `a` is missing in props [1] but exists in `Omit` [2].
 [prop-missing]
 
    hoc4.js:24:2
@@ -898,19 +898,14 @@ References:
    hoc4.js:24:1
    24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:9:43
-                                                 v
-    9| class MyComponent extends React.Component<{
-   10|   a: number,
-   11|   b: number,
-   12|   prop: number,
-   13| }> { render(): React.Node { return null } }
-       ^ [2]
+   hoc4.js:5:24
+    5| ): React.ComponentType<Omit<TProps, 'prop'>> {
+                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:24:2
 
-Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
+Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in `Omit` [2].
 [prop-missing]
 
    hoc4.js:24:2
@@ -921,14 +916,9 @@ References:
    hoc4.js:24:1
    24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:9:43
-                                                 v
-    9| class MyComponent extends React.Component<{
-   10|   a: number,
-   11|   b: number,
-   12|   prop: number,
-   13| }> { render(): React.Node { return null } }
-       ^ [2]
+   hoc4.js:5:24
+    5| ): React.ComponentType<Omit<TProps, 'prop'>> {
+                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:26:24
@@ -948,8 +938,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:2
 
-Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in object
-type [2]. [prop-missing]
+Cannot create `MyEnhancedFunctionComponent` element because property `a` is missing in props [1] but exists in
+`Omit` [2]. [prop-missing]
 
    hoc4.js:28:2
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -959,15 +949,15 @@ References:
    hoc4.js:28:1
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:22:45
-   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hoc4.js:5:24
+    5| ): React.ComponentType<Omit<TProps, 'prop'>> {
+                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:2
 
-Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in object
-type [2]. [prop-missing]
+Cannot create `MyEnhancedFunctionComponent` element because property `b` is missing in props [1] but exists in
+`Omit` [2]. [prop-missing]
 
    hoc4.js:28:2
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -977,9 +967,9 @@ References:
    hoc4.js:28:1
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   hoc4.js:22:45
-   22| const MyEnhancedFunctionComponent = connect<{a: number, b: number, prop: number}>(MyFunctionComponent);
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   hoc4.js:5:24
+    5| ): React.ComponentType<Omit<TProps, 'prop'>> {
+                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:30:32

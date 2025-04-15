@@ -265,83 +265,80 @@ References:
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:101:45
+Error --------------------------------------------------------------------------------------------------- more.js:105:45
 
 Cannot create `SingularTest` element because null [1] is incompatible with object type [2] in property `user`.
 [incompatible-type]
 
-   more.js:101:45
-   101| <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
+   more.js:105:45
+   105| <SingularTest onClick={cb} string="x" user={null} nullableUser={null} />;
                                                     ^^^^ [1]
 
 References:
-   more.js:27:50
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:50
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                          ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- more.js:104:2
+Error ---------------------------------------------------------------------------------------------------- more.js:108:2
 
 Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in `MapRelayProps` [2].
 [prop-missing]
 
-   more.js:104:2
-   104| <SingularTest onClick={cb} string="x" nullableUser={null} />;
+   more.js:108:2
+   108| <SingularTest onClick={cb} string="x" nullableUser={null} />;
          ^^^^^^^^^^^^
 
 References:
-   more.js:104:1
-   104| <SingularTest onClick={cb} string="x" nullableUser={null} />;
+   more.js:108:1
+   108| <SingularTest onClick={cb} string="x" nullableUser={null} />;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:38:24
-    38| ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+   more.js:42:24
+    42| ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:107:45
+Error --------------------------------------------------------------------------------------------------- more.js:111:45
 
 Cannot create `SingularTest` element because `BadFragmentReference` [1] is incompatible with `FragmentReference` [2] in
 property `user.__fragments`. [incompatible-type]
 
-   more.js:107:45
-   107| <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
+   more.js:111:45
+   111| <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
                                                     ^^^^^^^^^^
 
 References:
-   more.js:95:17
-    95|   +__fragments: BadFragmentReference<{thing: true}>,
+   more.js:99:17
+    99|   +__fragments: BadFragmentReference<{thing: true}>,
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:31:22
-    31|     ? {+__fragments: FragmentReference<V>}
+   more.js:35:22
+    35|     ? {+__fragments: FragmentReference<V>}
                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:135:17
+Error --------------------------------------------------------------------------------------------------- more.js:139:17
 
 Cannot create `SingularTest` element because in property `optionalUser`: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
- - Or null [1] is incompatible with object type [3].
+ - Or null [1] is incompatible with undefined [2].
 
-   more.js:135:17
-   135|   optionalUser={null}
+   more.js:139:17
+   139|   optionalUser={null}
                         ^^^^ [1]
 
 References:
-   more.js:27:63
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:63
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                                       ^^^^^^^^ [2]
-   more.js:31:7
-    31|     ? {+__fragments: FragmentReference<V>}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:140:34
+Error --------------------------------------------------------------------------------------------------- more.js:144:34
 
 Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
 argument `T`. [incompatible-type-arg]
 
-   more.js:140:34
-   140|   __fragments: FragmentReference<{thing1: true}> &
+   more.js:144:34
+   144|   __fragments: FragmentReference<{thing1: true}> &
                                          ^^^^^^^^^^^^^^ [1]
 
 References:
@@ -350,13 +347,13 @@ References:
                                                  ^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:142:23
+Error --------------------------------------------------------------------------------------------------- more.js:146:23
 
 Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
 argument `T`. [incompatible-type-arg]
 
-   more.js:142:23
-   142|     FragmentReference<{thing2: true}>,
+   more.js:146:23
+   146|     FragmentReference<{thing2: true}>,
                               ^^^^^^^^^^^^^^ [1]
 
 References:
@@ -365,103 +362,100 @@ References:
                                                  ^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:153:20
+Error --------------------------------------------------------------------------------------------------- more.js:157:20
 
 Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property `users`.
 [incompatible-type]
 
-   more.js:153:20
-   153| <PluralTest users={null} nullableUsers={null} />;
+   more.js:157:20
+   157| <PluralTest users={null} nullableUsers={null} />;
                            ^^^^ [1]
 
 References:
-   more.js:27:50
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:50
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                          ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- more.js:156:2
+Error ---------------------------------------------------------------------------------------------------- more.js:160:2
 
 Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in `MapRelayProps` [2].
 [prop-missing]
 
-   more.js:156:2
-   156| <PluralTest nullableUsers={null} />;
+   more.js:160:2
+   160| <PluralTest nullableUsers={null} />;
          ^^^^^^^^^^
 
 References:
-   more.js:156:1
-   156| <PluralTest nullableUsers={null} />;
+   more.js:160:1
+   160| <PluralTest nullableUsers={null} />;
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:38:24
-    38| ): React.ComponentType<$RelayProps<Props, RelayProp>>;
+   more.js:42:24
+    42| ): React.ComponentType<$RelayProps<Props, RelayProp>>;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:159:21
+Error --------------------------------------------------------------------------------------------------- more.js:163:21
 
 Cannot create `PluralTest` element because `BadFragmentReference` [1] is incompatible with `FragmentReference` [2] in
 property `__fragments` of array element of property `users`. [incompatible-type]
 
-   more.js:159:21
-   159| <PluralTest users={[nonUserRef]} nullableUsers={null} />;
+   more.js:163:21
+   163| <PluralTest users={[nonUserRef]} nullableUsers={null} />;
                             ^^^^^^^^^^
 
 References:
-   more.js:95:17
-    95|   +__fragments: BadFragmentReference<{thing: true}>,
+   more.js:99:17
+    99|   +__fragments: BadFragmentReference<{thing: true}>,
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:31:22
-    31|     ? {+__fragments: FragmentReference<V>}
+   more.js:35:22
+    35|     ? {+__fragments: FragmentReference<V>}
                              ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:183:66
+Error --------------------------------------------------------------------------------------------------- more.js:187:66
 
 Cannot create `PluralTest` element because in property `optionalUsers`: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
- - Or null [1] is incompatible with read-only array type [3].
+ - Or null [1] is incompatible with undefined [2].
 
-   more.js:183:66
-   183| <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
+   more.js:187:66
+   187| <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
                                                                          ^^^^ [1]
 
 References:
-   more.js:27:63
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:63
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                                       ^^^^^^^^ [2]
-   more.js:33:9
-    33|       ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:186:24
+Error --------------------------------------------------------------------------------------------------- more.js:190:24
 
 Cannot create `SingularTest` element because string [1] is incompatible with function type [2] in property `onClick`.
 [incompatible-type]
 
-   more.js:186:24
-   186| <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
+   more.js:190:24
+   190| <SingularTest onClick={'cb'} string="x" user={aUserRef} nullableUser={null} />;
                                ^^^^ [1]
 
 References:
-   more.js:27:50
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:50
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                          ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- more.js:189:36
+Error --------------------------------------------------------------------------------------------------- more.js:193:36
 
 Cannot create `SingularTest` element because number [1] is incompatible with string [2] in property `string`.
 [incompatible-type]
 
-   more.js:189:36
-   189| <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
+   more.js:193:36
+   193| <SingularTest onClick={cb} string={1} user={aUserRef} nullableUser={null} />;
                                            ^ [1]
 
 References:
-   more.js:27:50
-    27| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
+   more.js:31:50
+    31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                          ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

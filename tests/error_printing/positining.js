@@ -13,7 +13,7 @@ type X = $NonMaybeType<{|
 |}>;
 
 type $RelayProps<Props, RelayPropT = {}> = MapProps<
-  $Diff<Props, {relay: {} | void, ...}>,
+  Props,
 >;
 type MapProps<O> = {
   [K in keyof O]: O[K] extends {+$refType: empty, ...} ? O[K] : O[K] extends ?{+$refType: 3, ...} ? $FragmentRef<O[K]> : empty
@@ -23,7 +23,7 @@ type Props = {
   selectedValue: X,
 };
 
-declare var x: $RelayProps<React.ElementConfig<(Props) => React.Node>, {}>;
+declare var x: $RelayProps<Props, {}>;
 
 x as $RelayProps<Props>;
 

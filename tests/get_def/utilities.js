@@ -7,12 +7,6 @@ type SourceObj = { foo: string, bar: number };
 }
 
 {
-  declare const obj: $Diff<SourceObj, {bar: number}>;
-  obj.foo;
-//     ^
-}
-
-{
   declare const obj: {[K in keyof SourceObj]: string};
   obj.foo;
 //     ^

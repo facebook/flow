@@ -24,7 +24,7 @@ function fn2<T: {p: any}>(a: T, b: T => void): T['p'] => void {
 fn1({p: 42}, (x: {}) => {}); // over-restrictive in classic, not in LTI
 fn2({p: 42}, (x: {}) => {})('foo');
 
-function fn3<T: {p: any}>(a: T => void): ($Diff<T, {|p: number|}>) => void {
+function fn3<T: {p: any}>(a: T => void): (Omit<T, 'p'>) => void {
   return x => a({...x, p: 42});
 }
 

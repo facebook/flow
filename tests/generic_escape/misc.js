@@ -116,7 +116,7 @@ for (const xe of [42 as any]) {
 }
 
 var aaa = 1;
-function foo<T: {}>(x: $Diff<T, {}>) {
+function foo<T: {}>(x: Omit<T, empty>) {
   aaa = x;
 }
 

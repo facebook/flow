@@ -20,8 +20,12 @@ const React = require('react');
  * RelayModernTyped              *
  *********************************/
 
-export type $RelayProps<Props, RelayPropT = RelayProp> = MapRelayProps<
-  $Diff<Props, {relay: RelayPropT | void}>,
+type LooseOmitRelayProps<Props, K: $Keys<any>> = Pick<
+  Props,
+  Exclude<$Keys<Props>, K>,
+>;
+export type $RelayProps<Props, _RelayPropT = RelayProp> = MapRelayProps<
+  LooseOmitRelayProps<Props, 'relay'>,
 >;
 
 type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};

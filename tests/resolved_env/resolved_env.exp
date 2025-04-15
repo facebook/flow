@@ -943,60 +943,39 @@ References:
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
+Error ------------------------------------------------------------------------------------------------- tparams.js:23:11
 
-Cannot instantiate `$Diff` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot return array literal because inexact rest of object pattern [1] is incompatible with exact `Omit` [2] in index 0.
+[incompatible-exact]
 
-   tparams.js:21:38
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                            ^ [1]
-
-References:
-   tparams.js:21:45
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                                   ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- tparams.js:21:38
-
-Cannot instantiate `$Diff` because undefined [1] is incompatible with `B` [2]. [incompatible-type]
-
-   tparams.js:21:38
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                            ^ [1]
+   tparams.js:23:11
+   23|   return [o, p];
+                 ^
 
 References:
-   tparams.js:21:45
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                                   ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- tparams.js:22:10
-
-Property `p` is missing in mixed [1]. [incompatible-use]
-
-   tparams.js:22:10
-   22|   const {p, ...o} = a;
-                ^
-
-References:
-   tparams.js:21:27
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                 ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- tparams.js:22:16
-
-mixed [1] is not an object. [not-an-object]
-
    tparams.js:22:16
    22|   const {p, ...o} = a;
-                      ^
+                      ^ [1]
+   tparams.js:21:50
+   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                        ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
+
+Cannot return array literal because mixed [1] is incompatible with `B` [2] in index 1. [incompatible-return]
+
+   tparams.js:23:14
+   23|   return [o, p];
+                    ^
 
 References:
-   tparams.js:21:27
-   21| function removex<A, B>(a: A): [$Diff<A, {p: B}>, B] {
-                                 ^ [1]
+   tparams.js:21:26
+   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                ^^^^^ [1]
+   tparams.js:21:64
+   21| function removex<A: {+p: mixed, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+                                                                      ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:45:11
@@ -1156,4 +1135,4 @@ undefined. [incompatible-return]
 
 
 
-Found 80 errors
+Found 78 errors

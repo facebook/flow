@@ -8,7 +8,6 @@ class Comp extends React.Component<{}, {}> {}
 
 function f<
   Comp: React.ComponentType<{}>,
-  Props: $Diff<React.ElementConfig<Comp>, {}>,
 >(): Comp => {
 } {
   return function() {
@@ -17,4 +16,4 @@ function f<
 }
 
 // Error: inexact from foo vs exact from f
-var x = f<React.ComponentType<{}>, _>()(foo(Comp));
+var x = f<React.ComponentType<{}>>()(foo(Comp));

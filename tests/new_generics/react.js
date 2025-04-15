@@ -60,7 +60,7 @@ export type PCCP = {
 
 export function withCommentsConfig<TProps: PCCP>(
   Component: component(...TProps),
-): component(...$Diff<TProps, PCCP>) {
+): component(...Omit<TProps, $Keys<PCCP>>) {
   return function (props) {
     return <Component {...props} commentsConfig={42} />;
   };

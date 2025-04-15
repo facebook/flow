@@ -1148,21 +1148,38 @@ References:
               ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ rest.js:4:3
+
+Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+
+   rest.js:4:3
+   4|   x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+        ^
+
+References:
+   rest.js:3:29
+   3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
+                                  ^^^^^^ [1]
+   rest.js:4:8
+   4|   x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ rest.js:5:3
 
-Cannot cast `y` to `$Diff` because object type [1] is incompatible with `{ ...X }` [2]. [incompatible-cast]
+Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
 
    rest.js:5:3
-   5|   y as $Diff<{...X, ...Y}, {...Y}>; // nope
+   5|   y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
         ^
 
 References:
    rest.js:3:40
    3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
                                              ^^^^^^ [1]
-   rest.js:5:14
-   5|   y as $Diff<{...X, ...Y}, {...Y}>; // nope
-                   ^^^^^^^^^^^^ [2]
+   rest.js:5:8
+   5|   y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
@@ -1489,7 +1506,7 @@ References:
 
 
 
-Found 87 errors
+Found 88 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

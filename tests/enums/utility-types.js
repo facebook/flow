@@ -12,9 +12,6 @@ E.A as (typeof E)['A']
 trigger as (typeof E)['X']; // Error: `X` is not a member of enum `E`
 trigger as (typeof E)[string]; // Error: computed access is not allowed on enums
 
-// $Diff
-trigger as $Diff<typeof E, {A: E}>; // Error: enum  `E` is not an object
-
 // $ReadOnly
 trigger as $ReadOnly<typeof E>; // Error: enum `E` is not an object
 
