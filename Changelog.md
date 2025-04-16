@@ -1,3 +1,19 @@
+### 0.268.0
+
+Breaking:
+* The Linux x86 build is now built from `ubuntu-22.04`. It might make Flow not runnable on older linux distributions.
+
+Likely to cause new Flow errors:
+* Code like the ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SVqxC2AAJKQAxYgACgAlBzgAAdKAcjkAISoAH4rJTpZRBQBuMX0sVitkQTkKqiC4XqqBijRPKjYDm2exSqjIDky4C6yi2lbGCAwLlkRWG3IgBomEhwaBJBoABisACYAGwAdisIZA9KAA)) will have `[react-rule-hook-conditional]` instead of `[react-rule-hook-naming-convention]` errors.
+* `$Diff` support is removed. If you have trouble migrating, you can try to polyfill it by [this](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABAASAAicBgMAAPAB5ZDsip4riQ9nARnsgDSos5cuwtBIAs5ADEiAB3DXFACy2AAfEb2QBedkAHSg7PZQvZCgWUDYJDFPhMkuwMvZAH52QAFbJbYW8dkAUXkTyEGnVytVwqNoblJvZoqFAG5rbkQA0TCQ4NAkg0AAxWABMADYAOxWYsgelAA). However, `$Diff` has surprising behavior with regard to optional props in the second type parameter, which cannot be easily polyfilled ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABAAxYgARnZAF52QASAAicBgMAAPMAYMRkOz7KYoAhGeyZcQAPzyxUVFUAPgA3OyAPTGtWyiBahVSXX0gA6PlWXOIACYBcKxRLpRarTrlar1ZbtTb-YaTWbA76QyreOyLezqYx2VAIBJ2WxKLDjGwAIQO3IgBomEhwaBJBoABisLoAbAB2KwVkD0oA)).
+
+New Features:
+* We now allow you to configure certain error code to be unsuppressable. For example, to make `react-rule-hook-naming-convention` and `react-rule-hook-conditional` errors unsuppressable, you can add the following to the `[options]` section in flowconfig:
+```
+unsuppressable_error_codes=react-rule-hook-naming-convention
+unsuppressable_error_codes=react-rule-hook-conditional
+```
+
 ### 0.267.0
 
 Likely to cause new Flow errors:
