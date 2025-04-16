@@ -34,7 +34,7 @@ type check_file_and_comp_env = {
   compute_env: compute_env;
 }
 
-let unknown_module_t cx _mref module_name =
+let unknown_module_t cx module_name =
   match Context.builtin_module_opt cx module_name with
   | Some (reason, lazy_module) ->
     Context.TypedModule
@@ -86,10 +86,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
   let rec dep_module_t cx mref = function
     | Error mapped_name ->
       let m = Option.value mapped_name ~default:mref in
-      unknown_module_t cx mref m
+      unknown_module_t cx m
     | Ok m ->
       (match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
-      | None -> unknown_module_t cx mref (Parsing_heaps.read_dependency m |> Modulename.to_string)
+      | None -> unknown_module_t cx (Parsing_heaps.read_dependency m |> Modulename.to_string)
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
         | File_key.ResourceFile f as file_key ->
