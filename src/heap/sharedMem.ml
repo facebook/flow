@@ -43,14 +43,14 @@ type tag =
   | Haste_module_tag
   | Sklist_tag
   | Resolved_requires_tag
-  (* tags defined below this point are scanned for pointers *)
+  (* tags defined above this point are scanned for pointers *)
   | String_tag (* 13 -- see Heap_string_tag in hh_shared.c *)
   | Int64_tag
   | Docblock_tag
   | ALoc_table_tag
   | Requires_tag
   | Type_sig_tag
-  (* tags defined above this point are serialized+compressed *)
+  (* tags defined below this point are serialized+compressed *)
   | Serialized_tag (* 19 -- see Serialized_tag in hh_shared.c *)
   | Serialized_ast_tag
   | Serialized_file_sig_tag
