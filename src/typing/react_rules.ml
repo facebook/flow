@@ -766,7 +766,9 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
 
     val mutable in_function_component = false
 
-    val mutable declaring_function_component = false
+    (* If it's true, then we are in some context where we permissively assume can be passed with
+     * a function component or hook. *)
+    val mutable in_context_possibly_expecting_fn_component_or_hook = false
 
     method on_loc_annot l = l
 
@@ -838,7 +840,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           && Base.Option.is_none rest
         in
         let next_in_function_component =
-          (declaring_function_component
+          (in_context_possibly_expecting_fn_component_or_hook
           || is_probably_function_component
           || Base.Option.is_some (Flow_ast_utils.hook_function fn)
           )
@@ -874,16 +876,23 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
         | _ -> ()
       end;
-      let cur_declaring = declaring_function_component in
-      declaring_function_component <- compatibility_call expr || cur_declaring;
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
+      (* Within call like `React.memo`, we can pass fn components. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        compatibility_call expr || cur_in_context_possibly_expecting_fn_component_or_hook;
       let expr = super#call annot expr in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       expr
 
     method! export_default_declaration_decl decl =
-      let cur_declaring = declaring_function_component in
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
       let filename = Context.file cx |> File_key.to_string |> Filename.basename in
-      let next_declaring =
+      let next_in_context_possibly_expecting_fn_component_or_hook =
         if componentlike_name filename || Flow_ast_utils.hook_name filename then
           match decl with
           | Ast.Statement.ExportDefaultDeclaration.Expression
@@ -896,14 +905,20 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
         else
           false
       in
-      declaring_function_component <- next_declaring || cur_declaring;
+      (* We permissively assume that we are exporting a fn component or hook. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        next_in_context_possibly_expecting_fn_component_or_hook
+        || cur_in_context_possibly_expecting_fn_component_or_hook;
       let decl = super#export_default_declaration_decl decl in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       decl
 
     method! object_property (loc, prop) =
-      let cur_declaring = declaring_function_component in
-      let next_declaring =
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
+      let next_in_context_possibly_expecting_fn_component_or_hook =
         match prop with
         | Ast.Expression.Object.Property.(
             Method { key = Identifier (_, { Ast.Identifier.name; _ }); _ })
@@ -917,40 +932,55 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           Flow_ast_utils.hook_name name || name = "render"
         | _ -> false
       in
-      declaring_function_component <- next_declaring;
+      (* We permissively assume that it's a hook stored in object property. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        next_in_context_possibly_expecting_fn_component_or_hook;
       let res = super#object_property (loc, prop) in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       res
 
     method! return ({ Ast.Statement.Return.argument; _ } as r) =
-      let cur_declaring = declaring_function_component in
-      let next_declaring =
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
+      let next_in_context_possibly_expecting_fn_component_or_hook =
         match argument with
         | Some (_, Ast.Expression.(ArrowFunction _ | Function _)) -> Context.hook_compatibility cx
         | _ -> false
       in
-      declaring_function_component <- next_declaring;
+      (* We permissively assume that we are returning a fn component or hook. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        next_in_context_possibly_expecting_fn_component_or_hook;
       let res = super#return r in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       res
 
     method! body_expression ((_, argument) as r) =
-      let cur_declaring = declaring_function_component in
-      let next_declaring =
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
+      let next_in_context_possibly_expecting_fn_component_or_hook =
         match argument with
         | Ast.Expression.(ArrowFunction _ | Function _) -> Context.hook_compatibility cx
         | _ -> false
       in
-      declaring_function_component <- next_declaring;
+      (* We permissively assume that the anonymous function can be a fn component or hook. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        next_in_context_possibly_expecting_fn_component_or_hook;
       let res = super#body_expression r in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       res
 
     method! variable_declarator ~kind decl =
       let (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) = decl in
       let (_ : (_, _) Ast.Pattern.t) = this#variable_declarator_pattern ~kind id in
-      let cur_declaring = declaring_function_component in
-      let next_declaring =
+      let cur_in_context_possibly_expecting_fn_component_or_hook =
+        in_context_possibly_expecting_fn_component_or_hook
+      in
+      let next_in_context_possibly_expecting_fn_component_or_hook =
         match (id, init) with
         | ( ( _,
               Ast.Pattern.Identifier
@@ -961,9 +991,12 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           Context.hook_compatibility cx && (Flow_ast_utils.hook_name name || componentlike_name name)
         | _ -> false
       in
-      declaring_function_component <- next_declaring;
+      (* We have a function bind to a component or hook like name. *)
+      in_context_possibly_expecting_fn_component_or_hook <-
+        next_in_context_possibly_expecting_fn_component_or_hook;
       let (_ : _ option) = Base.Option.map ~f:this#expression init in
-      declaring_function_component <- cur_declaring;
+      in_context_possibly_expecting_fn_component_or_hook <-
+        cur_in_context_possibly_expecting_fn_component_or_hook;
       decl
   end
 
