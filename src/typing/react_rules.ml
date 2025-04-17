@@ -759,7 +759,7 @@ let effect_visitor cx ~is_hook rrid tast =
 
 let emit_effect_errors cx = Base.List.iter ~f:(Flow_js_utils.add_output cx)
 
-let rec whole_ast_visitor tast ~under_component cx rrid =
+let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
@@ -868,7 +868,9 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
         | HookCallee _
         | MaybeHookCallee _
           when (not in_function_component)
-               && not (Flow_ast_utils.hook_call expr && bare_use expr && under_component) ->
+               && not
+                    (Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body)
+          ->
           hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
         | _ -> ()
       end;
@@ -1158,9 +1160,10 @@ and component_ast_visitor tast cx rrid =
     method function_component_body = super#function_body_any
 
     method! function_body_any =
-      (whole_ast_visitor tast ~under_component:true cx rrid)#function_body_any
+      (whole_ast_visitor tast ~under_function_or_class_body:true cx rrid)#function_body_any
 
-    method! class_body = (whole_ast_visitor tast ~under_component:true cx rrid)#class_body
+    method! class_body =
+      (whole_ast_visitor tast ~under_function_or_class_body:true cx rrid)#class_body
 
     method! match_case ~on_case_body case =
       this#in_conditional (super#match_case ~on_case_body) case
@@ -1182,5 +1185,5 @@ let check_react_rules cx ast =
       Some opaque_id
     | _ -> None
   in
-  let _ = (whole_ast_visitor ast ~under_component:false cx rrid)#program ast in
+  let _ = (whole_ast_visitor ast ~under_function_or_class_body:false cx rrid)#program ast in
   ()
