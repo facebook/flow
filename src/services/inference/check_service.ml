@@ -34,24 +34,26 @@ type check_file_and_comp_env = {
   compute_env: compute_env;
 }
 
-let unknown_module_t cx module_name =
-  match Context.builtin_module_opt cx module_name with
+let typed_builtin_module_opt cx builtin_module_name =
+  match Context.builtin_module_opt cx builtin_module_name with
   | Some (reason, lazy_module) ->
-    Context.TypedModule
+    Some
       (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
       |> ConsGen.force_module_type_thunk cx
       )
+  | None -> None
+
+let unknown_module_t cx module_name =
+  match typed_builtin_module_opt cx module_name with
+  | Some typed -> Context.TypedModule typed
   | None -> Context.MissingModule module_name
 
-let unchecked_module_t cx file_key mref =
-  let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
-  match Context.builtin_module_opt cx mref with
-  | Some (reason, lazy_module) ->
-    Context.TypedModule
-      (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
-      |> ConsGen.force_module_type_thunk cx
-      )
-  | None -> Context.UncheckedModule (loc, mref)
+let unchecked_module_t cx file_key module_name =
+  match typed_builtin_module_opt cx module_name with
+  | Some typed -> Context.TypedModule typed
+  | None ->
+    let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
+    Context.UncheckedModule (loc, module_name)
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
