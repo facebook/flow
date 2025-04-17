@@ -512,9 +512,11 @@ type Price = StringPrefix<'$', '1' | '2'>;
 
 When not specified, the type of the remainder is just `string`.
 
-## Deprecated utility types
+## Removed utility types
 
-## `$Diff<A, B>` {#toc-diff}
+These utility types used to exist, but no longer exist in latest versions of Flow.
+
+### `$Diff<A, B>` <UntilVersion version="0.267" /> {#toc-diff}
 
 NOTE: Please use `Omit` type instead.
 
@@ -539,7 +541,7 @@ As you may have noticed, the example is not a random one.
 
 Note that `$Diff<A, B>` will error if the object you are removing properties from does not have the property being removed, i.e. if `B` has a key that doesn't exist in `A`:
 
-```js flow-check
+```js
 type Props = {name: string, age: number};
 type DefaultProps = {age: number, other: string};
 type RequiredProps = $Diff<Props, DefaultProps>; // Error!
@@ -552,7 +554,7 @@ function setProps(props: RequiredProps) {
 
 As a workaround, you can specify the property not present in `A` as optional. For example:
 
-```js flow-check
+```js
 type A = $Diff<{}, {nope: number}>; // Error!
 type B = $Diff<{}, {nope: number | void}>; // Works
 
@@ -560,9 +562,7 @@ const a: A = {};
 const b: B = {};
 ```
 
-## To-be-removed utility types
-
-## `$Rest<A, B>` <UntilVersion version="0.266" /> {#toc-rest}
+### `$Rest<A, B>` <UntilVersion version="0.266" /> {#toc-rest}
 
 NOTE: Please use `Omit` type instead.
 
@@ -586,10 +586,6 @@ The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims 
 which implies that exact object types are treated differently in `$Rest<A, B>`.
 For example, `$Rest<{n: number}, {...}>` will result in `{n?: number}` because an in-exact empty object may have an `n` property,
 while `$Diff<{n: number}, {...}>` will result in `{n: number}`.
-
-## Removed utility types
-
-These utility types used to exist, but no longer exist in latest version of Flow.
 
 ### `$PropertyType<T, k>` <UntilVersion version="0.265" /> {#toc-propertytype}
 
@@ -702,7 +698,7 @@ How to express this at a type level?
 
 This is where `ObjMap<T, F>` comes in handy
 
-```js flow-check
+```js
 // let's write a function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V;
 
@@ -797,7 +793,7 @@ that contain a subset of the properties included in `T`. For each property `p: S
 the type of a potential binding of `p` in `o` must be compatible with `S`.
 
 For example
-```js flow-check
+```js
 type Person = {
   age: number,
   name: string,
