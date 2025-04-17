@@ -41,7 +41,6 @@ type metadata = {
   hook_compatibility_includes: Str.regexp list;
   hook_compatibility: bool;
   react_rules: Options.react_rules list;
-  react_rules_always: bool;
   dev_only_refinement_info_as_errors: bool;
   enable_const_type_params: bool;
   enable_const_params: bool;
@@ -285,7 +284,6 @@ let metadata_of_options options =
     hook_compatibility_includes = Options.hook_compatibility_includes options;
     hook_compatibility = Options.hook_compatibility options;
     react_rules = Options.react_rules options;
-    react_rules_always = false;
     dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
     enable_const_type_params = Options.const_type_params options;
     enable_const_params = Options.enable_const_params options;
@@ -533,8 +531,6 @@ let component_syntax cx = cx.metadata.component_syntax || File_key.is_lib_file c
 let hook_compatibility cx =
   in_dirlist cx cx.metadata.hook_compatibility_includes
   || (cx.metadata.hook_compatibility && not (in_dirlist cx cx.metadata.hook_compatibility_excludes))
-
-let react_rules_always cx = cx.metadata.react_rules_always
 
 let react_rule_enabled cx rule = List.mem rule cx.metadata.react_rules
 

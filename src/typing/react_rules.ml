@@ -806,7 +806,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
         && Base.Option.is_none rest
       in
       let hook = effect_ = Ast.Function.Hook in
-      if (Context.react_rules_always cx && is_probably_function_component) || hook then (
+      if hook then (
         let effects =
           (effect_visitor cx hook rrid tast)#function_entry
             (Typed_ast_utils.untyped_ast_mapper#function_body_any body)

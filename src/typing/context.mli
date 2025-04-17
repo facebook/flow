@@ -91,7 +91,6 @@ type metadata = {
   hook_compatibility_includes: Str.regexp list;
   hook_compatibility: bool;
   react_rules: Options.react_rules list;
-  react_rules_always: bool;
   dev_only_refinement_info_as_errors: bool;
   enable_const_type_params: bool;
   enable_const_params: bool;
@@ -196,8 +195,6 @@ val builtins : t -> Builtins.t
 val hook_compatibility : t -> bool
 
 val react_rule_enabled : t -> Options.react_rules -> bool
-
-val react_rules_always : t -> bool
 
 val dev_only_refinement_info_as_errors : t -> bool
 
