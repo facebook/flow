@@ -191,7 +191,7 @@ let aloc_contains ~outer ~inner =
   with
   | _ -> false
 
-let convert_literal_type_to_const ~loc_range ~keep_container_reasons =
+let convert_literal_type_to_const ~loc_range =
   let open Reason in
   let reason_def_loc_within_call reason =
     aloc_contains ~outer:loc_range ~inner:(Reason.def_loc_of_reason reason)
@@ -216,22 +216,14 @@ let convert_literal_type_to_const ~loc_range ~keep_container_reasons =
                   TupleElement { reason; name; t; polarity = Polarity.Positive; optional }
               )
             in
-            let r =
-              if keep_container_reasons then
-                r
-              else
-                replace_desc_reason RConstArrayLit r
-            in
+            let r = replace_desc_reason RConstArrayLit r in
             DefT (r, ArrT (TupleAT { elem_t; elements; react_dro = None; arity; inexact = false }))
           else
             t
         | DefT (r, ObjT _) ->
           if is_literal_object_reason r && reason_def_loc_within_call r then
             let t = super#type_ cx map_cx t in
-            if keep_container_reasons then
-              t
-            else
-              TypeUtil.mod_reason_of_t (replace_desc_reason RConstObjectLit) t
+            TypeUtil.mod_reason_of_t (replace_desc_reason RConstObjectLit) t
           else
             t
         | _ -> super#type_ cx map_cx t

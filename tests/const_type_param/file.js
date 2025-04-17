@@ -9,7 +9,7 @@ function test_basic() {
 
   const x3 = f({f: 1});
   x3 as {+f: 1}; // okay
-  x3 as {f: 1}; // TODO error -f ~> f, x3 should not have a lit reason
+  x3 as {f: 1}; // error -f ~> f, x3 should not have a lit reason
 
   function f2<const T>(x: T): T {
     return x;
@@ -41,12 +41,12 @@ function test_tparam_deeper_in_type() {
   declare function f1<const X>(x: A<X>): X;
   const x1 = f1({f: {g: {h: 1}}});
   x1 as {+h: 1}; // okay
-  x1 as {h: 1}; // TODO error +h ~> h
+  x1 as {h: 1}; // error +h ~> h
 
   declare function f2<const X>(x: () => X): X;
   const x2 = f2(() => ({f: 1}));
   x2 as {+f: 1}; // okay
-  x2 as {f: 1}; // TODO error +f ~> f
+  x2 as {f: 1}; // error +f ~> f
 }
 
 function test_class() {

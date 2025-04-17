@@ -47,11 +47,9 @@ val convert_literal_type :
     for a literal expression to its 'const' form. This is the form expected for
     const type parameters (for example). It only descends down literal array and
     object containers that are defined within the `loc_range` parameter, and
-    converts them to readonly array and object types. If `keep_container_reasons`
-    is true it also converts their reasons to non-literal ones. For primitive
-    values it applies the `KeepAsConst` action. *)
-val convert_literal_type_to_const :
-  loc_range:ALoc.t -> keep_container_reasons:bool -> Context.t -> Type.t -> Type.t
+    converts them to readonly array and object types. For primitive values it
+    applies the `KeepAsConst` action. *)
+val convert_literal_type_to_const : loc_range:ALoc.t -> Context.t -> Type.t -> Type.t
 
 val loc_has_hint : Context.t -> ALoc.t -> bool
 

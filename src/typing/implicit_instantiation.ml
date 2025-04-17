@@ -1114,12 +1114,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             (* Adjust 'const' type parameters *)
             let loc_range = loc_of_reason instantiation_reason in
             (* Keeping container reasons for compatibility with existing code. *)
-            let keep_container_reasons = true in
-            Primitive_literal.convert_literal_type_to_const
-              ~loc_range
-              ~keep_container_reasons
-              cx
-              result.inferred
+            Primitive_literal.convert_literal_type_to_const ~loc_range cx result.inferred
           | _ ->
             (* Prevent leaking of precise singleton types *)
             generalize_singletons cx result.inferred
