@@ -796,15 +796,6 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
       } =
         fn
       in
-      let is_probably_function_component =
-        (* Capitalized letter initial name *)
-        Base.Option.value_map
-          ~f:(fun (_, { Ast.Identifier.name; _ }) -> componentlike_name name)
-          ~default:false
-          id
-        && List.length params_list <= 2 (* Props and ref *)
-        && Base.Option.is_none rest
-      in
       if effect_ = Ast.Function.Hook then (
         let effects =
           (effect_visitor cx ~is_hook:true rrid tast)#function_entry
@@ -837,6 +828,15 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
         )
       ) else begin
         let cur_in_function_component = in_function_component in
+        let is_probably_function_component =
+          (* Capitalized letter initial name *)
+          Base.Option.value_map
+            ~f:(fun (_, { Ast.Identifier.name; _ }) -> componentlike_name name)
+            ~default:false
+            id
+          && List.length params_list <= 2 (* Props and ref *)
+          && Base.Option.is_none rest
+        in
         let next_in_function_component =
           (declaring_function_component
           || is_probably_function_component
