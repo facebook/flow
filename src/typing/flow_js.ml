@@ -1242,7 +1242,7 @@ struct
           )
           when id1 = id2
                && List.length ts1 = List.length ts2
-               && (not (wraps_mapped_type cx t_out))
+               && (not (wraps_utility_type cx t_out))
                && fv1 = fv2 ->
           let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
           type_app_variance_check cx trace use_op r1 r2 targs tparams_loc tparams

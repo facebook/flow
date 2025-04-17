@@ -3128,23 +3128,46 @@ let is_same_instance_type { class_id = class_id1; _ } { class_id = class_id2; _ 
  * declare const x: ReadOnly<O1>;
  * (x: ReadOnly<O2>); // ERROR
  *
- * In order to prevent this in common mapped type cases, we do a best-effort check to
- * see if the RHS contains a mapped type. This traversal is extremely limited and does
- * not attempt to be exhaustive.
+ * In order to prevent this in common mapped type and other cases, we do a best-effort
+ * check to see if the RHS contains a mapped type, or other utility type. This traversal
+ * is extremely limited and does not attempt to be exhaustive.
  *)
-let rec wraps_mapped_type cx = function
-  | EvalT (_, TypeDestructorT (_, _, MappedType _), _) -> true
-  | DefT (_, TypeT (_, t)) -> wraps_mapped_type cx t
-  | OpenT (_, id) ->
-    let (_, constraints) = Context.find_constraints cx id in
-    (match constraints with
-    | FullyResolved s -> wraps_mapped_type cx (Context.force_fully_resolved_tvar cx s)
-    | Resolved t -> wraps_mapped_type cx t
-    | _ -> false)
-  | DefT (_, PolyT { t_out; _ }) -> wraps_mapped_type cx t_out
-  | TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ } ->
-    wraps_mapped_type cx type_
-  | _ -> false
+let wraps_utility_type cx tin =
+  let seen_open_id = ref ISet.empty in
+  let seen_eval_id = ref Eval.Set.empty in
+  let rec loop t =
+    match t with
+    | EvalT (GenericT _, TypeDestructorT (_, _, ReadOnlyType), _)
+    | EvalT (_, TypeDestructorT (_, _, ConditionalType { true_t = GenericT _; _ }), _)
+    | EvalT (_, TypeDestructorT (_, _, ConditionalType { false_t = GenericT _; _ }), _) ->
+      (* Handles special cases targeting tests/typeapp_opt/stylex.js *)
+      true
+    | EvalT (t, TypeDestructorT (_, _, ReadOnlyType), id) ->
+      if Eval.Set.mem id !seen_eval_id then
+        false
+      else (
+        seen_eval_id := Eval.Set.add id !seen_eval_id;
+        loop t
+      )
+    | EvalT (_, TypeDestructorT (_, _, MappedType _), _) -> true
+    | DefT (_, TypeT (_, t)) -> loop t
+    | OpenT (_, id) ->
+      let (root_id, constraints) = Context.find_constraints cx id in
+      if ISet.mem root_id !seen_open_id then
+        false
+      else (
+        seen_open_id := ISet.add root_id !seen_open_id;
+        match constraints with
+        | FullyResolved s -> loop (Context.force_fully_resolved_tvar cx s)
+        | Resolved t -> loop t
+        | _ -> false
+      )
+    | DefT (_, PolyT { t_out; _ }) -> loop t_out
+    | TypeAppT { reason = _; use_op = _; type_; targs = _; from_value = _; use_desc = _ } ->
+      loop type_
+    | _ -> false
+  in
+  loop tin
 
 (**********)
 (* Tuples *)
