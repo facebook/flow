@@ -1070,10 +1070,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           let this_write_locs = obj_this_write_locs obj in
           begin
             match obj_properties_synthesizable ~this_write_locs obj with
-            | Unsynthesizable -> Some (Value { hints = []; expr = init; decl_kind = None })
+            | Unsynthesizable -> Some (mk_value init)
             | synthesizable -> Some (ObjectValue { obj_loc = loc; obj; synthesizable })
           end
-        | (Some init, _) -> Some (Value { hints = []; expr = init; decl_kind = Some kind })
+        | (Some init, _) -> Some (mk_value ~decl_kind:kind init)
         | (None, _) -> None
       in
       let (source, hints) =
@@ -2062,11 +2062,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (None, Ast.Pattern.Expression e) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-        this#add_destructure_bindings (Value { hints = []; expr = right; decl_kind = None }) left;
+        this#add_destructure_bindings (mk_value right) left;
         this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (None, _) ->
         let (_ : (_, _) Ast.Pattern.t) = this#assignment_pattern (lhs_loc, lhs_node) in
-        this#add_destructure_bindings (Value { hints = []; expr = right; decl_kind = None }) left;
+        this#add_destructure_bindings (mk_value right) left;
         this#visit_expression ~hints:(other_pattern_hints left) ~cond:NoContext right
       | ( Some operator,
           Ast.Pattern.Identifier
@@ -3222,7 +3222,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#add_ordinary_binding
         match_keyword_loc
         (mk_reason RMatch match_keyword_loc)
-        (Binding (Root (Value { hints = []; expr = arg; decl_kind = None })));
+        (Binding (Root (mk_value arg)));
       let value_hints =
         Base.List.foldi cases ~init:IMap.empty ~f:(fun i acc (_, { Case.body; _ }) ->
             if expression_is_definitely_synthesizable ~autocomplete_hooks body then
@@ -3237,7 +3237,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
           in
           ignore @@ this#expression match_root;
-          let acc = Value { hints = []; expr = match_root; decl_kind = None } in
+          let acc = mk_value match_root in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
           run_opt this#expression guard;
@@ -3254,13 +3254,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#add_ordinary_binding
         match_keyword_loc
         (mk_reason RMatch match_keyword_loc)
-        (Binding (Root (Value { hints = []; expr = arg; decl_kind = None })));
+        (Binding (Root (mk_value arg)));
       Base.List.iter cases ~f:(fun (case_loc, { Case.pattern; body; guard; comments = _ }) ->
           let match_root =
             (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
           in
           ignore @@ this#expression match_root;
-          let acc = Value { hints = []; expr = match_root; decl_kind = None } in
+          let acc = mk_value match_root in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
           run_opt this#expression guard;

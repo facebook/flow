@@ -127,6 +127,8 @@ type root =
   | UnannotatedParameter of Reason.t
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
+let mk_value ?(hints = []) ?decl_kind expr = Value { hints; expr; decl_kind }
+
 type binding =
   | Root of root
   | Hooklike of binding
