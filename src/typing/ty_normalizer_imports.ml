@@ -151,7 +151,7 @@ let add_import_bindings cx ~typed_ast acc require =
     |> add_imported_loc_map_bindings cx ~typed_ast ~import_mode:Ty.TypeofMode ~source typesof
   | ImportDynamic _
   | Import0 _
-  | ImportSynthetic _
+  | ImportSyntheticUserland _
   | ExportFrom _ ->
     acc
 

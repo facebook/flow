@@ -42,7 +42,7 @@ let get_loc_to_replacement_map ~old_haste_name ~new_haste_name file_sig =
           Loc_collections.LocMap.add loc new_haste_name acc
         else
           acc
-      | ImportSynthetic _ -> acc)
+      | ImportSyntheticUserland _ -> acc)
     Loc_collections.LocMap.empty
     (File_sig.requires file_sig)
 

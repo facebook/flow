@@ -42,7 +42,7 @@ let search ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
       | Require { bindings = None; _ }
       | ImportDynamic _
       | Import0 _
-      | ImportSynthetic _
+      | ImportSyntheticUserland _
       | ExportFrom _ ->
         acc
     )

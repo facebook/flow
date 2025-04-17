@@ -1763,7 +1763,7 @@ let should_autoimport_react ~cx ~imports ~file_sig =
                 named
             | Require { bindings = None; _ }
             | Import0 _
-            | ImportSynthetic _
+            | ImportSyntheticUserland _
             | ImportDynamic _
             | ExportFrom _ ->
               false)

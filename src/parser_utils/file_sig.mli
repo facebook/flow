@@ -49,8 +49,9 @@ and require =
    * empty, but modeled as a separate variant to ensure use sites handle this
    * case if necessary. *)
   | Import0 of { source: Loc.t Flow_ast_utils.source }
-  (* A synthetic import declaration without a source location *)
-  | ImportSynthetic of { source: string }
+  (* A synthetic import declaration without a source location.
+   * This variant can only be used if the synthetic import can also be written down in the userland. *)
+  | ImportSyntheticUserland of { source: string }
   (* import declaration with specifiers *)
   | Import of {
       import_loc: Loc.t;

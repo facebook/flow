@@ -37,7 +37,7 @@ and require =
       import_loc: Loc.t;
     }
   | Import0 of { source: Loc.t Ast_utils.source }
-  | ImportSynthetic of { source: string }
+  | ImportSyntheticUserland of { source: string }
   | Import of {
       import_loc: Loc.t;
       source: Loc.t Ast_utils.source;
@@ -111,7 +111,7 @@ let to_string require_list =
         (PP.string_of_option string_of_require_bindings bindings)
     | ImportDynamic _ -> "ImportDynamic"
     | Import0 _ -> "Import0"
-    | ImportSynthetic _ -> "ImportSynthetic"
+    | ImportSyntheticUserland _ -> "ImportSyntheticUserland"
     | Import _ -> "Import"
     | ExportFrom _ -> "ExportFrom"
   in
@@ -123,7 +123,7 @@ let require_loc_map msig =
   List.fold_left
     (fun acc require ->
       match require with
-      | ImportSynthetic { source } -> SMap.add source [] acc ~combine:List.rev_append
+      | ImportSyntheticUserland { source } -> SMap.add source [] acc ~combine:List.rev_append
       | Require { source = (loc, mref); _ }
       | ImportDynamic { source = (loc, mref); _ }
       | Import0 { source = (loc, mref) }
@@ -195,7 +195,7 @@ class requires_calculator ~file_key ~ast ~opts =
           ~file:file_key
       with
       | Some (unconditional_extensions, grouped_extensions_with_conditional_extensions) ->
-        let add source = this#add_require (ImportSynthetic { source }) in
+        let add source = this#add_require (ImportSyntheticUserland { source }) in
         (* Regardless of whether they are actually required, in file_sig, we will synthesize
          * imports for all of them. Later in merge_js, we will only error on missing required
          * ones. *)
@@ -213,7 +213,7 @@ class requires_calculator ~file_key ~ast ~opts =
              file_key
          with
         | Some imported_interface_module_name ->
-          this#add_require (ImportSynthetic { source = imported_interface_module_name })
+          this#add_require (ImportSyntheticUserland { source = imported_interface_module_name })
         | None -> ())
 
     method! call call_loc (expr : (Loc.t, Loc.t) Ast.Expression.Call.t) =
