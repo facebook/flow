@@ -962,7 +962,7 @@ struct
       in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
-        | Value { hints; expr; decl_kind = _ } ->
+        | Value { hints; expr; decl_kind = _; as_const = _ } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->

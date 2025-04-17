@@ -1242,7 +1242,7 @@ module Make
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchStatement));
         Tast_utils.error_mapper#statement s
       ) else
-        let arg = expression cx arg in
+        let arg = expression cx ~as_const:true arg in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let cases_rev =
@@ -2972,7 +2972,7 @@ module Make
         Tast_utils.error_mapper#expression ex
       ) else
         let reason = mk_reason RMatch loc in
-        let arg = expression cx arg in
+        let arg = expression cx ~as_const:true arg in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, ts_rev, all_throws) =

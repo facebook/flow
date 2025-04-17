@@ -73,3 +73,22 @@
     _ => 0,
   }
 }
+
+{
+  const out = match ([1, 2]) {
+    const a => a,
+//             ^
+// Above should produce a tuple type, not `Array<number>`
+  }
+}
+
+{
+  declare const x: number;
+  declare const y: number;
+
+  const out = match ([x, y]) {
+    const a => a,
+//             ^
+// Above should produce a tuple type, not `Array<number>`
+  }
+}

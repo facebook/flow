@@ -86,6 +86,7 @@ type value = {
   hints: ast_hints;
   expr: (ALoc.t, ALoc.t) Ast.Expression.t;
   decl_kind: Ast.Variable.kind option;
+  as_const: bool;
 }
 
 type root =
@@ -127,7 +128,8 @@ type root =
   | UnannotatedParameter of Reason.t
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
-let mk_value ?(hints = []) ?decl_kind expr = Value { hints; expr; decl_kind }
+let mk_value ?(hints = []) ?decl_kind ?(as_const = false) expr =
+  Value { hints; expr; decl_kind; as_const }
 
 type binding =
   | Root of root

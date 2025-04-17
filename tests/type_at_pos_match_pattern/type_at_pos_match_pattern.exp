@@ -43,3 +43,13 @@ Flags:
 1
 test.js:71:8,71:10
 
+test.js:79:16
+Flags:
+$ReadOnly<[1, 2]>
+test.js:79:16,79:16
+
+test.js:90:16
+Flags:
+$ReadOnly<[number, number]>
+test.js:90:16,90:16
+

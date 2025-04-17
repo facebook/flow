@@ -43,7 +43,7 @@ let try_cache ~target_loc ~check ~cache cx =
     cache e;
     e
 
-let expression cx ?encl_ctx ?decl exp =
+let expression cx ?encl_ctx ?decl ?as_const exp =
   let cache = Context.node_cache cx in
   let target_loc =
     match Context.typing_mode cx with
@@ -54,7 +54,7 @@ let expression cx ?encl_ctx ?decl exp =
     try_cache
       cx
       ~target_loc
-      ~check:(fun () -> Statement.expression ?encl_ctx ?decl cx exp)
+      ~check:(fun () -> Statement.expression ?encl_ctx ?decl ?as_const cx exp)
       ~cache:(Node_cache.set_expression cache)
   in
   t
@@ -470,7 +470,8 @@ let rec resolve_binding cx reason loc b =
       TypeUtil.optional t
     else
       t
-  | Root (Value { hints = _; expr; decl_kind }) -> expression cx ?decl:decl_kind expr
+  | Root (Value { hints = _; expr; decl_kind; as_const }) ->
+    expression cx ?decl:decl_kind ~as_const expr
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
