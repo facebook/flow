@@ -922,6 +922,36 @@ References:
                                    ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- rules-of-hooks.js:8:7
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
+
+   rules-of-hooks.js:8:7
+   8|       useHook(); // ERROR
+            ^^^^^^^^^
+
+References:
+   rules-of-hooks.js:8:7
+   8|       useHook(); // ERROR
+            ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ rules-of-hooks.js:17:10
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
+
+   rules-of-hooks.js:17:10
+   17|     1 => useHook(), // ERROR
+                ^^^^^^^^^
+
+References:
+   rules-of-hooks.js:17:10
+   17|     1 => useHook(), // ERROR
+                ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ statement.js:22:3
 
 Unreachable code. [unreachable-code]
@@ -965,4 +995,4 @@ Invalid `match` statement case body. A block is required for each case body. Wra
 
 
 
-Found 80 errors
+Found 82 errors

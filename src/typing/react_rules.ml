@@ -1162,6 +1162,9 @@ and component_ast_visitor tast cx rrid =
       (whole_ast_visitor tast ~under_component:true cx rrid)#function_body_any
 
     method! class_body = (whole_ast_visitor tast ~under_component:true cx rrid)#class_body
+
+    method! match_case ~on_case_body case =
+      this#in_conditional (super#match_case ~on_case_body) case
   end
 
 let check_react_rules cx ast =

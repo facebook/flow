@@ -1,4 +1,5 @@
 [options]
 all=true
 experimental.pattern_matching=true
+component_syntax=true
 no_flowlib=false
