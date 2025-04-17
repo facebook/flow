@@ -394,7 +394,7 @@ end = struct
     }
 end
 
-let effect_visitor cx is_hook rrid tast =
+let effect_visitor cx ~is_hook rrid tast =
   let { Loc_env.var_info = { Env_api.env_values; providers; _ } as var_info; name_defs; _ } =
     Context.environment cx
   in
@@ -774,7 +774,7 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
 
     method! component_declaration ({ Ast.Statement.ComponentDeclaration.body; _ } as cmp) =
       let effects =
-        (effect_visitor cx false rrid tast)#component_entry
+        (effect_visitor cx ~is_hook:false rrid tast)#component_entry
           (Typed_ast_utils.untyped_ast_mapper#component_body body)
       in
       emit_effect_errors cx effects;
@@ -805,10 +805,9 @@ let rec whole_ast_visitor tast ~under_component cx rrid =
         && List.length params_list <= 2 (* Props and ref *)
         && Base.Option.is_none rest
       in
-      let hook = effect_ = Ast.Function.Hook in
-      if hook then (
+      if effect_ = Ast.Function.Hook then (
         let effects =
-          (effect_visitor cx hook rrid tast)#function_entry
+          (effect_visitor cx ~is_hook:true rrid tast)#function_entry
             (Typed_ast_utils.untyped_ast_mapper#function_body_any body)
         in
         emit_effect_errors cx effects;
