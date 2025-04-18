@@ -759,12 +759,22 @@ let effect_visitor cx ~is_hook rrid tast =
 
 let emit_effect_errors cx = Base.List.iter ~f:(Flow_js_utils.add_output cx)
 
+type hook_call_context =
+  (* e.g. Calling hooks in things like `function fetchData(...) {...}` *)
+  | HookCallDefinitelyNotAllowed
+  (* e.g. Calling hooks in things like `function Foo(...) {...}` or `function useFoo(...) {...}`,
+   * permissively allowed because hook compatibility mode is on *)
+  | HookCallPermissivelyAllowedUnderCompatibilityMode
+  (* e.g. Calling hooks in things like `function Foo(...) {...}` or `function useFoo(...) {...}`,
+   * strictly disallowed because hook compatibility mode is off *)
+  | HookCallStrictlyDisallowedWithoutCompatibilityMode
+
 let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable in_function_component = false
+    val mutable hook_call_context = HookCallDefinitelyNotAllowed
 
     (* If it's true, then we are in some context where we permissively assume can be passed with
      * a function component or hook. *)
@@ -829,7 +839,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
             }
         )
       ) else begin
-        let cur_in_function_component = in_function_component in
+        let cur_hook_call_context = hook_call_context in
         let is_probably_function_component =
           (* Capitalized letter initial name *)
           Base.Option.value_map
@@ -839,16 +849,23 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           && List.length params_list <= 2 (* Props and ref *)
           && Base.Option.is_none rest
         in
-        let next_in_function_component =
-          (in_context_possibly_expecting_fn_component_or_hook
-          || is_probably_function_component
-          || Base.Option.is_some (Flow_ast_utils.hook_function fn)
-          )
-          && Context.hook_compatibility cx
+        let next_hook_call_context =
+          let possibly_in_context_allow_hook_call =
+            in_context_possibly_expecting_fn_component_or_hook
+            || is_probably_function_component
+            || Base.Option.is_some (Flow_ast_utils.hook_function fn)
+          in
+          if possibly_in_context_allow_hook_call then
+            if Context.hook_compatibility cx then
+              HookCallPermissivelyAllowedUnderCompatibilityMode
+            else
+              HookCallStrictlyDisallowedWithoutCompatibilityMode
+          else
+            HookCallDefinitelyNotAllowed
         in
-        in_function_component <- next_in_function_component;
+        hook_call_context <- next_hook_call_context;
         let res = super#function_ fn in
-        in_function_component <- cur_in_function_component;
+        hook_call_context <- cur_hook_call_context;
         res
       end
 
@@ -869,11 +886,23 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
         match hook_callee cx callee_ty with
         | HookCallee _
         | MaybeHookCallee _
-          when (not in_function_component)
+          when (match hook_call_context with
+               | HookCallDefinitelyNotAllowed
+               | HookCallStrictlyDisallowedWithoutCompatibilityMode ->
+                 true
+               | HookCallPermissivelyAllowedUnderCompatibilityMode -> false)
                && not
                     (Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body)
           ->
-          hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
+          if Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body then
+            ()
+          else (
+            match hook_call_context with
+            | HookCallDefinitelyNotAllowed
+            | HookCallStrictlyDisallowedWithoutCompatibilityMode ->
+              hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
+            | HookCallPermissivelyAllowedUnderCompatibilityMode -> ()
+          )
         | _ -> ()
       end;
       let cur_in_context_possibly_expecting_fn_component_or_hook =
