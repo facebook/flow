@@ -91,7 +91,7 @@ type dependency_addr = Heap.dependency SharedMem.addr
 
 type resolved_module_addr = Heap.resolved_module SharedMem.addr
 
-type 'a resolved_module' = ('a, string option) result [@@deriving show]
+type 'a resolved_module' = ('a, Flow_import_specifier.t option) result [@@deriving show]
 
 type resolved_module = Modulename.t resolved_module' [@@deriving show]
 
@@ -271,7 +271,10 @@ let read_tolerable_file_sig_unsafe file_key parse =
 
 let read_file_sig_unsafe file_key parse = fst (read_tolerable_file_sig_unsafe file_key parse)
 
-let read_requires parse = Heap.get_requires parse |> Heap.read_requires
+let read_requires parse =
+  Heap.get_requires parse
+  |> Heap.read_requires
+  |> Array.map (fun s -> Flow_import_specifier.Userland s)
 
 let read_exports parse : Exports.t =
   let open Heap in
@@ -302,7 +305,8 @@ let read_dependency =
 let read_resolved_module f addr =
   match Heap.read_resolved_module addr with
   | Ok dependency -> Ok (f dependency)
-  | Error mapped_name -> Error (Option.map Heap.read_string mapped_name)
+  | Error mapped_name ->
+    Error (Option.map (fun s -> Flow_import_specifier.Userland (Heap.read_string s)) mapped_name)
 
 let read_resolved_modules f resolved_requires =
   let addr = Heap.get_resolved_modules resolved_requires in
@@ -328,7 +332,7 @@ let read_resolved_modules_map f parse resolved_requires =
     incr i;
     (mref, m)
   in
-  SMap.of_increasing_iterator_unchecked f n
+  Flow_import_specifier.Map.of_increasing_iterator_unchecked f n
 
 let haste_modulename m =
   Modulename.Haste
@@ -445,7 +449,8 @@ let prepare_write_phantom_dependencies phantom_dependencies =
 let prepare_write_resolved_module = function
   | Ok dependency -> Heap.prepare_const (dependency :> resolved_module_addr)
   | Error None -> Heap.prepare_const (SharedMem.null_addr :> resolved_module_addr)
-  | Error (Some name) -> (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
+  | Error (Some (Flow_import_specifier.Userland name)) ->
+    (Heap.prepare_write_string name :> resolved_module_addr Heap.prep)
 
 let prepare_write_resolved_requires (resolved_modules, phantom_dependencies) =
   let+ write_resolved_requires = Heap.prepare_write_resolved_requires
@@ -760,7 +765,8 @@ let prepare_add_checked_file
   in
   let prepare_create_parse_with_ents () =
     let+ hash = prepare_write_int64 hash
-    and+ requires = prepare_write_requires requires
+    and+ requires =
+      prepare_write_requires (Array.map (fun (Flow_import_specifier.Userland m) -> m) requires)
     and+ exports = prepare_write_exports exports
     and+ imports = prepare_write_imports imports
     and+ parse = prepare_write_typed_parse
@@ -1248,7 +1254,7 @@ module type READER = sig
     (dependency_addr -> 'a) ->
     File_key.t ->
     [ `typed ] parse_addr ->
-    'a resolved_module' SMap.t
+    'a resolved_module' Flow_import_specifier.Map.t
 
   val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
@@ -1541,7 +1547,7 @@ type worker_mutator = {
     Haste_module_info.t option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    string array ->
+    Flow_import_specifier.t array ->
     File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->

@@ -9,7 +9,7 @@ type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_modu
 
 type check_file =
   File_key.t ->
-  resolved_module SMap.t ->
+  resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -21,7 +21,7 @@ type check_file =
 
 type compute_env =
   File_key.t ->
-  resolved_module SMap.t ->
+  resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->

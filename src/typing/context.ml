@@ -16,7 +16,7 @@ exception Call_not_found of int
 
 exception Exports_not_found of Type.Exports.id
 
-exception Require_not_found of string
+exception Require_not_found of Flow_import_specifier.t
 
 exception Module_not_found of string
 
@@ -232,8 +232,8 @@ type typing_mode =
 
 type resolved_require =
   | TypedModule of (unit -> (Type.moduletype, Type.t) result)
-  | UncheckedModule of ALoc.t * string
-  | MissingModule of string
+  | UncheckedModule of ALoc.t * Flow_import_specifier.t
+  | MissingModule of Flow_import_specifier.t
 
 type t = {
   ccx: component_t;
@@ -260,7 +260,7 @@ type t = {
   natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
 }
 
-and resolve_require = string -> resolved_require
+and resolve_require = Flow_import_specifier.t -> resolved_require
 
 let metadata_of_options options =
   {

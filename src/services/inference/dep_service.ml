@@ -126,16 +126,22 @@ let file_dependencies ~reader file =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
-    Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
+    let read_import_specifier buf pos = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+    Bin.fold_tbl
+      read_import_specifier
+      Flow_import_specifier.Set.add
+      buf
+      (Bin.module_refs buf)
+      Flow_import_specifier.Set.empty
   in
   let resolved_modules =
     Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
   in
-  SMap.fold
+  Flow_import_specifier.Map.fold
     (fun mref m (sig_files, all_files) ->
       match implementation_file ~reader m with
       | Some f ->
-        if SSet.mem mref sig_require_set then
+        if Flow_import_specifier.Set.mem mref sig_require_set then
           (FilenameSet.add f sig_files, FilenameSet.add f all_files)
         else
           (sig_files, FilenameSet.add f all_files)

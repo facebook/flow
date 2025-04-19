@@ -93,13 +93,19 @@ let remove_dot_flow_suffix = function
   | module_ -> module_
 
 let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
-  match SMap.find module_ref resolved_modules with
+  match
+    Flow_import_specifier.Map.find (Flow_import_specifier.Userland module_ref) resolved_modules
+  with
   | Ok m -> Module.of_modulename ~root ~write_root m
   | Error mapped_name ->
     (* TODO: We reach this codepath for requires that might resolve to builtin
      * modules. During check we check the master context, which we can also do
      * here. *)
-    let name = Option.value mapped_name ~default:module_ref in
+    let name =
+      match mapped_name with
+      | None -> module_ref
+      | Some (Flow_import_specifier.Userland name) -> name
+    in
     Module.String name
 
 let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =

@@ -131,7 +131,9 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
   let is_local_use aloc = Scope_api.With_Loc.is_local_use scope_info (loc_of_aloc aloc) in
   let is_legit_require source_aloc =
     let source_loc = loc_of_aloc source_aloc in
-    SMap.exists (fun _ locs -> List.exists (fun loc -> loc = source_loc) locs) require_loc_map
+    Flow_import_specifier.Map.exists
+      (fun _ locs -> List.exists (fun loc -> loc = source_loc) locs)
+      require_loc_map
   in
   let rec loop ~scope_info ~depth req_loc loop_name =
     match Depth.add req_loc depth with

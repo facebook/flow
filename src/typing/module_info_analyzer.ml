@@ -139,7 +139,7 @@ let export_specifiers cx info loc source export_kind =
   | E.ExportBatchSpecifier (_, None) ->
     let (_, { Ast.StringLiteral.value; _ }) = Base.Option.value_exn source in
     let module_type_opt =
-      match Context.find_require cx value with
+      match Context.find_require cx (Flow_import_specifier.Userland value) with
       | Context.TypedModule f -> Base.Result.ok (f ())
       | _ -> None
     in

@@ -12,7 +12,7 @@ open Docblock_parser
 type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      requires: string array;
+      requires: Flow_import_specifier.t array;
       file_sig: File_sig.t;
       locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
@@ -22,7 +22,7 @@ type result =
     }
   | Parse_recovered of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
-      requires: string array;
+      requires: Flow_import_specifier.t array;
       file_sig: File_sig.t;
       tolerable_errors: File_sig.tolerable_error list;
       parse_errors: parse_error Nel.t;
@@ -182,7 +182,9 @@ let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
       else
         let (ast, parse_errors) = parse_source_file ~options content file in
         let file_sig = parse_file_sig options file docblock ast in
-        let requires = File_sig.require_set file_sig |> SSet.elements |> Array.of_list in
+        let requires =
+          File_sig.require_set file_sig |> Flow_import_specifier.Set.elements |> Array.of_list
+        in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
         let (_, (_, _, globals)) =
           let enable_enums = Options.enums options in

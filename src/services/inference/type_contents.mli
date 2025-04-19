@@ -42,7 +42,7 @@ val compute_env_of_contents :
   File_key.t ->
   Docblock.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  string array ->
+  Flow_import_specifier.t array ->
   File_sig.t ->
   Context.t * (ALoc.t, ALoc.t) Flow_ast.Program.t
 
@@ -54,6 +54,6 @@ val check_contents :
   File_key.t ->
   Docblock.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
-  string array ->
+  Flow_import_specifier.t array ->
   File_sig.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t

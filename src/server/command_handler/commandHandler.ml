@@ -2060,7 +2060,12 @@ let get_ephemeral_handler genv command =
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_find_module ~options ~reader ~moduleref ~filename)
+      (handle_find_module
+         ~options
+         ~reader
+         ~moduleref:(Flow_import_specifier.Userland moduleref)
+         ~filename
+      )
   | ServerProt.Request.FORCE_RECHECK { files; focus; missed_changes; changed_mergebase } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~missed_changes ~changed_mergebase)
   | ServerProt.Request.GET_DEF { input; line; char; wait_for_recheck } ->

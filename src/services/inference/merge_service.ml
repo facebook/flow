@@ -251,8 +251,8 @@ let sig_hash ~check_dirty_set ~root =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file_key parse
       in
       let f buf pos =
-        let mref = Bin.read_str buf pos in
-        let m = SMap.find mref resolved_modules in
+        let mref = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+        let m = Flow_import_specifier.Map.find mref resolved_modules in
         file_dependency ~reader component_rec component_map m
       in
       let pos = Bin.module_refs buf in
@@ -502,7 +502,7 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     let f mref =
       Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
     in
-    SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
+    Flow_import_specifier.Map.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
   let { Check_service.check_file; compute_env = _ } =
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
@@ -525,7 +525,7 @@ let compute_env_of_contents ~reader options master_cx file ast docblock file_sig
     let f mref =
       Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
     in
-    SMap.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
+    Flow_import_specifier.Map.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
   in
   let { Check_service.check_file = _; compute_env } =
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()

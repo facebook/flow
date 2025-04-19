@@ -491,7 +491,9 @@ let check_multiplatform_conformance cx ast tast =
   with
   | Some imported_interface_module_name ->
     let open Type in
-    (match Context.find_require cx imported_interface_module_name with
+    (match
+       Context.find_require cx (Flow_import_specifier.Userland imported_interface_module_name)
+     with
     | Context.MissingModule _
     | Context.UncheckedModule _ ->
       (* It's ok if a platform speicific implementation file doesn't have an interface.
@@ -551,7 +553,7 @@ let check_multiplatform_conformance cx ast tast =
     | None -> ()
     | Some (unconditional_extensions, grouped_extensions_with_conditional_extensions) ->
       let module_exists mref =
-        match Context.find_require cx mref with
+        match Context.find_require cx (Flow_import_specifier.Userland mref) with
         | Context.TypedModule _
         | Context.UncheckedModule _ ->
           true

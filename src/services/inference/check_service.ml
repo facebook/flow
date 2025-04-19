@@ -11,7 +11,7 @@ type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_modu
 
 type check_file =
   File_key.t ->
-  resolved_module SMap.t ->
+  resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   File_sig.t ->
   Docblock.t ->
@@ -23,7 +23,7 @@ type check_file =
 
 type compute_env =
   File_key.t ->
-  resolved_module SMap.t ->
+  resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
@@ -44,16 +44,19 @@ let typed_builtin_module_opt cx builtin_module_name =
   | None -> None
 
 let unknown_module_t cx module_name =
-  match typed_builtin_module_opt cx module_name with
-  | Some typed -> Context.TypedModule typed
-  | None -> Context.MissingModule module_name
+  match module_name with
+  | Flow_import_specifier.Userland user_land_module_name ->
+    (match typed_builtin_module_opt cx user_land_module_name with
+    | Some typed -> Context.TypedModule typed
+    | None -> Context.MissingModule module_name)
 
-let unchecked_module_t cx file_key module_name =
-  match typed_builtin_module_opt cx module_name with
-  | Some typed -> Context.TypedModule typed
-  | None ->
-    let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
-    Context.UncheckedModule (loc, module_name)
+let unchecked_module_t cx file_key mref =
+  let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
+  match mref with
+  | Flow_import_specifier.Userland user_land_module_name ->
+    (match typed_builtin_module_opt cx user_land_module_name with
+    | Some typed -> Context.TypedModule typed
+    | None -> Context.UncheckedModule (loc, mref))
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
@@ -91,7 +94,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       unknown_module_t cx m
     | Ok m ->
       (match Parsing_heaps.Reader_dispatcher.get_provider ~reader m with
-      | None -> unknown_module_t cx (Parsing_heaps.read_dependency m |> Modulename.to_string)
+      | None ->
+        unknown_module_t
+          cx
+          (Flow_import_specifier.Userland (Parsing_heaps.read_dependency m |> Modulename.to_string))
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
         | File_key.ResourceFile f as file_key ->
@@ -132,20 +138,23 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe ~reader Fun.id file_key parse
     in
 
-    let resolved_requires = ref SMap.empty in
+    let resolved_requires = ref Flow_import_specifier.Map.empty in
     let cx =
       let docblock = Parsing_heaps.read_docblock_unsafe file_key parse in
       let metadata = Context.docblock_overrides docblock file_key base_metadata in
-      let resolve_require mref = Lazy.force (SMap.find mref !resolved_requires) in
+      let resolve_require mref =
+        Lazy.force (Flow_import_specifier.Map.find mref !resolved_requires)
+      in
       Context.make ccx metadata file_key aloc_table resolve_require mk_builtins
     in
 
-    resolved_requires := SMap.mapi (fun mref m -> lazy (dep_module_t cx mref m)) resolved_modules;
+    resolved_requires :=
+      Flow_import_specifier.Map.mapi (fun mref m -> lazy (dep_module_t cx mref m)) resolved_modules;
 
     let dependencies =
       let f buf pos =
-        let mref = Bin.read_str buf pos in
-        (mref, SMap.find mref !resolved_requires)
+        let mref = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+        (mref, Flow_import_specifier.Map.find mref !resolved_requires)
       in
       let pos = Bin.module_refs buf in
       Bin.read_tbl_generic f buf pos Module_refs.init
@@ -310,10 +319,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx () in
     let metadata = Context.docblock_overrides docblock file_key base_metadata in
-    let resolved_requires = ref SMap.empty in
-    let resolve_require mref = SMap.find mref !resolved_requires in
+    let resolved_requires = ref Flow_import_specifier.Map.empty in
+    let resolve_require mref = Flow_import_specifier.Map.find mref !resolved_requires in
     let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
-    resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
+    resolved_requires := Flow_import_specifier.Map.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
     let (typed_ast, obj_to_obj_map) =
       Obj_to_obj_hook.with_obj_to_obj_hook
@@ -344,10 +353,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx () in
     let metadata = Context.docblock_overrides docblock file_key base_metadata in
-    let resolved_requires = ref SMap.empty in
-    let resolve_require mref = SMap.find mref !resolved_requires in
+    let resolved_requires = ref Flow_import_specifier.Map.empty in
+    let resolve_require mref = Flow_import_specifier.Map.find mref !resolved_requires in
     let cx = Context.make ccx metadata file_key aloc_table resolve_require mk_builtins in
-    resolved_requires := SMap.mapi (dep_module_t cx) resolved_modules;
+    resolved_requires := Flow_import_specifier.Map.mapi (dep_module_t cx) resolved_modules;
     ConsGen.set_dst_cx cx;
     let () = Type_inference_js.initialize_env cx aloc_ast in
     (cx, aloc_ast)

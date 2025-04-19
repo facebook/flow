@@ -19,7 +19,7 @@ val imported_module :
   node_modules_containers:SSet.t SMap.t ->
   importing_file:File_key.t ->
   ?phantom_acc:phantom_acc ->
-  string ->
+  Flow_import_specifier.t ->
   Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 (* repick providers for dirty modules *)

@@ -25,7 +25,7 @@ type dependency_addr = SharedMem.NewAPI.dependency SharedMem.addr
 
 type resolved_module_addr = SharedMem.NewAPI.resolved_module SharedMem.addr
 
-type 'a resolved_module' = ('a, string option) result [@@deriving show]
+type 'a resolved_module' = ('a, Flow_import_specifier.t option) result [@@deriving show]
 
 type resolved_module = Modulename.t resolved_module' [@@deriving show]
 
@@ -67,7 +67,7 @@ val read_tolerable_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File
 
 val read_file_sig_unsafe : File_key.t -> [ `typed ] parse_addr -> File_sig.t
 
-val read_requires : [ `typed ] parse_addr -> string array
+val read_requires : [ `typed ] parse_addr -> Flow_import_specifier.t array
 
 val read_exports : [ `typed ] parse_addr -> Exports.t
 
@@ -141,7 +141,7 @@ module type READER = sig
     (dependency_addr -> 'a) ->
     File_key.t ->
     [ `typed ] parse_addr ->
-    'a resolved_module' SMap.t
+    'a resolved_module' Flow_import_specifier.Map.t
 
   val get_leader_unsafe : reader:reader -> File_key.t -> [ `typed ] parse_addr -> file_addr
 
@@ -184,7 +184,7 @@ module Mutator_reader : sig
     (dependency_addr -> 'a) ->
     File_key.t ->
     [ `typed ] parse_addr ->
-    'a resolved_module' SMap.t
+    'a resolved_module' Flow_import_specifier.Map.t
 
   val get_old_provider : reader:reader -> dependency_addr -> file_addr option
 
@@ -212,7 +212,7 @@ type worker_mutator = {
     Haste_module_info.t option ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    string array ->
+    Flow_import_specifier.t array ->
     File_sig.tolerable_t ->
     locs_tbl ->
     type_sig ->
@@ -279,7 +279,7 @@ module Saved_state_mutator : sig
     Xx.hash ->
     Haste_module_info.t option ->
     Exports.t ->
-    string array ->
+    Flow_import_specifier.t array ->
     resolved_module array ->
     Modulename.t array ->
     Imports.t ->

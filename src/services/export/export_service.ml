@@ -53,7 +53,9 @@ module ModuleResolutionLazyStream = struct
     in
     let rec next (file_key, parse) mref : stream_result option =
       match
-        SMap.find_opt mref (resolved_modules file_key parse)
+        Flow_import_specifier.Map.find_opt
+          (Flow_import_specifier.Userland mref)
+          (resolved_modules file_key parse)
         |> Base.Option.bind ~f:Result.to_option
         |> Base.Option.bind ~f:get_provider
       with
@@ -185,21 +187,24 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         let acc = Export_index.add name Export_index.Global Export_index.NamedType acc in
         Export_index.add name Export_index.Global Export_index.Named acc
       | Unresolved_source mref ->
-        let result = SMap.find_opt mref resolved_modules in
+        let result =
+          Flow_import_specifier.Map.find_opt (Flow_import_specifier.Userland mref) resolved_modules
+        in
+        let kind_and_name module_name =
+          match import.Imports.kind with
+          | Imports.Default -> (Export_index.Default, module_name)
+          | Imports.Named -> (Export_index.Named, import.export)
+          | Imports.Namespace -> (Export_index.Namespace, module_name)
+          | Imports.NamedType -> (Export_index.NamedType, import.export)
+          | Imports.Unknown -> failwith "Unknown Kind"
+        in
         (match result with
         | Some (Ok dependency) ->
           let module_name = Parsing_heaps.read_dependency dependency in
           let (source, module_name) =
             (module_name, inferred_name_of_modulename (Modulename.to_string module_name))
           in
-          let (kind, name) =
-            match import.Imports.kind with
-            | Imports.Default -> (Export_index.Default, module_name)
-            | Imports.Named -> (Export_index.Named, import.export)
-            | Imports.Namespace -> (Export_index.Namespace, module_name)
-            | Imports.NamedType -> (Export_index.NamedType, import.export)
-            | Imports.Unknown -> failwith "Unknown Kind"
-          in
+          let (kind, name) = kind_and_name module_name in
           (match source with
           | Modulename.Filename fn ->
             let file_key = File_key fn in
@@ -210,16 +215,11 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
               let file_key = File_key (Parsing_heaps.read_file_key file) in
               Export_index.add name file_key kind acc
             | None -> acc))
-        | Some (Error mapped_name) ->
-          let mref = Option.value mapped_name ~default:mref in
-          let (kind, name) =
-            match import.Imports.kind with
-            | Imports.Default -> (Export_index.Default, mref)
-            | Imports.Named -> (Export_index.Named, import.export)
-            | Imports.Namespace -> (Export_index.Namespace, mref)
-            | Imports.NamedType -> (Export_index.NamedType, import.export)
-            | Imports.Unknown -> failwith "Unknown Kind"
-          in
+        | Some (Error (Some (Flow_import_specifier.Userland mref))) ->
+          let (kind, name) = kind_and_name mref in
+          Export_index.add name (Builtin mref) kind acc
+        | Some (Error None) ->
+          let (kind, name) = kind_and_name mref in
           Export_index.add name (Builtin mref) kind acc
         | None ->
           (*Could not find resolved_requires key for this unresolved_source*)

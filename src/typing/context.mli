@@ -11,7 +11,7 @@ exception Props_not_found of Type.Properties.id
 
 exception Exports_not_found of Type.Exports.id
 
-exception Require_not_found of string
+exception Require_not_found of Flow_import_specifier.t
 
 exception Module_not_found of string
 
@@ -140,10 +140,10 @@ val show_typing_mode : typing_mode Nel.t -> string
 
 type resolved_require =
   | TypedModule of (unit -> (Type.moduletype, Type.t) result)
-  | UncheckedModule of ALoc.t * string
-  | MissingModule of string
+  | UncheckedModule of ALoc.t * Flow_import_specifier.t
+  | MissingModule of Flow_import_specifier.t
 
-type resolve_require = string -> resolved_require
+type resolve_require = Flow_import_specifier.t -> resolved_require
 
 type voidable_check = {
   public_property_map: Type.Properties.id;
@@ -238,7 +238,7 @@ val find_call : t -> int -> Type.t
 
 val find_exports : t -> Type.Exports.id -> Type.Exports.t
 
-val find_require : t -> string -> resolved_require
+val find_require : t -> Flow_import_specifier.t -> resolved_require
 
 val find_tvar : t -> Type.ident -> Type.Constraint.node
 

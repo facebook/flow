@@ -38,7 +38,7 @@ type exports =
 
 type file = {
   cx: Context.t;
-  dependencies: (string * Context.resolved_require Lazy.t) Module_refs.t;
+  dependencies: (Flow_import_specifier.t * Context.resolved_require Lazy.t) Module_refs.t;
   exports: unit -> (Type.moduletype, Type.t) result;
   local_defs:
     (ALoc.t * string * Type.t Lazy.t (* general *) * Type.t Lazy.t (* const *)) Lazy.t Local_defs.t;
@@ -201,7 +201,11 @@ let add_name_field reason =
   SMap.update "name" f
 
 let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
-  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let (import_specifier, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let mref =
+    match import_specifier with
+    | Flow_import_specifier.Userland mref -> mref
+  in
   let reason = Reason.(mk_reason (RModule mref) loc) in
   let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
   ConsGen.cjs_require
@@ -214,7 +218,11 @@ let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
     resolved_require
 
 let import file reason index kind ~remote ~local =
-  let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let (import_specifier, (lazy resolved_require)) = Module_refs.get file.dependencies index in
+  let mref =
+    match import_specifier with
+    | Flow_import_specifier.Userland mref -> mref
+  in
   if remote = "default" then
     ConsGen.import_default file.cx reason kind local mref false resolved_require
   else
@@ -559,7 +567,11 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
   | Pack.Require { loc; index } ->
     require file loc index ~standard_cjs_esm_interop:false ~legacy_interop:false
   | Pack.ImportDynamic { loc; index } ->
-    let (mref, _) = Module_refs.get file.dependencies index in
+    let (import_specifier, _) = Module_refs.get file.dependencies index in
+    let mref =
+      match import_specifier with
+      | Flow_import_specifier.Userland mref -> mref
+    in
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
     let ns_t = import_ns file ns_reason mref loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
@@ -2196,13 +2208,16 @@ let merge_builtins
                  (loc |> Locs.get builtin_locs |> ALoc.of_loc)
                  module_kind
              in
-             SMap.add module_name lazy_module acc)
+             Flow_import_specifier.Map.add
+               (Flow_import_specifier.Userland module_name)
+               lazy_module
+               acc)
            global_modules
-           SMap.empty
+           Flow_import_specifier.Map.empty
        in
-       let map_module_ref s : Context.resolved_require Lazy.t =
-         match SMap.find_opt s dependencies_map with
-         | None -> lazy (Context.MissingModule s)
+       let map_module_ref specifier : Context.resolved_require Lazy.t =
+         match Flow_import_specifier.Map.find_opt specifier dependencies_map with
+         | None -> lazy (Context.MissingModule specifier)
          | Some lazy_module ->
            Lazy.map
              (fun (r, lazy_module) ->
@@ -2215,7 +2230,12 @@ let merge_builtins
        let exports () = Error (Type.AnyT.annot Reason.(locationless_reason RExports)) in
        ( {
            cx;
-           dependencies = Module_refs.map (fun s -> (s, map_module_ref s)) module_refs;
+           dependencies =
+             Module_refs.map
+               (fun mref ->
+                 let specifier = Flow_import_specifier.Userland mref in
+                 (specifier, map_module_ref specifier))
+               module_refs;
            exports;
            local_defs = Local_defs.map (local_def file_and_dependency_map_rec) local_defs;
            remote_refs = Remote_refs.map (remote_ref file_and_dependency_map_rec) remote_refs;
@@ -2255,7 +2275,10 @@ let merge_builtins
     SMap.fold
       (fun name _ acc ->
         let (_, dep_map) = Lazy.force file_and_dependency_map_rec in
-        SMap.add name (SMap.find name dep_map) acc)
+        SMap.add
+          name
+          (Flow_import_specifier.Map.find (Flow_import_specifier.Userland name) dep_map)
+          acc)
       global_modules
       SMap.empty
   in

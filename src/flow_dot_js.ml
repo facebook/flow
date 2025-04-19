@@ -235,8 +235,8 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
   in
   (* flow.js does not use abstract locations, so this is not used *)
   let aloc_table = lazy (ALoc.empty_table filename) in
-  let resolved_requires = ref SMap.empty in
-  let resolve_require mref = SMap.find mref !resolved_requires in
+  let resolved_requires = ref Flow_import_specifier.Map.empty in
+  let resolve_require mref = Flow_import_specifier.Map.find mref !resolved_requires in
   let cx =
     Context.make
       ccx
@@ -247,15 +247,17 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
       (Merge_js.mk_builtins metadata master_cx)
   in
   resolved_requires :=
-    SMap.mapi
-      (fun mref _locs ->
-        match Context.builtin_module_opt cx mref with
-        | Some m ->
-          Context.TypedModule
-            (Type.Constraint.ForcingState.of_lazy_module m
-            |> Annotation_inference.ConsGen.force_module_type_thunk cx
-            )
-        | None -> Context.MissingModule mref)
+    Flow_import_specifier.Map.mapi
+      (fun import_specifier _locs ->
+        match import_specifier with
+        | Flow_import_specifier.Userland mref ->
+          (match Context.builtin_module_opt cx mref with
+          | Some m ->
+            Context.TypedModule
+              (Type.Constraint.ForcingState.of_lazy_module m
+              |> Annotation_inference.ConsGen.force_module_type_thunk cx
+              )
+          | None -> Context.MissingModule import_specifier))
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

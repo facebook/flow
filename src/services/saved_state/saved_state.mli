@@ -6,7 +6,7 @@
  *)
 
 type denormalized_file_data = {
-  requires: string array;
+  requires: Flow_import_specifier.t array;
   resolved_modules: Parsing_heaps.resolved_module array;
   phantom_dependencies: Modulename.t array;
   exports: Exports.t;

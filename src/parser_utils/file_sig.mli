@@ -118,9 +118,9 @@ val program : file_key:File_key.t -> ast:(Loc.t, Loc.t) Flow_ast.Program.t -> op
 (* Use for debugging; not for exposing info to the end user *)
 val to_string : t -> string
 
-val require_loc_map : t -> Loc.t list SMap.t
+val require_loc_map : t -> Loc.t list Flow_import_specifier.Map.t
 
 (* Only the keys returned by `require_loc_map` *)
-val require_set : t -> SSet.t
+val require_set : t -> Flow_import_specifier.Set.t
 
 val requires : t -> require list

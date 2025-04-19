@@ -123,19 +123,31 @@ let require_loc_map msig =
   List.fold_left
     (fun acc require ->
       match require with
-      | ImportSyntheticUserland { source } -> SMap.add source [] acc ~combine:List.rev_append
+      | ImportSyntheticUserland { source } ->
+        Flow_import_specifier.Map.add
+          (Flow_import_specifier.Userland source)
+          []
+          acc
+          ~combine:List.rev_append
       | Require { source = (loc, mref); _ }
       | ImportDynamic { source = (loc, mref); _ }
       | Import0 { source = (loc, mref) }
       | Import { source = (loc, mref); _ }
       | ExportFrom { source = (loc, mref) } ->
-        SMap.add mref [loc] acc ~combine:List.rev_append)
-    SMap.empty
+        Flow_import_specifier.Map.add
+          (Flow_import_specifier.Userland mref)
+          [loc]
+          acc
+          ~combine:List.rev_append)
+    Flow_import_specifier.Map.empty
     msig
 
 let require_set msig =
   let map = require_loc_map msig in
-  SMap.fold (fun key _ acc -> SSet.add key acc) map SSet.empty
+  Flow_import_specifier.Map.fold
+    (fun key _ acc -> Flow_import_specifier.Set.add key acc)
+    map
+    Flow_import_specifier.Set.empty
 
 let requires msig = msig
 

@@ -8,7 +8,7 @@
 open Utils_js
 
 type denormalized_file_data = {
-  requires: string array;
+  requires: Flow_import_specifier.t array;
   resolved_modules: Parsing_heaps.resolved_module array;
   phantom_dependencies: Modulename.t array;
   exports: Exports.t;
@@ -77,11 +77,14 @@ let modulename_map_fn ~on_file ?on_string = function
            ~namespace_bitset:(Haste_module_info.namespace_bitset haste_module_info)
         ))
 
+let import_specifier_map_fn ~on_string = function
+  | Flow_import_specifier.Userland name -> Flow_import_specifier.Userland (on_string name)
+
 let resolved_module_map_fn ~on_file ?on_string = function
   | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)
   | Error mapped_name as err ->
     (match (mapped_name, on_string) with
-    | (Some name, Some f) -> Error (Some (f name))
+    | (Some name, Some on_string) -> Error (Some (import_specifier_map_fn ~on_string name))
     | _ -> err)
 
 (* It's simplest if the build ID is always the same length. Let's use 16, since that happens to
@@ -241,7 +244,7 @@ end = struct
 
   let normalize_file_data
       t { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
-    let requires = Array.map (intern t) requires in
+    let requires = Array.map (import_specifier_map_fn ~on_string:(intern t)) requires in
     let (resolved_modules, phantom_dependencies) =
       normalize_resolved_requires t resolved_modules phantom_dependencies
     in

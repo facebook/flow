@@ -183,7 +183,7 @@ module type MODULE_SYSTEM = sig
     node_modules_containers:SSet.t SMap.t ->
     importing_file:File_key.t ->
     phantom_acc:phantom_acc option ->
-    string ->
+    Flow_import_specifier.t ->
     Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
   (* for a given module name, choose a provider from among a set of
@@ -580,23 +580,24 @@ module Node = struct
             );
         ]
 
-  let imported_module
-      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc import_specifier =
-    let candidates = module_name_candidates ~options import_specifier in
-    match
-      List.find_map
-        (resolve_import ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc)
-        (Nel.to_list candidates)
-    with
-    | Some m -> Ok m
-    | None ->
-      (* For the Node module system, we always use the original unmapped name in
-       * error messages, so we never need to store a mapped name.
-       *
-       * TODO: This means that name mappers can not force a mapped module name
-       * to resolve to a libdef, since we try to resolve to libdef modules
-       * during check in the `Error _` case. *)
-      Error None
+  let imported_module ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc =
+    function
+    | Flow_import_specifier.Userland import_specifier ->
+      let candidates = module_name_candidates ~options import_specifier in
+      (match
+         List.find_map
+           (resolve_import ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc)
+           (Nel.to_list candidates)
+       with
+      | Some m -> Ok m
+      | None ->
+        (* For the Node module system, we always use the original unmapped name in
+         * error messages, so we never need to store a mapped name.
+         *
+         * TODO: This means that name mappers can not force a mapped module name
+         * to resolve to a libdef, since we try to resolve to libdef modules
+         * during check in the `Error _` case. *)
+        Error None)
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -932,33 +933,34 @@ module Haste : MODULE_SYSTEM = struct
               ]
             )
 
-  let imported_module
-      ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc import_specifier =
-    (* For historical reasons, the Haste module system always picks the first
-     * matching candidate, unlike the Node module system which picks the first
-     * "valid" matching candidate. *)
-    let candidates = module_name_candidates ~options import_specifier in
-    let import_specifier = Nel.hd candidates in
-    match
-      resolve_import
-        ~options
-        ~reader
-        ~node_modules_containers
-        ~importing_file
-        ~phantom_acc
-        ~import_specifier
-    with
-    | Some m -> Ok m
-    | None ->
-      (* If the candidates list is a singleton, then no name mappers applied,
-       * and we failed to resolve the unmapped name. Otherwise, `r` is the
-       * chosen mapped name and we store it for error reporting. *)
-      let mapped_name =
-        match Nel.tl candidates with
-        | [] -> None
-        | _ -> Some import_specifier
-      in
-      Error mapped_name
+  let imported_module ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc =
+    function
+    | Flow_import_specifier.Userland import_specifier ->
+      (* For historical reasons, the Haste module system always picks the first
+       * matching candidate, unlike the Node module system which picks the first
+       * "valid" matching candidate. *)
+      let candidates = module_name_candidates ~options import_specifier in
+      let import_specifier = Nel.hd candidates in
+      (match
+         resolve_import
+           ~options
+           ~reader
+           ~node_modules_containers
+           ~importing_file
+           ~phantom_acc
+           ~import_specifier
+       with
+      | Some m -> Ok m
+      | None ->
+        (* If the candidates list is a singleton, then no name mappers applied,
+         * and we failed to resolve the unmapped name. Otherwise, `r` is the
+         * chosen mapped name and we store it for error reporting. *)
+        let mapped_name =
+          match Nel.tl candidates with
+          | [] -> None
+          | _ -> Some (Flow_import_specifier.Userland import_specifier)
+        in
+        Error mapped_name)
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as
