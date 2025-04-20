@@ -6582,7 +6582,7 @@ module Make
                          Object.assign({}, obj). *)
                       (t, ObjSpreadAssign)
                   in
-                  Tvar.mk_where cx reason (fun t ->
+                  Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
                       Flow.flow
                         cx
                         ( result,
