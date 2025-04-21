@@ -885,15 +885,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
       begin
         match hook_callee cx callee_ty with
         | HookCallee _
-        | MaybeHookCallee _
-          when (match hook_call_context with
-               | HookCallDefinitelyNotAllowed
-               | HookCallStrictlyDisallowedWithoutCompatibilityMode ->
-                 true
-               | HookCallPermissivelyAllowedUnderCompatibilityMode -> false)
-               && not
-                    (Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body)
-          ->
+        | MaybeHookCallee _ ->
           if Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body then
             ()
           else (
