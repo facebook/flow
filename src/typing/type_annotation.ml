@@ -871,6 +871,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             )
             t_ast
         | "$Omit" ->
+          if not (Context.is_lib_file cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EInternalType
+                 (loc, Flow_intermediate_error_types.DollarUtilityTypeWithNonDollarAliases "Omit")
+              );
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
                 match convert_type_params () with

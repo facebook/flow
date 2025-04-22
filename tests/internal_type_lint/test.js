@@ -18,3 +18,6 @@ type T7_bad = React$MixedElement; // error
 type T7_good = React.MixedElement; // ok
 type T8_bad = React$Node; // error
 type T8_good = React.Node; // ok
+
+type T9_bad = $Omit<{}, empty>; // error
+type T9_good = Omit<{}, empty>; // ok
