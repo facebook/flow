@@ -126,6 +126,69 @@ References:
                                             ^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- intersection.js:5:1
+
+Incorrect arguments passed to `Object.assign` because: [incompatible-use]
+ - Either property `bar` is missing in object type [1].
+ - Or property `foo` is missing in object type [2].
+
+   intersection.js:5:1
+   5| Object.assign(inter1, {foo: '', bar: 3}); // error: should be ok
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   intersection.js:1:23
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                            ^^^^^^^^^^^^^^^^^^ [1]
+   intersection.js:1:44
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                                                 ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- intersection.js:6:1
+
+Incorrect arguments passed to `Object.assign` because: [incompatible-use]
+ - Either number [1] is incompatible with string [2].
+ - Or property `foo` is missing in object type [3].
+
+   intersection.js:6:1
+   6| Object.assign(inter1, {foo: 3});; // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   intersection.js:6:29
+   6| Object.assign(inter1, {foo: 3});; // error
+                                  ^ [1]
+   intersection.js:1:29
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                                  ^^^^^^ [2]
+   intersection.js:1:44
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                                                 ^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- intersection.js:7:1
+
+Incorrect arguments passed to `Object.assign` because: [incompatible-use]
+ - Either property `bar` is missing in object type [1].
+ - Or string [2] is incompatible with number [3].
+
+   intersection.js:7:1
+   7| Object.assign(inter1, {bar: ''});; // error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   intersection.js:1:23
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                            ^^^^^^^^^^^^^^^^^^ [1]
+   intersection.js:7:29
+   7| Object.assign(inter1, {bar: ''});; // error
+                                  ^^ [2]
+   intersection.js:1:50
+   1| declare const inter1: {foo: string, ...} & {bar: number, ...};
+                                                       ^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
 Incorrect arguments passed to `Object.assign` because property `a` is missing in string [1]. [incompatible-use]
@@ -260,4 +323,4 @@ References:
 
 
 
-Found 17 errors
+Found 20 errors
