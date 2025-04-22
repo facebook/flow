@@ -84,42 +84,42 @@ type singleton_action =
  *)
 class literal_type_mapper ~singleton_action =
   let open Reason in
-  let singleton_str cx t r value =
+  let singleton_str t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonStrT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
-      if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
+      if use_sound_type then
         DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
       else
         DefT (r, StrT_UNSOUND (None, value))
   in
-  let singleton_num cx t r value =
+  let singleton_num t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonNumT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
-      if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
+      if use_sound_type then
         DefT (replace_desc_reason RNumber r, NumGeneralT AnyLiteral)
       else
         DefT (r, NumT_UNSOUND (None, value))
   in
-  let singleton_bool cx t r value =
+  let singleton_bool t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonBoolT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
-      if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
+      if use_sound_type then
         DefT (replace_desc_reason RBoolean r, BoolGeneralT)
       else
         DefT (r, BoolT_UNSOUND value)
   in
-  let singleton_bigint cx t r value =
+  let singleton_bigint t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonBigIntT { from_annot = true; value })
     | DoNotKeep { use_sound_type } ->
-      if use_sound_type || Context.natural_inference_local_primitive_literals_full cx then
+      if use_sound_type then
         DefT (replace_desc_reason RBigInt r, BigIntGeneralT AnyLiteral)
       else
         DefT (r, BigIntT_UNSOUND (None, value))
@@ -172,10 +172,10 @@ class literal_type_mapper ~singleton_action =
              | InterRep.ImplicitInstiationKind -> true
              | InterRep.UnknownKind -> false ->
         super#type_ cx map_cx t
-      | DefT (r, SingletonStrT { from_annot = false; value }) -> singleton_str cx t r value
-      | DefT (r, SingletonNumT { from_annot = false; value }) -> singleton_num cx t r value
-      | DefT (r, SingletonBoolT { from_annot = false; value }) -> singleton_bool cx t r value
-      | DefT (r, SingletonBigIntT { from_annot = false; value }) -> singleton_bigint cx t r value
+      | DefT (r, SingletonStrT { from_annot = false; value }) -> singleton_str t r value
+      | DefT (r, SingletonNumT { from_annot = false; value }) -> singleton_num t r value
+      | DefT (r, SingletonBoolT { from_annot = false; value }) -> singleton_bool t r value
+      | DefT (r, SingletonBigIntT { from_annot = false; value }) -> singleton_bigint t r value
       | _ -> t
   end
 

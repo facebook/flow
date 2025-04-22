@@ -38,7 +38,7 @@ let generalize_singletons cx t =
          * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
         Primitive_literal.KeepAsIs
       else
-        Primitive_literal.DoNotKeep { use_sound_type = false }
+        Primitive_literal.DoNotKeep { use_sound_type = true }
     else
       Primitive_literal.DoNotKeep { use_sound_type = false }
   in
