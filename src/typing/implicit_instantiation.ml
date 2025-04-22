@@ -1259,7 +1259,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               tparams_map
               check)
           ~finally:(fun () ->
-            Context.reset_primitive_literal_checks cx;
             let implicit_instantiation_errors =
               Context.errors cx
               |> Flow_error.ErrorSet.filter (fun error ->

@@ -79,7 +79,7 @@ function test_regression() {
   const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // TODO okay
 
   type Params = $ReadOnly<{format: 'A' | 'B'}>;
-  const example2: Wrapper<Params> = object({ // TODO okay
+  const example2: Wrapper<Params> = object({ // okay
     format: union(literal('A'), literal('B')),
   });
   const example3: Wrapper<Params> = object({ // error 'C' ~> 'A' | 'B'

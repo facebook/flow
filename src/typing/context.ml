@@ -899,8 +899,6 @@ let get_ctor_callee cx loc = ALocMap.find_opt loc cx.ccx.ctor_callee
 let record_primitive_literal_check cx loc =
   cx.ccx.primitive_literal_checks <- ALocSet.add loc cx.ccx.primitive_literal_checks
 
-let reset_primitive_literal_checks cx = cx.ccx.primitive_literal_checks <- ALocSet.empty
-
 let is_primitive_literal_checked cx loc = ALocSet.mem loc cx.ccx.primitive_literal_checks
 
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt

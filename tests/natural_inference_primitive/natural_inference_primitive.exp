@@ -2587,30 +2587,6 @@ References:
                        ^ [3]
 
 
-Error ------------------------------------------------------------------------------------ nested_generic_calls.js:82:37
-
-Cannot assign `object(...)` to `example2` because string [1] is incompatible with union type [2] in property `format` of
-type argument `V` [3]. [incompatible-type-arg]
-
-   nested_generic_calls.js:82:37
-                                           v--------------------
-   82|   const example2: Wrapper<Params> = object({ // TODO okay
-   83|     format: union(literal('A'), literal('B')),
-   84|   });
-         -^
-
-References:
-   nested_generic_calls.js:75:28
-   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   nested_generic_calls.js:81:36
-   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
-                                          ^^^^^^^^^ [2]
-   nested_generic_calls.js:67:17
-   67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
-                       ^ [3]
-
-
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37
 
 Cannot assign `object(...)` to `example3` because string [1] is incompatible with union type [2] in property `format` of
@@ -2667,7 +2643,7 @@ References:
 
 
 
-Found 157 errors
+Found 156 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

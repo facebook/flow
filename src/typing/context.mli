@@ -572,8 +572,6 @@ val get_ctor_callee : t -> ALoc.t -> Type.t option
 
 val record_primitive_literal_check : t -> ALoc.t -> unit
 
-val reset_primitive_literal_checks : t -> unit
-
 val is_primitive_literal_checked : t -> ALoc.t -> bool
 
 val iter_union_opt : t -> f:(ALocMap.key -> Type.t -> unit) -> unit
