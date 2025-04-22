@@ -1640,9 +1640,6 @@ module rec TypeTerm : sig
 
   and t_out = t
 
-  and custom_fun_kind = (* builtins *)
-    | ObjectGetPrototypeOf
-
   and concretization_kind =
     | ConcretizeForImportsExports
     | ConcretizeForCJSExtractNamedExportsAndTypeExports
