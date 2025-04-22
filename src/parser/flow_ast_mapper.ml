@@ -507,6 +507,8 @@ class ['loc] mapper =
         id_loc this#class_property loc prop elem (fun prop -> Property (loc, prop))
       | PrivateField (loc, field) ->
         id_loc this#class_private_field loc field elem (fun field -> PrivateField (loc, field))
+      | StaticBlock (loc, block) ->
+        id_loc this#class_static_block loc block elem (fun block -> StaticBlock (loc, block))
 
     method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
       let open Ast.Class.Implements in
@@ -609,6 +611,16 @@ class ['loc] mapper =
           decorators = decorators';
           comments = comments';
         }
+
+    method class_static_block _loc (block : ('loc, 'loc) Ast.Class.StaticBlock.t') =
+      let open Ast.Class.StaticBlock in
+      let { body; comments } = block in
+      let body' = this#statement_list body in
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
+        block
+      else
+        { body = body'; comments = comments' }
 
     method default_opt (default : ('loc, 'loc) Ast.Expression.t option) =
       map_opt this#expression default

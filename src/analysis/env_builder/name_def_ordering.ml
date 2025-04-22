@@ -642,6 +642,7 @@ struct
           | Method (_, meth) -> this#class_method_annotated meth
           | Property (_, prop) -> this#class_property_annotated prop
           | PrivateField (_, field) -> this#class_private_field_annotated field
+          | StaticBlock _ -> ()
 
         method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
           let open Ast.Class.Method in

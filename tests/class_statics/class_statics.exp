@@ -30,6 +30,17 @@ Classes may not have static fields named `prototype`.
                ^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- static_block.js:2:3
+
+Class static blocks are not supported. [unsupported-syntax]
+
+        v-------------------------------
+   2|   static { // ERROR: not supported
+   3|     let x = 1;
+   4|   }
+        ^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
 Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1]. [prop-missing]
@@ -319,4 +330,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors

@@ -2257,6 +2257,16 @@ and Class : sig
     [@@deriving show]
   end
 
+  module StaticBlock : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      body: ('M, 'T) Statement.t list;
+      comments: ('M, 'M Comment.t list) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Extends : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
@@ -2300,6 +2310,7 @@ and Class : sig
       | Method of ('M, 'T) Method.t
       | Property of ('M, 'T) Property.t
       | PrivateField of ('M, 'T) PrivateField.t
+      | StaticBlock of ('M, 'T) StaticBlock.t
     [@@deriving show]
   end
 

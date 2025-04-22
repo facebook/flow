@@ -7707,6 +7707,16 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
+              | Body.StaticBlock (loc, _) as elem ->
+                Flow.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.ClassStaticBlock)
+                  );
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
             )
             (class_sig, [], empty_seen_names)
             elements

@@ -1563,6 +1563,15 @@ let tests =
              "class a {\n  #a;\n  #b = c;\n  static #b = c;\n}";
            assert_statement_string ~ctxt ~pretty:true "class a {\n  +#a: a;\n  #b: b = c;\n}"
          );
+         ( "class_static_blocks" >:: fun ctxt ->
+           assert_statement_string ~ctxt "class C{static{}}";
+           assert_statement_string ~ctxt ~pretty:true "class C {\n  static {}\n}";
+           assert_statement_string ~ctxt "class C{static{let x=0}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "class C {\n  static {\n    let x = 0;\n  }\n}"
+         );
          ( "class_declared_fields" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{declare x;}";
            assert_statement_string ~ctxt "class a{declare x:string;}"

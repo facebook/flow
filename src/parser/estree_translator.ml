@@ -1193,6 +1193,12 @@ with type t = Impl.t = struct
         | Method m -> class_method m
         | PrivateField p -> class_private_field p
         | Property p -> class_property p
+        | StaticBlock (loc, { Class.StaticBlock.body; comments }) ->
+          node
+            ?comments:(format_internal_comments comments)
+            "StaticBlock"
+            loc
+            [("body", statement_list body)]
       )
     and class_method (loc, { Class.Method.key; value; kind; static; decorators; comments }) =
       let (key, computed, comments) =

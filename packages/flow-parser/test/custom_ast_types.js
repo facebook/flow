@@ -331,8 +331,12 @@ function custom_ast_types(fork) {
 
   def('PropertyDefinition').bases('ClassProperty');
 
+  def('StaticBlock')
+    .bases('Node')
+    .field('body', [def('Statement')]);
+
   def('ClassBody').field('body', [
-    or(def('MethodDefinition'), def('PropertyDefinition')),
+    or(def('MethodDefinition'), def('PropertyDefinition'), def('StaticBlock')),
   ]);
 
   ////////

@@ -427,6 +427,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | Property (annot, prop) -> Property (this#on_type_annot annot, this#class_property prop)
       | PrivateField (annot, field) ->
         PrivateField (this#on_type_annot annot, this#class_private_field field)
+      | StaticBlock (annot, block) ->
+        StaticBlock (this#on_loc_annot annot, this#class_static_block block)
 
     method class_key key = this#object_key key
 
@@ -488,6 +490,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         decorators = decorators';
         comments = comments';
       }
+
+    method class_static_block (block : ('M, 'T) Ast.Class.StaticBlock.t') =
+      let open Ast.Class.StaticBlock in
+      let { body; comments } = block in
+      let body' = this#statement_list body in
+      let comments' = this#syntax_with_internal_opt comments in
+      { body = body'; comments = comments' }
 
     method conditional (expr : ('M, 'T) Ast.Expression.Conditional.t)
         : ('N, 'U) Ast.Expression.Conditional.t =

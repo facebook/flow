@@ -3840,7 +3840,8 @@ and class_def =
         | C.Body.Method (_, { C.Method.key = P.PrivateName _; _ })
         | C.Body.Property (_, { C.Property.key = P.PrivateName _; _ }) ->
           acc
-        (* unexpected non-private method/field with private name *))
+        (* unexpected non-private method/field with private name *)
+        | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *))
       acc
       elements
   in

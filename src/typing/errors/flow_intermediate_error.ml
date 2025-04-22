@@ -3891,6 +3891,7 @@ let to_printable_error :
       [text "Literal properties not yet supported."]
     | MessageUnsupportedSyntax ClassPropertyComputed ->
       [text "Computed property keys not supported."]
+    | MessageUnsupportedSyntax ClassStaticBlock -> [text "Class static blocks are not supported."]
     | MessageUnsupportedSyntax ComponentSyntax ->
       [
         text "Component syntax is not enabled. ";

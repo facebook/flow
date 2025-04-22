@@ -2404,6 +2404,22 @@ and class_private_field
   in
   class_property_helper ~opts loc key value static annot variance decorators comments
 
+and class_static_block ~opts (loc, { Ast.Class.StaticBlock.body; comments }) =
+  let statements = statement_list ~opts ~pretty_semicolon:true body in
+  source_location_with_comments
+    ?comments
+    ( loc,
+      if statements <> [] then
+        let body =
+          group [wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [fuse statements]]
+        in
+        fuse [Atom "static"; pretty_space; body]
+      else
+        match internal_comments comments with
+        | None -> fuse [Atom "static"; pretty_space; Atom "{}"]
+        | Some (_, _, comments) -> fuse [Atom "static"; pretty_space; Atom "{"; comments; Atom "}"]
+    )
+
 and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
   let elements =
     Base.List.map
@@ -2427,6 +2443,13 @@ and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
             )
           in
           (loc, comment_bounds, class_private_field ~opts field)
+        | Ast.Class.Body.StaticBlock ((loc, _) as block) ->
+          let comment_bounds =
+            comment_bounds loc block (fun collector (loc, block) ->
+                collector#class_static_block loc block
+            )
+          in
+          (loc, comment_bounds, class_static_block ~opts block)
         )
       body
     |> list_with_newlines

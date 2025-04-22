@@ -1352,6 +1352,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       Some [replace (fst p1) (ClassProperty p1) (ClassPrivateField f2)]
     | (PrivateField f1, Property p2) ->
       Some [replace (fst f1) (ClassPrivateField f1) (ClassProperty p2)]
+    | (StaticBlock _, _)
+    | (_, StaticBlock _) ->
+      None
   and class_private_field field1 field2 : node change list =
     let open Ast.Class.PrivateField in
     let ( loc1,

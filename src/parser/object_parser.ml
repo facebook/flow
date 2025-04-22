@@ -945,59 +945,83 @@ module Object
         ) else
           []
       in
-      let async =
-        Peek.token env = T_ASYNC
-        && (not (ith_implies_identifier ~i:1 env))
-        && not (Peek.ith_is_line_terminator ~i:1 env)
-      in
-      (* consume `async` *)
-      let leading_async =
-        if async then (
-          let leading = Peek.comments env in
-          Eat.token env;
-          leading
-        ) else
-          []
-      in
-      let (generator, leading_generator) = Declaration.generator env in
-      let parse_readonly =
-        Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
-      in
-      let variance = Declaration.variance env ~parse_readonly async generator in
-      let (generator, leading_generator) =
-        match (generator, variance) with
-        | (false, Some _) -> Declaration.generator env
-        | _ -> (generator, leading_generator)
-      in
-      let leading =
-        List.concat [leading_declare; leading_static; leading_async; leading_generator]
-      in
-      match (async, generator, Peek.token env) with
-      | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
-        let leading_get = Peek.comments env in
-        let (_, key) = key ~class_body:true env in
-        if implies_identifier env then
+      if static && Option.is_none declare && Eat.maybe env T_LCURLY then
+        Class.Body.StaticBlock
+          (with_loc
+             ~start_loc
+             (fun env ->
+               let internal = Peek.comments env in
+               let term_fn = function
+                 | T_RCURLY -> true
+                 | _ -> false
+               in
+               let body = Parse.statement_list ~term_fn env in
+               Expect.token env T_RCURLY;
+               let trailing = Eat.trailing_comments env in
+               let comments =
+                 Flow_ast_utils.mk_comments_with_internal_opt
+                   ~leading:leading_static
+                   ~trailing
+                   ~internal
+                   ()
+               in
+               { Class.StaticBlock.body; comments })
+             env
+          )
+      else
+        let async =
+          Peek.token env = T_ASYNC
+          && (not (ith_implies_identifier ~i:1 env))
+          && not (Peek.ith_is_line_terminator ~i:1 env)
+        in
+        (* consume `async` *)
+        let leading_async =
+          if async then (
+            let leading = Peek.comments env in
+            Eat.token env;
+            leading
+          ) else
+            []
+        in
+        let (generator, leading_generator) = Declaration.generator env in
+        let parse_readonly =
+          Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
+        in
+        let variance = Declaration.variance env ~parse_readonly async generator in
+        let (generator, leading_generator) =
+          match (generator, variance) with
+          | (false, Some _) -> Declaration.generator env
+          | _ -> (generator, leading_generator)
+        in
+        let leading =
+          List.concat [leading_declare; leading_static; leading_async; leading_generator]
+        in
+        match (async, generator, Peek.token env) with
+        | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
+          let leading_get = Peek.comments env in
+          let (_, key) = key ~class_body:true env in
+          if implies_identifier env then
+            init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+          else (
+            error_unsupported_declare env declare;
+            error_unsupported_variance env variance;
+            ignore (object_key_remove_trailing env key);
+            get env start_loc decorators static (leading @ leading_get)
+          )
+        | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
+          let leading_set = Peek.comments env in
+          let (_, key) = key ~class_body:true env in
+          if implies_identifier env then
+            init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+          else (
+            error_unsupported_declare env declare;
+            error_unsupported_variance env variance;
+            ignore (object_key_remove_trailing env key);
+            set env start_loc decorators static (leading @ leading_set)
+          )
+        | (_, _, _) ->
+          let (_, key) = key ~class_body:true env in
           init env start_loc decorators key ~async ~generator ~static ~declare variance leading
-        else (
-          error_unsupported_declare env declare;
-          error_unsupported_variance env variance;
-          ignore (object_key_remove_trailing env key);
-          get env start_loc decorators static (leading @ leading_get)
-        )
-      | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
-        let leading_set = Peek.comments env in
-        let (_, key) = key ~class_body:true env in
-        if implies_identifier env then
-          init env start_loc decorators key ~async ~generator ~static ~declare variance leading
-        else (
-          error_unsupported_declare env declare;
-          error_unsupported_variance env variance;
-          ignore (object_key_remove_trailing env key);
-          set env start_loc decorators static (leading @ leading_set)
-        )
-      | (_, _, _) ->
-        let (_, key) = key ~class_body:true env in
-        init env start_loc decorators key ~async ~generator ~static ~declare variance leading
 
   let class_body =
     let rec elements env seen_constructor private_names acc =
@@ -1065,6 +1089,7 @@ module Object
           | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.key; _ }) ->
             let private_names = check_private_names env private_names key `Field in
             (seen_constructor, private_names)
+          | Ast.Class.Body.StaticBlock _ -> (seen_constructor, private_names)
         in
         elements env seen_constructor' private_names' (element :: acc)
     in

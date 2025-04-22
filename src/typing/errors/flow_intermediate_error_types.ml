@@ -68,6 +68,7 @@ type unsupported_syntax =
   | InvariantSpreadArgument
   | ClassPropertyLiteral
   | ClassPropertyComputed
+  | ClassStaticBlock
   | RequireDynamicArgument
   | CatchParameterDeclaration
   | DestructuringObjectPropertyInvalidLiteral

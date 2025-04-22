@@ -142,6 +142,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method class_property_value :
       ('M, 'T) Ast.Class.Property.value -> ('N, 'U) Ast.Class.Property.value
 
+    method class_static_block :
+      ('M, 'T) Ast.Class.StaticBlock.t' -> ('N, 'U) Ast.Class.StaticBlock.t'
+
     method comment : 'M Ast.Comment.t -> 'N Ast.Comment.t
 
     method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t

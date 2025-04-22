@@ -726,6 +726,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
             add_private_name name acc
           | Body.Method _ -> acc
           | Body.Property _ -> acc
+          | Body.StaticBlock _ -> acc
         )
       in
       let saved_available_private_names = available_private_names in
