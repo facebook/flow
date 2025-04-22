@@ -128,4 +128,6 @@ val possible_concrete_types_for_computed_props : Context.t -> Reason.reason -> T
 val possible_concrete_types_for_operators_checking :
   Context.t -> Reason.reason -> Type.t -> Type.t list
 
+val possible_concrete_types_for_object_assign : Context.t -> Reason.reason -> Type.t -> Type.t list
+
 module FlowJs : Flow_common.S

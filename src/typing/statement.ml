@@ -6570,6 +6570,11 @@ module Make
         )
       in
       let t =
+        let assign_from l use_op reason_op to_obj t kind =
+          match to_obj with
+          | AnyT _ -> Flow.flow_t cx (to_obj, t)
+          | to_obj -> Flow.flow cx (l, ObjAssignFromT (use_op, reason_op, to_obj, t, kind))
+        in
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
             let result =
               List.fold_left
@@ -6582,12 +6587,25 @@ module Make
                          Object.assign({}, obj). *)
                       (t, ObjSpreadAssign)
                   in
+                  let use_op = Op (ObjectChain { op = reason }) in
                   Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
-                      Flow.flow
-                        cx
-                        ( result,
-                          ObjAssignToT (Op (ObjectChain { op = reason }), reason, that, t, kind)
-                        )
+                      Base.List.iter
+                        (Flow.possible_concrete_types_for_object_assign cx reason result)
+                        ~f:(fun l ->
+                          match l with
+                          | IntersectionT (r, rep) ->
+                            (* This is insufficient to deal with nested intersections.
+                             * However, it's unlikely to cause issues, and we should instead
+                             * focus our energy on killing `Object.assign` support instead. *)
+                            Base.List.map (InterRep.members rep) ~f:(fun to_obj () ->
+                                assign_from that use_op reason to_obj t kind
+                            )
+                            |> Speculation_flow.try_custom
+                                 cx
+                                 ~use_op
+                                 ~no_match_error_loc:(loc_of_reason r)
+                          | to_obj -> assign_from that use_op reason to_obj t kind
+                      )
                   ))
                 target_t
                 rest_arg_ts

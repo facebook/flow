@@ -795,7 +795,6 @@ and dump_use_t_ (depth, tvars) cx t =
     | PrivateMethodT (_, _, _, prop, _, _, action) ->
       p ~extra:(spf "(%s), (%s)" prop (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
-    | ObjAssignToT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjAssignFromT (_, _, arg1, arg2, _) -> p t ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
     | ObjRestT (_, xs, arg, _) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
     | ObjTestProtoT _ -> p t

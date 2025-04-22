@@ -386,7 +386,6 @@ let object_like_op = function
   | HasOwnPropT _
   | GetValuesT _
   | GetDictValuesT _
-  | ObjAssignToT _
   | ObjAssignFromT _
   | ObjRestT _
   | SetElemT _

@@ -1883,7 +1883,13 @@ struct
         | (IntersectionT _, CallT { use_op; call_action = ConcretizeCallee tout; _ }) ->
           rec_flow_t cx trace ~use_op (l, OpenT tout)
         | ( IntersectionT _,
-            ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector }
+            ConcretizeT
+              {
+                reason = _;
+                kind = ConcretizeForOperatorsChecking | ConcretizeForObjectAssign;
+                seen = _;
+                collector;
+              }
           ) ->
           TypeCollector.add collector l
         | (IntersectionT (r, rep), u) ->
@@ -3358,9 +3364,8 @@ struct
 
         (* Special case any. Otherwise this will lead to confusing errors when any tranforms to an
            object type. *)
-        | (AnyT _, ObjAssignToT (use_op, _, _, t, _)) -> rec_flow_t cx ~use_op trace (l, t)
-        | (to_obj, ObjAssignToT (use_op, reason, from_obj, t, kind)) ->
-          rec_flow cx trace (from_obj, ObjAssignFromT (use_op, reason, to_obj, t, kind))
+        | (l, ConcretizeT { reason = _; kind = ConcretizeForObjectAssign; seen = _; collector }) ->
+          TypeCollector.add collector l
         (* When some object-like type O1 flows to
            ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
            O2, and O2 is linked to X to signal that the copying is done; the
@@ -6017,7 +6022,6 @@ struct
     | UseT (_, OptionalT _) (* used to filter optional *)
     | ObjAssignFromT _
     (* Handled in __flow *)
-    | ObjAssignToT _ (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     | UseT (_, TypeAppT _)
     | UseT (_, DefT (_, TypeT _))
@@ -9454,6 +9458,8 @@ module rec FlowJs : Flow_common.S = struct
 
   let possible_concrete_types_for_operators_checking =
     possible_concrete_types ConcretizeForOperatorsChecking
+
+  let possible_concrete_types_for_object_assign = possible_concrete_types ConcretizeForObjectAssign
 end
 
 include FlowJs

@@ -725,8 +725,6 @@ module rec TypeTerm : sig
         ignore_dicts: bool;
       }
     (* operations on objects *)
-    (* Resolves the object into which the properties are assigned *)
-    | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
     | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
     | ObjRestT of reason * string list * t * int
@@ -1656,6 +1654,7 @@ module rec TypeTerm : sig
     | ConcretizeForSentinelPropTest
     | ConcretizeComputedPropsT
     | ConcretizeForOperatorsChecking
+    | ConcretizeForObjectAssign
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
@@ -4180,13 +4179,13 @@ let string_of_use_ctor = function
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
       | ConcretizeComputedPropsT -> "ConcretizeComputedPropsT"
-      | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking")
+      | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking"
+      | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign")
   | LookupT _ -> "LookupT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
   | PrivateMethodT _ -> "PrivateMethodT"
   | MixinT _ -> "MixinT"
-  | ObjAssignToT _ -> "ObjAssignToT"
   | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjRestT _ -> "ObjRestT"
   | ObjTestProtoT _ -> "ObjTestProtoT"

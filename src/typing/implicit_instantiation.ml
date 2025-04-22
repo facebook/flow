@@ -385,7 +385,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ExtendsUseT _
     (* The following upper bounds won't occur during implicit instantiation,
        because they are operations on values. *)
-    | ObjAssignToT _
     | ObjAssignFromT _
     | ObjTestT _
     | TypeCastT _

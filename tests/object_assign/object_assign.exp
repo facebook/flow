@@ -126,15 +126,15 @@ References:
                                             ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- intersection.js:5:1
+Error --------------------------------------------------------------------------------------------- intersection.js:5:15
 
 Incorrect arguments passed to `Object.assign` because: [incompatible-use]
- - Either property `bar` is missing in object type [1].
- - Or property `foo` is missing in object type [2].
+ - Either incorrect arguments passed to `Object.assign` because property `bar` is missing in object type [1].
+ - Or incorrect arguments passed to `Object.assign` because property `foo` is missing in object type [2].
 
-   intersection.js:5:1
+   intersection.js:5:15
    5| Object.assign(inter1, {foo: '', bar: 3}); // error: should be ok
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^
 
 References:
    intersection.js:1:23
@@ -145,15 +145,15 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- intersection.js:6:1
+Error --------------------------------------------------------------------------------------------- intersection.js:6:15
 
 Incorrect arguments passed to `Object.assign` because: [incompatible-use]
- - Either number [1] is incompatible with string [2].
- - Or property `foo` is missing in object type [3].
+ - Either incorrect arguments passed to `Object.assign` because number [1] is incompatible with string [2].
+ - Or incorrect arguments passed to `Object.assign` because property `foo` is missing in object type [3].
 
-   intersection.js:6:1
+   intersection.js:6:15
    6| Object.assign(inter1, {foo: 3});; // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^
 
 References:
    intersection.js:6:29
@@ -167,15 +167,15 @@ References:
                                                  ^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- intersection.js:7:1
+Error --------------------------------------------------------------------------------------------- intersection.js:7:15
 
 Incorrect arguments passed to `Object.assign` because: [incompatible-use]
- - Either property `bar` is missing in object type [1].
- - Or string [2] is incompatible with number [3].
+ - Either incorrect arguments passed to `Object.assign` because property `bar` is missing in object type [1].
+ - Or incorrect arguments passed to `Object.assign` because string [2] is incompatible with number [3].
 
-   intersection.js:7:1
+   intersection.js:7:15
    7| Object.assign(inter1, {bar: ''});; // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    ^^^^^^
 
 References:
    intersection.js:1:23
