@@ -42,13 +42,6 @@ type react_rules =
   | DeepReadOnlyHookReturns
   | RulesOfHooks
 
-module NaturalInferenceLevel = struct
-  type t =
-    | Off
-    | Partial
-    | Full
-end
-
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -136,7 +129,7 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_natural_inference_local_primitive_literals: NaturalInferenceLevel.t;
+  opt_natural_inference_local_primitive_literals_full: bool;
   opt_natural_inference_local_primitive_literals_full_includes: string list;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
@@ -323,8 +316,8 @@ let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
-let natural_inference_local_primitive_literals opts =
-  opts.opt_natural_inference_local_primitive_literals
+let natural_inference_local_primitive_literals_full opts =
+  opts.opt_natural_inference_local_primitive_literals_full
 
 let natural_inference_local_primitive_literals_full_includes opts =
   opts.opt_natural_inference_local_primitive_literals_full_includes

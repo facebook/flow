@@ -112,7 +112,7 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
+    natural_inference_local_primitive_literals_full: bool;
     natural_inference_local_primitive_literals_full_includes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
@@ -255,7 +255,7 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
       munge_underscores = false;
-      natural_inference_local_primitive_literals = Options.NaturalInferenceLevel.Partial;
+      natural_inference_local_primitive_literals_full = false;
       natural_inference_local_primitive_literals_full_includes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
@@ -862,7 +862,7 @@ module Opts = struct
       ~init:(fun opts ->
         {
           opts with
-          natural_inference_local_primitive_literals = Options.NaturalInferenceLevel.Full;
+          natural_inference_local_primitive_literals_full = true;
           natural_inference_local_primitive_literals_full_includes = [];
         })
       ~multiple:true
@@ -1170,12 +1170,8 @@ module Opts = struct
       ("name", root_name_parser);
       ( "experimental.natural_inference.local_primitive_literals",
         enum
-          [
-            ("off", Options.NaturalInferenceLevel.Off);
-            ("partial", Options.NaturalInferenceLevel.Partial);
-            ("full", Options.NaturalInferenceLevel.Full);
-          ]
-          (fun opts v -> Ok { opts with natural_inference_local_primitive_literals = v })
+          [("off", false); ("false", false); ("true", true); ("full", true)]
+          (fun opts v -> Ok { opts with natural_inference_local_primitive_literals_full = v })
       );
       ( "experimental.natural_inference.local_primitive_literals.full.includes",
         natural_inference_full_includes_parser
@@ -1961,8 +1957,8 @@ let multi_platform_ambient_supports_platform_directory_overrides c =
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
-let natural_inference_local_primitive_literals c =
-  c.options.Opts.natural_inference_local_primitive_literals
+let natural_inference_local_primitive_literals_full c =
+  c.options.Opts.natural_inference_local_primitive_literals_full
 
 let natural_inference_local_primitive_literals_full_includes c =
   c.options.Opts.natural_inference_local_primitive_literals_full_includes

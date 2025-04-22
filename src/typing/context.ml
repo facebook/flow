@@ -58,7 +58,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_local_primitive_literals_global: Options.NaturalInferenceLevel.t;
+  natural_inference_local_primitive_literals_global_full: bool;
   natural_inference_local_primitive_literals_full_includes: string list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
@@ -257,7 +257,7 @@ type t = {
    * "experimental.natural_inference.local_primitive_literals" and
    * "experimental.natural_inference.local_primitive_literals.full.includes".
    * See comment in `natural_inference_local_primitive_literals_in_file`. *)
-  natural_inference_local_primitive_literals: Options.NaturalInferenceLevel.t;
+  natural_inference_local_primitive_literals_full: bool;
 }
 
 and resolve_require = Flow_import_specifier.t -> resolved_require
@@ -301,8 +301,8 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    natural_inference_local_primitive_literals_global =
-      Options.natural_inference_local_primitive_literals options;
+    natural_inference_local_primitive_literals_global_full =
+      Options.natural_inference_local_primitive_literals_full options;
     natural_inference_local_primitive_literals_full_includes =
       Options.natural_inference_local_primitive_literals_full_includes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
@@ -445,24 +445,18 @@ let make_ccx () =
  * all other files in Partial mode.
  *)
 let natural_inference_local_primitive_literals_in_file metadata file =
-  match metadata.natural_inference_local_primitive_literals_global with
-  | Options.NaturalInferenceLevel.Off -> Options.NaturalInferenceLevel.Off
-  | Options.NaturalInferenceLevel.Partial -> Options.NaturalInferenceLevel.Partial
-  | Options.NaturalInferenceLevel.Full -> begin
-    match metadata.natural_inference_local_primitive_literals_full_includes with
-    | [] -> Options.NaturalInferenceLevel.Full
-    | dirs ->
-      let filename = File_key.to_string file in
-      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      if List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs then
-        Options.NaturalInferenceLevel.Full
-      else
-        Options.NaturalInferenceLevel.Partial
-  end
+  metadata.natural_inference_local_primitive_literals_global_full
+  &&
+  match metadata.natural_inference_local_primitive_literals_full_includes with
+  | [] -> true
+  | dirs ->
+    let filename = File_key.to_string file in
+    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let make ccx metadata file aloc_table resolve_require mk_builtins =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
-  let natural_inference_local_primitive_literals =
+  let natural_inference_local_primitive_literals_full =
     natural_inference_local_primitive_literals_in_file metadata file
   in
   let rec cx_lazy =
@@ -483,7 +477,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
         node_cache = Node_cache.mk_empty ();
         refined_locations = ALocMap.empty;
         aggressively_invalidated_locations = ALocMap.empty;
-        natural_inference_local_primitive_literals;
+        natural_inference_local_primitive_literals_full;
       }
   in
   Lazy.force cx_lazy
@@ -703,19 +697,8 @@ let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
-let natural_inference_local_primitive_literals_partial cx =
-  match cx.natural_inference_local_primitive_literals with
-  | Options.NaturalInferenceLevel.Off -> false
-  | Options.NaturalInferenceLevel.Partial
-  | Options.NaturalInferenceLevel.Full ->
-    true
-
 let natural_inference_local_primitive_literals_full cx =
-  match cx.natural_inference_local_primitive_literals with
-  | Options.NaturalInferenceLevel.Off
-  | Options.NaturalInferenceLevel.Partial ->
-    false
-  | Options.NaturalInferenceLevel.Full -> true
+  cx.natural_inference_local_primitive_literals_full
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

@@ -488,6 +488,12 @@ let synth_type
         ty
         type_loc
   in
+  let t =
+    Primitive_literal.convert_literal_type
+      cx
+      ~singleton_action:(fun _ -> Primitive_literal.DoNotKeep { use_sound_type = true })
+      t
+  in
   let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in
   match Ty_utils.typify_elt elt with
   | None -> Error (FailedToNormalize (type_loc, "Non-type"))

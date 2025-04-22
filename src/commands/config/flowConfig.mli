@@ -206,7 +206,7 @@ val multi_platform_ambient_supports_platform_directory_overrides :
 
 val munge_underscores : config -> bool
 
-val natural_inference_local_primitive_literals : config -> Options.NaturalInferenceLevel.t
+val natural_inference_local_primitive_literals_full : config -> bool
 
 val natural_inference_local_primitive_literals_full_includes : config -> string list
 

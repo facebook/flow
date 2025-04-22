@@ -70,19 +70,15 @@ if (
 ) {
   throw 'Incorrect get-def result';
 }
-
+const got = flow.autocomplete(
+  'test.js',
+  'const foo = 1;\nconst bar = "foo";\nfo',
+  3,
+  2,
+  config,
+);
 if (
-  JSON.stringify(
-    flow.autocomplete(
-      'test.js',
-      'const foo = 1;\nconst bar = "foo";\nfo',
-      3,
-      2,
-      config,
-    ),
-    undefined,
-    2,
-  ) !==
+  JSON.stringify(got, undefined, 2) !==
   `{
   "incomplete": false,
   "suggestions": [
@@ -103,8 +99,8 @@ if (
           "endColumn": 2
         }
       },
-      "detail": "number",
-      "kind": 6,
+      "detail": "1",
+      "kind": 12,
       "label": "foo"
     },
     {
@@ -150,5 +146,7 @@ if (
   ]
 }`
 ) {
-  throw 'Invalid autocomplete result.';
+  throw (
+    'Invalid autocomplete result. Got: ' + JSON.stringify(got, undefined, 2)
+  );
 }

@@ -11,6 +11,5 @@ jsx-intrinsics-mini.js
 all=true
 experimental.pattern_matching=true
 no_flowlib=false
-experimental.natural_inference.local_primitive_literals=partial
 
 [strict]

@@ -348,27 +348,21 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
       general ()
 
 let try_generalize cx syntactic_flags loc t =
-  if Context.natural_inference_local_primitive_literals_partial cx then
-    if is_generalization_candidate cx t then
-      let general () =
-        convert_literal_type cx ~singleton_action:(fun _ -> DoNotKeep { use_sound_type = true }) t
-      in
-      let precise () = t in
-      adjust_precision cx (TypeUtil.reason_of_t t) syntactic_flags ~precise ~general loc
-    else
-      t
+  if is_generalization_candidate cx t then
+    let general () =
+      convert_literal_type cx ~singleton_action:(fun _ -> DoNotKeep { use_sound_type = true }) t
+    in
+    let precise () = t in
+    adjust_precision cx (TypeUtil.reason_of_t t) syntactic_flags ~precise ~general loc
   else
     t
 
 let primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc =
   (* We need to at least have set the flag to "partial" to adjust based on hints. *)
-  if Context.natural_inference_local_primitive_literals_partial cx then
-    let general =
-      if Context.natural_inference_local_primitive_literals_full cx then
-        general
-      else
-        legacy
-    in
-    adjust_precision cx reason syntactic_flags ~precise ~general loc
-  else
-    legacy ()
+  let general =
+    if Context.natural_inference_local_primitive_literals_full cx then
+      general
+    else
+      legacy
+  in
+  adjust_precision cx reason syntactic_flags ~precise ~general loc

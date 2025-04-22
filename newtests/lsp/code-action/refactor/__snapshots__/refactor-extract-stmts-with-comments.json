@@ -32,7 +32,7 @@
                   "character": 1
                 }
               },
-              "newText": "\nfunction newFunction(): {| a: 3, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}"
+              "newText": "\nfunction newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}"
             }
           ]
         }
@@ -78,7 +78,7 @@
                   "character": 15
                 }
               },
-              "newText": "function newFunction(): {| a: 3, barr: number, fooo: number |} {\n    // comment before\n    let fooo = 3; // selected\n    let barr = 4; // selected\n    const a = 3; // selected\n    return { a, barr, fooo };\n  }"
+              "newText": "function newFunction(): {| a: number, barr: number, fooo: number |} {\n    // comment before\n    let fooo = 3; // selected\n    let barr = 4; // selected\n    const a = 3; // selected\n    return { a, barr, fooo };\n  }"
             }
           ]
         }

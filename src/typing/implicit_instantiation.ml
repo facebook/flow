@@ -31,21 +31,18 @@ and union_flatten = function
  * the rather impractical `42` (resp. `(42)=>void`).
  *)
 let generalize_singletons cx t =
-  if Context.natural_inference_local_primitive_literals_full cx then
-    let singleton_action loc =
+  let singleton_action loc =
+    if Context.natural_inference_local_primitive_literals_full cx then
       if Context.is_primitive_literal_checked cx loc then
         (* Keep singleton types that are checked against other precise types, which
          * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
         Primitive_literal.KeepAsIs
       else
         Primitive_literal.DoNotKeep { use_sound_type = false }
-    in
-    Primitive_literal.convert_literal_type cx ~singleton_action t
-  else if Context.natural_inference_local_primitive_literals_partial cx then
-    let singleton_action _ = Primitive_literal.DoNotKeep { use_sound_type = false } in
-    Primitive_literal.convert_literal_type cx ~singleton_action t
-  else
-    t
+    else
+      Primitive_literal.DoNotKeep { use_sound_type = false }
+  in
+  Primitive_literal.convert_literal_type cx ~singleton_action t
 
 type inferred_targ = {
   tparam: Type.typeparam;

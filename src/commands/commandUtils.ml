@@ -1459,8 +1459,8 @@ let make_options
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
-    opt_natural_inference_local_primitive_literals =
-      FlowConfig.natural_inference_local_primitive_literals flowconfig;
+    opt_natural_inference_local_primitive_literals_full =
+      FlowConfig.natural_inference_local_primitive_literals_full flowconfig;
     opt_natural_inference_local_primitive_literals_full_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)

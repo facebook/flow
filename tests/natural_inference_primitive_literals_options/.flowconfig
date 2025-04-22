@@ -1,4 +1,3 @@
 [options]
 all=true
-experimental.natural_inference.local_primitive_literals=partial
 experimental.natural_inference.local_primitive_literals.full.includes=<PROJECT_ROOT>/full
