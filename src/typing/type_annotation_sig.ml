@@ -67,7 +67,6 @@ module type S = sig
 
   val convert_render_type :
     Context.t ->
-    allow_generic_t:bool ->
     Type.t Subst_name.Map.t ->
     Env_api.With_ALoc.L.t ->
     (ALoc.t, ALoc.t) Flow_ast.Type.Renders.t ->

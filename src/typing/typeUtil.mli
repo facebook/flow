@@ -121,4 +121,4 @@ val dro_of_type : Type.t -> Type.react_dro option
 val map_property : f:(Type.t -> Type.t) -> Type.property_type -> Type.property_type
 
 val mk_possibly_generic_render_type :
-  allow_generic_t:bool -> variant:Flow_ast.Type.Renders.variant -> reason -> Type.t -> Type.t option
+  variant:Flow_ast.Type.Renders.variant -> reason -> Type.t -> Type.t option

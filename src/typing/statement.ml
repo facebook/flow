@@ -7926,9 +7926,7 @@ module Make
         let (ret_loc, renders_t, renders_ast) =
           match renders with
           | Ast.Type.AvailableRenders (loc, annot) ->
-            let (t, renders_ast) =
-              Anno.convert_render_type cx ~allow_generic_t:true tparams_map loc annot
-            in
+            let (t, renders_ast) = Anno.convert_render_type cx tparams_map loc annot in
             (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
           | Ast.Type.MissingRenders loc ->
             let reason =

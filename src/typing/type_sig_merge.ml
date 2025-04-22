@@ -920,12 +920,12 @@ and merge_annot env file = function
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
     Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactDRO (loc, ImmutableAnnot)), id))
-  | Renders { loc; arg; variant; allow_generic_t } ->
+  | Renders { loc; arg; variant } ->
     let t = merge { env with in_renders_arg = true } file arg in
     let reason =
       Reason.(mk_annot_reason (RRenderType (desc_of_reason (TypeUtil.reason_of_t t))) loc)
     in
-    (match TypeUtil.mk_possibly_generic_render_type ~allow_generic_t ~variant reason t with
+    (match TypeUtil.mk_possibly_generic_render_type ~variant reason t with
     | Some t -> t
     | None ->
       let renders_variant =

@@ -1848,15 +1848,6 @@ References:
                                                                              ^ [1]
 
 
-Error ----------------------------------------------------------------------------------- validation/validation.js:33:53
-
-Cannot use `T` [1] as the type argument of renders type. Generic render types are only allowed in rendering declaration
-of component syntax components, and only one or a union of generic types are permitted. [invalid-render]
-
-   33| type BannedGenericRenders3<T: React$Node> = renders T; // error
-                                                           ^ [1]
-
-
 Error ----------------------------------------------------------------------------------- validation/validation.js:35:37
 
 Cannot use boolean literal `false` [1], null [2] and undefined [3] as the type argument of renders type. Only elements
@@ -1968,7 +1959,7 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 
 
 
-Found 145 errors
+Found 144 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

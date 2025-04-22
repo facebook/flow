@@ -895,7 +895,7 @@ let map_property ~f prop =
     SyntheticField
       { get_type = Base.Option.map ~f get_type; set_type = Base.Option.map ~f set_type }
 
-let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
+let mk_possibly_generic_render_type ~variant reason t =
   let singleton_or_union_of_generic_t =
     let rec loop acc t =
       match (acc, t) with
@@ -911,7 +911,7 @@ let mk_possibly_generic_render_type ~allow_generic_t ~variant reason t =
         None
       | Some (hd :: tl) -> Some (hd, tl)
   in
-  if allow_generic_t && variant <> Flow_ast.Type.Renders.Star then
+  if variant <> Flow_ast.Type.Renders.Star then
     match singleton_or_union_of_generic_t t with
     | Some generic_ts ->
       let t =

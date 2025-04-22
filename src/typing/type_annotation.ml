@@ -428,7 +428,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });
       ((loc, t), Keyof { Keyof.argument; comments })
     | (loc, Renders renders) ->
-      let (t, renders_ast) = convert_render_type ~allow_generic_t:false env loc renders in
+      let (t, renders_ast) = convert_render_type env loc renders in
       ((loc, t), Renders renders_ast)
     | (loc, ReadOnly ro) ->
       let { ReadOnly.argument; comments } = ro in
@@ -1722,8 +1722,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       (t, Unqualified ((loc, t), id_name))
 
-  and convert_render_type
-      env ~allow_generic_t loc { Ast.Type.Renders.operator_loc; comments; argument; variant } =
+  and convert_render_type env loc { Ast.Type.Renders.operator_loc; comments; argument; variant } =
     let (((_, t), _) as t_ast) = convert { env with in_renders_arg = true } argument in
     let reason_desc =
       let arg_desc = desc_of_reason (reason_of_t t) in
@@ -1733,7 +1732,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       | Ast.Type.Renders.Star -> RRenderStarType arg_desc
     in
     let reason = mk_reason reason_desc loc in
-    match TypeUtil.mk_possibly_generic_render_type ~allow_generic_t ~variant reason t with
+    match TypeUtil.mk_possibly_generic_render_type ~variant reason t with
     | Some t' ->
       let node =
         Flow_js.get_builtin_react_type
@@ -3029,7 +3028,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let (ren_loc, renders_t, renders_ast) =
         match renders with
         | Ast.Type.AvailableRenders (loc, annot) ->
-          let (t, renders_ast) = convert_render_type env ~allow_generic_t:true loc annot in
+          let (t, renders_ast) = convert_render_type env loc annot in
           (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
         | Ast.Type.MissingRenders loc ->
           let reason =
@@ -3298,8 +3297,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   let convert_list cx tparams_map = convert_list (mk_convert_env cx tparams_map)
 
-  let convert_render_type cx ~allow_generic_t tparams_map =
-    convert_render_type (mk_convert_env cx tparams_map) ~allow_generic_t
+  let convert_render_type cx tparams_map = convert_render_type (mk_convert_env cx tparams_map)
 
   let convert_type_guard cx tparams_map = convert_type_guard (mk_convert_env cx tparams_map)
 

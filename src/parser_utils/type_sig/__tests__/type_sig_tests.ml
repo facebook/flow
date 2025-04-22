@@ -5980,8 +5980,7 @@ let%expect_test "component3" =
            (Annot
               Renders {loc = [2:54-69];
                 arg = (TyRef (Unqualified LocalRef {ref_loc = [2:62-69]; index = 0}));
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                variant = Flow_ast.Type.Renders.Normal})}}
 
   |}]
 
@@ -6026,8 +6025,7 @@ let%expect_test "component4" =
            (Annot
               Renders {loc = [1:26-35];
                 arg = (Annot Bound {ref_loc = [1:34-35]; name = "T"});
-                variant = Flow_ast.Type.Renders.Normal;
-                allow_generic_t = true})}}
+                variant = Flow_ast.Type.Renders.Normal})}}
   |}]
 
 let%expect_test "component_5" =
@@ -6173,8 +6171,7 @@ let%expect_test "component_type" =
                  (Annot
                     Renders {loc = [3:40-49];
                       arg = (TyRef (Unqualified LocalRef {ref_loc = [3:48-49]; index = 1}));
-                      variant = Flow_ast.Type.Renders.Normal;
-                      allow_generic_t = true})}
+                      variant = Flow_ast.Type.Renders.Normal})}
                )))}
     3. Variable {id_loc = [4:12-15];
          name = "Bar";
@@ -6283,8 +6280,7 @@ let%expect_test "render_types" =
          (Annot
             Renders {loc = [1:16-30];
               arg = (Annot (Number [1:24-30]));
-              variant = Flow_ast.Type.Renders.Normal;
-              allow_generic_t = false})}
+              variant = Flow_ast.Type.Renders.Normal})}
     1. TypeAlias {id_loc = [2:12-13];
          name = "Y"; tparams = Mono;
          body =
@@ -6294,8 +6290,7 @@ let%expect_test "render_types" =
               (Annot
                  Renders {loc = [2:16-30];
                    arg = (Annot (Number [2:24-30]));
-                   variant = Flow_ast.Type.Renders.Normal;
-                   allow_generic_t = false});
+                   variant = Flow_ast.Type.Renders.Normal});
               t1 = (Annot (String [2:33-39]));
               ts = []})}
     2. TypeAlias {id_loc = [3:12-13];
@@ -6309,8 +6304,7 @@ let%expect_test "render_types" =
                    t0 = (Annot (Number [3:25-31]));
                    t1 = (Annot (String [3:34-40]));
                    ts = []});
-              variant = Flow_ast.Type.Renders.Normal;
-              allow_generic_t = false})} |}]
+              variant = Flow_ast.Type.Renders.Normal})} |}]
 
 let%expect_test "render_maybe_types" =
   print_sig {|
@@ -6339,8 +6333,7 @@ let%expect_test "render_maybe_types" =
          (Annot
             Renders {loc = [1:16-31];
               arg = (Annot (Number [1:25-31]));
-              variant = Flow_ast.Type.Renders.Maybe;
-              allow_generic_t = false})}
+              variant = Flow_ast.Type.Renders.Maybe})}
     1. TypeAlias {id_loc = [2:12-13];
          name = "Y"; tparams = Mono;
          body =
@@ -6350,8 +6343,7 @@ let%expect_test "render_maybe_types" =
               (Annot
                  Renders {loc = [2:16-31];
                    arg = (Annot (Number [2:25-31]));
-                   variant = Flow_ast.Type.Renders.Maybe;
-                   allow_generic_t = false});
+                   variant = Flow_ast.Type.Renders.Maybe});
               t1 = (Annot (String [2:34-40]));
               ts = []})}
     2. TypeAlias {id_loc = [3:12-13];
@@ -6365,8 +6357,7 @@ let%expect_test "render_maybe_types" =
                    t0 = (Annot (Number [3:26-32]));
                    t1 = (Annot (String [3:35-41]));
                    ts = []});
-              variant = Flow_ast.Type.Renders.Maybe;
-              allow_generic_t = false})}
+              variant = Flow_ast.Type.Renders.Maybe})}
     3. TypeAlias {id_loc = [4:12-13];
          name = "C"; tparams = Mono;
          body =
@@ -6379,8 +6370,7 @@ let%expect_test "render_maybe_types" =
                  (Annot
                     Renders {loc = [4:28-43];
                       arg = (Annot (Number [4:37-43]));
-                      variant = Flow_ast.Type.Renders.Maybe;
-                      allow_generic_t = true})}
+                      variant = Flow_ast.Type.Renders.Maybe})}
                )))}
     4. ComponentBinding {id_loc = [5:25-28];
          name = "Foo"; fn_loc = [5:15-47];
@@ -6392,8 +6382,7 @@ let%expect_test "render_maybe_types" =
            (Annot
               Renders {loc = [5:31-46];
                 arg = (Annot (Number [5:40-46]));
-                variant = Flow_ast.Type.Renders.Maybe;
-                allow_generic_t = true})}}
+                variant = Flow_ast.Type.Renders.Maybe})}}
     5. ComponentBinding {id_loc = [6:17-20];
          name = "Bar"; fn_loc = [6:7-38];
          def =
@@ -6404,8 +6393,7 @@ let%expect_test "render_maybe_types" =
            (Annot
               Renders {loc = [6:23-38];
                 arg = (Annot (Number [6:32-38]));
-                variant = Flow_ast.Type.Renders.Maybe;
-                allow_generic_t = true})}} |}]
+                variant = Flow_ast.Type.Renders.Maybe})}} |}]
 
 let%expect_test "function_const_type_param" =
   print_sig {|
