@@ -26,14 +26,14 @@ function test_complex_input() {
   declare function f<const T>(x: T): T;
   declare function id<X>(x: X): X;
 
-  const x1 = f({a: 1, b: id(2)});
-  x1.b as 1; // error number ~> 1, 'b' does not get converted
+  const x1 = f({a: 1, b: id(42)});
+  x1.b as 42; // error number ~> 42, 'b' does not get converted
 
-  const x2 = f({a: 1, b: id({f: 2})});
-  x2.b.f as 2; // error number ~> 2, 'b.f' does not get converted
+  const x2 = f({a: 1, b: id({f: 42})});
+  x2.b.f as 42; // error number ~> 42, 'b.f' does not get converted
 
-  const x3 = f({a: 1, b: {...{c: 3}}});
-  x3.b.c as 1; // error number ~> 1, 'b.c' does not get converted
+  const x3 = f({a: 1, b: {...{c: 42}}});
+  x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
 }
 
 function test_tparam_deeper_in_type() {

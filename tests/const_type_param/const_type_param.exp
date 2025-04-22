@@ -32,56 +32,56 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:30:3
 
-Cannot cast `x1.b` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+Cannot cast `x1.b` to number literal `42` because number [1] is incompatible with number literal `42` [2].
 [incompatible-cast]
 
    file.js:30:3
-   30|   x1.b as 1; // error number ~> 1, 'b' does not get converted
+   30|   x1.b as 42; // error number ~> 42, 'b' does not get converted
          ^^^^
 
 References:
    file.js:29:29
-   29|   const x1 = f({a: 1, b: id(2)});
-                                   ^ [1]
+   29|   const x1 = f({a: 1, b: id(42)});
+                                   ^^ [1]
    file.js:30:11
-   30|   x1.b as 1; // error number ~> 1, 'b' does not get converted
-                 ^ [2]
+   30|   x1.b as 42; // error number ~> 42, 'b' does not get converted
+                 ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- file.js:33:3
 
-Cannot cast `x2.b.f` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+Cannot cast `x2.b.f` to number literal `42` because number [1] is incompatible with number literal `42` [2].
 [incompatible-cast]
 
    file.js:33:3
-   33|   x2.b.f as 2; // error number ~> 2, 'b.f' does not get converted
+   33|   x2.b.f as 42; // error number ~> 42, 'b.f' does not get converted
          ^^^^^^
 
 References:
    file.js:32:33
-   32|   const x2 = f({a: 1, b: id({f: 2})});
-                                       ^ [1]
+   32|   const x2 = f({a: 1, b: id({f: 42})});
+                                       ^^ [1]
    file.js:33:13
-   33|   x2.b.f as 2; // error number ~> 2, 'b.f' does not get converted
-                   ^ [2]
+   33|   x2.b.f as 42; // error number ~> 42, 'b.f' does not get converted
+                   ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- file.js:36:3
 
-Cannot cast `x3.b.c` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+Cannot cast `x3.b.c` to number literal `42` because number [1] is incompatible with number literal `42` [2].
 [incompatible-cast]
 
    file.js:36:3
-   36|   x3.b.c as 1; // error number ~> 1, 'b.c' does not get converted
+   36|   x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
          ^^^^^^
 
 References:
    file.js:35:34
-   35|   const x3 = f({a: 1, b: {...{c: 3}}});
-                                        ^ [1]
+   35|   const x3 = f({a: 1, b: {...{c: 42}}});
+                                        ^^ [1]
    file.js:36:13
-   36|   x3.b.c as 1; // error number ~> 1, 'b.c' does not get converted
-                   ^ [2]
+   36|   x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
+                   ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- file.js:44:3

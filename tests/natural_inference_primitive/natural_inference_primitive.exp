@@ -2479,6 +2479,162 @@ References:
                 ^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:13:25
+
+Cannot assign `g(...)` to `x4` because string [1] is incompatible with string literal `a` [2] in type argument `T` [3]
+of type argument `T` [3]. [incompatible-type-arg]
+
+   nested_generic_calls.js:13:25
+   13|   const x4: C<C<'a'>> = g(f('a')); // TODO okay
+                               ^^^^^^^^^
+
+References:
+   nested_generic_calls.js:13:29
+   13|   const x4: C<C<'a'>> = g(f('a')); // TODO okay
+                                   ^^^ [1]
+   nested_generic_calls.js:13:17
+   13|   const x4: C<C<'a'>> = g(f('a')); // TODO okay
+                       ^^^ [2]
+   nested_generic_calls.js:4:19
+    4|   declare class C<T> {}
+                         ^ [3]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
+
+Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
+[incompatible-call]
+
+   nested_generic_calls.js:15:24
+   15|   const y0: C<'b'> = f('a'); // error 'a' ~> 'b'
+                              ^^^ [1]
+
+References:
+   nested_generic_calls.js:15:15
+   15|   const y0: C<'b'> = f('a'); // error 'a' ~> 'b'
+                     ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:16:25
+
+Cannot assign `g(...)` to `y1` because string [1] is incompatible with string literal `b` [2] in type argument `T` [3]
+of type argument `T` [3]. [incompatible-type-arg]
+
+   nested_generic_calls.js:16:25
+   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
+                               ^^^^^^^^^
+
+References:
+   nested_generic_calls.js:16:29
+   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
+                                   ^^^ [1]
+   nested_generic_calls.js:16:17
+   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
+                       ^^^ [2]
+   nested_generic_calls.js:4:19
+    4|   declare class C<T> {}
+                         ^ [3]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:47
+
+Cannot call `f` with `42` bound to `literalValue` because number [1] is incompatible with number literal `43` [2].
+[incompatible-call]
+
+   nested_generic_calls.js:27:47
+   27|   const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
+                                                     ^^ [1]
+
+References:
+   nested_generic_calls.js:27:35
+   27|   const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
+                                         ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:58
+
+Cannot call `f` with object literal bound to `literalValue` because number [1] is incompatible with number literal
+`43` [2] in index 0 of property `f`. [incompatible-call]
+
+   nested_generic_calls.js:33:58
+   33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
+                                                                ^^ [1]
+
+References:
+   nested_generic_calls.js:33:40
+   33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
+                                              ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:79:45
+
+Cannot assign `object(...)` to `example1` because string [1] is incompatible with string literal `A` [2] in property
+`format` of type argument `V` [3]. [incompatible-type-arg]
+
+   nested_generic_calls.js:79:45
+   79|   const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // TODO okay
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   nested_generic_calls.js:75:28
+   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   nested_generic_calls.js:79:37
+   79|   const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // TODO okay
+                                           ^^^ [2]
+   nested_generic_calls.js:67:17
+   67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
+                       ^ [3]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:82:37
+
+Cannot assign `object(...)` to `example2` because string [1] is incompatible with union type [2] in property `format` of
+type argument `V` [3]. [incompatible-type-arg]
+
+   nested_generic_calls.js:82:37
+                                           v--------------------
+   82|   const example2: Wrapper<Params> = object({ // TODO okay
+   83|     format: union(literal('A'), literal('B')),
+   84|   });
+         -^
+
+References:
+   nested_generic_calls.js:75:28
+   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   nested_generic_calls.js:81:36
+   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
+                                          ^^^^^^^^^ [2]
+   nested_generic_calls.js:67:17
+   67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
+                       ^ [3]
+
+
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37
+
+Cannot assign `object(...)` to `example3` because string [1] is incompatible with union type [2] in property `format` of
+type argument `V` [3]. [incompatible-type-arg]
+
+   nested_generic_calls.js:85:37
+                                           v---------------------------------
+   85|   const example3: Wrapper<Params> = object({ // error 'C' ~> 'A' | 'B'
+   86|     format: union(literal('A'), literal('B'), literal('C')),
+   87|   });
+         -^
+
+References:
+   nested_generic_calls.js:75:28
+   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   nested_generic_calls.js:81:36
+   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
+                                          ^^^^^^^^^ [2]
+   nested_generic_calls.js:67:17
+   67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
+                       ^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- react.js:7:9
 
 Cannot create `MyDiv` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
@@ -2511,7 +2667,7 @@ References:
 
 
 
-Found 149 errors
+Found 157 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
