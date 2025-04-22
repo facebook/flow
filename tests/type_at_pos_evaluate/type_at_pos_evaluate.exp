@@ -78,7 +78,10 @@ test.js:32:6,32:7
 
 test.js:35:6
 Flags:
-(unknown)
+type T9 = {bar: number}
+
+'T9' defined at test.js:35:5
+
 test.js:35:6,35:7
 
 test.js:38:6

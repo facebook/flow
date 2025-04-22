@@ -459,6 +459,12 @@ module Make (I : INPUT) : S = struct
   let should_evaluate_destructor ~env ~force_eval t d =
     force_eval
     || should_force_eval_to_avoid_giant_types ~env t d
+    || (match d with
+       (* If we print out $Omit<Foo, 'bar'> unevaluated, it will end up with something like
+        * Omit<Foo, {[K in 'bar']: mixed}>, which is our implementation detail and makes no sense
+        * to users. Therefore, let's always evaluate. *)
+       | T.RestType (T.Object.Rest.Omit, _) -> true
+       | _ -> false)
     ||
     match Env.evaluate_type_destructors env with
     | Env.EvaluateNone -> false
