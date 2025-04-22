@@ -189,6 +189,28 @@ References:
                                                        ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
+
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because number [1] is incompatible with string [2] in
+the indexer property. [incompatible-type]
+
+   maybe.js:12:34
+                                        v----------------------
+   12|     target[annotationTypeName] = Object.assign( // error
+   13|       target[annotationTypeName],
+   14|       source[annotationTypeName],
+   15|     );
+           ^
+
+References:
+   maybe.js:3:21
+    3|   int: ?{[string]: ?number, ...},
+                           ^^^^^^ [1]
+   maybe.js:2:24
+    2|   string: ?{[string]: ?string, ...},
+                              ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
 Incorrect arguments passed to `Object.assign` because property `a` is missing in string [1]. [incompatible-use]
@@ -323,4 +345,4 @@ References:
 
 
 
-Found 20 errors
+Found 21 errors

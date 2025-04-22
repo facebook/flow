@@ -1092,12 +1092,6 @@ struct
           let t = push_type_alias_reason r t in
           let rep = UnionRep.make (f void_t) (f null_t) [f t] in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
-        | (MaybeT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _)) ->
-          (* This isn't correct, but matches the existing incorrectness of spreads
-           * today. In particular, spreading `null` and `void` become {}. The wrong
-           * part is that spreads should distribute through unions, so `{...?T}`
-           * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
-          rec_flow cx trace (t, u)
         | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (MaybeT (reason, t), _)
@@ -1137,14 +1131,6 @@ struct
           let void_t = VoidT.why_with_use_desc ~use_desc r in
           let rep = UnionRep.make (f void_t) (f t) [] in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
-        | ( OptionalT { reason = _; type_ = t; use_desc = _ },
-            ObjAssignFromT (_, _, _, _, ObjAssign _)
-          ) ->
-          (* This isn't correct, but matches the existing incorrectness of spreads
-           * today. In particular, spreading `null` and `void` become {}. The wrong
-           * part is that spreads should distribute through unions, so `{...?T}`
-           * should be `{...null}|{...void}|{...T}`, which simplifies to `{}`. *)
-          rec_flow cx trace (t, u)
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = _; type_ = t; use_desc = _ }, ExtractReactRefT _) ->
