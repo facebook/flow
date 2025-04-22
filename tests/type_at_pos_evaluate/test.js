@@ -32,6 +32,9 @@ type T7 = $Keys<Foo>;
 type T8 = $Keys<{foo: string, bar: number, baz: bigint}>;
 //   ^
 
+type T9 = $Omit<{foo: string, bar: number}, 'foo'>;
+//   ^
+
 type ValuesPoly<X> = $Values<X>
 //   ^
 
