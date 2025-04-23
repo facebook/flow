@@ -10,6 +10,5 @@
 all=true
 exact_by_default=false
 no_flowlib=false
-experimental.const_type_params=true
 
 [strict]

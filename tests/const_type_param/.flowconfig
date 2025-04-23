@@ -8,7 +8,6 @@
 
 [options]
 all=true
-experimental.const_type_params=true
 experimental.natural_inference.local_primitive_literals=full
 
 [strict]
