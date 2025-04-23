@@ -413,7 +413,13 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
     Context.mk_placeholder cx reason
   | Context.SynthesisMode { target_loc = _ } ->
     Context.set_synthesis_produced_uncacheable_result cx;
-    general ()
+    if
+      Context.natural_inference_local_primitive_literals_full cx
+      && needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc
+    then
+      precise ()
+    else
+      general ()
   | Context.CheckingMode
   | Context.HintEvaluationMode ->
     if needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc then

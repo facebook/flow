@@ -7,7 +7,7 @@ declare function setSelectedTab(x: 'a'|'b'): void;
 declare var selectedTab: 'a'|'b';
 
 component Main() {
-  return <TabGroup onChange={setSelectedTab /* TODO okay */} value={selectedTab}>
+  return <TabGroup onChange={setSelectedTab} value={selectedTab}>
     <Tab value="a" />
   </TabGroup>;
 }
