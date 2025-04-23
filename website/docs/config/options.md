@@ -350,7 +350,7 @@ By default, this is set to 26843545600 (25 * 2^30 bytes, which is 25GiB)
 
 Type: `boolean`
 
-This option enables Flow's [Relay](https://relay.dev]) integration. With the
+This option enables Flow's [Relay](https://relay.dev) integration. With the
 integration enabled Flow will infer the types of `graphql` tagged template
 literals as being the types that the Relay compiler emitted for that
 fragment/mutaiton/query/etc. This allows users to omit type parameters from
