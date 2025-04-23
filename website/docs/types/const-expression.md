@@ -76,3 +76,46 @@ To use the `as const` syntax, you need to upgrade your infrastructure:
 - Prettier: 3.1+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../../tools/babel) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../../tools/eslint) for more details.
+
+## `const` Type Parameters
+
+Sometimes it is useful to specify that an argument to function is always expected
+to be a const-expression. In such cases, you can annotate the type parameter with
+the `const` modifier. We refer to these type parameters as const-type parameters.
+
+When are `const` type parameters useful?
+
+One example is when you want to enforce that all arguments passed to a function
+`foo` with signature
+```
+declare function foo<X>(x: X): X;
+```
+need to be treated as const-expressions. One way to support this is by always
+calling `foo` with `as const` on its argument:
+```js
+const x1 = foo({ f: 42 } as const);
+const x2 = foo([42, "hello"] as const);
+```
+The variables `x1` and `x2` will have the type `{+f: 42}` and `$ReadOnly<[42, "hello"]>`,
+respectively.
+
+To avoid repeating and potentially forgetting to pass `as const`, you can use the
+`const` modifier on type parameter `X`:
+```js
+declare function constFoo<const X>(x: X): X;
+```
+Now you can call `constFoo` without `as const` and have the same effect as before:
+```js
+const y1 = constFoo({ f: 42 });
+const y2 = constFoo([42, "hello"]);
+```
+The variables `y1` and `y2` will have the same type as `x1` and `x2`, respectively.
+
+## Adoption of `const` type parameter syntax
+To use the `as const` syntax, you need to upgrade your infrastructure:
+- Flow and Flow Parser:
+  * 0.267 and 0.268 and passing the `experimental.const_type_params=true` flag in the flowconfig
+  * 0.269+ without the flag.
+- Prettier: 3.5+
+- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../../tools/babel) for more details.
+- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../../tools/eslint) for more details.
