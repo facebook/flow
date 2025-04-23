@@ -43,6 +43,9 @@ type singleton_action =
 val convert_literal_type :
   Context.t -> singleton_action:(ALoc.t -> singleton_action) -> Type.t -> Type.t
 
+val convert_implicit_instantiation_literal_type :
+  Context.t -> singleton_action:(ALoc.t -> singleton_action) -> Type.t -> Type.t
+
 (** [convert_literal_type_to_const ~loc_range cx t] converts a type `t` inferred
     for a literal expression to its 'const' form. This is the form expected for
     const type parameters (for example). It only descends down literal array and

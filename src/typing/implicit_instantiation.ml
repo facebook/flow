@@ -42,7 +42,7 @@ let generalize_singletons cx t =
     else
       Primitive_literal.DoNotKeep { use_sound_type = false }
   in
-  Primitive_literal.convert_literal_type cx ~singleton_action t
+  Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
 
 type inferred_targ = {
   tparam: Type.typeparam;
