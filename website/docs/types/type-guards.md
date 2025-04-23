@@ -76,7 +76,7 @@ function isPositive(n: ?number): boolean {
 ```
 If we declared `n is number` as the type guard of this function then in the following code:
 ```js
-declare n: ?number;
+declare var n: ?number;
 if (isPositive(n)) {
   // n is number here
 } else {
@@ -93,7 +93,7 @@ function isPositive(n: ?number): implies n is number {
 ```
 Now, we'll get the following behavior
 ```js
-declare n: ?number;
+declare var n: ?number;
 if (isPositive(n)) {
   // n is number here
 } else {
