@@ -725,8 +725,6 @@ module rec TypeTerm : sig
         ignore_dicts: bool;
       }
     (* operations on objects *)
-    (* Resolves the object from which the properties are assigned *)
-    | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
     | ObjRestT of reason * string list * t * int
     (* test that something is a valid proto (object-like or null) *)
     | ObjTestProtoT of reason * t_out
@@ -4183,7 +4181,6 @@ let string_of_use_ctor = function
   | MethodT _ -> "MethodT"
   | PrivateMethodT _ -> "PrivateMethodT"
   | MixinT _ -> "MixinT"
-  | ObjAssignFromT _ -> "ObjAssignFromT"
   | ObjRestT _ -> "ObjRestT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"

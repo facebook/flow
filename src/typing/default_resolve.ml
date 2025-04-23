@@ -142,7 +142,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | ValueToTypeReferenceT (_, _, _, t) -> resolve t
   | ConcretizeTypeAppsT _ -> _TODO
   | LookupT { lookup_action; _ } -> resolve_lookup_action lookup_action
-  | ObjAssignFromT (_, _, _, t, _)
   | ObjRestT (_, _, t, _)
   | ObjTestProtoT (_, t)
   | ObjTestT (_, _, t)

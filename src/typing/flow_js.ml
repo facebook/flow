@@ -974,8 +974,8 @@ struct
                   }
               ),
             ( GetKeysT _ | GetValuesT _ | GetDictValuesT _ | CallT _ | LookupT _ | SetPropT _
-            | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
-            | CallElemT _ | BindT _ )
+            | GetPropT _ | MethodT _ | ObjRestT _ | SetElemT _ | GetElemT _ | CallElemT _ | BindT _
+              )
           )
           when is_builtin_class_id "Map" class_id cx -> begin
           match u with
@@ -1022,8 +1022,8 @@ struct
                   }
               ),
             ( GetKeysT _ | GetValuesT _ | GetDictValuesT _ | CallT _ | LookupT _ | SetPropT _
-            | GetPropT _ | MethodT _ | ObjAssignFromT _ | ObjRestT _ | SetElemT _ | GetElemT _
-            | CallElemT _ | BindT _ )
+            | GetPropT _ | MethodT _ | ObjRestT _ | SetElemT _ | GetElemT _ | CallElemT _ | BindT _
+              )
           )
           when is_builtin_class_id "Set" class_id cx -> begin
           match u with
@@ -1848,28 +1848,6 @@ struct
             ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector }
           ) ->
           TypeCollector.add collector l
-        (* ObjAssignFromT copies multiple properties from its incoming LB.
-           Here we simulate a merged object type by iterating over the
-           entire intersection. *)
-        | (IntersectionT (_, rep), ObjAssignFromT (use_op, reason_op, proto, tout, kind)) ->
-          let tvar =
-            List.fold_left
-              (fun tout t ->
-                let tvar =
-                  match Cache.Fix.find cx false t with
-                  | Some tvar -> tvar
-                  | None ->
-                    Tvar.mk_where cx reason_op (fun tvar ->
-                        Cache.Fix.add cx false t tvar;
-                        rec_flow cx trace (t, ObjAssignFromT (use_op, reason_op, proto, tvar, kind))
-                    )
-                in
-                rec_flow_t cx ~use_op trace (tvar, tout);
-                tvar)
-              (Tvar.mk cx reason_op)
-              (InterRep.members rep)
-          in
-          rec_flow_t cx ~use_op trace (tvar, tout)
         (* This duplicates the (_, ReposLowerT u) near the end of this pattern
            match but has to appear here to preempt the (IntersectionT, _) in
            between so that we reposition the entire intersection. *)
@@ -3366,140 +3344,6 @@ struct
            object type. *)
         | (l, ConcretizeT { reason = _; kind = ConcretizeForObjectAssign; seen = _; collector }) ->
           TypeCollector.add collector l
-        (* When some object-like type O1 flows to
-           ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
-           O2, and O2 is linked to X to signal that the copying is done; the
-           intention is that when those properties are read through X, they should
-           be found (whereas this cannot be guaranteed when those properties are
-           read through O2). However, there is an additional twist: this scheme
-           may not work when O2 is unresolved. In particular, when O2 is
-           unresolved, the constraints that copy the properties from O1 may race
-           with reads of those properties through X as soon as O2 is resolved. To
-           avoid this race, we make O2 flow to ObjAssignToT(_,O1,X,ObjAssign);
-           when O2 is resolved, we make the switch. **)
-        | ( DefT (lreason, ObjT { props_tmap = mapr; flags = { react_dro; _ } as flags; _ }),
-            ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _)
-          ) ->
-          Context.iter_props cx mapr (fun name p ->
-              (* move the reason to the call site instead of the definition, so
-                 that it is in the same scope as the Object.assign, so that
-                 strictness rules apply. *)
-              let reason_prop =
-                lreason
-                |> update_desc_reason (fun desc -> RPropertyOf (name, desc))
-                |> repos_reason (loc_of_reason reason_op)
-              in
-              match Property.read_t p with
-              | Some t ->
-                let propref = mk_named_prop ~reason:reason_prop name in
-
-                let t =
-                  match react_dro with
-                  | Some dro when not (is_exception_to_react_dro propref) ->
-                    mk_react_dro cx use_op dro t
-                  | _ -> t
-                in
-                let t =
-                  match propref with
-                  | Named { name = OrdinaryName name; _ }
-                    when Context.hook_compatibility cx && Flow_ast_utils.hook_name name ->
-                    mk_hooklike cx use_op t
-                  | _ -> t
-                in
-
-                let t = filter_optional cx ~trace reason_prop t in
-                rec_flow
-                  cx
-                  trace
-                  ( to_obj,
-                    SetPropT
-                      (use_op, reason_prop, propref, Assign, Normal, OpenT (reason_prop, t), None)
-                  )
-              | None ->
-                add_output
-                  cx
-                  (Error_message.EPropNotReadable { reason_prop; prop_name = Some name; use_op })
-          );
-          (match flags.obj_kind with
-          | Indexed _ -> rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
-          | Exact
-          | Inexact ->
-            rec_flow_t cx trace ~use_op (to_obj, t))
-        | ( DefT (lreason, InstanceT { inst = { own_props; proto_props; _ }; _ }),
-            ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign _)
-          ) ->
-          let own_props = Context.find_props cx own_props in
-          let proto_props = Context.find_props cx proto_props in
-          let props = NameUtils.Map.union own_props proto_props in
-          props
-          |> NameUtils.Map.iter (fun name p ->
-                 match Property.read_t p with
-                 | Some t ->
-                   let propref = mk_named_prop ~reason:reason_op name in
-                   rec_flow
-                     cx
-                     trace
-                     (to_obj, SetPropT (use_op, reason_op, propref, Assign, Normal, t, None))
-                 | None ->
-                   add_output
-                     cx
-                     (Error_message.EPropNotReadable
-                        { reason_prop = lreason; prop_name = Some name; use_op }
-                     )
-             );
-          rec_flow_t cx ~use_op trace (to_obj, t)
-        (* AnyT has every prop, each one typed as `any`, so spreading it into an
-           existing object destroys all of the keys, turning the result into an
-           AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
-           `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-        | (AnyT (_, src), ObjAssignFromT (use_op, reason, _, t, ObjAssign _)) ->
-          rec_flow_t cx ~use_op trace (AnyT.make src reason, t)
-        | (AnyT _, ObjAssignFromT (use_op, _, _, t, _)) -> rec_flow_t cx ~use_op trace (l, t)
-        | (ObjProtoT _, ObjAssignFromT (use_op, _, to_obj, t, ObjAssign _)) ->
-          rec_flow_t cx ~use_op trace (to_obj, t)
-        (* Object.assign semantics *)
-        | (DefT (_, (NullT | VoidT)), ObjAssignFromT (use_op, _, to_obj, tout, ObjAssign _)) ->
-          rec_flow_t cx ~use_op trace (to_obj, tout)
-        (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
-        | (DefT (reason, MixedT _), ObjAssignFromT (_, _, _, _, ObjAssign _)) ->
-          let dict =
-            {
-              dict_name = None;
-              key = StrModuleT.make reason;
-              value = l;
-              dict_polarity = Polarity.Neutral;
-            }
-          in
-          let o = Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~obj_kind:(Indexed dict) in
-          rec_flow cx trace (o, u)
-        | (DefT (reason_arr, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign)) ->
-        begin
-          match arrtype with
-          | ArrayAT { elem_t; tuple_view = None; react_dro = _ }
-          | ArrayAT { elem_t; tuple_view = Some (TupleView { inexact = true; _ }); react_dro = _ }
-          | ROArrayAT (elem_t, _) ->
-            (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-            rec_flow cx trace (elem_t, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
-          | TupleAT { elements; _ } ->
-            (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
-            List.iteri
-              (fun n (TupleElement { t = from; polarity; name; optional = _; reason = _ }) ->
-                if not @@ Polarity.compat (polarity, Polarity.Positive) then
-                  add_output
-                    cx
-                    (Error_message.ETupleElementNotReadable
-                       { use_op; reason = reason_arr; index = n; name }
-                    );
-                rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
-              elements
-          | ArrayAT { tuple_view = Some (TupleView { elements; arity = _; inexact = _ }); _ } ->
-            (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
-            let ts = tuple_ts_of_elements elements in
-            List.iter
-              (fun from ->
-                rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind)))
-              ts
-        end
         (*************************)
         (* objects can be copied *)
         (*************************)
@@ -6020,7 +5864,6 @@ struct
     | ToStringT _
     | UseT (_, MaybeT _) (* used to filter maybe *)
     | UseT (_, OptionalT _) (* used to filter optional *)
-    | ObjAssignFromT _
     (* Handled in __flow *)
     | UseT (_, ThisTypeAppT _)
     | UseT (_, TypeAppT _)
