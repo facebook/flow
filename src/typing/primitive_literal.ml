@@ -183,6 +183,80 @@ let convert_literal_type cx ~singleton_action t =
   let mapper = new literal_type_mapper ~singleton_action in
   mapper#type_ cx () t
 
+let rec is_literal_type cx seen t =
+  let open Reason in
+  match t with
+  | OpenT (_, id) -> begin
+    match Context.find_constraints cx id with
+    | (root_id, Type.Constraint.FullyResolved s) ->
+      if ISet.mem root_id seen then
+        false
+      else
+        let t = Context.force_fully_resolved_tvar cx s in
+        is_literal_type cx (ISet.add root_id seen) t
+    | _ -> false
+  end
+  | DefT (r, ArrT _) -> is_literal_array_reason r
+  | DefT (r, ObjT _) -> is_literal_object_reason r
+  | DefT (r, FunT _) -> is_literal_function_reason r
+  | DefT (_, SingletonStrT { from_annot = false; _ })
+  | DefT (_, SingletonNumT { from_annot = false; _ })
+  | DefT (_, SingletonBoolT { from_annot = false; _ })
+  | DefT (_, SingletonBigIntT { from_annot = false; _ }) ->
+    true
+  | _ -> false
+
+class implicit_instantiation_literal_mapper ~singleton_action =
+  object (self)
+    inherit [unit] Type_subst.type_subst_base as super
+
+    method! type_ cx map_cx t =
+      if is_literal_type cx ISet.empty t then
+        convert_literal_type cx ~singleton_action t
+      else
+        match t with
+        | EvalT (x, TypeDestructorT (op, r, d), _) ->
+          let x' = self#type_ cx map_cx x in
+          let d' = self#destructor cx map_cx d in
+          if x == x' && d == d' then
+            t
+          else
+            Flow_cache.Eval.id cx x' (TypeDestructorT (op, r, d'))
+        | OpenT _
+        | DefT _
+        | ThisInstanceT _
+        | ThisTypeAppT _
+        | TypeAppT _
+        | GenericT _
+        | OpaqueT _
+        | OptionalT _
+        | MaybeT _
+        | IntersectionT _
+        | UnionT _ ->
+          super#type_ cx map_cx t
+        (* Stop here cause we need the precision *)
+        | AnnotT _
+        | KeysT _ ->
+          t
+        (* Stop cause there's nothing interesting *)
+        | FunProtoT _
+        | ObjProtoT _
+        | NullProtoT _
+        | FunProtoBindT _
+        | NamespaceT _
+        | StrUtilT _
+        | AnyT _ ->
+          t
+
+    (* The EvalT case is the only case that calls this function. We've explicitly
+     * overrided it in all cases, so this should never be called *)
+    method eval_id _cx _map_cx _id = assert false
+  end
+
+let convert_implicit_instantiation_literal_type cx ~singleton_action t =
+  let mapper = new implicit_instantiation_literal_mapper ~singleton_action in
+  mapper#type_ cx () t
+
 let aloc_contains ~outer ~inner =
   try
     let outer = ALoc.to_loc_exn outer in
