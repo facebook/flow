@@ -1,2 +1,3 @@
 [options]
 all=true
+this_type_guards=false
