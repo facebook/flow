@@ -346,6 +346,29 @@ of the heap.
 
 By default, this is set to 26843545600 (25 * 2^30 bytes, which is 25GiB)
 
+### relay_integration {#toc-relay-integration}
+
+Type: `boolean`
+
+This option enables Flow's [Relay](https://relay.dev]) integration. With the
+integration enabled Flow will infer the types of `graphql` tagged template
+literals as being the types that the Relay compiler emitted for that
+fragment/mutaiton/query/etc. This allows users to omit type parameters from
+common Relay APIs like `useFragment` and `usePreloadedQuery`.
+
+### relay_integration.excludes {#toc-relay-integration-excludes}
+
+Type: `string`
+
+This option allows you to exclude some directories in the project from using
+Flow's Relay integration. For example
+
+```
+relay_integration=true
+relay_integration.excludes=<PROJECT_ROOT>/dirA
+relay_integration.excludes=<PROJECT_ROOT>/dirB
+```
+
 ### suppress_type {#toc-suppress-type}
 
 Type: `string`
