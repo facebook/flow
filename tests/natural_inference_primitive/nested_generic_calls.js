@@ -10,7 +10,7 @@ function test_simple() {
   const x1: C<string> = f('a');
   const x2 = g(f('a'));
   const x3: C<C<string>> = g(f('a'));
-  const x4: C<C<'a'>> = g(f('a')); // TODO okay
+  const x4: C<C<'a'>> = g(f('a')); // okay
 
   const y0: C<'b'> = f('a'); // error 'a' ~> 'b'
   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
@@ -76,7 +76,7 @@ function test_regression() {
   };
 
   const example0 = object({format: literal('A')});
-  const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // TODO okay
+  const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // okay
 
   type Params = $ReadOnly<{format: 'A' | 'B'}>;
   const example2: Wrapper<Params> = object({ // okay

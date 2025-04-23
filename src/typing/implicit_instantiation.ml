@@ -30,19 +30,22 @@ and union_flatten = function
  * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
  * the rather impractical `42` (resp. `(42)=>void`).
  *)
-let generalize_singletons cx t =
-  let singleton_action loc =
-    if Context.natural_inference_local_primitive_literals_full cx then
-      if Context.is_primitive_literal_checked cx loc then
-        (* Keep singleton types that are checked against other precise types, which
-         * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
-        Primitive_literal.KeepAsIs
+let generalize_singletons cx ~has_syntactic_hint t =
+  if Context.natural_inference_local_primitive_literals_full cx && has_syntactic_hint then
+    t
+  else
+    let singleton_action loc =
+      if Context.natural_inference_local_primitive_literals_full cx then
+        if Context.is_primitive_literal_checked cx loc then
+          (* Keep singleton types that are checked against other precise types, which
+           * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
+          Primitive_literal.KeepAsIs
+        else
+          Primitive_literal.DoNotKeep { use_sound_type = true }
       else
-        Primitive_literal.DoNotKeep { use_sound_type = true }
-    else
-      Primitive_literal.DoNotKeep { use_sound_type = false }
-  in
-  Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
+        Primitive_literal.DoNotKeep { use_sound_type = false }
+    in
+    Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
 
 type inferred_targ = {
   tparam: Type.typeparam;
@@ -89,6 +92,7 @@ module type S = sig
     Context.t ->
     use_op:Type.use_op ->
     ?allow_underconstrained:bool ->
+    ?has_syntactic_hint:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
     inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
@@ -1066,6 +1070,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       ~use_op
       ~has_new_errors
       ~allow_underconstrained
+      ~has_syntactic_hint
       inferred_targ_list
       marked_tparams
       tparams_map
@@ -1113,7 +1118,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             Primitive_literal.convert_literal_type_to_const ~loc_range cx result.inferred
           | _ ->
             (* Prevent leaking of precise singleton types *)
-            generalize_singletons cx result.inferred
+            generalize_singletons cx ~has_syntactic_hint result.inferred
         in
         let result = { result with inferred } in
         (Subst_name.Map.add name result acc, (inferred, name) :: inferred_targ_list_acc))
@@ -1197,7 +1202,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     in
     (inferred_targ_list, marked_tparams, tparams_map, tout)
 
-  let solve_targs cx ~use_op ?(allow_underconstrained = false) ?return_hint check =
+  let solve_targs
+      cx ~use_op ?(allow_underconstrained = false) ?(has_syntactic_hint = false) ?return_hint check
+      =
     Context.run_and_rolled_back_cache cx (fun () ->
         let init_errors = Context.errors cx in
         let cache_snapshot = Context.take_cache_snapshot cx in
@@ -1250,6 +1257,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
               ~use_op
               ~has_new_errors
               ~allow_underconstrained
+              ~has_syntactic_hint
               inferred_targ_list
               marked_tparams
               tparams_map
@@ -1558,10 +1566,25 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       | EncounteredPlaceholder ->
         (false, None)
     in
+    (* The `has_syntactic_hint` flag will inform the decision on whether to keep
+     * precise literal types in the instantiation result. Here, we avoid using
+     * Type_env.has_hint, as this function always returns `false` in non-checking
+     * mode. *)
+    let has_syntactic_hint =
+      let { Loc_env.hint_map; _ } = Context.environment cx in
+      Loc_collections.ALocMap.find_opt (Reason.loc_of_reason reason_op) hint_map
+      |> Base.Option.value_map ~f:fst ~default:false
+    in
     Context.run_in_implicit_instantiation_mode cx (fun () ->
         let (_, _, t) = check.Implicit_instantiation_check.poly_t in
         let (soln, inferred_targs) =
-          Pierce.solve_targs cx ~use_op ~allow_underconstrained ?return_hint check
+          Pierce.solve_targs
+            cx
+            ~use_op
+            ~allow_underconstrained
+            ~has_syntactic_hint
+            ?return_hint
+            check
         in
         let t = instantiate_poly_with_subst_map cx trace t soln ~use_op ~reason_op ~reason_tapp in
         (t, inferred_targs)

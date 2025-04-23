@@ -27,10 +27,10 @@ function test_complex_input() {
   declare function id<X>(x: X): X;
 
   const x1 = f({a: 1, b: id(42)});
-  x1.b as 42; // error number ~> 42, 'b' does not get converted
+  x1.b as 42; // okay
 
   const x2 = f({a: 1, b: id({f: 42})});
-  x2.b.f as 42; // error number ~> 42, 'b.f' does not get converted
+  x2.b.f as 42; // okay
 
   const x3 = f({a: 1, b: {...{c: 42}}});
   x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
