@@ -164,16 +164,9 @@ let union_ident_map_and_dedup =
       in
       TypeUtil.union_of_ts r (List.rev ts)
 
-let substituter =
+class virtual ['a] type_subst_base =
   object (self)
-    inherit [replacement Subst_name.Map.t * bool * bool * use_op option] Type_mapper.t as super
-
-    val mutable change_id = false
-
-    (* Objects store a list of reachable targs and their polarity so that we
-     * can do any-propagation without exploring the full structure of the
-     * type. *)
-    val mutable obj_reachable_targs = None
+    inherit ['a] Type_mapper.t
 
     method tvar _cx _map_cx _r id = id
 
@@ -216,6 +209,18 @@ let substituter =
         id
       else
         Context.make_export_map cx exps'
+  end
+
+let substituter =
+  object (self)
+    inherit [replacement Subst_name.Map.t * bool * bool * use_op option] type_subst_base as super
+
+    val mutable change_id = false
+
+    (* Objects store a list of reachable targs and their polarity so that we
+     * can do any-propagation without exploring the full structure of the
+     * type. *)
+    val mutable obj_reachable_targs = None
 
     method! type_ cx map_cx t =
       let (map, force, placeholder_no_infer, use_op) = map_cx in
