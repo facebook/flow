@@ -52,6 +52,7 @@ module type S = sig
     Context.t ->
     use_op:Type.use_op ->
     ?allow_underconstrained:bool ->
+    ?has_syntactic_hint:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
     inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
