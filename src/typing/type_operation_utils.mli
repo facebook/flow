@@ -56,6 +56,10 @@ module Promise : sig
   val await : Context.t -> reason -> Type.t -> Type.t
 end
 
+module SpecialCasedFunctions : sig
+  val object_assign : Context.t -> Type.use_op -> reason -> Type.t -> Type.call_arg list -> Type.t
+end
+
 module TypeAssertions : sig
   val assert_binary_in_lhs : Context.t -> Type.t -> unit
 
