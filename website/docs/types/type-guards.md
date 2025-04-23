@@ -195,6 +195,16 @@ In `filterError1`, filtering produces `Array<Success>` that is not compatible wi
 
 In `filterError2`, the predicate `response.type === 'success'` is used to refine `Response`s to `Success`s, not `Error`s.
 
+Note that as of version 0.261 it is not necessary to provide a type guard annotation for the argument of `.filter()`.
+This will be inferred from the body of the arrow function:
+```js
+function filterSuccessShort(response: Array<Response>): Array<Success> {
+  return response.filter(
+    response => response.type === 'success'
+  );
+}
+```
+
 
 ## Defining Type Guard Functions {#toc-restrictions-of-type-guard-functions}
 
