@@ -69,7 +69,6 @@ and reason_of_use_t = function
   | MapTypeT (_, reason, _, _) -> reason
   | MethodT (_, reason, _, _, _) -> reason
   | MixinT (reason, _) -> reason
-  | ObjAssignFromT (_, reason, _, _, _) -> reason
   | ObjRestT (reason, _, _, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
@@ -219,7 +218,6 @@ let rec util_use_op_of_use_t :
   | ResolveSpreadT (op, r, s) -> util op (fun op -> ResolveSpreadT (op, r, s))
   | ExtendsUseT (op, r, ts, a, b) -> util op (fun op -> ExtendsUseT (op, r, ts, a, b))
   | MapTypeT (op, r, k, t) -> util op (fun op -> MapTypeT (op, r, k, t))
-  | ObjAssignFromT (op, r, t1, t2, k) -> util op (fun op -> ObjAssignFromT (op, r, t1, t2, k))
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })

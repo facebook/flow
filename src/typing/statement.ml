@@ -6570,10 +6570,160 @@ module Make
         )
       in
       let t =
-        let assign_from l use_op reason_op to_obj t kind =
+        let rec assign_from l use_op reason_op to_obj t kind =
           match to_obj with
           | AnyT _ -> Flow.flow_t cx (to_obj, t)
-          | to_obj -> Flow.flow cx (l, ObjAssignFromT (use_op, reason_op, to_obj, t, kind))
+          | to_obj ->
+            Base.List.iter
+              (Flow.possible_concrete_types_for_object_assign cx (TypeUtil.reason_of_t l) l)
+              ~f:(fun l -> assign_from_after_concretization l use_op reason_op to_obj t kind)
+        and assign_from_after_concretization l use_op reason_op to_obj t kind =
+          match (l, kind) with
+          (* assign_from copies multiple properties from its incoming LB.
+             Here we simulate a merged object type by iterating over the
+             entire intersection. *)
+          | (IntersectionT (_, rep), kind) ->
+            let tvar =
+              List.fold_left
+                (fun tout t ->
+                  let tvar =
+                    match Flow_cache.Fix.find cx false t with
+                    | Some tvar -> tvar
+                    | None ->
+                      Tvar.mk_where cx reason_op (fun tvar ->
+                          Flow_cache.Fix.add cx false t tvar;
+                          assign_from t use_op reason_op to_obj tvar kind
+                      )
+                  in
+                  Flow.flow_t cx (tvar, tout);
+                  tvar)
+                (Tvar.mk cx reason_op)
+                (InterRep.members rep)
+            in
+            Flow.flow_t cx (tvar, t)
+          | (DefT (lreason, ObjT { props_tmap = mapr; flags; _ }), ObjAssign _) ->
+            Context.iter_props cx mapr (fun name p ->
+                (* move the reason to the call site instead of the definition, so
+                   that it is in the same scope as the Object.assign, so that
+                   strictness rules apply. *)
+                let reason_prop =
+                  lreason
+                  |> update_desc_reason (fun desc -> RPropertyOf (name, desc))
+                  |> repos_reason (loc_of_reason reason_op)
+                in
+                match Property.read_t p with
+                | Some t ->
+                  let propref = mk_named_prop ~reason:reason_prop name in
+
+                  let t =
+                    Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_prop (fun tout ->
+                        Flow.flow cx (t, FilterOptionalT (unknown_use, tout))
+                    )
+                  in
+                  Flow.flow
+                    cx
+                    (to_obj, SetPropT (use_op, reason_prop, propref, Assign, Normal, t, None))
+                | None ->
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.EPropNotReadable { reason_prop; prop_name = Some name; use_op })
+            );
+            (match flags.obj_kind with
+            | Indexed _ -> Flow.flow_t cx (AnyT.make Untyped reason_op, t)
+            | Exact
+            | Inexact ->
+              Flow.flow_t cx (to_obj, t))
+          | (DefT (lreason, InstanceT { inst = { own_props; proto_props; _ }; _ }), ObjAssign _) ->
+            let own_props = Context.find_props cx own_props in
+            let proto_props = Context.find_props cx proto_props in
+            let props = NameUtils.Map.union own_props proto_props in
+            props
+            |> NameUtils.Map.iter (fun name p ->
+                   match Property.read_t p with
+                   | Some t ->
+                     let propref = mk_named_prop ~reason:reason_op name in
+                     Flow.flow
+                       cx
+                       (to_obj, SetPropT (use_op, reason_op, propref, Assign, Normal, t, None))
+                   | None ->
+                     Flow_js_utils.add_output
+                       cx
+                       (Error_message.EPropNotReadable
+                          { reason_prop = lreason; prop_name = Some name; use_op }
+                       )
+               );
+            Flow.flow_t cx (to_obj, t)
+          (* AnyT has every prop, each one typed as `any`, so spreading it into an
+             existing object destroys all of the keys, turning the result into an
+             AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
+             `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
+          | (AnyT (_, src), ObjAssign _) -> Flow.flow_t cx (AnyT.make src reason, t)
+          | (AnyT _, _) -> Flow.flow_t cx (l, t)
+          | (ObjProtoT _, ObjAssign _) -> Flow.flow_t cx (to_obj, t)
+          (* Object.assign semantics *)
+          | (DefT (_, (NullT | VoidT)), ObjAssign _) -> Flow.flow_t cx (to_obj, t)
+          (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
+          | (DefT (reason, MixedT _), ObjAssign _) ->
+            let dict =
+              {
+                dict_name = None;
+                key = StrModuleT.make reason;
+                value = l;
+                dict_polarity = Polarity.Neutral;
+              }
+            in
+            let o = Obj_type.mk_with_proto cx reason (ObjProtoT reason) ~obj_kind:(Indexed dict) in
+            assign_from_after_concretization o use_op reason_op to_obj t kind
+          | (DefT (reason_arr, ArrT arrtype), ObjSpreadAssign) -> begin
+            match arrtype with
+            | ArrayAT { elem_t; tuple_view = None; react_dro = _ }
+            | ArrayAT { elem_t; tuple_view = Some (TupleView { inexact = true; _ }); react_dro = _ }
+            | ROArrayAT (elem_t, _) ->
+              (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
+              assign_from elem_t use_op reason_op to_obj t default_obj_assign_kind
+            | TupleAT { elements; _ } ->
+              (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+              List.iteri
+                (fun n (TupleElement { t = from; polarity; name; optional = _; reason = _ }) ->
+                  if not @@ Polarity.compat (polarity, Polarity.Positive) then
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.ETupleElementNotReadable
+                         { use_op; reason = reason_arr; index = n; name }
+                      );
+                  assign_from from use_op reason_op to_obj t default_obj_assign_kind)
+                elements
+            | ArrayAT { tuple_view = Some (TupleView { elements; arity = _; inexact = _ }); _ } ->
+              (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
+              let ts = tuple_ts_of_elements elements in
+              List.iter
+                (fun from -> assign_from from use_op reason_op to_obj t default_obj_assign_kind)
+                ts
+          end
+          | (GenericT { reason; bound; _ }, _) ->
+            assign_from
+              (Flow.reposition cx (loc_of_reason reason) bound)
+              use_op
+              reason_op
+              to_obj
+              t
+              kind
+          | (l, _) ->
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EIncompatible
+                 {
+                   lower = (reason_of_t l, None);
+                   upper =
+                     ( reason_op,
+                       match kind with
+                       | ObjSpreadAssign -> Error_message.IncompatibleObjAssignFromTSpread
+                       | ObjAssign _ -> Error_message.IncompatibleObjAssignFromT
+                     );
+                   use_op = Some use_op;
+                 }
+              );
+            Flow.flow_t cx (AnyT.error reason_op, t)
         in
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
             let result =
