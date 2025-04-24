@@ -1,0 +1,9 @@
+test.js:1:5
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"foo","type":"Import from ./@flowtyped/foo"},
+    {"name":"foo","type":"Import * from ./@flowtyped/foo"}
+  ]
+}
+
