@@ -1,0 +1,22 @@
+test.js:1:5
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"foo","type":"Import from foo"},
+    {"name":"foo","type":"Import from ./root_relative_for_some/foo"},
+    {"name":"foo","type":"Import * from foo"},
+    {"name":"foo","type":"Import * from ./root_relative_for_some/foo"}
+  ]
+}
+
+some/some.js:1:5
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"foo","type":"Import from foo"},
+    {"name":"foo","type":"Import from foo"},
+    {"name":"foo","type":"Import * from foo"},
+    {"name":"foo","type":"Import * from foo"}
+  ]
+}
+

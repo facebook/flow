@@ -123,6 +123,7 @@ let rec chop_prefix_opt root_parts require_path =
     removed. *)
 let node_path
     ~node_resolver_dirnames
+    ~node_resolver_root_relative_dirnames
     ~module_declaration_dirnames
     ~get_package_info
     ~resolves_to_real_path
@@ -158,6 +159,25 @@ let node_path
     | [] -> None
   in
   (* Similar to the function above that tries to prettify import path of a node module, here
+   * we try to prettify the import path for root relative modules. *)
+  let root_relative_import_path require_path =
+    Base.List.find_map
+      node_resolver_root_relative_dirnames
+      ~f:(fun (src_prefix_opt, root_relative_dirname) ->
+        if
+          match src_prefix_opt with
+          | None -> true
+          | Some prefix -> Files.is_prefix prefix src_dir
+        then
+          let root_relative_dirname_parts = Files.split_path root_relative_dirname in
+          Base.Option.map
+            (chop_prefix_opt root_relative_dirname_parts require_path)
+            ~f:string_of_path_parts
+        else
+          None
+    )
+  in
+  (* Similar to the function above that tries to prettify import path of a node module, here
    * we try to prettify the import path for @flowtyped modules. *)
   let module_declaration_import_path require_path =
     Base.List.find_map module_declaration_dirnames ~f:(fun module_declaration_dirname ->
@@ -170,26 +190,30 @@ let node_path
   match node_modules_package_import_path ancestor_rev to_req with
   | Some path -> path
   | None ->
-    (match module_declaration_import_path req_parts with
+    (match root_relative_import_path req_parts with
     | Some path -> path
     | None ->
-      let parts =
-        if Base.List.is_empty to_src then
-          Filename.current_dir_name :: to_req
-        else
-          (* add `..` for each dir in `to_src`, to relativize `to_req` *)
-          Base.List.fold_left
-            ~f:(fun path _ -> Filename.parent_dir_name :: path)
-            ~init:to_req
-            to_src
-      in
-      string_of_path_parts parts)
+      (match module_declaration_import_path req_parts with
+      | Some path -> path
+      | None ->
+        let parts =
+          if Base.List.is_empty to_src then
+            Filename.current_dir_name :: to_req
+          else
+            (* add `..` for each dir in `to_src`, to relativize `to_req` *)
+            Base.List.fold_left
+              ~f:(fun path _ -> Filename.parent_dir_name :: path)
+              ~init:to_req
+              to_src
+        in
+        string_of_path_parts parts))
 
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
 let path_of_modulename
     ~node_resolver_dirnames
+    ~node_resolver_root_relative_dirnames
     ~module_declaration_dirnames
     ~get_package_info
     ~resolves_to_real_path
@@ -202,6 +226,7 @@ let path_of_modulename
         let path = File_key.to_string (Files.chop_flow_ext file_key) in
         node_path
           ~node_resolver_dirnames
+          ~node_resolver_root_relative_dirnames
           ~module_declaration_dirnames
           ~get_package_info
           ~resolves_to_real_path
@@ -275,6 +300,7 @@ let from_of_source ~module_system_info ~src_dir source =
     in
     path_of_modulename
       ~node_resolver_dirnames
+      ~node_resolver_root_relative_dirnames:module_system_info.node_resolver_root_relative_dirnames
       ~module_declaration_dirnames
       ~get_package_info:module_system_info.get_package_info
       ~resolves_to_real_path:module_system_info.resolves_to_real_path
