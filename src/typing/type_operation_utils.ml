@@ -504,6 +504,59 @@ end
 
 module SpecialCasedFunctions = struct
   let object_assign cx use_op reason target_t rest_arg_ts =
+    (* What is this EVIL cache doing? Consider the following example:
+
+       ```
+       declare const inter: {foo: string, ...} & {bar: number, ...};
+       Object.assign(inter, inter);
+       ```
+
+       Of course, we want it to pass, because it should be equivalent to
+
+       ```
+       declare const inter: {foo: string, bar: number, ...};
+       Object.assign(inter, inter);
+       ```
+
+       which should pass.
+
+       However, without the cache, the above code will be treated like
+
+       - Try to assign `{foo: string, ...} & {bar: number, ...}` to `{foo: string, ...}`
+         - Assign `{foo: string, ...}` to `{foo: string, ...}` -> Good
+         - Assign `{bar: number, ...}` to `{foo: string, ...}` -> Failed
+         - This branch of speculation has failed
+       - Try to assign `{foo: string, ...} & {bar: number, ...}` to `{bar: number, ...}`
+         - Assign `{foo: string, ...}` to `{bar: number, ...}` -> Failed
+         - This branch of speculation has failed
+       - Speculation failed!
+
+       The cache is trying to "fix" this by trying to assign each member of intersection only once,
+       so the above example becomes something like
+
+       - Try to assign `{foo: string, ...} & {bar: number, ...}` to `{foo: string, ...}`
+         - Assign `{foo: string, ...}` to `{foo: string, ...}` -> Good
+         - Assign `{bar: number, ...}` to `{foo: string, ...}` -> Failed
+         - This branch of speculation has failed
+       - Try to assign `{foo: string, ...} & {bar: number, ...}` to `{bar: number, ...}`
+         - Assign `{foo: string, ...}` to `{bar: number, ...}` -> Cache hit
+         - Assign `{bar: number, ...}` to `{bar: number, ...}` -> Cache hit
+         - This branch of speculation has succeed by doing nothing...
+       - Speculation succeeded!
+
+       This is a very bad fix, since it's easily broken by the following example:
+
+       ```
+       declare const inter: {foo: string, ...} & {bar: number, ...};
+       declare const inter2: {bar: number, ...} & {foo: string, ...};
+       Object.assign(inter, inter2);
+       ```
+
+       Since `Object.assign` support is on the chopping block, it might not make sense to fix
+       it in a proper way, but the least we can do is to localize the broken cache. The cache used
+       to be global one.
+    *)
+    let fix_cache = ref TypeMap.empty in
     let open TypeUtil in
     let rec assign_from l use_op reason_op to_obj t kind =
       match to_obj with
@@ -522,11 +575,11 @@ module SpecialCasedFunctions = struct
           List.fold_left
             (fun tout t ->
               let tvar =
-                match Flow_cache.Fix.find cx false t with
+                match TypeMap.find_opt t !fix_cache with
                 | Some tvar -> tvar
                 | None ->
                   Tvar.mk_where cx reason_op (fun tvar ->
-                      Flow_cache.Fix.add cx false t tvar;
+                      fix_cache := TypeMap.add t tvar !fix_cache;
                       assign_from t use_op reason_op to_obj tvar kind
                   )
               in
