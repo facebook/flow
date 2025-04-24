@@ -281,12 +281,23 @@ let mk_module_system_info =
     | None -> false
   in
   fun ~options ~reader ->
+    let node_resolver_root_relative_dirnames =
+      if Options.node_resolver_allow_root_relative options then
+        let root = Options.root options in
+        Options.node_resolver_root_relative_dirnames options
+        |> Base.List.map ~f:(fun (prefix_opt, root_relative) ->
+               (prefix_opt, Files.normalize_path (File_path.to_string root) root_relative)
+           )
+      else
+        []
+    in
     {
       Lsp_module_system_info.file_options = Options.file_options options;
       haste_module_system = Options.(module_system options = Haste);
       get_haste_module_info = get_haste_module_info ~reader;
       get_package_info = Parsing_heaps.Reader.get_package_info ~reader;
       is_package_file = is_package_file ~options ~reader;
+      node_resolver_root_relative_dirnames;
       resolves_to_real_path =
         (fun ~from ~to_real_path -> Sys_utils.realpath from = Some to_real_path);
     }
