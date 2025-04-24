@@ -28,6 +28,7 @@ val text_edits_of_import :
 module For_tests : sig
   val path_of_modulename :
     node_resolver_dirnames:string list ->
+    node_resolver_root_relative_dirnames:(string option * string) list ->
     module_declaration_dirnames:string list ->
     get_package_info:(File_key.t -> (Package_json.t, unit) result option) ->
     resolves_to_real_path:(from:string -> to_real_path:string -> bool) ->

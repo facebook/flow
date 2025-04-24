@@ -1,0 +1,5 @@
+[options]
+all=true
+module.system.node.allow_root_relative=true
+module.system.node.root_relative_dirname=root_relative_for_all
+module.system.node.root_relative_dirname='<PROJECT_ROOT>/some' -> 'root_relative_for_some'
