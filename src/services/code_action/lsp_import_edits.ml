@@ -109,8 +109,13 @@ let rec can_import_as_node_package
 
     Lastly, if the path ends with [index.js] or [.js], those default suffixes are also
     removed. *)
-let node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~src_dir require_path
-    =
+let node_path
+    ~node_resolver_dirnames
+    ~module_declaration_dirnames
+    ~get_package_info
+    ~resolves_to_real_path
+    ~src_dir
+    require_path =
   let require_path = String_utils.rstrip require_path Files.flow_ext in
   let src_parts = Files.split_path src_dir in
   let req_parts = Files.split_path require_path in
@@ -140,29 +145,68 @@ let node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~
       | _ -> node_modules_package_import_path (package_dir :: ancestor_rev) rest)
     | [] -> None
   in
+  (* Similar to the function above that tries to prettify import path of a node module, here
+   * we try to prettify the import path for @flowtyped modules. *)
+  let module_declaration_import_path require_path =
+    Base.List.find_map module_declaration_dirnames ~f:(fun module_declaration_dirname ->
+        let module_declaration_dirname_parts = Files.split_path module_declaration_dirname in
+        let rec chop_prefix_opt module_declaration_dirname_parts require_path =
+          match module_declaration_dirname_parts with
+          | [] -> Some require_path
+          | module_declaration_dirname_parts_hd :: module_declaration_dirname_parts_tl ->
+            (match require_path with
+            | [] -> None
+            | require_path_hd :: require_path_tl ->
+              if String.equal module_declaration_dirname_parts_hd require_path_hd then
+                chop_prefix_opt module_declaration_dirname_parts_tl require_path_tl
+              else
+                None)
+        in
+        Base.Option.map
+          (chop_prefix_opt module_declaration_dirname_parts require_path)
+          ~f:string_of_path_parts
+    )
+  in
   match node_modules_package_import_path ancestor_rev to_req with
   | Some path -> path
   | None ->
-    let parts =
-      if Base.List.is_empty to_src then
-        Filename.current_dir_name :: to_req
-      else
-        (* add `..` for each dir in `to_src`, to relativize `to_req` *)
-        Base.List.fold_left ~f:(fun path _ -> Filename.parent_dir_name :: path) ~init:to_req to_src
-    in
-    string_of_path_parts parts
+    (match module_declaration_import_path req_parts with
+    | Some path -> path
+    | None ->
+      let parts =
+        if Base.List.is_empty to_src then
+          Filename.current_dir_name :: to_req
+        else
+          (* add `..` for each dir in `to_src`, to relativize `to_req` *)
+          Base.List.fold_left
+            ~f:(fun path _ -> Filename.parent_dir_name :: path)
+            ~init:to_req
+            to_src
+      in
+      string_of_path_parts parts)
 
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
 let path_of_modulename
-    ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path src_dir file_key = function
+    ~node_resolver_dirnames
+    ~module_declaration_dirnames
+    ~get_package_info
+    ~resolves_to_real_path
+    src_dir
+    file_key = function
   | Some _ as string_module_name -> string_module_name
   | None ->
     Base.Option.map
       ~f:(fun src_dir ->
         let path = File_key.to_string (Files.chop_flow_ext file_key) in
-        node_path ~node_resolver_dirnames ~get_package_info ~resolves_to_real_path ~src_dir path)
+        node_path
+          ~node_resolver_dirnames
+          ~module_declaration_dirnames
+          ~get_package_info
+          ~resolves_to_real_path
+          ~src_dir
+          path)
       src_dir
 
 let haste_package_path ~module_system_info ~src_dir require_path =
@@ -226,8 +270,12 @@ let from_of_source ~module_system_info ~src_dir source =
       | None -> None
     in
     let node_resolver_dirnames = Files.node_resolver_dirnames module_system_info.file_options in
+    let module_declaration_dirnames =
+      Files.module_declaration_dirnames module_system_info.file_options
+    in
     path_of_modulename
       ~node_resolver_dirnames
+      ~module_declaration_dirnames
       ~get_package_info:module_system_info.get_package_info
       ~resolves_to_real_path:module_system_info.resolves_to_real_path
       src_dir
