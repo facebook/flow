@@ -1604,6 +1604,3 @@ References:
 
 
 Found 112 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches

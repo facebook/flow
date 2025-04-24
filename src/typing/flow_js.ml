@@ -1078,20 +1078,6 @@ struct
               None
           in
           rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
-        | (MaybeT (r, t), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
-          let f t =
-            Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                rec_flow
-                  cx
-                  trace
-                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-            )
-          in
-          let void_t = VoidT.why r in
-          let null_t = NullT.why r in
-          let t = push_type_alias_reason r t in
-          let rep = UnionRep.make (f void_t) (f null_t) [f t] in
-          rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (MaybeT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (MaybeT (reason, t), _)
@@ -1117,20 +1103,6 @@ struct
           (* Don't split the optional type into its constituent members. Instead,
              reposition the entire optional type. *)
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | ( OptionalT { reason = r; type_ = t; use_desc },
-            DestructuringT (reason, DestructAnnot, s, tout, _)
-          ) ->
-          let f t =
-            Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                rec_flow
-                  cx
-                  trace
-                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-            )
-          in
-          let void_t = VoidT.why_with_use_desc ~use_desc r in
-          let rep = UnionRep.make (f void_t) (f t) [] in
-          rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
         | (OptionalT { reason = _; type_ = t; use_desc = _ }, ExtractReactRefT _) ->
@@ -1610,18 +1582,6 @@ struct
         | (UnionT _, SealGenericT { reason = _; id; name; cont; no_infer }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
-        | (UnionT (_, rep), DestructuringT (reason, DestructAnnot, s, tout, _)) ->
-          let (t0, (t1, ts)) = UnionRep.members_nel rep in
-          let f t =
-            Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                rec_flow
-                  cx
-                  trace
-                  (t, DestructuringT (reason, DestructAnnot, s, tvar, Reason.mk_id ()))
-            )
-          in
-          let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
-          rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
           ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         (* Shortcut for indexed accesses with the same type as the dict key. *)
