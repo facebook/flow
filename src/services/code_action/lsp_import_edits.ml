@@ -96,6 +96,18 @@ let rec can_import_as_node_package
          ~package_dir
          (Nel.of_list src_dir_rev_list)
 
+let rec chop_prefix_opt root_parts require_path =
+  match root_parts with
+  | [] -> Some require_path
+  | root_parts_hd :: root_parts_tl ->
+    (match require_path with
+    | [] -> None
+    | require_path_hd :: require_path_tl ->
+      if String.equal root_parts_hd require_path_hd then
+        chop_prefix_opt root_parts_tl require_path_tl
+      else
+        None)
+
 (** [node_path ~node_resolver_dirnames ~reader src_dir require_path] converts absolute path
     [require_path] into a Node-compatible "require" path relative to [src_dir], taking into
     account node's hierarchical search for [node_modules].
@@ -150,18 +162,6 @@ let node_path
   let module_declaration_import_path require_path =
     Base.List.find_map module_declaration_dirnames ~f:(fun module_declaration_dirname ->
         let module_declaration_dirname_parts = Files.split_path module_declaration_dirname in
-        let rec chop_prefix_opt module_declaration_dirname_parts require_path =
-          match module_declaration_dirname_parts with
-          | [] -> Some require_path
-          | module_declaration_dirname_parts_hd :: module_declaration_dirname_parts_tl ->
-            (match require_path with
-            | [] -> None
-            | require_path_hd :: require_path_tl ->
-              if String.equal module_declaration_dirname_parts_hd require_path_hd then
-                chop_prefix_opt module_declaration_dirname_parts_tl require_path_tl
-              else
-                None)
-        in
         Base.Option.map
           (chop_prefix_opt module_declaration_dirname_parts require_path)
           ~f:string_of_path_parts
