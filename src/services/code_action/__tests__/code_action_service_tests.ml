@@ -16,6 +16,8 @@ let string_opt = function
 
 let node_resolver_dirnames = ["node_modules"]
 
+let module_declaration_dirnames = ["/path/to/root/@flowtyped"]
+
 let resolves_to_real_path ~from:_ ~to_real_path:_ = true
 
 (** Creates a mutator so we can write some files to sharedmem, and
@@ -61,6 +63,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root")
@@ -73,6 +76,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root")
@@ -85,6 +89,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root")
@@ -97,6 +102,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root")
@@ -114,6 +120,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a/b")
@@ -131,6 +138,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a")
@@ -143,6 +151,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a")
@@ -155,6 +164,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a/c")
@@ -176,6 +186,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a/c")
@@ -197,6 +208,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a/c")
@@ -218,6 +230,7 @@ let tests =
            let path =
              path_of_modulename
                ~node_resolver_dirnames
+               ~module_declaration_dirnames
                ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
                ~resolves_to_real_path
                (Some "/path/to/root/a/c")
@@ -225,5 +238,18 @@ let tests =
                None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_nested_main") path
+         );
+         ( "supports_flowtyped_modules" >:: fun ctxt ->
+           let path =
+             path_of_modulename
+               ~node_resolver_dirnames
+               ~module_declaration_dirnames
+               ~get_package_info:(Parsing_heaps.Reader.get_package_info ~reader)
+               ~resolves_to_real_path
+               (Some "/path/to/root/a/c")
+               (File_key.SourceFile "/path/to/root/@flowtyped/foo")
+               None
+           in
+           assert_equal ~ctxt ~printer:string_opt (Some "foo") path
          );
        ]
