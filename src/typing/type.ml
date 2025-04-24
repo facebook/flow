@@ -892,12 +892,7 @@ module rec TypeTerm : sig
    * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
    * because `p` should behave like a `string` annotation.
    *
-   * We accomplish this by wrapping the binding itself in an AnnotT type.
-   *
-   * Since DestructuringT uses with the DestructAnnot kind should only encounter
-   * annotations, the set of lower bounds will be a subset of all possible
-   * types. The only important cases to handle are disjunctive types that would
-   * violate the 0->1 property, like UnionT and MaybeT. *)
+   * We accomplish this by wrapping the binding itself in an AnnotT type. *)
   and destruct_kind =
     | DestructAnnot
     | DestructInfer
