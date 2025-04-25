@@ -1,3 +1,23 @@
+### 0.269.0
+
+Likely to cause new Flow errors:
+* Using `$Omit` will trigger an `internal-type` error.
+* There might be some error code differences around destructuring
+* `Object.assign` now has stricter behavior over maybe type and optional type inputs. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SRWxgABABBT4QSzwuzsgC87IAClQstwADzAAA6UHZ7PspigCGQ7IA-MAANpKioIAC6avVupVvHZVgtjLlCoqEiN2pNBqNwhENzNFqsVqg9IAfABuOWB2APZRwaDs9hsblQXmZMN2AAU1vZlkoOLtXJ5fPjJF4yZIECElEhaujsf5ublAEo1Q0IHA2OzZfL2QB5NAAKzmMR2tBICYLRchVasMAglAAokpagngTHs9AACqrAByzmwQp9TeTCtT6a1c-L8eXxjX5n1Qrbne7VgwJBIiCgCfZAHoX+yvgB3dkmSjjncKimVD7oeC5QCe2Bntg+p5i2gGKoWxbYAeWZxkuq7rjBAFVgGLb0jhcr0nKuQgA0JgPtASQZPYJggPSQA)
+
+New Features:
+* You can now use `this is T` as type-guard annotation on a method `m`, to refine `x` when calling `if (x.m()) {}`. This-type guards can only be used on declare classes and interfaces. (E.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABOySCROQBBTnAAA6UE5nNpACEABQASmQnIktVpEr5koA3KL6aLRWzcBzufreZzJZyFAsoGw+YLgNqoLq5vqWJzAZyMAr+ZqoHAYJzpRgrFK5bKhaLxRg3Wr1ZyAPQxzkQLZ0LVm7qhsVuyMC6NxhNJ2hhzMYKOx+MmSgQSgCiWPdKOLJoNqcgDucCVJq1uRADRMJDg0CSDQADFYAEwANgAHFYhyB6UA))
+* Added support for `const` type parameters that allow you to specify that an argument to a function is always treated as a const-expression, by annotating the type parameter with the `const` modifier. This eliminates the need to use the `as const` syntax when calling functions with this annotation. See more in [our docs](https://flow.org/en/docs/types/const-expression/#const-type-parameters).
+
+Notable bug fixes:
+* Auto-import for modules from `module.system.node.root_relative_dirname` will have correct import path instead of relative import path.
+* Auto-import for modules from `@flowtyped` will have correct import path instead of relative import path.
+* Generic render types are now allowed everywhere.
+* Fixed potential issue that makes hover on `Omit<...>` to fail.
+
+Parser:
+* Parse class static blocks. The feature is not yet supported for type-checking.
+
 ### 0.268.0
 
 Breaking:
