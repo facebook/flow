@@ -37,6 +37,7 @@ type enclosing_context =
   | JsxAttrOrChildrenContext
   (* if (x ==/=== C) {} when C is literal expression *)
   | LiteralTestContext
+[@@deriving show]
 
 let is_conditional_test_context = function
   | SwitchTestContext _

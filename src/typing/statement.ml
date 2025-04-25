@@ -5245,9 +5245,11 @@ module Make
         let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
         (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
       | NullishCoalesce ->
-        let (((_, t1), _) as left) = expression cx ?decl ~has_hint left in
+        let (((_, t1), _) as left) = expression cx ~encl_ctx ?decl ~has_hint left in
         let ((((_, t2), _) as right), right_throws) =
-          Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl ~has_hint right)
+          Abnormal.catch_expr_control_flow_exception (fun () ->
+              expression cx ~encl_ctx ?decl ~has_hint right
+          )
         in
         let t2 =
           if right_throws then

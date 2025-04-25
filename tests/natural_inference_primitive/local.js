@@ -586,3 +586,9 @@ function tests_unary_negation() {
   objb2.b2 as -2n; // error bigint ~> -2n
   objb2.b2 as bigint; // okay
 }
+
+function test_nullish_coalesce_2() {
+  declare var map: {prop: mixed};
+  declare var p: void | 'prop';
+  map[p ?? 'prop']; // okay
+}
