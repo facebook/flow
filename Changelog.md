@@ -1,3 +1,7 @@
+### 0.269.1
+
+It should have the same behavior as 0.269.0.
+
 ### 0.269.0
 
 Likely to cause new Flow errors:
