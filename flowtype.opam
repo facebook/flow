@@ -9,7 +9,7 @@ doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
   "ocaml" {>= "5.2.0"}
-  "base" {>= "v0.16.3"}
+  "base" {>= "v0.17.1"}
   "base-unix"
   "base-bytes"
   "camlp-streams" {>= "5.0.1"}
