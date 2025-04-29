@@ -2870,7 +2870,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | Ast.Expression.NumberLiteral _
         | Ast.Expression.BooleanLiteral _
         | Ast.Expression.BigIntLiteral _
-        | Ast.Expression.Unary _ ->
+        | Ast.Expression.Unary _
+        | Ast.Expression.TemplateLiteral _ ->
           this#record_hint loc hints_before_synthesizable_check
         | _ -> this#record_hint loc hints
       in

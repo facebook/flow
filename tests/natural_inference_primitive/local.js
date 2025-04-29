@@ -596,3 +596,14 @@ function test_nullish_coalesce_2() {
 function test_object_expression_hint() {
   const o: {fn:() => 'a'} = {fn() {return 'a';}}; // okay 'a' is kept precise due to hint on missing return
 }
+
+function test_template_literal() {
+  `a` as 'a'; // okay
+  `a` as 'b'; // error
+  const x1 = `a`;
+  x1 as 'a'; //  okay
+  const x2 = `a` as const; // okay
+  x2 as 'a'; // okay
+  const o = Object.freeze({f: `a`});
+  o.f as 'a'; // okay
+}

@@ -2479,6 +2479,21 @@ References:
                 ^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:602:3
+
+Cannot cast template string to string literal `b` because string [1] is incompatible with string literal `b` [2].
+[incompatible-cast]
+
+   local.js:602:3
+   602|   `a` as 'b'; // error
+          ^^^ [1]
+
+References:
+   local.js:602:10
+   602|   `a` as 'b'; // error
+                 ^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
 Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
@@ -2601,7 +2616,7 @@ References:
 
 
 
-Found 154 errors
+Found 155 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

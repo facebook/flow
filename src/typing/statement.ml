@@ -884,7 +884,8 @@ module Make
       | RegExpLiteral _
       | Array _
       | Object _
-      | Unary { Unary.operator = Unary.Minus; argument = (_, NumberLiteral _); _ } ->
+      | Unary { Unary.operator = Unary.Minus; argument = (_, NumberLiteral _); _ }
+      | TemplateLiteral _ ->
         false
       | Identifier _ -> not (Primitive_literal.is_generalization_candidate cx t)
       | _ -> true
@@ -3464,7 +3465,7 @@ module Make
               ) =
             head
           in
-          let t = string_literal_value cx empty_syntactic_flags elem_loc cooked in
+          let t = string_literal_value cx syntactic_flags elem_loc cooked in
           (t, [])
         | _ ->
           let t_out = StrModuleT.at loc in
