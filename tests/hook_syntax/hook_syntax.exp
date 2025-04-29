@@ -97,8 +97,9 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:23:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    declare_hook_tests.js:23:5
    23|     useBadHook([], (42: any)); // error
@@ -112,8 +113,9 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:25:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    declare_hook_tests.js:25:5
    25|     badName([], (42: any)); // error
@@ -474,8 +476,9 @@ Cannot read `current` from `w` [1] because `ref` values may not be read within h
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:51:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_tests.js:51:5
    51|     useBadHook([], (42: any)); // error
@@ -489,8 +492,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:53:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_tests.js:53:5
    53|     badName([], (42: any)); // error
@@ -903,8 +907,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:23:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_type_tests.js:23:5
    23|     useBadHook([], (42: any)); // error
@@ -918,8 +923,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:25:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    hook_type_tests.js:25:5
    25|     badName([], (42: any)); // error
@@ -1203,7 +1209,8 @@ Unreachable code. [unreachable-code]
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:116:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:116:3
@@ -1218,7 +1225,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:123:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:123:3
@@ -1233,7 +1241,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:128:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:128:3
@@ -1248,7 +1257,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:133:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:133:3
@@ -1263,7 +1273,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:139:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:139:3
@@ -1473,7 +1484,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:653:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:653:3
@@ -1491,7 +1503,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:654:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:654:5
@@ -1506,7 +1519,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:661:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:661:3
@@ -1524,7 +1538,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:662:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:662:5
@@ -1584,8 +1599,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:705:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:705:3
    705|   useState(); // error
@@ -1599,8 +1615,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:719:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:719:3
    719|   useHookInsideNormalFunction(); // error
@@ -1614,8 +1631,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:727:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:727:3
    727|   useHookInsideNormalFunction(); // error
@@ -1629,8 +1647,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:730:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:730:3
    730|   useHookInsideNormalFunction(); // error
@@ -1644,8 +1663,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:741:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:741:5
    741|     useHookInsideNormalFunction(); // error
@@ -1764,8 +1784,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:800:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:800:3
    800|   useState(); // error
@@ -1779,8 +1800,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:803:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:803:3
    803|   useState(); // error
@@ -2051,7 +2073,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:918:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:918:5
@@ -2066,7 +2089,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:926:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:926:5
@@ -2081,7 +2105,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:934:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:934:5
@@ -2231,7 +2256,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:1011:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    rules_of_hooks.js:1011:3
@@ -2246,8 +2272,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:1016:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:1016:3
    1016|   use(promise); // error
@@ -2381,7 +2408,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:33:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    syntax_compatibility.js:33:5
@@ -2396,8 +2424,9 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:42:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    syntax_compatibility.js:42:5
    42|     useHook(); // Error
@@ -2486,7 +2515,8 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:19:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    syntax_compatibility_import.js:19:5
@@ -2501,8 +2531,9 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:27:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    syntax_compatibility_import.js:27:5
    27|     useHook(); // Error
@@ -2516,7 +2547,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- using_react.js:10:15
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
    using_react.js:10:15

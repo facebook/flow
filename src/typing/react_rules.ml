@@ -762,6 +762,9 @@ let emit_effect_errors cx = Base.List.iter ~f:(Flow_js_utils.add_output cx)
 type hook_call_context =
   (* e.g. Calling hooks in things like `function fetchData(...) {...}` *)
   | HookCallDefinitelyNotAllowed
+  (* e.g. Calling hooks in things like `() => {...}` where we are not sure whether it can be a
+   * component or hook. *)
+  | HookCallNotAllowedUnderUnknownContext
   (* e.g. Calling hooks in things like `function Foo(...) {...}` or `function useFoo(...) {...}`,
    * permissively allowed because hook compatibility mode is on *)
   | HookCallPermissivelyAllowedUnderCompatibilityMode
@@ -774,7 +777,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable hook_call_context = HookCallDefinitelyNotAllowed
+    val mutable hook_call_context = HookCallNotAllowedUnderUnknownContext
 
     (* If it's true, then we are in some context where we permissively assume can be passed with
      * a function component or hook. *)
@@ -849,6 +852,32 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           && List.length params_list <= 2 (* Props and ref *)
           && Base.Option.is_none rest
         in
+        let is_definitely_non_component_due_to_typing () =
+          (* Not returning `React.Node` *)
+          (match return with
+          | Ast.Function.ReturnAnnot.Missing (_, t)
+          | Ast.Function.ReturnAnnot.Available (_, ((_, t), _)) ->
+            not
+            @@ Flow_js.FlowJs.speculative_subtyping_succeeds
+                 cx
+                 t
+                 (Flow_js.get_builtin_react_type
+                    cx
+                    (TypeUtil.reason_of_t t)
+                    Flow_intermediate_error_types.ReactModuleForReactNodeType
+                 )
+          | Ast.Function.ReturnAnnot.TypeGuard _ -> true)
+          ||
+          match params_list with
+          | [] -> false (* function Component() {...} *)
+          | [_props] ->
+            (* function Component(props: {...}) *)
+            false
+          | [_props; _ref_t] ->
+            (* forwardRef(props: {...}, ref: ...) *)
+            false
+          | _ -> true
+        in
         let next_hook_call_context =
           let possibly_in_context_allow_hook_call =
             in_context_possibly_expecting_fn_component_or_hook
@@ -860,8 +889,17 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
               HookCallPermissivelyAllowedUnderCompatibilityMode
             else
               HookCallStrictlyDisallowedWithoutCompatibilityMode
-          else
+          else if
+            match id with
+            | None -> false
+            | Some (_, { Ast.Identifier.name; _ }) ->
+              (not in_context_possibly_expecting_fn_component_or_hook)
+              && Base.Option.is_none (Flow_ast_utils.hook_function fn)
+              && ((not (componentlike_name name)) || is_definitely_non_component_due_to_typing ())
+          then
             HookCallDefinitelyNotAllowed
+          else
+            HookCallNotAllowedUnderUnknownContext
         in
         hook_call_context <- next_hook_call_context;
         let res = super#function_ fn in
@@ -890,9 +928,16 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
             ()
           else (
             match hook_call_context with
-            | HookCallDefinitelyNotAllowed
+            | HookCallDefinitelyNotAllowed ->
+              hook_error cx ~callee_loc ~call_loc Error_message.HookDefinitelyNotInComponentOrHook
+            | HookCallNotAllowedUnderUnknownContext ->
+              hook_error cx ~callee_loc ~call_loc Error_message.HookInUnknownContext
             | HookCallStrictlyDisallowedWithoutCompatibilityMode ->
-              hook_error cx ~callee_loc ~call_loc Error_message.HookNotInComponentOrHook
+              hook_error
+                cx
+                ~callee_loc
+                ~call_loc
+                Error_message.HookNotInComponentSyntaxComponentOrHookSyntaxHook
             | HookCallPermissivelyAllowedUnderCompatibilityMode -> ()
           )
         | _ -> ()

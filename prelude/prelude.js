@@ -93,3 +93,8 @@ declare var module: {
 };
 
 declare var exports: {-[key: string]: mixed};
+
+declare module 'react' {
+  type Node = any;
+  type RefSetter<T> = any;
+}

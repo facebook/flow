@@ -1599,7 +1599,25 @@ let to_printable_error :
         text " because React hooks cannot be called in conditional contexts. ";
         text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
-    | MessageCannotCallReactHookInNonComponentOrHook callee_loc ->
+    | MessageCannotCallReactHookInDefinitelyNonComponentOrHook callee_loc ->
+      [
+        text "Cannot call ";
+        hardcoded_string_desc_ref "hook" callee_loc;
+        text " because React hooks can only be called within components or hooks. ";
+        text "This hook is definitely not called in a component or hook. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
+      ]
+    | MessageCannotCallReactHookInNonComponentSyntaxComponentOrHookSyntaxHook callee_loc ->
+      [
+        text "Cannot call ";
+        hardcoded_string_desc_ref "hook" callee_loc;
+        text " because React hooks can only be called within components or hooks. ";
+        text "Under the current configuration, ";
+        text "we only infer component-syntax components to be components";
+        text " and hook-syntax hooks to be hooks. ";
+        text "(https://react.dev/reference/rules/rules-of-hooks)";
+      ]
+    | MessageCannotCallReactHookInUnknownContext callee_loc ->
       [
         text "Cannot call ";
         hardcoded_string_desc_ref "hook" callee_loc;

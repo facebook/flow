@@ -1,14 +1,5 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot resolve module `react`. The `react` module must exist to provide a type for `React.RefSetter`.
-[cannot-resolve-module]
-
-   3| <div />;
-      ^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------ test.js:3:1
-
 Cannot resolve name `React$Element`. [cannot-resolve-name]
 
    3| <div />;
@@ -32,4 +23,4 @@ Cannot resolve name `$JSXIntrinsics`. [cannot-resolve-name]
 
 
 
-Found 4 errors
+Found 3 errors

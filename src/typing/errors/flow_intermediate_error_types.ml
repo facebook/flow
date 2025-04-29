@@ -380,7 +380,9 @@ type 'loc message =
       n: int;
     }
   | MessageCannotCallReactHookConditionally of 'loc
-  | MessageCannotCallReactHookInNonComponentOrHook of 'loc
+  | MessageCannotCallReactHookInDefinitelyNonComponentOrHook of 'loc
+  | MessageCannotCallReactHookInNonComponentSyntaxComponentOrHookSyntaxHook of 'loc
+  | MessageCannotCallReactHookInUnknownContext of 'loc
   | MessageCannotCallReactHookWithIllegalName of 'loc
   | MessageCannotCallFunctionWithExtraArg of {
       def_reason: 'loc virtual_reason;

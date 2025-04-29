@@ -785,7 +785,9 @@ and 'l hook_rule =
       hooks: 'l list;
       non_hooks: 'l list;
     }
-  | HookNotInComponentOrHook
+  | HookDefinitelyNotInComponentOrHook
+  | HookInUnknownContext
+  | HookNotInComponentSyntaxComponentOrHookSyntaxHook
 
 let string_of_invalid_render_type_kind = function
   | InvalidRendersNullVoidFalse -> "null | void | false"
@@ -1362,7 +1364,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         MaybeHook { hooks = List.map f hooks; non_hooks = List.map f non_hooks }
       | HookHasIllegalName -> HookHasIllegalName
       | NonHookHasIllegalName -> NonHookHasIllegalName
-      | HookNotInComponentOrHook -> HookNotInComponentOrHook
+      | HookDefinitelyNotInComponentOrHook -> HookDefinitelyNotInComponentOrHook
+      | HookInUnknownContext -> HookInUnknownContext
+      | HookNotInComponentSyntaxComponentOrHookSyntaxHook ->
+        HookNotInComponentSyntaxComponentOrHookSyntaxHook
       | ConditionalHook -> ConditionalHook
     in
     EHookRuleViolation { callee_loc = f callee_loc; call_loc = f call_loc; hook_rule }
@@ -2944,8 +2949,14 @@ let friendly_message_of_msg = function
     Normal (MessageCannotCallMaybeReactHook { callee_loc; hooks; non_hooks })
   | EHookRuleViolation { callee_loc; hook_rule = NonHookHasIllegalName; call_loc = _ } ->
     Normal (MessageCannotCallNonReactHookWithIllegalName callee_loc)
-  | EHookRuleViolation { callee_loc; hook_rule = HookNotInComponentOrHook; call_loc = _ } ->
-    Normal (MessageCannotCallReactHookInNonComponentOrHook callee_loc)
+  | EHookRuleViolation { callee_loc; hook_rule = HookDefinitelyNotInComponentOrHook; call_loc = _ }
+    ->
+    Normal (MessageCannotCallReactHookInDefinitelyNonComponentOrHook callee_loc)
+  | EHookRuleViolation
+      { callee_loc; hook_rule = HookNotInComponentSyntaxComponentOrHookSyntaxHook; call_loc = _ } ->
+    Normal (MessageCannotCallReactHookInNonComponentSyntaxComponentOrHookSyntaxHook callee_loc)
+  | EHookRuleViolation { callee_loc; hook_rule = HookInUnknownContext; call_loc = _ } ->
+    Normal (MessageCannotCallReactHookInUnknownContext callee_loc)
   | EInvalidGraphQL (_, err) -> Normal (MessageInvalidGraphQL err)
   | EAnnotationInference (_, reason_op, reason, suggestion) ->
     Normal (MessageCannotUseTypeForAnnotationInference { reason_op; reason; suggestion })
@@ -3346,8 +3357,15 @@ let error_code_of_message err : error_code option =
   | EHookNaming _ -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation { hook_rule = ConditionalHook; _ } -> Some ReactRuleHookConditional
   | EHookRuleViolation { hook_rule = HookHasIllegalName; _ } -> Some ReactRuleHookNamingConvention
+  | EHookRuleViolation { hook_rule = HookDefinitelyNotInComponentOrHook; _ } ->
+    Some ReactRuleHookDefinitelyNotInComponentOrHook
   | EHookRuleViolation
-      { hook_rule = NonHookHasIllegalName | MaybeHook _ | HookNotInComponentOrHook; _ } ->
+      {
+        hook_rule =
+          ( NonHookHasIllegalName | MaybeHook _ | HookInUnknownContext
+          | HookNotInComponentSyntaxComponentOrHookSyntaxHook );
+        _;
+      } ->
     Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation

@@ -1,7 +1,8 @@
 Error --------------------------------------------------------------------------------------- componentlike_name.js:12:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    componentlike_name.js:12:3
    12|   useState(); // ERROR
