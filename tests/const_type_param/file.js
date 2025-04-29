@@ -33,7 +33,7 @@ function test_complex_input() {
   x2.b.f as 42; // okay
 
   const x3 = f({a: 1, b: {...{c: 42}}});
-  x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
+  x3.b.c as 42; // okay - const modifier reaches into spread
 }
 
 function test_tparam_deeper_in_type() {

@@ -2913,7 +2913,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~hooklike:false
           loc
           x
-      | Ast.Expression.Object expr -> this#visit_object_expression ~object_hints:hints expr
+      | Ast.Expression.Object expr ->
+        this#visit_object_expression ~object_hints:hints_before_synthesizable_check expr
       | Ast.Expression.Member m -> this#visit_member_expression ~cond ~hints loc m
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond ~hints loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr

@@ -30,24 +30,6 @@ References:
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- file.js:36:3
-
-Cannot cast `x3.b.c` to number literal `42` because number [1] is incompatible with number literal `42` [2].
-[incompatible-cast]
-
-   file.js:36:3
-   36|   x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
-         ^^^^^^
-
-References:
-   file.js:35:34
-   35|   const x3 = f({a: 1, b: {...{c: 42}}});
-                                        ^^ [1]
-   file.js:36:13
-   36|   x3.b.c as 42; // error number ~> 42, 'b.c' does not get converted
-                   ^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- file.js:44:3
 
 Cannot cast `x1` to object type because property `h` is read-only in const object literal [1] but writable in object
@@ -274,4 +256,4 @@ parameter. [incompatible-type-param-const]
 
 
 
-Found 17 errors
+Found 16 errors

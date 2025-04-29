@@ -592,3 +592,7 @@ function test_nullish_coalesce_2() {
   declare var p: void | 'prop';
   map[p ?? 'prop']; // okay
 }
+
+function test_object_expression_hint() {
+  const o: {fn:() => 'a'} = {fn() {return 'a';}}; // okay 'a' is kept precise due to hint on missing return
+}
