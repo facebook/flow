@@ -2003,7 +2003,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (r2, ArrT (ArrayAT { elem_t = t2; tuple_view = tv2; react_dro = _ }))
       ) ->
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
-      let lit1 = desc_of_reason r1 = RArrayLit in
+      let lit1 =
+        match desc_of_reason r1 with
+        | RArrayLit
+        | RReactChildren ->
+          true
+        | _ -> false
+      in
       let ts1 =
         Base.Option.value_map
           ~default:[]

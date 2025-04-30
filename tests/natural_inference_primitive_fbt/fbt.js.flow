@@ -1,0 +1,20 @@
+declare class $FbtResultBase {}
+declare opaque type FbtString: string;
+declare type FbtElement = $FbtResultBase;
+declare type FbtWithoutString = FbtString | FbtElement;
+declare type Fbt = string | FbtWithoutString;
+declare class FbtPureStringResult extends $FbtResultBase {}
+
+// $FlowExpectedError[libdef-override]
+declare type React$Node =
+  | void
+  | null
+  | boolean
+  | number
+  | string
+  | React$Element<any>
+  | React$Portal
+  | FbtElement
+  | FbtString
+  | FbtPureStringResult
+  | Iterable<React$Node>;
