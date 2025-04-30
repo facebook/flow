@@ -7139,7 +7139,7 @@ struct
             add_output cx (Error_message.EPrivateLookupFailed ((reason_op, reason_c), name, use_op))))
 
   and elem_action_on_obj cx trace ~use_op l obj reason_op action =
-    let propref = propref_for_elem_t l in
+    let propref = propref_for_elem_t cx l in
     match action with
     | ReadElem { id; from_annot; skip_optional; access_iterables = _; tout } ->
       rec_flow

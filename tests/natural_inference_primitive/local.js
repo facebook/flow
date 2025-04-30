@@ -607,3 +607,16 @@ function test_template_literal() {
   const o = Object.freeze({f: `a`});
   o.f as 'a'; // okay
 }
+
+function test_generic_call_with_elem_t_bound() {
+  type Obj = {
+    prop1: {};
+    prop2: {};
+  };
+
+  declare function foo<K: string>(key: K, args: Obj[K]): void;
+
+  foo('prop1', {}); // okay
+  foo('prop3', {}); // error: prop3 is not a key of Obj
+  foo('prop1' as const, {}); // okay
+}

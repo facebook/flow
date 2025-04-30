@@ -2494,6 +2494,20 @@ References:
                  ^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:620:7
+
+Cannot call `foo` because property `prop3` (did you mean `prop1`?) is missing in `Obj` [1]. [prop-missing]
+
+   local.js:620:7
+   620|   foo('prop3', {}); // error: prop3 is not a key of Obj
+              ^^^^^^^
+
+References:
+   local.js:617:49
+   617|   declare function foo<K: string>(key: K, args: Obj[K]): void;
+                                                        ^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
 Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
@@ -2616,7 +2630,7 @@ References:
 
 
 
-Found 155 errors
+Found 156 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

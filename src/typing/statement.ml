@@ -2424,7 +2424,7 @@ module Make
       ~frozen
       value =
     let single_key key =
-      match Flow_js_utils.propref_for_elem_t key with
+      match Flow_js_utils.propref_for_elem_t cx key with
       | Computed key ->
         (match key with
         | DefT (_, StrGeneralT _)

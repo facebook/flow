@@ -1097,7 +1097,7 @@ module rec ConsGen : S = struct
             source = DefT (_, (ObjT _ | InstanceT _)) as obj;
           }
       ) ->
-      let prop_ref = Flow_js_utils.propref_for_elem_t t in
+      let prop_ref = Flow_js_utils.propref_for_elem_t cx t in
       elab_t cx obj (Annot_GetPropT { reason = reason_op; from_annot; use_op; prop_ref })
     | ( _,
         Annot_ElemT

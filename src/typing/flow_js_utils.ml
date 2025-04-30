@@ -2874,11 +2874,13 @@ let array_elem_check
   );
   (value, is_tuple, use_op, react_dro)
 
-let propref_for_elem_t = function
+let propref_for_elem_t cx l =
+  match l with
   | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
   | GenericT
       { bound = DefT (_, (SingletonStrT { value = name; _ } | StrT_UNSOUND (_, name))); reason; _ }
   | DefT (reason, (SingletonStrT { value = name; _ } | StrT_UNSOUND (_, name))) ->
+    update_lit_type_from_annot cx l;
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
   | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
@@ -2891,6 +2893,7 @@ let propref_for_elem_t = function
       }
   | DefT (reason_num, (NumT_UNSOUND (_, (value, raw)) | SingletonNumT { value = (value, raw); _ }))
     when Js_number.is_float_safe_integer value ->
+    update_lit_type_from_annot cx l;
     let reason = replace_desc_reason (RProperty (Some (OrdinaryName raw))) reason_num in
     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
     mk_named_prop ~reason ~from_indexed_access:true name
