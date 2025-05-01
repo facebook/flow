@@ -777,7 +777,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable hook_call_context = HookCallNotAllowedUnderUnknownContext
+    val mutable hook_call_context = lazy HookCallNotAllowedUnderUnknownContext
 
     (* If it's true, then we are in some context where we permissively assume can be passed with
      * a function component or hook. *)
@@ -884,12 +884,17 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
             || is_probably_function_component
             || Base.Option.is_some (Flow_ast_utils.hook_function fn)
           in
-          if possibly_in_context_allow_hook_call then
-            if Context.hook_compatibility cx then
-              HookCallPermissivelyAllowedUnderCompatibilityMode
-            else
-              HookCallStrictlyDisallowedWithoutCompatibilityMode
-          else if
+          let in_context_possibly_expecting_fn_component_or_hook =
+            in_context_possibly_expecting_fn_component_or_hook
+          in
+          (* Above, we pull out some reads of mutable class fields out of lazy block. *)
+          lazy
+            ( if possibly_in_context_allow_hook_call then
+              if Context.hook_compatibility cx then
+                HookCallPermissivelyAllowedUnderCompatibilityMode
+              else
+                HookCallStrictlyDisallowedWithoutCompatibilityMode
+            else if
             match id with
             | None -> false
             | Some (_, { Ast.Identifier.name; _ }) ->
@@ -897,9 +902,10 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
               && Base.Option.is_none (Flow_ast_utils.hook_function fn)
               && ((not (componentlike_name name)) || is_definitely_non_component_due_to_typing ())
           then
-            HookCallDefinitelyNotAllowed
-          else
-            HookCallNotAllowedUnderUnknownContext
+              HookCallDefinitelyNotAllowed
+            else
+              HookCallNotAllowedUnderUnknownContext
+            )
         in
         hook_call_context <- next_hook_call_context;
         let res = super#function_ fn in
@@ -927,7 +933,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           if Flow_ast_utils.hook_call expr && bare_use expr && under_function_or_class_body then
             ()
           else (
-            match hook_call_context with
+            match Lazy.force hook_call_context with
             | HookCallDefinitelyNotAllowed ->
               hook_error cx ~callee_loc ~call_loc Error_message.HookDefinitelyNotInComponentOrHook
             | HookCallNotAllowedUnderUnknownContext ->
