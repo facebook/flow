@@ -45,50 +45,50 @@ References:
            ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- exclude.js:5:5
+Error --------------------------------------------------------------------------------------------------- exclude.js:6:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
 we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
-   exclude.js:5:5
-   5|     IP.useFoo(); // error
+   exclude.js:6:5
+   6|     IP.useFoo(); // error
           ^^^^^^^^^^^
 
 References:
-   exclude.js:5:5
-   5|     IP.useFoo(); // error
+   exclude.js:6:5
+   6|     IP.useFoo(); // error
           ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- exclude.js:7:5
+Error --------------------------------------------------------------------------------------------------- exclude.js:8:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
 we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
 (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
-   exclude.js:7:5
-   7|     XP.useFoo(); // error
+   exclude.js:8:5
+   8|     XP.useFoo(); // error
           ^^^^^^^^^^^
 
 References:
-   exclude.js:7:5
-   7|     XP.useFoo(); // error
+   exclude.js:8:5
+   8|     XP.useFoo(); // error
           ^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- exclude.js:15:5
+Error -------------------------------------------------------------------------------------------------- exclude.js:16:5
 
 Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
 defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
 
-   exclude.js:15:5
-   15|     XP.useBar(); // error
+   exclude.js:16:5
+   16|     XP.useBar(); // error
            ^^^^^^^^^^^
 
 References:
-   exclude.js:15:5
-   15|     XP.useBar(); // error
+   exclude.js:16:5
+   16|     XP.useBar(); // error
            ^^^^^^^^^ [1]
 
 

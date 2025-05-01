@@ -1,3 +1,4 @@
+import * as React from 'react';
 import * as IP from './include_provider';
 import * as XP from './exclude_provider';
 
@@ -15,3 +16,7 @@ component Component() {
     XP.useBar(); // error
     return null;
 }
+
+React.memo(() => {
+    IP.useFoo(); // ok: called in fn contextually typed as component
+})

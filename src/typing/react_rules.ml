@@ -795,7 +795,19 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
       emit_effect_errors cx effects;
       (component_ast_visitor tast cx rrid)#component_declaration cmp
 
-    method! function_ fn =
+    method! expression (((loc, _), expr') as expr) =
+      match expr' with
+      | Ast.Expression.ArrowFunction fn ->
+        ignore @@ this#visit_function ~loc_for_hint:loc fn;
+        expr
+      | Ast.Expression.Function fn ->
+        ignore @@ this#visit_function ~loc_for_hint:loc fn;
+        expr
+      | _ -> super#expression expr
+
+    method! function_ fn = this#visit_function fn
+
+    method private visit_function ?loc_for_hint fn =
       let {
         Ast.Function.id;
         params = (_, { Ast.Function.Params.params = params_list; rest; _ }) as params;
@@ -878,6 +890,24 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
             false
           | _ -> true
         in
+        let is_definitely_component_due_to_hint () =
+          match loc_for_hint with
+          | None -> false
+          | Some hint_loc ->
+            let (_has_hint, lazy_hint_compute) = Type_env.get_hint cx hint_loc in
+            let reason = mk_reason RFunctionType hint_loc in
+            (match lazy_hint_compute ~expected_only:true ~skip_optional:true reason with
+            | Type.NoHint
+            | Type.EncounteredPlaceholder
+            | Type.DecompositionError ->
+              false
+            | Type.HintAvailable (hint_t, _) ->
+              Type.(
+                (match Flow_js.singleton_concrete_type_for_inspection cx reason hint_t with
+                | DefT (_, ReactAbstractComponentT _) -> true
+                | _ -> false)
+              ))
+        in
         let next_hook_call_context =
           let possibly_in_context_allow_hook_call =
             in_context_possibly_expecting_fn_component_or_hook
@@ -890,7 +920,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           (* Above, we pull out some reads of mutable class fields out of lazy block. *)
           lazy
             ( if possibly_in_context_allow_hook_call then
-              if Context.hook_compatibility cx then
+              if Context.hook_compatibility cx || is_definitely_component_due_to_hint () then
                 HookCallPermissivelyAllowedUnderCompatibilityMode
               else
                 HookCallStrictlyDisallowedWithoutCompatibilityMode

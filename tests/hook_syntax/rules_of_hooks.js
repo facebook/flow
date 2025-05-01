@@ -130,13 +130,13 @@ const FancyButton3 = forwardRef(function (props: any, ref: any) {
 });
 
 const MemoizedFunction1 = React.memo((props: any) => {
-  useHook(); // error only in noncompat
+  useHook(); // ok: called in fn contextually typed as component
   return <button {...props} />;
 });
 
 
 const MemoizedFunction2 = memo(function (props: any) {
-  useHook(); // error only in noncompat
+  useHook(); // ok: called in fn contextually typed as component
   return <button {...props} />;
 });
 

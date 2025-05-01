@@ -1255,38 +1255,6 @@ References:
           ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:133:3
-
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   rules_of_hooks.js:133:3
-   133|   useHook(); // error only in noncompat
-          ^^^^^^^^^
-
-References:
-   rules_of_hooks.js:133:3
-   133|   useHook(); // error only in noncompat
-          ^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:139:3
-
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   rules_of_hooks.js:139:3
-   139|   useHook(); // error only in noncompat
-          ^^^^^^^^^
-
-References:
-   rules_of_hooks.js:139:3
-   139|   useHook(); // error only in noncompat
-          ^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:518:5
 
 Cannot call hook [1] because React hooks cannot be called in conditional contexts.
@@ -1515,25 +1483,6 @@ References:
    rules_of_hooks.js:654:5
    654|     useHookInsideCallback(); // error only in noncompat
             ^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:661:3
-
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   rules_of_hooks.js:661:3
-          v----------------------------------------------------------
-   661|   ReactWithHooks.useEffect(() => { // error only in noncompat
-   662|     useHookInsideCallback(); // error only in noncompat
-   663|   });
-          -^
-
-References:
-   rules_of_hooks.js:661:3
-   661|   ReactWithHooks.useEffect(() => { // error only in noncompat
-          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:662:5
@@ -2103,22 +2052,6 @@ References:
             ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:934:5
-
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   rules_of_hooks.js:934:5
-   934|     useCustomHook(); // error only in noncompat
-            ^^^^^^^^^^^^^^^
-
-References:
-   rules_of_hooks.js:934:5
-   934|     useCustomHook(); // error only in noncompat
-            ^^^^^^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:946:1
 
 Cannot call hook [1] because React hooks can only be called within components or hooks.
@@ -2562,4 +2495,4 @@ References:
 
 
 
-Found 164 errors
+Found 160 errors
