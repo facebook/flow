@@ -620,3 +620,20 @@ function test_generic_call_with_elem_t_bound() {
   foo('prop3', {}); // error: prop3 is not a key of Obj
   foo('prop1' as const, {}); // okay
 }
+
+function test_type_guard_context() {
+  type A = {valueType: 'A'};
+  type B = {valueType: 'B'};
+  type Union = A | B;
+
+  const isA_arrow = (value: Union): value is A => value.valueType === 'A';
+  const isA_body = (value: Union): value is A => {
+    return value.valueType === 'A'
+  };
+  const isA_inferred = (value: Union) => value.valueType === 'A';
+
+  declare var x: Union;
+  if (isA_inferred(x)) {
+    x as A; // okay
+  }
+}

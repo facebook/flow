@@ -58,7 +58,7 @@ References:
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:9:19
 
 Cannot get `s.abcd` because property `abcd` is missing in mixed (inferred from type parameter's bound) [1].
-[incompatible-use]
+[incompatible-type]
 
    reason_of_inferred_targs.js:9:19
    9| magicCall1(s => s.abcd); // error
@@ -72,7 +72,8 @@ References:
 
 Error -------------------------------------------------------------------------------- reason_of_inferred_targs.js:10:19
 
-Cannot get `s.abcd` because property `abcd` is missing in `Number` [1]. [prop-missing]
+Cannot get `s.abcd` because property `abcd` is missing in number (inferred from type parameter's default) [1].
+[prop-missing]
 
    reason_of_inferred_targs.js:10:19
    10| magicCall2(s => s.abcd); // error

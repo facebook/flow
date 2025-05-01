@@ -729,6 +729,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     val mutable return_hint_stack : ast_hints list = []
 
+    val mutable predicate_kind : Hint.predicate_kind option = None
+
     method add_tparam loc name = tparams <- ALocMap.add loc name tparams
 
     method record_hint loc hint =
@@ -1714,6 +1716,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           run_opt this#function_this_param this_;
           let param_str_list = this#params_list_to_str_opt params_list in
           let pred = this#hint_pred_kind params body return in
+          let old_predicate_kind = predicate_kind in
+          predicate_kind <- pred;
           Base.List.iteri
             ~f:(fun i ->
               this#visit_function_param
@@ -1762,10 +1766,12 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               ignore @@ this#block loc block;
               loc
             | Ast.Function.BodyExpression ((loc, _) as expr) ->
-              this#visit_expression ~hints:return_hint ~cond:NoContext expr;
+              let cond = Utils_js.ite (Option.is_some pred) OtherTestContext NoContext in
+              this#visit_expression ~hints:return_hint ~cond expr;
               loc
           in
           return_hint_stack <- old_stack;
+          predicate_kind <- old_predicate_kind;
 
           begin
             if generator then
@@ -2117,10 +2123,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let open Ast.Statement.Return in
       let { argument; comments = _; return_out = _ } = stmt in
       Base.Option.iter argument ~f:(fun argument ->
-          this#visit_expression
-            ~hints:(Base.Option.value ~default:[] (Base.List.hd return_hint_stack))
-            ~cond:NoContext
-            argument
+          let hints = Base.Option.value ~default:[] (Base.List.hd return_hint_stack) in
+          let cond = Utils_js.ite (Option.is_some predicate_kind) OtherTestContext NoContext in
+          this#visit_expression ~hints ~cond argument
       );
       stmt
 
