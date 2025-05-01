@@ -1,17 +1,17 @@
-Error ----------------------------------------------------------------------------------------------------- test1.js:2:1
+Error ----------------------------------------------------------------------------------------------------- test1.js:3:1
 
 Incorrect arguments passed to `Object.assign` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   test1.js:2:1
-   2| Object.assign({ p: 0 }, new C);
+   test1.js:3:1
+   3| Object.assign({ p: 0 }, new C);
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test1.js:1:14
    1| class C { p: string };
                    ^^^^^^ [1]
-   test1.js:2:20
-   2| Object.assign({ p: 0 }, new C);
+   test1.js:3:20
+   3| Object.assign({ p: 0 }, new C);
                          ^ [2]
 
 

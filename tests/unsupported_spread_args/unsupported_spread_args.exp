@@ -12,25 +12,25 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:11:29
+Error ---------------------------------------------------------------------------------------------------- test.js:12:29
 
 A spread argument is unsupported here. [unsupported-syntax]
 
-   11| const o1 = Object.assign(...objArr); // error
+   12| const o1 = Object.assign(...objArr); // error
                                    ^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
 Incorrect arguments passed to `Object.assign` because number [1] is not an object. [not-an-object]
 
-   test.js:17:1
-   17| Object.assign({}, ...[1]); // error
+   test.js:20:1
+   20| Object.assign({}, ...[1]); // error
        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:17:23
-   17| Object.assign({}, ...[1]); // error
+   test.js:20:23
+   20| Object.assign({}, ...[1]); // error
                              ^ [1]
 
 

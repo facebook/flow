@@ -166,6 +166,7 @@ type error_code =
   | UnsafeAddition
   | UnsafeArith
   | UnsafeGettersSetters
+  | UnsafeObjectAssign
   | UnsupportedSyntax
   | UnsupportedVarianceAnnotation
   | UntypedImport
@@ -193,6 +194,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnclearType -> UnclearType
   | Lints.DeprecatedType _ -> DeprecatedType
   | Lints.UnsafeGettersSetters -> UnsafeGettersSetters
+  | Lints.UnsafeObjectAssign -> UnsafeObjectAssign
   | Lints.UnnecessaryOptionalChain -> UnnecessaryOptionalChain
   | Lints.UnnecessaryInvariant -> UnnecessaryInvariant
   | Lints.ImplicitInexactObject -> ImplicitInexactObject
@@ -393,6 +395,7 @@ let string_of_code : error_code -> string = function
   | UnsafeAddition -> "unsafe-addition"
   | UnsafeArith -> "unsafe-arithmetic"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
+  | UnsafeObjectAssign -> "unsafe-object-assign"
   | UnsupportedSyntax -> "unsupported-syntax"
   | UnsupportedVarianceAnnotation -> "unsupported-variance-annotation"
   | UntypedImport -> "untyped-import"

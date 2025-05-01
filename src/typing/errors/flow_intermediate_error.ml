@@ -3873,6 +3873,8 @@ let to_printable_error :
     | MessageUnreachableCode -> [text "Unreachable code."]
     | MessageUnsafeGetterSetter ->
       [text "Getters and setters can have side effects and are unsafe."]
+    | MessageUnsafeObjectAssign ->
+      [text "Flow's support for "; code "Object.assign"; text " is unsafe. Use spreads instead."]
     | MessageUnsupportedKeyInObject { key_error_kind; obj_kind } ->
       let suffix =
         Base.Option.value

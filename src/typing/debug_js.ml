@@ -1603,6 +1603,7 @@ let dump_error_message =
       let deprecated_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
       spf "EIncorrectTypeWithReplacement (%s) (%s)" (string_of_aloc loc) deprecated_name
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
+    | EUnsafeObjectAssign loc -> spf "EUnsafeObjectAssign (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
     | ECodelessSuppression (loc, c) -> spf "ECodelessSuppression (%s, %s)" (string_of_aloc loc) c
     | ELintSetting (loc, kind) ->

@@ -903,6 +903,7 @@ type 'loc message =
   | MessageUnnecessaryOptionalChain of 'loc virtual_reason
   | MessageUnreachableCode
   | MessageUnsafeGetterSetter
+  | MessageUnsafeObjectAssign
   | MessageUnsupportedKeyInObject of {
       key_error_kind: InvalidObjKey.t;
       obj_kind: [ `Type | `Literal ];

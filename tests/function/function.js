@@ -22,6 +22,7 @@ function good(x: Function, MyThing: Function): number {
   x();
   <MyThing />;
   var {...something} = x;
+  // $FlowExpectedError[unsafe-object-assign]
   Object.assign(x, {hi: 'there'});
   Object.keys(x);
   return x.bar + x['bar'] + x.lala();

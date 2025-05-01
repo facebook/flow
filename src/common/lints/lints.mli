@@ -37,6 +37,7 @@ type lint_kind =
   | UnclearType
   | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters
+  | UnsafeObjectAssign
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | ImplicitInexactObject

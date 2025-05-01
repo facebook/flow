@@ -6572,6 +6572,7 @@ module Make
           (args_loc, { Ast.Expression.ArgList.arguments = first_arg :: rest_args; comments })
         )
       in
+      let () = Flow_js_utils.add_output cx (Error_message.EUnsafeObjectAssign loc) in
       let t = SpecialCasedFunctions.object_assign cx use_op reason target_t rest_arg_ts in
       (t, None, args)
     | ("getPrototypeOf", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->

@@ -11,6 +11,7 @@ Default .flowconfig looks like this:
 [lints]
 untyped-type-import=error
 internal-type=error
+unsafe-object-assign=error
 libdef-override=error
 deprecated-type-bool=error
 

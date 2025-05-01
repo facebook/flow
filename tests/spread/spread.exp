@@ -1,15 +1,15 @@
-Error ------------------------------------------------------------------------------------------------------ dict.js:5:5
+Error ------------------------------------------------------------------------------------------------------ dict.js:6:5
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
 spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
 spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
-   dict.js:5:5
+   dict.js:6:5
           v
-   5|     {
-   6|       first,
-   7|       ...map // Error, can't spread indexer second
-   8|     },
+   6|     {
+   7|       first,
+   8|       ...map // Error, can't spread indexer second
+   9|     },
           ^ [1]
 
 References:

@@ -45,8 +45,10 @@ const res = f(n); // ERROR
 (res: empty); // ERROR
 
 declare var osr: [+foo: {a: number}];
+// $FlowExpectedError[unsafe-object-assign]
 Object.assign({a: 1}, ...osr); // OK
 declare var osw: [-foo: {a: number}];
+// $FlowExpectedError[unsafe-object-assign]
 Object.assign({a: 1}, ...osw); // ERROR - can't read
 
 // $ReadOnly on tuple

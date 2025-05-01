@@ -67,6 +67,7 @@ function gv<
 ): {[K in keyof TFormData]: ?string} {
   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
     <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+      // $FlowExpectedError[unsafe-object-assign]
       Object.assign(acc, {[k]: validators[k](k, data)}),
     {},
   );

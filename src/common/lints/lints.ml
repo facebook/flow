@@ -37,6 +37,7 @@ type lint_kind =
   | UnclearType
   | DeprecatedType of deprecated_type_kind
   | UnsafeGettersSetters
+  | UnsafeObjectAssign
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | ImplicitInexactObject
@@ -85,6 +86,7 @@ let string_of_kind = function
   | UnclearType -> "unclear-type"
   | DeprecatedType kind -> string_of_deprecated_type_kind kind
   | UnsafeGettersSetters -> "unsafe-getters-setters"
+  | UnsafeObjectAssign -> "unsafe-object-assign"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | ImplicitInexactObject -> "implicit-inexact-object"
@@ -131,6 +133,7 @@ let kinds_of_string = function
   | "deprecated-type" -> Some [DeprecatedType DeprecatedBool]
   | "deprecated-type-bool" -> Some [DeprecatedType DeprecatedBool]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
+  | "unsafe-object-assign" -> Some [UnsafeObjectAssign]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]

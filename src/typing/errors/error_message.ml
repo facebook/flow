@@ -367,6 +367,7 @@ and 'loc t' =
       kind: IncorrectType.t;
     }
   | EUnsafeGettersSetters of 'loc
+  | EUnsafeObjectAssign of 'loc
   | EUnusedSuppression of 'loc
   | ECodelessSuppression of 'loc * string
   | ELintSetting of 'loc * LintSettings.lint_parse_error
@@ -1199,6 +1200,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EIncorrectTypeWithReplacement { loc; kind } ->
     EIncorrectTypeWithReplacement { loc = f loc; kind }
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
+  | EUnsafeObjectAssign loc -> EUnsafeObjectAssign (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
   | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
@@ -1724,6 +1726,7 @@ let util_use_op_of_msg nope util = function
   | EInternalType _
   | EIncorrectTypeWithReplacement _
   | EUnsafeGettersSetters _
+  | EUnsafeObjectAssign _
   | EUnusedSuppression _
   | ECodelessSuppression _
   | ELintSetting _
@@ -1926,6 +1929,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInternalType (loc, _)
   | EIncorrectTypeWithReplacement { loc; _ }
   | EUnsafeGettersSetters loc
+  | EUnsafeObjectAssign loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
   | EUnnecessaryDeclareTypeOnlyExport loc
@@ -2097,6 +2101,7 @@ let kind_of_msg =
     | EUnclearType _ -> LintError Lints.UnclearType
     | EDeprecatedBool _ -> LintError Lints.(DeprecatedType DeprecatedBool)
     | EUnsafeGettersSetters _ -> LintError Lints.UnsafeGettersSetters
+    | EUnsafeObjectAssign _ -> LintError Lints.UnsafeObjectAssign
     | ESketchyNullLint { kind; _ } -> LintError (Lints.SketchyNull kind)
     | ESketchyNumberLint (kind, _) -> LintError (Lints.SketchyNumber kind)
     | EUnnecessaryOptionalChain _ -> LintError Lints.UnnecessaryOptionalChain
@@ -2741,6 +2746,7 @@ let friendly_message_of_msg = function
   | EInternalType (_, kind) -> Normal (MessageInternalType kind)
   | EIncorrectTypeWithReplacement { kind; _ } -> Normal (MessageIncorrectType kind)
   | EUnsafeGettersSetters _ -> Normal MessageUnsafeGetterSetter
+  | EUnsafeObjectAssign _ -> Normal MessageUnsafeObjectAssign
   | EUnusedSuppression _ -> Normal MessageUnusedSuppression
   | ECodelessSuppression (_, c) -> Normal (MessageSuppressionMissingCode c)
   | ELintSetting (_, kind) -> Normal (MessageInvalidLintSettings kind)
@@ -3057,6 +3063,7 @@ let defered_in_speculation = function
   | EDeprecatedBool _
   | EInternalType _
   | EUnsafeGettersSetters _
+  | EUnsafeObjectAssign _
   | ESketchyNullLint _
   | ESketchyNumberLint _
   | EUnnecessaryOptionalChain _
@@ -3387,6 +3394,7 @@ let error_code_of_message err : error_code option =
   | EInternalType _
   | EUnclearType _
   | EDeprecatedBool _
+  | EUnsafeObjectAssign _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
