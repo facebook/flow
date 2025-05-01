@@ -1690,8 +1690,6 @@ and merge_fun
           if name <> "this" && Base.List.for_all params ~f:(fun (pname, _) -> pname <> Some name)
           then
             None
-          else if name = "this" && not (Context.this_type_guards file.cx) then
-            None
           else if name = "this" && ((not is_method) || is_static || not is_declare_or_intf) then
             None
           else

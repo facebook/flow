@@ -125,7 +125,6 @@ type metadata = {
   suppress_types: SSet.t;
   ts_syntax: bool;
   type_expansion_recursion_limit: int;
-  this_type_guards: bool;
   use_mixed_in_catch_variables: bool;
   ban_spread_key_props: bool;
 }
@@ -218,8 +217,6 @@ val error_suppressions : t -> Error_suppressions.t
 val evaluated : t -> Type.t Type.Eval.Map.t
 
 val exact_by_default : t -> bool
-
-val this_type_guards : t -> bool
 
 val file : t -> File_key.t
 

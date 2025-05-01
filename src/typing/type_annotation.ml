@@ -2292,12 +2292,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             comments;
           }
         ) ->
-      if not (Context.this_type_guards env.cx) then
-        let msg =
-          Error_message.EUnsupportedSyntax (gloc, Flow_intermediate_error_types.ThisTypeGuards)
-        in
-        error_type_guard env (gloc, x, t, kind, comments) msg
-      else if allows_this_type_guards meth_kind then
+      if allows_this_type_guards meth_kind then
         let (bool_t, guard', predicate) = convert_type_guard env fparams gloc kind x t comments in
         (bool_t, Function.TypeGuard guard', predicate)
       else

@@ -143,7 +143,6 @@ module Opts = struct
     suppress_types: SSet.t;
     ts_syntax: bool;
     type_expansion_recursion_limit: int;
-    this_type_guards: bool;
     unsuppressable_error_codes: SSet.t;
     use_mixed_in_catch_variables: bool option;
     wait_for_recheck: bool;
@@ -285,7 +284,6 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
-      this_type_guards = true;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
       wait_for_recheck = false;
@@ -1058,7 +1056,6 @@ module Opts = struct
       ( "experimental.component_syntax.hooklike_functions.excludes",
         hook_compatibility_excludes_parser
       );
-      ("this_type_guards", boolean (fun opts v -> Ok { opts with this_type_guards = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
@@ -2020,8 +2017,6 @@ let suppress_types c = c.options.Opts.suppress_types
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
-
-let this_type_guards c = c.options.Opts.this_type_guards
 
 let unsuppressable_error_codes c = c.options.Opts.unsuppressable_error_codes
 

@@ -94,7 +94,6 @@ type unsupported_syntax =
   | WithStatement
   | ComponentSyntax
   | DeclareGlobal
-  | ThisTypeGuards
 
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
