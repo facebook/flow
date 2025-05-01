@@ -81,7 +81,6 @@ type t = {
   opt_casting_syntax: CastingSyntax.t;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
-  opt_const_type_params: bool;
   opt_hook_compatibility_includes: Str.regexp list;
   opt_hook_compatibility_excludes: Str.regexp list;
   opt_hook_compatibility: bool;
@@ -192,8 +191,6 @@ let casting_syntax opts = opts.opt_casting_syntax
 let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
-
-let const_type_params opts = opts.opt_const_type_params
 
 let hook_compatibility opts = opts.opt_hook_compatibility
 

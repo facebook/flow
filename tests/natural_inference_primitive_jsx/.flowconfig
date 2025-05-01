@@ -1,6 +1,5 @@
 [options]
 all=true
 experimental.natural_inference.local_primitive_literals=full
-experimental.const_type_params=true
 component_syntax=true
 no_flowlib=false

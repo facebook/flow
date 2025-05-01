@@ -2549,28 +2549,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let reason = mk_annot_reason (RType (OrdinaryName name)) name_loc in
       let polarity = polarity cx variance in
       let is_const =
-        if Context.enable_const_type_params cx then
-          let open Flow_ast_mapper in
-          match (const, kind) with
-          | ( Some _,
-              ( ClassTP | FunctionTP | DeclareFunctionTP | DeclareClassTP | DeclareComponentTP
-              | ComponentDeclarationTP | ComponentTypeTP | FunctionTypeTP )
-            ) ->
-            true
-          | (Some _, _) ->
-            Flow_js_utils.add_output env.cx (Error_message.ETypeParamConstInvalidPosition reason);
-            false
-          | (None, _) -> false
-        else (
-          Base.Option.iter const ~f:(fun (loc, _) ->
-              Flow_js_utils.add_output
-                env.cx
-                (Error_message.EUnsupportedSyntax
-                   (loc, Flow_intermediate_error_types.ConstTypeParameter)
-                )
-          );
+        let open Flow_ast_mapper in
+        match (const, kind) with
+        | ( Some _,
+            ( ClassTP | FunctionTP | DeclareFunctionTP | DeclareClassTP | DeclareComponentTP
+            | ComponentDeclarationTP | ComponentTypeTP | FunctionTypeTP )
+          ) ->
+          true
+        | (Some _, _) ->
+          Flow_js_utils.add_output env.cx (Error_message.ETypeParamConstInvalidPosition reason);
           false
-        )
+        | (None, _) -> false
       in
       (match bound_kind with
       | Ast.Type.TypeParam.Extends when not (kind = Flow_ast_mapper.InferTP || Context.ts_syntax cx)

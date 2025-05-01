@@ -90,8 +90,6 @@ val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option
 
-val enable_const_type_params : config -> bool
-
 val enable_const_params : config -> bool option
 
 val enums : config -> bool

@@ -33,7 +33,6 @@ let metadata =
     hook_compatibility = true;
     react_rules = [];
     dev_only_refinement_info_as_errors = false;
-    enable_const_type_params = false;
     enable_const_params = false;
     enable_enums = true;
     enable_jest_integration = false;

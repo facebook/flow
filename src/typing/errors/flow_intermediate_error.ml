@@ -4016,8 +4016,6 @@ let to_printable_error :
       [text "Unsupported static internal slot "; code name; text "."]
     | MessageUnsupportedSyntax WithStatement ->
       [text "Flow doesn't support "; code "with"; text " statements."]
-    | MessageUnsupportedSyntax ConstTypeParameter ->
-      [text "Const type parameters are not yet supported. This modifier will be ignored."]
     | MessageUnsupportedSyntax ThisTypeGuards ->
       [
         code "this";
