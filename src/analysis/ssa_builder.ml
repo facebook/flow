@@ -505,6 +505,7 @@ struct
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left; right; comments = _ } = expr in
+        let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
         begin
           match operator with
           | None ->

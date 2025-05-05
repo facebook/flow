@@ -1144,6 +1144,7 @@ struct
       in
       let depends_of_op_assign lhs rhs =
         let lhs =
+          let (lhs, _) = Flow_ast_utils.unwrap_nonnull_lhs lhs in
           match lhs with
           | (_, Ast.Pattern.Expression e) -> Some e
           | _ -> None

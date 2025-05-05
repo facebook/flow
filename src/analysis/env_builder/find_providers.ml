@@ -1173,6 +1173,7 @@ end = struct
           | (_, Ast.Expression.Array { Ast.Expression.Array.elements = _ :: _; _ }) -> ArrayValue n
           | _ -> Value n
         in
+        let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
         this#visit_in_context
           ~mod_cx:(fun _cx -> { mk_state })
           (fun () -> this#assignment_pattern left);
@@ -1201,6 +1202,14 @@ end = struct
         let open Ast.Expression.Member in
         let open Ast.Expression.Assignment in
         let open Ast.Expression.Call in
+        let expr =
+          match expr with
+          | (loc, Ast.Expression.Assignment ({ Ast.Expression.Assignment.left; _ } as assignment))
+            ->
+            let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
+            (loc, Ast.Expression.Assignment { assignment with Ast.Expression.Assignment.left })
+          | _ -> expr
+        in
         begin
           match expr with
           | ( _,

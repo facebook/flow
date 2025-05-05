@@ -2504,7 +2504,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       (* Order of evaluation matters *)
       method! assignment assign_loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
-        let { operator; left = (left_loc, _) as left; right; comments = _ } = expr in
+        let { operator; left; right; comments = _ } = expr in
+        let (((left_loc, _) as left), _) = Flow_ast_utils.unwrap_nonnull_lhs left in
         (match left with
         | ( _,
             Ast.Pattern.Expression
@@ -5229,7 +5230,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
         let open Flow_ast.Expression.Assignment in
-        match assignment.left with
+        let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs assignment.left in
+        match left with
         | ( id_loc,
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ }
@@ -6596,6 +6598,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! assignment loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left; _ } = expr in
+        let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
         let () =
           match (operator, left) with
           | (Some _, (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ })) ->

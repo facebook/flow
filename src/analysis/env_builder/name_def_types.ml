@@ -174,6 +174,7 @@ type def =
       lhs: (ALoc.t, ALoc.t) Ast.Pattern.t;
       op: Ast.Expression.Assignment.operator;
       rhs: (ALoc.t, ALoc.t) Ast.Expression.t;
+      assertion: bool;
     }
   | Update of {
       exp_loc: ALoc.t;

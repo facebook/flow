@@ -5530,6 +5530,7 @@ module Make
     let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) loc in
     let rhs_reason = mk_expression_reason rhs in
     let update_env result_t =
+      let (lhs, _) = Flow_ast_utils.unwrap_nonnull_lhs lhs in
       match lhs with
       | ( _,
           Ast.Pattern.Identifier

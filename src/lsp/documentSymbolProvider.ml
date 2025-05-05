@@ -32,7 +32,9 @@ let name_and_loc_of_key (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key
   | PrivateName name -> name_and_loc_of_private_name name
   | Computed (_, _) -> None
 
-let name_and_loc_of_pattern = function
+let name_and_loc_of_pattern p =
+  let (p, _) = Flow_ast_utils.unwrap_nonnull_lhs p in
+  match p with
   | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional = _ }) ->
     name_and_loc_of_identifier name
   | (_, Ast.Pattern.Object _)

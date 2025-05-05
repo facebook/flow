@@ -207,6 +207,7 @@ class exports_error_checker ~is_local_use =
       let open Ast.Expression in
       let open Ast.Expression.Assignment in
       let { operator; left; right; comments = _ } = expr in
+      let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
       (* Handle exports *)
       match (operator, left) with
       (* module.exports = ... *)

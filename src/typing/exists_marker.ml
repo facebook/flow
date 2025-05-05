@@ -45,9 +45,15 @@ class marker cx =
                 { OptionalMember.member = { Member.property = Member.PropertyExpression _; _ }; _ }
             )
           | (_, OptionalMember { OptionalMember.filtered_out = (loc, ty); _ })
-          | ((loc, ty), Member _)
-          | ((_, ty), Assignment { Assignment.left = ((loc, _), Ast.Pattern.Identifier _); _ }) ->
+          | ((loc, ty), Member _) ->
             Context.add_exists_check cx loc ty
+          | ((_, ty), Assignment { Assignment.left; _ }) ->
+            let (((loc, _), left_expr), _) = Flow_ast_utils.unwrap_nonnull_lhs left in
+            begin
+              match left_expr with
+              | Ast.Pattern.Identifier _ -> Context.add_exists_check cx loc ty
+              | _ -> ()
+            end
           | ((loc, ty), _) when Base.Option.is_some (Refinement.Keys.key ~allow_optional:false expr)
             ->
             Context.add_exists_check cx loc ty
@@ -110,6 +116,7 @@ class marker cx =
     method! assignment (expr : (_, _) Ast.Expression.Assignment.t) =
       let open Ast.Expression.Assignment in
       let { operator; left; right; comments = _ } = expr in
+      let (left, _) = Flow_ast_utils.unwrap_nonnull_lhs left in
       let left_expr =
         match left with
         | (lhs_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->

@@ -759,3 +759,50 @@ let get_inferred_type_guard_candidate params body return =
     | _ -> None
   end
   | _ -> None
+
+let rec unwrap_nonnull_lhs_expr :
+          'loc 'tloc1 'tloc2.
+          ('loc, 'tloc1) Expression.t ->
+          ('loc, 'tloc1) Expression.t
+          * bool
+          * (('loc, 'tloc2) Expression.t ->
+            map_loc:('tloc1 -> 'tloc2) ->
+            ('loc, 'tloc2) Expression.t
+            ) =
+ fun expr ->
+  match expr with
+  | ( loc,
+      Expression.Unary { Expression.Unary.operator = Expression.Unary.Nonnull; argument; comments }
+    ) ->
+    let (argument, _, reconstruct) = unwrap_nonnull_lhs_expr argument in
+    let reconstruct argument ~map_loc =
+      ( map_loc loc,
+        Expression.Unary
+          {
+            Expression.Unary.operator = Expression.Unary.Nonnull;
+            argument = reconstruct ~map_loc argument;
+            comments;
+          }
+      )
+    in
+    (argument, true, reconstruct)
+  | _ -> (expr, false, (fun argument ~map_loc:_ -> argument))
+
+let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pattern.t * bool =
+ fun pat ->
+  match pat with
+  | (loc, Pattern.Expression expr) ->
+    let (expr, optional, _) = unwrap_nonnull_lhs_expr expr in
+    begin
+      match expr with
+      | (e_loc, Expression.Identifier name) ->
+        assert optional;
+        ( ( loc,
+            Pattern.Identifier
+              { Pattern.Identifier.name; optional = false; annot = Type.Missing e_loc }
+          ),
+          true
+        )
+      | _ -> ((loc, Pattern.Expression expr), optional)
+    end
+  | _ -> (pat, false)

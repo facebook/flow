@@ -193,3 +193,16 @@ val get_inferred_type_guard_candidate :
   ('l, 't) Flow_ast.Function.body ->
   ('l, 't) Flow_ast.Function.ReturnAnnot.t ->
   ('t * string) option
+
+val unwrap_nonnull_lhs_expr :
+  'loc 'tloc.
+  ('loc, 'loc) Flow_ast.Expression.t ->
+  ('loc, 'loc) Flow_ast.Expression.t
+  * bool
+  * (('loc, 'tloc) Flow_ast.Expression.t ->
+    map_loc:('loc -> 'tloc) ->
+    ('loc, 'tloc) Flow_ast.Expression.t
+    )
+
+val unwrap_nonnull_lhs :
+  'loc 'tloc. ('loc, 'tloc) Flow_ast.Pattern.t -> ('loc, 'tloc) Flow_ast.Pattern.t * bool

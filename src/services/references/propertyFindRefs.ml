@@ -127,7 +127,7 @@ module Potential_ordinary_refs_search = struct
         super#jsx_opening_element elt
 
       method! pattern ?kind expr =
-        let ((_, ty), patt) = expr in
+        let (((_, ty), patt), _) = Flow_ast_utils.unwrap_nonnull_lhs expr in
         let _ =
           match patt with
           | Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->

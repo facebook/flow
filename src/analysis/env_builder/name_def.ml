@@ -1973,7 +1973,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private visit_assignment_expression ~is_function_statics_assignment loc expr =
       let open Ast.Expression.Assignment in
-      let { operator; left = (lhs_loc, lhs_node) as left; right; comments = _ } = expr in
+      let { operator; left; right; comments = _ } = expr in
+      let (((lhs_loc, lhs_node) as left), assertion) = Flow_ast_utils.unwrap_nonnull_lhs left in
       let expression_pattern_hints = function
         | (_, Ast.Expression.Member { Ast.Expression.Member._object; property; comments = _ }) as e
           when (not is_function_statics_assignment) && not (Flow_ast_utils.is_module_dot_exports e)
@@ -2081,7 +2082,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         this#add_ordinary_binding
           id_loc
           (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
+          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right; assertion });
         this#visit_expression ~hints:(other_pattern_hints left) ~cond:NoContext right
       | (Some operator, Ast.Pattern.Expression ((def_loc, _) as e)) ->
         (* In op_assign, the LHS will also be read. *)
@@ -2096,7 +2097,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         this#add_ordinary_binding
           def_loc
           (mk_pattern_reason left)
-          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right });
+          (OpAssign { exp_loc = loc; lhs = left; op = operator; rhs = right; assertion });
         this#visit_expression ~hints:(expression_pattern_hints e) ~cond:NoContext right
       | (Some _operator, (Ast.Pattern.Array _ | Ast.Pattern.Object _)) ->
         (* [a] += 1;
