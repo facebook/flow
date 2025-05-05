@@ -1003,7 +1003,7 @@ let rec code_desc_of_expression ~wrap (_, x) =
   | Match _ -> "match"
   | Member { Member._object; property; comments = _ } ->
     let o = code_desc_of_expression ~wrap:true _object in
-    let p = code_desc_of_property ~optional:false property in
+    let p = code_desc_of_property property in
     o ^ p
   | MetaProperty
       {
@@ -1045,11 +1045,10 @@ let rec code_desc_of_expression ~wrap (_, x) =
       | (_loc, { ArgList.arguments = _; comments = _ }) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee
-    ^ ( if optional then
-        "?."
-      else
-        ""
-      )
+    ^ (match optional with
+      | OptionalCall.NonOptional -> ""
+      | OptionalCall.Optional -> "?."
+      | OptionalCall.AssertNonnull -> "!")
     ^ targ_string
     ^ arg_string
   | OptionalMember
@@ -1072,20 +1071,21 @@ let rec code_desc_of_expression ~wrap (_, x) =
     code_desc_of_expression ~wrap expression
   | Unary { Unary.operator; argument; comments = _ } ->
     let x = code_desc_of_expression ~wrap:true argument in
-    let op =
+    let (l, r) =
       Unary.(
         match operator with
-        | Minus -> "-"
-        | Plus -> "+"
-        | Not -> "!"
-        | BitNot -> "~"
-        | Typeof -> "typeof "
-        | Void -> "void "
-        | Delete -> "delete "
-        | Await -> "await "
+        | Minus -> ("-", x)
+        | Plus -> ("+", x)
+        | Not -> ("!", x)
+        | BitNot -> ("~", x)
+        | Typeof -> ("typeof ", x)
+        | Void -> ("void ", x)
+        | Delete -> ("delete ", x)
+        | Await -> ("await ", x)
+        | Nonnull -> (x, "!")
       )
     in
-    do_wrap (op ^ x)
+    do_wrap (l ^ r)
   | Update { Update.operator; prefix; argument; comments = _ } ->
     let x = code_desc_of_expression ~wrap:true argument in
     let op =
@@ -1215,28 +1215,25 @@ and code_desc_of_jsx_element x =
     in
     "<" ^ loop x ^ " />"
 
-and code_desc_of_property ~optional property =
+and code_desc_of_property ?(optional = Ast.Expression.OptionalMember.NonOptional) property =
   match property with
   | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = x; comments = _ }) ->
-    ( if optional then
-      "?."
-    else
-      "."
-    )
+    (match optional with
+    | Ast.Expression.OptionalMember.Optional -> "?."
+    | Ast.Expression.OptionalMember.NonOptional -> "."
+    | Ast.Expression.OptionalMember.AssertNonnull -> "!.")
     ^ x
   | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name = x; comments = _ }) ->
-    ( if optional then
-      "?.#"
-    else
-      ".#"
-    )
+    (match optional with
+    | Ast.Expression.OptionalMember.Optional -> "?.#"
+    | Ast.Expression.OptionalMember.NonOptional -> ".#"
+    | Ast.Expression.OptionalMember.AssertNonnull -> "!.#")
     ^ x
   | Ast.Expression.Member.PropertyExpression x ->
-    ( if optional then
-      "?.["
-    else
-      "["
-    )
+    (match optional with
+    | Ast.Expression.OptionalMember.Optional -> "?.["
+    | Ast.Expression.OptionalMember.NonOptional -> "["
+    | Ast.Expression.OptionalMember.AssertNonnull -> "![")
     ^ code_desc_of_expression ~wrap:false x
     ^ "]"
 
@@ -1257,7 +1254,7 @@ let rec mk_expression_reason =
       (RMember
          {
            object_ = code_desc_of_expression ~wrap:true _object;
-           property = code_desc_of_property ~optional:false property;
+           property = code_desc_of_property property;
          }
       )
       loc

@@ -3123,6 +3123,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } -> begin
     match operator with
+    | E.Unary.Nonnull
     | E.Unary.Await ->
       (* This is already a parse error *)
       let e = Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Unary) in

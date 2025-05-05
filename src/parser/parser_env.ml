@@ -132,12 +132,14 @@ type parse_options = {
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
   module_ref_prefix: string option;
   module_ref_prefix_LEGACY_INTEROP: string option;
+  assert_operator: bool;
 }
 
 let default_parse_options =
   {
     components = false;
     enums = false;
+    assert_operator = false;
     pattern_matching = false;
     esproposal_decorators = false;
     types = true;
@@ -150,6 +152,7 @@ let permissive_parse_options =
   {
     components = true;
     enums = true;
+    assert_operator = false;
     pattern_matching = true;
     esproposal_decorators = true;
     types = true;

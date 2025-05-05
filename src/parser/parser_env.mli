@@ -37,6 +37,7 @@ type parse_options = {
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
   module_ref_prefix: string option;
   module_ref_prefix_LEGACY_INTEROP: string option;
+  assert_operator: bool;
 }
 
 val default_parse_options : parse_options

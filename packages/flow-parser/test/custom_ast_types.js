@@ -380,6 +380,11 @@ function custom_ast_types(fork) {
     .build('expression', 'typeAnnotation')
     .field('expression', def('Expression'))
     .field('typeAnnotation', def('FlowType'));
+  def('NonNullExpression')
+    .bases('Expression')
+    .bases('Pattern')
+    .build('argument')
+    .field('argument', def('Expression'));
   def('AsConstExpression')
     .bases('Expression')
     .build('expression')

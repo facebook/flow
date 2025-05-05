@@ -125,6 +125,7 @@ let eval_unary file loc t =
   | U.Typeof -> Type.StrModuleT.at loc
   | U.Void -> Type.VoidT.at loc
   | U.Delete -> Type.BoolModuleT.at loc
+  | U.Nonnull
   | U.Await ->
     (* This is a parse error *)
     Type.(AnyT.at (AnyError None) loc)

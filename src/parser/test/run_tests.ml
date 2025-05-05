@@ -122,6 +122,9 @@ end = struct
           match k with
           | "components" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.components = v })
+          | "assert_operator" ->
+            get_bool k v >>= fun v ->
+            return (test_opts, { opts with Parser_env.assert_operator = v })
           | "enums" ->
             get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.enums = v })
           | "pattern_matching" ->

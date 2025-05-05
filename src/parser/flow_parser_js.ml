@@ -71,6 +71,7 @@ let parse_options jsopts =
     esproposal_decorators = bool_opt defaults.esproposal_decorators jsopts "esproposal_decorators";
     types = bool_opt defaults.types jsopts "types";
     use_strict = bool_opt defaults.use_strict jsopts "use_strict";
+    assert_operator = bool_opt defaults.assert_operator jsopts "assert_operator";
     module_ref_prefix = None;
     module_ref_prefix_LEGACY_INTEROP = None;
   }

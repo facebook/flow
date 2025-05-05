@@ -1203,16 +1203,17 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                option (call_args ~opts ~is_new:true ~lparen:"(") arguments;
              ]
       | E.Unary { E.Unary.operator; argument; comments } ->
-        let (s_operator, needs_space) =
+        let (s_operator, needs_space, prefix) =
           match operator with
-          | E.Unary.Minus -> (Atom "-", false)
-          | E.Unary.Plus -> (Atom "+", false)
-          | E.Unary.Not -> (Atom "!", false)
-          | E.Unary.BitNot -> (Atom "~", false)
-          | E.Unary.Typeof -> (Atom "typeof", true)
-          | E.Unary.Void -> (Atom "void", true)
-          | E.Unary.Delete -> (Atom "delete", true)
-          | E.Unary.Await -> (Atom "await", true)
+          | E.Unary.Minus -> (Atom "-", false, true)
+          | E.Unary.Plus -> (Atom "+", false, true)
+          | E.Unary.Not -> (Atom "!", false, true)
+          | E.Unary.BitNot -> (Atom "~", false, true)
+          | E.Unary.Typeof -> (Atom "typeof", true, true)
+          | E.Unary.Void -> (Atom "void", true, true)
+          | E.Unary.Delete -> (Atom "delete", true, true)
+          | E.Unary.Await -> (Atom "await", true, true)
+          | E.Unary.Nonnull -> (Atom "!", false, false)
         in
         let expr =
           let ctxt =
@@ -1227,10 +1228,16 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
           in
           expression_with_parens ~precedence ~ctxt ~opts argument
         in
+        let (fst, snd) =
+          if prefix then
+            (s_operator, expr)
+          else
+            (expr, s_operator)
+        in
         layout_node_with_comments_opt loc comments
         @@ fuse
              [
-               s_operator;
+               fst;
                ( if needs_space then
                  match argument with
                  | (_, E.Sequence _) -> Empty
@@ -1238,7 +1245,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                else
                  Empty
                );
-               expr;
+               snd;
              ]
       | E.Update { E.Update.operator; prefix; argument; comments } ->
         layout_node_with_comments_opt
@@ -1333,24 +1340,25 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
     )
 
-and call ?(optional = false) ~precedence ~ctxt ~opts call_node loc =
+and call ?(optional = Ast.Expression.OptionalCall.NonOptional) ~precedence ~ctxt ~opts call_node loc
+    =
   let { Ast.Expression.Call.callee; targs; arguments; comments } = call_node in
   let (targs, lparen) =
     match targs with
     | None ->
       let lparen =
-        if optional then
-          "?.("
-        else
-          "("
+        match optional with
+        | Ast.Expression.OptionalCall.NonOptional -> "("
+        | Ast.Expression.OptionalCall.Optional -> "?.("
+        | Ast.Expression.OptionalCall.AssertNonnull -> "!("
       in
       (Empty, lparen)
     | Some targs ->
       let less_than =
-        if optional then
-          "?.<"
-        else
-          "<"
+        match optional with
+        | Ast.Expression.OptionalCall.NonOptional -> "<"
+        | Ast.Expression.OptionalCall.Optional -> "?.<"
+        | Ast.Expression.OptionalCall.AssertNonnull -> "!<"
       in
       (call_type_args ~opts ~less_than targs, "(")
   in
@@ -1475,7 +1483,9 @@ and module_ref_literal loc { Ast.ModuleRefLiteral.raw; comments; _ } =
 
 and null_literal loc comments = layout_node_with_comments_opt loc comments (Atom "null")
 
-and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
+and member
+    ?(optional = Ast.Expression.OptionalMember.NonOptional) ~opts ~precedence ~ctxt member_node loc
+    =
   let { Ast.Expression.Member._object; property; comments } = member_node in
   let (computed, property_loc) =
     match property with
@@ -1486,10 +1496,12 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
   in
   let (ldelim, rdelim) =
     match (computed, optional) with
-    | (false, false) -> (Atom ".", Empty)
-    | (false, true) -> (Atom "?.", Empty)
-    | (true, false) -> (Atom "[", Atom "]")
-    | (true, true) -> (Atom "?.[", Atom "]")
+    | (false, Ast.Expression.OptionalMember.NonOptional) -> (Atom ".", Empty)
+    | (false, Ast.Expression.OptionalMember.Optional) -> (Atom "?.", Empty)
+    | (false, Ast.Expression.OptionalMember.AssertNonnull) -> (Atom "!.", Empty)
+    | (true, Ast.Expression.OptionalMember.NonOptional) -> (Atom "[", Atom "]")
+    | (true, Ast.Expression.OptionalMember.Optional) -> (Atom "?.[", Atom "]")
+    | (true, Ast.Expression.OptionalMember.AssertNonnull) -> (Atom "![", Atom "]")
   in
   let property_layout =
     match property with

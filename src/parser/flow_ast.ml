@@ -1485,6 +1485,7 @@ and Expression : sig
       | Void
       | Delete
       | Await
+      | Nonnull
 
     and ('M, 'T) t = {
       operator: operator;
@@ -1630,10 +1631,16 @@ and Expression : sig
   end
 
   module OptionalCall : sig
+    type kind =
+      | Optional
+      | NonOptional
+      | AssertNonnull
+    [@@deriving show]
+
     type ('M, 'T) t = {
       call: ('M, 'T) Call.t;
       filtered_out: 'T;
-      optional: bool;
+      optional: kind;
     }
     [@@deriving show]
   end
@@ -1653,10 +1660,16 @@ and Expression : sig
   end
 
   module OptionalMember : sig
+    type kind =
+      | Optional
+      | NonOptional
+      | AssertNonnull
+    [@@deriving show]
+
     type ('M, 'T) t = {
       member: ('M, 'T) Member.t;
       filtered_out: 'T;
-      optional: bool;
+      optional: kind;
     }
     [@@deriving show]
   end

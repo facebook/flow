@@ -6112,7 +6112,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let open Flow_ast.Expression.Member in
         let optional =
           match expr with
-          | OptionalMember { Ast.Expression.OptionalMember.optional; _ } -> optional
+          | OptionalMember
+              {
+                Ast.Expression.OptionalMember.optional =
+                  Ast.Expression.OptionalMember.(AssertNonnull | Optional);
+                _;
+              } ->
+            true
           | _ -> false
         in
         match expr with

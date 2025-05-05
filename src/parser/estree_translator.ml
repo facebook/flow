@@ -473,6 +473,7 @@ with type t = Impl.t = struct
         Unary.(
           (match operator with
           | Await -> node ?comments "AwaitExpression" loc [("argument", expression argument)]
+          | Nonnull -> node ?comments "NonNullExpression" loc [("argument", expression argument)]
           | _ ->
             let operator =
               match operator with
@@ -483,7 +484,9 @@ with type t = Impl.t = struct
               | Typeof -> "typeof"
               | Void -> "void"
               | Delete -> "delete"
-              | Await -> failwith "matched above"
+              | Nonnull
+              | Await ->
+                failwith "matched above"
             in
             node
               ?comments
@@ -616,22 +619,35 @@ with type t = Impl.t = struct
             ~inner:(format_internal_comments args_comments)
             ~outer:comments
         in
+
+        let optional =
+          match optional with
+          | OptionalCall.Optional -> bool true
+          | OptionalCall.NonOptional -> bool false
+          | OptionalCall.AssertNonnull -> string "assert"
+        in
         node
           ?comments
           "OptionalCallExpression"
           loc
-          (call_node_properties call @ [("optional", bool optional)])
+          (call_node_properties call @ [("optional", optional)])
       | (loc, Member ({ Member.comments; _ } as member)) ->
         node ?comments "MemberExpression" loc (member_node_properties member)
       | ( loc,
           OptionalMember
             { OptionalMember.member = { Member.comments; _ } as member; optional; filtered_out = _ }
         ) ->
+        let optional =
+          match optional with
+          | OptionalMember.Optional -> bool true
+          | OptionalMember.NonOptional -> bool false
+          | OptionalMember.AssertNonnull -> string "assert"
+        in
         node
           ?comments
           "OptionalMemberExpression"
           loc
-          (member_node_properties member @ [("optional", bool optional)])
+          (member_node_properties member @ [("optional", optional)])
       | (loc, Yield { Yield.argument; delegate; comments; result_out = _ }) ->
         node
           ?comments

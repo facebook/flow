@@ -3687,17 +3687,19 @@ module Make
         match e with
         | OptionalCall { OptionalCall.call; optional; filtered_out } ->
           let opt_state =
-            if optional then
-              NewChain
-            else
+            match optional with
+            | OptionalCall.Optional -> NewChain
+            | OptionalCall.AssertNonnull (* TODO *)
+            | OptionalCall.NonOptional ->
               ContinueChain
           in
           (opt_state, filtered_out, Call call)
         | OptionalMember { OptionalMember.member; optional; filtered_out } ->
           let opt_state =
-            if optional then
-              NewChain
-            else
+            match optional with
+            | OptionalMember.Optional -> NewChain
+            | OptionalMember.AssertNonnull (* TODO *)
+            | OptionalMember.NonOptional ->
               ContinueChain
           in
           (opt_state, filtered_out, Member member)
@@ -3708,20 +3710,37 @@ module Make
         Context.set_signature_help_callee cx loc sig_help;
         match opt_state with
         | NewChain ->
-          OptionalCall { OptionalCall.call; optional = true; filtered_out = (filtered_out_loc, ty) }
+          OptionalCall
+            {
+              OptionalCall.call;
+              optional = OptionalCall.Optional;
+              filtered_out = (filtered_out_loc, ty);
+            }
         | ContinueChain ->
           OptionalCall
-            { OptionalCall.call; optional = false; filtered_out = (filtered_out_loc, ty) }
+            {
+              OptionalCall.call;
+              optional = OptionalCall.NonOptional;
+              filtered_out = (filtered_out_loc, ty);
+            }
         | NonOptional -> Call call
       in
       let member_ast member ty =
         match opt_state with
         | NewChain ->
           OptionalMember
-            { OptionalMember.member; optional = true; filtered_out = (filtered_out_loc, ty) }
+            {
+              OptionalMember.member;
+              optional = OptionalMember.Optional;
+              filtered_out = (filtered_out_loc, ty);
+            }
         | ContinueChain ->
           OptionalMember
-            { OptionalMember.member; optional = false; filtered_out = (filtered_out_loc, ty) }
+            {
+              OptionalMember.member;
+              optional = OptionalMember.NonOptional;
+              filtered_out = (filtered_out_loc, ty);
+            }
         | NonOptional -> Member member
       in
       (e', opt_state, call_ast, member_ast)
@@ -4516,7 +4535,8 @@ module Make
             OptionalMember { OptionalMember.member; optional; filtered_out = (filtered_out, ty) }
           in
           let member_opt =
-            if optional then
+            match optional with
+            | OptionalMember.Optional ->
               (* In this case:
                *
                *   callee
@@ -4530,7 +4550,8 @@ module Make
                * factored out.
                *)
               NewChain
-            else
+            | OptionalMember.AssertNonnull (* TODO *)
+            | OptionalMember.NonOptional ->
               (* In this case:
                *
                *             callee
@@ -5041,6 +5062,10 @@ module Make
       ( Type_operation_utils.Promise.await cx reason arg,
         { operator = Await; argument = argument_ast; comments }
       )
+    | { operator = Nonnull; argument; comments } ->
+      (* TODO *)
+      let (((_, arg_t), _) as argument) = expression cx argument in
+      (arg_t, { operator = Nonnull; argument; comments })
 
   (* numeric pre/post inc/dec *)
   and update cx loc expr =
@@ -5654,10 +5679,10 @@ module Make
         OptionalMember { OptionalMember.member = mem; optional; filtered_out = (filtered_out, ty) }
       in
       let opt_state =
-        if optional then
-          NewChain
-        else
-          ContinueChain
+        match optional with
+        | OptionalMember.Optional -> NewChain
+        | OptionalMember.AssertNonnull -> (* TODO *) ContinueChain
+        | OptionalMember.NonOptional -> ContinueChain
       in
       assign_member
         cx
