@@ -2153,7 +2153,7 @@ module ImportExportUtils : sig
     purpose:Flow_intermediate_error_types.expected_module_purpose ->
     Type.t
 end = struct
-  let check_platform_availability cx reason imported_module_available_platforms =
+  let check_platform_availability cx error_loc imported_module_available_platforms =
     let current_module_available_platforms = Context.available_platforms cx in
     match (current_module_available_platforms, imported_module_available_platforms) with
     | (None, None)
@@ -2170,9 +2170,9 @@ end = struct
       in
       let missing_platforms = SSet.diff required_platforms available_platforms in
       if SSet.cardinal missing_platforms > 0 then
-        let loc = Reason.loc_of_reason reason in
         let message =
-          Error_message.EMissingPlatformSupport { loc; available_platforms; required_platforms }
+          Error_message.EMissingPlatformSupport
+            { loc = error_loc; available_platforms; required_platforms }
         in
         add_output cx message
 
@@ -2204,7 +2204,6 @@ end = struct
         | Context.MissingModule (Flow_import_specifier.Userland m_name) ->
           Error (lookup_builtin_module_error cx m_name loc)
       in
-      let reason = Reason.(mk_reason (RCustom mref) loc) in
       let need_platform_validation =
         perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
       in
@@ -2212,7 +2211,7 @@ end = struct
         match module_type_or_any with
         | Ok m ->
           if need_platform_validation then
-            check_platform_availability cx reason m.module_available_platforms
+            check_platform_availability cx loc m.module_available_platforms
         | Error _ -> ()
       );
       module_type_or_any
