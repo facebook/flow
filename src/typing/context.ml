@@ -74,6 +74,7 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
+  assert_operator: bool;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
   ban_spread_key_props: bool;
@@ -318,6 +319,7 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
+    assert_operator = Options.assert_operator options |> Options.AssertOperator.usable;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
     ban_spread_key_props = Options.ban_spread_key_props options;
@@ -646,6 +648,8 @@ let should_strip_root cx = cx.metadata.strip_root
 let suppress_types cx = cx.metadata.suppress_types
 
 let ts_syntax cx = cx.metadata.ts_syntax
+
+let assert_operator cx = cx.metadata.assert_operator
 
 let type_expansion_recursion_limit cx = cx.metadata.type_expansion_recursion_limit
 

@@ -270,6 +270,8 @@ val suppress_types : config -> SSet.t
 
 val ts_syntax : config -> bool
 
+val assert_operator : config -> Options.AssertOperator.t
+
 val type_expansion_recursion_limit : config -> int
 
 val unsuppressable_error_codes : config -> SSet.t

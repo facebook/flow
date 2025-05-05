@@ -1508,6 +1508,7 @@ let make_options
     opt_slow_to_check_logging = options_flags.slow_to_check_logging;
     opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
+    opt_assert_operator = FlowConfig.assert_operator flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
     opt_automatic_require_default =
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;

@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:4
+
+Unexpected token `!`, expected the end of an expression statement (`;`)
+
+   3|   a! as number;
+         ^
+
+
+
+Found 1 error

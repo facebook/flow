@@ -142,6 +142,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     suppress_types: SSet.t;
     ts_syntax: bool;
+    assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
     use_mixed_in_catch_variables: bool option;
@@ -282,6 +283,7 @@ module Opts = struct
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
+      assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
@@ -975,6 +977,17 @@ module Opts = struct
       ]
       (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher })
 
+  let assert_operator_parser =
+    enum
+      [
+        ("false", Options.AssertOperator.Disabled);
+        ("disabled", Options.AssertOperator.Disabled);
+        ("true", Options.AssertOperator.Enabled);
+        ("enabled", Options.AssertOperator.Enabled);
+        ("unparsed", Options.AssertOperator.Unparsed);
+      ]
+      (fun opts assert_operator -> Ok { opts with assert_operator })
+
   let shm_hash_table_pow_parser =
     uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
 
@@ -1093,6 +1106,7 @@ module Opts = struct
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
+      ("experimental.assert_operator", assert_operator_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
@@ -2015,6 +2029,8 @@ let strict_mode c = c.strict_mode
 let suppress_types c = c.options.Opts.suppress_types
 
 let ts_syntax c = c.options.Opts.ts_syntax
+
+let assert_operator c = c.options.Opts.assert_operator
 
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 

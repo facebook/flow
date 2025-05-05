@@ -83,11 +83,13 @@ let parse_source_file ~options content file =
     else
       Options.modules_are_use_strict options
   in
+  let assert_operator = Options.assert_operator options |> Options.AssertOperator.parse in
   let parse_options =
     Some
       {
         Parser_env.permissive_parse_options with
         Parser_env.use_strict;
+        assert_operator;
         module_ref_prefix = Options.haste_module_ref_prefix options;
         module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
       }

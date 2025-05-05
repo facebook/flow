@@ -42,6 +42,25 @@ type react_rules =
   | DeepReadOnlyHookReturns
   | RulesOfHooks
 
+module AssertOperator = struct
+  type t =
+    | Enabled
+    | Disabled
+    | Unparsed
+
+  let parse = function
+    | Unparsed -> false
+    | Enabled
+    | Disabled ->
+      true
+
+  let usable = function
+    | Unparsed
+    | Disabled ->
+      false
+    | Enabled -> true
+end
+
 type format = {
   opt_bracket_spacing: bool;
   opt_single_quotes: bool;
@@ -161,6 +180,7 @@ type t = {
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
+  opt_assert_operator: AssertOperator.t;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
   opt_use_mixed_in_catch_variables: bool;
@@ -382,6 +402,8 @@ let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
+
+let assert_operator opts = opts.opt_assert_operator
 
 let type_expansion_recursion_limit opts = opts.opt_type_expansion_recursion_limit
 

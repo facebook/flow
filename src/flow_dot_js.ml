@@ -144,6 +144,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     ts_syntax = true;
+    assert_operator = false;
     type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;
     ban_spread_key_props = false;
@@ -172,6 +173,9 @@ let merge_custom_check_config js_config_object metadata =
   let enable_const_params =
     Js.Unsafe.get js_config_object "experimental.const_params" |> Js.to_bool
   in
+  let assert_operator =
+    Js.Unsafe.get js_config_object "experimental.assert_operator" |> Js.to_bool
+  in
   let ts_syntax = Js.Unsafe.get js_config_object "experimental.ts_syntax" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in
   let exact_by_default = Js.Unsafe.get js_config_object "exact_by_default" |> Js.to_bool in
@@ -192,6 +196,7 @@ let merge_custom_check_config js_config_object metadata =
     exact_by_default;
     react_runtime;
     ts_syntax;
+    assert_operator;
     use_mixed_in_catch_variables;
   }
 
@@ -1026,6 +1031,13 @@ let () =
     "type": "bool",
     "default": false,
     "desc": "Error when a promise is unused."
+  }
+  {
+    "key": "experimental.assert_operator",
+    "kind": "option",
+    "type": "bool",
+    "default": false,
+    "desc": "Allow use of the `!` operator to assert non-nullability."
   }
 ]
 |}

@@ -233,10 +233,12 @@ let refactor_extract_and_stub_out_code_actions
           let module_ref_prefix_LEGACY_INTEROP =
             Options.haste_module_ref_prefix_LEGACY_INTEROP options
           in
+          let assert_operator = Options.assert_operator options |> Options.AssertOperator.parse in
           let parse_options =
             {
               Parser_env.permissive_parse_options with
               Parser_env.use_strict;
+              assert_operator;
               module_ref_prefix;
               module_ref_prefix_LEGACY_INTEROP;
             }
@@ -308,10 +310,12 @@ let insert_inferred_type_as_cast_code_actions
         let module_ref_prefix_LEGACY_INTEROP =
           Options.haste_module_ref_prefix_LEGACY_INTEROP options
         in
+        let assert_operator = Options.assert_operator options |> Options.AssertOperator.parse in
         let parse_options =
           {
             Parser_env.permissive_parse_options with
             Parser_env.use_strict;
+            assert_operator;
             module_ref_prefix;
             module_ref_prefix_LEGACY_INTEROP;
           }
