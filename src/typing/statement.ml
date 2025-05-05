@@ -3682,15 +3682,21 @@ module Make
       Base.List.iter ts ~f:(Tvar_resolver.resolve cx);
       ts
     in
-    let factor_out_optional (_, e) =
+    let factor_out_optional (factored_loc, e) =
       let (opt_state, filtered_out_loc, e') =
         match e with
         | OptionalCall { OptionalCall.call; optional; filtered_out } ->
           let opt_state =
             match optional with
             | OptionalCall.Optional -> NewChain
-            | OptionalCall.AssertNonnull (* TODO *)
-            | OptionalCall.NonOptional ->
+            | OptionalCall.NonOptional -> ContinueChain
+            | OptionalCall.AssertNonnull ->
+              if not (Context.assert_operator cx) then
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (factored_loc, Flow_intermediate_error_types.NonnullAssertion)
+                  );
               ContinueChain
           in
           (opt_state, filtered_out, Call call)
@@ -3698,8 +3704,15 @@ module Make
           let opt_state =
             match optional with
             | OptionalMember.Optional -> NewChain
-            | OptionalMember.AssertNonnull (* TODO *)
-            | OptionalMember.NonOptional ->
+            | OptionalMember.NonOptional -> ContinueChain
+            | OptionalMember.AssertNonnull ->
+              if not (Context.assert_operator cx) then
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (factored_loc, Flow_intermediate_error_types.NonnullAssertion)
+                  );
+              (* TODO *)
               ContinueChain
           in
           (opt_state, filtered_out, Member member)
@@ -4550,7 +4563,15 @@ module Make
                * factored out.
                *)
               NewChain
-            | OptionalMember.AssertNonnull (* TODO *)
+            | OptionalMember.AssertNonnull ->
+              if not (Context.assert_operator cx) then
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (callee_loc, Flow_intermediate_error_types.NonnullAssertion)
+                  );
+              (* TODO *)
+              ContinueChain
             | OptionalMember.NonOptional ->
               (* In this case:
                *
@@ -5063,6 +5084,10 @@ module Make
         { operator = Await; argument = argument_ast; comments }
       )
     | { operator = Nonnull; argument; comments } ->
+      if not (Context.assert_operator cx) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
       (* TODO *)
       let (((_, arg_t), _) as argument) = expression cx argument in
       (arg_t, { operator = Nonnull; argument; comments })
@@ -5309,6 +5334,20 @@ module Make
             optional;
           }
       )
+    | ( loc,
+        Ast.Pattern.Expression
+          ( ( _,
+              Ast.Expression.Unary
+                { Ast.Expression.Unary.operator = Ast.Expression.Unary.Nonnull; _ }
+            ) as m
+          )
+      ) ->
+      if not (Context.assert_operator cx) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
+      let (((_, t), _) as m) = expression cx m in
+      ((loc, t), Ast.Pattern.Expression m)
     | (loc, Ast.Pattern.Expression ((_, Ast.Expression.Member _) as m)) ->
       let (((_, t), _) as m) = expression cx m in
       ((loc, t), Ast.Pattern.Expression m)
@@ -5511,6 +5550,21 @@ module Make
     let (((_, t), _) as typed_rhs) = expression cx rhs in
     let lhs =
       match lhs with
+      | ( _,
+          Ast.Pattern.Expression
+            ( expr_loc,
+              Ast.Expression.Unary
+                { Ast.Expression.Unary.operator = Ast.Expression.Unary.Nonnull; _ }
+            )
+        )
+        when not (Context.assert_operator cx) ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (expr_loc, Flow_intermediate_error_types.NonnullAssertion)
+          );
+        (* TODO *)
+        Destructuring.assignment cx rhs lhs
       | (lhs_loc, Ast.Pattern.Expression (pat_loc, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (SetProperty { lhs; prop; value = mk_expression_reason rhs }) in
@@ -5682,7 +5736,15 @@ module Make
       let opt_state =
         match optional with
         | OptionalMember.Optional -> NewChain
-        | OptionalMember.AssertNonnull -> (* TODO *) ContinueChain
+        | OptionalMember.AssertNonnull ->
+          if not (Context.assert_operator cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (lhs_loc, Flow_intermediate_error_types.NonnullAssertion)
+              );
+          (* TODO *)
+          ContinueChain
         | OptionalMember.NonOptional -> ContinueChain
       in
       assign_member

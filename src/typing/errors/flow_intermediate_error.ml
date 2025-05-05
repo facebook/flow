@@ -4020,6 +4020,8 @@ let to_printable_error :
       [text "Flow doesn't support "; code "with"; text " statements."]
     | MessageUnsupportedVarianceAnnotation kind ->
       [text "Variance modifiers cannot appear on a type parameter of a "; text kind; text "."]
+    | MessageUnsupportedSyntax NonnullAssertion ->
+      [text "Flow doesn't support non-null assertions (the postfix "; code "!"; text " operator)."]
     | MessageUntypedImport module_name ->
       [
         text "Importing from an untyped module makes it ";
