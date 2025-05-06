@@ -260,7 +260,7 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
               (Type.Constraint.ForcingState.of_lazy_module m
               |> Annotation_inference.ConsGen.force_module_type_thunk cx
               )
-          | None -> Context.MissingModule import_specifier))
+          | None -> Context.MissingModule))
       (File_sig.require_loc_map file_sig);
   (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in

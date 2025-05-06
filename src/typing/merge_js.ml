@@ -496,7 +496,7 @@ let check_multiplatform_conformance cx ast tast =
          cx
          (Flow_import_specifier.userland_specifier imported_interface_module_name)
      with
-    | Context.MissingModule _
+    | Context.MissingModule
     | Context.UncheckedModule _ ->
       (* It's ok if a platform speicific implementation file doesn't have an interface.
        * It just makes the module non-importable without platform extension. *)
@@ -559,7 +559,7 @@ let check_multiplatform_conformance cx ast tast =
         | Context.TypedModule _
         | Context.UncheckedModule _ ->
           true
-        | Context.MissingModule _ -> false
+        | Context.MissingModule -> false
       in
       if
         (not (Context.has_explicit_supports_platform cx))
@@ -971,7 +971,7 @@ let mk_builtins metadata master_cx =
           { metadata with Context.checked = false }
           builtin_leader_file_key
           (lazy (ALoc.empty_table builtin_leader_file_key))
-          (fun mref -> Context.MissingModule mref)
+          (fun _ -> Context.MissingModule)
           (fun _ -> !builtins_ref)
       in
       let (values, types, modules) =

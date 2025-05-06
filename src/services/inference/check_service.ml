@@ -50,7 +50,7 @@ let unknown_module_t cx module_name =
        typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
      with
     | Some typed -> Context.TypedModule typed
-    | None -> Context.MissingModule module_name)
+    | None -> Context.MissingModule)
 
 let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
@@ -60,7 +60,7 @@ let unchecked_module_t cx file_key mref =
        typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
      with
     | Some typed -> Context.TypedModule typed
-    | None -> Context.UncheckedModule (loc, mref))
+    | None -> Context.UncheckedModule loc)
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in

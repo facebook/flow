@@ -252,7 +252,7 @@ module rec ConsGen : S = struct
         | Error _ -> Error (Type.AnyError None)
         | Ok module_type -> Ok module_type)
     | Context.UncheckedModule _ -> lazy (Error Type.Untyped)
-    | Context.MissingModule _ -> lazy (Error Type.(AnyError (Some UnresolvedName)))
+    | Context.MissingModule -> lazy (Error Type.(AnyError (Some UnresolvedName)))
 
   let error_internal_reason cx msg reason_op =
     let loc = Reason.loc_of_reason reason_op in

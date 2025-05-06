@@ -411,7 +411,7 @@ let merge_exports =
       match resolved_module with
       | Context.TypedModule f -> Some f
       | Context.UncheckedModule _ -> None
-      | Context.MissingModule _ -> None
+      | Context.MissingModule -> None
     in
     (loc, f)
   in
@@ -2216,7 +2216,7 @@ let merge_builtins
        in
        let map_module_ref specifier : Context.resolved_require Lazy.t =
          match Flow_import_specifier.Map.find_opt specifier dependencies_map with
-         | None -> lazy (Context.MissingModule specifier)
+         | None -> lazy Context.MissingModule
          | Some lazy_module ->
            Lazy.map
              (fun (r, lazy_module) ->

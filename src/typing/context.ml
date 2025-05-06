@@ -231,8 +231,8 @@ type typing_mode =
 
 type resolved_require =
   | TypedModule of (unit -> (Type.moduletype, Type.t) result)
-  | UncheckedModule of ALoc.t * Flow_import_specifier.t
-  | MissingModule of Flow_import_specifier.t
+  | UncheckedModule of ALoc.t
+  | MissingModule
 
 type t = {
   ccx: component_t;
