@@ -251,7 +251,9 @@ let mk_cx ~verbose () =
   let builtins_ref = ref (Builtins.empty ()) in
   let resolve_require = function
     | Flow_import_specifier.Userland mref ->
-      (match Builtins.get_builtin_module_opt !builtins_ref mref with
+      (match
+         Builtins.get_builtin_module_opt !builtins_ref (Flow_import_specifier.unwrap_userland mref)
+       with
       | Some m ->
         Context.TypedModule
           (fun () ->

@@ -46,7 +46,9 @@ let typed_builtin_module_opt cx builtin_module_name =
 let unknown_module_t cx module_name =
   match module_name with
   | Flow_import_specifier.Userland user_land_module_name ->
-    (match typed_builtin_module_opt cx user_land_module_name with
+    (match
+       typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
+     with
     | Some typed -> Context.TypedModule typed
     | None -> Context.MissingModule module_name)
 
@@ -54,7 +56,9 @@ let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
   match mref with
   | Flow_import_specifier.Userland user_land_module_name ->
-    (match typed_builtin_module_opt cx user_land_module_name with
+    (match
+       typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
+     with
     | Some typed -> Context.TypedModule typed
     | None -> Context.UncheckedModule (loc, mref))
 
@@ -97,7 +101,9 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
       | None ->
         unknown_module_t
           cx
-          (Flow_import_specifier.Userland (Parsing_heaps.read_dependency m |> Modulename.to_string))
+          (Flow_import_specifier.userland_specifier
+             (Parsing_heaps.read_dependency m |> Modulename.to_string)
+          )
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
         | File_key.ResourceFile f as file_key ->
@@ -153,7 +159,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
 
     let dependencies =
       let f buf pos =
-        let mref = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+        let mref = Flow_import_specifier.userland_specifier (Bin.read_str buf pos) in
         (mref, Flow_import_specifier.Map.find mref !resolved_requires)
       in
       let pos = Bin.module_refs buf in

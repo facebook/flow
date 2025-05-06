@@ -126,7 +126,9 @@ let file_dependencies ~reader file =
     let module Heap = SharedMem.NewAPI in
     let module Bin = Type_sig_bin in
     let buf = Heap.type_sig_buf (Option.get (Heap.get_type_sig parse)) in
-    let read_import_specifier buf pos = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+    let read_import_specifier buf pos =
+      Flow_import_specifier.userland_specifier (Bin.read_str buf pos)
+    in
     Bin.fold_tbl
       read_import_specifier
       Flow_import_specifier.Set.add

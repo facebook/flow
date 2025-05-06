@@ -5,7 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = Userland of string [@@deriving show, ord]
+type userland [@@deriving show, ord]
+
+val userland : string -> userland
+
+val unwrap_userland : userland -> string
+
+type t = Userland of userland [@@deriving show, ord]
+
+val userland_specifier : string -> t
 
 module Map : WrappedMap_sig.S with type key = t
 

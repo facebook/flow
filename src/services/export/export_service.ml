@@ -54,7 +54,7 @@ module ModuleResolutionLazyStream = struct
     let rec next (file_key, parse) mref : stream_result option =
       match
         Flow_import_specifier.Map.find_opt
-          (Flow_import_specifier.Userland mref)
+          (Flow_import_specifier.userland_specifier mref)
           (resolved_modules file_key parse)
         |> Base.Option.bind ~f:Result.to_option
         |> Base.Option.bind ~f:get_provider
@@ -188,7 +188,9 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         Export_index.add name Export_index.Global Export_index.Named acc
       | Unresolved_source mref ->
         let result =
-          Flow_import_specifier.Map.find_opt (Flow_import_specifier.Userland mref) resolved_modules
+          Flow_import_specifier.Map.find_opt
+            (Flow_import_specifier.userland_specifier mref)
+            resolved_modules
         in
         let kind_and_name module_name =
           match import.Imports.kind with
@@ -216,6 +218,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
               Export_index.add name file_key kind acc
             | None -> acc))
         | Some (Error (Some (Flow_import_specifier.Userland mref))) ->
+          let mref = Flow_import_specifier.unwrap_userland mref in
           let (kind, name) = kind_and_name mref in
           Export_index.add name (Builtin mref) kind acc
         | Some (Error None) ->

@@ -125,7 +125,7 @@ let require_loc_map msig =
       match require with
       | ImportSyntheticUserland { source } ->
         Flow_import_specifier.Map.add
-          (Flow_import_specifier.Userland source)
+          (Flow_import_specifier.userland_specifier source)
           []
           acc
           ~combine:List.rev_append
@@ -135,7 +135,7 @@ let require_loc_map msig =
       | Import { source = (loc, mref); _ }
       | ExportFrom { source = (loc, mref) } ->
         Flow_import_specifier.Map.add
-          (Flow_import_specifier.Userland mref)
+          (Flow_import_specifier.userland_specifier mref)
           [loc]
           acc
           ~combine:List.rev_append)

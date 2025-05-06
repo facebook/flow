@@ -583,7 +583,9 @@ module Node = struct
   let imported_module ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc =
     function
     | Flow_import_specifier.Userland import_specifier ->
-      let candidates = module_name_candidates ~options import_specifier in
+      let candidates =
+        module_name_candidates ~options (Flow_import_specifier.unwrap_userland import_specifier)
+      in
       (match
          List.find_map
            (resolve_import ~options ~reader ~node_modules_containers ~importing_file ~phantom_acc)
@@ -939,7 +941,9 @@ module Haste : MODULE_SYSTEM = struct
       (* For historical reasons, the Haste module system always picks the first
        * matching candidate, unlike the Node module system which picks the first
        * "valid" matching candidate. *)
-      let candidates = module_name_candidates ~options import_specifier in
+      let candidates =
+        module_name_candidates ~options (Flow_import_specifier.unwrap_userland import_specifier)
+      in
       let import_specifier = Nel.hd candidates in
       (match
          resolve_import
@@ -958,7 +962,7 @@ module Haste : MODULE_SYSTEM = struct
         let mapped_name =
           match Nel.tl candidates with
           | [] -> None
-          | _ -> Some (Flow_import_specifier.Userland import_specifier)
+          | _ -> Some (Flow_import_specifier.userland_specifier import_specifier)
         in
         Error mapped_name)
 

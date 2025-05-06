@@ -492,7 +492,9 @@ let check_multiplatform_conformance cx ast tast =
   | Some imported_interface_module_name ->
     let open Type in
     (match
-       Context.find_require cx (Flow_import_specifier.Userland imported_interface_module_name)
+       Context.find_require
+         cx
+         (Flow_import_specifier.userland_specifier imported_interface_module_name)
      with
     | Context.MissingModule _
     | Context.UncheckedModule _ ->
@@ -553,7 +555,7 @@ let check_multiplatform_conformance cx ast tast =
     | None -> ()
     | Some (unconditional_extensions, grouped_extensions_with_conditional_extensions) ->
       let module_exists mref =
-        match Context.find_require cx (Flow_import_specifier.Userland mref) with
+        match Context.find_require cx (Flow_import_specifier.userland_specifier mref) with
         | Context.TypedModule _
         | Context.UncheckedModule _ ->
           true

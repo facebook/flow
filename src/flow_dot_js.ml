@@ -254,7 +254,7 @@ let init_infer_and_merge ~root filename js_config_object docblock ast file_sig =
       (fun import_specifier _locs ->
         match import_specifier with
         | Flow_import_specifier.Userland mref ->
-          (match Context.builtin_module_opt cx mref with
+          (match Context.builtin_module_opt cx (Flow_import_specifier.unwrap_userland mref) with
           | Some m ->
             Context.TypedModule
               (Type.Constraint.ForcingState.of_lazy_module m

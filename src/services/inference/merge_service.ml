@@ -251,7 +251,7 @@ let sig_hash ~check_dirty_set ~root =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file_key parse
       in
       let f buf pos =
-        let mref = Flow_import_specifier.Userland (Bin.read_str buf pos) in
+        let mref = Flow_import_specifier.userland_specifier (Bin.read_str buf pos) in
         let m = Flow_import_specifier.Map.find mref resolved_modules in
         file_dependency ~reader component_rec component_map m
       in

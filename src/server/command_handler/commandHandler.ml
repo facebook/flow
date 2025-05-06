@@ -2074,7 +2074,7 @@ let get_ephemeral_handler genv command =
       (handle_find_module
          ~options
          ~reader
-         ~moduleref:(Flow_import_specifier.Userland moduleref)
+         ~moduleref:(Flow_import_specifier.userland_specifier moduleref)
          ~filename
       )
   | ServerProt.Request.FORCE_RECHECK { files; focus; missed_changes; changed_mergebase } ->

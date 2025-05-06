@@ -205,7 +205,7 @@ let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
   let (import_specifier, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let mref =
     match import_specifier with
-    | Flow_import_specifier.Userland mref -> mref
+    | Flow_import_specifier.Userland mref -> Flow_import_specifier.unwrap_userland mref
   in
   let reason = Reason.(mk_reason (RModule mref) loc) in
   let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
@@ -222,7 +222,7 @@ let import file reason index kind ~remote ~local =
   let (import_specifier, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let mref =
     match import_specifier with
-    | Flow_import_specifier.Userland mref -> mref
+    | Flow_import_specifier.Userland mref -> Flow_import_specifier.unwrap_userland mref
   in
   if remote = "default" then
     ConsGen.import_default file.cx reason kind local mref false resolved_require
@@ -571,7 +571,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let (import_specifier, _) = Module_refs.get file.dependencies index in
     let mref =
       match import_specifier with
-      | Flow_import_specifier.Userland mref -> mref
+      | Flow_import_specifier.Userland mref -> Flow_import_specifier.unwrap_userland mref
     in
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
     let ns_t = import_ns file ns_reason mref loc index in
@@ -2208,7 +2208,7 @@ let merge_builtins
                  module_kind
              in
              Flow_import_specifier.Map.add
-               (Flow_import_specifier.Userland module_name)
+               (Flow_import_specifier.userland_specifier module_name)
                lazy_module
                acc)
            global_modules
@@ -2232,7 +2232,7 @@ let merge_builtins
            dependencies =
              Module_refs.map
                (fun mref ->
-                 let specifier = Flow_import_specifier.Userland mref in
+                 let specifier = Flow_import_specifier.userland_specifier mref in
                  (specifier, map_module_ref specifier))
                module_refs;
            exports;
@@ -2276,7 +2276,7 @@ let merge_builtins
         let (_, dep_map) = Lazy.force file_and_dependency_map_rec in
         SMap.add
           name
-          (Flow_import_specifier.Map.find (Flow_import_specifier.Userland name) dep_map)
+          (Flow_import_specifier.Map.find (Flow_import_specifier.userland_specifier name) dep_map)
           acc)
       global_modules
       SMap.empty

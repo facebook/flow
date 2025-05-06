@@ -94,7 +94,9 @@ let remove_dot_flow_suffix = function
 
 let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
   match
-    Flow_import_specifier.Map.find (Flow_import_specifier.Userland module_ref) resolved_modules
+    Flow_import_specifier.Map.find
+      (Flow_import_specifier.userland_specifier module_ref)
+      resolved_modules
   with
   | Ok m -> Module.of_modulename ~root ~write_root m
   | Error mapped_name ->
@@ -104,7 +106,7 @@ let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
     let name =
       match mapped_name with
       | None -> module_ref
-      | Some (Flow_import_specifier.Userland name) -> name
+      | Some (Flow_import_specifier.Userland name) -> Flow_import_specifier.unwrap_userland name
     in
     Module.String name
 

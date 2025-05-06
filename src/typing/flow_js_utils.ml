@@ -2187,9 +2187,10 @@ end = struct
       | None -> Error (lookup_builtin_module_error cx mref loc)
     else
       let module_type_or_any =
-        match Context.find_require cx (Flow_import_specifier.Userland mref) with
+        match Context.find_require cx (Flow_import_specifier.userland_specifier mref) with
         | Context.TypedModule f -> f ()
         | Context.UncheckedModule (module_def_loc, Flow_import_specifier.Userland mref) ->
+          let mref = Flow_import_specifier.unwrap_userland mref in
           Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
               match import_kind with
               | ImportType
@@ -2202,6 +2203,7 @@ end = struct
           );
           Error (AnyT.why Untyped (mk_reason (RModule mref) module_def_loc))
         | Context.MissingModule (Flow_import_specifier.Userland m_name) ->
+          let m_name = Flow_import_specifier.unwrap_userland m_name in
           Error (lookup_builtin_module_error cx m_name loc)
       in
       let need_platform_validation =
