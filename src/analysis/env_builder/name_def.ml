@@ -2873,6 +2873,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
          * to decide if we are going to generalize singleton types or not.*)
         | Ast.Expression.Array _
         | Ast.Expression.ArrowFunction _
+        | Ast.Expression.Function _
         | Ast.Expression.Object _
         | Ast.Expression.Logical _
         | Ast.Expression.Conditional _
