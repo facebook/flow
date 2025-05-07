@@ -2,12 +2,6 @@
 all=true
 
 module.system=haste
-# get basename
-module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\)$' -> '\1'
-# strip .js or .js.flow suffix
-module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
-# strip .ios suffix
-module.system.haste.name_reducers='^\(.*\)\.ios$' -> '\1'
 
 module.system.haste.paths.includes=<PROJECT_ROOT>/dir[0-9]+/.*
 module.system.haste.paths.excludes=.*/node_modules/.*

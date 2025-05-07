@@ -1,9 +1,3 @@
 [options]
 all=true
 module.system=haste
-# get basename
-module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.\(js\|tsx?\)\(\.flow\)?\)$' -> '\1'
-module.system.haste.name_reducers='^\(.*\)\.\(js\|tsx?\)\(\.flow\)?$' -> '\1'
-# strip .ios suffix
-module.system.haste.name_reducers='^\(.*\)\.ios$' -> '\1'
-experimental.multi_platform.extensions=.ios
