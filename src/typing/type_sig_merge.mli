@@ -27,7 +27,7 @@ type exports =
 
 type file = {
   cx: Context.t;
-  dependencies: (Flow_import_specifier.t * Context.resolved_require Lazy.t) Module_refs.t;
+  dependencies: (Flow_import_specifier.userland * Context.resolved_require Lazy.t) Module_refs.t;
   exports: unit -> (Type.moduletype, Type.t) result;
   local_defs: (ALoc.t * string * Type.t Lazy.t * Type.t Lazy.t) Lazy.t Local_defs.t;
   remote_refs: (ALoc.t * string * Type.t) Lazy.t Remote_refs.t;

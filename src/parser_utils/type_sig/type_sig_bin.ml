@@ -107,6 +107,8 @@ let str_size x =
   let len = String.length x in
   len_size + aligned len
 
+let userland_import_specifier_size x = str_size (Flow_import_specifier.unwrap_userland x)
+
 let serialized_size x =
   let len = String.length x in
   aligned len
@@ -133,6 +135,9 @@ let write_str buf pos_ref x =
   buf_write_string buf (pos + 4) len x;
   pos_ref := pos + 4 + aligned len;
   pos
+
+let write_userland_import_specifier buf pos_ref x =
+  write_str buf pos_ref (Flow_import_specifier.unwrap_userland x)
 
 (* Serialized values do not need a length prefix because the encoding starts
  * with a header containing that information already. *)
@@ -253,7 +258,7 @@ let write type_sig =
   let size =
     index_size
     + module_size
-    + tbl_size str_size module_refs
+    + tbl_size userland_import_specifier_size module_refs
     + tbl_size serialized_size local_defs
     + tbl_size serialized_size remote_refs
     + tbl_size serialized_size pattern_defs
@@ -264,7 +269,7 @@ let write type_sig =
   let write buf =
     let pos_ref = ref index_size in
     let module_pos = write_module buf pos_ref in
-    let module_refs_pos = write_tbl write_str buf pos_ref module_refs in
+    let module_refs_pos = write_tbl write_userland_import_specifier buf pos_ref module_refs in
     let local_defs_pos = write_tbl write_serialized buf pos_ref local_defs in
     let remote_refs_pos = write_tbl write_serialized buf pos_ref remote_refs in
     let pattern_defs_pos = write_tbl write_serialized buf pos_ref pattern_defs in
@@ -314,6 +319,8 @@ let es_module_info buf pos = Int32.to_int (buf_get32 buf (pos + 8))
 let read_str buf pos =
   let len = Int32.to_int (buf_get32 buf pos) in
   buf_read_string buf (pos + 4) len
+
+let read_userland_import_specifier buf pos = Flow_import_specifier.userland (read_str buf pos)
 
 let read_tbl_generic f buf pos init =
   if pos = 0 then
@@ -416,7 +423,9 @@ let read buf =
   let dirty_local_defs_pos = dirty_local_defs buf in
   let dirty_pattern_defs_pos = dirty_pattern_defs buf in
   let module_kind = read_module_kind read_cjs_module read_es_module buf module_kind_pos in
-  let module_refs = read_tbl_generic read_str buf module_refs_pos Module_refs.init in
+  let module_refs =
+    read_tbl_generic read_userland_import_specifier buf module_refs_pos Module_refs.init
+  in
   let local_defs = read_tbl_generic read_local_def buf local_defs_pos Local_defs.init in
   let remote_refs = read_tbl_generic read_remote_ref buf remote_refs_pos Remote_refs.init in
   let pattern_defs = read_tbl_generic read_packed buf pattern_defs_pos Pattern_defs.init in

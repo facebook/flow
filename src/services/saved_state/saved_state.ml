@@ -79,7 +79,7 @@ let modulename_map_fn ~on_file ?on_string = function
 
 let import_specifier_map_fn ~on_string = function
   | Flow_import_specifier.Userland name ->
-    Flow_import_specifier.userland_specifier (on_string (Flow_import_specifier.unwrap_userland name))
+    Flow_import_specifier.Userland (Flow_import_specifier.map_userland ~f:on_string name)
 
 let resolved_module_map_fn ~on_file ?on_string = function
   | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)
@@ -163,6 +163,8 @@ end = struct
       Hashtbl.add t.intern_tbl x x;
       x
 
+  let intern_userland_import_specifier t = Flow_import_specifier.map_userland ~f:(intern t)
+
   let intern_haste_module_info t haste_module_info =
     let _module_name : string = intern t (Haste_module_info.module_name haste_module_info) in
     haste_module_info
@@ -224,9 +226,10 @@ end = struct
       | Default name_opt -> Default (Base.Option.map ~f:(intern t) name_opt)
       | Named str -> Named (intern t str)
       | NamedType str -> NamedType (intern t str)
-      | Module (str, exports) -> Module (intern t str, normalize_exports t exports)
-      | ReExportModule str -> ReExportModule (intern t str)
-      | ReExportModuleTypes str -> ReExportModuleTypes (intern t str)
+      | Module (s, exports) ->
+        Module (intern_userland_import_specifier t s, normalize_exports t exports)
+      | ReExportModule s -> ReExportModule (intern_userland_import_specifier t s)
+      | ReExportModuleTypes s -> ReExportModuleTypes (intern_userland_import_specifier t s)
     in
     (fun exports -> Base.List.map ~f exports)
 
@@ -236,7 +239,7 @@ end = struct
       let export = intern t export in
       let source =
         match source with
-        | Unresolved_source str -> Unresolved_source (intern t str)
+        | Unresolved_source s -> Unresolved_source (intern_userland_import_specifier t s)
         | Global -> Global
       in
       { export; source; kind }

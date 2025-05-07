@@ -58,7 +58,7 @@ let pp_module_refs fmt module_refs =
   if Module_refs.length module_refs > 0 then fprintf fmt "@.Module refs:@.";
   Module_refs.iteri
     (fun i mref ->
-      fprintf fmt "%d. %s" (i :> int) mref;
+      fprintf fmt "%d. %s" (i :> int) (Flow_import_specifier.display_userland mref);
       pp_print_newline fmt ())
     module_refs
 

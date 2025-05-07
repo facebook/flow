@@ -1849,7 +1849,7 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
       let src_dir = src_dir_of_loc ac_loc in
       let kind = Export_index.Namespace in
       let name = "React" in
-      let source = Export_index.Builtin "react" in
+      let source = Export_index.Builtin (Flow_import_specifier.userland "react") in
       Lsp_import_edits.text_edits_of_import
         ~layout_options
         ~module_system_info

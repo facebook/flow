@@ -10,9 +10,10 @@ type export =
   | Default of string option  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
-  | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
-  | ReExportModule of string
-  | ReExportModuleTypes of string
+  | Module of Flow_import_specifier.userland * export list
+      (** `declare module "foo" { ... exports ... }` *)
+  | ReExportModule of Flow_import_specifier.userland
+  | ReExportModuleTypes of Flow_import_specifier.userland
 [@@deriving show { with_path = false }]
 
 type t = export list [@@deriving show { with_path = false }]
@@ -20,7 +21,7 @@ type t = export list [@@deriving show { with_path = false }]
 module Export_sig = struct
   type 'loc t = {
     module_kind: 'loc Type_sig_pack.module_kind option;
-    module_refs: string Type_sig_collections.Module_refs.t;
+    module_refs: Flow_import_specifier.userland Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
     pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t;
@@ -487,7 +488,7 @@ let of_builtins
              ~pattern_defs
              ~patterns
          in
-         Module (name, of_sig export_sig) :: acc)
+         Module (Flow_import_specifier.userland name, of_sig export_sig) :: acc)
        global_modules
 
 let empty = []

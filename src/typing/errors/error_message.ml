@@ -44,9 +44,9 @@ and 'loc t' =
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
   | EImportTypeAsValue of 'loc virtual_reason * string
-  | ENoDefaultExport of 'loc virtual_reason * string * string option
-  | EOnlyDefaultExport of 'loc virtual_reason * string * string
-  | ENoNamedExport of 'loc virtual_reason * string * string * string option
+  | ENoDefaultExport of 'loc virtual_reason * Flow_import_specifier.userland * string option
+  | EOnlyDefaultExport of 'loc virtual_reason * Flow_import_specifier.userland * string
+  | ENoNamedExport of 'loc virtual_reason * Flow_import_specifier.userland * string * string option
   | EMissingTypeArgs of {
       reason_op: 'loc virtual_reason;
       reason_tapp: 'loc virtual_reason;
@@ -356,8 +356,8 @@ and 'loc t' =
   | EImplicitInexactObject of 'loc
   | EAmbiguousObjectType of 'loc
   (* The string is either the name of a module or "the module that exports `_`". *)
-  | EUntypedTypeImport of 'loc * string
-  | EUntypedImport of 'loc * string
+  | EUntypedTypeImport of 'loc * Flow_import_specifier.userland
+  | EUntypedImport of 'loc * Flow_import_specifier.userland
   | ENonstrictImport of 'loc
   | EUnclearType of 'loc
   | EDeprecatedBool of 'loc
@@ -2322,11 +2322,24 @@ let friendly_message_of_msg = function
   | EImportTypeAsTypeof (_, export_name) -> Normal (MessageImportTypeAsTypeof export_name)
   | EImportTypeAsValue (_, export_name) -> Normal (MessageImportTypeAsValue export_name)
   | ENoDefaultExport (_, module_name, suggestion) ->
-    Normal (MessageNoDefaultExport { module_name; suggestion })
+    Normal
+      (MessageNoDefaultExport
+         { module_name = Flow_import_specifier.display_userland module_name; suggestion }
+      )
   | EOnlyDefaultExport (_, module_name, export_name) ->
-    Normal (MessageOnlyDefaultExport { module_name; export_name })
+    Normal
+      (MessageOnlyDefaultExport
+         { module_name = Flow_import_specifier.display_userland module_name; export_name }
+      )
   | ENoNamedExport (_, module_name, export_name, suggestion) ->
-    Normal (MessageNoNamedExport { module_name; export_name; suggestion })
+    Normal
+      (MessageNoNamedExport
+         {
+           module_name = Flow_import_specifier.display_userland module_name;
+           export_name;
+           suggestion;
+         }
+      )
   | EMissingTypeArgs { reason_op = _; reason_tapp; arity_loc; min_arity; max_arity } ->
     let reason_arity = mk_reason (desc_of_reason reason_tapp) arity_loc in
     Normal (MessageCannotUseTypeWithoutAnyTypeArgs { reason_arity; min_arity; max_arity })
@@ -2738,8 +2751,10 @@ let friendly_message_of_msg = function
   | EDocblockError (_, err) -> Normal (MessageDocblockError err)
   | EImplicitInexactObject _ -> Normal MessageImplicitInexactObject
   | EAmbiguousObjectType _ -> Normal MessageAmbiguousObjectType
-  | EUntypedTypeImport (_, module_name) -> Normal (MessageUntypedTypeImport module_name)
-  | EUntypedImport (_, module_name) -> Normal (MessageUntypedImport module_name)
+  | EUntypedTypeImport (_, module_name) ->
+    Normal (MessageUntypedTypeImport (Flow_import_specifier.display_userland module_name))
+  | EUntypedImport (_, module_name) ->
+    Normal (MessageUntypedImport (Flow_import_specifier.display_userland module_name))
   | ENonstrictImport _ -> Normal MessageNonStrictImport
   | EUnclearType _ -> Normal MessageUnclearType
   | EDeprecatedBool _ -> Normal MessageDeprecatedBool

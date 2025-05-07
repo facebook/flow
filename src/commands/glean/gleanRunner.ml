@@ -94,9 +94,7 @@ let remove_dot_flow_suffix = function
 
 let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
   match
-    Flow_import_specifier.Map.find
-      (Flow_import_specifier.userland_specifier module_ref)
-      resolved_modules
+    Flow_import_specifier.Map.find (Flow_import_specifier.Userland module_ref) resolved_modules
   with
   | Ok m -> Module.of_modulename ~root ~write_root m
   | Error mapped_name ->
@@ -106,9 +104,9 @@ let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
     let name =
       match mapped_name with
       | None -> module_ref
-      | Some (Flow_import_specifier.Userland name) -> Flow_import_specifier.unwrap_userland name
+      | Some (Flow_import_specifier.Userland name) -> name
     in
-    Module.String name
+    Module.String (Flow_import_specifier.display_userland name)
 
 let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
   (i :> int)
@@ -204,7 +202,13 @@ let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open Base.List.Let_syntax in
   (match%bind requires file_sig with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
-    let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
+    let module_ =
+      module_of_module_ref
+        ~resolved_modules
+        ~root
+        ~write_root
+        (Flow_import_specifier.userland module_ref)
+    in
     let types_info =
       let%bind (export_name, local) = SMap.elements types in
       let typeExport = TypeExport.Named export_name in
@@ -302,7 +306,13 @@ let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open Base.List.Let_syntax in
   (match%bind requires file_sig with
   | Require { source = (_, module_ref); bindings; _ } ->
-    let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
+    let module_ =
+      module_of_module_ref
+        ~resolved_modules
+        ~root
+        ~write_root
+        (Flow_import_specifier.userland module_ref)
+    in
     (match bindings with
     | None -> []
     | Some (BindIdent (loc, name)) ->
@@ -329,7 +339,13 @@ let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   | ExportFrom _ ->
     []
   | Import { source = (_, module_ref); named; ns; _ } ->
-    let module_ = module_of_module_ref ~resolved_modules ~root ~write_root module_ref in
+    let module_ =
+      module_of_module_ref
+        ~resolved_modules
+        ~root
+        ~write_root
+        (Flow_import_specifier.userland module_ref)
+    in
     let named_import_declarations =
       let%bind (export_name, local) = SMap.elements named in
       let export = export_of_export_name export_name in

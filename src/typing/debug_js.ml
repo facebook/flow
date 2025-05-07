@@ -1166,11 +1166,22 @@ let dump_error_message =
     | EImportTypeAsValue (reason, str) ->
       spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
     | ENoDefaultExport (reason, module_name, _) ->
-      spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
+      spf
+        "ENoDefaultExport (%s, %s)"
+        (dump_reason cx reason)
+        (Flow_import_specifier.display_userland module_name)
     | EOnlyDefaultExport (reason, module_name, export_name) ->
-      spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+      spf
+        "EOnlyDefaultExport (%s, %s, %s)"
+        (dump_reason cx reason)
+        (Flow_import_specifier.display_userland module_name)
+        export_name
     | ENoNamedExport (reason, module_name, export_name, _) ->
-      spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
+      spf
+        "ENoNamedExport (%s, %s, %s)"
+        (dump_reason cx reason)
+        (Flow_import_specifier.display_userland module_name)
+        export_name
     | EMissingTypeArgs { reason_op; reason_tapp; arity_loc; min_arity; max_arity } ->
       spf
         "EMissingTypeArgs { reason_op=%s; reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
@@ -1592,9 +1603,15 @@ let dump_error_message =
     | EImplicitInexactObject loc -> spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EAmbiguousObjectType loc -> spf "EAmbiguousObjectType (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
-      spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
+      spf
+        "EUntypedTypeImport (%s, %s)"
+        (string_of_aloc loc)
+        (Flow_import_specifier.display_userland module_name)
     | EUntypedImport (loc, module_name) ->
-      spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
+      spf
+        "EUntypedImport (%s, %s)"
+        (string_of_aloc loc)
+        (Flow_import_specifier.display_userland module_name)
     | ENonstrictImport loc -> spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EInternalType (loc, _) -> spf "EInternalType (%s)" (string_of_aloc loc)
     | EUnclearType loc -> spf "EUnclearType (%s)" (string_of_aloc loc)

@@ -15,7 +15,8 @@ type kind =
 
 type source =
   | Global
-  | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
+  | Builtin of Flow_import_specifier.userland
+      (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
   | File_key of File_key.t
 [@@deriving show]
 
@@ -56,7 +57,7 @@ let compare_source a b =
   | (Global, _) -> -1
   | (_, Global) -> 1
   (* builtins second *)
-  | (Builtin a, Builtin b) -> String.compare a b
+  | (Builtin a, Builtin b) -> Flow_import_specifier.compare_userland a b
   | (Builtin _, _) -> -1
   | (_, Builtin _) -> 1
   (* user modules last *)

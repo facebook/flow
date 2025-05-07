@@ -16,7 +16,7 @@ type kind =
 [@@deriving show { with_path = false }]
 
 type source =
-  | Unresolved_source of string
+  | Unresolved_source of Flow_import_specifier.userland
   | Global
 [@@deriving show { with_path = false }]
 
@@ -37,7 +37,7 @@ let of_file_sig (file_sig : File_sig.t) =
     (fun acc (require : File_sig.require) ->
       match require with
       | Import require ->
-        let source = snd require.source in
+        let source = Flow_import_specifier.userland (snd require.source) in
         let acc =
           SMap.fold
             (fun export _elem acc ->

@@ -878,6 +878,7 @@ let emit_cacheable_env_error cx loc err =
   add_output cx err
 
 let lookup_builtin_module_error cx module_name loc =
+  let module_name = Flow_import_specifier.display_userland module_name in
   let potential_generator =
     Context.missing_module_generators cx
     |> Base.List.find ~f:(fun (pattern, _) -> Str.string_match pattern module_name 0)
@@ -2084,14 +2085,14 @@ module ImportExportUtils : sig
     Context.t ->
     ?perform_platform_validation:bool ->
     import_kind_for_untyped_import_validation:Type.import_kind option ->
-    ALoc.t * string ->
+    ALoc.t * Flow_import_specifier.userland ->
     (Type.moduletype, Type.t) result
 
   val get_imported_type :
     cx ->
     singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
     import_reason:reason ->
-    module_name:string ->
+    module_name:Flow_import_specifier.userland ->
     source_module:(Type.moduletype, Type.t) result ->
     import_kind:Type.import_kind ->
     remote_name:string ->
@@ -2109,7 +2110,7 @@ module ImportExportUtils : sig
     cx ->
     reason ->
     import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
+    module_name:Flow_import_specifier.userland ->
     namespace_symbol:FlowSymbol.symbol ->
     source_module:(Type.moduletype, Type.t) result ->
     local_loc:loc ->
@@ -2120,7 +2121,7 @@ module ImportExportUtils : sig
     reason ->
     singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
     import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
+    module_name:Flow_import_specifier.userland ->
     source_module:(Type.moduletype, Type.t) result ->
     remote_name:string ->
     local_name:string ->
@@ -2131,7 +2132,7 @@ module ImportExportUtils : sig
     reason ->
     singleton_concretize_type_for_imports_exports:(cx -> reason -> Type.t -> Type.t) ->
     import_kind:Flow_ast.Statement.ImportDeclaration.import_kind ->
-    module_name:string ->
+    module_name:Flow_import_specifier.userland ->
     source_module:(Type.moduletype, Type.t) result ->
     local_name:string ->
     ALoc.t option * Type.t
@@ -2187,7 +2188,7 @@ end = struct
       | None -> Error (lookup_builtin_module_error cx mref loc)
     else
       let module_type_or_any =
-        match Context.find_require cx (Flow_import_specifier.userland_specifier mref) with
+        match Context.find_require cx (Flow_import_specifier.Userland mref) with
         | Context.TypedModule f -> f ()
         | Context.UncheckedModule module_def_loc ->
           Base.Option.iter import_kind_for_untyped_import_validation ~f:(fun import_kind ->
@@ -2347,10 +2348,10 @@ end = struct
   let get_implicitly_imported_react_type
       cx loc ~singleton_concretize_type_for_imports_exports ~purpose =
     let source_module =
-      match Context.builtin_module_opt cx "react" with
+      match Context.builtin_module_opt cx (Flow_import_specifier.userland "react") with
       | Some (_, (lazy module_type)) -> Ok module_type
       | None ->
-        let reason = mk_reason (RModule "react") loc in
+        let reason = mk_reason (RModule (Flow_import_specifier.userland "react")) loc in
         add_output
           cx
           (Error_message.EExpectedModuleLookupFailed
@@ -2372,7 +2373,7 @@ end = struct
       cx
       ~singleton_concretize_type_for_imports_exports
       ~import_reason:reason
-      ~module_name:"react"
+      ~module_name:(Flow_import_specifier.userland "react")
       ~source_module
       ~import_kind
       ~remote_name:name

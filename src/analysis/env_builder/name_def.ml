@@ -2322,7 +2322,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               in
               this#add_ordinary_binding
                 id_loc
-                (mk_reason (RNamedImportedType (source, name)) rem_id_loc)
+                (mk_reason
+                   (RNamedImportedType (Flow_import_specifier.userland source, name))
+                   rem_id_loc
+                )
                 (Import
                    {
                      import_kind;
@@ -2354,7 +2357,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                  identifier = (id_loc, { Ast.Identifier.name; _ });
                  remote_default_name_def_loc = _;
                } ->
-          let import_reason = mk_reason (RDefaultImportedType (name, source)) id_loc in
+          let import_reason =
+            mk_reason (RDefaultImportedType (name, Flow_import_specifier.userland source)) id_loc
+          in
           this#add_ordinary_binding
             id_loc
             import_reason

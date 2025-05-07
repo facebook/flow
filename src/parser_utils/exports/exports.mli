@@ -10,9 +10,10 @@ type export =
   | Default of string option  (** e.g. `export default function() {}` *)
   | Named of string  (** `export const foo: string = "foo"` *)
   | NamedType of string  (** `export type T = string` *)
-  | Module of string * export list  (** `declare module "foo" { ... exports ... }` *)
-  | ReExportModule of string
-  | ReExportModuleTypes of string
+  | Module of Flow_import_specifier.userland * export list
+      (** `declare module "foo" { ... exports ... }` *)
+  | ReExportModule of Flow_import_specifier.userland
+  | ReExportModuleTypes of Flow_import_specifier.userland
 [@@deriving show { with_path = false }]
 
 type t = export list [@@deriving show { with_path = false }]

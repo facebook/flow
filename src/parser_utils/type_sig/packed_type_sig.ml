@@ -8,7 +8,7 @@
 module Module = struct
   type 'loc t = {
     module_kind: 'loc Type_sig_pack.module_kind;
-    module_refs: string Type_sig_collections.Module_refs.t;
+    module_refs: Flow_import_specifier.userland Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
     dirty_local_defs: int array;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
@@ -20,7 +20,7 @@ end
 
 module Builtins = struct
   type 'loc t = {
-    module_refs: string Type_sig_collections.Module_refs.t;
+    module_refs: Flow_import_specifier.userland Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
     pattern_defs: 'loc Type_sig_pack.packed Type_sig_collections.Pattern_defs.t;

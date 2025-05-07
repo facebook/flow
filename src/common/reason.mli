@@ -136,11 +136,11 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RNamedImportedType of string * string
+  | RNamedImportedType of Flow_import_specifier.userland * string
   | RImportStarType of string
   | RImportStarTypeOf of string
   | RImportStar of string
-  | RDefaultImportedType of string * string
+  | RDefaultImportedType of string * Flow_import_specifier.userland
   | RAsyncImport
   | RCode of string
   | RCustom of string
@@ -165,7 +165,7 @@ type 'loc virtual_reason_desc =
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
-  | RModule of string
+  | RModule of Flow_import_specifier.userland
   | RNamespace of string
   | ROptionalChain
   | RReactProps

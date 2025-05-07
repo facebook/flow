@@ -143,7 +143,7 @@ let tests =
       let file_a = sf "path/to/a.js" in
       let file_b = sf "path/to/b.js" in
       let file_foo = sf "path/to/foo.js" in
-      let builtin_z = declare_module "z" in
+      let builtin_z = declare_module (Flow_import_specifier.userland "z") in
 
       let index =
         let open Export_index in

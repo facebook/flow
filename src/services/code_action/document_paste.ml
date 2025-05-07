@@ -59,7 +59,7 @@ class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =
            match
              Flow_js_utils.ImportExportUtils.get_module_type_or_any
                cx
-               (source_loc, value)
+               (source_loc, Flow_import_specifier.userland value)
                ~perform_platform_validation:false
                ~import_kind_for_untyped_import_validation:None
            with
@@ -186,7 +186,7 @@ let provide_document_paste_edits ~layout_options ~module_system_info ~src_dir as
               ( if import_source_is_resolved then
                 Export_index.File_key (File_key.SourceFile import_source)
               else
-                Export_index.Builtin import_source
+                Export_index.Builtin (Flow_import_specifier.userland import_source)
               )
           with
           | None -> None

@@ -5,9 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type userland = string [@@deriving show, ord]
+type userland = string [@@deriving show, eq, ord]
 
 let userland x = x
+
+let map_userland ~f x = f x
+
+let display_userland x = x
 
 let unwrap_userland x = x
 

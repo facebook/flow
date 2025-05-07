@@ -57,7 +57,7 @@ let find_tests =
       let file_a = file_source "path/to/a.js" in
       let file_b = file_source "path/to/b.js" in
       let file_foo = file_source "path/to/foo.js" in
-      let builtin_z = declare_module "z" in
+      let builtin_z = declare_module (Flow_import_specifier.userland "z") in
 
       (* defaults before named before namespace, then
          globals before builtins before source files *)

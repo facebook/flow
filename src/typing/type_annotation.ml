@@ -1004,18 +1004,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     }
                   ) ->
                 let { Ast.StringLiteral.value; _ } = str_lit in
+                let import_specifier = Flow_import_specifier.userland value in
                 let remote_module =
-                  match Context.builtin_module_opt cx value with
+                  match Context.builtin_module_opt cx import_specifier with
                   | Some (_, (lazy m)) -> Ok m
-                  | None -> Error (Flow_js_utils.lookup_builtin_module_error cx value loc)
+                  | None -> Error (Flow_js_utils.lookup_builtin_module_error cx import_specifier loc)
                 in
                 let str_t = mk_singleton_string str_loc value in
                 let (_def_loc_opt, require_t) =
                   Flow_js_utils.ImportExportUtils.cjs_require_type
                     cx
-                    (mk_annot_reason (RModule value) loc)
+                    (mk_annot_reason (RModule import_specifier) loc)
                     ~reposition:Flow.reposition
-                    ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:value ~def_loc:loc)
+                    ~namespace_symbol:
+                      (FlowSymbol.mk_module_symbol ~name:import_specifier ~def_loc:loc)
                     ~standard_cjs_esm_interop:false
                     ~legacy_interop:false
                     remote_module

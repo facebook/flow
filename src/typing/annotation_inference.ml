@@ -114,7 +114,7 @@ module type S = sig
     Reason.t ->
     Type.import_kind ->
     string ->
-    string ->
+    Flow_import_specifier.userland ->
     bool ->
     Context.resolved_require ->
     Type.t
@@ -124,7 +124,7 @@ module type S = sig
     Reason.t ->
     Type.import_kind ->
     string ->
-    string ->
+    Flow_import_specifier.userland ->
     bool ->
     Context.resolved_require ->
     Type.t

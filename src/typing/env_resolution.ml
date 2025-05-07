@@ -939,6 +939,7 @@ let resolve_opaque_type cx loc opaque =
   t
 
 let resolve_import cx id_loc import_reason import_kind module_name source_loc import =
+  let module_name = Flow_import_specifier.userland module_name in
   let source_module =
     let import_kind_for_untyped_import_validation =
       match import_kind with

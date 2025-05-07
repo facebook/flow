@@ -41,7 +41,7 @@ val mk_constant_symbol : name:string -> def_loc:ALoc.t -> symbol
 
 val mk_enum_symbol : name:string -> def_loc:ALoc.t -> symbol
 
-val mk_module_symbol : name:string -> def_loc:ALoc.t -> symbol
+val mk_module_symbol : name:Flow_import_specifier.userland -> def_loc:ALoc.t -> symbol
 
 val mk_namespace_symbol : name:string -> def_loc:ALoc.t -> symbol
 

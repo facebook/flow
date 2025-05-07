@@ -112,7 +112,7 @@ let entries_of_exports =
           | Exports.Module (module_name, exports) ->
             ( has_named,
               helper
-                ~module_name
+                ~module_name:(Flow_import_specifier.display_userland module_name)
                 ~get_dep_and_next_resolver
                 ~visited_deps
                 ~include_values
@@ -147,7 +147,7 @@ let entries_of_exports =
       acc
   and with_reexports mref ~module_name ~get_dep_and_next_resolver ~visited_deps ~include_values acc
       =
-    match get_dep_and_next_resolver mref with
+    match get_dep_and_next_resolver (Flow_import_specifier.display_userland mref) with
     | None -> acc
     | Some { ModuleResolutionLazyStream.parse; file_key; next } ->
       (* Guard against potential re-exports cycle *)
@@ -188,15 +188,15 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         Export_index.add name Export_index.Global Export_index.Named acc
       | Unresolved_source mref ->
         let result =
-          Flow_import_specifier.Map.find_opt
-            (Flow_import_specifier.userland_specifier mref)
-            resolved_modules
+          Flow_import_specifier.Map.find_opt (Flow_import_specifier.Userland mref) resolved_modules
         in
         let kind_and_name module_name =
           match import.Imports.kind with
-          | Imports.Default -> (Export_index.Default, module_name)
+          | Imports.Default ->
+            (Export_index.Default, Flow_import_specifier.display_userland module_name)
           | Imports.Named -> (Export_index.Named, import.export)
-          | Imports.Namespace -> (Export_index.Namespace, module_name)
+          | Imports.Namespace ->
+            (Export_index.Namespace, Flow_import_specifier.display_userland module_name)
           | Imports.NamedType -> (Export_index.NamedType, import.export)
           | Imports.Unknown -> failwith "Unknown Kind"
         in
@@ -206,7 +206,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
           let (source, module_name) =
             (module_name, inferred_name_of_modulename (Modulename.to_string module_name))
           in
-          let (kind, name) = kind_and_name module_name in
+          let (kind, name) = kind_and_name (Flow_import_specifier.userland module_name) in
           (match source with
           | Modulename.Filename fn ->
             let file_key = File_key fn in
@@ -218,7 +218,6 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
               Export_index.add name file_key kind acc
             | None -> acc))
         | Some (Error (Some (Flow_import_specifier.Userland mref))) ->
-          let mref = Flow_import_specifier.unwrap_userland mref in
           let (kind, name) = kind_and_name mref in
           Export_index.add name (Builtin mref) kind acc
         | Some (Error None) ->
@@ -253,7 +252,12 @@ let add_exports_of_builtins lib_exports index =
       match export with
       | Exports.Module (module_name, exports) ->
         let source = Export_index.Builtin module_name in
-        add_exports ~source ~module_name ~get_dep_and_next_resolver:(fun _ -> None) exports acc
+        add_exports
+          ~source
+          ~module_name:(Flow_import_specifier.display_userland module_name)
+          ~get_dep_and_next_resolver:(fun _ -> None)
+          exports
+          acc
       | Exports.Named name -> Export_index.add name Global Named acc
       | Exports.NamedType name -> Export_index.add name Global NamedType acc
       | Exports.DefaultType _ -> (* impossible *) acc

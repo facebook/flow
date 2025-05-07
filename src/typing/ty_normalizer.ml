@@ -662,7 +662,12 @@ module Make (I : INPUT) : S = struct
     let module_symbol_opt env reason =
       match desc_of_reason reason with
       | RModule name ->
-        let symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
+        let symbol =
+          symbol_from_reason
+            env
+            reason
+            (Reason.OrdinaryName (Flow_import_specifier.display_userland name))
+        in
         return (Some symbol)
       | RExports -> return None
       | desc ->

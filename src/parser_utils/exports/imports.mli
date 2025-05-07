@@ -14,7 +14,7 @@ type kind =
 [@@deriving show { with_path = false }]
 
 type source =
-  | Unresolved_source of string
+  | Unresolved_source of Flow_import_specifier.userland
   | Global
 [@@deriving show { with_path = false }]
 

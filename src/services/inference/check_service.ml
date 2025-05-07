@@ -46,9 +46,7 @@ let typed_builtin_module_opt cx builtin_module_name =
 let unknown_module_t cx module_name =
   match module_name with
   | Flow_import_specifier.Userland user_land_module_name ->
-    (match
-       typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
-     with
+    (match typed_builtin_module_opt cx user_land_module_name with
     | Some typed -> Context.TypedModule typed
     | None -> Context.MissingModule)
 
@@ -56,9 +54,7 @@ let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
   match mref with
   | Flow_import_specifier.Userland user_land_module_name ->
-    (match
-       typed_builtin_module_opt cx (Flow_import_specifier.unwrap_userland user_land_module_name)
-     with
+    (match typed_builtin_module_opt cx user_land_module_name with
     | Some typed -> Context.TypedModule typed
     | None -> Context.UncheckedModule loc)
 
@@ -159,8 +155,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
 
     let dependencies =
       let f buf pos =
-        let mref = Flow_import_specifier.userland_specifier (Bin.read_str buf pos) in
-        (mref, Flow_import_specifier.Map.find mref !resolved_requires)
+        let mref = Flow_import_specifier.userland (Bin.read_str buf pos) in
+        ( mref,
+          Flow_import_specifier.Map.find (Flow_import_specifier.Userland mref) !resolved_requires
+        )
       in
       let pos = Bin.module_refs buf in
       Bin.read_tbl_generic f buf pos Module_refs.init

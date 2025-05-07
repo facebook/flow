@@ -175,11 +175,11 @@ type 'loc virtual_reason_desc =
   | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
-  | RNamedImportedType of string (* module *) * string (* local name *)
+  | RNamedImportedType of Flow_import_specifier.userland (* module *) * string (* local name *)
   | RImportStarType of string
   | RImportStarTypeOf of string
   | RImportStar of string
-  | RDefaultImportedType of string * string
+  | RDefaultImportedType of string * Flow_import_specifier.userland
   | RAsyncImport
   | RCode of string
   | RCustom of string
@@ -204,7 +204,7 @@ type 'loc virtual_reason_desc =
   | RRequiredOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
-  | RModule of string
+  | RModule of Flow_import_specifier.userland
   | RNamespace of string
   | ROptionalChain
   | RReactProps
@@ -669,12 +669,14 @@ let rec string_of_desc = function
   | RUndefinedProperty x -> spf "undefined property `%s`" (display_string_of_name x)
   | RSomeProperty -> "some property"
   | RNameProperty d -> spf "property `name` of %s" (string_of_desc d)
-  | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
+  | RNamedImportedType (m, _) ->
+    spf "Named import from module `%s`" (Flow_import_specifier.display_userland m)
   | RImportStarType n -> spf "import type * as %s" n
   | RImportStarTypeOf n -> spf "import typeof * as %s" n
   | RImportStar n -> spf "import * as %s" n
   | RCode x -> "`" ^ x ^ "`"
-  | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
+  | RDefaultImportedType (_, m) ->
+    spf "Default import from `%s`" (Flow_import_specifier.display_userland m)
   | RAsyncImport -> "async import"
   | RCustom x -> x
   | RPolyType (RClass d) -> string_of_desc d
@@ -704,7 +706,7 @@ let rec string_of_desc = function
   | RRequiredOf d -> spf "required of %s" (string_of_desc d)
   | RObjectPatternRestProp -> "rest of object pattern"
   | RArrayPatternRestProp -> "rest of array pattern"
-  | RModule x -> spf "module `%s`" x
+  | RModule x -> spf "module `%s`" (Flow_import_specifier.display_userland x)
   | RNamespace x -> spf "namespace %s" x
   | ROptionalChain -> "optional chain"
   | RReactProps -> "props"

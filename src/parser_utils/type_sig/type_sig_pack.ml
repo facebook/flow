@@ -463,7 +463,12 @@ and pack_exports
         props
     in
     let exports =
-      Some (Value (DeclareModuleImplicitlyExportedObject { loc = file_loc; module_name; props }))
+      Some
+        (Value
+           (DeclareModuleImplicitlyExportedObject
+              { loc = file_loc; module_name = Flow_import_specifier.userland module_name; props }
+           )
+        )
     in
     let info = CJSModuleInfo { type_export_keys; type_stars; strict; platform_availability_set } in
     CJSModule { type_exports; exports; info }

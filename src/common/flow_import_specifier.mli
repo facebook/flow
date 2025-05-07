@@ -5,9 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type userland [@@deriving show, ord]
+type userland [@@deriving show, eq, ord]
 
 val userland : string -> userland
+
+val map_userland : f:(string -> string) -> userland -> userland
+
+val display_userland : userland -> string
 
 val unwrap_userland : userland -> string
 

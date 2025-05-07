@@ -52,6 +52,7 @@ let get_builtin_type_opt builtins name =
 
 let get_builtin_module_opt
     { original_global_modules; module_type_mapper; mapped_global_modules; _ } name =
+  let name = Flow_import_specifier.unwrap_userland name in
   match Hashtbl.find_opt mapped_global_modules name with
   | Some v -> Some v
   | None ->

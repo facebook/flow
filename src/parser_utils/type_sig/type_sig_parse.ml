@@ -312,7 +312,7 @@ and 'loc loc_node = 'loc Locs.node
 
 and 'loc local_def_node = 'loc local_binding Local_defs.node
 
-and module_ref_node = string Module_refs.node
+and module_ref_node = Flow_import_specifier.userland Module_refs.node
 
 and 'loc remote_ref_node = 'loc remote_binding Remote_refs.node
 
@@ -323,7 +323,7 @@ and 'loc pattern_node = 'loc pattern Patterns.node
 and 'loc tables = {
   locs: 'loc Locs.builder;
   local_defs: 'loc local_binding Local_defs.builder;
-  module_refs: string Module_refs.Interned.builder;
+  module_refs: Flow_import_specifier.userland Module_refs.Interned.builder;
   remote_refs: 'loc remote_binding Remote_refs.builder;
   pattern_defs: 'loc parsed Pattern_defs.builder;
   patterns: 'loc pattern Patterns.builder;
@@ -2559,7 +2559,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   | "$Exports" -> begin
     match targs with
     | Some (_, { arguments = [(_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
-      Annot (ExportsT (loc, value))
+      Annot (ExportsT (loc, Flow_import_specifier.userland value))
     | Some (_, { arguments = [(loc, _)]; _ }) -> Err (push_loc tbls loc, CheckError)
     | _ -> Err (loc, CheckError)
   end
@@ -2889,7 +2889,9 @@ let setter_def opts scope tbls xs id_loc f =
   | _ -> failwith "unexpected setter"
 
 let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; legacy_interop; _ } =
-  let mref = push_module_ref tbls (Base.String.drop_prefix value prefix_len) in
+  let mref =
+    push_module_ref tbls (Flow_import_specifier.userland (Base.String.drop_prefix value prefix_len))
+  in
   ModuleRef { loc; mref; legacy_interop }
 
 let string_literal ~frozen opts loc s =
@@ -2911,7 +2913,7 @@ let graphql_literal opts tbls loc quasi =
   let module_prefix = opts.relay_integration_module_prefix in
   match Graphql.extract_module_name ~module_prefix quasi with
   | Ok module_name ->
-    let mref = push_module_ref tbls module_name in
+    let mref = push_module_ref tbls (Flow_import_specifier.userland module_name) in
     Require { loc; mref }
   | Error _ -> Annot (Any loc)
 
@@ -3173,6 +3175,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
     begin
       match mref with
       | Some mref ->
+        let mref = Flow_import_specifier.userland mref in
         let mref = push_module_ref tbls mref in
         Require { loc; mref }
       | None ->
@@ -3269,6 +3272,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
       (* error case: non-literal require *)
       Annot (Any loc)
     | Some mref ->
+      let mref = Flow_import_specifier.userland mref in
       let mref = push_module_ref tbls mref in
       ImportDynamic { loc; mref }
   end
@@ -4358,6 +4362,7 @@ let import_decl _opts scope tbls decl =
   } =
     decl
   in
+  let mref = Flow_import_specifier.userland mref in
   begin
     match default with
     | None -> ()
@@ -4599,19 +4604,23 @@ let export_specifiers scope tbls kind source =
   function
   | E.ExportBatchSpecifier (_, Some id) ->
     let mref = Base.Option.value_exn source in
+    let mref = Flow_import_specifier.userland mref in
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
     Scope.export_ns scope tbls kind mref id_loc name
   | E.ExportBatchSpecifier (loc, None) ->
     let loc = push_loc tbls loc in
     let mref = Base.Option.value_exn source in
+    let mref = Flow_import_specifier.userland mref in
     Scope.export_star scope tbls kind loc mref
   | E.ExportSpecifiers specifiers ->
     List.iter
       (fun (_, { E.ExportSpecifier.local; exported; from_remote = _; imported_name_def_loc = _ }) ->
         match source with
         | None -> Scope.export_ref scope tbls kind ~local ~exported
-        | Some mref -> Scope.export_from scope tbls kind mref ~local ~exported)
+        | Some mref ->
+          let mref = Flow_import_specifier.userland mref in
+          Scope.export_from scope tbls kind mref ~local ~exported)
       specifiers
 
 let assignment =

@@ -17,7 +17,7 @@ let is_available_autoimport_result cx =
     let open Export_index in
     match source with
     | Global -> SSet.mem name available_globals
-    | Builtin mref -> SSet.mem mref available_modules
+    | Builtin mref -> SSet.mem (Flow_import_specifier.display_userland mref) available_modules
     | File_key _ -> true
 
 let main_of_package ~get_package_info package_dir =
@@ -275,7 +275,7 @@ let haste_package_path ~module_system_info ~src_dir require_path =
 let from_of_source ~module_system_info ~src_dir source =
   match source with
   | Export_index.Global -> None
-  | Export_index.Builtin from -> Some from
+  | Export_index.Builtin from -> Some (Flow_import_specifier.display_userland from)
   | Export_index.File_key from ->
     let module_name =
       match module_system_info.get_haste_module_info from with

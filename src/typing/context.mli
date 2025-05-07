@@ -183,7 +183,8 @@ val builtin_value_opt : t -> string -> (ALoc.t * Type.t) option
 
 val builtin_type_opt : t -> string -> (ALoc.t * Type.t) option
 
-val builtin_module_opt : t -> string -> (Reason.t * Type.moduletype Lazy.t) option
+val builtin_module_opt :
+  t -> Flow_import_specifier.userland -> (Reason.t * Type.moduletype Lazy.t) option
 
 val casting_syntax : t -> Options.CastingSyntax.t
 

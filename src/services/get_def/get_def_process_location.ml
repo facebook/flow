@@ -788,7 +788,7 @@ class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers
       match
         Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
-          (loc, module_name)
+          (loc, Flow_import_specifier.userland module_name)
           ~perform_platform_validation:false
           ~import_kind_for_untyped_import_validation:None
       with
@@ -912,7 +912,7 @@ class on_demand_searcher cx ~is_local_use ~is_legit_require ~covers_target ~purp
       match
         Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
-          (loc, module_name)
+          (loc, Flow_import_specifier.userland module_name)
           ~perform_platform_validation:false
           ~import_kind_for_untyped_import_validation:None
       with

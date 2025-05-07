@@ -46,7 +46,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
       (Flow_js_utils.ImportExportUtils.get_module_type_or_any
          cx
          ~import_kind_for_untyped_import_validation:None
-         (source_loc, module_name)
+         (source_loc, Flow_import_specifier.userland module_name)
       )
   in
   SMap.fold
@@ -63,7 +63,7 @@ let add_imported_loc_map_bindings cx ~typed_ast ~import_mode ~source map acc =
                   local_name
                   import_mode
                   local_loc
-                  (source_loc, module_name, Lazy.force source_module)
+                  (source_loc, Flow_import_specifier.userland module_name, Lazy.force source_module)
                   remote_name
                   acc
               | Some typed_ast ->
@@ -135,7 +135,12 @@ let add_require_bindings cx ~typed_ast ~import_mode ~source bindings_opt acc =
       | None ->
         let (loc, name) = source in
         let loc = ALoc.of_loc loc in
-        add_require_bindings_from_exports_map cx loc name bindings acc
+        add_require_bindings_from_exports_map
+          cx
+          loc
+          (Flow_import_specifier.userland name)
+          bindings
+          acc
       | Some typed_ast -> add_require_bindings_from_typed_ast ~typed_ast ~import_mode bindings acc
   )
 

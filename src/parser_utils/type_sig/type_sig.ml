@@ -419,7 +419,7 @@ type ('loc, 'a) value =
   | NullLit of 'loc
   | DeclareModuleImplicitlyExportedObject of {
       loc: 'loc;
-      module_name: string;
+      module_name: Flow_import_specifier.userland;
       props: ('loc, 'a) obj_value_prop smap;
     }
   | ObjLit of {
@@ -539,7 +539,7 @@ type ('loc, 'a) annot =
   | ComponentMissingRenders of 'loc
   | Values of 'loc * 'a
   | Exact of 'loc * 'a
-  | ExportsT of 'loc * string
+  | ExportsT of 'loc * Flow_import_specifier.userland
   | Conditional of {
       loc: 'loc;
       distributive_tparam: ('loc, 'a) tparam option;

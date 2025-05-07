@@ -59,7 +59,8 @@ let mk_constant_symbol ~name = mk_symbol ~kind:SymbolConstant ~name
 
 let mk_enum_symbol ~name = mk_symbol ~kind:SymbolEnum ~name
 
-let mk_module_symbol ~name = mk_symbol ~kind:SymbolModule ~name
+let mk_module_symbol ~name =
+  mk_symbol ~kind:SymbolModule ~name:(Flow_import_specifier.display_userland name)
 
 let mk_namespace_symbol ~name = mk_symbol ~kind:SymbolNamespace ~name
 

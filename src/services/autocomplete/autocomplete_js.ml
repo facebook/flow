@@ -812,7 +812,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
                 Flow_js_utils.ImportExportUtils.get_module_type_or_any
                   cx
                   ~import_kind_for_untyped_import_validation:None
-                  (loc, value)
+                  (loc, Flow_import_specifier.userland value)
                 |> Base.Result.ok
               | _ -> (* impossible *) None
             in

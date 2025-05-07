@@ -14,7 +14,8 @@ type kind =
 
 and source =
   | Global
-  | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
+  | Builtin of Flow_import_specifier.userland
+      (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
   | File_key of File_key.t
 
 and export = source * kind [@@deriving show, ord]

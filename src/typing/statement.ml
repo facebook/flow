@@ -852,7 +852,7 @@ module Make
 
   let module_ref_literal cx loc lit =
     let { Ast.ModuleRefLiteral.value; def_loc_opt = _; prefix_len; legacy_interop; _ } = lit in
-    let mref = Base.String.drop_prefix value prefix_len in
+    let mref = Flow_import_specifier.userland (Base.String.drop_prefix value prefix_len) in
     let module_type_or_any =
       Flow_js_utils.ImportExportUtils.get_module_type_or_any
         cx
@@ -1031,7 +1031,7 @@ module Make
       let export =
         match source with
         | Some (source_module, _, { Ast.StringLiteral.value = module_name; _ }) ->
-          export_from ~module_name ~source_module
+          export_from ~module_name:(Flow_import_specifier.userland module_name) ~source_module
         | None -> export_ref
       in
       let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
@@ -1760,7 +1760,7 @@ module Make
             Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
-              (source_loc, module_name)
+              (source_loc, Flow_import_specifier.userland module_name)
           in
           Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
       in
@@ -1776,7 +1776,7 @@ module Make
       let reason =
         let filename = Context.file cx in
         mk_reason
-          (RModule (File_key.to_string filename))
+          (RModule (Flow_import_specifier.userland (File_key.to_string filename)))
           (Loc.{ none with source = Some filename } |> ALoc.of_loc)
       in
       Flow.flow_t cx (t, Type.Unsoundness.exports_any reason);
@@ -1809,7 +1809,7 @@ module Make
             Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation
-              (source_loc, module_name)
+              (source_loc, Flow_import_specifier.userland module_name)
               ~perform_platform_validation
           in
           Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
@@ -1864,6 +1864,7 @@ module Make
         | ImportDeclaration.ImportTypeof -> (false, Some ImportTypeof)
         | ImportDeclaration.ImportValue -> (true, Some ImportValue)
       in
+      let module_name = Flow_import_specifier.userland module_name in
       let source_module =
         Flow_js_utils.ImportExportUtils.get_module_type_or_any
           cx
@@ -3376,26 +3377,31 @@ module Make
             Flow_js_utils.ImportExportUtils.get_module_type_or_any
               cx
               ~import_kind_for_untyped_import_validation:(Some ImportValue)
-              (loc, module_name)
+              (loc, Flow_import_specifier.userland module_name)
           in
           if Context.relay_integration_esmodules cx then
-            let import_reason = mk_reason (RDefaultImportedType (module_name, module_name)) loc in
+            let import_reason =
+              mk_reason
+                (RDefaultImportedType (module_name, Flow_import_specifier.userland module_name))
+                loc
+            in
             Flow_js_utils.ImportExportUtils.import_default_specifier_type
               cx
               import_reason
               ~singleton_concretize_type_for_imports_exports:
                 Flow.singleton_concretize_type_for_imports_exports
               ~import_kind:Ast.Statement.ImportDeclaration.ImportValue
-              ~module_name
+              ~module_name:(Flow_import_specifier.userland module_name)
               ~source_module
               ~local_name:module_name
             |> snd
           else
             Flow_js_utils.ImportExportUtils.cjs_require_type
               cx
-              (mk_reason (RModule module_name) loc)
+              (mk_reason (RModule (Flow_import_specifier.userland module_name)) loc)
               ~reposition:Flow.reposition
-              ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
+              ~namespace_symbol:
+                (mk_module_symbol ~name:(Flow_import_specifier.userland module_name) ~def_loc:loc)
               ~standard_cjs_esm_interop:false
               ~legacy_interop:false
               source_module
@@ -3639,7 +3645,7 @@ module Make
       in
       (match argument with
       | Ast.Expression.StringLiteral ({ Ast.StringLiteral.value = module_name; _ } as lit) ->
-        let t = t module_name in
+        let t = t (Flow_import_specifier.userland module_name) in
         ( (loc, t),
           Import { Import.argument = ((source_loc, t), Ast.Expression.StringLiteral lit); comments }
         )
@@ -3652,7 +3658,7 @@ module Make
             ) =
           quasi
         in
-        let t = t module_name in
+        let t = t (Flow_import_specifier.userland module_name) in
         ((loc, t), Import { Import.argument = ((source_loc, t), TemplateLiteral lit); comments })
       | _ ->
         let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
@@ -3824,6 +3830,7 @@ module Make
                 }
               )
             ) ->
+            let module_name = Flow_import_specifier.userland module_name in
             let (def_loc_opt, require_t) =
               Flow_js_utils.ImportExportUtils.get_module_type_or_any
                 cx
@@ -4314,7 +4321,7 @@ module Make
           ignore
           @@ Flow_js_utils.ImportExportUtils.get_module_type_or_any
                cx
-               (source_loc, module_name)
+               (source_loc, Flow_import_specifier.userland module_name)
                ~perform_platform_validation:false
                ~import_kind_for_untyped_import_validation:None
         | _ -> ());
