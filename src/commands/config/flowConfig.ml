@@ -676,9 +676,6 @@ module Opts = struct
   let haste_module_ref_prefix_LEGACY_INTEROP_parser =
     string (fun opts v -> Ok { opts with haste_module_ref_prefix_LEGACY_INTEROP = Some v })
 
-  (* TODO: delete the config parsing support once all internal usages are migrated. *)
-  let haste_use_name_reducers_parser = enum [("true", true)] (fun opts _ -> Ok opts)
-
   let gc_worker_major_heap_increment_parser =
     uint (fun opts v -> Ok { opts with gc_worker_major_heap_increment = Some v })
 
@@ -1165,7 +1162,6 @@ module Opts = struct
       );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
-      ("module.system.haste.use_name_reducers", haste_use_name_reducers_parser);
       ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
       ("module.system.node.main_field", node_main_field_parser);
       ("module.system.node.package_export_condition", node_package_export_condition_parser);
