@@ -1,8 +1,4 @@
 [options]
 module.system=haste
-# get basename
-module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.js\(\.flow\)?\)$' -> '\1'
-# strip .js or .js.flow suffix
-module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
 # prefix our module refs with m#
 module.system.haste.module_ref_prefix=m#
