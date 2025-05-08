@@ -630,17 +630,6 @@ module Haste : MODULE_SYSTEM = struct
       let file = Sys_utils.normalize_filename_dir_sep file in
       Str.string_match mock_path file 0
 
-  let is_haste_file options =
-    let includes = lazy (Base.List.map ~f:Str.regexp (Options.haste_paths_includes options)) in
-    let excludes = lazy (Base.List.map ~f:Str.regexp (Options.haste_paths_excludes options)) in
-    let matches_includes name =
-      List.exists (fun r -> Str.string_match r name 0) (Lazy.force includes)
-    in
-    let matches_excludes name =
-      List.exists (fun r -> Str.string_match r name 0) (Lazy.force excludes)
-    in
-    (fun name -> matches_includes name && not (matches_excludes name))
-
   let haste_name =
     let regexp = Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$" in
     (fun name -> Str.global_replace regexp "\\2" name)
@@ -651,7 +640,7 @@ module Haste : MODULE_SYSTEM = struct
     Files.is_within_node_modules ~root ~options
 
   let exported_module options =
-    let is_haste_file = is_haste_file options in
+    let is_haste_file = Options.is_haste_file options in
     let projects_options = Options.haste_namespaces_options options in
     let namespace_of_path path =
       match path |> Flow_projects.projects_bitset_of_path ~opts:projects_options with

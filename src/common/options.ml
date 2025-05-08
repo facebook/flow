@@ -289,9 +289,16 @@ let haste_namespaces_options opts =
   else
     Flow_projects.default_options
 
-let haste_paths_excludes opts = opts.opt_haste_paths_excludes
-
-let haste_paths_includes opts = opts.opt_haste_paths_includes
+let is_haste_file options =
+  let includes = lazy (Base.List.map ~f:Str.regexp options.opt_haste_paths_includes) in
+  let excludes = lazy (Base.List.map ~f:Str.regexp options.opt_haste_paths_excludes) in
+  let matches_includes name =
+    List.exists (fun r -> Str.string_match r name 0) (Lazy.force includes)
+  in
+  let matches_excludes name =
+    List.exists (fun r -> Str.string_match r name 0) (Lazy.force excludes)
+  in
+  (fun name -> matches_includes name && not (matches_excludes name))
 
 let include_suppressions opts = opts.opt_include_suppressions
 
