@@ -114,179 +114,440 @@ References:
                        ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:3
+Error ----------------------------------------------------------------------------------------------------- test.js:30:3
+
+Cannot cast `a?.b!.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
+
+   test.js:30:3
+   30|   a?.b!.c as number; // LHS is ?number
+         ^
+
+References:
+   test.js:29:15
+   29| function F(a: null | { b: null | { c: number }}) {
+                     ^^^^ [1]
+   test.js:30:14
+   30|   a?.b!.c as number; // LHS is ?number
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:3
+
+Cannot cast `a?.b!.c!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:32:3
+   32|   a?.b!.c! as empty; // LHS is number
+         ^^^^^^^
+
+References:
+   test.js:29:39
+   29| function F(a: null | { b: null | { c: number }}) {
+                                             ^^^^^^ [1]
+   test.js:32:15
+   32|   a?.b!.c! as empty; // LHS is number
+                     ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:34:3
+
+Cannot cast `(a?.b!).c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:34:3
+   34|   (a?.b)!.c as empty; //LHS is number
+         ^^^^^^^^^
+
+References:
+   test.js:29:39
+   29| function F(a: null | { b: null | { c: number }}) {
+                                             ^^^^^^ [1]
+   test.js:34:16
+   34|   (a?.b)!.c as empty; //LHS is number
+                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:39:3
+
+Cannot cast `((a!).b()!).c!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:39:3
+   39|   a!.b()!.c! as empty; // LHS is number
+         ^^^^^^^^^
+
+References:
+   test.js:37:54
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                                                            ^^^^^^ [1]
+   test.js:39:17
+   39|   a!.b()!.c! as empty; // LHS is number
+                       ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:3
+
+Cannot cast `((a!).b()!)['c']` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:41:3
+   41|   a!.b()!['c'] as empty; // LHS is ?number
+         ^^^^^^^^^^^^
+
+References:
+   test.js:37:47
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                                                     ^^^^ [1]
+   test.js:41:19
+   41|   a!.b()!['c'] as empty; // LHS is ?number
+                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:3
+
+Cannot cast `((a!).b()!)['c']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:41:3
+   41|   a!.b()!['c'] as empty; // LHS is ?number
+         ^^^^^^^^^^^^
+
+References:
+   test.js:37:54
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                                                            ^^^^^^ [1]
+   test.js:41:19
+   41|   a!.b()!['c'] as empty; // LHS is ?number
+                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
+
+Cannot cast `a?.b()!['c']` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
+
+   test.js:42:3
+   42|   a?.b()!['c'] as number; // LHS is ?number
+         ^
+
+References:
+   test.js:37:15
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                     ^^^^ [1]
+   test.js:42:19
+   42|   a?.b()!['c'] as number; // LHS is ?number
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
+
+Cannot cast `a?.b()!['c']` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:42:3
+   42|   a?.b()!['c'] as number; // LHS is ?number
+         ^^^^^^^^^^^^
+
+References:
+   test.js:37:47
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                                                     ^^^^ [1]
+   test.js:42:19
+   42|   a?.b()!['c'] as number; // LHS is ?number
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:3
+
+Cannot cast `a?.b()!['c']!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:44:3
+   44|   a?.b()!['c']! as empty; // LHS is number
+         ^^^^^^^^^^^^
+
+References:
+   test.js:37:54
+   37| function G(a: null | { b: (() => (null | { c: null | number }))}) {
+                                                            ^^^^^^ [1]
+   test.js:44:20
+   44|   a?.b()!['c']! as empty; // LHS is number
+                          ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:50:3
 
 Cannot cast `(((a!).b!)()!).c!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   test.js:31:3
-   31|   a!.b!()!.c! as empty; // LHS is number
+   test.js:50:3
+   50|   a!.b!()!.c! as empty; // LHS is number
          ^^^^^^^^^^
 
 References:
-   test.js:29:59
-   29| function H(a: null | { b: null | () => null | { c: null | number }}) {
+   test.js:48:59
+   48| function H(a: null | { b: null | () => null | { c: null | number }}) {
                                                                  ^^^^^^ [1]
-   test.js:31:18
-   31|   a!.b!()!.c! as empty; // LHS is number
+   test.js:50:18
+   50|   a!.b!()!.c! as empty; // LHS is number
                         ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:39:5
+Error ----------------------------------------------------------------------------------------------------- test.js:54:3
 
-Cannot cast `(c!).#p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a?.b()!['c']` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
 
-   test.js:39:5
-   39|     c!.#p as empty; // LHS is number
-           ^^^^^
-
-References:
-   test.js:35:7
-   35|   #p: number = 42;
-             ^^^^^^ [1]
-   test.js:39:14
-   39|     c!.#p as empty; // LHS is number
-                    ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:44:10
-
-Cannot assign `1` to `x.a!` because number [1] is incompatible with object type [2]. [incompatible-type]
-
-   test.js:44:10
-   44|   x.a! = 1; // error
-                ^ [1]
+   test.js:54:3
+   54|   a?.b()!['c'] as number; // LHS is ?number
+         ^
 
 References:
-   test.js:43:20
-   43| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
-                          ^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:47:12
-
-Cannot assign `"43"` to `(x.a!).b` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   test.js:47:12
-   47|   x.a!.b = "43"; // error
-                  ^^^^ [1]
-
-References:
-   test.js:45:22
-   45|   x.a! = ({} as {b?: number}); // ok
-                            ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:48:5
-
-Cannot get `x.f` because property `f` is missing in object type [1]. [prop-missing]
-
-   test.js:48:5
-   48|   x.f.d += 42; // error addition
-           ^
-
-References:
-   test.js:43:15
-   43| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:48:7
-
-Cannot get `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
-[incompatible-use]
-
-   test.js:48:7
-   48|   x.f.d += 42; // error addition
-             ^
-
-References:
-   test.js:48:3
-   48|   x.f.d += 42; // error addition
-         ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:48:7
-
-Cannot update `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
-[incompatible-use]
-
-   test.js:48:7
-   48|   x.f.d += 42; // error addition
-             ^
-
-References:
-   test.js:48:3
-   48|   x.f.d += 42; // error addition
-         ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:50:4
-
-Cannot cast `x.c.d! += 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
-
-   test.js:50:4
-   50|   (x.c.d! += 42) as empty; // LHS is number
-          ^^^^^
-
-References:
-   test.js:49:4
-   49|   (x.c.d! += 42) as number; // ok
-          ^^^^^^^^^^^^ [1]
-   test.js:50:21
-   50|   (x.c.d! += 42) as empty; // LHS is number
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:51:3
-
-Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
-
-   test.js:51:3
-   51|   x.c.e! += false; // incompatible operation
-         ^^^^^^^^^^^^^^^
-
-References:
-   test.js:43:57
-   43| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
-                                                               ^^^^^^ [1]
-   test.js:51:13
-   51|   x.c.e! += false; // incompatible operation
-                   ^^^^^ [2]
+   test.js:53:15
+   53| function I(a: null | { b: () => null | { c: number }}) {
+                     ^^^^ [1]
+   test.js:54:19
+   54|   a?.b()!['c'] as number; // LHS is ?number
+                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:3
 
-Cannot use operator `+=` with operands null [1] and number [2] [unsafe-addition]
+Cannot cast `(a?.b()!)['c']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    test.js:56:3
-   56|   y += 10; // error
-         ^^^^^^^
+   56|   (a?.b())!['c'] as empty; // LHS is number
+         ^^^^^^^^^^^^^^
 
 References:
-   test.js:54:15
-   54| function M(x: null | number) {
-                     ^^^^ [1]
-   test.js:56:8
-   56|   y += 10; // error
-              ^^ [2]
+   test.js:53:45
+   53| function I(a: null | { b: () => null | { c: number }}) {
+                                                   ^^^^^^ [1]
+   test.js:56:21
+   56|   (a?.b())!['c'] as empty; // LHS is number
+                           ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:3
 
-Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
+Cannot cast `a?.().b?.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
 
    test.js:60:3
-   60|   w! += false; // error incompatible
+   60|   a?.().b?.c as number // LHS is ?number from both nulls
+         ^
+
+References:
+   test.js:59:15
+   59| function J(a: null | (() => { b: null | { c: number }})) {
+                     ^^^^ [1]
+   test.js:60:17
+   60|   a?.().b?.c as number // LHS is ?number from both nulls
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:60:3
+
+Cannot cast `a?.().b?.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
+
+   test.js:60:3
+   60|   a?.().b?.c as number // LHS is ?number from both nulls
+         ^^^^^^^
+
+References:
+   test.js:59:34
+   59| function J(a: null | (() => { b: null | { c: number }})) {
+                                        ^^^^ [1]
+   test.js:60:17
+   60|   a?.().b?.c as number // LHS is ?number from both nulls
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:61:3
+
+Cannot cast `a?.().b!.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
+incompatible with number [2]. [incompatible-cast]
+
+   test.js:61:3
+   61|   a?.().b!.c as number // LHS is ?number from only a's null
+         ^
+
+References:
+   test.js:59:15
+   59| function J(a: null | (() => { b: null | { c: number }})) {
+                     ^^^^ [1]
+   test.js:61:17
+   61|   a?.().b!.c as number // LHS is ?number from only a's null
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:63:3
+
+Cannot cast `(a?.().b!).c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:63:3
+   63|   (a?.().b)!.c as empty // LHS is number
+         ^^^^^^^^^^^^
+
+References:
+   test.js:59:46
+   59| function J(a: null | (() => { b: null | { c: number }})) {
+                                                    ^^^^^^ [1]
+   test.js:63:19
+   63|   (a?.().b)!.c as empty // LHS is number
+                         ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:5
+
+Cannot cast `(c!).#p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:71:5
+   71|     c!.#p as empty; // LHS is number
+           ^^^^^
+
+References:
+   test.js:67:7
+   67|   #p: number = 42;
+             ^^^^^^ [1]
+   test.js:71:14
+   71|     c!.#p as empty; // LHS is number
+                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:76:10
+
+Cannot assign `1` to `x.a!` because number [1] is incompatible with object type [2]. [incompatible-type]
+
+   test.js:76:10
+   76|   x.a! = 1; // error
+                ^ [1]
+
+References:
+   test.js:75:20
+   75| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
+                          ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:79:12
+
+Cannot assign `"43"` to `(x.a!).b` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:79:12
+   79|   x.a!.b = "43"; // error
+                  ^^^^ [1]
+
+References:
+   test.js:77:22
+   77|   x.a! = ({} as {b?: number}); // ok
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:80:5
+
+Cannot get `x.f` because property `f` is missing in object type [1]. [prop-missing]
+
+   test.js:80:5
+   80|   x.f.d += 42; // error addition
+           ^
+
+References:
+   test.js:75:15
+   75| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:80:7
+
+Cannot get `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
+[incompatible-use]
+
+   test.js:80:7
+   80|   x.f.d += 42; // error addition
+             ^
+
+References:
+   test.js:80:3
+   80|   x.f.d += 42; // error addition
+         ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:80:7
+
+Cannot update `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
+[incompatible-use]
+
+   test.js:80:7
+   80|   x.f.d += 42; // error addition
+             ^
+
+References:
+   test.js:80:3
+   80|   x.f.d += 42; // error addition
+         ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:82:4
+
+Cannot cast `x.c.d! += 42` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:82:4
+   82|   (x.c.d! += 42) as empty; // LHS is number
+          ^^^^^
+
+References:
+   test.js:81:4
+   81|   (x.c.d! += 42) as number; // ok
+          ^^^^^^^^^^^^ [1]
+   test.js:82:21
+   82|   (x.c.d! += 42) as empty; // LHS is number
+                           ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:83:3
+
+Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
+
+   test.js:83:3
+   83|   x.c.e! += false; // incompatible operation
+         ^^^^^^^^^^^^^^^
+
+References:
+   test.js:75:57
+   75| function L(x: {a?: { b?: number }, c: { d?: number, e?: number, f?: number }}) {
+                                                               ^^^^^^ [1]
+   test.js:83:13
+   83|   x.c.e! += false; // incompatible operation
+                   ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:88:3
+
+Cannot use operator `+=` with operands null [1] and number [2] [unsafe-addition]
+
+   test.js:88:3
+   88|   y += 10; // error
+         ^^^^^^^
+
+References:
+   test.js:86:15
+   86| function M(x: null | number) {
+                     ^^^^ [1]
+   test.js:88:8
+   88|   y += 10; // error
+              ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:92:3
+
+Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
+
+   test.js:92:3
+   92|   w! += false; // error incompatible
          ^^^^^^^^^^^
 
 References:
-   test.js:54:22
-   54| function M(x: null | number) {
+   test.js:86:22
+   86| function M(x: null | number) {
                             ^^^^^^ [1]
-   test.js:60:9
-   60|   w! += false; // error incompatible
+   test.js:92:9
+   92|   w! += false; // error incompatible
                ^^^^^ [2]
 
 
 
-Found 18 errors
+Found 33 errors

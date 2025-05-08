@@ -934,6 +934,7 @@ module rec TypeTerm : sig
     | NonOptional
     | NewChain
     | ContinueChain
+    | AssertChain
 
   and method_action =
     | CallM of {

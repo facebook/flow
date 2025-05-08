@@ -630,8 +630,14 @@ module Make
     let propref = mk_named_prop ~reason:reason_prop prop_name in
     let action =
       match opt_state with
+      | AssertChain
       | NewChain ->
-        let exp_reason = mk_reason ROptionalChain chain_loc in
+        let (voided_out, exp_reason) =
+          if opt_state = NewChain then
+            (voided_out, mk_reason ROptionalChain chain_loc)
+          else
+            (MixedT.make (reason_of_t voided_out), mk_reason (RCustom "!") chain_loc)
+        in
         OptChainM
           {
             exp_reason;
@@ -726,7 +732,14 @@ module Make
     let opt_methodcalltype = mk_opt_methodcalltype targts argts true in
     let action =
       match opt_state with
+      | AssertChain
       | NewChain ->
+        let voided_out =
+          if opt_state = NewChain then
+            voided_out
+          else
+            MixedT.make (reason_of_t voided_out)
+        in
         OptChainM
           {
             exp_reason = reason_chain;
@@ -3701,7 +3714,7 @@ module Make
                   (Error_message.EUnsupportedSyntax
                      (factored_loc, Flow_intermediate_error_types.NonnullAssertion)
                   );
-              ContinueChain
+              AssertChain
           in
           (opt_state, filtered_out, Call call)
         | OptionalMember { OptionalMember.member; optional; filtered_out } ->
@@ -3716,8 +3729,7 @@ module Make
                   (Error_message.EUnsupportedSyntax
                      (factored_loc, Flow_intermediate_error_types.NonnullAssertion)
                   );
-              (* TODO *)
-              ContinueChain
+              AssertChain
           in
           (opt_state, filtered_out, Member member)
         | _ -> (NonOptional, loc, e)
@@ -3740,6 +3752,13 @@ module Make
               optional = OptionalCall.NonOptional;
               filtered_out = (filtered_out_loc, ty);
             }
+        | AssertChain ->
+          OptionalCall
+            {
+              OptionalCall.call;
+              optional = OptionalCall.AssertNonnull;
+              filtered_out = (filtered_out_loc, ty);
+            }
         | NonOptional -> Call call
       in
       let member_ast member ty =
@@ -3756,6 +3775,13 @@ module Make
             {
               OptionalMember.member;
               optional = OptionalMember.NonOptional;
+              filtered_out = (filtered_out_loc, ty);
+            }
+        | AssertChain ->
+          OptionalMember
+            {
+              OptionalMember.member;
+              optional = OptionalMember.AssertNonnull;
               filtered_out = (filtered_out_loc, ty);
             }
         | NonOptional -> Member member
@@ -4361,7 +4387,7 @@ module Make
       )
     in
     let noop _ = None in
-    let handle_new_chain conf lhs_reason loc (chain_t, voided_t, object_ast) =
+    let handle_new_chain ~assertion conf lhs_reason loc (chain_t, voided_t, object_ast) =
       let { ChainingConf.subexpressions; get_reason; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
          We need to flow the "success" type of obj_ into a OptionalChainT
@@ -4404,6 +4430,12 @@ module Make
         )
       in
       let opt_use = get_opt_use subexpression_types reason in
+      let chain_voided_out =
+        if assertion then
+          MixedT.make reason
+        else
+          voided_out
+      in
       Flow.flow
         cx
         ( chain_t,
@@ -4412,7 +4444,7 @@ module Make
               reason = chain_reason;
               lhs_reason;
               t_out = apply_opt_use opt_use mem_tvar;
-              voided_out;
+              voided_out = chain_voided_out;
             }
         );
       let mem_t = OpenT mem_tvar in
@@ -4473,6 +4505,7 @@ module Make
           | None -> get_result subexpression_types reason obj_t
         in
         (lhs_t, [], lhs_t, obj_t, object_ast, subexpression_asts)
+      | AssertChain
       | NewChain ->
         let lhs_reason = mk_expression_reason obj_ in
         let ((filtered_t, voided_t, object_ast) as object_data) =
@@ -4496,7 +4529,7 @@ module Make
               object_ast,
               subexpression_asts
             )
-          | None -> handle_new_chain conf lhs_reason loc object_data
+          | None -> handle_new_chain ~assertion:(opt = AssertChain) conf lhs_reason loc object_data
         end
       | ContinueChain -> handle_continue_chain conf (optional_chain ~encl_ctx:NoContext cx obj_)
     in
@@ -4546,7 +4579,7 @@ module Make
                   comments = _;
                 } as call
               ),
-            (NewChain | ContinueChain)
+            (NewChain | ContinueChain | AssertChain)
           ) ->
           let receiver_ast member ty =
             OptionalMember { OptionalMember.member; optional; filtered_out = (filtered_out, ty) }
@@ -4574,8 +4607,7 @@ module Make
                   (Error_message.EUnsupportedSyntax
                      (callee_loc, Flow_intermediate_error_types.NonnullAssertion)
                   );
-              (* TODO *)
-              ContinueChain
+              AssertChain
             | OptionalMember.NonOptional ->
               (* In this case:
                *
@@ -4799,8 +4831,14 @@ module Make
                   Flow.unify cx f prop_t;
                   let call_t =
                     match opt_state with
+                    | AssertChain
                     | NewChain ->
-                      let chain_reason = mk_reason ROptionalChain loc in
+                      let (chain_reason, voided_out) =
+                        if opt_state = NewChain then
+                          (mk_reason ROptionalChain loc, OpenT t)
+                        else
+                          (mk_reason (RCustom "!") loc, MixedT.make reason_call)
+                      in
                       let lhs_reason = mk_expression_reason callee in
                       OptionalChainT
                         {
@@ -4814,7 +4852,7 @@ module Make
                                 call_action = Funcalltype app;
                                 return_hint = Type_env.get_hint cx loc;
                               };
-                          voided_out = OpenT t;
+                          voided_out;
                         }
                     | _ ->
                       CallT
@@ -5391,8 +5429,13 @@ module Make
     let open Ast.Expression in
     let maybe_chain lhs_reason use_t =
       match (optional, mode) with
-      | (NewChain, Delete) ->
-        let reason = mk_reason ROptionalChain lhs_loc in
+      | ((NewChain | AssertChain), Delete) ->
+        let reason =
+          if optional = NewChain then
+            mk_reason ROptionalChain lhs_loc
+          else
+            mk_reason (RCustom "!") lhs_loc
+        in
 
         (* When deleting an optional chain, we only really care about the case
            where the object type is non-nullable. The specification is:
@@ -5418,7 +5461,7 @@ module Make
          case.
       *)
       match (optional, mode) with
-      | ((NewChain | ContinueChain), Delete) ->
+      | ((NewChain | ContinueChain | AssertChain), Delete) ->
         let (o, _, _object) = optional_chain ~encl_ctx:NoContext cx obj in
         (o, _object)
       | _ ->
@@ -5811,8 +5854,7 @@ module Make
               (Error_message.EUnsupportedSyntax
                  (lhs_loc, Flow_intermediate_error_types.NonnullAssertion)
               );
-          (* TODO *)
-          ContinueChain
+          AssertChain
         | OptionalMember.NonOptional -> ContinueChain
       in
       assign_member

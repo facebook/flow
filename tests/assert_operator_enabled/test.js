@@ -26,9 +26,41 @@ function E(a: null | { b: (() => (null | { c: null | number }))}) {
   a!.b()!.c! as empty; // LHS is number
 }
 
+function F(a: null | { b: null | { c: number }}) {
+  a?.b!.c as number; // LHS is ?number
+  a?.b!.c! as number;// ok
+  a?.b!.c! as empty; // LHS is number
+  (a?.b)!.c as number;// ok
+  (a?.b)!.c as empty; //LHS is number
+}
+
+function G(a: null | { b: (() => (null | { c: null | number }))}) {
+  a!.b()!.c! as number;// ok
+  a!.b()!.c! as empty; // LHS is number
+  a!.b()!['c'] as null | number;// ok
+  a!.b()!['c'] as empty; // LHS is ?number
+  a?.b()!['c'] as number; // LHS is ?number
+  a?.b()!['c']! as number;// ok
+  a?.b()!['c']! as empty; // LHS is number
+}
+
+
 function H(a: null | { b: null | () => null | { c: null | number }}) {
   a!.b!()!.c! as number;// ok
   a!.b!()!.c! as empty; // LHS is number
+}
+
+function I(a: null | { b: () => null | { c: number }}) {
+  a?.b()!['c'] as number; // LHS is ?number
+  (a?.b())!['c'] as number;
+  (a?.b())!['c'] as empty; // LHS is number
+}
+
+function J(a: null | (() => { b: null | { c: number }})) {
+  a?.().b?.c as number // LHS is ?number from both nulls
+  a?.().b!.c as number // LHS is ?number from only a's null
+  (a?.().b)!.c as number // ok
+  (a?.().b)!.c as empty // LHS is number
 }
 
 class K {
