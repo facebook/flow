@@ -80,7 +80,6 @@ module Opts = struct
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     haste_module_ref_prefix: string option;
     haste_module_ref_prefix_LEGACY_INTEROP: string option;
-    haste_name_reducers: (Str.regexp * string) list;
     haste_namespaces_enabled: bool;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
@@ -221,8 +220,6 @@ module Opts = struct
       gc_worker_window_size = None;
       haste_module_ref_prefix = None;
       haste_module_ref_prefix_LEGACY_INTEROP = None;
-      haste_name_reducers =
-        [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
       haste_namespaces_enabled = false;
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
@@ -1880,8 +1877,6 @@ let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 
 let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_prefix_LEGACY_INTEROP
-
-let haste_name_reducers c = c.options.Opts.haste_name_reducers
 
 let haste_namespaces_enabled c = c.options.Opts.haste_namespaces_enabled
 

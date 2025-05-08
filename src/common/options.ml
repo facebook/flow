@@ -124,7 +124,6 @@ type t = {
   opt_gc_worker: gc_control;
   opt_haste_module_ref_prefix: string option;
   opt_haste_module_ref_prefix_LEGACY_INTEROP: string option;
-  opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_namespaces_enabled: bool;
   opt_haste_paths_excludes: string list;
   opt_haste_paths_includes: string list;
@@ -283,8 +282,6 @@ let gc_worker opts = opts.opt_gc_worker
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
 let haste_module_ref_prefix_LEGACY_INTEROP opts = opts.opt_haste_module_ref_prefix_LEGACY_INTEROP
-
-let haste_name_reducers opts = opts.opt_haste_name_reducers
 
 let haste_namespaces_options opts =
   if opts.opt_haste_namespaces_enabled then

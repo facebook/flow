@@ -138,8 +138,6 @@ val haste_module_ref_prefix : config -> string option
 
 val haste_module_ref_prefix_LEGACY_INTEROP : config -> string option
 
-val haste_name_reducers : config -> (Str.regexp * string) list
-
 val haste_namespaces_enabled : config -> bool
 
 val haste_paths_excludes : config -> string list

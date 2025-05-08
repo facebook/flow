@@ -1442,7 +1442,6 @@ let make_options
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_module_ref_prefix_LEGACY_INTEROP =
       FlowConfig.haste_module_ref_prefix_LEGACY_INTEROP flowconfig;
-    opt_haste_name_reducers = FlowConfig.haste_name_reducers flowconfig;
     opt_haste_namespaces_enabled = FlowConfig.haste_namespaces_enabled flowconfig;
     opt_haste_paths_excludes =
       Base.List.map

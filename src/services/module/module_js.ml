@@ -642,8 +642,8 @@ module Haste : MODULE_SYSTEM = struct
     (fun name -> matches_includes name && not (matches_excludes name))
 
   let haste_name =
-    let reduce_name name (regexp, template) = Str.global_replace regexp template name in
-    (fun options name -> List.fold_left reduce_name name (Options.haste_name_reducers options))
+    let regexp = Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$" in
+    (fun name -> Str.global_replace regexp "\\2" name)
 
   let is_within_node_modules options =
     let root = Options.root options in
@@ -676,7 +676,7 @@ module Haste : MODULE_SYSTEM = struct
           if is_haste_file normalized_file_name then
             Some
               (Haste_module_info.mk
-                 ~module_name:(haste_name options normalized_file_name)
+                 ~module_name:(haste_name normalized_file_name)
                  ~namespace_bitset:(namespace_of_path path)
               )
           else
