@@ -637,3 +637,13 @@ function test_type_guard_context() {
     x as A; // okay
   }
 }
+
+function test_contextual_typing_rest() {
+  declare var fn: (
+    fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
+  ) => void;
+
+  fn(() => new Set(['A'])); // okay
+  fn(() => new Set(['A', 'B'])); // okay
+  fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+}

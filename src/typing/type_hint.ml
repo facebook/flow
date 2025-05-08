@@ -486,14 +486,13 @@ and type_of_hint_decomposition cx opts op reason t =
             SpeculationFlow.resolved_upper_flow_t_unsafe cx reason (fun_t, t)
         )
       | Decomp_FuncReturn ->
+        let rest_param =
+          match Flow_js.possible_concrete_types_for_inspection cx reason t with
+          | [DefT (_, FunT (_, { rest_param = Some (_, _, t); _ }))] -> Some (None, ALoc.none, t)
+          | _ -> Some (None, ALoc.none, Unsoundness.unresolved_any reason)
+        in
         Tvar.mk_where cx reason (fun return_t ->
-            let fun_t =
-              fun_t
-                ~params:[]
-                ~rest_param:(Some (None, ALoc.none, Unsoundness.unresolved_any reason))
-                ~return_t
-                ~type_guard:None
-            in
+            let fun_t = fun_t ~params:[] ~rest_param ~return_t ~type_guard:None in
             SpeculationFlow.resolved_lower_flow_t_unsafe cx reason (t, fun_t)
         )
       | Comp_ImmediateFuncCall -> fun_t ~params:[] ~rest_param:None ~return_t:t ~type_guard:None

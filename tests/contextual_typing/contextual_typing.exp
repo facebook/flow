@@ -96,6 +96,23 @@ An annotation on `x` is required because Flow cannot infer its type from local c
                            ^
 
 
+Error ------------------------------------------------------------------------------------------------ call_rest.js:29:9
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   call_rest.js:29:9
+   29|         x as number; // error string ~> number
+               ^
+
+References:
+   call_rest.js:24:37
+   24|       ) => ReturnType<() => Set<(x: string) => void>>,
+                                           ^^^^^^ [1]
+   call_rest.js:29:14
+   29|         x as number; // error string ~> number
+                    ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- destructuring_assignment.js:7:12
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1233,4 +1250,4 @@ References:
 
 
 
-Found 88 errors
+Found 89 errors

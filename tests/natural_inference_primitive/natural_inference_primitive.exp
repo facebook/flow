@@ -2508,6 +2508,27 @@ References:
                                                         ^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- local.js:648:20
+
+Cannot call `Set` with array literal bound to `iterable` because string [1] is incompatible with union type [2] in type
+argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+
+   local.js:648:20
+    648|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+                            ^^^^^
+
+References:
+   local.js:648:21
+    648|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+                             ^^^ [1]
+   local.js:643:77
+    643|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
+                                                                                     ^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1790:30
+   1790| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
 Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
@@ -2630,7 +2651,7 @@ References:
 
 
 
-Found 156 errors
+Found 157 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
