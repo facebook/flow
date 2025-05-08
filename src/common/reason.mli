@@ -342,7 +342,9 @@ val mk_obj_lit_reason : as_const:bool -> frozen:bool -> 'loc -> 'loc virtual_rea
 
 module ReasonMap : WrappedMap.S with type key = reason
 
-val mk_expression_reason : ('loc, 'loc) Flow_ast.Expression.t -> 'loc virtual_reason
+val mk_expression_reason : ('a, 'a) Flow_ast.Expression.t -> 'a virtual_reason
+
+val mk_typed_expression_reason : ('loc, 'loc * 't) Flow_ast.Expression.t -> 'loc virtual_reason
 
 val mk_initial_arguments_reason :
   ('loc, 'loc) Flow_ast.Expression.ArgList.t -> 'loc virtual_reason list

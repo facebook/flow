@@ -922,7 +922,9 @@ end)
  * In the first example we need to wrap 1 + 2 to correctly print the property
  * access. However, we don't need to wrap o in o.p. In o[1 + 2] we don't need to
  * wrap 1 + 2 since it is already wrapped in a sense. *)
-let rec code_desc_of_expression ~wrap (_, x) =
+let rec code_desc_of_expression : 'loc 'tloc. wrap:bool -> ('loc, 'tloc) Ast.Expression.t -> string
+    =
+ fun ~wrap (_, x) ->
   let do_wrap =
     if wrap then
       fun s ->
@@ -1239,28 +1241,36 @@ and code_desc_of_property ?(optional = Ast.Expression.OptionalMember.NonOptional
     ^ code_desc_of_expression ~wrap:false x
     ^ "]"
 
-let rec mk_expression_reason =
+let rec mk_generic_expression_reason :
+          'a 'b. f:('b -> 'a) -> ('a, 'b) Ast.Expression.t -> 'a virtual_reason =
   let open Ast.Expression in
-  function
-  | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
-  | (loc, Object _) -> mk_reason RObjectLit loc
-  | (loc, Array _) -> mk_reason RArrayLit loc
-  | (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
-  | (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
-  | (loc, StringLiteral { Ast.StringLiteral.value = ""; _ }) ->
-    mk_reason (RStringLit (OrdinaryName "")) loc
-  | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
-  | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
-  | (loc, Member { Member._object; property; comments = _ }) ->
-    mk_reason
-      (RMember
-         {
-           object_ = code_desc_of_expression ~wrap:true _object;
-           property = code_desc_of_property property;
-         }
-      )
-      loc
-  | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
+  fun ~f -> function
+    | (loc, TypeCast { TypeCast.expression; _ }) ->
+      repos_reason (f loc) (mk_generic_expression_reason ~f expression)
+    | (loc, Object _) -> f loc |> mk_reason RObjectLit
+    | (loc, Array _) -> f loc |> mk_reason RArrayLit
+    | (loc, ArrowFunction { Ast.Function.async; _ }) -> f loc |> func_reason ~async ~generator:false
+    | (loc, Function { Ast.Function.async; generator; _ }) -> f loc |> func_reason ~async ~generator
+    | (loc, StringLiteral { Ast.StringLiteral.value = ""; _ }) ->
+      f loc |> mk_reason (RStringLit (OrdinaryName ""))
+    | (loc, TaggedTemplate _)
+    | (loc, TemplateLiteral _) ->
+      f loc |> mk_reason RTemplateString
+    | (loc, Member { Member._object; property; comments = _ }) ->
+      f loc
+      |> mk_reason
+           (RMember
+              {
+                object_ = code_desc_of_expression ~wrap:true _object;
+                property = code_desc_of_property property;
+              }
+           )
+    | (loc, _) as x -> f loc |> mk_reason (RCode (code_desc_of_expression ~wrap:false x))
+
+let mk_expression_reason : ('a, 'a) Flow_ast.Expression.t -> 'a virtual_reason =
+ (fun t -> mk_generic_expression_reason ~f:Base.Fn.id t)
+
+let mk_typed_expression_reason t = mk_generic_expression_reason ~f:fst t
 
 let mk_initial_arguments_reason =
   let open Ast.Expression in
