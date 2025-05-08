@@ -1,0 +1,4 @@
+[options]
+all=true
+module.system=haste
+module.system.haste.paths.includes=<PROJECT_ROOT>/.*
