@@ -482,15 +482,6 @@ module Opts = struct
           let module_file_exts = v :: opts.module_file_exts in
           Ok { opts with module_file_exts })
 
-  let haste_name_reducers_parser =
-    mapping
-      ~init:(fun opts -> { opts with haste_name_reducers = [] })
-      ~multiple:true
-      (fun (pattern, template) ->
-        let%bind pattern = optparse_regexp pattern in
-        Ok (pattern, template))
-      (fun opts v -> Ok { opts with haste_name_reducers = v :: opts.haste_name_reducers })
-
   let projects_parser =
     string
       ~init:(fun opts -> { opts with projects = [] })
@@ -1156,7 +1147,6 @@ module Opts = struct
       ( "module.system.haste.module_ref_prefix_LEGACY_INTEROP",
         haste_module_ref_prefix_LEGACY_INTEROP_parser
       );
-      ("module.system.haste.name_reducers", haste_name_reducers_parser);
       ( "module.system.haste.experimental.namespaces",
         boolean (fun opts v -> Ok { opts with haste_namespaces_enabled = v })
       );
