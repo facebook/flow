@@ -922,6 +922,15 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
             ( if possibly_in_context_allow_hook_call then
               if Context.hook_compatibility cx || is_definitely_component_due_to_hint () then
                 HookCallPermissivelyAllowedUnderCompatibilityMode
+              else if
+                match id with
+                | None -> false
+                | Some (_, { Ast.Identifier.name; _ }) ->
+                  Base.Option.is_none (Flow_ast_utils.hook_function fn)
+                  && componentlike_name name
+                  && is_definitely_non_component_due_to_typing ()
+              then
+                HookCallDefinitelyNotAllowed
               else
                 HookCallStrictlyDisallowedWithoutCompatibilityMode
             else if

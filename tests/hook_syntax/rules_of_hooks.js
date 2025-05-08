@@ -1008,7 +1008,7 @@ class ClassComponentWithHook extends React.Component<any> {
 
 // not allowed in compatibility
 async function AsyncComponent() {
-  useState(); // error only in noncompat
+  useState(); // error because the return type is not React.Node
 }
 /* [asyncComponentHookError('useState')] */
 

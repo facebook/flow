@@ -2189,17 +2189,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:1011:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:1011:3
-   1011|   useState(); // error only in noncompat
+   1011|   useState(); // error because the return type is not React.Node
            ^^^^^^^^^^
 
 References:
    rules_of_hooks.js:1011:3
-   1011|   useState(); // error only in noncompat
+   1011|   useState(); // error because the return type is not React.Node
            ^^^^^^^^ [1]
 
 
