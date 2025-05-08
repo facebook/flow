@@ -22,14 +22,6 @@ Flow doesn't support non-null assertions (the postfix `!` operator). [unsupporte
         ^^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:4:3
-
-Unsupported expression pattern in destructuring. [unsupported-syntax]
-
-   4|   a! = 42;
-        ^^
-
-
 Error ------------------------------------------------------------------------------------------------------ test.js:5:3
 
 Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
@@ -49,14 +41,6 @@ Flow doesn't support non-null assertions (the postfix `!` operator). [unsupporte
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
 Flow doesn't support non-null assertions (the postfix `!` operator). [unsupported-syntax]
-
-   8|   b.x! = 42;
-        ^^^^
-
-
-Error ------------------------------------------------------------------------------------------------------ test.js:8:3
-
-Unsupported expression pattern in destructuring. [unsupported-syntax]
 
    8|   b.x! = 42;
         ^^^^
@@ -128,4 +112,4 @@ Flow doesn't support non-null assertions (the postfix `!` operator). [unsupporte
 
 
 
-Found 15 errors
+Found 13 errors

@@ -200,7 +200,7 @@ val unwrap_nonnull_lhs_expr :
   ('loc, 'loc) Flow_ast.Expression.t
   * bool
   * (('loc, 'tloc) Flow_ast.Expression.t ->
-    map_loc:('loc -> 'tloc) ->
+    filter_nullish:('loc -> 'tloc) ->
     ('loc, 'tloc) Flow_ast.Expression.t
     )
 

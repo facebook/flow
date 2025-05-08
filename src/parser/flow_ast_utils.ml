@@ -766,7 +766,7 @@ let rec unwrap_nonnull_lhs_expr :
           ('loc, 'tloc1) Expression.t
           * bool
           * (('loc, 'tloc2) Expression.t ->
-            map_loc:('tloc1 -> 'tloc2) ->
+            filter_nullish:('tloc1 -> 'tloc2) ->
             ('loc, 'tloc2) Expression.t
             ) =
  fun expr ->
@@ -775,18 +775,18 @@ let rec unwrap_nonnull_lhs_expr :
       Expression.Unary { Expression.Unary.operator = Expression.Unary.Nonnull; argument; comments }
     ) ->
     let (argument, _, reconstruct) = unwrap_nonnull_lhs_expr argument in
-    let reconstruct argument ~map_loc =
-      ( map_loc loc,
+    let reconstruct argument ~filter_nullish =
+      ( filter_nullish loc,
         Expression.Unary
           {
             Expression.Unary.operator = Expression.Unary.Nonnull;
-            argument = reconstruct ~map_loc argument;
+            argument = reconstruct ~filter_nullish argument;
             comments;
           }
       )
     in
     (argument, true, reconstruct)
-  | _ -> (expr, false, (fun argument ~map_loc:_ -> argument))
+  | _ -> (expr, false, (fun argument ~filter_nullish:_ -> argument))
 
 let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pattern.t * bool =
  fun pat ->

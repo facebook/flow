@@ -5092,9 +5092,11 @@ module Make
         Flow_js_utils.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
-      (* TODO *)
-      let (((_, arg_t), _) as argument) = expression cx argument in
-      (arg_t, { operator = Nonnull; argument; comments })
+      let (((_, argt), _) as argument) = expression cx argument in
+      let reason = mk_reason (RCustom "!") loc in
+      ( Operators.non_maybe cx reason argt,
+        { operator = Ast.Expression.Unary.Delete; argument; comments }
+      )
 
   (* numeric pre/post inc/dec *)
   and update cx loc expr =
@@ -5338,28 +5340,44 @@ module Make
             optional;
           }
       )
-    | ( loc,
-        Ast.Pattern.Expression
-          ( ( _,
-              Ast.Expression.Unary
-                { Ast.Expression.Unary.operator = Ast.Expression.Unary.Nonnull; _ }
-            ) as m
-          )
-      ) ->
-      if not (Context.assert_operator cx) then
+    | (loc, Ast.Pattern.Expression expr) ->
+      let (expr, assertion, reconstruct_ast) = Flow_ast_utils.unwrap_nonnull_lhs_expr expr in
+      if assertion && not (Context.assert_operator cx) then
         Flow_js_utils.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
-      let (((_, t), _) as m) = expression cx m in
-      ((loc, t), Ast.Pattern.Expression m)
-    | (loc, Ast.Pattern.Expression ((_, Ast.Expression.Member _) as m)) ->
-      let (((_, t), _) as m) = expression cx m in
-      ((loc, t), Ast.Pattern.Expression m)
+      begin
+        match expr with
+        | (id_exp_loc, Ast.Expression.Identifier (id_loc, name)) ->
+          let t = identifier cx empty_syntactic_flags name id_loc in
+          let (((_, t), _) as expr) =
+            reconstruct_ast
+              ~filter_nullish:(fun loc ->
+                let reason = mk_reason (RCustom "!") loc in
+                let t = Operators.non_maybe cx reason t in
+                (loc, t))
+              ((id_exp_loc, t), Ast.Expression.Identifier ((id_loc, t), name))
+          in
+          ((loc, t), Ast.Pattern.Expression expr)
+        | (_, Ast.Expression.Member _) ->
+          let (((_, t), _) as expr) = expression cx expr in
+          let (((_, t), _) as expr) =
+            reconstruct_ast
+              ~filter_nullish:(fun loc ->
+                let reason = mk_reason (RCustom "!") loc in
+                let t = Operators.non_maybe cx reason t in
+                (loc, t))
+              expr
+          in
+          ((loc, t), Ast.Pattern.Expression expr)
+        | _ ->
+          Flow.add_output cx (Error_message.EInvalidLHSInAssignment loc);
+          Tast_utils.error_mapper#pattern patt
+      end
     (* TODO: object, array and non-member expression patterns are invalid
        (should be a parse error but isn't yet) *)
     | (lhs_loc, Ast.Pattern.Object _)
-    | (lhs_loc, Ast.Pattern.Array _)
-    | (lhs_loc, Ast.Pattern.Expression _) ->
+    | (lhs_loc, Ast.Pattern.Array _) ->
       Flow.add_output cx (Error_message.EInvalidLHSInAssignment lhs_loc);
       Tast_utils.error_mapper#pattern patt
 
@@ -5554,30 +5572,67 @@ module Make
     let (((_, t), _) as typed_rhs) = expression cx rhs in
     let lhs =
       match lhs with
-      | ( _,
-          Ast.Pattern.Expression
-            ( expr_loc,
-              Ast.Expression.Unary
-                { Ast.Expression.Unary.operator = Ast.Expression.Unary.Nonnull; _ }
-            )
-        )
-        when not (Context.assert_operator cx) ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.EUnsupportedSyntax
-             (expr_loc, Flow_intermediate_error_types.NonnullAssertion)
-          );
-        (* TODO *)
-        Destructuring.assignment cx rhs lhs
-      | (lhs_loc, Ast.Pattern.Expression (pat_loc, Ast.Expression.Member mem)) ->
-        let lhs_prop_reason = mk_pattern_reason lhs in
-        let make_op ~lhs ~prop = Op (SetProperty { lhs; prop; value = mk_expression_reason rhs }) in
-        let reconstruct_ast mem _ = Ast.Expression.Member mem in
-        let ((lhs_loc, t), lhs) =
-          assign_member cx ~make_op ~t ~lhs_loc ~lhs_prop_reason ~reconstruct_ast ~mode:Assign mem
+      | (lhs_loc, Ast.Pattern.Expression (expr_loc, expr)) ->
+        let ((pat_loc, expr), assertion, reconstruct_ast) =
+          Flow_ast_utils.unwrap_nonnull_lhs_expr (expr_loc, expr)
         in
-        ((lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), lhs))
-      (* other r structures are handled as destructuring assignments *)
+        if assertion && not (Context.assert_operator cx) then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (expr_loc, Flow_intermediate_error_types.NonnullAssertion)
+            );
+        begin
+          match expr with
+          | Ast.Expression.Member mem ->
+            let lhs_prop_reason = mk_pattern_reason lhs in
+            let make_op ~lhs ~prop =
+              Op (SetProperty { lhs; prop; value = mk_expression_reason rhs })
+            in
+            let ((lhs_loc, t), lhs) =
+              let reconstruct_ast_internal mem _ = Ast.Expression.Member mem in
+              assign_member
+                cx
+                ~make_op
+                ~t
+                ~lhs_loc
+                ~lhs_prop_reason
+                ~reconstruct_ast:reconstruct_ast_internal
+                ~mode:Assign
+                mem
+            in
+            ( (lhs_loc, t),
+              Ast.Pattern.Expression
+                (reconstruct_ast ~filter_nullish:(fun loc -> (loc, t)) ((pat_loc, t), lhs))
+            )
+          | Ast.Expression.Identifier name ->
+            let pat =
+              ( lhs_loc,
+                Ast.Pattern.Identifier
+                  {
+                    Ast.Pattern.Identifier.name;
+                    optional = false;
+                    annot = Ast.Type.Missing (fst name);
+                  }
+              )
+            in
+            let ((_, t), pat) = Destructuring.assignment cx rhs pat in
+            begin
+              match pat with
+              | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
+                ( (lhs_loc, t),
+                  Ast.Pattern.Expression
+                    (reconstruct_ast
+                       ~filter_nullish:(fun loc -> (loc, t))
+                       ((pat_loc, t), Ast.Expression.Identifier name)
+                    )
+                )
+              | _ ->
+                Utils_js.assert_false
+                  "Result of destructuring an identifier should be an identifier"
+            end
+          | _ -> Destructuring.assignment cx rhs lhs
+        end
       | _ -> Destructuring.assignment cx rhs lhs
     in
     (t, lhs, typed_rhs)
@@ -5636,6 +5691,7 @@ module Make
       (* lhs (op)= rhs *)
       let (((_, lhs_t), _) as lhs_ast) = assignment_lhs cx lhs in
       let (((_, rhs_t), _) as rhs_ast) = expression cx rhs in
+
       let result_t =
         Operators.arith cx reason (ArithKind.arith_kind_of_assignment_operator op) lhs_t rhs_t
       in
@@ -5652,6 +5708,14 @@ module Make
           Some (lhs_loc, Ast.Expression.Identifier name)
         | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
           Some (lhs_loc, Ast.Expression.Member mem)
+        | ( lhs_loc,
+            Ast.Pattern.Expression
+              ( _,
+                Ast.Expression.Unary
+                  ({ Ast.Expression.Unary.operator = Ast.Expression.Unary.Nonnull; _ } as op)
+              )
+          ) ->
+          Some (lhs_loc, Ast.Expression.Unary op)
         | _ -> None
       in
       (match left_expr with

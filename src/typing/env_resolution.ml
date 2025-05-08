@@ -882,7 +882,7 @@ let resolve_class cx id_loc reason class_loc class_ =
   Type_env.bind_class_self_type cx class_t_internal class_loc;
   class_t
 
-let resolve_op_assign cx ~exp_loc lhs op rhs =
+let resolve_op_assign cx ~exp_loc lhs assertion op rhs =
   let open Ast.Expression in
   let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
   match op with
@@ -899,7 +899,14 @@ let resolve_op_assign cx ~exp_loc lhs op rhs =
   | Assignment.BitXorAssign
   | Assignment.BitAndAssign ->
     (* lhs (op)= rhs *)
-    let ((_, lhs_t), _) = Statement.assignment_lhs cx lhs in
+    let ((lhs_loc, lhs_t), _) = Statement.assignment_lhs cx lhs in
+    let lhs_t =
+      if assertion then
+        let reason = mk_reason (RCustom "!") lhs_loc in
+        Operators.non_maybe cx reason lhs_t
+      else
+        lhs_t
+    in
     let rhs_t = expression cx rhs in
     Operators.arith cx reason (ArithKind.arith_kind_of_assignment_operator op) lhs_t rhs_t
   | Assignment.AndAssign
@@ -1138,7 +1145,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | Class { class_; class_loc; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
-    | OpAssign { exp_loc; lhs; op; rhs; assertion = _ } -> resolve_op_assign cx ~exp_loc lhs op rhs
+    | OpAssign { exp_loc; lhs; op; rhs; assertion } ->
+      resolve_op_assign cx ~exp_loc lhs assertion op rhs
     | Update { exp_loc; op = _ } -> resolve_update cx ~id_loc ~exp_loc def_reason
     | TypeAlias (loc, alias) -> resolve_type_alias cx loc alias
     | OpaqueType (loc, opaque) -> resolve_opaque_type cx loc opaque

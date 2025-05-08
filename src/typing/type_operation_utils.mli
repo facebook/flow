@@ -50,6 +50,8 @@ module Operators : sig
   val unary_arith : Context.t -> reason -> Type.UnaryArithKind.t -> Type.t -> Type.t
 
   val unary_not : Context.t -> reason -> Type.t -> Type.t
+
+  val non_maybe : Context.t -> reason -> Type.t -> Type.t
 end
 
 module Promise : sig

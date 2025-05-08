@@ -488,6 +488,26 @@ module Operators = struct
             ~check_base:(fun cx t -> Flow.flow_t cx (f reason t, tout)
           )
       )
+
+  let non_maybe =
+    let f = function
+      | DefT (r, NullT)
+      | DefT (r, VoidT) ->
+        EmptyT.why r
+      | DefT (r, MixedT (Mixed_everything | Mixed_non_null | Mixed_non_void)) ->
+        DefT (r, MixedT Mixed_non_maybe)
+      | t -> t
+    in
+    fun cx reason t ->
+      Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
+          DistributeUnionIntersection.distribute
+            cx
+            t
+            ~break_up_union:Flow.possible_concrete_types_for_inspection
+            ~get_no_match_error_loc:loc_of_reason
+            ~check_base:(fun cx t -> Flow.flow_t cx (f t, tout)
+          )
+      )
 end
 
 module Promise = struct
