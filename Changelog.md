@@ -1,3 +1,13 @@
+### 0.270.0
+
+Likely to cause new Flow errors:
+* When component syntax support is enabled, upper case functions with component-like name but doesn't return `React.Node` will no longer be treated like components. Thus, all the hooks call in such functions will have `react-rule-hook-definitely-not-in-component-or-hook` errors.
+* Usage of `Object.assign` will now trigger `unsafe-object-assign` lint error that's on by default. The type checking behavior for `Object.assign` will otherwise stay the same for now.
+* When Flow decides that the hook call definitely doesn't happen within component or hook body, it will emit errors with code `react-rule-hook-definitely-not-in-component-or-hook`.
+
+Parser:
+* Parse the TS nonnull assertion operator.
+
 ### 0.269.1
 
 It should have the same behavior as 0.269.0.
