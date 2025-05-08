@@ -661,6 +661,10 @@ and 'loc t' =
     }
   | EMatchStatementInvalidBody of { loc: 'loc }
   | EUndocumentedFeature of { loc: 'loc }
+  | EIllegalAssertOperator of {
+      op: 'loc virtual_reason;
+      obj: 'loc virtual_reason;
+    }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
       refined_loc: 'loc;
@@ -1501,6 +1505,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
   | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
+  | EIllegalAssertOperator { op; obj } ->
+    EIllegalAssertOperator { op = map_reason op; obj = map_reason obj }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -1818,7 +1824,8 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidPatternReference _
   | EMatchInvalidObjectShorthand _
   | EMatchStatementInvalidBody _
-  | EUndocumentedFeature _ ->
+  | EUndocumentedFeature _
+  | EIllegalAssertOperator _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1890,7 +1897,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeGuardThisParam reason
   | ETypeGuardFunctionInvalidWrites { reason; _ }
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
-  | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ } ->
+  | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
+  | EIllegalAssertOperator { op = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3068,6 +3076,7 @@ let friendly_message_of_msg = function
     Normal (MessageMatchInvalidObjectShorthand { name })
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
+  | EIllegalAssertOperator { obj; _ } -> Normal (MessageIllegalAssertOperator { obj })
 
 let defered_in_speculation = function
   | EUntypedTypeImport _
@@ -3444,3 +3453,4 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
   | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
   | EUndocumentedFeature _ -> Some UndocumentedFeature
+  | EIllegalAssertOperator _ -> Some IllegalAssertOperator

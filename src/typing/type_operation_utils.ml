@@ -917,4 +917,27 @@ module TypeAssertions = struct
         |> Base.List.is_empty
         |> not
     )
+
+  let check_assert_operator_implicitly_nullable =
+    let valid_target = function
+      | AnyT _
+      | DefT (_, (ObjT { flags = { obj_kind = Indexed _; _ }; _ } | ArrT (ArrayAT _ | ROArrayAT _)))
+        ->
+        true
+      | _ -> false
+    in
+    fun cx t ->
+      let ts = Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t in
+      Base.List.map ~f:valid_target ts |> Base.List.fold ~f:( || ) ~init:false
+
+  let check_assert_operator_nullable =
+    let valid_target = function
+      | AnyT _
+      | DefT (_, (NullT | VoidT | MixedT (Mixed_everything | Mixed_non_null | Mixed_non_void))) ->
+        true
+      | _ -> false
+    in
+    fun cx t ->
+      let ts = Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t in
+      Base.List.map ~f:valid_target ts |> Base.List.fold ~f:( || ) ~init:false
 end

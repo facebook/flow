@@ -5133,7 +5133,7 @@ module Make
       let (((_, argt), _) as argument) = expression cx argument in
       let reason = mk_reason (RCustom "!") loc in
       ( Operators.non_maybe cx reason argt,
-        { operator = Ast.Expression.Unary.Delete; argument; comments }
+        { operator = Ast.Expression.Unary.Nonnull; argument; comments }
       )
 
   (* numeric pre/post inc/dec *)

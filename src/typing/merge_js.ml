@@ -700,6 +700,68 @@ let emit_refinement_information_as_errors =
       emit_invalidated_locations_info cx
     )
 
+let check_assert_operator cx tast =
+  let open Type_operation_utils in
+  let check_assert_operator_useful ~op_reason expr =
+    let obj_reason = Reason.mk_typed_expression_reason expr in
+    let ((_, t), expr_node) = expr in
+    let legal =
+      TypeAssertions.check_assert_operator_nullable cx t
+      ||
+      match expr_node with
+      | Ast.Expression.Member { Ast.Expression.Member._object; _ }
+      | Ast.Expression.OptionalMember
+          { Ast.Expression.OptionalMember.member = { Ast.Expression.Member._object; _ }; _ } ->
+        let ((_, obj_t), _) = _object in
+        TypeAssertions.check_assert_operator_implicitly_nullable cx obj_t
+      | _ -> false
+    in
+    if not legal then
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EIllegalAssertOperator { op = op_reason; obj = obj_reason })
+  in
+  let checker =
+    object
+      inherit
+        [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+
+      method on_type_annot x = x
+
+      method on_loc_annot x = x
+
+      method! expression expr =
+        begin
+          let open Ast.Expression in
+          match expr with
+          | (_, Unary { Unary.operator = Unary.Nonnull; argument; _ }) ->
+            let op_reason = Reason.mk_typed_expression_reason expr in
+            check_assert_operator_useful ~op_reason argument
+          | ( _,
+              OptionalCall
+                {
+                  OptionalCall.optional = OptionalCall.AssertNonnull;
+                  call = { Call.callee = target; _ };
+                  _;
+                }
+            )
+          | ( _,
+              OptionalMember
+                {
+                  OptionalMember.optional = OptionalMember.AssertNonnull;
+                  member = { Member._object = target; _ };
+                  _;
+                }
+            ) ->
+            let op_reason = Reason.mk_typed_expression_reason target in
+            check_assert_operator_useful ~op_reason expr
+          | _ -> ()
+        end;
+        super#expression expr
+    end
+  in
+  if Context.assert_operator cx then ignore (checker#program tast : (_, _) Ast.Program.t)
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -734,6 +796,7 @@ let post_merge_checks cx ast tast metadata =
   check_union_opt cx;
   check_spread_prop_keys cx tast;
   check_match_exhaustiveness cx tast;
+  check_assert_operator cx tast;
   emit_refinement_information_as_errors cx
 
 (* Check will lazily create types for the checked file's dependencies. These

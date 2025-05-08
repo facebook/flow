@@ -15,6 +15,21 @@ References:
               ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+`a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   test.js:8:3
+   8|   a! as number;// ok
+        ^^
+
+References:
+   test.js:8:3
+   8|   a! as number;// ok
+        ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
 Cannot cast `a!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -32,6 +47,21 @@ References:
               ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+`a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   test.js:9:3
+   9|   a! as empty; // LHS is number
+        ^^
+
+References:
+   test.js:9:3
+   9|   a! as empty; // LHS is number
+        ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
 Cannot cast `f()!` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -47,6 +77,21 @@ References:
    test.js:14:11
    14|   f()! as empty; // LHS is number
                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:3
+
+`f` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   test.js:15:3
+   15|   f!() as number // LHS is ?number
+         ^^
+
+References:
+   test.js:15:3
+   15|   f!() as number // LHS is ?number
+         ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
@@ -423,6 +468,36 @@ References:
                           ^^^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:78:3
+
+`x.a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   test.js:78:3
+   78|   x.a!.b = 42; // ok
+         ^^^^
+
+References:
+   test.js:78:3
+   78|   x.a!.b = 42; // ok
+         ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:79:3
+
+`x.a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   test.js:79:3
+   79|   x.a!.b = "43"; // error
+         ^^^^
+
+References:
+   test.js:79:3
+   79|   x.a!.b = "43"; // error
+         ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:79:12
 
 Cannot assign `"43"` to `(x.a!).b` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -479,6 +554,21 @@ References:
    test.js:80:3
    80|   x.f.d += 42; // error addition
          ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:82:4
+
+`x.c.d` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   test.js:82:4
+   82|   (x.c.d! += 42) as empty; // LHS is number
+          ^^^^^^
+
+References:
+   test.js:82:4
+   82|   (x.c.d! += 42) as empty; // LHS is number
+          ^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:4
@@ -549,5 +639,140 @@ References:
                ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- useful_check.js:2:1
 
-Found 33 errors
+`x` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   useful_check.js:2:1
+   2| x!; // error
+      ^^
+
+References:
+   useful_check.js:2:1
+   2| x!; // error
+      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- useful_check.js:3:1
+
+`x` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   useful_check.js:3:1
+   3| x! = 42; // error
+      ^^
+
+References:
+   useful_check.js:3:1
+   3| x! = 42; // error
+      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- useful_check.js:4:1
+
+`x + 20` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:4:1
+   4| (x + 20)!; // error;
+      ^^^^^^^^^
+
+References:
+   useful_check.js:4:2
+   4| (x + 20)!; // error;
+       ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- useful_check.js:7:1
+
+`y` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to values
+with nullable types. [illegal-assert-operator]
+
+   useful_check.js:7:1
+   7| y!; // error;
+      ^^
+
+References:
+   useful_check.js:7:1
+   7| y!; // error;
+      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- useful_check.js:8:1
+
+`y.a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:8:1
+   8| y.a!; // error;
+      ^^^^
+
+References:
+   useful_check.js:8:1
+   8| y.a!; // error;
+      ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- useful_check.js:10:1
+
+`y.a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:10:1
+   10| y.a!.b; // error
+       ^^^^
+
+References:
+   useful_check.js:10:1
+   10| y.a!.b; // error
+       ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- useful_check.js:23:1
+
+`a3[0]` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:23:1
+   23| a3[0]!; // error
+       ^^^^^^
+
+References:
+   useful_check.js:23:1
+   23| a3[0]!; // error
+       ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- useful_check.js:26:1
+
+`o2.e` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:26:1
+   26| o2.e!; // error
+       ^^^^^
+
+References:
+   useful_check.js:26:1
+   26| o2.e!; // error
+       ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- useful_check.js:27:1
+
+`o3.e` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be applied to
+values with nullable types. [illegal-assert-operator]
+
+   useful_check.js:27:1
+   27| o3.e!; // error
+       ^^^^^
+
+References:
+   useful_check.js:27:1
+   27| o3.e!; // error
+       ^^^^ [1]
+
+
+
+Found 48 errors

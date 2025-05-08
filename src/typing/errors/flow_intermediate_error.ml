@@ -3752,6 +3752,17 @@ let to_printable_error :
         text "It might be removed in the future, ";
         text "and the behavior might change at any time without warning.";
       ]
+    | MessageIllegalAssertOperator { obj } ->
+      let explanation =
+        [text "The assert operator can only be applied to values with nullable types."]
+      in
+      [
+        ref obj;
+        text " is not a valid target of the nonnull assertion operator (";
+        code "!";
+        text "). ";
+      ]
+      @ explanation
     | MessageTupleElementNotReadable { reason; index; name } ->
       mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name "readable"
     | MessageTupleElementNotWritable { reason; index; name } ->

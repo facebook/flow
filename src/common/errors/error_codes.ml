@@ -183,6 +183,7 @@ type error_code =
   | ReactIntrinsicOverlap
   | NestedComponent
   | TypeParamConstCode
+  | IllegalAssertOperator
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -412,3 +413,4 @@ let string_of_code : error_code -> string = function
   | BigIntNumCoerce -> "bigint-num-coerce"
   | InvalidComponentProp -> "invalid-component-prop"
   | TypeParamConstCode -> "incompatible-type-param-const"
+  | IllegalAssertOperator -> "illegal-assert-operator"

@@ -80,4 +80,8 @@ module TypeAssertions : sig
     Context.t -> ALoc.t -> async:bool -> use_op:Type.use_op -> Type.t -> Type.t list -> unit
 
   val non_exhaustive : Context.t -> Type.t list -> bool
+
+  val check_assert_operator_nullable : Context.t -> Type.t -> bool
+
+  val check_assert_operator_implicitly_nullable : Context.t -> Type.t -> bool
 end
