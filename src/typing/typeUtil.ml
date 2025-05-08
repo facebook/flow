@@ -503,7 +503,7 @@ let is_mixed_subtype l mixed_flavor =
   | (l, Mixed_truthy) -> is_concrete l && not (is_falsy l)
   | (_, Mixed_everything) -> true
 
-let quick_subtype t1 t2 =
+let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   match (t1, t2) with
   | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
       DefT (_, (NumGeneralT _ | NumT_UNSOUND _))
@@ -571,7 +571,10 @@ let quick_subtype t1 t2 =
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     OrdinaryName actual = expected
-  | _ -> reasonless_eq t1 t2
+  | _ ->
+    let result = reasonless_eq t1 t2 in
+    if result then on_singleton_eq t1;
+    result
 
 let reason_of_propref = function
   | Named { reason; _ } -> reason

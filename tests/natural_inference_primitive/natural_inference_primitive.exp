@@ -861,25 +861,10 @@ References:
                          ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:222:11
-
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
-
-   imported.js:222:11
-   222|   set({f: 2}); // okay
-                  ^ [1]
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- imported.js:223:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+[incompatible-call]
 
    imported.js:223:11
    223|   set({f: "blah"}); // error "blah" ~> number
@@ -1992,21 +1977,6 @@ References:
                          ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:234:11
-
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
-
-   local.js:234:11
-   234|   set({f: 2}); // TODO(?) okay the type of `one` is checked against a general bound
-                  ^ [1]
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- local.js:235:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
@@ -2651,7 +2621,7 @@ References:
 
 
 
-Found 157 errors
+Found 155 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -41,7 +41,7 @@ module TypeExSet : Flow_set.S with type elt = Type.t
 val nominal_id_have_same_logical_module :
   file_options:Files.options -> ALoc.id * string option -> ALoc.id * string option -> bool
 
-val quick_subtype : Type.t -> Type.t -> bool
+val quick_subtype : ?on_singleton_eq:(Type.t -> unit) -> Type.t -> Type.t -> bool
 
 val is_falsy : Type.t -> bool
 

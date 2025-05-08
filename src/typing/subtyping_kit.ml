@@ -1213,8 +1213,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Flow_js_utils.update_lit_type_from_annot cx l
     | (_, UnionT (_, rep))
       when let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
-           List.exists (TypeUtil.quick_subtype l) ts ->
-      Flow_js_utils.update_lit_type_from_annot cx l
+           let on_singleton_eq = Flow_js_utils.update_lit_type_from_annot cx in
+           List.exists (TypeUtil.quick_subtype ~on_singleton_eq l) ts ->
+      ()
     | (DefT (renders_r, RendersT _), UnionT (r, rep)) ->
       (* This is a tricky case because there are multiple ways that it could pass. Either
        * the union contains a supertype of the LHS, or the Union itself is a super type of

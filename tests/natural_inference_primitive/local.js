@@ -231,7 +231,7 @@ function test_useState_7() {
   declare function useStateWithBound<T: {f:number|string}>(x: T): [T, (y: T) => void];
   const [o, set] = useStateWithBound({f: one});
   set({f: 1}); // okay
-  set({f: 2}); // TODO(?) okay the type of `one` is checked against a general bound
+  set({f: 2}); // okay the type of `one` is checked against a general bound
   set({f: "blah"}); // error
 }
 
@@ -646,4 +646,10 @@ function test_contextual_typing_rest() {
   fn(() => new Set(['A'])); // okay
   fn(() => new Set(['A', 'B'])); // okay
   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+}
+
+function test_useState_12() {
+  declare function useStateWithBound<T: void|boolean>(x: T): [T, (y: T) => void];
+  const [o, set] = useStateWithBound(true);
+  set(false); // okay
 }
