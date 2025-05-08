@@ -95,7 +95,6 @@ and ModuleRefLiteral : sig
     require_loc: 'M;
     def_loc_opt: 'M option;
     prefix_len: int;
-    legacy_interop: bool;
     raw: string;
     comments: ('M, unit) Syntax.t option;
   }

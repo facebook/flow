@@ -19,7 +19,6 @@ type options = {
   explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
-  haste_module_ref_prefix_LEGACY_INTEROP: string option;
   relay_integration_module_prefix: string option;
 }
 
@@ -76,7 +75,6 @@ let default_opts =
     explicit_available_platforms = None;
     file_options = Files.default_options;
     haste_module_ref_prefix = None;
-    haste_module_ref_prefix_LEGACY_INTEROP = None;
     relay_integration_module_prefix = None;
   }
 

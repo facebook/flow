@@ -851,7 +851,7 @@ module Make
     Flow.get_builtin_type cx reason "RegExp"
 
   let module_ref_literal cx loc lit =
-    let { Ast.ModuleRefLiteral.value; def_loc_opt = _; prefix_len; legacy_interop; _ } = lit in
+    let { Ast.ModuleRefLiteral.value; def_loc_opt = _; prefix_len; _ } = lit in
     let mref = Flow_import_specifier.userland (Base.String.drop_prefix value prefix_len) in
     let module_type_or_any =
       Flow_js_utils.ImportExportUtils.get_module_type_or_any
@@ -866,7 +866,6 @@ module Make
         ~reposition:Flow.reposition
         ~namespace_symbol:(mk_module_symbol ~name:mref ~def_loc:loc)
         ~standard_cjs_esm_interop:true
-        ~legacy_interop
         module_type_or_any
     in
     let reason = mk_reason (RCustom "module reference") loc in
@@ -3403,7 +3402,6 @@ module Make
               ~namespace_symbol:
                 (mk_module_symbol ~name:(Flow_import_specifier.userland module_name) ~def_loc:loc)
               ~standard_cjs_esm_interop:false
-              ~legacy_interop:false
               source_module
             |> snd
         | Error err ->
@@ -3843,7 +3841,6 @@ module Make
                    ~reposition:Flow.reposition
                    ~namespace_symbol:(mk_module_symbol ~name:module_name ~def_loc:loc)
                    ~standard_cjs_esm_interop:false
-                   ~legacy_interop:false
             in
             let lit_exp =
               let ((l, t), e) = expression cx lit_exp in

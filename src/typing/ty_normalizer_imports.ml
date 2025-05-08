@@ -91,7 +91,6 @@ let add_require_bindings_from_exports_map cx loc source_name binding acc =
       ~reposition:Flow_js.reposition
       ~namespace_symbol:(FlowSymbol.mk_module_symbol ~name:source_name ~def_loc:loc)
       ~standard_cjs_esm_interop:false
-      ~legacy_interop:false
       source_module
     |> snd
   in

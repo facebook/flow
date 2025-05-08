@@ -67,7 +67,6 @@ type 'loc parsed =
   | ModuleRef of {
       loc: 'loc loc_node;
       mref: module_ref_node;
-      legacy_interop: bool;
     }
 
 and 'loc tyname =
@@ -2888,11 +2887,11 @@ let setter_def opts scope tbls xs id_loc f =
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
-let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; legacy_interop; _ } =
+let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; _ } =
   let mref =
     push_module_ref tbls (Flow_import_specifier.userland (Base.String.drop_prefix value prefix_len))
   in
-  ModuleRef { loc; mref; legacy_interop }
+  ModuleRef { loc; mref }
 
 let string_literal ~frozen opts loc s =
   if frozen = FrozenProp then

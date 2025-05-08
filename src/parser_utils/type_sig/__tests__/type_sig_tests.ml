@@ -195,16 +195,9 @@ let make_test_formatter () =
   pp_set_max_indent fmt 32;
   fmt
 
-let parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP =
+let parse_options ~module_ref_prefix =
   let open Parser_env in
-  Some
-    {
-      default_parse_options with
-      components = true;
-      enums = true;
-      module_ref_prefix;
-      module_ref_prefix_LEGACY_INTEROP;
-    }
+  Some { default_parse_options with components = true; enums = true; module_ref_prefix }
 
 let sig_options
     ?(suppress_types = SSet.empty)
@@ -253,7 +246,6 @@ let print_sig
     ?exact_by_default
     ?max_literal_len
     ?module_ref_prefix
-    ?module_ref_prefix_LEGACY_INTEROP
     ?enable_enums
     ?enable_component_syntax
     ?enable_relay_integration
@@ -277,7 +269,7 @@ let print_sig
       ?locs_to_dirtify
       ()
   in
-  let parse_options = parse_options ~module_ref_prefix ~module_ref_prefix_LEGACY_INTEROP in
+  let parse_options = parse_options ~module_ref_prefix in
   let type_sig =
     parse_and_pack_module
       ~parse_options
@@ -294,9 +286,7 @@ let print_builtins ordered_contents_indent =
     List.map
       (fun contents_indent ->
         let contents = dedent_trim contents_indent in
-        let parse_options =
-          parse_options ~module_ref_prefix:None ~module_ref_prefix_LEGACY_INTEROP:None
-        in
+        let parse_options = parse_options ~module_ref_prefix:None in
         let (ast, _errors) = Parser_flow.program ~parse_options contents in
         ast)
       ordered_contents_indent
@@ -4325,8 +4315,7 @@ let%expect_test "module_ref_prefix" =
     module.exports = "m#foo";
   |};
   [%expect {|
-    CJSModule {type_exports = [||];
-      exports = (Some ModuleRef {loc = [1:17-24]; index = 0; legacy_interop = false});
+    CJSModule {type_exports = [||]; exports = (Some ModuleRef {loc = [1:17-24]; index = 0});
       info =
       CJSModuleInfo {type_export_keys = [||];
         type_stars = []; strict = true;

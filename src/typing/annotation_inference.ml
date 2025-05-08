@@ -102,7 +102,6 @@ module type S = sig
     FlowSymbol.symbol ->
     is_strict:bool ->
     standard_cjs_esm_interop:bool ->
-    legacy_interop:bool ->
     Context.resolved_require ->
     Type.t
 
@@ -1346,14 +1345,7 @@ module rec ConsGen : S = struct
     in
     mk_lazy_tvar cx reason f
 
-  and cjs_require
-      cx
-      reason
-      namespace_symbol
-      ~is_strict
-      ~standard_cjs_esm_interop
-      ~legacy_interop
-      resolved_require =
+  and cjs_require cx reason namespace_symbol ~is_strict ~standard_cjs_esm_interop resolved_require =
     mk_sig_tvar
       cx
       reason
@@ -1367,7 +1359,6 @@ module rec ConsGen : S = struct
                  ~module_symbol:namespace_symbol
                  ~is_strict
                  ~standard_cjs_esm_interop
-                 ~legacy_interop
                  module_type
                |> fst
              | Error src -> Type.AnyT.why src reason

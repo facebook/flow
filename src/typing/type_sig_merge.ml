@@ -201,7 +201,7 @@ let add_name_field reason =
   in
   SMap.update "name" f
 
-let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
+let require file loc index ~standard_cjs_esm_interop =
   let (mref, (lazy resolved_require)) = Module_refs.get file.dependencies index in
   let reason = Reason.(mk_reason (RModule mref) loc) in
   let symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
@@ -210,7 +210,6 @@ let require file loc index ~legacy_interop ~standard_cjs_esm_interop =
     reason
     symbol
     ~is_strict:false
-    ~legacy_interop
     ~standard_cjs_esm_interop
     resolved_require
 
@@ -559,8 +558,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let op = merge_op env file op in
     let t = eval file loc t op in
     make_hooklike file hooklike t
-  | Pack.Require { loc; index } ->
-    require file loc index ~standard_cjs_esm_interop:false ~legacy_interop:false
+  | Pack.Require { loc; index } -> require file loc index ~standard_cjs_esm_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
@@ -568,8 +566,8 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
     make_hooklike file hooklike t
-  | Pack.ModuleRef { loc; index; legacy_interop } ->
-    let t = require file loc index ~standard_cjs_esm_interop:true ~legacy_interop in
+  | Pack.ModuleRef { loc; index } ->
+    let t = require file loc index ~standard_cjs_esm_interop:true in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
@@ -828,7 +826,6 @@ and merge_annot env file = function
       symbol
       ~is_strict:false
       ~standard_cjs_esm_interop:false
-      ~legacy_interop:false
       (Context.TypedModule f)
   | Conditional
       { loc; distributive_tparam; infer_tparams; check_type; extends_type; true_type; false_type }

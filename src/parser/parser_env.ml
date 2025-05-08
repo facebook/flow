@@ -131,7 +131,6 @@ type parse_options = {
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
   module_ref_prefix: string option;
-  module_ref_prefix_LEGACY_INTEROP: string option;
   assert_operator: bool;
 }
 
@@ -145,7 +144,6 @@ let default_parse_options =
     types = true;
     use_strict = false;
     module_ref_prefix = None;
-    module_ref_prefix_LEGACY_INTEROP = None;
   }
 
 let permissive_parse_options =
@@ -158,7 +156,6 @@ let permissive_parse_options =
     types = true;
     use_strict = false;
     module_ref_prefix = None;
-    module_ref_prefix_LEGACY_INTEROP = None;
   }
 
 type allowed_super =

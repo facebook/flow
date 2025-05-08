@@ -91,7 +91,6 @@ let parse_source_file ~options content file =
         Parser_env.use_strict;
         assert_operator;
         module_ref_prefix = Options.haste_module_ref_prefix options;
-        module_ref_prefix_LEGACY_INTEROP = Options.haste_module_ref_prefix_LEGACY_INTEROP options;
       }
   in
   Parser_flow.program_file ~fail:false ~parse_options content (Some file)
@@ -121,9 +120,6 @@ let parse_file_sig options file docblock ast =
   let enable_enums = Options.enums options in
 
   let haste_module_ref_prefix = Options.haste_module_ref_prefix options in
-  let haste_module_ref_prefix_LEGACY_INTEROP =
-    Options.haste_module_ref_prefix_LEGACY_INTEROP options
-  in
   let enable_jest_integration = Options.enable_jest_integration options in
   let enable_relay_integration = Options.enable_relay_integration options in
   let relay_integration_excludes = Options.relay_integration_excludes options in
@@ -149,7 +145,6 @@ let parse_file_sig options file docblock ast =
       explicit_available_platforms = Docblock.supportsPlatform docblock;
       file_options;
       haste_module_ref_prefix;
-      haste_module_ref_prefix_LEGACY_INTEROP;
       relay_integration_module_prefix;
     }
   in

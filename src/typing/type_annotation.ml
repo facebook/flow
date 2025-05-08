@@ -1019,7 +1019,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     ~namespace_symbol:
                       (FlowSymbol.mk_module_symbol ~name:import_specifier ~def_loc:loc)
                     ~standard_cjs_esm_interop:false
-                    ~legacy_interop:false
                     remote_module
                 in
                 reconstruct_ast

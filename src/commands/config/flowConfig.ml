@@ -79,7 +79,6 @@ module Opts = struct
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     haste_module_ref_prefix: string option;
-    haste_module_ref_prefix_LEGACY_INTEROP: string option;
     haste_namespaces_enabled: bool;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
@@ -219,7 +218,6 @@ module Opts = struct
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
       haste_module_ref_prefix = None;
-      haste_module_ref_prefix_LEGACY_INTEROP = None;
       haste_namespaces_enabled = false;
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
@@ -660,9 +658,6 @@ module Opts = struct
 
   let haste_module_ref_prefix_parser =
     string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v })
-
-  let haste_module_ref_prefix_LEGACY_INTEROP_parser =
-    string (fun opts v -> Ok { opts with haste_module_ref_prefix_LEGACY_INTEROP = Some v })
 
   let gc_worker_major_heap_increment_parser =
     uint (fun opts v -> Ok { opts with gc_worker_major_heap_increment = Some v })
@@ -1140,9 +1135,6 @@ module Opts = struct
               Error
                 "module.system.haste.module_ref_prefix.standard_cjs_esm_interop cannot be disabled."
         )
-      );
-      ( "module.system.haste.module_ref_prefix_LEGACY_INTEROP",
-        haste_module_ref_prefix_LEGACY_INTEROP_parser
       );
       ( "module.system.haste.experimental.namespaces",
         boolean (fun opts v -> Ok { opts with haste_namespaces_enabled = v })
@@ -1875,8 +1867,6 @@ let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
-
-let haste_module_ref_prefix_LEGACY_INTEROP c = c.options.Opts.haste_module_ref_prefix_LEGACY_INTEROP
 
 let haste_namespaces_enabled c = c.options.Opts.haste_namespaces_enabled
 

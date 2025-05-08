@@ -76,8 +76,6 @@ let get_rename_edits ~reader ~options ~old_haste_name ~new_haste_name old_file_k
       explicit_available_platforms = None;
       file_options = Options.file_options options;
       haste_module_ref_prefix = Options.haste_module_ref_prefix options;
-      haste_module_ref_prefix_LEGACY_INTEROP =
-        Options.haste_module_ref_prefix_LEGACY_INTEROP options;
       relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     }
   in

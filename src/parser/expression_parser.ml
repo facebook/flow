@@ -1351,8 +1351,8 @@ module Expression
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
       let expr =
         let opts = parse_options env in
-        match (opts.module_ref_prefix, opts.module_ref_prefix_LEGACY_INTEROP) with
-        | (Some prefix, _) when String.starts_with ~prefix value ->
+        match opts.module_ref_prefix with
+        | Some prefix when String.starts_with ~prefix value ->
           let prefix_len = String.length prefix in
           Expression.ModuleRefLiteral
             {
@@ -1360,19 +1360,6 @@ module Expression
               require_loc = loc;
               def_loc_opt = None;
               prefix_len;
-              legacy_interop = false;
-              raw;
-              comments;
-            }
-        | (_, Some prefix) when String.starts_with ~prefix value ->
-          let prefix_len = String.length prefix in
-          Expression.ModuleRefLiteral
-            {
-              Ast.ModuleRefLiteral.value;
-              require_loc = loc;
-              def_loc_opt = None;
-              prefix_len;
-              legacy_interop = true;
               raw;
               comments;
             }

@@ -1508,15 +1508,8 @@ end
 
 module CJSRequireTKit = struct
   (* require('SomeModule') *)
-  let on_ModuleT
-      cx
-      ~reposition
-      ~reason
-      ~module_symbol
-      ~is_strict
-      ~standard_cjs_esm_interop
-      ~legacy_interop
-      module_ =
+  let on_ModuleT cx ~reposition ~reason ~module_symbol ~is_strict ~standard_cjs_esm_interop module_
+      =
     let {
       module_reason;
       module_export_types = exports;
@@ -1549,7 +1542,7 @@ module CJSRequireTKit = struct
         NamespaceT { namespace_symbol = module_symbol; values_type; types_tmap }
       in
       let t =
-        if standard_cjs_esm_interop && not legacy_interop then
+        if standard_cjs_esm_interop then
           lookup_builtin_typeapp
             cx
             reason
@@ -1558,8 +1551,7 @@ module CJSRequireTKit = struct
         else
           (* Use default export if option is enabled and module is not lib *)
           let automatic_require_default =
-            (legacy_interop || Context.automatic_require_default cx)
-            && not (is_lib_reason_def module_reason)
+            Context.automatic_require_default cx && not (is_lib_reason_def module_reason)
           in
           if automatic_require_default then
             match NameUtils.Map.find_opt (OrdinaryName "default") value_exports_tmap with
@@ -2143,7 +2135,6 @@ module ImportExportUtils : sig
     reposition:(cx -> ALoc.t -> Type.t -> Type.t) ->
     namespace_symbol:FlowSymbol.symbol ->
     standard_cjs_esm_interop:bool ->
-    legacy_interop:bool ->
     (Type.moduletype, Type.t) result ->
     ALoc.t option * Type.t
 
@@ -2321,13 +2312,7 @@ end = struct
       ~local_name
 
   let cjs_require_type
-      cx
-      reason
-      ~reposition
-      ~namespace_symbol
-      ~standard_cjs_esm_interop
-      ~legacy_interop
-      source_module =
+      cx reason ~reposition ~namespace_symbol ~standard_cjs_esm_interop source_module =
     let is_strict = Context.is_strict cx in
     match source_module with
     | Ok m ->
@@ -2339,7 +2324,6 @@ end = struct
           ~module_symbol:namespace_symbol
           ~is_strict
           ~standard_cjs_esm_interop
-          ~legacy_interop
           m
       in
       (Some def_loc, t)

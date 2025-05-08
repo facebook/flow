@@ -230,9 +230,6 @@ let refactor_extract_and_stub_out_code_actions
         let tokens =
           let use_strict = Options.modules_are_use_strict options in
           let module_ref_prefix = Options.haste_module_ref_prefix options in
-          let module_ref_prefix_LEGACY_INTEROP =
-            Options.haste_module_ref_prefix_LEGACY_INTEROP options
-          in
           let assert_operator = Options.assert_operator options |> Options.AssertOperator.parse in
           let parse_options =
             {
@@ -240,7 +237,6 @@ let refactor_extract_and_stub_out_code_actions
               Parser_env.use_strict;
               assert_operator;
               module_ref_prefix;
-              module_ref_prefix_LEGACY_INTEROP;
             }
           in
           Ast_extraction_utils.AstExtractor.tokens ~parse_options (Some file) file_contents
@@ -307,9 +303,6 @@ let insert_inferred_type_as_cast_code_actions
       let tokens =
         let use_strict = Options.modules_are_use_strict options in
         let module_ref_prefix = Options.haste_module_ref_prefix options in
-        let module_ref_prefix_LEGACY_INTEROP =
-          Options.haste_module_ref_prefix_LEGACY_INTEROP options
-        in
         let assert_operator = Options.assert_operator options |> Options.AssertOperator.parse in
         let parse_options =
           {
@@ -317,7 +310,6 @@ let insert_inferred_type_as_cast_code_actions
             Parser_env.use_strict;
             assert_operator;
             module_ref_prefix;
-            module_ref_prefix_LEGACY_INTEROP;
           }
         in
         Ast_extraction_utils.AstExtractor.tokens ~parse_options (Some file) file_contents
