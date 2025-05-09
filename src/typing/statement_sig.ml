@@ -90,7 +90,7 @@ module type S = sig
     Context.t ->
     Reason.reason ->
     check_expression:
-      (?encl_ctx:enclosing_context ->
+      (?has_hint:bool Lazy.t ->
       Context.t ->
       (ALoc.t, ALoc.t) Ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Expression.t

@@ -1090,6 +1090,21 @@ References:
                            ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- jsx_pragma.js:12:27
+
+Cannot create `C` element because string [1] is incompatible with string literal `BAZ` [2] in property `bar` of array
+element of property `foo`. [incompatible-type]
+
+   jsx_pragma.js:12:27
+   12| const c2 = <C foo={[{bar: 'BAK'}]} />; // error 'BAZ' != 'BAK'
+                                 ^^^^^ [1]
+
+References:
+   jsx_pragma.js:10:52
+   10| declare var C: (props: $ReadOnly<{foo: Array<{bar: 'BAZ'}>}>) => void;
+                                                          ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- local.js:35:3
 
 Cannot cast `abc` to string literal `def` because string [1] is incompatible with string literal `def` [2].
@@ -2649,7 +2664,7 @@ References:
 
 
 
-Found 157 errors
+Found 158 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

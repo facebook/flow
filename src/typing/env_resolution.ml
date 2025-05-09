@@ -319,7 +319,7 @@ let resolve_hint cx loc hint : Type_hint.concr_hint =
              Statement.jsx_mk_props
                cx
                reason
-               ~check_expression:(fun ?encl_ctx:_ ->
+               ~check_expression:(fun ?has_hint:_ ->
                  synthesize_expression_for_instantiation ~target_loc:None)
                ~collapse_children:synthesize_jsx_children_for_instantiation
                name

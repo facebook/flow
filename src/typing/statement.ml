@@ -6011,7 +6011,7 @@ module Make
           jsx_mk_props
             cx
             fbt_reason
-            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
+            ~check_expression:(fun ?has_hint cx e -> expression ?has_hint cx e)
             ~collapse_children
             name
             attributes
@@ -6059,7 +6059,7 @@ module Make
             jsx_mk_props
               cx
               reason
-              ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
+              ~check_expression:(fun ?has_hint cx e -> expression ?has_hint cx e)
               ~collapse_children
               name
               attributes
@@ -6099,7 +6099,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
+            ~check_expression:(fun ?has_hint cx e -> expression ?has_hint cx e)
             ~collapse_children
             name
             attributes
@@ -6123,7 +6123,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
+            ~check_expression:(fun ?has_hint cx e -> expression ?has_hint cx e)
             ~collapse_children
             el_name
             attributes
@@ -6140,7 +6140,7 @@ module Make
           jsx_mk_props
             cx
             reason
-            ~check_expression:(fun ?encl_ctx cx e -> expression ?encl_ctx cx e)
+            ~check_expression:(fun ?has_hint cx e -> expression ?has_hint cx e)
             ~collapse_children
             el_name
             attributes
@@ -6252,9 +6252,7 @@ module Make
                       }
                     )
                     ) ->
-                let (((_, t), _) as e) =
-                  check_expression ~encl_ctx:JsxAttrOrChildrenContext cx (loc, e)
-                in
+                let (((_, t), _) as e) = check_expression ~has_hint:(lazy true) cx (loc, e) in
                 ( t,
                   Some
                     (Attribute.ExpressionContainer
@@ -6305,7 +6303,9 @@ module Make
             (acc, atts)
           (* <element {...spread} /> *)
           | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments }) ->
-            let (((_, spread), _) as argument) = check_expression ~encl_ctx:NoContext cx argument in
+            let (((_, spread), _) as argument) =
+              check_expression ~has_hint:(lazy true) cx argument
+            in
             let acc = ObjectExpressionAcc.add_spread spread acc in
             let att =
               Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument; comments })
