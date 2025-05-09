@@ -28,6 +28,8 @@ val mk_syntactic_flags :
 
 val is_generalization_candidate : Context.t -> Type.t -> bool
 
+val enclosing_context_needs_precise : Enclosing_context.enclosing_context -> bool
+
 type singleton_action =
   | DoNotKeep of { use_sound_type: bool }  (** Generalize singleton type *)
   | KeepAsIs

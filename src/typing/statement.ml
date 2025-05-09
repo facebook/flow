@@ -3292,7 +3292,9 @@ module Make
       ( (loc, t),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
-    | Call _ -> subscript ~encl_ctx cx ex
+    | Call _ ->
+      Context.set_enclosing_context_for_call cx loc encl_ctx;
+      subscript ~encl_ctx cx ex
     | OptionalCall _ -> subscript ~encl_ctx cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
       let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in

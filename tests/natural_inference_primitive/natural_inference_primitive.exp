@@ -2499,6 +2499,20 @@ References:
                                       ^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:661:7
+
+Cannot get `obj[getKey(...)]` because property `c` is missing in object type [1]. [prop-missing]
+
+   local.js:661:7
+   661|   obj[getKey('c')]; // error 'c' is missing in obj
+              ^^^^^^^^^^^
+
+References:
+   local.js:658:20
+   658|   declare var obj: {a: number, b: string};
+                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
 Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
@@ -2621,7 +2635,7 @@ References:
 
 
 
-Found 155 errors
+Found 156 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

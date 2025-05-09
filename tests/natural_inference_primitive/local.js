@@ -653,3 +653,10 @@ function test_useState_12() {
   const [o, set] = useStateWithBound(true);
   set(false); // okay
 }
+
+function test_call_enclosing_context() {
+  declare var obj: {a: number, b: string};
+  declare function getKey<T>(key: T): T;
+  obj[getKey('a')]; // okay
+  obj[getKey('c')]; // error 'c' is missing in obj
+}

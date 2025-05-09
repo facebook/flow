@@ -30,8 +30,13 @@ and union_flatten = function
  * for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
  * the rather impractical `42` (resp. `(42)=>void`).
  *)
-let generalize_singletons cx ~has_syntactic_hint t =
-  if Context.natural_inference_local_primitive_literals_full cx && has_syntactic_hint then
+let generalize_singletons cx ~call_loc ~has_syntactic_hint t =
+  let needs_precise =
+    has_syntactic_hint
+    (* Targets the case of `obj[foo('a')]` and `obj[foo('a')] = e` *)
+    || Context.get_enclosing_context_for_call cx call_loc = Some Enclosing_context.IndexContext
+  in
+  if Context.natural_inference_local_primitive_literals_full cx && needs_precise then
     t
   else
     let singleton_action loc =
@@ -1108,16 +1113,16 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         in
         let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
+        let call_loc = loc_of_reason instantiation_reason in
         let inferred =
           match op with
           | Check.Call _ when tparam.is_const ->
-            (* Adjust 'const' type parameters *)
-            let loc_range = loc_of_reason instantiation_reason in
-            (* Keeping container reasons for compatibility with existing code. *)
-            Primitive_literal.convert_literal_type_to_const ~loc_range cx result.inferred
+            (* Adjust 'const' type parameters. Keeping container reasons for
+             * compatibility with existing code. *)
+            Primitive_literal.convert_literal_type_to_const ~loc_range:call_loc cx result.inferred
           | _ ->
             (* Prevent leaking of precise singleton types *)
-            generalize_singletons cx ~has_syntactic_hint result.inferred
+            generalize_singletons cx ~call_loc ~has_syntactic_hint result.inferred
         in
         let result = { result with inferred } in
         (Subst_name.Map.add name result acc, (inferred, name) :: inferred_targ_list_acc))

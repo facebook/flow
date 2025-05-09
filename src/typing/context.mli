@@ -587,3 +587,7 @@ val use_mixed_in_catch_variables : t -> bool
 val ban_spread_key_props : t -> bool
 
 val new_specialized_callee : t -> Type.specialized_callee
+
+val set_enclosing_context_for_call : t -> ALoc.t -> Enclosing_context.enclosing_context -> unit
+
+val get_enclosing_context_for_call : t -> ALoc.t -> Enclosing_context.enclosing_context option

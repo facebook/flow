@@ -221,6 +221,7 @@ type component_t = {
   (* Natural inference (records checks on primitive literal types during
    * implicit instantiation) *)
   mutable primitive_literal_checks: ALocSet.t;
+  mutable enclosing_context_for_call: Enclosing_context.enclosing_context ALocMap.t;
 }
 [@@warning "-69"]
 
@@ -432,6 +433,7 @@ let make_ccx () =
     ctor_callee = ALocMap.empty;
     union_opt = ALocMap.empty;
     primitive_literal_checks = ALocSet.empty;
+    enclosing_context_for_call = ALocMap.empty;
   }
 
 (* When only "experimental.natural_inference.local_primitive_literals" is provided,
@@ -879,6 +881,11 @@ let record_primitive_literal_check cx loc =
   cx.ccx.primitive_literal_checks <- ALocSet.add loc cx.ccx.primitive_literal_checks
 
 let is_primitive_literal_checked cx loc = ALocSet.mem loc cx.ccx.primitive_literal_checks
+
+let set_enclosing_context_for_call cx loc t =
+  cx.ccx.enclosing_context_for_call <- ALocMap.add loc t cx.ccx.enclosing_context_for_call
+
+let get_enclosing_context_for_call cx loc = ALocMap.find_opt loc cx.ccx.enclosing_context_for_call
 
 let set_union_opt cx loc t = cx.ccx.union_opt <- ALocMap.add loc t cx.ccx.union_opt
 
