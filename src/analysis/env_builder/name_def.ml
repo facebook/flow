@@ -2564,6 +2564,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       end;
       ignore @@ super#member loc mem
 
+    method! member_property_expression (expr : ('loc, 'loc) Ast.Expression.t) =
+      this#visit_expression ~hints:[] ~cond:IndexContext expr;
+      expr
+
     method! optional_member loc _ = fail loc "Should be visited by visit_optional_member_expression"
 
     method private visit_optional_member_expression ~cond ~hints loc mem =

@@ -659,4 +659,6 @@ function test_call_enclosing_context() {
   declare function getKey<T>(key: T): T;
   obj[getKey('a')]; // okay
   obj[getKey('c')]; // error 'c' is missing in obj
+  obj[getKey('a')] = 1; // okay
+  obj[getKey('c')] = 1; // error 'c' is missing in obj
 }
