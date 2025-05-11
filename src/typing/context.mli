@@ -124,7 +124,7 @@ type metadata = {
   strip_root: bool;
   suppress_types: SSet.t;
   ts_syntax: bool;
-  assert_operator: bool;
+  assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
   ban_spread_key_props: bool;
@@ -290,7 +290,9 @@ val suppress_types : t -> SSet.t
 
 val ts_syntax : t -> bool
 
-val assert_operator : t -> bool
+val assert_operator_enabled : t -> bool
+
+val assert_operator_specialized : t -> bool
 
 val type_expansion_recursion_limit : t -> int
 

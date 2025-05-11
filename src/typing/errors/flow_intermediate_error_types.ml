@@ -895,7 +895,10 @@ type 'loc message =
       reason_tparam: 'loc virtual_reason;
     }
   | MessageUndocumentedFeature
-  | MessageIllegalAssertOperator of { obj: 'loc virtual_reason }
+  | MessageIllegalAssertOperator of {
+      obj: 'loc virtual_reason;
+      specialized: bool;
+    }
   | MessageUnexpectedTemporaryBaseType
   | MessageUnexpectedUseOfThisType
   | MessageUninitializedInstanceProperty of Lints.property_assignment_kind

@@ -81,6 +81,12 @@ module TypeAssertions : sig
 
   val non_exhaustive : Context.t -> Type.t list -> bool
 
+  val check_specialized_assert_operator_property :
+    Context.t -> op_reason:reason -> obj_reason:reason -> Type.t -> string -> unit
+
+  val check_specialized_assert_operator_lookup :
+    Context.t -> op_reason:reason -> obj_reason:reason -> Type.t -> Type.t -> unit
+
   val check_assert_operator_nullable : Context.t -> Type.t -> bool
 
   val check_assert_operator_implicitly_nullable : Context.t -> Type.t -> bool

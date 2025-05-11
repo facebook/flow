@@ -144,7 +144,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
     ts_syntax = true;
-    assert_operator = false;
+    assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;
     ban_spread_key_props = false;
@@ -174,7 +174,10 @@ let merge_custom_check_config js_config_object metadata =
     Js.Unsafe.get js_config_object "experimental.const_params" |> Js.to_bool
   in
   let assert_operator =
-    Js.Unsafe.get js_config_object "experimental.assert_operator" |> Js.to_bool
+    if Js.Unsafe.get js_config_object "experimental.assert_operator" |> Js.to_bool then
+      Options.AssertOperator.Enabled
+    else
+      Options.AssertOperator.Disabled
   in
   let ts_syntax = Js.Unsafe.get js_config_object "experimental.ts_syntax" |> Js.to_bool in
   let enable_enums = Js.Unsafe.get js_config_object "enums" |> Js.to_bool in

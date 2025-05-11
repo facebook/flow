@@ -45,12 +45,14 @@ type react_rules =
 module AssertOperator = struct
   type t =
     | Enabled
+    | Specialized
     | Disabled
     | Unparsed
 
   let parse = function
     | Unparsed -> false
     | Enabled
+    | Specialized
     | Disabled ->
       true
 
@@ -58,7 +60,16 @@ module AssertOperator = struct
     | Unparsed
     | Disabled ->
       false
-    | Enabled -> true
+    | Enabled
+    | Specialized ->
+      true
+
+  let specialized = function
+    | Specialized -> true
+    | Unparsed
+    | Disabled
+    | Enabled ->
+      false
 end
 
 type format = {

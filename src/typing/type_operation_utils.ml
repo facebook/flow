@@ -918,6 +918,52 @@ module TypeAssertions = struct
         |> not
     )
 
+  let assert_operator_receiver_base cx ~op_reason ~obj_reason obj prop =
+    match (obj, prop) with
+    | (AnyT _, _)
+    | (DefT (_, (EmptyT | NullT | VoidT)), _)
+    | (DefT (_, ArrT (ROArrayAT _ | ArrayAT _)), _) ->
+      ()
+    | (DefT (_, ObjT { props_tmap; _ }), Some prop) when Context.has_prop cx props_tmap prop ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EIllegalAssertOperator { op = op_reason; obj = obj_reason; specialized = true }
+        )
+    | (DefT (_, ObjT { flags = { obj_kind = Indexed _; _ }; _ }), _) -> ()
+    | _ ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EIllegalAssertOperator { op = op_reason; obj = obj_reason; specialized = true }
+        )
+
+  let check_specialized_assert_operator_property cx ~op_reason ~obj_reason t prop =
+    DistributeUnionIntersection.distribute
+      cx
+      t
+      ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+      ~get_no_match_error_loc:loc_of_reason
+      ~check_base:(fun cx t ->
+        assert_operator_receiver_base cx ~op_reason ~obj_reason t (Some (Reason.OrdinaryName prop))
+    )
+
+  let check_specialized_assert_operator_lookup =
+    let check_base cx ~op_reason ~obj_reason (obj, prop) =
+      match prop with
+      | DefT (_, (StrT_UNSOUND (_, value) | SingletonStrT { value; _ })) ->
+        assert_operator_receiver_base cx ~op_reason ~obj_reason obj (Some value)
+      | _ -> assert_operator_receiver_base cx ~op_reason ~obj_reason obj None
+    in
+    fun cx ~op_reason ~obj_reason t1 t2 ->
+      DistributeUnionIntersection.distribute_2
+        cx
+        ~break_up_union:Flow.possible_concrete_types_for_operators_checking
+        ~get_no_match_error_loc:(fun r1 r2 ->
+          Flow_error.ordered_reasons (r1, r2) |> fst |> loc_of_reason)
+        ~check_base:(fun cx -> check_base cx ~op_reason ~obj_reason)
+        (t1, t2)
+
   let check_assert_operator_implicitly_nullable =
     let valid_target = function
       | AnyT _

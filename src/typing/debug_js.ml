@@ -1941,8 +1941,12 @@ let dump_error_message =
     | EMatchStatementInvalidBody { loc } ->
       spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
-    | EIllegalAssertOperator { obj; op } ->
-      spf "EIllegalAssertOperator {obj=%s, op=%s}" (dump_reason cx obj) (dump_reason cx op)
+    | EIllegalAssertOperator { obj; op; specialized } ->
+      spf
+        "EIllegalAssertOperator {obj=%s, op=%s, specialized=%b}"
+        (dump_reason cx obj)
+        (dump_reason cx op)
+        specialized
     | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } ->
       spf "EDevOnlyRefinedLocInfo {refined_loc=%s}" (string_of_aloc refined_loc)
     | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } ->

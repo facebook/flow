@@ -3752,9 +3752,12 @@ let to_printable_error :
         text "It might be removed in the future, ";
         text "and the behavior might change at any time without warning.";
       ]
-    | MessageIllegalAssertOperator { obj } ->
+    | MessageIllegalAssertOperator { obj; specialized } ->
       let explanation =
-        [text "The assert operator can only be applied to values with nullable types."]
+        if specialized then
+          [text "The assert operator can only be used with arrays and objects with indexers."]
+        else
+          [text "The assert operator can only be applied to values with nullable types."]
       in
       [
         ref obj;

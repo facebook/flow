@@ -664,6 +664,7 @@ and 'loc t' =
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
       obj: 'loc virtual_reason;
+      specialized: bool;
     }
   (* Dev only *)
   | EDevOnlyRefinedLocInfo of {
@@ -1505,8 +1506,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
   | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
-  | EIllegalAssertOperator { op; obj } ->
-    EIllegalAssertOperator { op = map_reason op; obj = map_reason obj }
+  | EIllegalAssertOperator { op; obj; specialized } ->
+    EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info } ->
     EDevOnlyInvalidatedRefinementInfo
       {
@@ -3076,7 +3077,8 @@ let friendly_message_of_msg = function
     Normal (MessageMatchInvalidObjectShorthand { name })
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
-  | EIllegalAssertOperator { obj; _ } -> Normal (MessageIllegalAssertOperator { obj })
+  | EIllegalAssertOperator { obj; specialized; _ } ->
+    Normal (MessageIllegalAssertOperator { obj; specialized })
 
 let defered_in_speculation = function
   | EUntypedTypeImport _

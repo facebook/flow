@@ -1,0 +1,77 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
+
+`tuple[0]` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be used with
+arrays and objects with indexers. [illegal-assert-operator]
+
+   test.js:6:1
+   6| tuple[0]!; // error
+      ^^^^^^^^^
+
+References:
+   test.js:6:1
+   6| tuple[0]!; // error
+      ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+`exact_obj.a` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be used
+with arrays and objects with indexers. [illegal-assert-operator]
+
+   test.js:9:1
+   9| exact_obj.a!; // error
+      ^^^^^^^^^^^^
+
+References:
+   test.js:9:1
+   9| exact_obj.a!; // error
+      ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+`exact_obj['a']` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be used
+with arrays and objects with indexers. [illegal-assert-operator]
+
+   test.js:10:1
+   10| exact_obj['a']!; // error
+       ^^^^^^^^^^^^^^^
+
+References:
+   test.js:10:1
+   10| exact_obj['a']!; // error
+       ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:1
+
+`indexer.foo` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be used
+with arrays and objects with indexers. [illegal-assert-operator]
+
+   test.js:14:1
+   14| indexer.foo!; // error
+       ^^^^^^^^^^^^
+
+References:
+   test.js:14:1
+   14| indexer.foo!; // error
+       ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+`indexer['foo']` [1] is not a valid target of the nonnull assertion operator (`!`). The assert operator can only be used
+with arrays and objects with indexers. [illegal-assert-operator]
+
+   test.js:16:1
+   16| indexer['foo']!; // error
+       ^^^^^^^^^^^^^^^
+
+References:
+   test.js:16:1
+   16| indexer['foo']!; // error
+       ^^^^^^^^^^^^^^ [1]
+
+
+
+Found 5 errors

@@ -965,6 +965,7 @@ module Opts = struct
         ("true", Options.AssertOperator.Enabled);
         ("enabled", Options.AssertOperator.Enabled);
         ("unparsed", Options.AssertOperator.Unparsed);
+        ("specialized", Options.AssertOperator.Specialized);
       ]
       (fun opts assert_operator -> Ok { opts with assert_operator })
 

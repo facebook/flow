@@ -702,6 +702,55 @@ let emit_refinement_information_as_errors =
 
 let check_assert_operator cx tast =
   let open Type_operation_utils in
+  let check_specialized_assert_operator ~op_reason expr =
+    let open Ast.Expression in
+    let obj_reason = Reason.mk_typed_expression_reason expr in
+    match expr with
+    | ( _,
+        ( Member
+            {
+              Member._object = ((_, obj_t), _);
+              property = Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+              _;
+            }
+        | OptionalMember
+            {
+              OptionalMember.member =
+                {
+                  Member._object = ((_, obj_t), _);
+                  property = Member.PropertyIdentifier (_, { Ast.Identifier.name; _ });
+                  _;
+                };
+              _;
+            } )
+      ) ->
+      TypeAssertions.check_specialized_assert_operator_property cx ~op_reason ~obj_reason obj_t name
+    | ( _,
+        ( Member
+            {
+              Member._object = ((_, obj_t), _);
+              property = Member.PropertyExpression ((_, prop_t), _);
+              _;
+            }
+        | OptionalMember
+            {
+              OptionalMember.member =
+                {
+                  Member._object = ((_, obj_t), _);
+                  property = Member.PropertyExpression ((_, prop_t), _);
+                  _;
+                };
+              _;
+            } )
+      ) ->
+      TypeAssertions.check_specialized_assert_operator_lookup cx ~op_reason ~obj_reason obj_t prop_t
+    | _ ->
+      Flow_js_utils.add_output
+        cx
+        Error_message.(
+          EIllegalAssertOperator { op = op_reason; obj = obj_reason; specialized = true }
+        )
+  in
   let check_assert_operator_useful ~op_reason expr =
     let obj_reason = Reason.mk_typed_expression_reason expr in
     let ((_, t), expr_node) = expr in
@@ -719,7 +768,13 @@ let check_assert_operator cx tast =
     if not legal then
       Flow_js_utils.add_output
         cx
-        Error_message.(EIllegalAssertOperator { op = op_reason; obj = obj_reason })
+        Error_message.(
+          EIllegalAssertOperator { op = op_reason; obj = obj_reason; specialized = false }
+        )
+  in
+  let check ~op_reason expr =
+    check_assert_operator_useful ~op_reason expr;
+    if Context.assert_operator_specialized cx then check_specialized_assert_operator ~op_reason expr
   in
   let checker =
     object
@@ -736,7 +791,7 @@ let check_assert_operator cx tast =
           match expr with
           | (_, Unary { Unary.operator = Unary.Nonnull; argument; _ }) ->
             let op_reason = Reason.mk_typed_expression_reason expr in
-            check_assert_operator_useful ~op_reason argument
+            check ~op_reason argument
           | ( _,
               OptionalCall
                 {
@@ -754,13 +809,13 @@ let check_assert_operator cx tast =
                 }
             ) ->
             let op_reason = Reason.mk_typed_expression_reason target in
-            check_assert_operator_useful ~op_reason expr
+            check ~op_reason target
           | _ -> ()
         end;
         super#expression expr
     end
   in
-  if Context.assert_operator cx then ignore (checker#program tast : (_, _) Ast.Program.t)
+  if Context.assert_operator_enabled cx then ignore (checker#program tast : (_, _) Ast.Program.t)
 
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then

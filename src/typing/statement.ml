@@ -3710,7 +3710,7 @@ module Make
             | OptionalCall.Optional -> NewChain
             | OptionalCall.NonOptional -> ContinueChain
             | OptionalCall.AssertNonnull ->
-              if not (Context.assert_operator cx) then
+              if not (Context.assert_operator_enabled cx) then
                 Flow_js_utils.add_output
                   cx
                   (Error_message.EUnsupportedSyntax
@@ -3725,7 +3725,7 @@ module Make
             | OptionalMember.Optional -> NewChain
             | OptionalMember.NonOptional -> ContinueChain
             | OptionalMember.AssertNonnull ->
-              if not (Context.assert_operator cx) then
+              if not (Context.assert_operator_enabled cx) then
                 Flow_js_utils.add_output
                   cx
                   (Error_message.EUnsupportedSyntax
@@ -4603,7 +4603,7 @@ module Make
                *)
               NewChain
             | OptionalMember.AssertNonnull ->
-              if not (Context.assert_operator cx) then
+              if not (Context.assert_operator_enabled cx) then
                 Flow_js_utils.add_output
                   cx
                   (Error_message.EUnsupportedSyntax
@@ -5128,7 +5128,7 @@ module Make
         { operator = Await; argument = argument_ast; comments }
       )
     | { operator = Nonnull; argument; comments } ->
-      if not (Context.assert_operator cx) then
+      if not (Context.assert_operator_enabled cx) then
         Flow_js_utils.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
@@ -5382,7 +5382,7 @@ module Make
       )
     | (loc, Ast.Pattern.Expression expr) ->
       let (expr, assertion, reconstruct_ast) = Flow_ast_utils.unwrap_nonnull_lhs_expr expr in
-      if assertion && not (Context.assert_operator cx) then
+      if assertion && not (Context.assert_operator_enabled cx) then
         Flow_js_utils.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
@@ -5621,12 +5621,25 @@ module Make
         let ((pat_loc, expr), assertion, reconstruct_ast) =
           Flow_ast_utils.unwrap_nonnull_lhs_expr (expr_loc, expr)
         in
-        if assertion && not (Context.assert_operator cx) then
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EUnsupportedSyntax
-               (expr_loc, Flow_intermediate_error_types.NonnullAssertion)
-            );
+        if assertion then begin
+          if not (Context.assert_operator_enabled cx) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (expr_loc, Flow_intermediate_error_types.NonnullAssertion)
+              );
+          if Context.assert_operator_specialized cx then
+            Flow_js_utils.add_output
+              cx
+              Error_message.(
+                EIllegalAssertOperator
+                  {
+                    op = mk_reason (RCustom "!") lhs_loc;
+                    obj = mk_expression_reason (expr_loc, expr);
+                    specialized = true;
+                  }
+              )
+        end;
         begin
           match expr with
           | Ast.Expression.Member mem ->
@@ -5850,7 +5863,7 @@ module Make
         match optional with
         | OptionalMember.Optional -> NewChain
         | OptionalMember.AssertNonnull ->
-          if not (Context.assert_operator cx) then
+          if not (Context.assert_operator_enabled cx) then
             Flow_js_utils.add_output
               cx
               (Error_message.EUnsupportedSyntax
