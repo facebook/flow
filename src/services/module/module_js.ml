@@ -600,6 +600,9 @@ module Node = struct
          * to resolve to a libdef, since we try to resolve to libdef modules
          * during check in the `Error _` case. *)
         Error None)
+    | Flow_import_specifier.HasteImportWithSpecifiedNamespace _ ->
+      (* We should never find Haste modules under Node. *)
+      Error None
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -689,7 +692,13 @@ module Haste : MODULE_SYSTEM = struct
       None
 
   let resolve_haste_module
-      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
+      ~options
+      ~reader
+      ~phantom_acc
+      ~importing_file
+      ~importing_file_dir
+      ~namespace_opt
+      ~import_specifier =
     let (name, subpath) =
       match String.split_on_char '/' import_specifier with
       | [] -> (import_specifier, [])
@@ -731,13 +740,16 @@ module Haste : MODULE_SYSTEM = struct
         None
     in
     let haste_namespace_bitset_candidates =
-      let opts = Options.haste_namespaces_options options in
-      match Flow_projects.projects_bitset_of_path ~opts (File_key.to_string importing_file) with
-      | None -> []
-      | Some bitset ->
-        bitset
-        |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts
-        |> List.map Flow_projects.to_bitset
+      match namespace_opt with
+      | Some namespace -> [namespace]
+      | None ->
+        let opts = Options.haste_namespaces_options options in
+        (match Flow_projects.projects_bitset_of_path ~opts (File_key.to_string importing_file) with
+        | None -> []
+        | Some bitset ->
+          bitset
+          |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts
+          |> List.map Flow_projects.to_bitset)
     in
     let mname_of_bitset namespace_bitset =
       Modulename.Haste (Haste_module_info.mk ~module_name:name ~namespace_bitset)
@@ -749,7 +761,13 @@ module Haste : MODULE_SYSTEM = struct
       )
 
   let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
+      ~options
+      ~reader
+      ~phantom_acc
+      ~importing_file
+      ~importing_file_dir
+      ~namespace_opt
+      ~import_specifier =
     let dependency =
       resolve_haste_module
         ~options
@@ -757,6 +775,7 @@ module Haste : MODULE_SYSTEM = struct
         ~phantom_acc
         ~importing_file
         ~importing_file_dir
+        ~namespace_opt
         ~import_specifier
     in
     let file_options = Options.file_options options in
@@ -800,6 +819,7 @@ module Haste : MODULE_SYSTEM = struct
                  ~phantom_acc
                  ~importing_file
                  ~importing_file_dir
+                 ~namespace_opt:None
                  ~import_specifier
               );
             lazy
@@ -843,6 +863,7 @@ module Haste : MODULE_SYSTEM = struct
                    ~phantom_acc
                    ~importing_file
                    ~importing_file_dir
+                   ~namespace_opt:None
                    ~import_specifier
                 );
               lazy
@@ -882,6 +903,7 @@ module Haste : MODULE_SYSTEM = struct
                       ~phantom_acc
                       ~importing_file
                       ~importing_file_dir
+                      ~namespace_opt:None
                       ~import_specifier:(import_specifier ^ "." ^ platform)
                    )
              )
@@ -893,6 +915,7 @@ module Haste : MODULE_SYSTEM = struct
                      ~phantom_acc
                      ~importing_file
                      ~importing_file_dir
+                     ~namespace_opt:None
                      ~import_specifier
                   );
                 lazy
@@ -954,6 +977,21 @@ module Haste : MODULE_SYSTEM = struct
           | _ -> Some (Flow_import_specifier.userland_specifier import_specifier)
         in
         Error mapped_name)
+    | Flow_import_specifier.HasteImportWithSpecifiedNamespace { namespace; name } as specifier ->
+      let importing_file_dir = Filename.dirname (File_key.to_string importing_file) in
+      let import_specifier = Nel.hd (module_name_candidates ~options name) in
+      (match
+         resolve_haste_module
+           ~options
+           ~reader
+           ~phantom_acc
+           ~importing_file
+           ~importing_file_dir
+           ~namespace_opt:(Some namespace)
+           ~import_specifier
+       with
+      | Some m -> Ok m
+      | None -> Error (Some specifier))
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as

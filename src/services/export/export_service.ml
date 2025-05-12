@@ -220,6 +220,9 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         | Some (Error (Some (Flow_import_specifier.Userland mref))) ->
           let (kind, name) = kind_and_name mref in
           Export_index.add name (Builtin mref) kind acc
+        | Some (Error (Some (Flow_import_specifier.HasteImportWithSpecifiedNamespace _))) ->
+          (* We should not index synthetic imports. *)
+          acc
         | Some (Error None) ->
           let (kind, name) = kind_and_name mref in
           Export_index.add name (Builtin mref) kind acc

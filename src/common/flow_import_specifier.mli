@@ -15,7 +15,13 @@ val display_userland : userland -> string
 
 val unwrap_userland : userland -> string
 
-type t = Userland of userland [@@deriving show, ord]
+type t =
+  | Userland of userland
+  | HasteImportWithSpecifiedNamespace of {
+      namespace: Bitset.t;
+      name: string;
+    }
+[@@deriving show, ord]
 
 val userland_specifier : string -> t
 

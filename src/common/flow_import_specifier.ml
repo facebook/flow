@@ -16,7 +16,13 @@ let display_userland x = x
 let unwrap_userland x = x
 
 module Key = struct
-  type t = Userland of userland [@@deriving show, ord]
+  type t =
+    | Userland of userland
+    | HasteImportWithSpecifiedNamespace of {
+        namespace: Bitset.t;
+        name: string;
+      }
+  [@@deriving show, ord]
 end
 
 let userland_specifier x = Key.Userland x

@@ -49,6 +49,9 @@ let unknown_module_t cx module_name =
     (match typed_builtin_module_opt cx user_land_module_name with
     | Some typed -> Context.TypedModule typed
     | None -> Context.MissingModule)
+  | Flow_import_specifier.HasteImportWithSpecifiedNamespace _ ->
+    (* We should not lookup builtins modules for synthetic imports. *)
+    Context.MissingModule
 
 let unchecked_module_t cx file_key mref =
   let loc = ALoc.of_loc Loc.{ none with source = Some file_key } in
@@ -57,6 +60,9 @@ let unchecked_module_t cx file_key mref =
     (match typed_builtin_module_opt cx user_land_module_name with
     | Some typed -> Context.TypedModule typed
     | None -> Context.UncheckedModule loc)
+  | Flow_import_specifier.HasteImportWithSpecifiedNamespace _ ->
+    (* We should not lookup builtins modules for synthetic imports. *)
+    Context.UncheckedModule loc
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in

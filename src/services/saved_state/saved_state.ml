@@ -80,6 +80,8 @@ let modulename_map_fn ~on_file ?on_string = function
 let import_specifier_map_fn ~on_string = function
   | Flow_import_specifier.Userland name ->
     Flow_import_specifier.Userland (Flow_import_specifier.map_userland ~f:on_string name)
+  | Flow_import_specifier.HasteImportWithSpecifiedNamespace { namespace; name } ->
+    Flow_import_specifier.HasteImportWithSpecifiedNamespace { namespace; name = on_string name }
 
 let resolved_module_map_fn ~on_file ?on_string = function
   | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)

@@ -105,6 +105,9 @@ let module_of_module_ref ~resolved_modules ~root ~write_root module_ref =
       match mapped_name with
       | None -> module_ref
       | Some (Flow_import_specifier.Userland name) -> name
+      | Some (Flow_import_specifier.HasteImportWithSpecifiedNamespace _) ->
+        failwith
+          "We import from Flow_import_specifier.Userland, so we should not get other kinds of missing modules."
     in
     Module.String (Flow_import_specifier.display_userland name)
 
