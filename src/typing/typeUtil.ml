@@ -571,10 +571,11 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     OrdinaryName actual = expected
-  | _ ->
+  | (DefT (_, (SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SingletonBigIntT _)), _) ->
     let result = reasonless_eq t1 t2 in
     if result then on_singleton_eq t1;
     result
+  | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function
   | Named { reason; _ } -> reason
