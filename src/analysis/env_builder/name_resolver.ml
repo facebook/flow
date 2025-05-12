@@ -1478,18 +1478,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           env_state.env
 
       method havoc_current_env ~invalidation_reason ~loc =
-        let invalidation_info =
-          Refinement_invalidation.singleton ~reason:invalidation_reason ~loc
-        in
-        let all =
-          match invalidation_reason with
-          | Refinement_invalidation.Yield -> true
-          | Refinement_invalidation.FunctionCall
-          | Refinement_invalidation.ConstructorCall
-          | Refinement_invalidation.Await
-          | Refinement_invalidation.PropertyAssignment ->
-            false
-        in
         let havoced_ids =
           FullEnv.fold_current_function_scope_values env_state.env ~init:ISet.empty ~f:(fun acc -> function
             | { kind = Bindings.Internal; _ } -> acc
@@ -1501,33 +1489,44 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 heap_refinements;
                 kind = _;
               } ->
-              let uninitialized_writes =
-                lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
-              in
-              let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
-              let havoc_ref =
-                if val_is_undeclared_or_skipped then
-                  !val_ref
-                else
-                  let havoc =
-                    match (all, writes_by_closure_provider_val) with
-                    | (false, Some writes_by_closure_provider_val) ->
-                      Val.merge !val_ref writes_by_closure_provider_val
-                    | _ -> havoc
-                  in
-                  Base.List.fold
-                    ~init:havoc
-                    ~f:(fun acc write -> Val.merge acc (Val.of_write write))
-                    (Lazy.force uninitialized_writes)
+              let all =
+                match invalidation_reason with
+                | Refinement_invalidation.Yield -> true
+                | Refinement_invalidation.FunctionCall
+                | Refinement_invalidation.ConstructorCall
+                | Refinement_invalidation.Await
+                | Refinement_invalidation.PropertyAssignment ->
+                  false
               in
               if this#should_invalidate ~all def_loc then (
+                let val_is_undeclared_or_skipped = Val.is_undeclared_or_skipped !val_ref in
+                let havoc_ref =
+                  if val_is_undeclared_or_skipped then
+                    !val_ref
+                  else
+                    let uninitialized_writes =
+                      lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
+                    in
+                    let havoc =
+                      match (all, writes_by_closure_provider_val) with
+                      | (false, Some writes_by_closure_provider_val) ->
+                        Val.merge !val_ref writes_by_closure_provider_val
+                      | _ -> havoc
+                    in
+                    Base.List.fold
+                      ~init:havoc
+                      ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                      (Lazy.force uninitialized_writes)
+                in
                 this#havoc_heap_refinements heap_refinements;
                 val_ref := havoc_ref;
                 ISet.add (Val.base_id_of_val havoc_ref) acc
-              ) else (
+              ) else
+                let invalidation_info =
+                  Refinement_invalidation.singleton ~reason:invalidation_reason ~loc
+                in
                 this#invalidate_heap_refinements ~invalidation_info heap_refinements;
                 acc
-              )
           )
         in
         Base.Option.iter env_state.type_guard_name ~f:(fun (TGinfo { id; havoced; _ }) ->
