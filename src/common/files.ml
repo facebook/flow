@@ -18,6 +18,8 @@ type options = {
   declarations: (string * Str.regexp) list;
   implicitly_include_root: bool;
   includes: Path_matcher.t;
+  haste_paths_excludes: Str.regexp list;
+  haste_paths_includes: Str.regexp list;
   lib_paths: (string option * File_path.t) list;
   module_declaration_dirnames: string list;
   module_file_exts: string list;
@@ -36,6 +38,8 @@ let mk_options
     ~declarations
     ~implicitly_include_root
     ~includes
+    ~haste_paths_excludes
+    ~haste_paths_includes
     ~lib_paths
     ~module_declaration_dirnames
     ~module_file_exts
@@ -52,6 +56,8 @@ let mk_options
     declarations;
     implicitly_include_root;
     includes;
+    haste_paths_excludes;
+    haste_paths_includes;
     lib_paths;
     module_declaration_dirnames;
     module_file_exts;
@@ -71,6 +77,8 @@ let default_options =
     declarations = [];
     implicitly_include_root = true;
     includes = Path_matcher.empty;
+    haste_paths_excludes = [];
+    haste_paths_includes = [];
     lib_paths = [];
     module_declaration_dirnames = [];
     module_file_exts = [];
@@ -144,6 +152,22 @@ let is_prefix prefix =
       prefix ^ Filename.dir_sep
   in
   (fun path -> path = prefix || String.starts_with ~prefix:prefix_with_sep path)
+
+let haste_name_opt ~options =
+  let matches_includes name =
+    List.exists (fun r -> Str.string_match r name 0) options.haste_paths_includes
+  in
+  let matches_excludes name =
+    List.exists (fun r -> Str.string_match r name 0) options.haste_paths_excludes
+  in
+  let regexp = Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$" in
+  fun file ->
+    (* Standardize \ to / in path for Windows *)
+    let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
+    if matches_includes normalized_file_name && not (matches_excludes normalized_file_name) then
+      Some (Str.global_replace regexp "\\2" normalized_file_name)
+    else
+      None
 
 let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   if options.multi_platform then

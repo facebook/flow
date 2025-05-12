@@ -633,17 +633,13 @@ module Haste : MODULE_SYSTEM = struct
       let file = Sys_utils.normalize_filename_dir_sep file in
       Str.string_match mock_path file 0
 
-  let haste_name =
-    let regexp = Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$" in
-    (fun name -> Str.global_replace regexp "\\2" name)
-
   let is_within_node_modules options =
     let root = Options.root options in
     let options = Options.file_options options in
     Files.is_within_node_modules ~root ~options
 
   let exported_module options =
-    let is_haste_file = Options.is_haste_file options in
+    let haste_name_opt = Files.haste_name_opt ~options:(Options.file_options options) in
     let projects_options = Options.haste_namespaces_options options in
     let namespace_of_path path =
       match path |> Flow_projects.projects_bitset_of_path ~opts:projects_options with
@@ -660,19 +656,12 @@ module Haste : MODULE_SYSTEM = struct
                ~module_name:(short_module_name_of file)
                ~namespace_bitset:(namespace_of_path path)
             )
-        else
-          (* Standardize \ to / in path for Windows *)
-          let normalized_file_name =
-            Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
-          in
-          if is_haste_file normalized_file_name then
-            Some
-              (Haste_module_info.mk
-                 ~module_name:(haste_name normalized_file_name)
-                 ~namespace_bitset:(namespace_of_path path)
-              )
-          else
-            None
+        else (
+          match haste_name_opt file with
+          | Some module_name ->
+            Some (Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path path))
+          | None -> None
+        )
       | File_key.JsonFile path ->
         (match package_info with
         | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->

@@ -20,6 +20,8 @@ val mk_options :
   declarations:(string * Str.regexp) list ->
   implicitly_include_root:bool ->
   includes:Path_matcher.t ->
+  haste_paths_excludes:Str.regexp list ->
+  haste_paths_includes:Str.regexp list ->
   lib_paths:(string option * File_path.t) list ->
   module_declaration_dirnames:string list ->
   module_file_exts:string list ->
@@ -71,6 +73,9 @@ val has_flow_ext : File_key.t -> bool
 val chop_flow_ext : File_key.t -> File_key.t
 
 val eponymous_module : File_key.t -> Modulename.t
+
+(* If the given file is a Haste file, return Some(haste name of file) *)
+val haste_name_opt : options:options -> File_key.t -> string option
 
 val relative_interface_mref_of_possibly_platform_specific_file :
   options:options -> File_key.t -> string option

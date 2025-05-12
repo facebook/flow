@@ -1321,6 +1321,16 @@ let make_options
       ~temp_dir
       ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
       ~includes
+      ~haste_paths_excludes:
+        (Base.List.map
+           ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+           (FlowConfig.haste_paths_excludes flowconfig)
+        )
+      ~haste_paths_includes:
+        (Base.List.map
+           ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+           (FlowConfig.haste_paths_includes flowconfig)
+        )
       ~ignores
       ~libs
       ~untyped
@@ -1441,14 +1451,6 @@ let make_options
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_haste_namespaces_enabled = FlowConfig.haste_namespaces_enabled flowconfig;
-    opt_haste_paths_excludes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.haste_paths_excludes flowconfig);
-    opt_haste_paths_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.haste_paths_includes flowconfig);
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;

@@ -135,8 +135,6 @@ type t = {
   opt_gc_worker: gc_control;
   opt_haste_module_ref_prefix: string option;
   opt_haste_namespaces_enabled: bool;
-  opt_haste_paths_excludes: string list;
-  opt_haste_paths_includes: string list;
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
@@ -296,17 +294,6 @@ let haste_namespaces_options opts =
     opts.opt_projects_options
   else
     Flow_projects.default_options
-
-let is_haste_file options =
-  let includes = lazy (Base.List.map ~f:Str.regexp options.opt_haste_paths_includes) in
-  let excludes = lazy (Base.List.map ~f:Str.regexp options.opt_haste_paths_excludes) in
-  let matches_includes name =
-    List.exists (fun r -> Str.string_match r name 0) (Lazy.force includes)
-  in
-  let matches_excludes name =
-    List.exists (fun r -> Str.string_match r name 0) (Lazy.force excludes)
-  in
-  (fun name -> matches_includes name && not (matches_excludes name))
 
 let include_suppressions opts = opts.opt_include_suppressions
 
