@@ -473,7 +473,12 @@ with type t = Impl.t = struct
         Unary.(
           (match operator with
           | Await -> node ?comments "AwaitExpression" loc [("argument", expression argument)]
-          | Nonnull -> node ?comments "NonNullExpression" loc [("argument", expression argument)]
+          | Nonnull ->
+            node
+              ?comments
+              "NonNullExpression"
+              loc
+              [("argument", expression argument); ("chain", bool false)]
           | _ ->
             let operator =
               match operator with
@@ -620,34 +625,44 @@ with type t = Impl.t = struct
             ~outer:comments
         in
 
-        let optional =
+        let (optional, wrap_callee) =
           match optional with
-          | OptionalCall.Optional -> bool true
-          | OptionalCall.NonOptional -> bool false
-          | OptionalCall.AssertNonnull -> string "assert"
+          | OptionalCall.Optional -> (bool true, None)
+          | OptionalCall.NonOptional -> (bool false, None)
+          | OptionalCall.AssertNonnull ->
+            ( bool false,
+              Some
+                (fun callee ->
+                  node "NonNullExpression" loc [("argument", callee); ("chain", bool true)])
+            )
         in
         node
           ?comments
           "OptionalCallExpression"
           loc
-          (call_node_properties call @ [("optional", optional)])
+          (call_node_properties ?wrap_callee call @ [("optional", optional)])
       | (loc, Member ({ Member.comments; _ } as member)) ->
         node ?comments "MemberExpression" loc (member_node_properties member)
       | ( loc,
           OptionalMember
             { OptionalMember.member = { Member.comments; _ } as member; optional; filtered_out = _ }
         ) ->
-        let optional =
+        let (optional, wrap_reciever) =
           match optional with
-          | OptionalMember.Optional -> bool true
-          | OptionalMember.NonOptional -> bool false
-          | OptionalMember.AssertNonnull -> string "assert"
+          | OptionalMember.Optional -> (bool true, None)
+          | OptionalMember.NonOptional -> (bool false, None)
+          | OptionalMember.AssertNonnull ->
+            ( bool false,
+              Some
+                (fun receiver ->
+                  node "NonNullExpression" loc [("argument", receiver); ("chain", bool true)])
+            )
         in
         node
           ?comments
           "OptionalMemberExpression"
           loc
-          (member_node_properties member @ [("optional", optional)])
+          (member_node_properties ?wrap_reciever member @ [("optional", optional)])
       | (loc, Yield { Yield.argument; delegate; comments; result_out = _ }) ->
         node
           ?comments
@@ -2458,20 +2473,32 @@ with type t = Impl.t = struct
         | Inferred -> ("InferredPredicate", [])
       in
       node ?comments _type loc value
-    and call_node_properties { Expression.Call.callee; targs; arguments; comments = _ } =
+    and call_node_properties ?wrap_callee { Expression.Call.callee; targs; arguments; comments = _ }
+        =
+      let callee =
+        match wrap_callee with
+        | None -> expression callee
+        | Some wrap -> wrap (expression callee)
+      in
       [
-        ("callee", expression callee);
+        ("callee", callee);
         ("typeArguments", option call_type_args targs);
         ("arguments", arg_list arguments);
       ]
-    and member_node_properties { Expression.Member._object; property; comments = _ } =
+    and member_node_properties ?wrap_reciever { Expression.Member._object; property; comments = _ }
+        =
       let (property, computed) =
         match property with
         | Expression.Member.PropertyIdentifier id -> (identifier id, false)
         | Expression.Member.PropertyPrivateName name -> (private_identifier name, false)
         | Expression.Member.PropertyExpression expr -> (expression expr, true)
       in
-      [("object", expression _object); ("property", property); ("computed", bool computed)]
+      let _object =
+        match wrap_reciever with
+        | None -> expression _object
+        | Some wrap -> wrap (expression _object)
+      in
+      [("object", _object); ("property", property); ("computed", bool computed)]
     in
     { program; expression }
 

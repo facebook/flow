@@ -1,60 +1,32 @@
 {
   "type":"Program",
-  "loc":{
-    "source":null,
-    "start":{"line":1,"column":0},
-    "end":{"line":2,"column":10}
-  },
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":10}},
   "range":[0,29],
   "body":[
     {
       "type":"ExpressionStatement",
-      "loc":{
-        "source":null,
-        "start":{"line":1,"column":0},
-        "end":{"line":1,"column":12}
-      },
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":12}},
       "range":[0,12],
       "expression":{
         "type":"AssignmentExpression",
-        "loc":{
-          "source":null,
-          "start":{"line":1,"column":0},
-          "end":{"line":1,"column":11}
-        },
+        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":11}},
         "range":[0,11],
         "operator":"=",
         "left":{
           "type":"MemberExpression",
-          "loc":{
-            "source":null,
-            "start":{"line":1,"column":0},
-            "end":{"line":1,"column":6}
-          },
+          "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":6}},
           "range":[0,6],
           "object":{
             "type":"NonNullExpression",
-            "loc":{
-              "source":null,
-              "start":{"line":1,"column":0},
-              "end":{"line":1,"column":4}
-            },
+            "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
             "range":[0,4],
             "argument":{
               "type":"MemberExpression",
-              "loc":{
-                "source":null,
-                "start":{"line":1,"column":0},
-                "end":{"line":1,"column":3}
-              },
+              "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":3}},
               "range":[0,3],
               "object":{
                 "type":"Identifier",
-                "loc":{
-                  "source":null,
-                  "start":{"line":1,"column":0},
-                  "end":{"line":1,"column":1}
-                },
+                "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":1}},
                 "range":[0,1],
                 "name":"x",
                 "typeAnnotation":null,
@@ -62,26 +34,19 @@
               },
               "property":{
                 "type":"Identifier",
-                "loc":{
-                  "source":null,
-                  "start":{"line":1,"column":2},
-                  "end":{"line":1,"column":3}
-                },
+                "loc":{"source":null,"start":{"line":1,"column":2},"end":{"line":1,"column":3}},
                 "range":[2,3],
                 "name":"a",
                 "typeAnnotation":null,
                 "optional":false
               },
               "computed":false
-            }
+            },
+            "chain":false
           },
           "property":{
             "type":"Identifier",
-            "loc":{
-              "source":null,
-              "start":{"line":1,"column":5},
-              "end":{"line":1,"column":6}
-            },
+            "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":6}},
             "range":[5,6],
             "name":"b",
             "typeAnnotation":null,
@@ -91,11 +56,7 @@
         },
         "right":{
           "type":"Literal",
-          "loc":{
-            "source":null,
-            "start":{"line":1,"column":9},
-            "end":{"line":1,"column":11}
-          },
+          "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":11}},
           "range":[9,11],
           "value":42,
           "raw":"42"
@@ -105,44 +66,24 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{
-        "source":null,
-        "start":{"line":2,"column":0},
-        "end":{"line":2,"column":10}
-      },
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":10}},
       "range":[19,29],
       "expression":{
         "type":"AssignmentExpression",
-        "loc":{
-          "source":null,
-          "start":{"line":2,"column":0},
-          "end":{"line":2,"column":9}
-        },
+        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":9}},
         "range":[19,28],
         "operator":"=",
         "left":{
           "type":"NonNullExpression",
-          "loc":{
-            "source":null,
-            "start":{"line":2,"column":0},
-            "end":{"line":2,"column":4}
-          },
+          "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":4}},
           "range":[19,23],
           "argument":{
             "type":"MemberExpression",
-            "loc":{
-              "source":null,
-              "start":{"line":2,"column":0},
-              "end":{"line":2,"column":3}
-            },
+            "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":3}},
             "range":[19,22],
             "object":{
               "type":"Identifier",
-              "loc":{
-                "source":null,
-                "start":{"line":2,"column":0},
-                "end":{"line":2,"column":1}
-              },
+              "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":1}},
               "range":[19,20],
               "name":"x",
               "typeAnnotation":null,
@@ -150,26 +91,19 @@
             },
             "property":{
               "type":"Identifier",
-              "loc":{
-                "source":null,
-                "start":{"line":2,"column":2},
-                "end":{"line":2,"column":3}
-              },
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":3}},
               "range":[21,22],
               "name":"a",
               "typeAnnotation":null,
               "optional":false
             },
             "computed":false
-          }
+          },
+          "chain":false
         },
         "right":{
           "type":"Literal",
-          "loc":{
-            "source":null,
-            "start":{"line":2,"column":7},
-            "end":{"line":2,"column":9}
-          },
+          "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":9}},
           "range":[26,28],
           "value":42,
           "raw":"42"
@@ -181,21 +115,13 @@
   "comments":[
     {
       "type":"Line",
-      "loc":{
-        "source":null,
-        "start":{"line":1,"column":13},
-        "end":{"line":1,"column":18}
-      },
+      "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":18}},
       "range":[13,18],
       "value":" ok"
     },
     {
       "type":"Line",
-      "loc":{
-        "source":null,
-        "start":{"line":2,"column":11},
-        "end":{"line":2,"column":16}
-      },
+      "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":16}},
       "range":[30,35],
       "value":" ok"
     }

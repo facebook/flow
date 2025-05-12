@@ -383,8 +383,9 @@ function custom_ast_types(fork) {
   def('NonNullExpression')
     .bases('Expression')
     .bases('Pattern')
-    .build('argument')
-    .field('argument', def('Expression'));
+    .build('argument', 'chain')
+    .field('argument', def('Expression'))
+    .field('chain', Boolean);
   def('AsConstExpression')
     .bases('Expression')
     .build('expression')
