@@ -45,7 +45,7 @@ file.js:26:14,26:17
 
 file.js:28:7
 Flags:
-readonly [number, number, number]
+readonly [1, 2, 3]
 file.js:28:7,28:10
 
 file.js:30:7
@@ -65,7 +65,7 @@ file.js:34:14,34:17
 
 file.js:36:7
 Flags:
-readonly [number, number, number]
+readonly [1, 2, 3]
 file.js:36:7,36:10
 
 file.js:38:14

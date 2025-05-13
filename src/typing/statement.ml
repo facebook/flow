@@ -2780,7 +2780,7 @@ module Make
              let reason = mk_reason RArrayElement loc in
              (UnresolvedArg (mk_tuple_element reason t, None), Hole loc)
            | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
-             let (((_, t), _) as argument) = expression cx ~has_hint argument in
+             let (((_, t), _) as argument) = expression cx ~as_const ~has_hint argument in
              ( UnresolvedSpreadArg t,
                Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
              )

@@ -41,7 +41,7 @@ function test_arr3() {
 }
 
 function test_arr4() {
-  arr4 as readonly [1, 2, 3]; // okay arr4 elements are Num<i>
+  arr4 as readonly [1, 2, 3]; // error arr4 elements are `number` not `1`, `2`, `3`
   arr4 as readonly [number, number, number]; // okay
 
   _ as [1, 2, 3] as typeof arr4; // okay
