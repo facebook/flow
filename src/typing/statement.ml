@@ -5095,20 +5095,26 @@ module Make
       in
       (tout, { operator = Not; argument; comments })
     | { operator = Plus; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx argument in
+      let (((_, argt), _) as argument) =
+        expression cx ~encl_ctx ?decl ~has_hint ~as_const ~frozen argument
+      in
       let reason = mk_reason (desc_of_t argt) loc in
       ( Operators.unary_arith cx reason UnaryArithKind.Plus argt,
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
       let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
-      let (((_, argt), _) as argument) = expression cx ?decl ~has_hint ~as_const ~frozen argument in
+      let (((_, argt), _) as argument) =
+        expression cx ~encl_ctx ?decl ~has_hint ~as_const ~frozen argument
+      in
       let reason = mk_reason (desc_of_t argt) loc in
       ( Operators.unary_arith cx reason UnaryArithKind.Minus argt,
         { operator = Minus; argument; comments }
       )
     | { operator = BitNot; argument; comments } ->
-      let (((_, argt), _) as argument) = expression cx argument in
+      let (((_, argt), _) as argument) =
+        expression cx ~encl_ctx ?decl ~has_hint ~as_const ~frozen argument
+      in
       let reason = mk_reason (desc_of_t argt) loc in
       ( Operators.unary_arith cx reason UnaryArithKind.BitNot argt,
         { operator = BitNot; argument; comments }
@@ -5133,7 +5139,9 @@ module Make
         Flow_js_utils.add_output
           cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.NonnullAssertion));
-      let (((_, argt), _) as argument) = expression cx argument in
+      let (((_, argt), _) as argument) =
+        expression ~encl_ctx ?decl ~has_hint ~as_const ~frozen cx argument
+      in
       let reason = mk_reason (RCustom "!") loc in
       ( Operators.non_maybe cx reason argt,
         { operator = Ast.Expression.Unary.Nonnull; argument; comments }

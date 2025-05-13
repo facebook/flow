@@ -8,10 +8,10 @@ function foo2(x: Array<number>): [number, ?number] {
 
 // Array literals with known elements can flow to tuples
 {
-  const arr = [1,2,3];
-  (arr: [1,2,3]); // ok
-  (arr: [1,2]); // error
-  (arr: [1,2,3,4]); // error
+  const arr = [1,2,3] as const;
+  (arr: $ReadOnly<[1,2,3]>); // ok
+  (arr: $ReadOnly<[1,2]>); // error
+  (arr: $ReadOnly<[1,2,3,4]>); // error
 }
 
 // Fresh array -> tuple can subtype

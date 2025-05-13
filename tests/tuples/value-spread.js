@@ -1,11 +1,11 @@
 // Basic
 {
   declare const x: [1, 2];
-  const y = [0, ...x, 3];
-  (y: [0, 1, 2, 3]); // OK
-  (y: [0, 1, 2]); // ERROR
-  (y: [0, 1, 2, 3, 4]); // ERROR
-  (y: [0, 1, 2, 999]); // ERROR
+  const y = [0, ...x, 3] as const;
+  (y: $ReadOnly<[0, 1, 2, 3]>); // OK
+  (y: $ReadOnly<[0, 1, 2]>); // ERROR
+  (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
+  (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
 }
 
 // Optional members

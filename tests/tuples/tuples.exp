@@ -70,38 +70,38 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:13:4
 
-Cannot cast `arr` to tuple type because array literal [1] has 3 elements but tuple type [2] has 2 elements.
+Cannot cast `arr` to `$ReadOnly` because const array literal [1] has 3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
    array.js:13:4
-   13|   (arr: [1,2]); // error
+   13|   (arr: $ReadOnly<[1,2]>); // error
           ^^^
 
 References:
    array.js:11:15
-   11|   const arr = [1,2,3];
+   11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:13:9
-   13|   (arr: [1,2]); // error
-               ^^^^^ [2]
+   array.js:13:19
+   13|   (arr: $ReadOnly<[1,2]>); // error
+                         ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- array.js:14:4
 
-Cannot cast `arr` to tuple type because array literal [1] has 3 elements but tuple type [2] has 4 elements.
+Cannot cast `arr` to `$ReadOnly` because const array literal [1] has 3 elements but tuple type [2] has 4 elements.
 [invalid-tuple-arity]
 
    array.js:14:4
-   14|   (arr: [1,2,3,4]); // error
+   14|   (arr: $ReadOnly<[1,2,3,4]>); // error
           ^^^
 
 References:
    array.js:11:15
-   11|   const arr = [1,2,3];
+   11|   const arr = [1,2,3] as const;
                      ^^^^^^^ [1]
-   array.js:14:9
-   14|   (arr: [1,2,3,4]); // error
-               ^^^^^^^^^ [2]
+   array.js:14:19
+   14|   (arr: $ReadOnly<[1,2,3,4]>); // error
+                         ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:21:62
@@ -581,8 +581,8 @@ elements. [invalid-tuple-arity]
 
 References:
    inexact.js:106:13
-   106|   const b = [0, ...a];
-                    ^^^^^^^^^ [1]
+   106|   const b = [0 as const, ...a];
+                    ^^^^^^^^^^^^^^^^^^ [1]
    inexact.js:107:8
    107|   b as [0, 1]; // ERROR - not inexact
                ^^^^^^ [2]
@@ -2149,56 +2149,56 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:6:4
 
-Cannot cast `y` to tuple type because array literal [1] has 4 elements but tuple type [2] has 3 elements.
+Cannot cast `y` to `$ReadOnly` because const array literal [1] has 4 elements but tuple type [2] has 3 elements.
 [invalid-tuple-arity]
 
    value-spread.js:6:4
-   6|   (y: [0, 1, 2]); // ERROR
+   6|   (y: $ReadOnly<[0, 1, 2]>); // ERROR
          ^
 
 References:
    value-spread.js:4:13
-   4|   const y = [0, ...x, 3];
+   4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:6:7
-   6|   (y: [0, 1, 2]); // ERROR
-            ^^^^^^^^^ [2]
+   value-spread.js:6:17
+   6|   (y: $ReadOnly<[0, 1, 2]>); // ERROR
+                      ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:7:4
 
-Cannot cast `y` to tuple type because array literal [1] has 4 elements but tuple type [2] has 5 elements.
+Cannot cast `y` to `$ReadOnly` because const array literal [1] has 4 elements but tuple type [2] has 5 elements.
 [invalid-tuple-arity]
 
    value-spread.js:7:4
-   7|   (y: [0, 1, 2, 3, 4]); // ERROR
+   7|   (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
          ^
 
 References:
    value-spread.js:4:13
-   4|   const y = [0, ...x, 3];
+   4|   const y = [0, ...x, 3] as const;
                   ^^^^^^^^^^^^ [1]
-   value-spread.js:7:7
-   7|   (y: [0, 1, 2, 3, 4]); // ERROR
-            ^^^^^^^^^^^^^^^ [2]
+   value-spread.js:7:17
+   7|   (y: $ReadOnly<[0, 1, 2, 3, 4]>); // ERROR
+                      ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:8:4
 
-Cannot cast `y` to tuple type because number [1] is incompatible with number literal `999` [2] in index 3.
+Cannot cast `y` to `$ReadOnly` because number literal `3` [1] is incompatible with number literal `999` [2] in index 3.
 [incompatible-cast]
 
    value-spread.js:8:4
-   8|   (y: [0, 1, 2, 999]); // ERROR
+   8|   (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
          ^
 
 References:
    value-spread.js:4:23
-   4|   const y = [0, ...x, 3];
+   4|   const y = [0, ...x, 3] as const;
                             ^ [1]
-   value-spread.js:8:17
-   8|   (y: [0, 1, 2, 999]); // ERROR
-                      ^^^ [2]
+   value-spread.js:8:27
+   8|   (y: $ReadOnly<[0, 1, 2, 999]>); // ERROR
+                                ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:15:4

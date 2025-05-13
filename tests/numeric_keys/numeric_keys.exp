@@ -80,6 +80,24 @@ References:
                          ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
+
+Cannot cast `o2` to object type because boolean [1] is incompatible with boolean literal `true` [2] in the indexer
+property. [incompatible-cast]
+
+   non_literal_number.js:22:3
+   22|   o2 as {[number]: true}; // OK
+         ^^
+
+References:
+   non_literal_number.js:19:32
+   19|   declare const o1: {[number]: boolean};
+                                      ^^^^^^^ [1]
+   non_literal_number.js:22:20
+   22|   o2 as {[number]: true}; // OK
+                          ^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
 Cannot cast `o` to object type because property `1` is missing in object type [1] but exists in object literal [2]. Any
@@ -180,6 +198,60 @@ References:
    test.js:17:10
    17|   o as {['1']: boolean}; // ERROR
                 ^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:3
+
+Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `1`.
+[incompatible-cast]
+
+   test.js:20:3
+   20|   o as {'1': true, [number]: false}; // OK
+         ^
+
+References:
+   test.js:3:10
+    3|     '1': true,
+                ^^^^ [1]
+   test.js:20:14
+   20|   o as {'1': true, [number]: false}; // OK
+                    ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:3
+
+Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `false` [2] in property `2`.
+[incompatible-cast]
+
+   test.js:20:3
+   20|   o as {'1': true, [number]: false}; // OK
+         ^
+
+References:
+   test.js:4:10
+    4|     '2': false,
+                ^^^^^ [1]
+   test.js:20:30
+   20|   o as {'1': true, [number]: false}; // OK
+                                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:3
+
+Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `1`.
+[incompatible-cast]
+
+   test.js:21:3
+   21|   o as {'1': true, [number]: true}; // ERROR
+         ^
+
+References:
+   test.js:3:10
+    3|     '1': true,
+                ^^^^ [1]
+   test.js:21:14
+   21|   o as {'1': true, [number]: true}; // ERROR
+                    ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
@@ -707,4 +779,4 @@ References:
 
 
 
-Found 44 errors
+Found 48 errors

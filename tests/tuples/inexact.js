@@ -103,7 +103,7 @@ type C = [0, ...A, 2]; // ERROR - element after inexact spread
 // Value spread of inexact
 {
   declare const a: [1, ...];
-  const b = [0, ...a];
+  const b = [0 as const, ...a];
   b as [0, 1]; // ERROR - not inexact
   b as [0, 1, ...]; // OK
   [0, ...a, 2]; // ERROR - element after inexact spread

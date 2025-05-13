@@ -3034,9 +3034,11 @@ let flow_unary_arith cx l reason kind =
     AnyT.error reason
   | (Plus, _) -> NumModuleT.why reason
   | (BitNot, DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))) -> NumModuleT.why reason
-  | (BitNot, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
+  | (BitNot, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))) ->
+    BigIntModuleT.why reason
   | (Update, DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))) -> NumModuleT.why reason
-  | (Update, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))) -> BigIntModuleT.why reason
+  | (Update, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))) ->
+    BigIntModuleT.why reason
   | (_, AnyT (_, src)) ->
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
