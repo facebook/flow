@@ -125,7 +125,7 @@ class literal_type_mapper ~singleton_action =
         DefT (r, BigIntT_UNSOUND (None, value))
   in
   object (self)
-    inherit [unit] Type_mapper.t as super
+    inherit [ISet.t] Type_mapper.t as super
 
     method exports _cx _map_cx id = id
 
@@ -148,13 +148,17 @@ class literal_type_mapper ~singleton_action =
 
     method tvar cx map_cx _r id =
       match Context.find_constraints cx id with
-      | (_, Type.Constraint.FullyResolved s) ->
-        let t = Context.force_fully_resolved_tvar cx s in
-        let t' = self#type_ cx map_cx t in
-        if t == t' then
+      | (root_id, Type.Constraint.FullyResolved s) ->
+        if ISet.mem root_id map_cx then
           id
         else
-          Tvar.mk_fully_resolved_no_wrap cx t'
+          let map_cx = ISet.add root_id map_cx in
+          let t = Context.force_fully_resolved_tvar cx s in
+          let t' = self#type_ cx map_cx t in
+          if t == t' then
+            id
+          else
+            Tvar.mk_fully_resolved_no_wrap cx t'
       | _ -> id
 
     method! type_ cx map_cx t =
@@ -181,7 +185,7 @@ class literal_type_mapper ~singleton_action =
 
 let convert_literal_type cx ~singleton_action t =
   let mapper = new literal_type_mapper ~singleton_action in
-  mapper#type_ cx () t
+  mapper#type_ cx ISet.empty t
 
 let rec is_literal_type cx seen t =
   let open Reason in
@@ -324,9 +328,9 @@ let convert_literal_type_to_const ~loc_range =
         id'
     end
   in
-  (fun cx t -> mapper#type_ cx () t)
+  (fun cx t -> mapper#type_ cx ISet.empty t)
 
-let rec is_generalization_candidate cx t =
+let rec is_generalization_candidate cx seen t =
   match t with
   | DefT (_, SingletonStrT { from_annot = false; _ })
   | DefT (_, SingletonBoolT { from_annot = false; _ })
@@ -335,14 +339,20 @@ let rec is_generalization_candidate cx t =
     true
   | OpenT (_, id) -> begin
     match Context.find_constraints cx id with
-    | (_, Type.Constraint.FullyResolved s) ->
-      is_generalization_candidate cx (Context.force_fully_resolved_tvar cx s)
+    | (root_id, Type.Constraint.FullyResolved s) ->
+      if ISet.mem root_id seen then
+        false
+      else
+        let seen = ISet.add root_id seen in
+        is_generalization_candidate cx seen (Context.force_fully_resolved_tvar cx s)
     | _ -> false
   end
   | UnionT (_, rep) ->
     let members = UnionRep.members rep in
-    List.exists (is_generalization_candidate cx) members
+    List.exists (is_generalization_candidate cx seen) members
   | _ -> false
+
+let is_generalization_candidate cx t = is_generalization_candidate cx ISet.empty t
 
 let loc_has_hint cx loc =
   let open Hint in
