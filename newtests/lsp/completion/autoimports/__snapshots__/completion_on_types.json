@@ -282,8 +282,59 @@
       {
         "label": "ThisIsAnotherType",
         "kind": 6,
-        "detail": "Import type from ./to-be-reexported-two-levels",
+        "detail": "Import type from ./re-exports",
         "sortText": "00000000000000000006",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 12
+            },
+            "end": {
+              "line": 2,
+              "character": 13
+            }
+          },
+          "newText": "ThisIsAnotherType"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import type { ThisIsAnotherType } from \"./re-exports\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "TAUTO332",
+              "index": 6,
+              "session_requests": 1,
+              "typed_length": 1,
+              "completion": "ThisIsAnotherType",
+              "ac_type": "Actype"
+            }
+          ]
+        }
+      },
+      {
+        "label": "ThisIsAnotherType",
+        "kind": 6,
+        "detail": "Import type from ./to-be-reexported-two-levels",
+        "sortText": "00000000000000000007",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -321,7 +372,7 @@
             "autoimport",
             {
               "token": "TAUTO332",
-              "index": 6,
+              "index": 7,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "ThisIsAnotherType",
@@ -334,7 +385,7 @@
         "label": "Toodle",
         "kind": 6,
         "detail": "Import type from ./types",
-        "sortText": "00000000000000000007",
+        "sortText": "00000000000000000008",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -372,7 +423,7 @@
             "autoimport",
             {
               "token": "TAUTO332",
-              "index": 7,
+              "index": 8,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "Toodle",
@@ -385,7 +436,7 @@
         "label": "true",
         "kind": 6,
         "detail": "true",
-        "sortText": "00000000000000000008",
+        "sortText": "00000000000000000009",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -408,7 +459,7 @@
             "builtin type",
             {
               "token": "TAUTO332",
-              "index": 8,
+              "index": 9,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "true",
@@ -421,7 +472,7 @@
         "label": "$NonMaybeType",
         "kind": 3,
         "detail": "$NonMaybeType",
-        "sortText": "00000000000000000009",
+        "sortText": "00000000000000000010",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -444,7 +495,7 @@
             "builtin type",
             {
               "token": "TAUTO332",
-              "index": 9,
+              "index": 10,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "$NonMaybeType",

@@ -65,7 +65,7 @@ module ModuleResolutionLazyStream = struct
         | None -> None
         | Some dep_parse ->
           let file_key = Parsing_heaps.read_file_key dep_file_addr in
-          let next = next (file_key, parse) in
+          let next = next (file_key, dep_parse) in
           Some { parse = dep_parse; file_key; next })
     in
     next
