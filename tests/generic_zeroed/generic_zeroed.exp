@@ -77,11 +77,11 @@ References:
    reduce.js:7:22
       7|   return nums.reduce<T>(
                               ^ [2]
-   <BUILTINS>/core.js:1055:5
+   <BUILTINS>/core.js:1060:5
              v------
-   1055|     reduce(
-   1056|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1057|     ): T;
+   1060|     reduce(
+   1061|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
+   1062|     ): T;
              ---^ [3]
 
 

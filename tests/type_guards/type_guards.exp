@@ -1423,8 +1423,8 @@ Error --------------------------------------------------------------------------
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1920:40
-   1920| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1925:40
+   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1438,8 +1438,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1906:11
-   1906| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1911:11
+   1911| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -1452,8 +1452,8 @@ Cannot return `(typeof x) == "number"` because `$Generator` [1] is incompatible 
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1920:40
-   1920| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1925:40
+   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
@@ -1494,8 +1494,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2143:15
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:15
+   2148| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error
@@ -2483,8 +2483,8 @@ References:
    refinement.js:231:7
    231|   fn: (x: mixed) => implies x is number,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:734:24
-   734|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+   <BUILTINS>/core.js:739:24
+   739|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
                                ^^^^^^^^^^^^^^ [4]
 
 
@@ -2508,8 +2508,8 @@ References:
    refinement.js:231:7
    231|   fn: (x: mixed) => implies x is number,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:734:24
-   734|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+   <BUILTINS>/core.js:739:24
+   739|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
                                ^^^^^^^^^^^^^^ [4]
 
 

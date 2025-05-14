@@ -10,8 +10,8 @@ References:
    async.js:9:30
       9| async function f1(): Promise<boolean> {
                                       ^^^^^^^ [2]
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -31,8 +31,8 @@ References:
    async.js:28:48
      28| async function f4(p: Promise<number>): Promise<boolean> {
                                                         ^^^^^^^ [2]
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -99,8 +99,8 @@ undefined in type argument `R` [2]. [incompatible-return]
                      ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [2]
 
 
@@ -142,8 +142,8 @@ References:
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -160,8 +160,8 @@ References:
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -181,8 +181,8 @@ References:
    async_return_void.js:9:32
       9| async function foo3(): Promise<string> {
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:2143:24
-   2143| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2148:24
+   2148| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -220,11 +220,11 @@ string [2] in type argument `Yield` [3]. [incompatible-return]
                                                      ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2206:58
-   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2211:58
+   2211|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1937:27
-   1937| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1942:27
+   1942| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [3]
 
 
@@ -237,14 +237,14 @@ string [1] is incompatible with number [2] in type argument `Yield` [3]. [incomp
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2206:58
-   2206|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2211:58
+   2211|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [1]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1937:27
-   1937| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1942:27
+   1942| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [3]
 
 
@@ -258,8 +258,8 @@ Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:1948:7
-   1948|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:1953:7
+   1953|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

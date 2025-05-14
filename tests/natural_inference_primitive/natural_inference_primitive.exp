@@ -2509,8 +2509,8 @@ References:
    local.js:643:77
     643|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
                                                                                      ^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1790:30
-   1790| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1795:30
+   1795| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
 
 
