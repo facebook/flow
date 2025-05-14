@@ -4,7 +4,7 @@ Server should start in types-first mode
 Error should refer to test/node_modules/foo.js
 Error -------------------------------------------------------------------------------------------------- foo2/foo.js:1:1
 
-Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+Duplicate module provider for `foo`. Change either the name of this file or the name of the current module provider [1].
 [duplicate-module]
 
    foo2/foo.js:1:1
@@ -61,7 +61,7 @@ Found 1 error
 Adding foo1.js should make error refer to foo1/foo.js
 Error -------------------------------------------------------------------------------------------------- foo2/foo.js:1:1
 
-Duplicate module provider for `foo`. Change either this module provider or the current module provider [1].
+Duplicate module provider for `foo`. Change either the name of this file or the name of the current module provider [1].
 [duplicate-module]
 
    foo2/foo.js:1:1

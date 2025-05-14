@@ -156,6 +156,7 @@ let add_import_bindings cx ~typed_ast acc require =
   | ImportDynamic _
   | Import0 _
   | ImportSyntheticUserland _
+  | ImportSyntheticHaste _
   | ExportFrom _ ->
     acc
 

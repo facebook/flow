@@ -241,6 +241,7 @@ let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   | Import0 _
   | ImportDynamic _
   | ImportSyntheticUserland _
+  | ImportSyntheticHaste _
   | ExportFrom _ ->
     [])
   |> Base.List.map ~f:(TypeImportDeclaration.to_json ~root ~write_root)
@@ -339,6 +340,7 @@ let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   | ImportDynamic _
   | Import0 _
   | ImportSyntheticUserland _
+  | ImportSyntheticHaste _
   | ExportFrom _ ->
     []
   | Import { source = (_, module_ref); named; ns; _ } ->

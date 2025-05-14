@@ -1,0 +1,2 @@
+declare const foo: number; // TODO error: should conform to JsFlowConflict2.js.flow
+export default foo;

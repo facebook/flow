@@ -12,6 +12,7 @@ type options = {
   explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
+  haste_namespaces_options: Flow_projects.options;
   relay_integration_module_prefix: string option;
 }
 
@@ -51,6 +52,12 @@ and require =
   (* A synthetic import declaration without a source location.
    * This variant can only be used if the synthetic import can also be written down in the userland. *)
   | ImportSyntheticUserland of { source: string }
+  (* A synthetic Haste import declaration without a source location.
+   * This variant is used to generate synthetic Haste imports for multiplatform Haste purposes. *)
+  | ImportSyntheticHaste of {
+      namespace: Bitset.t;
+      name: string;
+    }
   (* import declaration with specifiers *)
   | Import of {
       import_loc: Loc.t;

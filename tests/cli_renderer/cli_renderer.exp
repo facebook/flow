@@ -443,8 +443,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- haste_dupe_2/dupe.js:1:1
 
-Duplicate module provider for `dupe`. Change either this module provider or the current module provider [1].
-[duplicate-module]
+Duplicate module provider for `dupe`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
 
    haste_dupe_2/dupe.js:1:1
    1| /**

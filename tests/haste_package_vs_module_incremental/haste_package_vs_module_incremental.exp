@@ -22,8 +22,8 @@ Found 1 error
 duplicate provider:
 Error ----------------------------------------------------------------------------------------- package/package.json:1:1
 
-Duplicate module provider for `package`. Change either this module provider or the current module provider [1].
-[duplicate-module]
+Duplicate module provider for `package`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
 
    package/package.json:1:1
    1| {
@@ -79,8 +79,8 @@ Found 1 error
 duplicate provider:
 Error ----------------------------------------------------------------------------------------- package/package.json:1:1
 
-Duplicate module provider for `package`. Change either this module provider or the current module provider [1].
-[duplicate-module]
+Duplicate module provider for `package`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
 
    package/package.json:1:1
    1| {

@@ -29,3 +29,5 @@ val bitset_of_project_string : opts:options -> string -> t
 val projects_bitset_of_path : opts:options -> string -> t option
 
 val reachable_projects_bitsets_from_projects_bitset : opts:options -> t -> t list
+
+val individual_projects_bitsets_from_common_project_bitset : opts:options -> t -> t list option

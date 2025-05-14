@@ -43,6 +43,7 @@ let search ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
       | ImportDynamic _
       | Import0 _
       | ImportSyntheticUserland _
+      | ImportSyntheticHaste _
       | ExportFrom _ ->
         acc
     )

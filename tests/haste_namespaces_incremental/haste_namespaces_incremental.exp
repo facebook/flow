@@ -1,0 +1,59 @@
+We start with conflicting Haste module providers
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+Duplicate module provider for `JsConflict`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js:1:1
+   1|
+       [1]
+
+
+
+Found 1 error
+
+Rename .js into .js.flow, still conflicting
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js.flow:1:1
+   1|
+       [1]
+
+
+
+Found 1 error
+
+Fix conflicting Haste module providers errors
+No errors!
+
+Reintroduce errors
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+Duplicate module provider for `JsConflict`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js:1:1
+   1|
+       [1]
+
+
+
+Found 1 error

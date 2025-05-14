@@ -1764,6 +1764,7 @@ let should_autoimport_react ~cx ~imports ~file_sig =
             | Require { bindings = None; _ }
             | Import0 _
             | ImportSyntheticUserland _
+            | ImportSyntheticHaste _
             | ImportDynamic _
             | ExportFrom _ ->
               false)

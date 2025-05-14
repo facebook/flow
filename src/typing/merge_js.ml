@@ -481,6 +481,81 @@ let check_general_post_inference_validations cx =
 
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
+let check_haste_provider_conflict cx =
+  let metadata = Context.metadata cx in
+  let file_options = metadata.Context.file_options in
+  let filename = Context.file cx in
+  (* Suppose we have the setup of web project, native project, and web+native common code project.
+   * We want to emit the same kinds of Haste module provider conflict error as if the same set of
+   * code is covered by two flowconfigs.
+   * (one include web only + common, one include native only + common) *)
+  if Files.has_flow_ext filename then
+    (* We have Foo.js.flow in common code.
+
+       1. If we have also have Foo.js in common code:
+         a. We have Foo.js.flow or Foo.js in web code.
+            This is not good, but we will complain anyways from Foo.js in common code.
+         b. Nothing in web code. We are good
+       2. If we don't have Foo.js in common code:
+         a. We have Foo.js.flow or Foo.js in web code.
+            This can be tolerated, because the Foo.js.flow file can act as common interface file.
+         b. Nothing in web code. We are good.
+
+       Therefore, in all possible cases, we don't have to emit an error.
+    *)
+    ()
+  else
+    (* We have Foo.js in common code.
+     * We should error if we want Foo.js or Foo.js.flow in web only code. *)
+    match Files.haste_name_opt ~options:file_options filename with
+    | None -> ()
+    | Some haste_name ->
+      (match
+         let opts = metadata.Context.haste_namespaces_options in
+         Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
+         |> Base.Option.bind
+              ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
+       with
+      | None -> ()
+      | Some projects ->
+        Base.List.iter projects ~f:(fun project ->
+            let platform_specific_provider_module_loc =
+              match
+                Context.find_require
+                  cx
+                  (Flow_import_specifier.HasteImportWithSpecifiedNamespace
+                     { namespace = Flow_projects.to_bitset project; name = haste_name }
+                  )
+              with
+              | Context.MissingModule -> None
+              | Context.UncheckedModule loc -> Some loc
+              | Context.TypedModule f ->
+                (match f () with
+                | Ok { Type.module_reason; _ } -> Some (Reason.loc_of_reason module_reason)
+                | Error t -> Some (TypeUtil.loc_of_t t))
+            in
+            Base.Option.iter
+              platform_specific_provider_module_loc
+              ~f:(fun platform_specific_provider_module_loc ->
+                let platform_specific_provider_file =
+                  Base.Option.value_exn (ALoc.source platform_specific_provider_module_loc)
+                in
+                let pos = Loc.{ line = 1; column = 0 } in
+                let loc_of_file f =
+                  Loc.{ source = Some f; start = pos; _end = pos } |> ALoc.of_loc
+                in
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EDuplicateModuleProvider
+                     {
+                       module_name = haste_name;
+                       conflict = loc_of_file filename;
+                       provider = loc_of_file platform_specific_provider_file;
+                     }
+                  )
+            )
+        ))
+
 let check_multiplatform_conformance cx ast tast =
   let (prog_aloc, _) = ast in
   let filename = Context.file cx in
@@ -837,7 +912,10 @@ let get_lint_severities metadata strict_mode lint_severities =
 let post_merge_checks cx ast tast metadata =
   force_lazy_tvars cx;
   check_react_rules cx tast;
-  if not (Context.is_lib_file cx) then check_multiplatform_conformance cx ast tast;
+  if not (Context.is_lib_file cx) then (
+    if (Context.metadata cx).Context.haste_namespaces_enabled then check_haste_provider_conflict cx;
+    check_multiplatform_conformance cx ast tast
+  );
   check_polarity cx;
   check_general_post_inference_validations cx;
   detect_sketchy_null_checks cx tast;

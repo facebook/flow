@@ -131,6 +131,7 @@ let parse_file_sig options file docblock ast =
     enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
   in
   let file_options = Options.file_options options in
+  let haste_namespaces_options = Options.haste_namespaces_options options in
   let relay_integration_module_prefix =
     Relay_options.module_prefix_for_file
       relay_integration_module_prefix_includes
@@ -145,6 +146,7 @@ let parse_file_sig options file docblock ast =
       explicit_available_platforms = Docblock.supportsPlatform docblock;
       file_options;
       haste_module_ref_prefix;
+      haste_namespaces_options;
       relay_integration_module_prefix;
     }
   in

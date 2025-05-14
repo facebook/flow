@@ -107,3 +107,32 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
   match additional with
   | Some p' -> [p; p']
   | None -> [p]
+
+(**
+ * Suppose we have web and native project, and some paths that can be part of both web and native.
+ * Then this function will always return the bitset representation of web,native projects, if and
+ * only if it's given a web+native project.
+ *
+ * This is important to enforce in Haste that we have only one provider for a module name `N`. The
+ * module name might come from multiple projects, so we have to search for files that might provide
+ * all of the following haste_module_info: `web:N`, `native:N` to ensure that there is no module
+ * that will also provide `N` that's already provided in the common code.
+ *)
+let individual_projects_bitsets_from_common_project_bitset ~opts common =
+  let size = Nel.length opts.projects in
+  if Base.List.mem ~equal:Bitset.equal (IMap.values opts.projects_overlap_mapping) common then
+    (* Given the common project, compute all the individual singleton projects in it. *)
+    let individual_singleton_projects =
+      if IMap.exists (fun _ b -> Bitset.equal b common) opts.projects_overlap_mapping then
+        Base.List.filter_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
+            if Bitset.mem i common then
+              Some (Bitset.all_zero size |> Bitset.set i)
+            else
+              None
+        )
+      else
+        []
+    in
+    Some individual_singleton_projects
+  else
+    None

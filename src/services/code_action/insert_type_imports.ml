@@ -789,6 +789,7 @@ end = struct
         | ImportDynamic _
         | Import0 _
         | ImportSyntheticUserland _
+        | ImportSyntheticHaste _
         | ExportFrom _ ->
           ()
       in

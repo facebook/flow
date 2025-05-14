@@ -289,6 +289,8 @@ let gc_worker opts = opts.opt_gc_worker
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
+let haste_namespaces_enabled opts = opts.opt_haste_namespaces_enabled
+
 let haste_namespaces_options opts =
   if opts.opt_haste_namespaces_enabled then
     opts.opt_projects_options

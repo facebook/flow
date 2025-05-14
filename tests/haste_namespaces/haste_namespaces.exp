@@ -23,6 +23,36 @@ References:
              ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+Duplicate module provider for `JsConflict`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   native/JsConflict.js:1:1
+   1|
+       [1]
+
+
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+This file is being illegally shadowed by the js.flow file [1]. This file can only be shadowed by a js.flow file in the
+same directory with the same base name. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js.flow:1:1
+   1|
+       [1]
+
+
 Error ----------------------------------------------------------------------------------------- native/NativeOnly.js:4:1
 
 Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -66,4 +96,4 @@ References:
 
 
 
-Found 5 errors
+Found 7 errors

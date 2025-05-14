@@ -2656,8 +2656,8 @@ let to_printable_error :
           text "Duplicate module provider for ";
           code module_name;
           text ". Change ";
-          text "either this module provider or the ";
-          hardcoded_string_desc_ref "current module provider" provider;
+          text "either the name of this file or the ";
+          hardcoded_string_desc_ref "name of the current module provider" provider;
           text ".";
         ])
     | MessageEnumsNotEnabled ->
