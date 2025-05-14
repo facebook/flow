@@ -79,7 +79,7 @@ To use the `as const` syntax, you need to upgrade your infrastructure:
 
 ## `const` Type Parameters
 
-Sometimes it is useful to specify that an argument to function is always expected
+Sometimes it is useful to specify that an argument to a function is always expected
 to be a const-expression. In such cases, you can annotate the type parameter with
 the `const` modifier. We refer to these type parameters as const-type parameters.
 
