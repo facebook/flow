@@ -451,10 +451,61 @@
         }
       },
       {
+        "label": "FooBar",
+        "kind": 6,
+        "detail": "Import default from ./re-exports",
+        "sortText": "00000000000000000010",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 1
+            }
+          },
+          "newText": "FooBar"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import FooBar from \"./re-exports\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "fAUTO332",
+              "index": 10,
+              "session_requests": 1,
+              "typed_length": 1,
+              "completion": "FooBar",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
         "label": "Function",
         "kind": 6,
         "detail": "(global)",
-        "sortText": "00000000000000000010",
+        "sortText": "00000000000000000011",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -477,7 +528,7 @@
             "global",
             {
               "token": "fAUTO332",
-              "index": 10,
+              "index": 11,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "Function",
@@ -490,7 +541,7 @@
         "label": "barFoo",
         "kind": 6,
         "detail": "Import from ./bar",
-        "sortText": "00000000000000000011",
+        "sortText": "00000000000000000012",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -528,7 +579,7 @@
             "autoimport",
             {
               "token": "fAUTO332",
-              "index": 11,
+              "index": 12,
               "session_requests": 1,
               "typed_length": 1,
               "completion": "barFoo",

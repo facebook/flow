@@ -310,10 +310,61 @@
         }
       },
       {
+        "label": "FooBar",
+        "kind": 6,
+        "detail": "Import default from ./re-exports",
+        "sortText": "00000000000000000006",
+        "insertTextFormat": 1,
+        "textEdit": {
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 0
+            },
+            "end": {
+              "line": 2,
+              "character": 3
+            }
+          },
+          "newText": "FooBar"
+        },
+        "additionalTextEdits": [
+          {
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 0
+              },
+              "end": {
+                "line": 2,
+                "character": 0
+              }
+            },
+            "newText": "import FooBar from \"./re-exports\";\n\n"
+          }
+        ],
+        "command": {
+          "title": "",
+          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+          "arguments": [
+            "textDocument/completion",
+            "autoimport",
+            {
+              "token": "fooAUTO332",
+              "index": 6,
+              "session_requests": 1,
+              "typed_length": 3,
+              "completion": "FooBar",
+              "ac_type": "Acid"
+            }
+          ]
+        }
+      },
+      {
         "label": "barFoo",
         "kind": 6,
         "detail": "Import from ./bar",
-        "sortText": "00000000000000000006",
+        "sortText": "00000000000000000007",
         "insertTextFormat": 1,
         "textEdit": {
           "range": {
@@ -351,7 +402,7 @@
             "autoimport",
             {
               "token": "fooAUTO332",
-              "index": 6,
+              "index": 7,
               "session_requests": 1,
               "typed_length": 3,
               "completion": "barFoo",

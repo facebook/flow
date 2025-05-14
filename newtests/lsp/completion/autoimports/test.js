@@ -25,6 +25,7 @@ module.exports = (suite(
         'foobar.js',
         'functions.js',
         're-exports.js',
+        'to-be-reexported-two-levels.js',
         'lib/builtins.js',
       ),
       addCode(`f`),
@@ -48,7 +49,14 @@ module.exports = (suite(
     ]),
 
     test('textDocument/completion with ranked autoimports', [
-      addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+      addFiles(
+        'foo.js',
+        'bar.js',
+        'foobar.js',
+        're-exports.js',
+        'to-be-reexported-two-levels.js',
+        'lib/builtins.js',
+      ),
       addCode(`f`),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -72,7 +80,14 @@ module.exports = (suite(
     test(
       'textDocument/completion with min number of characters to get auto imports',
       [
-        addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+        addFiles(
+          'foo.js',
+          'bar.js',
+          'foobar.js',
+          're-exports.js',
+          'to-be-reexported-two-levels.js',
+          'lib/builtins.js',
+        ),
         addCode(`f`),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -97,7 +112,14 @@ module.exports = (suite(
     test(
       'textDocument/completion with min number of characters to get auto imports',
       [
-        addFiles('foo.js', 'bar.js', 'foobar.js', 'lib/builtins.js'),
+        addFiles(
+          'foo.js',
+          'bar.js',
+          'foobar.js',
+          're-exports.js',
+          'to-be-reexported-two-levels.js',
+          'lib/builtins.js',
+        ),
         addCode(`foo`),
         lspStartAndConnect(),
         lspRequestAndWaitUntilResponse('textDocument/completion', {
@@ -172,6 +194,7 @@ module.exports = (suite(
         'types.js',
         'foobar.js',
         're-exports.js',
+        'to-be-reexported-two-levels.js',
         'lib/builtins.js',
       ),
       addCode(`type Test = T`),
@@ -191,7 +214,12 @@ module.exports = (suite(
     ]),
 
     test('textDocument/completion on types with re-exports', [
-      addFiles('foobar.js', 'functions.js', 're-exports.js'),
+      addFiles(
+        'foobar.js',
+        'functions.js',
+        're-exports.js',
+        'to-be-reexported-two-levels.js',
+      ),
       addCode(`type Test = FooBa`),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/completion', {
