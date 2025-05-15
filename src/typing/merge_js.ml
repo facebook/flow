@@ -481,7 +481,7 @@ let check_general_post_inference_validations cx =
 
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
-let check_haste_provider_conflict cx =
+let check_haste_provider_conflict cx tast =
   let metadata = Context.metadata cx in
   let file_options = metadata.Context.file_options in
   let filename = Context.file cx in
@@ -559,9 +559,40 @@ let check_haste_provider_conflict cx =
                 in
                 if Files.has_flow_ext platform_specific_provider_file then
                   add_duplicate_provider_error platform_specific_provider_file
-              | Ok _ ->
-                (* TODO: validate platform speicific file against common interface *)
-                ())
+              | Ok platform_specific_module_type ->
+                let open Type in
+                let get_exports_t ~is_common_interface_module reason m =
+                  (* For conformance test, we only care about the value part *)
+                  let (values_t, _) =
+                    Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+                      cx
+                      ~is_common_interface_module
+                      (reason, false)
+                      m
+                  in
+                  values_t
+                in
+                let (self_sig_loc, self_module_type) =
+                  Module_info_analyzer.analyze_program cx tast
+                in
+                let prog_aloc = fst tast in
+                let interface_t =
+                  let reason = Reason.(mk_reason (RCustom "common interface") (fst tast)) in
+                  get_exports_t ~is_common_interface_module:true reason self_module_type
+                in
+                let platform_specific_t =
+                  get_exports_t
+                    ~is_common_interface_module:false
+                    platform_specific_module_type.Type.module_reason
+                    platform_specific_module_type
+                in
+                (* We need to fully resolve the type to prevent tvar widening. *)
+                Tvar_resolver.resolve cx interface_t;
+                Tvar_resolver.resolve cx platform_specific_t;
+                let use_op =
+                  Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc })
+                in
+                Flow_js.flow cx (platform_specific_t, UseT (use_op, interface_t)))
         )
       else
         (* We have Foo.js in common code.
@@ -949,7 +980,8 @@ let post_merge_checks cx ast tast metadata =
   force_lazy_tvars cx;
   check_react_rules cx tast;
   if not (Context.is_lib_file cx) then (
-    if (Context.metadata cx).Context.haste_namespaces_enabled then check_haste_provider_conflict cx;
+    if (Context.metadata cx).Context.haste_namespaces_enabled then
+      check_haste_provider_conflict cx tast;
     check_multiplatform_conformance cx ast tast
   );
   check_polarity cx;

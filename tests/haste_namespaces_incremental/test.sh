@@ -24,3 +24,15 @@ echo "Reintroduce errors"
 mv web/JsNoConflict.js web/JsConflict.js
 assert_ok "$FLOW" force-recheck web/JsNoConflict.js web/JsConflict.js
 assert_errors "$FLOW" status .
+
+echo "Introduce interface conformance errors"
+echo "export type T = string" > web/JsFlowConflictTypeProvider.js
+assert_ok "$FLOW" force-recheck web/JsFlowConflictTypeProvider.js
+assert_errors "$FLOW" status .
+echo ""
+
+echo "Fix interface conformance errors"
+echo "export type T = number" > web/JsFlowConflictTypeProvider.js
+assert_ok "$FLOW" force-recheck web/JsFlowConflictTypeProvider.js
+assert_errors "$FLOW" status .
+echo ""

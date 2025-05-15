@@ -1,2 +1,2 @@
 declare const foo: string;
-export default foo;
+export default foo; // error: platform-specific impl file should conform to JsFlowConflict2.js.flow

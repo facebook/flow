@@ -1,2 +1,2 @@
-declare const foo: number; // TODO error: should conform to JsFlowConflict2.js.flow
+declare const foo: number; // error in common interface file
 export default foo;

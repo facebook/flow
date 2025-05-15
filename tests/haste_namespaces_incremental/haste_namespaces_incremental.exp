@@ -57,3 +57,60 @@ References:
 
 
 Found 1 error
+Introduce interface conformance errors
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+Duplicate module provider for `JsConflict`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js:1:1
+   1|
+       [1]
+
+
+Error ------------------------------------------------------------------------------- common/JsFlowConflict.js.flow:2:16
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in property `default`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   common/JsFlowConflict.js.flow:2:16
+   2| export default foo;
+                     ^^^
+
+References:
+   web/JsFlowConflict.js:3:20
+   3| declare const foo: T;
+                         ^ [1]
+   common/JsFlowConflict.js.flow:1:20
+   1| declare const foo: number; // error in common interface file
+                         ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+Fix interface conformance errors
+Error ----------------------------------------------------------------------------------------- common/JsConflict.js:1:1
+
+Duplicate module provider for `JsConflict`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/JsConflict.js:1:1
+   1|
+      
+
+References:
+   web/JsConflict.js:1:1
+   1|
+       [1]
+
+
+
+Found 1 error
+

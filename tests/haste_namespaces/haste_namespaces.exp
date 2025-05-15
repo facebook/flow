@@ -53,6 +53,44 @@ References:
        [1]
 
 
+Error ------------------------------------------------------------------------------ common/JsFlowConflict1.js.flow:2:16
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   common/JsFlowConflict1.js.flow:2:16
+   2| export default foo; // error: platform-specific impl file should conform to JsFlowConflict2.js.flow
+                     ^^^
+
+References:
+   web/JsFlowConflict1.js:1:20
+   1| declare const foo: number; // error in common interface file
+                         ^^^^^^ [1]
+   common/JsFlowConflict1.js.flow:1:20
+   1| declare const foo: string;
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ common/JsFlowConflict2.js.flow:2:16
+
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
+the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   common/JsFlowConflict2.js.flow:2:16
+   2| export default foo; // error: platform-specific impl file should conform to JsFlowConflict2.js.flow
+                     ^^^
+
+References:
+   web/JsFlowConflict2.js.flow:1:20
+   1| declare const foo: number; // error in common interface file
+                         ^^^^^^ [1]
+   common/JsFlowConflict2.js.flow:1:20
+   1| declare const foo: string;
+                         ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------- common/Untyped2.js.flow:1:1
 
 Duplicate module provider for `Untyped2`. Change either the name of this file or the name of the current module
@@ -111,4 +149,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors
