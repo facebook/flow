@@ -1,3 +1,11 @@
+### 0.271.0
+
+Notable bug fixes:
+* Multiple levels of `export *` will now be correctly indexed so that they won't be missing in autoimport results.
+
+Library Definitions
+* Add `Float16Array` type
+
 ### 0.270.0
 
 Likely to cause new Flow errors:
