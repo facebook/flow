@@ -1,0 +1,3 @@
+// no error against web/Untypes1.js
+declare const foo: string;
+export default foo;

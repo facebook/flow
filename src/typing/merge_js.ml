@@ -529,7 +529,40 @@ let check_haste_provider_conflict cx =
 
            Therefore, in all possible cases, we don't have to emit an error.
         *)
-        ()
+        Base.List.iter projects ~f:(fun project ->
+            match
+              Context.find_require
+                cx
+                (Flow_import_specifier.HasteImportWithSpecifiedNamespace
+                   { namespace = Flow_projects.to_bitset project; name = haste_name }
+                )
+            with
+            | Context.MissingModule ->
+              (* There is no corresponding implementation file. This is allowed. *)
+              ()
+            | Context.UncheckedModule platform_specific_provider_module_loc ->
+              (* If the corresponding platform specific file is untyped, then we assume it satisfies
+               * the common interface. However, we do need to make sure that it's not another
+               * .js.flow file *)
+              let platform_specific_provider_file =
+                Base.Option.value_exn (ALoc.source platform_specific_provider_module_loc)
+              in
+              if Files.has_flow_ext platform_specific_provider_file then
+                add_duplicate_provider_error platform_specific_provider_file
+            | Context.TypedModule f ->
+              (match f () with
+              | Error t ->
+                (* Similar to the case above,
+                 * but in this case the module is any typed instead of untyped. *)
+                let platform_specific_provider_file =
+                  Base.Option.value_exn (ALoc.source (TypeUtil.loc_of_t t))
+                in
+                if Files.has_flow_ext platform_specific_provider_file then
+                  add_duplicate_provider_error platform_specific_provider_file
+              | Ok _ ->
+                (* TODO: validate platform speicific file against common interface *)
+                ())
+        )
       else
         (* We have Foo.js in common code.
          * We should error if we want Foo.js or Foo.js.flow in web only code. *)

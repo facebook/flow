@@ -53,6 +53,21 @@ References:
        [1]
 
 
+Error -------------------------------------------------------------------------------------- common/Untyped2.js.flow:1:1
+
+Duplicate module provider for `Untyped2`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   common/Untyped2.js.flow:1:1
+   1| // Error against web/Untypes2.js.flow, because we shouldn't have two js.flow file with the same Haste name
+      
+
+References:
+   web/Untyped2.js.flow:1:1
+   1| // @noflow
+       [1]
+
+
 Error ----------------------------------------------------------------------------------------- native/NativeOnly.js:4:1
 
 Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -96,4 +111,4 @@ References:
 
 
 
-Found 7 errors
+Found 8 errors

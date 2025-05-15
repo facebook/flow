@@ -1,0 +1,3 @@
+// Error against web/Untypes2.js.flow, because we shouldn't have two js.flow file with the same Haste name
+declare const foo: string;
+export default foo;
