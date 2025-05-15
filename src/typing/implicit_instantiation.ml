@@ -1116,7 +1116,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let call_loc = loc_of_reason instantiation_reason in
         let inferred =
           match op with
-          | Check.Call _ when tparam.is_const ->
+          | Check.Call _
+          | Check.Constructor _
+            when tparam.is_const ->
             (* Adjust 'const' type parameters. Keeping container reasons for
              * compatibility with existing code. *)
             Primitive_literal.convert_literal_type_to_const ~loc_range:call_loc cx result.inferred

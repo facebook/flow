@@ -255,5 +255,59 @@ parameter. [incompatible-type-param-const]
                        ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- file.js:140:3
 
-Found 16 errors
+Cannot cast `x.size` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   file.js:140:3
+   140|   x.size as 2; // error 1 ~> 2
+          ^^^^^^
+
+References:
+   file.js:138:19
+   138|   const x = new A(1);
+                          ^ [1]
+   file.js:140:13
+   140|   x.size as 2; // error 1 ~> 2
+                    ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:149:3
+
+Cannot cast `y1.size` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   file.js:149:3
+   149|   y1.size as 1; // error number ~> 1
+          ^^^^^^^
+
+References:
+   file.js:148:21
+   148|   const y1 = new B1(1);
+                            ^ [1]
+   file.js:149:14
+   149|   y1.size as 1; // error number ~> 1
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- file.js:160:3
+
+Cannot cast `y2.size` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-cast]
+
+   file.js:160:3
+   160|   y2.size as 2; // error 1 ~> 2
+          ^^^^^^^
+
+References:
+   file.js:158:21
+   158|   const y2 = new B2(1);
+                            ^ [1]
+   file.js:160:14
+   160|   y2.size as 2; // error 1 ~> 2
+                     ^ [2]
+
+
+
+Found 19 errors

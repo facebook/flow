@@ -128,3 +128,34 @@ function test_invalid() {
   interface I1<const T> { x: T }  // error, modifier cannot appear here
   type T<const X> = X; // error, modifier cannot appear here
 }
+
+function test_new() {
+  class A<const Size> {
+    size: Size;
+    constructor(x: Size) {}
+  }
+
+  const x = new A(1);
+  x.size as 1; // okay
+  x.size as 2; // error 1 ~> 2
+
+  class B1<Size> extends A<Size> {
+    constructor(x: Size) {
+      super(x);
+    }
+  }
+
+  const y1 = new B1(1);
+  y1.size as 1; // error number ~> 1
+  y1.size as number; // okay
+
+  class B2<const Size> extends A<Size> {
+    constructor(x: Size) {
+      super(x);
+    }
+  }
+
+  const y2 = new B2(1);
+  y2.size as 1; // okay
+  y2.size as 2; // error 1 ~> 2
+}
