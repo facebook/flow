@@ -485,39 +485,41 @@ let check_haste_provider_conflict cx =
   let metadata = Context.metadata cx in
   let file_options = metadata.Context.file_options in
   let filename = Context.file cx in
-  (* Suppose we have the setup of web project, native project, and web+native common code project.
-   * We want to emit the same kinds of Haste module provider conflict error as if the same set of
-   * code is covered by two flowconfigs.
-   * (one include web only + common, one include native only + common) *)
-  if Files.has_flow_ext filename then
-    (* We have Foo.js.flow in common code.
-
-       1. If we have also have Foo.js in common code:
-         a. We have Foo.js.flow or Foo.js in web code.
-            This is not good, but we will complain anyways from Foo.js in common code.
-         b. Nothing in web code. We are good
-       2. If we don't have Foo.js in common code:
-         a. We have Foo.js.flow or Foo.js in web code.
-            This can be tolerated, because the Foo.js.flow file can act as common interface file.
-         b. Nothing in web code. We are good.
-
-       Therefore, in all possible cases, we don't have to emit an error.
-    *)
-    ()
-  else
-    (* We have Foo.js in common code.
-     * We should error if we want Foo.js or Foo.js.flow in web only code. *)
-    match Files.haste_name_opt ~options:file_options filename with
+  match Files.haste_name_opt ~options:file_options filename with
+  | None -> ()
+  | Some haste_name ->
+    (match
+       let opts = metadata.Context.haste_namespaces_options in
+       Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
+       |> Base.Option.bind
+            ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
+     with
     | None -> ()
-    | Some haste_name ->
-      (match
-         let opts = metadata.Context.haste_namespaces_options in
-         Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
-         |> Base.Option.bind
-              ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
-       with
-      | None -> ()
-      | Some projects ->
+    | Some projects ->
+      if
+        (* Suppose we have the setup of web project, native project, and web+native common code project.
+         * We want to emit the same kinds of Haste module provider conflict error as if the same set of
+         * code is covered by two flowconfigs.
+         * (one include web only + common, one include native only + common) *)
+        Files.has_flow_ext filename
+      then
+        (* We have Foo.js.flow in common code.
+
+           1. If we have also have Foo.js in common code:
+             a. We have Foo.js.flow or Foo.js in web code.
+                This is not good, but we will complain anyways from Foo.js in common code.
+             b. Nothing in web code. We are good
+           2. If we don't have Foo.js in common code:
+             a. We have Foo.js.flow or Foo.js in web code.
+                This can be tolerated, because the Foo.js.flow file can act as common interface file.
+             b. Nothing in web code. We are good.
+
+           Therefore, in all possible cases, we don't have to emit an error.
+        *)
+        ()
+      else
+        (* We have Foo.js in common code.
+         * We should error if we want Foo.js or Foo.js.flow in web only code. *)
         Base.List.iter projects ~f:(fun project ->
             let platform_specific_provider_module_loc =
               match
