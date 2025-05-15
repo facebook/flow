@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flowtype"
-version: "0.270.0"
+version: "0.271.0"
 maintainer: "flow@fb.com"
 authors: "Flow Team <flow@fb.com>"
 license: "MIT"
@@ -15,7 +15,7 @@ depends: [
   "camlp-streams" {>= "5.0.1"}
   "dtoa" {>= "0.3.2"}
   "fileutils" {>= "0.6.4"}
-  "flow_parser" {= "0.270.0"}
+  "flow_parser" {= "0.271.0"}
   "inotify" {os = "linux" & >= "2.4.1"}
   "ounit2" {with-test}
   "lwt" {>= "5.7.0"}
