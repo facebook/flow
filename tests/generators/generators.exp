@@ -42,8 +42,8 @@ References:
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1920:24
-   1920| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1925:24
+   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                 ^^^^^^ [3]
 
 
@@ -125,14 +125,14 @@ of property `@@iterator`. [incompatible-type-arg]
                     ^^
 
 References:
-   <BUILTINS>/core.js:1800:50
-   1800| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+   <BUILTINS>/core.js:1805:50
+   1805| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
                                                           ^^^^ [1]
    class.js:71:71
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
                                                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1790:50
-   1790| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1795:50
+   1795| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                                           ^^^^ [3]
 
 
@@ -374,8 +374,8 @@ References:
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1920:24
-   1920| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1925:24
+   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                 ^^^^^^ [3]
 
 
@@ -679,8 +679,8 @@ Cannot cast `refuse_return_result.value` to string because undefined [1] is inco
             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1777:14
-   1777|     +value?: Return,
+   <BUILTINS>/core.js:1782:14
+   1782|     +value?: Return,
                       ^^^^^^ [1]
    return.js:20:32
      20|   (refuse_return_result.value: string); // error: number | void ~> string

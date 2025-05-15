@@ -456,8 +456,8 @@ References:
    everything_implicit_instantiation.js:6:46
       6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:2101:19
-   2101| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2106:19
+   2106| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
    <BUILTINS>/react.js:139:19
     139|   type RefSetter<-T> = React$RefSetter<T>;
@@ -800,8 +800,8 @@ References:
    props_implicit_instantiation.js:7:46
       7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:2101:19
-   2101| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2106:19
+   2106| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
    <BUILTINS>/react.js:139:19
     139|   type RefSetter<-T> = React$RefSetter<T>;
