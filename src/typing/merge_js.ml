@@ -496,6 +496,19 @@ let check_haste_provider_conflict cx =
      with
     | None -> ()
     | Some projects ->
+      let pos = Loc.{ line = 1; column = 0 } in
+      let loc_of_file f = Loc.{ source = Some f; start = pos; _end = pos } |> ALoc.of_loc in
+      let add_duplicate_provider_error platform_specific_provider_file =
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EDuplicateModuleProvider
+             {
+               module_name = haste_name;
+               conflict = loc_of_file filename;
+               provider = loc_of_file platform_specific_provider_file;
+             }
+          )
+      in
       if
         (* Suppose we have the setup of web project, native project, and web+native common code project.
          * We want to emit the same kinds of Haste module provider conflict error as if the same set of
@@ -542,19 +555,7 @@ let check_haste_provider_conflict cx =
                 let platform_specific_provider_file =
                   Base.Option.value_exn (ALoc.source platform_specific_provider_module_loc)
                 in
-                let pos = Loc.{ line = 1; column = 0 } in
-                let loc_of_file f =
-                  Loc.{ source = Some f; start = pos; _end = pos } |> ALoc.of_loc
-                in
-                Flow_js_utils.add_output
-                  cx
-                  (Error_message.EDuplicateModuleProvider
-                     {
-                       module_name = haste_name;
-                       conflict = loc_of_file filename;
-                       provider = loc_of_file platform_specific_provider_file;
-                     }
-                  )
+                add_duplicate_provider_error platform_specific_provider_file
             )
         ))
 
