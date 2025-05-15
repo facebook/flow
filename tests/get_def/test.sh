@@ -48,6 +48,11 @@ assert_ok "$FLOW" get-def imports.js 3 24 --strip-root --pretty
 printf "local reference points to default import = "
 assert_ok "$FLOW" get-def imports.js 4 4 --strip-root --pretty
 
+# import thing2 from "./helpers/module_exports.js";
+#         ^
+printf "default import points to module.exports = "
+assert_ok "$FLOW" get-def imports.js 5 10 --strip-root --pretty
+
 # import {foo, bar as baz} from "./helpers/exports_named.js";
 #          ^
 printf "named import of const points to named export = "
