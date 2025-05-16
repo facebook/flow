@@ -25,14 +25,28 @@ const config = {
   exact_by_default: true,
 };
 
-(() => {
-  try {
-    flow.parse('#!/usr/bin/env node\n', {tokens: true});
-  } catch {
-    return;
-  }
-  throw 'No longer crashes.';
-})();
+// Regression test for https://github.com/facebook/flow/issues/9024
+if (
+  JSON.stringify(flow.parse('#!/usr/bin/env node\n', {tokens: true}).tokens) !==
+  JSON.stringify([
+    {
+      type: 'T_INTERPRETER',
+      context: 'normal',
+      loc: {start: {line: 1, column: 0}, end: {line: 1, column: 19}},
+      range: [0, 19],
+      value: '/usr/bin/env node',
+    },
+    {
+      type: 'T_EOF',
+      context: 'normal',
+      loc: {start: {line: 2, column: 0}, end: {line: 2, column: 0}},
+      range: [20, 20],
+      value: '',
+    },
+  ])
+) {
+  throw 'Incorrect parse result';
+}
 
 if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
   throw 'There should be no errors if the library is correctly registered.';

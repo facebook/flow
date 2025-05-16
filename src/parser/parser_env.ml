@@ -1091,10 +1091,17 @@ module Eat = struct
     (match !(env.token_sink) with
     | None -> ()
     | Some token_sink ->
+      let token_loc = Peek.loc env in
+      let token = Peek.token env in
+      let token_loc =
+        match token with
+        | Token.T_INTERPRETER (loc, _) -> loc
+        | _ -> token_loc
+      in
       token_sink
         {
-          token_loc = Peek.loc env;
-          token = Peek.token env;
+          token_loc;
+          token;
           (*
            * The lex mode is useful because it gives context to some
            * context-sensitive tokens.
