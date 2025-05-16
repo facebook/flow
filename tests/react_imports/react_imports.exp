@@ -8,8 +8,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:612:19
-   612|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:613:19
+   613|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    commonjs.js:4:19
      4| (React.Component: number); // Error
@@ -63,8 +63,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:612:19
-   612|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:613:19
+   613|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    es-default.js:4:19
      4| (React.Component: number); // Error
@@ -103,8 +103,8 @@ Cannot get `React.Missing` because property `Missing` is missing in namespace Re
                       ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1003:26
-   1003|   declare export default typeof React;
+   <BUILTINS>/react.js:1011:26
+   1011|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -118,8 +118,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:612:19
-   612|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:613:19
+   613|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    es-namespace.js:4:19
      4| (React.Component: number); // Error

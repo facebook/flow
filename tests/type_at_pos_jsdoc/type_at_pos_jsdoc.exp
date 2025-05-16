@@ -1690,7 +1690,7 @@ Flags: --strip-root --pretty
 react_api.js:17:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`forwardRef` lets your component expose a DOM node to parent component\nwith a ref.\n\n**@see** https://react.dev/reference/react/forwardRef",
+  "documentation":"**@deprecated** \n\nIn React 19, `forwardRef` is no longer necessary. Pass `ref` as a prop instead.\nforwardRef will deprecated in a future release.\n\n**@see** https://react.dev/blog/2024/12/05/react-19#ref-as-a-prop",
   "types":{
     "unevaluated":{
       "type":"<Config: {...}, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: React$RefSetter<Instance>) => Renders) => component(ref: RefSetter<Instance>, ...Config) renders Renders"

@@ -4,7 +4,7 @@ lazy_ref.js:14:9 = {
   default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
 }
 
-'RefSetter' defined at (lib) react.js:985:9
+'RefSetter' defined at (lib) react.js:993:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
@@ -30,7 +30,7 @@ We recommend defining components as functions instead of classes.
 **@see** https://react.dev/reference/react/Component
 class Component<Props, State = void>
 
-'Component' defined at (lib) react.js:612:18
+'Component' defined at (lib) react.js:613:18
 
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
@@ -45,7 +45,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:710:5,712:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:718:5,720:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -83,7 +83,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:710:5,712:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:718:5,720:22"},
           "name":"Fragment"
         },
         "typeParams":[

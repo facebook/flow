@@ -52,8 +52,8 @@ References:
    forwardRef.js:18:32
     18| const badRef = React.createRef<DivInstance>();
                                        ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:588:8
-   588|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:589:8
+   589|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:105:6
    105|   | ((T | null) => mixed)
@@ -104,8 +104,8 @@ References:
    forwardRef.js:41:54
     41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
                                                              ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:588:8
-   588|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:589:8
+   589|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:105:6
    105|   | ((T | null) => mixed)

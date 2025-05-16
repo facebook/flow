@@ -1052,8 +1052,8 @@ References:
    react.js:14:24
     14|   b as React.Component<Props>; // nope
                                ^^^^^ [2]
-   <BUILTINS>/react.js:612:29
-   612|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:613:29
+   613|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
 
 

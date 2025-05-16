@@ -37,14 +37,14 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:546:24
+   <BUILTINS>/react.js:547:24
                                v-------
-   546|       component: () => Promise<
-   547|         $ReadOnly<{
-   548|           default: component(ref?: Ref, ...Config) renders Renders,
-   549|           ...
-   550|         }>,
-   551|       >,
+   547|       component: () => Promise<
+   548|         $ReadOnly<{
+   549|           default: component(ref?: Ref, ...Config) renders Renders,
+   550|           ...
+   551|         }>,
+   552|       >,
               ^ [2]
 
 
@@ -61,14 +61,14 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:546:24
+   <BUILTINS>/react.js:547:24
                                v-------
-   546|       component: () => Promise<
-   547|         $ReadOnly<{
-   548|           default: component(ref?: Ref, ...Config) renders Renders,
-   549|           ...
-   550|         }>,
-   551|       >,
+   547|       component: () => Promise<
+   548|         $ReadOnly<{
+   549|           default: component(ref?: Ref, ...Config) renders Renders,
+   550|           ...
+   551|         }>,
+   552|       >,
               ^ [2]
 
 
@@ -86,12 +86,12 @@ References:
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:547:19
+   <BUILTINS>/react.js:548:19
                            v
-    547|         $ReadOnly<{
-    548|           default: component(ref?: Ref, ...Config) renders Renders,
-    549|           ...
-    550|         }>,
+    548|         $ReadOnly<{
+    549|           default: component(ref?: Ref, ...Config) renders Renders,
+    550|           ...
+    551|         }>,
                  ^ [2]
    <BUILTINS>/core.js:2148:24
    2148| declare class Promise<+R = mixed> {
@@ -111,12 +111,12 @@ References:
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
                ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:547:19
+   <BUILTINS>/react.js:548:19
                            v
-    547|         $ReadOnly<{
-    548|           default: component(ref?: Ref, ...Config) renders Renders,
-    549|           ...
-    550|         }>,
+    548|         $ReadOnly<{
+    549|           default: component(ref?: Ref, ...Config) renders Renders,
+    550|           ...
+    551|         }>,
                  ^ [2]
    <BUILTINS>/core.js:2148:24
    2148| declare class Promise<+R = mixed> {
@@ -352,8 +352,8 @@ Cannot call `React.forwardRef` with `Demo` bound to `render` because in the seco
                                                  ^^^^
 
 References:
-   <BUILTINS>/react.js:701:36
-   701|       render: (props: Config, ref: React$RefSetter<Instance>) => Renders,
+   <BUILTINS>/react.js:709:36
+   709|       render: (props: Config, ref: React$RefSetter<Instance>) => Renders,
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    memo_ref.js:7:33
      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => mixed))) {

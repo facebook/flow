@@ -144,8 +144,8 @@ References:
    test.js:13:45
      13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -172,8 +172,8 @@ References:
    test.js:13:45
      13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -200,8 +200,8 @@ References:
    test.js:14:45
      14| declare var b: ExactReactElement_DEPRECATED<Class<B>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -228,8 +228,8 @@ References:
    test.js:15:45
      15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -256,8 +256,8 @@ References:
    test.js:15:45
      15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -343,8 +343,8 @@ References:
    test.js:16:45
      16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -371,8 +371,8 @@ References:
    test.js:16:45
      16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                      ^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -455,8 +455,8 @@ References:
    test.js:69:1
      69| function SFC(props: { p: number }) { return null };
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -483,8 +483,8 @@ References:
    test.js:74:51
      74| declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
                                                            ^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -546,8 +546,8 @@ References:
    <BUILTINS>/react.js:89:49
      89| declare type React$MixedElement = React$Element<React$ElementType>;
                                                          ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:1013:4
-   1013|   [string]: {
+   <BUILTINS>/react.js:1021:4
+   1021|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};

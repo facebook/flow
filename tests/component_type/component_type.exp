@@ -311,8 +311,8 @@ Cannot create `C` element because in property `ref`: [incompatible-type]
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:588:8
-   588|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:589:8
+   589|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:105:6
    105|   | ((T | null) => mixed)
