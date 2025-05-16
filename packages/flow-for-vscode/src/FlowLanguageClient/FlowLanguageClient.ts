@@ -299,6 +299,7 @@ export default class FlowLanguageClient {
   }
 
   _disposeClient(): Promise<void> {
+    this._client?.clientOptions;
     return Promise.resolve(this._client ? this._client.stop() : undefined);
   }
 

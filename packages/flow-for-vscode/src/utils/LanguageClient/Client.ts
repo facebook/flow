@@ -10,7 +10,11 @@
 // 2) Status
 // 3) ConfigureCompletionSnippetSupport
 
-import { LanguageClient as VscodeLanguageClient } from 'vscode-languageclient/node';
+import {
+  Disposable,
+  StaticFeature,
+  LanguageClient as VscodeLanguageClient,
+} from 'vscode-languageclient/node';
 import { type ServerOptions, type LanguageClientOptions } from './types';
 
 import TypeCoverageFeature from './TypeCoverageFeature';
@@ -18,6 +22,8 @@ import StatusFeature from './StatusFeature';
 import ConfigureCompletionSnippetSupport from './ConfigureCompletionSnippetSupport';
 
 export default class LanguageClientEx extends VscodeLanguageClient {
+  private features: Array<StaticFeature> = [];
+
   constructor(
     id: string,
     name: string,
@@ -38,8 +44,23 @@ export default class LanguageClientEx extends VscodeLanguageClient {
   }
 
   _registerExtraFeatures(): void {
-    this.registerFeature(new TypeCoverageFeature(this));
-    this.registerFeature(new StatusFeature(this));
-    this.registerFeature(new ConfigureCompletionSnippetSupport(this));
+    const typeCoverageFeature = new TypeCoverageFeature(this);
+    const statusFeature = new StatusFeature(this);
+    const configureCompletionSnippetSupport =
+      new ConfigureCompletionSnippetSupport(this);
+    this.registerFeature(typeCoverageFeature);
+    this.registerFeature(statusFeature);
+    this.registerFeature(configureCompletionSnippetSupport);
+    this.features.push(
+      typeCoverageFeature,
+      statusFeature,
+      configureCompletionSnippetSupport,
+    );
+  }
+
+  async dispose(timeout?: number): Promise<void> {
+    await super.dispose(timeout);
+    this.features.forEach((f) => f.clear());
+    this.features = [];
   }
 }

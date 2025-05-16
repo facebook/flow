@@ -39,7 +39,7 @@ export default class TypeCoverageFeature extends lsp.DynamicDocumentFeature<
   }
 
   unregister(): void {
-    this.coverage = null;
+    this.clear();
   }
 
   protected getDocumentSelectors(): IterableIterator<vscode.DocumentSelector> {
@@ -57,7 +57,10 @@ export default class TypeCoverageFeature extends lsp.DynamicDocumentFeature<
     };
   }
 
-  clear(): void {}
+  clear(): void {
+    this.coverage?.dispose();
+    this.coverage = null;
+  }
 
   fillClientCapabilities(capabilities: lsp.ClientCapabilities): void {
     // @ts-ignore

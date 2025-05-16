@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.1.1 (2025-05-16)
+
+#### Features
+
+* Fix https://github.com/facebook/flow/issues/9281
+
 ### 3.1.0 (2025-03-31)
 
 #### Features
