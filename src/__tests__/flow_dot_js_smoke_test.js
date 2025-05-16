@@ -25,6 +25,15 @@ const config = {
   exact_by_default: true,
 };
 
+(() => {
+  try {
+    flow.parse('#!/usr/bin/env node\n', {tokens: true});
+  } catch {
+    return;
+  }
+  throw 'No longer crashes.';
+})();
+
 if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
   throw 'There should be no errors if the library is correctly registered.';
 }
