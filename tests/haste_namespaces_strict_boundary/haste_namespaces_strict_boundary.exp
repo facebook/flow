@@ -1,0 +1,10 @@
+Error --------------------------------------------------------------------------------------------- common/Common.js:1:8
+
+Cannot resolve module `SameNameNotCommon`. [cannot-resolve-module]
+
+   1| import 'SameNameNotCommon'; // banned under experimental.projects.strict_boundary=true
+             ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

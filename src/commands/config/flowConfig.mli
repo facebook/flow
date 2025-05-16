@@ -226,6 +226,8 @@ val projects_overlap_mapping : config -> SSet.t SMap.t
 
 val projects_path_mapping : config -> (string * string list) list
 
+val projects_strict_boundary : config -> bool
+
 val node_resolver_root_relative_dirnames : config -> (string option * string) list
 
 val react_custom_jsx_typing : config -> bool

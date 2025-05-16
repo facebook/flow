@@ -16,6 +16,7 @@ val mk_options :
   projects_overlap_mapping:SSet.t SMap.t ->
   map_path:(string -> Str.regexp) ->
   projects_path_mapping:(string * string list) list ->
+  projects_strict_boundary:bool ->
   options
 
 val equal : t -> t -> bool

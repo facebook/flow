@@ -9,6 +9,7 @@ type options = {
   projects: string Nel.t;
   projects_overlap_mapping: Bitset.t IMap.t;
   projects_path_mapping: (Str.regexp * Bitset.t) list;
+  projects_strict_boundary: bool;
 }
 
 type t = Bitset.t
@@ -23,6 +24,7 @@ let default_options =
     projects = Nel.one "default";
     projects_overlap_mapping = IMap.empty;
     projects_path_mapping = [];
+    projects_strict_boundary = false;
   }
 
 let mk_options =
@@ -31,7 +33,7 @@ let mk_options =
       ~init:(Bitset.all_zero (Nel.length projects))
       ~f:(fun bitset n -> Bitset.set (index_of ~projects n) bitset)
   in
-  fun ~projects ~projects_overlap_mapping ~map_path ~projects_path_mapping ->
+  fun ~projects ~projects_overlap_mapping ~map_path ~projects_path_mapping ~projects_strict_boundary ->
     let projects_overlap_mapping =
       SMap.fold
         (fun k ns acc ->
@@ -44,7 +46,7 @@ let mk_options =
           (map_path path, list_to_bitset ~projects ns)
       )
     in
-    { projects; projects_overlap_mapping; projects_path_mapping }
+    { projects; projects_overlap_mapping; projects_path_mapping; projects_strict_boundary }
 
 let from_bitset_unchecked v = v
 
@@ -84,25 +86,28 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
           None
     )
   in
-  (* Temporary hack: common code can reach into 1-project code.
-   * e.g. Suppose that we have two projects web and native.
-   * We temporarily allow common code (web+native) to use web-only code.
-   * This is of course incorrect, and we should move these web-only code into common code instead.
-   * However, the temporary measure exists so that we can still have good type coverage during
-   * experimentation before we can lock down the boundary. *)
   let additional =
-    match additional with
-    | Some _ -> additional
-    | None ->
-      if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
-        Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
-            if Bitset.mem i p then
-              Some (Bitset.all_zero size |> Bitset.set i)
-            else
-              None
-        )
-      else
-        None
+    if opts.projects_strict_boundary then
+      additional
+    else
+      (* Temporary hack: common code can reach into 1-project code.
+       * e.g. Suppose that we have two projects web and native.
+       * We temporarily allow common code (web+native) to use web-only code.
+       * This is of course incorrect, and we should move these web-only code into common code instead.
+       * However, the temporary measure exists so that we can still have good type coverage during
+       * experimentation before we can lock down the boundary. *)
+      match additional with
+      | Some _ -> additional
+      | None ->
+        if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
+          Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
+              if Bitset.mem i p then
+                Some (Bitset.all_zero size |> Bitset.set i)
+              else
+                None
+          )
+        else
+          None
   in
   match additional with
   | Some p' -> [p; p']

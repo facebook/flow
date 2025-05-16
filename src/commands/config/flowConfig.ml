@@ -123,6 +123,7 @@ module Opts = struct
     projects: string list;
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
+    projects_strict_boundary: bool;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
@@ -262,6 +263,7 @@ module Opts = struct
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
+      projects_strict_boundary = false;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
       react_rules = [];
@@ -1086,6 +1088,9 @@ module Opts = struct
       );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
+      ( "experimental.projects.strict_boundary",
+        boolean (fun opts v -> Ok { opts with projects_strict_boundary = v })
+      );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.assert_operator", assert_operator_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
@@ -1962,6 +1967,8 @@ let projects c = Nel.of_list_exn c.options.Opts.projects
 let projects_overlap_mapping c = c.options.Opts.projects_overlap_mapping
 
 let projects_path_mapping c = c.options.Opts.projects_path_mapping
+
+let projects_strict_boundary c = c.options.Opts.projects_strict_boundary
 
 let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 

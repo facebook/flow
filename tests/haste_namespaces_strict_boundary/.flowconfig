@@ -1,0 +1,10 @@
+[options]
+all=true
+module.system=haste
+module.system.haste.experimental.namespaces=true
+experimental.projects=web
+experimental.projects=native
+experimental.projects.strict_boundary=true
+experimental.projects_path_mapping='<PROJECT_ROOT>/common/' -> 'web,native'
+experimental.projects_path_mapping='<PROJECT_ROOT>/web/' -> 'web'
+experimental.projects_path_mapping='<PROJECT_ROOT>/native/' -> 'native'
