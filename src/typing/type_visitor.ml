@@ -429,7 +429,7 @@ class ['a] t =
       let { value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export = _ } = e in
       let acc = self#exports cx pole acc value_exports_tmap in
       let acc = self#exports cx pole acc type_exports_tmap in
-      let acc = self#opt (self#type_ cx pole) acc cjs_export in
+      let acc = self#opt (fun acc (_, t) -> self#type_ cx pole acc t) acc cjs_export in
       acc
 
     method private object_kit_spread_operand_slice

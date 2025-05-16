@@ -1520,10 +1520,15 @@ module CJSRequireTKit = struct
     in
     check_nonstrict_import cx is_strict imported_is_strict reason;
     match exports.cjs_export with
-    | Some t ->
+    | Some (def_loc_opt, t) ->
       (* reposition the export to point at the require(), like the object
          we create below for non-CommonJS exports *)
-      (reposition cx (loc_of_reason reason) t, def_loc_of_t t)
+      let def_loc =
+        match def_loc_opt with
+        | None -> def_loc_of_t t
+        | Some l -> l
+      in
+      (reposition cx (loc_of_reason reason) t, def_loc)
     | None ->
       let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
       let type_exports_tmap = Context.find_exports cx exports.type_exports_tmap in
@@ -1622,10 +1627,15 @@ module ImportModuleNsTKit = struct
         value_props
       else
         match exports.cjs_export with
-        | Some type_ ->
-          (* TODO this Field should probably have a location *)
+        | Some (def_loc_opt, type_) ->
+          let key_loc =
+            Some
+              (match def_loc_opt with
+              | None -> def_loc_of_t type_
+              | Some l -> l)
+          in
           let p =
-            Field { preferred_def_locs = None; key_loc = None; type_; polarity = Polarity.Positive }
+            Field { preferred_def_locs = None; key_loc; type_; polarity = Polarity.Positive }
           in
           NameUtils.Map.add (OrdinaryName "default") p value_props
         | None -> value_props
@@ -1666,7 +1676,14 @@ module ImportDefaultTKit = struct
     check_nonstrict_import cx is_strict imported_is_strict reason;
     let (loc_opt, export_t) =
       match exports.cjs_export with
-      | Some t -> (None, t)
+      | Some (def_loc_opt, t) ->
+        let def_loc =
+          Some
+            (match def_loc_opt with
+            | None -> def_loc_of_t t
+            | Some l -> l)
+        in
+        (def_loc, t)
       | None ->
         let exports_tmap = Context.find_exports cx exports.value_exports_tmap in
         (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
@@ -1734,10 +1751,16 @@ module ImportNamedTKit = struct
     let value_exports_tmap =
       let value_exports_tmap = Context.find_exports cx exports.value_exports_tmap in
       match exports.cjs_export with
-      | Some type_ ->
+      | Some (def_loc_opt, type_) ->
+        let name_loc =
+          Some
+            (match def_loc_opt with
+            | None -> def_loc_of_t type_
+            | Some l -> l)
+        in
         NameUtils.Map.add
           (OrdinaryName "default")
-          { preferred_def_locs = None; name_loc = None; type_ }
+          { preferred_def_locs = None; name_loc; type_ }
           value_exports_tmap
       | None -> value_exports_tmap
     in

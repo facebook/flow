@@ -11,7 +11,7 @@ open Type_sig_collections
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
-      exports: Type.t Lazy.t option;
+      exports: (ALoc.t option * Type.t) Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
       platform_availability_set: Platform_set.t option;
@@ -58,7 +58,7 @@ val merge_resource_module_t : Context.t -> File_key.t -> string -> Reason.t * Ty
 
 val merge : tparams_map -> file -> ALoc.t Pack.packed -> Type.t
 
-val merge_cjs_export_t : file -> ALoc.t Pack.packed -> Type.t
+val merge_cjs_export_t : file -> ALoc.t Pack.packed -> ALoc.t option * Type.t
 
 val merge_builtins :
   Context.t ->

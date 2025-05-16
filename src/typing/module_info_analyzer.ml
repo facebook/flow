@@ -440,9 +440,9 @@ let mk_module_type =
    *     ES <-> CJS module interop semantics)
    *)
   let mk_commonjs_module_t cx reason_exports_module reason cjs_exports_state =
-    let export_t =
+    let (def_loc, export_t) =
       match cjs_exports_state with
-      | CJSModuleExports (_, t) -> t
+      | CJSModuleExports (def_loc, t) -> (Some def_loc, t)
       | CJSExportNames named ->
         let props =
           SMap.fold
@@ -461,13 +461,13 @@ let mk_module_type =
             named
             NameUtils.Map.empty
         in
-        Obj_type.mk_with_proto cx reason (Type.ObjProtoT reason) ~obj_kind:Type.Exact ~props
+        (None, Obj_type.mk_with_proto cx reason (Type.ObjProtoT reason) ~obj_kind:Type.Exact ~props)
     in
     let module_export_types =
       {
         value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
         type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-        cjs_export = Some export_t;
+        cjs_export = Some (def_loc, export_t);
         has_every_named_export = false;
       }
     in

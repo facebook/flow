@@ -22,7 +22,7 @@ module Flow_js = struct end
 type exports =
   | CJSExports of {
       type_exports: Type.named_symbol Lazy.t SMap.t;
-      exports: Type.t Lazy.t option;
+      exports: (ALoc.t option * Type.t) Lazy.t option;
       type_stars: (ALoc.t * Module_refs.index) list;
       strict: bool;
       platform_availability_set: Platform_set.t option;
@@ -382,13 +382,13 @@ let merge_type_export file reason = function
     let (lazy (loc, _name, type_)) = Remote_refs.get file.remote_refs index in
     { Type.name_loc = Some loc; preferred_def_locs = None; type_ }
 
-let mk_commonjs_module_t cx module_reason module_is_strict module_available_platforms t =
+let mk_commonjs_module_t cx module_reason ~module_is_strict ~module_available_platforms ~def_loc t =
   let open Type in
   let module_export_types =
     {
       value_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       type_exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
-      cjs_export = Some t;
+      cjs_export = Some (def_loc, t);
       has_every_named_export = false;
     }
   in
@@ -451,10 +451,11 @@ let merge_exports =
   in
   fun file reason -> function
     | CJSExports { type_exports; exports; type_stars; strict; platform_availability_set } ->
-      let exports =
+      let (def_loc_opt, exports) =
         match exports with
-        | Some (lazy t) -> t
-        | None -> Obj_type.mk_with_proto file.cx reason ~obj_kind:Type.Exact (Type.ObjProtoT reason)
+        | Some (lazy (def_loc_opt, t)) -> (def_loc_opt, t)
+        | None ->
+          (None, Obj_type.mk_with_proto file.cx reason ~obj_kind:Type.Exact (Type.ObjProtoT reason))
       in
       let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
@@ -462,7 +463,14 @@ let merge_exports =
         lazy
           (let module_type =
              Lazy.force
-               (mk_commonjs_module_t file.cx reason strict platform_availability_set exports)
+               (mk_commonjs_module_t
+                  file.cx
+                  reason
+                  ~module_is_strict:strict
+                  ~module_available_platforms:platform_availability_set
+                  ~def_loc:def_loc_opt
+                  exports
+               )
            in
            Flow_js_utils.ExportNamedTKit.mod_ModuleT
              file.cx
@@ -2032,7 +2040,15 @@ let merge_resource_module_t cx file_key filename =
   in
   let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
   let reason = Reason.(mk_reason RExports file_loc) in
-  (reason, mk_commonjs_module_t cx reason (Context.is_strict cx) None exports_t)
+  ( reason,
+    mk_commonjs_module_t
+      cx
+      reason
+      ~module_is_strict:(Context.is_strict cx)
+      ~module_available_platforms:None
+      ~def_loc:None
+      exports_t
+  )
 
 let merge tps = merge (mk_merge_env tps)
 
@@ -2040,20 +2056,25 @@ let merge_cjs_export_t file = function
   (* We run a special code path for objects in cjs exports,
    * in order to retain the original definition location of exported names *)
   | Pack.Value (ObjLit { loc; frozen; proto; props }) ->
-    merge_object_lit
-      ~for_export:true
-      ~as_const:false
-      (mk_merge_env SMap.empty)
-      file
-      (loc, frozen, proto, props)
+    ( Some loc,
+      merge_object_lit
+        ~for_export:true
+        ~as_const:false
+        (mk_merge_env SMap.empty)
+        file
+        (loc, frozen, proto, props)
+    )
   | Pack.Value (ObjSpreadLit { loc; frozen; proto; elems_rev }) ->
-    merge_obj_spread_lit
-      ~for_export:true
-      ~as_const:false
-      (mk_merge_env SMap.empty)
-      file
-      (loc, frozen, proto, elems_rev)
-  | packed -> merge SMap.empty file packed
+    ( Some loc,
+      merge_obj_spread_lit
+        ~for_export:true
+        ~as_const:false
+        (mk_merge_env SMap.empty)
+        file
+        (loc, frozen, proto, elems_rev)
+    )
+  | Pack.Ref ref -> merge_ref file (fun type_ ~ref_loc:_ ~def_loc _ -> (Some def_loc, type_)) ref
+  | packed -> (None, merge SMap.empty file packed)
 
 let merge_builtins
     cx file_key builtin_locs (builtins : Type_sig_collections.Locs.index Packed_type_sig.Builtins.t)

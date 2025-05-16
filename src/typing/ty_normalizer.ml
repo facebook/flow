@@ -2047,7 +2047,7 @@ module Make (I : INPUT) : S = struct
       let open Type in
       let from_cjs_export ~env = function
         | None -> return None
-        | Some exports ->
+        | Some (_def_loc, exports) ->
           (match Lookahead.peek (Env.get_cx env) exports with
           | Lookahead.LowerBounds [DefT (_, ObjT o)] ->
             let%map (_, default) = module_of_object ~env o in

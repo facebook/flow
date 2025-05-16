@@ -388,7 +388,16 @@ class virtual ['a] t =
         ({ value_exports_tmap; type_exports_tmap; cjs_export; has_every_named_export } as t) =
       let value_exports_tmap' = self#exports cx map_cx value_exports_tmap in
       let type_exports_tmap' = self#exports cx map_cx type_exports_tmap in
-      let cjs_export' = OptionUtils.ident_map (self#type_ cx map_cx) cjs_export in
+      let cjs_export' =
+        OptionUtils.ident_map
+          (fun ((loc_opt, t) as export) ->
+            let t' = self#type_ cx map_cx t in
+            if t == t' then
+              export
+            else
+              (loc_opt, t'))
+          cjs_export
+      in
       if
         value_exports_tmap == value_exports_tmap'
         && type_exports_tmap == type_exports_tmap'
