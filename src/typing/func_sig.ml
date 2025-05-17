@@ -232,9 +232,7 @@ struct
         else
           return_t
       | ArbitraryEffect
-      | AnyEffect
-      | ParametricEffect _
-      | IdempotentEffect ->
+      | AnyEffect ->
         return_t
     in
     let type_guard =

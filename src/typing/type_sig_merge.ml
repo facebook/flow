@@ -1719,8 +1719,6 @@ and merge_fun
       | HookAnnot -> (Type.HookAnnot, dro_return_t ())
       | ArbitraryEffect -> (Type.ArbitraryEffect, return_t)
       | AnyEffect -> (Type.AnyEffect, return_t)
-      | IdempotentEffect -> (Type.IdempotentEffect, return_t)
-      | ParametricEffect n -> (Type.ParametricEffect n, return_t)
     in
     let funtype =
       {

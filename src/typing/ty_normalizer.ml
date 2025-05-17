@@ -987,8 +987,6 @@ module Make (I : INPUT) : S = struct
         | T.HookDecl _ ->
           Ty.Hook
         | T.ArbitraryEffect -> Ty.Arbitrary
-        | T.IdempotentEffect -> Ty.Idempotent
-        | T.ParametricEffect n -> Ty.Parametric n
         | T.AnyEffect -> Ty.Arbitrary (* TODO do we need an any-ful ty rep? *)
       in
       let%bind fun_params = mapM (fun_param ~env) params in

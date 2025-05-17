@@ -1839,13 +1839,11 @@ and convert_effect opts effect_ fun_loc_opt name_opt =
   | (Ast.Function.Hook, Some loc) when opts.component_syntax_enabled_in_config -> HookDecl loc
   | (Ast.Function.Hook, None) when opts.component_syntax_enabled_in_config -> HookAnnot
   | (Ast.Function.Hook, _) -> ArbitraryEffect
-  | (Ast.Function.Idempotent, _) -> IdempotentEffect
   | (Ast.Function.Arbitrary, _)
     when opts.hook_compatibility
          && Base.Option.value_map name_opt ~default:false ~f:Flow_ast_utils.hook_name ->
     AnyEffect
   | (Ast.Function.Arbitrary, _) -> ArbitraryEffect
-  | (Ast.Function.Parametric n, _) -> ParametricEffect n
 
 and function_type opts scope tbls xs f =
   let module F = T.Function in

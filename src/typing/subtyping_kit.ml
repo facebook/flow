@@ -1808,7 +1808,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           add_output
             cx
             (Error_message.EHookUniqueIncompatible { use_op; lower = lreason; upper = ureason })
-        | _ -> (* todo *) ()
       end;
 
       (* Return type subtyping *)

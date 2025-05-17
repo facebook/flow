@@ -140,8 +140,6 @@ and gen_kind =
 
 and fun_effect =
   | Hook
-  | Idempotent
-  | Parametric of int
   | Arbitrary
 
 and fun_t = {

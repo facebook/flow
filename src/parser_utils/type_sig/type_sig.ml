@@ -86,8 +86,6 @@ type ('loc, 'a) fun_rest_param =
 type 'loc react_effect =
   | HookDecl of 'loc
   | HookAnnot
-  | IdempotentEffect
-  | ParametricEffect of int
   | ArbitraryEffect
   | AnyEffect
 [@@deriving iter, map, show { with_path = false }]

@@ -1093,8 +1093,6 @@ module rec TypeTerm : sig
   and react_effect_type =
     | HookDecl of ALoc.id
     | HookAnnot
-    | IdempotentEffect
-    | ParametricEffect of int
     | ArbitraryEffect
     | AnyEffect
 

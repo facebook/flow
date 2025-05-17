@@ -2403,8 +2403,6 @@ and Function : sig
   type effect_ =
     | Hook
     | Arbitrary
-    | Idempotent
-    | Parametric of int
   [@@deriving show]
 
   type ('M, 'T) t = {

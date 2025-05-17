@@ -8454,8 +8454,6 @@ module Make
           match effect_ with
           | Ast.Function.Hook -> HookDecl (Context.make_aloc_id cx loc)
           | Ast.Function.Arbitrary -> ArbitraryEffect
-          | Ast.Function.Idempotent -> IdempotentEffect
-          | Ast.Function.Parametric n -> ParametricEffect n
         in
         let func_stmt_sig =
           {

@@ -1390,9 +1390,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             else
               return_t
           )
-        | Ast.Function.Idempotent -> (IdempotentEffect, return_t)
         | Ast.Function.Arbitrary -> (ArbitraryEffect, return_t)
-        | Ast.Function.Parametric n -> (ParametricEffect n, return_t)
       in
       let ft =
         DefT

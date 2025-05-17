@@ -103,9 +103,7 @@ let hook_callee cx t =
     match t with
     | DefT (r, FunT (_, { effect_ = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
     | DefT (_, FunT (_, { effect_ = AnyEffect; _ })) -> AnyCallee
-    | DefT (r, FunT (_, { effect_ = ArbitraryEffect | IdempotentEffect | ParametricEffect _; _ }))
-      ->
-      NotHookCallee (set_of_reason r)
+    | DefT (r, FunT (_, { effect_ = ArbitraryEffect; _ })) -> NotHookCallee (set_of_reason r)
     | OpaqueT (_, { underlying_t; super_t; _ }) -> begin
       match (underlying_t, super_t) with
       | (Some t, _)

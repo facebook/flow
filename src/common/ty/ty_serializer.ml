@@ -299,8 +299,6 @@ let type_ options =
       match f.fun_effect with
       | Ty.Arbitrary -> Ast.Function.Arbitrary
       | Ty.Hook -> Ast.Function.Hook
-      | Ty.Parametric n -> Ast.Function.Parametric n
-      | Ty.Idempotent -> Ast.Function.Idempotent
     in
     { T.Function.params; return; tparams; effect_; comments = None }
   and fun_params params rest_param =
