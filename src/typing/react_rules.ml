@@ -1156,7 +1156,7 @@ and component_ast_visitor tast cx rrid =
                 { hooks = ALocFuzzySet.elements hooks; non_hooks = ALocFuzzySet.elements non_hooks }
             )
         | NotHookCallee _ ->
-          if Flow_ast_utils.hook_call expr then hook_error Error_message.NonHookHasIllegalName
+          if Flow_ast_utils.hook_call expr then hook_error Error_message.NotHookSyntaxHook
         | AnyCallee -> ()
       end;
       let res = super#call annot expr in

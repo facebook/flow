@@ -161,7 +161,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    declare_hook_tests.js:47:5
    47|     f([], (42: any)) // error
@@ -181,8 +181,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:50:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    declare_hook_tests.js:50:5
    50|     useBadName(); // error
@@ -228,7 +228,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    declare_hook_tests.js:69:5
    69|     f([], (42: any)) // error
@@ -248,8 +248,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:72:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    declare_hook_tests.js:72:5
    72|     useBadName(); // error
@@ -540,7 +540,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_tests.js:75:5
    75|     f([], (42: any)) // error
@@ -560,8 +560,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:78:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    hook_tests.js:78:5
    78|     useBadName(); // error
@@ -607,7 +607,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_tests.js:97:5
    97|     f([], (42: any)) // error
@@ -627,8 +627,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- hook_tests.js:100:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    hook_tests.js:100:5
    100|     useBadName(); // error
@@ -971,7 +971,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_type_tests.js:47:5
    47|     f([], (42: any)) // error
@@ -991,8 +991,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:50:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    hook_type_tests.js:50:5
    50|     useBadName(); // error
@@ -1038,7 +1038,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call function because callee [1] may be a React hook [2] or may be a regular function definition [3]. Function
 callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a
-component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+component renders. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-mixed-with-non-hook]
 
    hook_type_tests.js:69:5
    69|     f([], (42: any)) // error
@@ -1058,8 +1058,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:72:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    hook_type_tests.js:72:5
    72|     useBadName(); // error
@@ -1139,8 +1139,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- ref.js:7:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    ref.js:7:5
    7|     useFakeHook(x); // error both for calling a fake hook and for escaping ref
@@ -2266,8 +2266,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:24:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility.js:24:5
    24|     useHooklikeAnnotatedFunction(); // Error
@@ -2281,8 +2281,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:25:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility.js:25:5
    25|     useHooklikeInferredFunction(); // Error
@@ -2296,8 +2296,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:26:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility.js:26:5
    26|     useDeclaredHooklikeFunction(); // Error
@@ -2311,8 +2311,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:27:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility.js:27:5
    27|     useAssignedHooklikeArbitraryExpression(); // Error
@@ -2326,8 +2326,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:28:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility.js:28:5
    28|     useAssignedHooklikeFunctionExpression(); // Error
@@ -2388,8 +2388,8 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:11:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility_import.js:11:5
    11|     useHooklikeAnnotatedFunction(); // Error
@@ -2403,8 +2403,8 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:12:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility_import.js:12:5
    12|     useDeclaredHooklikeFunction(); // Error
@@ -2418,8 +2418,8 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:13:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility_import.js:13:5
    13|     useAssignedHooklikeArbitraryExpression(); // Error
@@ -2433,8 +2433,8 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:14:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    syntax_compatibility_import.js:14:5
    14|     useAssignedHooklikeFunctionExpression(); // Error

@@ -786,7 +786,7 @@ and invalid_mapped_type_error_kind =
 and 'l hook_rule =
   | ConditionalHook
   | HookHasIllegalName
-  | NonHookHasIllegalName
+  | NotHookSyntaxHook
   | MaybeHook of {
       hooks: 'l list;
       non_hooks: 'l list;
@@ -1370,7 +1370,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | MaybeHook { hooks; non_hooks } ->
         MaybeHook { hooks = List.map f hooks; non_hooks = List.map f non_hooks }
       | HookHasIllegalName -> HookHasIllegalName
-      | NonHookHasIllegalName -> NonHookHasIllegalName
+      | NotHookSyntaxHook -> NotHookSyntaxHook
       | HookDefinitelyNotInComponentOrHook -> HookDefinitelyNotInComponentOrHook
       | HookInUnknownContext -> HookInUnknownContext
       | HookNotInComponentSyntaxComponentOrHookSyntaxHook ->
@@ -2977,8 +2977,8 @@ let friendly_message_of_msg = function
     Normal (MessageCannotCallReactHookWithIllegalName callee_loc)
   | EHookRuleViolation { callee_loc; hook_rule = MaybeHook { hooks; non_hooks }; call_loc = _ } ->
     Normal (MessageCannotCallMaybeReactHook { callee_loc; hooks; non_hooks })
-  | EHookRuleViolation { callee_loc; hook_rule = NonHookHasIllegalName; call_loc = _ } ->
-    Normal (MessageCannotCallNonReactHookWithIllegalName callee_loc)
+  | EHookRuleViolation { callee_loc; hook_rule = NotHookSyntaxHook; call_loc = _ } ->
+    Normal (MessageCannotCallNonHookSyntaxHook callee_loc)
   | EHookRuleViolation { callee_loc; hook_rule = HookDefinitelyNotInComponentOrHook; call_loc = _ }
     ->
     Normal (MessageCannotCallReactHookInDefinitelyNonComponentOrHook callee_loc)
@@ -3392,13 +3392,10 @@ let error_code_of_message err : error_code option =
   | EHookRuleViolation { hook_rule = HookHasIllegalName; _ } -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation { hook_rule = HookDefinitelyNotInComponentOrHook; _ } ->
     Some ReactRuleHookDefinitelyNotInComponentOrHook
+  | EHookRuleViolation { hook_rule = MaybeHook _; _ } -> Some ReactRuleHookMixedWithNonHoook
+  | EHookRuleViolation { hook_rule = NotHookSyntaxHook; _ } -> Some ReactRuleHookNonHookSyntax
   | EHookRuleViolation
-      {
-        hook_rule =
-          ( NonHookHasIllegalName | MaybeHook _ | HookInUnknownContext
-          | HookNotInComponentSyntaxComponentOrHookSyntaxHook );
-        _;
-      } ->
+      { hook_rule = HookInUnknownContext | HookNotInComponentSyntaxComponentOrHookSyntaxHook; _ } ->
     Some ReactRuleHook
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation

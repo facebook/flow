@@ -32,8 +32,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- __tests__/excluded-test.js:15:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    __tests__/excluded-test.js:15:5
    15|     XP.useBar(); // error
@@ -79,8 +79,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exclude.js:15:5
 
-Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is
-defined as a non-hook function. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
 
    exclude.js:15:5
    15|     XP.useBar(); // error

@@ -368,7 +368,7 @@ type 'loc message =
       hooks: 'loc list;
       non_hooks: 'loc list;
     }
-  | MessageCannotCallNonReactHookWithIllegalName of 'loc
+  | MessageCannotCallNonHookSyntaxHook of 'loc
   | MessageCannotCallObjectFunctionOnEnum of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;

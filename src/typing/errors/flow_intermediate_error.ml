@@ -1536,13 +1536,13 @@ let to_printable_error :
             ". Function callees must either be definitely a hook or definitely not a hook, because the same hook must be called every time a component renders. ";
         ]
       @ [text "(https://react.dev/reference/rules/rules-of-hooks)"]
-    | MessageCannotCallNonReactHookWithIllegalName callee_loc ->
+    | MessageCannotCallNonHookSyntaxHook callee_loc ->
       [
         text "Cannot call function because ";
         hardcoded_string_desc_ref "callee" callee_loc;
         text " has a name that indicates it is a React hook (starting with ";
         code "use";
-        text ") but it is defined as a non-hook function. ";
+        text ") but it is not defined with hook syntax. ";
         text "(https://react.dev/reference/rules/rules-of-hooks)";
       ]
     | MessageCannotCallObjectFunctionOnEnum { reason; enum_reason } ->
