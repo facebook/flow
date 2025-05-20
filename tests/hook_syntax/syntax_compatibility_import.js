@@ -16,7 +16,7 @@ component C() {
 }
 
 function FunctionComponent(_props: mixed) {
-    useHook(); // Error
+    useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
     useHooklikeAnnotatedFunction(); // Ok
     useDeclaredHooklikeFunction(); // Ok
     useAssignedHooklikeArbitraryExpression(); // Ok

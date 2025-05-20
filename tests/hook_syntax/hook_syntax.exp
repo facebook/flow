@@ -2249,6 +2249,22 @@ References:
              ^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:1064:3
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
+
+   rules_of_hooks.js:1064:3
+   1064|   useState(); // error: definitely not component
+           ^^^^^^^^^^
+
+References:
+   rules_of_hooks.js:1064:3
+   1064|   useState(); // error: definitely not component
+           ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:15:1
 
 Cannot call hook [1] because React hooks can only be called within components or hooks.
@@ -2341,17 +2357,17 @@ References:
 
 Error ------------------------------------------------------------------------------------- syntax_compatibility.js:33:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    syntax_compatibility.js:33:5
-   33|     useHook(); // Error
+   33|     useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
            ^^^^^^^^^
 
 References:
    syntax_compatibility.js:33:5
-   33|     useHook(); // Error
+   33|     useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
            ^^^^^^^ [1]
 
 
@@ -2448,17 +2464,17 @@ References:
 
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:19:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    syntax_compatibility_import.js:19:5
-   19|     useHook(); // Error
+   19|     useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
            ^^^^^^^^^
 
 References:
    syntax_compatibility_import.js:19:5
-   19|     useHook(); // Error
+   19|     useHook(); // Error: definitely not component, because props is not subtype of `interface {}`
            ^^^^^^^ [1]
 
 
@@ -2480,19 +2496,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------- using_react.js:10:15
 
-Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
-we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    using_react.js:10:15
-   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function
+   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function. definitely not component, because props is not subtype of `interface {}`
                      ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    using_react.js:10:15
-   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function
+   10|     const x = HookReact.useRef(null); // error, because this useRef is a hook and we're in a function. definitely not component, because props is not subtype of `interface {}`
                      ^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 160 errors
+Found 161 errors

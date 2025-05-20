@@ -880,12 +880,16 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           ||
           match params_list with
           | [] -> false (* function Component() {...} *)
-          | [_props] ->
+          | [props_param]
+          | [props_param; _] ->
             (* function Component(props: {...}) *)
-            false
-          | [_props; _ref_t] ->
             (* forwardRef(props: {...}, ref: ...) *)
-            false
+            let (_, { Ast.Function.Param.argument = ((props_loc, props_t), _); _ }) = props_param in
+            not
+            @@ Flow_js.FlowJs.speculative_subtyping_succeeds
+                 cx
+                 props_t
+                 (Fix_statement.Statement_.Anno.mk_empty_interface_type cx props_loc)
           | _ -> true
         in
         let is_definitely_component_due_to_hint () =

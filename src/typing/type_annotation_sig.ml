@@ -83,6 +83,8 @@ module type S = sig
     (ALoc.t, ALoc.t Flow_ast.Comment.t list) Flow_ast.Syntax.t option ->
     Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.TypeGuard.t * Type.type_guard option
 
+  val mk_empty_interface_type : Context.t -> ALoc.t -> Type.t
+
   val mk_super :
     Context.t ->
     Type.t Subst_name.Map.t ->

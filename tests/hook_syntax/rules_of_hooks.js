@@ -1059,3 +1059,7 @@ class Cx {
 //     // TODO: this should error but doesn't.
 //     // errors: [genericError('useState')],
 //   },
+
+function FakeComponent(props: string) {
+  useState(); // error: definitely not component
+}

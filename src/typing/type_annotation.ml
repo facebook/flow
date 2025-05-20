@@ -3284,6 +3284,30 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   let convert_type_guard cx tparams_map = convert_type_guard (mk_convert_env cx tparams_map)
 
+  let mk_empty_interface_type cx loc =
+    let ((_, t), _) =
+      convert
+        cx
+        Subst_name.Map.empty
+        ( loc,
+          Ast.Type.Interface
+            {
+              Ast.Type.Interface.body =
+                ( loc,
+                  {
+                    Ast.Type.Object.exact = false;
+                    inexact = true;
+                    properties = [];
+                    comments = None;
+                  }
+                );
+              extends = [];
+              comments = None;
+            }
+        )
+    in
+    t
+
   let mk_super cx tparams_map = mk_super (mk_convert_env cx tparams_map)
 
   let mk_type_available_annotation cx tparams_map =
