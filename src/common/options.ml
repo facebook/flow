@@ -288,8 +288,6 @@ let gc_worker opts = opts.opt_gc_worker
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
-let haste_namespaces_options opts = opts.opt_projects_options
-
 let include_suppressions opts = opts.opt_include_suppressions
 
 let is_debug_mode opts = opts.opt_debug

@@ -266,9 +266,7 @@ let mk_module_system_info =
   let is_package_file ~options ~reader ~module_path ~module_name =
     let dependency =
       match
-        Flow_projects.projects_bitset_of_path
-          ~opts:(Options.haste_namespaces_options options)
-          module_path
+        Flow_projects.projects_bitset_of_path ~opts:(Options.projects_options options) module_path
       with
       | None -> None
       | Some ns ->

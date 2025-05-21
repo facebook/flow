@@ -489,7 +489,7 @@ let check_haste_provider_conflict cx tast =
   | None -> ()
   | Some haste_name ->
     (match
-       let opts = metadata.Context.haste_namespaces_options in
+       let opts = metadata.Context.projects_options in
        Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
        |> Base.Option.bind
             ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)

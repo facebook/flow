@@ -19,7 +19,7 @@ type options = {
   explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
-  haste_namespaces_options: Flow_projects.options;
+  project_options: Flow_projects.options;
   relay_integration_module_prefix: string option;
 }
 
@@ -80,7 +80,7 @@ let default_opts =
     explicit_available_platforms = None;
     file_options = Files.default_options;
     haste_module_ref_prefix = None;
-    haste_namespaces_options = Flow_projects.default_options;
+    project_options = Flow_projects.default_options;
     relay_integration_module_prefix = None;
   }
 
@@ -210,7 +210,7 @@ class requires_calculator ~file_key ~ast ~opts =
       | None -> ()
       | Some haste_name ->
         (match
-           let opts = opts.haste_namespaces_options in
+           let opts = opts.project_options in
            Flow_projects.projects_bitset_of_path ~opts (File_key.to_string file_key)
            |> Base.Option.bind
                 ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
