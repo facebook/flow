@@ -1,3 +1,18 @@
+### 0.272.0
+
+Likely to cause new Flow errors:
+* When component syntax is enabled, hook calls happen inside an upper case function that doesn't have a `props` param that's a subtype of `interface {}` will get `react-rule-hook-definitely-not-in-component-or-hook` error.
+* Calling a function that's a union of hook and non-hook will now get `react-rule-hook-mixed-with-non-hook` error instead of `react-rule-hook` error. Calling functions named like hook but not in hook syntax will now get `react-rule-hook-non-hook-syntax` instead of `react-rule-hook` error.
+
+Notable bug fixes:
+* Go-to-definition on default import of `module.exports` will correctly jump to the exporting file
+
+Parser:
+* Fix crash on `''#!/usr/bin/env node\n''` when generating token list
+
+Library Definitions:
+* [`React.forwardRef`](https://react.dev/reference/react/forwardRef) is marked as deprecated. We might remove it from our builtin libdef in the future.
+
 ### 0.271.0
 
 Notable bug fixes:
