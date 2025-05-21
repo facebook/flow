@@ -92,7 +92,7 @@ function f2() {
 {
   let target;
   const out = match (x) {
-    const a => target = "foo",
+    const a => target = "foo" as const,
   };
   a; // ERROR
 
