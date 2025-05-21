@@ -1055,14 +1055,6 @@ module Opts = struct
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
-      ( "experimental.libdef_recheck_partial_fix",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error "experimental.libdef_recheck_partial_fix cannot be disabled"
-        )
-      );
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
       ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
