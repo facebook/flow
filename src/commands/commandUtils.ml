@@ -1450,7 +1450,6 @@ let make_options
       || FlowConfig.include_warnings flowconfig;
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
-    opt_haste_namespaces_enabled = FlowConfig.haste_namespaces_enabled flowconfig;
     opt_file_options = file_options;
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;

@@ -136,8 +136,6 @@ val gc_worker_window_size : config -> int option
 
 val haste_module_ref_prefix : config -> string option
 
-val haste_namespaces_enabled : config -> bool
-
 val haste_paths_excludes : config -> string list
 
 val haste_paths_includes : config -> string list

@@ -134,7 +134,6 @@ type t = {
   opt_format: format;
   opt_gc_worker: gc_control;
   opt_haste_module_ref_prefix: string option;
-  opt_haste_namespaces_enabled: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
@@ -289,13 +288,7 @@ let gc_worker opts = opts.opt_gc_worker
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
-let haste_namespaces_enabled opts = opts.opt_haste_namespaces_enabled
-
-let haste_namespaces_options opts =
-  if opts.opt_haste_namespaces_enabled then
-    opts.opt_projects_options
-  else
-    Flow_projects.default_options
+let haste_namespaces_options opts = opts.opt_projects_options
 
 let include_suppressions opts = opts.opt_include_suppressions
 

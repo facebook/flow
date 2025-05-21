@@ -79,7 +79,6 @@ module Opts = struct
     gc_worker_space_overhead: int option;  (** Gc.control's space_overhead *)
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     haste_module_ref_prefix: string option;
-    haste_namespaces_enabled: bool;
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
     hook_compatibility: bool;
@@ -219,7 +218,6 @@ module Opts = struct
       gc_worker_space_overhead = None;
       gc_worker_window_size = None;
       haste_module_ref_prefix = None;
-      haste_namespaces_enabled = false;
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       hook_compatibility = true;
@@ -1135,7 +1133,12 @@ module Opts = struct
         )
       );
       ( "module.system.haste.experimental.namespaces",
-        boolean (fun opts v -> Ok { opts with haste_namespaces_enabled = v })
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error "module.system.haste.experimental.namespaces cannot be disabled"
+        )
       );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
@@ -1865,8 +1868,6 @@ let gc_worker_space_overhead c = c.options.Opts.gc_worker_space_overhead
 let gc_worker_window_size c = c.options.Opts.gc_worker_window_size
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
-
-let haste_namespaces_enabled c = c.options.Opts.haste_namespaces_enabled
 
 let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
