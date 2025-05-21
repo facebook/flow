@@ -64,7 +64,7 @@ function f2() {
   let target;
   match (x) {
     const a => {
-      target = "foo";
+      target = "foo" as const;
     }
   }
   a; // ERROR

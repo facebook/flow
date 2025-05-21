@@ -3,3 +3,4 @@ all=true
 experimental.pattern_matching=true
 component_syntax=true
 no_flowlib=false
+experimental.natural_inference.local_primitive_literals=full

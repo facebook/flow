@@ -3296,7 +3296,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       in
       MatchPattern.visit_pattern
         ~visit_binding
-        ~visit_expression:(this#visit_expression ~hints:[] ~cond:NoContext)
+        ~visit_expression:(this#visit_expression ~hints:[] ~cond:MatchPattern)
         ~visit_intermediate:this#add_destructure_binding
         (Root root)
         pattern
