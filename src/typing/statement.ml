@@ -1556,7 +1556,7 @@ module Make
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
-        let (((_, t), _) as right_ast) = condition ~encl_ctx:OtherTestContext cx right in
+        let (((_, t), _) as right_ast) = expression cx right in
         let elem_t = for_of_elemt cx t reason await in
 
         (* null/undefined are NOT allowed *)
