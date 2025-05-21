@@ -980,8 +980,7 @@ let post_merge_checks cx ast tast metadata =
   force_lazy_tvars cx;
   check_react_rules cx tast;
   if not (Context.is_lib_file cx) then (
-    if (Context.metadata cx).Context.haste_namespaces_enabled then
-      check_haste_provider_conflict cx tast;
+    check_haste_provider_conflict cx tast;
     check_multiplatform_conformance cx ast tast
   );
   check_polarity cx;

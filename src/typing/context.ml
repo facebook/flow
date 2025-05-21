@@ -61,7 +61,6 @@ type metadata = {
   natural_inference_local_primitive_literals_full_includes: string list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
-  haste_namespaces_enabled: bool;
   haste_namespaces_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -308,7 +307,6 @@ let metadata_of_options options =
       Options.natural_inference_local_primitive_literals_full_includes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     projects_options = Options.projects_options options;
-    haste_namespaces_enabled = Options.haste_namespaces_enabled options;
     haste_namespaces_options = Options.haste_namespaces_options options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
