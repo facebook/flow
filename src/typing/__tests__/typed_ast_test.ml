@@ -50,7 +50,6 @@ let metadata =
     no_unchecked_indexed_access = false;
     pattern_matching_includes = [];
     projects_options = Flow_projects.default_options;
-    haste_namespaces_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
     react_runtime = Options.ReactRuntimeClassic;

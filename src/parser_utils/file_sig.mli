@@ -12,7 +12,7 @@ type options = {
   explicit_available_platforms: string list option;
   file_options: Files.options;
   haste_module_ref_prefix: string option;
-  haste_namespaces_options: Flow_projects.options;
+  project_options: Flow_projects.options;
   relay_integration_module_prefix: string option;
 }
 

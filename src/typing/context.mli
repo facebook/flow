@@ -111,7 +111,6 @@ type metadata = {
   natural_inference_local_primitive_literals_full_includes: string list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
-  haste_namespaces_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
   react_runtime: Options.react_runtime;

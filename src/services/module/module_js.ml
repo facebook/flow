@@ -640,7 +640,7 @@ module Haste : MODULE_SYSTEM = struct
 
   let exported_module options =
     let haste_name_opt = Files.haste_name_opt ~options:(Options.file_options options) in
-    let projects_options = Options.haste_namespaces_options options in
+    let projects_options = Options.projects_options options in
     let namespace_of_path path =
       match path |> Flow_projects.projects_bitset_of_path ~opts:projects_options with
       | None -> failwith ("Path " ^ path ^ " doesn't match any Haste namespace.")
@@ -732,7 +732,7 @@ module Haste : MODULE_SYSTEM = struct
       match namespace_opt with
       | Some namespace -> [namespace]
       | None ->
-        let opts = Options.haste_namespaces_options options in
+        let opts = Options.projects_options options in
         (match Flow_projects.projects_bitset_of_path ~opts (File_key.to_string importing_file) with
         | None -> []
         | Some bitset ->
