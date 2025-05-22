@@ -39,7 +39,11 @@ module TypeExSet : Flow_set.S with type elt = Type.t
  * [nominal_id_have_same_logical_module ~file_options a b] tells us whether in the multiplatform world,
  * [a] and [b] are the same logical module. *)
 val nominal_id_have_same_logical_module :
-  file_options:Files.options -> ALoc.id * string option -> ALoc.id * string option -> bool
+  file_options:Files.options ->
+  projects_options:Flow_projects.options ->
+  ALoc.id * string option ->
+  ALoc.id * string option ->
+  bool
 
 val quick_subtype : ?on_singleton_eq:(Type.t -> unit) -> Type.t -> Type.t -> bool
 

@@ -891,6 +891,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when TypeUtil.nominal_id_have_same_logical_module
              ~file_options:Context.((metadata cx).file_options)
+             ~projects_options:Context.((metadata cx).projects_options)
              (id1, Some name1)
              (id2, Some name2)
            && List.length ltargs = List.length utargs ->
@@ -1689,6 +1690,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when ALoc.equal_id idl idu
            || TypeUtil.nominal_id_have_same_logical_module
                 ~file_options:Context.((metadata cx).file_options)
+                ~projects_options:Context.((metadata cx).projects_options)
                 (idl, Some name_l)
                 (idu, Some name_u) ->
       rec_flow_t cx trace ~use_op (configu, configl);
@@ -2431,6 +2433,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
       when TypeUtil.nominal_id_have_same_logical_module
              ~file_options:Context.((metadata cx).file_options)
+             ~projects_options:Context.((metadata cx).projects_options)
              (id1, Some n1)
              (id2, Some n2)
            && SSet.equal (SSet.of_list @@ SMap.keys m1) (SSet.of_list @@ SMap.keys m2)

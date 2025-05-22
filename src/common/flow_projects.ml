@@ -66,6 +66,14 @@ let projects_bitset_of_path ~opts path =
     | Some (_, bitset) -> Some bitset
     | None -> None)
 
+let is_common_code_path ~opts path =
+  match projects_bitset_of_path ~opts path with
+  | None -> false
+  | Some projects_bitset ->
+    IMap.exists
+      (fun _ common_project_bitset -> Bitset.equal common_project_bitset projects_bitset)
+      opts.projects_overlap_mapping
+
 (**
  * Suppose we have web and native project, and some paths that can be part of both web and native.
  * Then this function will return which projects' files can be accessed by the given project.
