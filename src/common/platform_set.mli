@@ -9,6 +9,7 @@ type t [@@deriving show]
 
 val available_platforms :
   file_options:Files.options ->
+  projects_options:Flow_projects.options ->
   filename:string ->
   explicit_available_platforms:string list option ->
   t option

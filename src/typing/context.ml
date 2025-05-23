@@ -367,10 +367,12 @@ let docblock_overrides docblock_info file_key metadata =
   in
   let metadata =
     let file_options = metadata.file_options in
+    let projects_options = metadata.projects_options in
     let explicit_available_platforms = Docblock.supportsPlatform docblock_info in
     let available_platforms =
       Platform_set.available_platforms
         ~file_options
+        ~projects_options
         ~filename:(File_key.to_string file_key)
         ~explicit_available_platforms
     in

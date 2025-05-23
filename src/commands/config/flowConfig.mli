@@ -196,6 +196,9 @@ val multi_platform_extension_group_mapping : config -> (string * string list) li
 val multi_platform_ambient_supports_platform_directory_overrides :
   config -> (string * string list) list
 
+val multi_platform_ambient_supports_platform_project_overrides :
+  config -> (string * string list) list
+
 val munge_underscores : config -> bool
 
 val natural_inference_local_primitive_literals_full : config -> bool

@@ -107,6 +107,7 @@ module Opts = struct
     multi_platform_extensions: string list;
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
+    multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
     natural_inference_local_primitive_literals_full: bool;
     natural_inference_local_primitive_literals_full_includes: string list;
@@ -246,6 +247,7 @@ module Opts = struct
       multi_platform_extensions = [];
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_directory_overrides = [];
+      multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
       natural_inference_local_primitive_literals_full = false;
       natural_inference_local_primitive_literals_full_includes = [];
@@ -815,6 +817,30 @@ module Opts = struct
                 :: opts.multi_platform_ambient_supports_platform_directory_overrides;
             })
 
+  let multi_platform_ambient_supports_platform_project_overrides_parser =
+    mapping
+      ~multiple:true
+      (fun v -> Ok v)
+      (fun opts (project, platforms) ->
+        let platforms = Base.String.split ~on:',' platforms |> Base.List.map ~f:String.trim in
+        match
+          Base.List.find_map platforms ~f:(fun p ->
+              if Base.List.mem opts.multi_platform_extensions ("." ^ p) ~equal:String.equal then
+                None
+              else
+                Some ("Unknown platform '" ^ p ^ "'.")
+          )
+        with
+        | Some e -> Error e
+        | None ->
+          Ok
+            {
+              opts with
+              multi_platform_ambient_supports_platform_project_overrides =
+                (project, platforms)
+                :: opts.multi_platform_ambient_supports_platform_project_overrides;
+            })
+
   let name_mapper_parser =
     mapping
       ~multiple:true
@@ -1065,6 +1091,9 @@ module Opts = struct
       );
       ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
         multi_platform_ambient_supports_platform_directory_overrides_parser
+      );
+      ( "experimental.multi_platform.ambient_supports_platform.project_overrides",
+        multi_platform_ambient_supports_platform_project_overrides_parser
       );
       ( "experimental.pattern_matching",
         boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
@@ -1928,6 +1957,9 @@ let multi_platform_extension_group_mapping c = c.options.Opts.multi_platform_ext
 
 let multi_platform_ambient_supports_platform_directory_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
+
+let multi_platform_ambient_supports_platform_project_overrides c =
+  c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
 

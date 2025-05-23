@@ -87,6 +87,7 @@ module SignatureVerification = struct
       let platform_availability_set =
         Platform_set.available_platforms
           ~file_options:(Options.file_options options)
+          ~projects_options:(Options.projects_options options)
           ~filename:(File_key.to_string file)
           ~explicit_available_platforms:(Docblock.supportsPlatform docblock)
       in

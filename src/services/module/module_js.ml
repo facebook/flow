@@ -318,10 +318,12 @@ module Node = struct
           );
       ]
 
-  let ordered_allowed_implicit_platform_specific_import ~file_options ~importing_file =
+  let ordered_allowed_implicit_platform_specific_import
+      ~file_options ~projects_options ~importing_file =
     match
       Platform_set.available_platforms
         ~file_options
+        ~projects_options
         ~filename:importing_file
         ~explicit_available_platforms:None
       |> Option.map (Platform_set.to_platform_string_set ~file_options)
@@ -355,6 +357,7 @@ module Node = struct
   let resolve_relative
       ~options ~reader ~phantom_acc ~importing_file ~relative_to_directory ?subpath rel_path =
     let file_options = Options.file_options options in
+    let projects_options = Options.projects_options options in
     let package_path = Files.normalize_path relative_to_directory rel_path in
     let full_path =
       match subpath with
@@ -368,6 +371,7 @@ module Node = struct
     match
       ordered_allowed_implicit_platform_specific_import
         ~file_options
+        ~projects_options
         ~importing_file:(File_key.to_string importing_file)
     with
     | None ->
@@ -798,6 +802,7 @@ module Haste : MODULE_SYSTEM = struct
         import_specifier
     else
       let file_options = Options.file_options options in
+      let projects_options = Options.projects_options options in
       if not (Files.multi_platform file_options) then
         lazy_seq
           [
@@ -840,7 +845,10 @@ module Haste : MODULE_SYSTEM = struct
           ]
       else
         match
-          Node.ordered_allowed_implicit_platform_specific_import ~file_options ~importing_file:file
+          Node.ordered_allowed_implicit_platform_specific_import
+            ~file_options
+            ~projects_options
+            ~importing_file:file
         with
         | None ->
           lazy_seq

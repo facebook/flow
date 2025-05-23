@@ -231,6 +231,7 @@ class requires_calculator ~file_key ~ast ~opts =
           ~platform_set:
             (Platform_set.available_platforms
                ~file_options:opts.file_options
+               ~projects_options:opts.project_options
                ~filename:(File_key.to_string file_key)
                ~explicit_available_platforms:opts.explicit_available_platforms
             )
