@@ -25,6 +25,13 @@ const config = {
   exact_by_default: true,
 };
 
+// Regression test for invalid configSchema literal
+try {
+  JSON.parse(flow.configSchema);
+} catch (e) {
+  throw 'configSchema literal is not valid JSON: ' + e?.message;
+}
+
 // Regression test for https://github.com/facebook/flow/issues/9024
 if (
   JSON.stringify(flow.parse('#!/usr/bin/env node\n', {tokens: true}).tokens) !==
