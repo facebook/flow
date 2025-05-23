@@ -1035,7 +1035,7 @@ let () =
     "type": "bool",
     "default": false,
     "desc": "Error when a promise is unused."
-  }
+  },
   {
     "key": "experimental.assert_operator",
     "kind": "option",
