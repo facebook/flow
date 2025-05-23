@@ -71,17 +71,13 @@
 #include <string.h>
 #include <sys/errno.h>
 #include <sys/mman.h>
-#include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
 
-#include <inttypes.h>
 #include <limits.h>
 #include <lz4.h>
 #include <stdalign.h>
-#include <sys/time.h>
-#include <time.h>
 
 #include "hh_assert.h"
 
