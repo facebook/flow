@@ -86,7 +86,7 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
   (* 1-project code can reach into common code.
    * e.g. Suppose that we have two projects web and native.
    * Web code can use common code (web+native). *)
-  let additional =
+  let additional_from_common_code =
     Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
         if Bitset.equal p (Bitset.set i (Bitset.all_zero size)) then
           IMap.find_opt i opts.projects_overlap_mapping
@@ -94,9 +94,9 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
           None
     )
   in
-  let additional =
+  let additional_from_1_project_code_unsafe =
     if opts.projects_strict_boundary then
-      additional
+      None
     else
       (* Temporary hack: common code can reach into 1-project code.
        * e.g. Suppose that we have two projects web and native.
@@ -104,8 +104,8 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
        * This is of course incorrect, and we should move these web-only code into common code instead.
        * However, the temporary measure exists so that we can still have good type coverage during
        * experimentation before we can lock down the boundary. *)
-      match additional with
-      | Some _ -> additional
+      match additional_from_common_code with
+      | Some _ -> None
       | None ->
         if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
           Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
@@ -117,9 +117,10 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
         else
           None
   in
-  match additional with
-  | Some p' -> [p; p']
-  | None -> [p]
+  p
+  :: (Base.Option.to_list additional_from_common_code
+     @ Base.Option.to_list additional_from_1_project_code_unsafe
+     )
 
 (**
  * Suppose we have web and native project, and some paths that can be part of both web and native.
