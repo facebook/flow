@@ -1,3 +1,9 @@
+### 0.272.1
+
+Notable bug fixes:
+* Fixed https://flow.org/try. It was broken from v0.270.0 to v0.272.0.
+* Documentation in hover now preserves indentations. Therefore, code blocks in jsdoc will no longer lose indentation.
+
 ### 0.272.0
 
 Likely to cause new Flow errors:
