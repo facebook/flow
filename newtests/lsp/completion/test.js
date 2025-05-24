@@ -774,7 +774,7 @@ module.exports = (suite(
                   documentation: {
                     kind: 'markdown',
                     value:
-                      "Docblock for 'fred'\n\n**@return** {number} Docblock for return",
+                      "Docblock for 'fred'\n\n**@return**  {number} Docblock for return",
                   },
                   sortText: '00000000000000000021',
                   insertTextFormat: 1,

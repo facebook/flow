@@ -1,7 +1,7 @@
 variable_declaration.js:8:8
 Flags: --strip-root --pretty
 {
-  "documentation":"this is foo!",
+  "documentation":"\n this is foo!",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -20,7 +20,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:11:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is foo!",
+  "documentation":"\n this is foo!",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -39,7 +39,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:19:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is bar!",
+  "documentation":"\n this is bar!",
   "types":{"unevaluated":{"type":"void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -58,7 +58,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:27:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is baz!",
+  "documentation":"\n this is baz!",
   "types":{"unevaluated":{"type":"void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -77,7 +77,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:35:5
 Flags: --strip-root --pretty
 {
-  "documentation":"this is alpha!",
+  "documentation":"\n this is alpha!",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -96,7 +96,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:43:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is beta!",
+  "documentation":"\n this is beta!",
   "types":{"unevaluated":{"type":"void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -115,7 +115,7 @@ Flags: --strip-root --pretty
 variable_declaration.js:48:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is beta!",
+  "documentation":"\n this is beta!",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -134,7 +134,7 @@ Flags: --strip-root --pretty
 class_declaration.js:8:14
 Flags: --strip-root --pretty
 {
-  "documentation":"this is Foo!",
+  "documentation":"\n this is Foo!",
   "types":{"unevaluated":{"type":"class Foo"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -153,7 +153,7 @@ Flags: --strip-root --pretty
 function_declaration.js:8:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is foo!",
+  "documentation":"\n this is foo!",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -172,7 +172,7 @@ Flags: --strip-root --pretty
 declare.js:8:4
 Flags: --strip-root --pretty
 {
-  "documentation":"declaration of foo",
+  "documentation":"\n declaration of foo",
   "types":{"unevaluated":{"type":"empty"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -191,7 +191,7 @@ Flags: --strip-root --pretty
 declare.js:16:6
 Flags: --strip-root --pretty
 {
-  "documentation":"declaration of Bar",
+  "documentation":"\n declaration of Bar",
   "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -210,7 +210,7 @@ Flags: --strip-root --pretty
 declare.js:24:4
 Flags: --strip-root --pretty
 {
-  "documentation":"declaration of baz",
+  "documentation":"\n declaration of baz",
   "types":{"unevaluated":{"type":"(any) => any"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -229,7 +229,7 @@ Flags: --strip-root --pretty
 objects-requires.js:18:6
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is an identifier property",
+  "documentation":"\n foo is an identifier property",
   "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -248,7 +248,7 @@ Flags: --strip-root --pretty
 objects-requires.js:20:6
 Flags: --strip-root --pretty
 {
-  "documentation":"bar is a getter property",
+  "documentation":"\n bar is a getter property",
   "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -267,7 +267,7 @@ Flags: --strip-root --pretty
 objects-requires.js:22:6
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is an identifier property with variance",
+  "documentation":"\n baz is an identifier property with variance",
   "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -286,7 +286,7 @@ Flags: --strip-root --pretty
 objects-requires.js:24:6
 Flags: --strip-root --pretty
 {
-  "documentation":"qux is a literal property",
+  "documentation":"\n qux is a literal property",
   "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -305,7 +305,7 @@ Flags: --strip-root --pretty
 objects-requires.js:30:6
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is an identifier property",
+  "documentation":"\n foo is an identifier property",
   "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -324,7 +324,7 @@ Flags: --strip-root --pretty
 objects-requires.js:32:6
 Flags: --strip-root --pretty
 {
-  "documentation":"bar is a getter property",
+  "documentation":"\n bar is a getter property",
   "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -343,7 +343,7 @@ Flags: --strip-root --pretty
 objects-requires.js:34:6
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is an identifier property with variance",
+  "documentation":"\n baz is an identifier property with variance",
   "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -362,7 +362,7 @@ Flags: --strip-root --pretty
 objects-requires.js:36:6
 Flags: --strip-root --pretty
 {
-  "documentation":"qux is a literal property",
+  "documentation":"\n qux is a literal property",
   "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -381,7 +381,7 @@ Flags: --strip-root --pretty
 objects-requires.js:41:6
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is an identifier property",
+  "documentation":"\n foo is an identifier property",
   "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -400,7 +400,7 @@ Flags: --strip-root --pretty
 objects-requires.js:43:6
 Flags: --strip-root --pretty
 {
-  "documentation":"bar is a getter property",
+  "documentation":"\n bar is a getter property",
   "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -419,7 +419,7 @@ Flags: --strip-root --pretty
 objects-requires.js:45:6
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is an identifier property with variance",
+  "documentation":"\n baz is an identifier property with variance",
   "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -438,7 +438,7 @@ Flags: --strip-root --pretty
 objects-requires.js:47:6
 Flags: --strip-root --pretty
 {
-  "documentation":"qux is a literal property",
+  "documentation":"\n qux is a literal property",
   "types":{"unevaluated":{"type":"4"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -457,7 +457,7 @@ Flags: --strip-root --pretty
 objects-requires.js:51:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is a static property",
+  "documentation":"\n this is a static property",
   "types":{"unevaluated":{"type":"1"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -476,7 +476,7 @@ Flags: --strip-root --pretty
 objects-requires.js:53:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is a static method",
+  "documentation":"\n this is a static method",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -495,7 +495,7 @@ Flags: --strip-root --pretty
 objects-requires.js:56:12
 Flags: --strip-root --pretty
 {
-  "documentation":"this is an instance property",
+  "documentation":"\n this is an instance property",
   "types":{"unevaluated":{"type":"2"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -514,7 +514,7 @@ Flags: --strip-root --pretty
 objects-requires.js:58:12
 Flags: --strip-root --pretty
 {
-  "documentation":"this is an instance method",
+  "documentation":"\n this is an instance method",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -533,7 +533,7 @@ Flags: --strip-root --pretty
 objects-requires.js:60:12
 Flags: --strip-root --pretty
 {
-  "documentation":"property with variance",
+  "documentation":"\n property with variance",
   "types":{"unevaluated":{"type":"3"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -552,7 +552,7 @@ Flags: --strip-root --pretty
 objects-requires.js:63:8
 Flags: --strip-root --pretty
 {
-  "documentation":"a defaulted string enum",
+  "documentation":"\n a defaulted string enum",
   "types":{"unevaluated":{"type":"enum DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -571,7 +571,7 @@ Flags: --strip-root --pretty
 objects-requires.js:65:23
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a defaulted string enum",
+  "documentation":"\n first member of a defaulted string enum",
   "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -590,7 +590,7 @@ Flags: --strip-root --pretty
 objects-requires.js:67:23
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of a defaulted string enum",
+  "documentation":"\n second member of a defaulted string enum",
   "types":{"unevaluated":{"type":"DefaultedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -609,7 +609,7 @@ Flags: --strip-root --pretty
 objects-requires.js:69:8
 Flags: --strip-root --pretty
 {
-  "documentation":"an initialized string enum",
+  "documentation":"\n an initialized string enum",
   "types":{"unevaluated":{"type":"enum InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -628,7 +628,7 @@ Flags: --strip-root --pretty
 objects-requires.js:71:25
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of an initialized string enum",
+  "documentation":"\n first member of an initialized string enum",
   "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -647,7 +647,7 @@ Flags: --strip-root --pretty
 objects-requires.js:73:25
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of an initialized string enum",
+  "documentation":"\n second member of an initialized string enum",
   "types":{"unevaluated":{"type":"InitializedStringEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -666,7 +666,7 @@ Flags: --strip-root --pretty
 objects-requires.js:75:6
 Flags: --strip-root --pretty
 {
-  "documentation":"a number enum",
+  "documentation":"\n a number enum",
   "types":{"unevaluated":{"type":"enum NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -685,7 +685,7 @@ Flags: --strip-root --pretty
 objects-requires.js:77:14
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a number enum",
+  "documentation":"\n first member of a number enum",
   "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -704,7 +704,7 @@ Flags: --strip-root --pretty
 objects-requires.js:79:14
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of a number enum",
+  "documentation":"\n second member of a number enum",
   "types":{"unevaluated":{"type":"NumberEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -723,7 +723,7 @@ Flags: --strip-root --pretty
 objects-requires.js:81:7
 Flags: --strip-root --pretty
 {
-  "documentation":"a boolean enum",
+  "documentation":"\n a boolean enum",
   "types":{"unevaluated":{"type":"enum BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -742,7 +742,7 @@ Flags: --strip-root --pretty
 objects-requires.js:83:15
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a boolean enum",
+  "documentation":"\n first member of a boolean enum",
   "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -761,7 +761,7 @@ Flags: --strip-root --pretty
 objects-requires.js:85:15
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of a boolean enum",
+  "documentation":"\n second member of a boolean enum",
   "types":{"unevaluated":{"type":"BooleanEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -780,7 +780,7 @@ Flags: --strip-root --pretty
 objects-requires.js:87:6
 Flags: --strip-root --pretty
 {
-  "documentation":"a symbol enum",
+  "documentation":"\n a symbol enum",
   "types":{"unevaluated":{"type":"enum SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -799,7 +799,7 @@ Flags: --strip-root --pretty
 objects-requires.js:89:15
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a symbol enum",
+  "documentation":"\n first member of a symbol enum",
   "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -818,7 +818,7 @@ Flags: --strip-root --pretty
 objects-requires.js:91:15
 Flags: --strip-root --pretty
 {
-  "documentation":"second member of a symbol enum",
+  "documentation":"\n second member of a symbol enum",
   "types":{"unevaluated":{"type":"SymbolEnum"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -837,7 +837,7 @@ Flags: --strip-root --pretty
 objects.js:58:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a defaulted string enum",
+  "documentation":"\n first member of a defaulted string enum",
   "types":null,
   "reasons":[],
   "loc":{
@@ -856,7 +856,7 @@ Flags: --strip-root --pretty
 objects.js:73:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of an initialized string enum",
+  "documentation":"\n first member of an initialized string enum",
   "types":null,
   "reasons":[],
   "loc":{
@@ -875,7 +875,7 @@ Flags: --strip-root --pretty
 objects.js:88:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a number enum",
+  "documentation":"\n first member of a number enum",
   "types":null,
   "reasons":[],
   "loc":{
@@ -894,7 +894,7 @@ Flags: --strip-root --pretty
 objects.js:103:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a boolean enum",
+  "documentation":"\n first member of a boolean enum",
   "types":null,
   "reasons":[],
   "loc":{
@@ -913,7 +913,7 @@ Flags: --strip-root --pretty
 objects.js:118:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first member of a symbol enum",
+  "documentation":"\n first member of a symbol enum",
   "types":null,
   "reasons":[],
   "loc":{
@@ -932,7 +932,7 @@ Flags: --strip-root --pretty
 objects.js:168:5
 Flags: --strip-root --pretty
 {
-  "documentation":"identifier property of an object literal",
+  "documentation":"\n identifier property of an object literal",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -951,7 +951,7 @@ Flags: --strip-root --pretty
 objects.js:170:5
 Flags: --strip-root --pretty
 {
-  "documentation":"literal property of an object literal",
+  "documentation":"\n literal property of an object literal",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -970,7 +970,7 @@ Flags: --strip-root --pretty
 objects.js:172:5
 Flags: --strip-root --pretty
 {
-  "documentation":"computed property of an object literal",
+  "documentation":"\n computed property of an object literal",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -989,7 +989,7 @@ Flags: --strip-root --pretty
 objects.js:174:5
 Flags: --strip-root --pretty
 {
-  "documentation":"annotated getter property of an object literal",
+  "documentation":"\n annotated getter property of an object literal",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1008,7 +1008,7 @@ Flags: --strip-root --pretty
 objects.js:178:5
 Flags: --strip-root --pretty
 {
-  "documentation":"method property of an object literal",
+  "documentation":"\n method property of an object literal",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1027,7 +1027,7 @@ Flags: --strip-root --pretty
 objects.js:180:5
 Flags: --strip-root --pretty
 {
-  "documentation":"async method property of an object literal",
+  "documentation":"\n async method property of an object literal",
   "types":{"unevaluated":{"type":"() => Promise<void>"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1046,7 +1046,7 @@ Flags: --strip-root --pretty
 requires.js:5:4
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is a function",
+  "documentation":"\n foo is a function",
   "types":{"unevaluated":{"type":"(x: number, y: number) => number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1065,7 +1065,7 @@ Flags: --strip-root --pretty
 requires.js:7:4
 Flags: --strip-root --pretty
 {
-  "documentation":"Bar is a class",
+  "documentation":"\n Bar is a class",
   "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1084,7 +1084,7 @@ Flags: --strip-root --pretty
 requires.js:9:4
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is a variable",
+  "documentation":"\n baz is a variable",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1103,7 +1103,7 @@ Flags: --strip-root --pretty
 imports.js:7:4
 Flags: --strip-root --pretty
 {
-  "documentation":"foo is a function",
+  "documentation":"\n foo is a function",
   "types":{"unevaluated":{"type":"(x: number, y: number) => number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1122,7 +1122,7 @@ Flags: --strip-root --pretty
 imports.js:9:4
 Flags: --strip-root --pretty
 {
-  "documentation":"Bar is a class",
+  "documentation":"\n Bar is a class",
   "types":{"unevaluated":{"type":"class Bar"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1141,7 +1141,7 @@ Flags: --strip-root --pretty
 imports.js:11:4
 Flags: --strip-root --pretty
 {
-  "documentation":"baz is a variable",
+  "documentation":"\n baz is a variable",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1160,7 +1160,7 @@ Flags: --strip-root --pretty
 imports.js:13:4
 Flags: --strip-root --pretty
 {
-  "documentation":"alpha is a number",
+  "documentation":" alpha is a number",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1179,7 +1179,7 @@ Flags: --strip-root --pretty
 imports.js:15:4
 Flags: --strip-root --pretty
 {
-  "documentation":"Beta is a class",
+  "documentation":" Beta is a class",
   "types":{"unevaluated":{"type":"class Beta"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1198,7 +1198,7 @@ Flags: --strip-root --pretty
 imports.js:17:4
 Flags: --strip-root --pretty
 {
-  "documentation":"gamma is a function",
+  "documentation":" gamma is a function",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1217,7 +1217,7 @@ Flags: --strip-root --pretty
 imports.js:19:4
 Flags: --strip-root --pretty
 {
-  "documentation":"delta is a function",
+  "documentation":" delta is a function",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1236,7 +1236,7 @@ Flags: --strip-root --pretty
 imports.js:21:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is 2",
+  "documentation":" this is 2",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1255,7 +1255,7 @@ Flags: --strip-root --pretty
 imports.js:23:4
 Flags: --strip-root --pretty
 {
-  "documentation":"ε is a component",
+  "documentation":" ε is a component",
   "types":{
     "unevaluated":{"type":"component Epsilon()"},
     "evaluated":{"type":"component Epsilon()"}
@@ -1277,7 +1277,7 @@ Flags: --strip-root --pretty
 imports.js:25:4
 Flags: --strip-root --pretty
 {
-  "documentation":"this is a lambda",
+  "documentation":" this is a lambda",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1296,7 +1296,7 @@ Flags: --strip-root --pretty
 unrecognized_tags.js:14:4
 Flags: --strip-root --pretty
 {
-  "documentation":"description\n\n**@explorer-desc** this is foo\nit's a component\n\n**@explorer-ignore**\n\n**@explorer-title** foo the component",
+  "documentation":"\n description\n\n**@explorer-desc** \n  this is foo\n  it's a component\n\n**@explorer-ignore**\n\n**@explorer-title**  foo the component",
   "types":{"unevaluated":{"type":"number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1315,7 +1315,7 @@ Flags: --strip-root --pretty
 parse_error.js:6:5
 Flags: --strip-root --pretty
 {
-  "documentation":"this is foo",
+  "documentation":" this is foo",
   "types":{"unevaluated":{"type":"() => void"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1334,7 +1334,7 @@ Flags: --strip-root --pretty
 types.js:16:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is myFoo",
+  "documentation":" this is myFoo",
   "types":{"unevaluated":{"type":"type myFoo = number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1353,7 +1353,7 @@ Flags: --strip-root --pretty
 types.js:18:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is myBar",
+  "documentation":" this is myBar",
   "types":{"unevaluated":{"type":"type myBar<T> = ?T"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1372,7 +1372,7 @@ Flags: --strip-root --pretty
 types.js:20:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is myOpaque",
+  "documentation":" this is myOpaque",
   "types":{"unevaluated":{"type":"type myOpaque<T> = [T, T]"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1391,7 +1391,7 @@ Flags: --strip-root --pretty
 types.js:22:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is myClass",
+  "documentation":" this is myClass",
   "types":{"unevaluated":{"type":"class myClass"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1410,7 +1410,7 @@ Flags: --strip-root --pretty
 types.js:24:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is myInterface",
+  "documentation":" this is myInterface",
   "types":{"unevaluated":{"type":"interface myInterface"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1429,7 +1429,7 @@ Flags: --strip-root --pretty
 types.js:26:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportFoo",
+  "documentation":" this is ExportFoo",
   "types":{"unevaluated":{"type":"type ExportFoo = number"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1448,7 +1448,7 @@ Flags: --strip-root --pretty
 types.js:28:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportBar",
+  "documentation":" this is ExportBar",
   "types":{"unevaluated":{"type":"type ExportBar<T> = ?T"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1467,7 +1467,7 @@ Flags: --strip-root --pretty
 types.js:30:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportOpaque",
+  "documentation":" this is ExportOpaque",
   "types":{"unevaluated":{"type":"type ExportOpaque<T>"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1486,7 +1486,7 @@ Flags: --strip-root --pretty
 types.js:32:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportClass",
+  "documentation":" this is ExportClass",
   "types":{"unevaluated":{"type":"class ExportClass"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1505,7 +1505,7 @@ Flags: --strip-root --pretty
 types.js:34:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportInterface",
+  "documentation":" this is ExportInterface",
   "types":{"unevaluated":{"type":"interface ExportInterface"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1524,7 +1524,7 @@ Flags: --strip-root --pretty
 types.js:38:7
 Flags: --strip-root --pretty
 {
-  "documentation":"this is ExportValue",
+  "documentation":" this is ExportValue",
   "types":{"unevaluated":{"type":"type exportValue = 1"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1543,7 +1543,7 @@ Flags: --strip-root --pretty
 react_api.js:3:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`Children`lets you manipulate and transform the JSX received as the\nchildren prop.\n\nUsing `Children` is uncommon and can lead to fragile code.\n[See common alternatives](https://react.dev/reference/react/Children#alternatives).\n\n**@see** https://react.dev/reference/react/Children",
+  "documentation":"\n `Children`lets you manipulate and transform the JSX received as the\n children prop.\n\n Using `Children` is uncommon and can lead to fragile code.\n [See common alternatives](https://react.dev/reference/react/Children#alternatives).\n\n**@see**  https://react.dev/reference/react/Children",
   "types":{
     "unevaluated":{
       "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg: This): Array<$NonMaybeType<U>>, only<T>(children: ChildrenArray<T>): $NonMaybeType<T>, toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>, ...}"
@@ -1569,7 +1569,7 @@ Flags: --strip-root --pretty
 react_api.js:5:10
 Flags: --strip-root --pretty
 {
-  "documentation":"Using cloneElement is uncommon and can lead to fragile code.\n[See common alternatives](https://react.dev/reference/react/cloneElement#alternatives)\n\n**@see** https://react.dev/reference/react/cloneElement",
+  "documentation":"\n Using cloneElement is uncommon and can lead to fragile code.\n [See common alternatives](https://react.dev/reference/react/cloneElement#alternatives)\n\n**@see**  https://react.dev/reference/react/cloneElement",
   "types":{"unevaluated":{"type":"React$CloneElement"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1588,7 +1588,7 @@ Flags: --strip-root --pretty
 react_api.js:7:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`Component` lets you define a React component as a JavaScript class.\n\nWe recommend defining components as functions instead of classes.\n[See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).\n\n**@see** https://react.dev/reference/react/Component",
+  "documentation":"\n `Component` lets you define a React component as a JavaScript class.\n\n We recommend defining components as functions instead of classes.\n [See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).\n\n**@see**  https://react.dev/reference/react/Component",
   "types":{
     "unevaluated":{"type":"class Component<Props, State = void>"},
     "evaluated":null
@@ -1628,7 +1628,7 @@ Flags: --strip-root --pretty
 react_api.js:11:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`createContext` lets you create a context that components can provide or read.\n\n**@see** https://react.dev/reference/react/createContext",
+  "documentation":"\n `createContext` lets you create a context that components can provide or read.\n\n**@see**  https://react.dev/reference/react/createContext",
   "types":{
     "unevaluated":{
       "type":"<T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => React$Context<T>"
@@ -1652,7 +1652,7 @@ Flags: --strip-root --pretty
 react_api.js:13:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`createElement` lets you create a React element.\nIt serves as an alternative to writing JSX.\n\n**@see** https://react.dev/reference/react/createElement",
+  "documentation":"\n `createElement` lets you create a React element.\n It serves as an alternative to writing JSX.\n\n**@see**  https://react.dev/reference/react/createElement",
   "types":{"unevaluated":{"type":"React$CreateElement"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1671,7 +1671,7 @@ Flags: --strip-root --pretty
 react_api.js:15:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`createRef` creates a ref object which can contain arbitrary value.\n\n`createRef` is mostly used for class components.\nFunction components typically rely on `useRef` instead.\n\n**@see** https://react.dev/reference/react/createRef",
+  "documentation":"\n `createRef` creates a ref object which can contain arbitrary value.\n\n `createRef` is mostly used for class components.\n Function components typically rely on `useRef` instead.\n\n**@see**  https://react.dev/reference/react/createRef",
   "types":{"unevaluated":{"type":"<T>() => React$RefObject<T | null>"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1690,7 +1690,7 @@ Flags: --strip-root --pretty
 react_api.js:17:10
 Flags: --strip-root --pretty
 {
-  "documentation":"**@deprecated** \n\nIn React 19, `forwardRef` is no longer necessary. Pass `ref` as a prop instead.\nforwardRef will deprecated in a future release.\n\n**@see** https://react.dev/blog/2024/12/05/react-19#ref-as-a-prop",
+  "documentation":"**@deprecated** \n\n\n In React 19, `forwardRef` is no longer necessary. Pass `ref` as a prop instead.\n forwardRef will deprecated in a future release.\n\n**@see**  https://react.dev/blog/2024/12/05/react-19#ref-as-a-prop",
   "types":{
     "unevaluated":{
       "type":"<Config: {...}, Instance, Renders: React$Node = React$Node>(render: (props: Config, ref: React$RefSetter<Instance>) => Renders) => component(ref: RefSetter<Instance>, ...Config) renders Renders"
@@ -1714,7 +1714,7 @@ Flags: --strip-root --pretty
 react_api.js:19:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`useState` is a React Hook that lets you add a\n[state variable](https://react.dev/learn/state-a-components-memory)\nto your component.\n\n**@see** https://react.dev/reference/react/useState",
+  "documentation":"\n `useState` is a React Hook that lets you add a\n [state variable](https://react.dev/learn/state-a-components-memory)\n to your component.\n\n**@see**  https://react.dev/reference/react/useState",
   "types":{
     "unevaluated":{
       "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
@@ -1740,7 +1740,7 @@ Flags: --strip-root --pretty
 react_api.js:21:10
 Flags: --strip-root --pretty
 {
-  "documentation":"`useReducer` is a React Hook that lets you add a\n[reducer](https://react.dev/learn/extracting-state-logic-into-a-reducer)\nto your component.\n\n**@see** https://react.dev/reference/react/useReducer",
+  "documentation":"\n `useReducer` is a React Hook that lets you add a\n [reducer](https://react.dev/learn/extracting-state-logic-into-a-reducer)\n to your component.\n\n**@see**  https://react.dev/reference/react/useReducer",
   "types":{
     "unevaluated":{
       "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
@@ -1766,7 +1766,7 @@ Flags: --strip-root --pretty
 redeclare_import.js:5:5
 Flags: --strip-root --pretty
 {
-  "documentation":"first declaration",
+  "documentation":"\n first declaration",
   "types":{
     "unevaluated":{"type":"((x: number) => number) & ((x: string) => string)"},
     "evaluated":null
@@ -1788,7 +1788,7 @@ Flags: --strip-root --pretty
 components.js:10:4
 Flags: --strip-root --pretty
 {
-  "documentation":"doc 1",
+  "documentation":" doc 1",
   "types":{"unevaluated":{"type":"string"},"evaluated":{"type":"string"}},
   "reasons":[],
   "loc":{
@@ -1807,7 +1807,7 @@ Flags: --strip-root --pretty
 components.js:13:7
 Flags: --strip-root --pretty
 {
-  "documentation":"doc 2",
+  "documentation":" doc 2",
   "types":{"unevaluated":{"type":"{baz: string}"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1826,7 +1826,7 @@ Flags: --strip-root --pretty
 components.js:16:6
 Flags: --strip-root --pretty
 {
-  "documentation":"doc 3",
+  "documentation":" doc 3",
   "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1845,7 +1845,7 @@ Flags: --strip-root --pretty
 components.js:25:4
 Flags: --strip-root --pretty
 {
-  "documentation":"This is the component Foo!",
+  "documentation":"\n This is the component Foo!",
   "types":{
     "unevaluated":{"type":"component Foo(baz: string, bar: string)"},
     "evaluated":{"type":"component Foo(bar: string, baz: string)"}
@@ -1867,7 +1867,7 @@ Flags: --strip-root --pretty
 components.js:29:4
 Flags: --strip-root --pretty
 {
-  "documentation":"doc 1",
+  "documentation":" doc 1",
   "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{
@@ -1886,7 +1886,7 @@ Flags: --strip-root --pretty
 components.js:31:4
 Flags: --strip-root --pretty
 {
-  "documentation":"doc 3",
+  "documentation":" doc 3",
   "types":{"unevaluated":{"type":"string"},"evaluated":null},
   "reasons":[],
   "loc":{

@@ -959,7 +959,7 @@ Flags: --lsp
   "detail":"number",
   "documentation":{
     "kind":"markdown",
-    "value":"description\n\n**@explorer-desc** this is qux\nit's a var\n\n**@explorer-ignore**\n\n**@explorer-title** qux"
+    "value":"description\n\n**@explorer-desc** \n  this is qux\n  it's a var\n\n**@explorer-ignore**\n\n**@explorer-title**  qux"
   },
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -1277,7 +1277,7 @@ Flags: --lsp
   "labelDetails":{"detail":": () => void"},
   "kind":3,
   "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"**@deprecated** \n\na JSDoc in the same file."},
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\n\n a JSDoc in the same file."},
   "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -1544,7 +1544,7 @@ Flags: --lsp
   "detail":"number",
   "documentation":{
     "kind":"markdown",
-    "value":"member h\n\n**@explorer-desc** this is h\nit's a member\n\n**@explorer-ignore**\n\n**@explorer-title** h the member"
+    "value":"member h\n\n**@explorer-desc** \n  this is h\n  it's a member\n\n**@explorer-ignore**\n\n**@explorer-title**  h the member"
   },
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -3414,7 +3414,7 @@ Flags: --lsp
   "detail":"type ExportFoo = number",
   "documentation":{
     "kind":"markdown",
-    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+    "value":"**@deprecated**  Use number instead.\n\n\n this is ExportFoo."
   },
   "tags":[1],
   "sortText":"00000000000000000000",
@@ -3584,7 +3584,7 @@ Flags: --lsp
   "label":"myFoo",
   "kind":6,
   "detail":"type myFoo = number",
-  "documentation":{"kind":"markdown","value":"**@deprecated** \n\nthis is myFoo."},
+  "documentation":{"kind":"markdown","value":"**@deprecated** \n\n\n this is myFoo."},
   "tags":[1],
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
@@ -4533,7 +4533,7 @@ Flags: --lsp
   "detail":"type ExportFoo = number",
   "documentation":{
     "kind":"markdown",
-    "value":"**@deprecated** Use number instead.\n\nthis is ExportFoo."
+    "value":"**@deprecated**  Use number instead.\n\n\n this is ExportFoo."
   },
   "tags":[1],
   "sortText":"00000000000000000003",

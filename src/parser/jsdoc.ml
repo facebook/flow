@@ -77,7 +77,29 @@ module Parser = struct
 
   let empty = { description = None; params = []; deprecated = None; unrecognized_tags = [] }
 
-  let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> String.trim
+  let trim_end s =
+    let is_space = function
+      | ' '
+      | '\012'
+      | '\n'
+      | '\r'
+      | '\t' ->
+        true
+      | _ -> false
+    in
+    let len = String.length s in
+    let j = ref (len - 1) in
+    while !j >= 0 && is_space (String.get s !j) do
+      decr j
+    done;
+    if !j = len - 1 then
+      s
+    else if !j >= 0 then
+      String.sub s 0 (!j + 1)
+    else
+      ""
+
+  let trimmed_string_of_buffer buffer = buffer |> Buffer.contents |> trim_end
 
   let description_of_desc_buf desc_buf =
     match trimmed_string_of_buffer desc_buf with
@@ -129,15 +151,24 @@ module Parser = struct
     | _ (* eof *) -> description_of_desc_buf desc_buf
 
   and description_or_tag desc_buf lexbuf =
-    match%sedlex lexbuf with
-    | '@' -> description_of_desc_buf desc_buf
-    | _ -> description desc_buf lexbuf
+    let rec skip_and_count_significant_whitespace acc =
+      match%sedlex lexbuf with
+      | whitespace -> skip_and_count_significant_whitespace (acc + 1)
+      | '@' -> None
+      | _ -> Some acc
+    in
+    match skip_and_count_significant_whitespace 0 with
+    | None -> description_of_desc_buf desc_buf
+    | Some count ->
+      for i = 1 to count do
+        Buffer.add_char desc_buf ' '
+      done;
+      description desc_buf lexbuf
 
   and description_startline desc_buf lexbuf =
     match%sedlex lexbuf with
-    | '*'
-    | whitespace ->
-      description_startline desc_buf lexbuf
+    | '*' -> description_or_tag desc_buf lexbuf
+    | whitespace -> description_startline desc_buf lexbuf
     | _ -> description_or_tag desc_buf lexbuf
 
   let rec param_path ?(path = Param.Name) lexbuf =

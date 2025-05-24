@@ -22,12 +22,13 @@ react_component.js:3:9 = module "react"
 'react' defined at react_component.js:3:14
 
 react_component.js:3:7,3:11
-react_component.js:13:33 = `Component` lets you define a React component as a JavaScript class.
+react_component.js:13:33 = 
+ `Component` lets you define a React component as a JavaScript class.
 
-We recommend defining components as functions instead of classes.
-[See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).
+ We recommend defining components as functions instead of classes.
+ [See how to migrate](https://react.dev/reference/react/PureComponent#alternatives).
 
-**@see** https://react.dev/reference/react/Component
+**@see**  https://react.dev/reference/react/Component
 class Component<Props, State = void>
 
 'Component' defined at (lib) react.js:613:18
@@ -39,7 +40,7 @@ react_component.js:18:17 = State
 
 react_component.js:18:14,18:18
 react_component.js:31:7 = {
-  "documentation":"`<Fragment>`, often used via `<>...</>` syntax,\nlets you group elements without a wrapper node.\n\n**@see** https://react.dev/reference/react/Fragment",
+  "documentation":"\n `<Fragment>`, often used via `<>...</>` syntax,\n lets you group elements without a wrapper node.\n\n**@see**  https://react.dev/reference/react/Fragment",
   "types":{
     "unevaluated":{
       "expanded":{
@@ -182,10 +183,11 @@ react_component.js:32:29 = {
 }
 react.js:4:7
 Flags:
-`createElement` lets you create a React element.
-It serves as an alternative to writing JSX.
 
-**@see** https://react.dev/reference/react/createElement
+ `createElement` lets you create a React element.
+ It serves as an alternative to writing JSX.
+
+**@see**  https://react.dev/reference/react/createElement
 React$CreateElement
 
 'React$CreateElement' defined at (lib) react.js:163:20
