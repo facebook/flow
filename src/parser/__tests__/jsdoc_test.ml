@@ -87,12 +87,12 @@ let tests =
   "JSDoc"
   >::: [
          "dont_parse_line" >:: mk_test (mk_line_comment "* foo") ~should_not_parse:true;
-         "parse_description" >:: mk_test (mk_block_comment "* foo") ~description:(Some "foo");
+         "parse_description" >:: mk_test (mk_block_comment "* foo") ~description:(Some " foo");
          "parse_deprecated_with_str"
-         >:: mk_test (mk_block_comment "* @deprecated foo") ~deprecated:"foo";
+         >:: mk_test (mk_block_comment "* @deprecated foo") ~deprecated:" foo";
          "parse_deprecated_without_str"
          >:: mk_test (mk_block_comment "* @deprecated") ~deprecated:"";
-         "trim_whitespace_and_asterisks"
+         "trim_asterisks"
          >:: mk_test
                (mk_block_comment
                   {|*
@@ -101,11 +101,11 @@ let tests =
                     *   @snap crackle
                     *   |}
                )
-               ~description:(Some "foo\nbar");
+               ~description:(Some "\n   foo\n   bar");
          "pick_last_jsdoc-containing_leading_comment"
          >:: mk_test
                (mk_block_comments ~leading:["* foo"; "bar"; "* baz"; "snap"] ~trailing:["* crackle"])
-               ~description:(Some "baz");
+               ~description:(Some " baz");
          "no_description" >:: mk_test (mk_block_comment "*\n @unsupported") ~description:None;
          "simple_param_descriptions"
          >:: mk_test
@@ -125,7 +125,7 @@ let tests =
                       @param h
                       @param i description before eof|}
                )
-               ~description:(Some "overall description")
+               ~description:(Some " overall description")
                ~params:
                  Jsdoc.Param.
                    [
@@ -139,7 +139,7 @@ let tests =
                        [
                          ( Name,
                            {
-                             description = Some "hyphen before description for c";
+                             description = Some " hyphen before description for c";
                              optional = NotOptional;
                            }
                          );
@@ -150,7 +150,7 @@ let tests =
                        [
                          ( Name,
                            {
-                             description = Some "multiline\nparam description";
+                             description = Some "multiline\n           param description";
                              optional = NotOptional;
                            }
                          );
@@ -159,7 +159,7 @@ let tests =
                      ( "f",
                        [
                          ( Name,
-                           { description = Some "arg alias for param tag"; optional = NotOptional }
+                           { description = Some " arg alias for param tag"; optional = NotOptional }
                          );
                        ]
                      );
@@ -167,7 +167,7 @@ let tests =
                        [
                          ( Name,
                            {
-                             description = Some "argument alias for param tag";
+                             description = Some " argument alias for param tag";
                              optional = NotOptional;
                            }
                          );
@@ -201,18 +201,18 @@ let tests =
                ~params:
                  Jsdoc.Param.
                    [
-                     ("foo", [(Name, { description = Some "optional foo"; optional = Optional })]);
+                     ("foo", [(Name, { description = Some " optional foo"; optional = Optional })]);
                      ( "bar",
                        [
                          ( Element Name,
-                           { description = Some "element path of bar"; optional = NotOptional }
+                           { description = Some " element path of bar"; optional = NotOptional }
                          );
                          ( Member (Name, "x"),
-                           { description = Some "member x path of bar"; optional = NotOptional }
+                           { description = Some " member x path of bar"; optional = NotOptional }
                          );
                          ( Member (Name, "y"),
                            {
-                             description = Some "optional member y path of bar with default";
+                             description = Some " optional member y path of bar with default";
                              optional = OptionalWithDefault "this is a default";
                            }
                          );
@@ -222,7 +222,7 @@ let tests =
                        [
                          ( Element Name,
                            {
-                             description = Some "optional element path of baz with default";
+                             description = Some " optional element path of baz with default";
                              optional = OptionalWithDefault "this is another default";
                            }
                          );
@@ -264,7 +264,7 @@ let tests =
                     * @param b another parameter|}
                )
                ~description:
-                 (Some "this description overrides the first one\nand can have multiple lines")
+                 (Some " this description overrides the first one\n   and can have multiple lines")
                ~params:
                  Jsdoc.Param.
                    [
@@ -284,7 +284,8 @@ let tests =
                     *   and can have multiple lines
                     * @param b another parameter|}
                )
-               ~description:(Some "this desc overrides the first one\nand can have multiple lines")
+               ~description:
+                 (Some " this desc overrides the first one\n   and can have multiple lines")
                ~params:
                  Jsdoc.Param.
                    [
@@ -305,11 +306,11 @@ let tests =
                     * @explorer-title some title
                     * @desc description 2 |}
                )
-               ~description:(Some "description 2")
+               ~description:(Some " description 2")
                ~unrecognized_tags:
                  [
-                   ("explorer-desc", Some "contents of explorer-desc tag");
+                   ("explorer-desc", Some "\n contents of explorer-desc tag");
                    ("explorer-ignore", None);
-                   ("explorer-title", Some "some title");
+                   ("explorer-title", Some " some title");
                  ];
        ]

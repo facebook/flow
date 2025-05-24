@@ -13,7 +13,8 @@ decls.js:3:10,3:12
 
 decls.js:9:15
 Flags:
-Returns the elements of an array that meet the condition specified in a callback function.
+
+ Returns the elements of an array that meet the condition specified in a callback function.
 (
   callbackfn: (value: 0 | 1, index: number, array: $ReadOnlyArray<0 | 1>) => implies value is 0,
   thisArg: void

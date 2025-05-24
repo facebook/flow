@@ -363,14 +363,15 @@ module.exports = (suite(
                   label: '(bar: string, baz: number): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'foo\n\n**@unrecognized** this tag is unrecognized',
+                    value:
+                      '\n foo\n\n**@unrecognized**  this tag is unrecognized',
                   },
                   parameters: [
                     {
                       label: 'bar: string',
                       documentation: {
                         kind: 'markdown',
-                        value: 'bar - the first summand',
+                        value: 'bar -  the first summand',
                       },
                     },
                     {
@@ -378,7 +379,7 @@ module.exports = (suite(
                       documentation: {
                         kind: 'markdown',
                         value:
-                          'baz - the second and third summands\nbaz.x (optional)  - the second summand\nbaz.y (optional, defaults to 0)  - the third summand',
+                          'baz -  the second and third summands\nbaz.x (optional)  -  the second summand\nbaz.y (optional, defaults to 0)  -  the third summand',
                       },
                     },
                   ],
@@ -410,7 +411,7 @@ module.exports = (suite(
                   label: '(x: string): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'foo',
+                    value: '\n foo',
                   },
                   parameters: [
                     {
@@ -449,7 +450,7 @@ module.exports = (suite(
                   label: '(y: number): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'bar',
+                    value: '\n bar',
                   },
                   parameters: [
                     {
@@ -488,7 +489,7 @@ module.exports = (suite(
                   label: '(z: bigint): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'baz',
+                    value: '\n baz',
                   },
                   parameters: [
                     {
@@ -527,7 +528,7 @@ module.exports = (suite(
                   label: '(x: string, y: number): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'constructor docs',
+                    value: '\n constructor docs',
                   },
                   parameters: [
                     {
@@ -573,7 +574,7 @@ module.exports = (suite(
                   label: '(x: string): void',
                   documentation: {
                     kind: 'markdown',
-                    value: 'variable declaration',
+                    value: '\n variable declaration',
                   },
                   parameters: [
                     {
@@ -1852,21 +1853,21 @@ module.exports = (suite(
                   label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
-                    value: 'first overload',
+                    value: '\n first overload',
                   },
                   parameters: [
                     {
                       label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of first overload',
+                        value: 'x -  1st param of first overload',
                       },
                     },
                     {
                       label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of first overload',
+                        value: 'y -  2nd param of first overload',
                       },
                     },
                   ],
@@ -1875,21 +1876,21 @@ module.exports = (suite(
                   label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
-                    value: 'second overload',
+                    value: '\n second overload',
                   },
                   parameters: [
                     {
                       label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of second overload',
+                        value: 'x -  1st param of second overload',
                       },
                     },
                     {
                       label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of second overload',
+                        value: 'y -  2nd param of second overload',
                       },
                     },
                   ],
@@ -1921,21 +1922,21 @@ module.exports = (suite(
                   label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
-                    value: 'first overload',
+                    value: '\n first overload',
                   },
                   parameters: [
                     {
                       label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of first overload',
+                        value: 'x -  1st param of first overload',
                       },
                     },
                     {
                       label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of first overload',
+                        value: 'y -  2nd param of first overload',
                       },
                     },
                   ],
@@ -1944,21 +1945,21 @@ module.exports = (suite(
                   label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
-                    value: 'second overload',
+                    value: '\n second overload',
                   },
                   parameters: [
                     {
                       label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of second overload',
+                        value: 'x -  1st param of second overload',
                       },
                     },
                     {
                       label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of second overload',
+                        value: 'y -  2nd param of second overload',
                       },
                     },
                   ],
@@ -1990,21 +1991,21 @@ module.exports = (suite(
                   label: '(x: 10, y: 11): 1',
                   documentation: {
                     kind: 'markdown',
-                    value: 'first overload',
+                    value: '\n first overload',
                   },
                   parameters: [
                     {
                       label: 'x: 10',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of first overload',
+                        value: 'x -  1st param of first overload',
                       },
                     },
                     {
                       label: 'y: 11',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of first overload',
+                        value: 'y -  2nd param of first overload',
                       },
                     },
                   ],
@@ -2013,21 +2014,21 @@ module.exports = (suite(
                   label: '(x: 20, y: 21): 2',
                   documentation: {
                     kind: 'markdown',
-                    value: 'second overload',
+                    value: '\n second overload',
                   },
                   parameters: [
                     {
                       label: 'x: 20',
                       documentation: {
                         kind: 'markdown',
-                        value: 'x - 1st param of second overload',
+                        value: 'x -  1st param of second overload',
                       },
                     },
                     {
                       label: 'y: 21',
                       documentation: {
                         kind: 'markdown',
-                        value: 'y - 2nd param of second overload',
+                        value: 'y -  2nd param of second overload',
                       },
                     },
                   ],
@@ -3489,7 +3490,8 @@ module.exports = (suite(
                       label: 'foo: number',
                       documentation: {
                         kind: 'markdown',
-                        value: 'This is documentation for Props1.foo property',
+                        value:
+                          '\n This is documentation for Props1.foo property',
                       },
                     },
                   ],
@@ -3524,7 +3526,8 @@ module.exports = (suite(
                       label: 'foo: number',
                       documentation: {
                         kind: 'markdown',
-                        value: 'This is documentation for Props1.foo property',
+                        value:
+                          '\n This is documentation for Props1.foo property',
                       },
                     },
                   ],
@@ -3536,7 +3539,8 @@ module.exports = (suite(
                       label: 'foo: string',
                       documentation: {
                         kind: 'markdown',
-                        value: 'This is documentation for Props2.foo property',
+                        value:
+                          '\n This is documentation for Props2.foo property',
                       },
                     },
                   ],
