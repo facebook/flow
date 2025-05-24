@@ -1480,7 +1480,9 @@ let make_options
         ~projects_overlap_mapping:(FlowConfig.projects_overlap_mapping flowconfig)
         ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
         ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig)
-        ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig);
+        ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig)
+        ~multi_platform_ambient_supports_platform_project_overrides:
+          (FlowConfig.multi_platform_ambient_supports_platform_project_overrides flowconfig);
     opt_include_suppressions = options_flags.include_suppressions;
     opt_distributed = options_flags.distributed;
     opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;

@@ -16,7 +16,8 @@ let available_platforms_to_bitset ~multi_platform_extensions available_platforms
         bitset
   )
 
-let available_platforms ~file_options ~filename ~explicit_available_platforms : t option =
+let available_platforms ~file_options ~projects_options ~filename ~explicit_available_platforms :
+    t option =
   if not (Files.multi_platform file_options) then
     None
   else
@@ -31,22 +32,37 @@ let available_platforms ~file_options ~filename ~explicit_available_platforms : 
     | None ->
       (match explicit_available_platforms with
       | None ->
-        let match_directory_override (path, platform) =
-          let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-          Base.Option.some_if (Base.String.is_prefix ~prefix:path normalized_filename) platform
-        in
         (match
-           Base.List.find_map
-             (Files.multi_platform_ambient_supports_platform_directory_overrides file_options)
-             ~f:match_directory_override
+           Base.Option.bind
+             (Flow_projects.projects_bitset_of_path ~opts:projects_options filename)
+             ~f:
+               (Flow_projects.multi_platform_ambient_supports_platform_for_project
+                  ~opts:projects_options
+               )
          with
-        | None -> Some (Bitset.all_one (Base.List.length multi_platform_extensions))
-        | Some supported_platforms_from_directory_overrides ->
+        | Some supported_platforms_from_project_overrides ->
           Some
             (available_platforms_to_bitset
                ~multi_platform_extensions
-               supported_platforms_from_directory_overrides
-            ))
+               supported_platforms_from_project_overrides
+            )
+        | None ->
+          let match_directory_override (path, platform) =
+            let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+            Base.Option.some_if (Base.String.is_prefix ~prefix:path normalized_filename) platform
+          in
+          (match
+             Base.List.find_map
+               (Files.multi_platform_ambient_supports_platform_directory_overrides file_options)
+               ~f:match_directory_override
+           with
+          | None -> Some (Bitset.all_one (Base.List.length multi_platform_extensions))
+          | Some supported_platforms_from_directory_overrides ->
+            Some
+              (available_platforms_to_bitset
+                 ~multi_platform_extensions
+                 supported_platforms_from_directory_overrides
+              )))
       | Some explicit_available_platforms ->
         Some (available_platforms_to_bitset ~multi_platform_extensions explicit_available_platforms))
 

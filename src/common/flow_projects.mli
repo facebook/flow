@@ -17,6 +17,7 @@ val mk_options :
   map_path:(string -> Str.regexp) ->
   projects_path_mapping:(string * string list) list ->
   projects_strict_boundary:bool ->
+  multi_platform_ambient_supports_platform_project_overrides:(string * string list) list ->
   options
 
 val equal : t -> t -> bool
@@ -34,3 +35,5 @@ val is_common_code_path : opts:options -> string -> bool
 val reachable_projects_bitsets_from_projects_bitset : opts:options -> t -> t list
 
 val individual_projects_bitsets_from_common_project_bitset : opts:options -> t -> t list option
+
+val multi_platform_ambient_supports_platform_for_project : opts:options -> t -> string list option

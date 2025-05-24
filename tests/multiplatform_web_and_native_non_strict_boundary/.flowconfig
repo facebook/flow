@@ -5,8 +5,8 @@ experimental.projects=web
 experimental.projects=native
 experimental.projects_path_mapping='<PROJECT_ROOT>/web' -> 'web'
 experimental.projects_path_mapping='<PROJECT_ROOT>/native' -> 'native'
-experimental.projects_path_mapping='<PROJECT_ROOT>/' -> 'web,native'
-experimental.projects.strict_boundary=true
+experimental.projects_path_mapping='<PROJECT_ROOT>/xplat' -> 'web,native'
+experimental.projects.strict_boundary=false
 
 experimental.multi_platform=true
 experimental.multi_platform.extensions=.ios
