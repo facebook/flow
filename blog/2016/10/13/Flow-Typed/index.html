@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="blog-wrapper blog-post-page plugin-blog plugin-id-default" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.7.0">
+<title data-rh="true">Introducing Flow-Typed | Flow</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://flow.org/blog/2016/10/13/Flow-Typed/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="Introducing Flow-Typed | Flow"><meta data-rh="true" name="description" content="Having high-quality and community-driven library definitions (“libdefs”) are"><meta data-rh="true" property="og:description" content="Having high-quality and community-driven library definitions (“libdefs”) are"><meta data-rh="true" property="og:type" content="article"><meta data-rh="true" property="article:published_time" content="2016-10-13T00:00:00.000Z"><link data-rh="true" rel="icon" href="/img/favicon.png"><link data-rh="true" rel="canonical" href="https://flow.org/blog/2016/10/13/Flow-Typed/"><link data-rh="true" rel="alternate" href="https://flow.org/blog/2016/10/13/Flow-Typed/" hreflang="en"><link data-rh="true" rel="alternate" href="https://flow.org/blog/2016/10/13/Flow-Typed/" hreflang="x-default"><link data-rh="true" rel="preconnect" href="https://P6T3E8XPGT-dsn.algolia.net" crossorigin="anonymous"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","@id":"https://flow.org/blog/2016/10/13/Flow-Typed","mainEntityOfPage":"https://flow.org/blog/2016/10/13/Flow-Typed","url":"https://flow.org/blog/2016/10/13/Flow-Typed","headline":"Introducing Flow-Typed","name":"Introducing Flow-Typed","description":"Having high-quality and community-driven library definitions (“libdefs”) are","datePublished":"2016-10-13T00:00:00.000Z","author":{"@type":"Person","name":"Jeff Morrison"},"keywords":[],"isPartOf":{"@type":"Blog","@id":"https://flow.org/blog","name":"Blog"}}</script><link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="Flow RSS Feed">
+<link rel="alternate" type="application/atom+xml" href="/blog/atom.xml" title="Flow Atom Feed">
+
+<link rel="preconnect" href="https://www.google-analytics.com">
+<script>window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga("create","UA-49208336-4","auto"),ga("set","anonymizeIp",!0),ga("send","pageview")</script>
+<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+
+
+<link rel="search" type="application/opensearchdescription+xml" title="Flow" href="/opensearch.xml"><link rel="stylesheet" href="/assets/css/styles.eb31f43d.css">
+<script src="/assets/js/runtime~main.956207a3.js" defer="defer"></script>
+<script src="/assets/js/main.04ede09f.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();t(null!==e?e:"light")}(),function(){try{const n=new URLSearchParams(window.location.search).entries();for(var[t,e]of n)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script>
+
+<div style="display: none; text-align: center; background-color: white; color: black;" id="internaldocs-banner"></div><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/img/logo.svg" alt="My Facebook Project Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/img/logo.svg" alt="My Facebook Project Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div></a><a class="navbar__item navbar__link" href="/en/docs/getting-started/">Getting Started</a><a class="navbar__item navbar__link" href="/en/docs/">Docs</a><a class="navbar__item navbar__link" href="/try/">Try</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/blog/">Blog</a></div><div class="navbar__items navbar__items--right"><a href="https://twitter.com/flowtype" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link navbar__icon twitter__link" aria-label="Twitter"></a><a href="http://stackoverflow.com/questions/tagged/flowtype" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link navbar__icon stackoverflow__link" aria-label="Stack Overflow"></a><a href="https://github.com/facebook/flow" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link navbar__icon github__link" aria-label="GitHub"></a><div class="navbarSearchContainer_Bca1"><button type="button" class="DocSearch DocSearch-Button" aria-label="Search (Command+K)"><span class="DocSearch-Button-Container"><svg width="20" height="20" class="DocSearch-Search-Icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z" stroke="currentColor" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="DocSearch-Button-Placeholder">Search</span></span><span class="DocSearch-Button-Keys"></span></button></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="main-wrapper mainWrapper_z2l0"><div class="container margin-vert--lg"><div class="row"><main class="col col--9 col--offset-1"><article class=""><header><h1 class="title_xvU1" itemprop="headline">Introducing Flow-Typed</h1><div class="container_mt6G margin-vert--md"><time datetime="2016-10-13T00:00:00.000Z">October 13, 2016</time></div><div class="margin-top--md margin-bottom--sm row"><div class="col col--12 authorCol_Hf19"><div class="avatar margin-bottom--sm"><div class="avatar__intro authorDetails_lV9A"><div class="avatar__name"><span class="authorName_yefp">Jeff Morrison</span></div><div class="authorSocials_rSDt"></div></div></div></div></div></header><div id="__blog-post-container" class="markdown"><p>Having high-quality and community-driven library definitions (“libdefs”) are
+important for having a great experience with Flow. Today, we are introducing
+<strong>flow-typed</strong>: A <a href="https://github.com/flowtype/flow-typed/" target="_blank" rel="noopener noreferrer">repository</a> and
+<a href="http://npmjs.org/packages/flow-typed" target="_blank" rel="noopener noreferrer">CLI tool</a> that represent the first parts
+of a new workflow for building, sharing, and distributing Flow libdefs.</p>
+<p>The goal of this project is to grow an ecosystem of libdefs that
+<a href="https://medium.com/@thejameskyle/flow-mapping-an-object-373d64c44592" target="_blank" rel="noopener noreferrer">allows Flow&#x27;s type inference to shine</a>
+and that aligns with Flow&#x27;s mission: To extract precise and <em>accurate</em> types
+from real-world JavaScript. We&#x27;ve learned a lot from similar efforts like
+DefinitelyTyped for TypeScript and we want to bring some of the lessons we&#x27;ve
+learned to the Flow ecosystem.</p>
+<p>Here are some of the objectives of this project:</p>
+<ul>
+<li>Libdefs should be <strong>versioned</strong> — both against the libraries they describe
+<em>and</em> against the version(s) of Flow they are compatible with.</li>
+<li>Libdefs should meet a <strong>high quality bar</strong>, including <strong>libdef tests</strong> to
+ensure that their quality persists over time.</li>
+<li>There must be a straightforward way to <strong>contribute libdef improvements over
+time</strong> and for developers to <strong>benefit from those improvements</strong> over time.</li>
+<li>The process of managing libdefs for a Flow project should be <strong>automated,
+simple, and easy to get right</strong>.</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="versioned--tested-libdefs">Versioned &amp; Tested Libdefs<a href="#versioned--tested-libdefs" class="hash-link" aria-label="Direct link to Versioned &amp; Tested Libdefs" title="Direct link to Versioned &amp; Tested Libdefs">​</a></h3>
+<p>Anyone can contribute a libdef (or improve on an existing one), but when doing
+so it&#x27;s important that we maintain a high quality bar so that all developers
+feel confident in the libdefs they are using. To address this, flow-typed
+requires that all libdef contributions are explicitly versioned against both
+the version of the library they are describing and the version(s) of Flow the
+libdef is compatible with.</p>
+<p>Additionally, all libdefs must be accompanied by tests that exercise the
+important parts of the API and assert that they yield the correct types. By
+including both version information and tests with each libdef, we can
+automatically verify in Travis that the tests work as expected for all versions
+of Flow a libdef is compatible with. Tests also help to ensure that future
+changes to the libdef don&#x27;t regress its features over time.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="automating-libdef-installation">Automating Libdef Installation<a href="#automating-libdef-installation" class="hash-link" aria-label="Direct link to Automating Libdef Installation" title="Direct link to Automating Libdef Installation">​</a></h3>
+<p>We&#x27;ve built a simple CLI tool called <code>flow-typed</code> that helps to automate the
+process of finding, installing, and upgrading libdefs in your Flow projects. It
+uses the explicit version info associated with each libdef to find all
+necessary libdefs based on your project&#x27;s package.json dependencies. This
+minimizes the work you need to do in order to pull in and update libdefs in
+your projects.</p>
+<p>You can get the flow-typed CLI using either yarn (<code>yarn global add flow-typed</code>)
+or npm (<code>npm install -g flow-typed</code>).</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="installing-libdefs">Installing Libdefs<a href="#installing-libdefs" class="hash-link" aria-label="Direct link to Installing Libdefs" title="Direct link to Installing Libdefs">​</a></h3>
+<p>Installing libdefs from the flow-typed repository is a matter of running a
+single command on your project after installing your dependencies:</p>
+<div class="codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">&gt; yarn install # Or `npm install` if you&#x27;re old-school :)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">&gt; flow-typed install</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<p>The <code>flow-typed install</code> command reads your project&#x27;s package.json file,
+queries the flow-typed repository for libdefs matching your dependencies, and
+installs the correctly-versioned libdefs into the <code>flow-typed/</code> directory for
+you. By default, Flow knows to look in the <code>flow-typed/</code> directory for libdefs
+— so there is no additional configuration necessary.</p>
+<p>Note that it&#x27;s necessary to run this command <em>after</em> running <code>yarn</code> or
+<code>npm install</code>. This is because this command will also generate stub libdefs for
+you if one of your dependencies doesn&#x27;t have types.</p>
+<p>Once libdefs have been installed, <strong>we recommend that you check them in to your
+project&#x27;s repo</strong>. Libdefs in the flow-typed repository may be improved over
+time (fixing a bug, more precise types, etc). If this happens for a libdef that
+you depend on, you&#x27;ll want to have control over when that update is applied to
+your project. Periodically you can run <code>flow-typed update</code> to download any
+libdef updates, verify that your project still typechecks, and the commit the
+updates.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="why-not-just-use-npm-to-distribute-libdefs">Why Not Just Use Npm To Distribute Libdefs?<a href="#why-not-just-use-npm-to-distribute-libdefs" class="hash-link" aria-label="Direct link to Why Not Just Use Npm To Distribute Libdefs?" title="Direct link to Why Not Just Use Npm To Distribute Libdefs?">​</a></h3>
+<p>Over time libdefs in the flow-typed repo may be updated to fix bugs, improve
+accuracy, or make use of new Flow features that better describe the types of
+the library. As a result, there are really 3 versions that apply to each
+libdef: The version of the library being described, the current version of the
+libdef in the flow-typed repo, and the version(s) of Flow the libdef is
+compatible with.</p>
+<p>If an update is made to some libdef that you use in your project after you&#x27;ve
+already installed it, there&#x27;s a good chance that update may find new type
+errors in your project that were previously unknown. While it is certainly a
+good thing to find errors that were previously missed, you&#x27;ll want to have
+control over when those changes get pulled in to your project.</p>
+<p>This is the reason we advise that you commit your installed libdefs to version
+control rather than rely on a system like npm+semver to download and install a
+non-deterministic semver-ranged version from npm. Checking in your libdefs
+ensures that all collaborators on your project have consistent output from Flow
+at any given commit in version history.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="building-a-community">Building a Community<a href="#building-a-community" class="hash-link" aria-label="Direct link to Building a Community" title="Direct link to Building a Community">​</a></h3>
+<p>This is first and foremost a community project. It was started by a community
+member (hey <a href="https://github.com/splodingsocks" target="_blank" rel="noopener noreferrer">@splodingsocks</a>!) and has
+already benefitted from hours of work by many others. Moreover, this will
+continue to be a community effort: Anyone can create and/or help maintain a
+libdef for any npm library. Authors may create libdefs for their packages when
+publishing, and/or consumers can create them when someone else hasn&#x27;t already
+done so. Either way, everyone benefits!</p>
+<p>We&#x27;d like to send a big shout-out to <a href="https://github.com/marudor" target="_blank" rel="noopener noreferrer">@marudor</a> for
+contributing so many of his own libdefs and spending time helping others to
+write and contribute libdefs. Additionally we&#x27;d like to thank
+<a href="https://github.com/ryyppy" target="_blank" rel="noopener noreferrer">@ryyppy</a> for helping to design and iterate on the
+CLI and installation workflow as well as manage libdef reviews.</p>
+<p>The Flow core team intends to stay invested in developing and improving this
+project, but in order for it to truly succeed we need your help! If you&#x27;ve
+already written some libdefs for Flow projects that you work on, we encourage
+you to <a href="https://github.com/flowtype/flow-typed/#how-do-i-contribute-library-definitions" target="_blank" rel="noopener noreferrer">contribute</a>
+them for others to benefit from them as well. By managing libdefs in a
+community-driven repository, the community as a whole can work together to
+extend Flow&#x27;s capabilities beyond just explicitly-typed JS.</p>
+<p>It&#x27;s still early days and there&#x27;s still a lot to do, so we&#x27;re excited to hear
+your ideas/feedback and read your pull requests! :)</p>
+<p>Happy typing!</p></div></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Blog post page navigation"><a class="pagination-nav__link pagination-nav__link--prev" href="/blog/2017/05/07/Strict-Function-Call-Arity/"><div class="pagination-nav__sublabel">Newer post</div><div class="pagination-nav__label">Strict Checking of Function Call Arity</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/blog/2016/10/04/Property-Variance/"><div class="pagination-nav__sublabel">Older post</div><div class="pagination-nav__label">Property Variance and Other Upcoming Changes</div></a></nav></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Learn</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/en/docs/getting-started/">Getting Started</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://twitter.com/flowtype" target="_blank" rel="noopener noreferrer" class="footer__link-item">Twitter<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://discordapp.com/invite/8ezwRUK" target="_blank" rel="noopener noreferrer" class="footer__link-item">Discord<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://medium.com/flow-type" target="_blank" rel="noopener noreferrer" class="footer__link-item">Medium</a></li><li class="footer__item"><a href="https://github.com/facebook/flow" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div><div class="col footer__col"><div class="footer__title">Legal</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://opensource.facebook.com/legal/privacy/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Privacy<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://opensource.facebook.com/legal/terms/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Terms<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://opensource.facebook.com/legal/data-policy/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Data Policy<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li><li class="footer__item"><a href="https://opensource.facebook.com/legal/cookie-policy/" target="_blank" rel="noopener noreferrer" class="footer__link-item">Cookie Policy<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="margin-bottom--sm"><a href="https://opensource.facebook.com" rel="noopener noreferrer" class="footerLogoLink_BH7S"><img src="/img/oss_logo.png" alt="Facebook Open Source Logo" class="footer__logo themedComponent_mlkZ themedComponent--light_NVdE"><img src="/img/oss_logo.png" alt="Facebook Open Source Logo" class="footer__logo themedComponent_mlkZ themedComponent--dark_xIcU"></a></div><div class="footer__copyright">Copyright © 2025 Meta Platforms, Inc. Built with Docusaurus.</div></div></div></footer></div>
+</body>
+</html>
