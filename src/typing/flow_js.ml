@@ -2733,6 +2733,7 @@ struct
             (* We are subtyping a class from platform-specific impl file against the interface file *)
             TypeUtil.nominal_id_have_same_logical_module
               ~file_options:Context.((metadata cx).file_options)
+              ~projects_options:Context.((metadata cx).projects_options)
               (inst.class_id, inst.class_name)
               (inst_super.class_id, inst_super.class_name)
             && List.length inst.type_args = List.length inst_super.type_args

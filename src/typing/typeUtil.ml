@@ -444,11 +444,25 @@ end)
 
 let nominal_id_have_same_logical_module
     ~file_options
+    ~projects_options
     ((a_id, a_name) : ALoc.id * string option)
     ((b_id, b_name) : ALoc.id * string option) =
+  let haste_name_opt = Files.haste_name_opt ~options:file_options in
+  let is_common_code src =
+    Flow_projects.is_common_code_path ~opts:projects_options (File_key.to_string src)
+  in
   let matching_platform_specific_impl_and_interface_file_key a_src b_src =
     Files.has_flow_ext a_src
-    && Files.chop_flow_ext a_src = Files.chop_platform_suffix_for_file ~options:file_options b_src
+    && (* A.js.flow, A.ios.js in the same directory *)
+    (Files.chop_flow_ext a_src = Files.chop_platform_suffix_for_file ~options:file_options b_src
+    ||
+    (* A.js.flow as Haste module in common code, A.js as Haste module in web/native only code *)
+    match
+      (is_common_code a_src, is_common_code b_src, haste_name_opt a_src, haste_name_opt b_src)
+    with
+    | (true, false, Some n1, Some n2) -> n1 = n2
+    | _ -> false
+    )
   in
   match (a_name, b_name, ALoc.source (a_id :> ALoc.t), ALoc.source (b_id :> ALoc.t)) with
   | (Some a_name, Some b_name, Some a_src, Some b_src) ->

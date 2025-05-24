@@ -1,2 +1,4 @@
 declare const foo: string;
 export default foo; // error: platform-specific impl file should conform to JsFlowConflict2.js.flow
+
+declare export class Bar {} // ok: we have accounted for the fact that this class and the one in web/JSFlowConflict.js should have the same nominal id
