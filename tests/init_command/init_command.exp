@@ -12,6 +12,7 @@ Default .flowconfig looks like this:
 untyped-type-import=error
 internal-type=error
 unsafe-object-assign=error
+nested-component=error
 libdef-override=error
 deprecated-type-bool=error
 
