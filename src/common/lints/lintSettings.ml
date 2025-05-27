@@ -29,6 +29,7 @@ let default_explicit_values =
   |> LintMap.add Lints.InternalType (Severity.Err, None)
   |> LintMap.add Lints.LibdefOverride (Severity.Err, None)
   |> LintMap.add Lints.NestedComponent (Severity.Err, None)
+  |> LintMap.add Lints.NestedHook (Severity.Err, None)
   |> LintMap.add Lints.UnsafeObjectAssign (Severity.Err, None)
   |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
 

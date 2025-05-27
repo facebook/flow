@@ -53,6 +53,7 @@ type lint_kind =
   | UnusedPromise
   | ReactIntrinsicOverlap
   | NestedComponent
+  | NestedHook
   | LibdefOverride
 
 val string_of_kind : lint_kind -> string

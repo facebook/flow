@@ -1816,7 +1816,9 @@ let to_printable_error :
       ]
     | MessageCannotMutateThisPrototype -> [text "Mutating this prototype is unsupported."]
     | MessageCannotNestComponents ->
-      [text "Components may not be nested directly within other components."]
+      [text "Components may not be nested directly within other components or hooks."]
+    | MessageCannotNestHook ->
+      [text "Hooks may not be nested directly within other components or hooks."]
     | MessageCannotOptimizeUnionDueToNonUniqueKeys non_unique_keys ->
       let string_of_union_enum x = code (Type.UnionEnum.to_string x) in
       let string_of_non_unique_key (name, map) =

@@ -53,6 +53,7 @@ type lint_kind =
   | UnusedPromise
   | ReactIntrinsicOverlap
   | NestedComponent
+  | NestedHook
   | LibdefOverride
 
 let string_of_sketchy_null_kind = function
@@ -102,6 +103,7 @@ let string_of_kind = function
   | UnusedPromise -> "unused-promise"
   | ReactIntrinsicOverlap -> "react-intrinsic-overlap"
   | NestedComponent -> "nested-component"
+  | NestedHook -> "nested-hook"
   | LibdefOverride -> "libdef-override"
 
 let kinds_of_string = function
@@ -149,6 +151,7 @@ let kinds_of_string = function
   | "unused-promise" -> Some [UnusedPromise]
   | "react-intrinsic-overlap" -> Some [ReactIntrinsicOverlap]
   | "nested-component" -> Some [NestedComponent]
+  | "nested-hook" -> Some [NestedHook]
   | "libdef-override" -> Some [LibdefOverride]
   | _ -> None
 

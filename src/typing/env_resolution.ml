@@ -381,8 +381,11 @@ let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
     )
 
 let resolve_annotated_function
-    cx ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
+    cx ~scope_kind ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
   let { Ast.Function.sig_loc; effect_; _ } = function_ in
+  if scope_kind = ComponentOrHookBody && effect_ = Ast.Function.Hook then begin
+    Flow_js_utils.add_output cx Error_message.(ENestedHook reason)
+  end;
   let cache = Context.node_cache cx in
   let tparams_map = mk_tparams_map cx tparams_map in
   let default_this = Flow_js_utils.default_this_type cx ~needs_this_param:bind_this function_ in
@@ -440,7 +443,7 @@ let rec binding_has_annot = function
     binding_has_annot b
   | _ -> false
 
-let rec resolve_binding cx reason loc b =
+let rec resolve_binding cx def_scope_kind reason loc b =
   match b with
   | Root
       (Annotation
@@ -478,6 +481,7 @@ let rec resolve_binding cx reason loc b =
       let reason = func_reason ~async:false ~generator:false prop_loc in
       resolve_annotated_function
         cx
+        ~scope_kind:def_scope_kind
         ~bind_this
         ~hook_like:false
         ~statics:SMap.empty
@@ -815,7 +819,7 @@ let rec resolve_binding cx reason loc b =
       StrModuleT.at loc
     | Of { await } -> Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->
-    let t = resolve_binding cx reason loc binding in
+    let t = resolve_binding cx def_scope_kind reason loc binding in
     make_hooklike cx t
   | Select { selector; parent = (parent_loc, binding) } ->
     let refined_type =
@@ -859,12 +863,16 @@ let rec resolve_binding cx reason loc b =
       else
         t)
 
-let resolve_inferred_function cx ~statics ~needs_this_param id_loc reason function_loc function_ =
+let resolve_inferred_function
+    cx ~scope_kind ~statics ~needs_this_param id_loc reason function_loc function_ =
   let cache = Context.node_cache cx in
   let ((fun_type, _) as fn) =
     Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
   in
   Node_cache.set_function cache id_loc fn;
+  if scope_kind = ComponentOrHookBody && function_.Ast.Function.effect_ = Ast.Function.Hook then begin
+    Flow_js_utils.add_output cx Error_message.(ENestedHook reason)
+  end;
   if
     function_.Ast.Function.effect_ <> Ast.Function.Hook
     && Base.Option.is_some (Flow_ast_utils.hook_function function_)
@@ -1095,7 +1103,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   Context.set_environment cx { env with Loc_env.scope_kind = def_scope_kind; class_stack };
   let t =
     match def with
-    | Binding b -> resolve_binding cx def_reason id_loc b
+    | Binding b -> resolve_binding cx def_scope_kind def_reason id_loc b
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
@@ -1116,6 +1124,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
       let hook_like = Base.Option.is_some (Flow_ast_utils.hook_function function_) in
       resolve_annotated_function
         cx
+        ~scope_kind:def_scope_kind
         ~bind_this:(not arrow)
         ~statics
         ~hook_like
@@ -1136,6 +1145,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         } ->
       resolve_inferred_function
         cx
+        ~scope_kind:def_scope_kind
         ~statics
         ~needs_this_param:(not arrow)
         id_loc

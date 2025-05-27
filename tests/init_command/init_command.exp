@@ -13,6 +13,7 @@ untyped-type-import=error
 internal-type=error
 unsafe-object-assign=error
 nested-component=error
+nested-hook=error
 libdef-override=error
 deprecated-type-bool=error
 

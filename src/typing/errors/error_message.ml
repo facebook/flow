@@ -544,6 +544,7 @@ and 'loc t' =
   | EComponentCase of 'loc
   | EComponentMissingReturn of 'loc virtual_reason
   | ENestedComponent of 'loc virtual_reason
+  | ENestedHook of 'loc virtual_reason
   | EInvalidDeclaration of {
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
@@ -1385,6 +1386,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComponentCase loc -> EComponentCase (f loc)
   | EComponentMissingReturn r -> EComponentMissingReturn (map_reason r)
   | ENestedComponent r -> ENestedComponent (map_reason r)
+  | ENestedHook r -> ENestedHook (map_reason r)
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
     EInvalidDeclaration
       {
@@ -1775,6 +1777,7 @@ let util_use_op_of_msg nope util = function
   | EComponentCase _
   | EComponentMissingReturn _
   | ENestedComponent _
+  | ENestedHook _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
   | EDefinitionCycle _
@@ -1857,6 +1860,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMissingLocalAnnotation { reason; _ }
   | EComponentMissingReturn reason
   | ENestedComponent reason
+  | ENestedHook reason
   | EUnsupportedExact (_, reason)
   | EPolarityMismatch { reason; _ }
   | ENoNamedExport (reason, _, _, _)
@@ -2130,6 +2134,7 @@ let kind_of_msg =
     | EUnusedPromise _ -> LintError Lints.UnusedPromise
     | EReactIntrinsicOverlap _ -> LintError Lints.ReactIntrinsicOverlap
     | ENestedComponent _ -> LintError Lints.NestedComponent
+    | ENestedHook _ -> LintError Lints.NestedHook
     | ESignatureBindingValidation (Signature_error.ModuleOverride _ | Signature_error.NameOverride _)
       ->
       LintError Lints.LibdefOverride
@@ -2886,6 +2891,7 @@ let friendly_message_of_msg = function
   | EComponentCase _ -> Normal MessageComponentNonUpperCase
   | EComponentMissingReturn reason -> Normal (MessageComponentMissingReturn reason)
   | ENestedComponent _ -> Normal MessageCannotNestComponents
+  | ENestedHook _ -> Normal MessageCannotNestHook
   | EDuplicateClassMember { name; static; _ } ->
     Normal (MessageDuplicateClassMember { name; static })
   | EEmptyArrayNoProvider { loc = _ } -> Normal MessageCannotDetermineEmptyArrayLiteralType
@@ -3428,6 +3434,7 @@ let error_code_of_message err : error_code option =
   | EReactIntrinsicOverlap _
   | EUninitializedInstanceProperty _
   | ENestedComponent _
+  | ENestedHook _
   | EUnusedPromise _ -> begin
     match kind_of_msg err with
     | Flow_errors_utils.LintError kind -> Some (Error_codes.code_of_lint kind)

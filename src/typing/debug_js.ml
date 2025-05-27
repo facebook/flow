@@ -1816,6 +1816,7 @@ let dump_error_message =
     | EComponentCase loc -> spf "EComponentCase (%s)" (string_of_aloc loc)
     | EComponentMissingReturn r -> spf "EComponentMissingReturn (%s)" (dump_reason cx r)
     | ENestedComponent r -> spf "ENestedComponent (%s)" (dump_reason cx r)
+    | ENestedHook r -> spf "ENestedHook (%s)" (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)
     | EImplicitInstantiationUnderconstrainedError { use_op; _ } ->
       spf "EImplicitInstantiationUnderconstrainedError (%s)" (string_of_use_op use_op)

@@ -1088,6 +1088,14 @@ References:
             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------- hooks_in_nested_component_or_hook.js:4:3
+
+Hooks may not be nested directly within other components or hooks. [nested-hook]
+
+   4|   hook useNested() { // error: nested-hook
+        ^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:5:12
 
 Cannot call hook [1] because React hooks can only be called within components or hooks.
@@ -1105,7 +1113,7 @@ References:
 
 Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:13:3
 
-Components may not be nested directly within other components. [nested-component]
+Components may not be nested directly within other components or hooks. [nested-component]
 
    13|   component Bar() { // error: nested-component
          ^^^^^^^^^^^^^^^
@@ -1141,6 +1149,14 @@ References:
          ^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:27:3
+
+Hooks may not be nested directly within other components or hooks. [nested-hook]
+
+   27|   hook useNested() { // error: nested-hook
+         ^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------- hooks_in_nested_component_or_hook.js:28:12
 
 Cannot call hook [1] because React hooks can only be called within components or hooks.
@@ -1158,7 +1174,7 @@ References:
 
 Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:36:3
 
-Components may not be nested directly within other components. [nested-component]
+Components may not be nested directly within other components or hooks. [nested-component]
 
    36|   component Bar() { // error: nested-component
          ^^^^^^^^^^^^^^^
@@ -2617,4 +2633,4 @@ References:
 
 
 
-Found 169 errors
+Found 171 errors

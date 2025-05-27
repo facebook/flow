@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 
 component Foo() {
-  hook useNested() {
+  hook useNested() { // error: nested-hook
     return useState(); // error: react-rule-hook error
   }
 
@@ -24,7 +24,7 @@ component Foo() {
 }
 
 hook useFoo() {
-  hook useNested() {
+  hook useNested() { // error: nested-hook
     return useState(); // error: react-rule-hook error
   }
 

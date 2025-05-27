@@ -427,6 +427,7 @@ type 'loc message =
   | MessageCannotIterateWithForIn of 'loc virtual_reason
   | MessageCannotMutateThisPrototype
   | MessageCannotNestComponents
+  | MessageCannotNestHook
   | MessageCannotOptimizeUnionDueToNonUniqueKeys of
       'loc virtual_reason Nel.t Type.UnionRep.UnionEnumMap.t NameUtils.Map.t
   | MessageCannotOptimizeUnionInternally of 'loc Type.UnionRep.optimized_error
