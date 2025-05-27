@@ -729,6 +729,14 @@ let%expect_test "es6_declare_class" =
     [(Named "Foo"); (NamedType "Foo")]
   |}]
 
+let%expect_test "es6_export_default_from" =
+  print_module {|
+    export {default as View} from 'react-native';
+  |};
+  [%expect {|
+    [(Named "View")]
+  |}]
+
 let%expect_test "es6_interface" =
   print_module {|
     export interface Foo { bar: string }
