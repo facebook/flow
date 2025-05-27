@@ -2738,37 +2738,41 @@ struct
               (inst_super.class_id, inst_super.class_name)
             && List.length inst.type_args = List.length inst_super.type_args
           then (
-            let implements_use_op =
-              Op (ClassImplementsCheck { def = reason; name = reason; implements = reason_u })
-            in
-            (* We need to ensure that the shape of the class instances match. *)
-            let inst_type_to_obj_type reason inst =
-              inst_type_to_obj_type
+            if TypeUtil.is_in_common_interface_conformance_check use_op then (
+              let implements_use_op =
+                Op (ClassImplementsCheck { def = reason; name = reason; implements = reason_u })
+              in
+              (* We need to ensure that the shape of the class instances match. *)
+              let inst_type_to_obj_type reason inst =
+                inst_type_to_obj_type
+                  cx
+                  reason
+                  (inst.own_props, inst.proto_props, inst.inst_call_t, inst.inst_dict)
+              in
+              rec_unify
                 cx
-                reason
-                (inst.own_props, inst.proto_props, inst.inst_call_t, inst.inst_dict)
-            in
-            rec_unify
-              cx
-              trace
-              ~use_op:implements_use_op
-              (inst_type_to_obj_type reason inst)
-              (inst_type_to_obj_type reason_u inst_super);
-            (* We need to ensure that the shape of the class statics match. *)
-            let spread_of reason t =
-              (* Spread to keep only own props and own methods. *)
-              let id = Eval.generate_id () in
-              let destructor = SpreadType (Object.Spread.Annot { make_exact = false }, [], None) in
-              mk_possibly_evaluated_destructor cx unknown_use reason t destructor id
-            in
-            rec_unify
-              cx
-              trace
-              ~use_op:implements_use_op
-              (spread_of reason static)
-              (spread_of reason_u static_super);
-            (* We need to ensure that the classes have the same nominal hierarchy *)
-            rec_flow_t cx trace ~use_op (super, super_super);
+                trace
+                ~use_op:implements_use_op
+                (inst_type_to_obj_type reason inst)
+                (inst_type_to_obj_type reason_u inst_super);
+              (* We need to ensure that the shape of the class statics match. *)
+              let spread_of reason t =
+                (* Spread to keep only own props and own methods. *)
+                let id = Eval.generate_id () in
+                let destructor =
+                  SpreadType (Object.Spread.Annot { make_exact = false }, [], None)
+                in
+                mk_possibly_evaluated_destructor cx unknown_use reason t destructor id
+              in
+              rec_unify
+                cx
+                trace
+                ~use_op:implements_use_op
+                (spread_of reason static)
+                (spread_of reason_u static_super);
+              (* We need to ensure that the classes have the same nominal hierarchy *)
+              rec_flow_t cx trace ~use_op (super, super_super)
+            );
             (* We need to ensure that the classes have the matching targs *)
             flow_type_args cx trace ~use_op reason reason_u inst.type_args inst_super.type_args
           ) else

@@ -23,6 +23,8 @@ val mod_reason_of_t : (reason -> reason) -> Type.t -> Type.t
 
 val mod_reason_of_defer_use_t : (reason -> reason) -> Type.defer_use_t -> Type.defer_use_t
 
+val is_in_common_interface_conformance_check : Type.use_op -> bool
+
 val use_op_of_use_t : Type.use_t -> Type.use_op option
 
 val mod_use_op_of_use_t : (Type.use_op -> Type.use_op) -> Type.use_t -> Type.use_t

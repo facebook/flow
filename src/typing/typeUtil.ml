@@ -251,6 +251,11 @@ let rec util_use_op_of_use_t :
   | EvalTypeDestructorT _ ->
     nope u
 
+let is_in_common_interface_conformance_check use_op =
+  match root_of_use_op use_op with
+  | ConformToCommonInterface _ -> true
+  | _ -> false
+
 let use_op_of_use_t = util_use_op_of_use_t (fun _ -> None) (fun _ op _ -> Some op)
 
 let mod_use_op_of_use_t f =

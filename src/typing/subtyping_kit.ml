@@ -896,7 +896,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              (id2, Some name2)
            && List.length ltargs = List.length utargs ->
       (* Check super *)
-      begin
+      if TypeUtil.is_in_common_interface_conformance_check use_op then begin
         let super1 = Base.Option.value super1 ~default:(MixedT.make lreason) in
         let super2 = Base.Option.value super2 ~default:(MixedT.make ureason) in
         let use_op =
@@ -2438,13 +2438,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
              (id2, Some n2)
            && SSet.equal (SSet.of_list @@ SMap.keys m1) (SSet.of_list @@ SMap.keys m2)
            && has_unknown1 = has_unknown2 ->
-      let use_op =
-        Frame
-          ( EnumRepresentationTypeCompatibility { lower = enum_reason_l; upper = enum_reason_u },
-            use_op
-          )
-      in
-      rec_flow_t cx trace ~use_op (r1, r2)
+      if TypeUtil.is_in_common_interface_conformance_check use_op then
+        let use_op =
+          Frame
+            ( EnumRepresentationTypeCompatibility { lower = enum_reason_l; upper = enum_reason_u },
+              use_op
+            )
+        in
+        rec_flow_t cx trace ~use_op (r1, r2)
     | ( DefT (_, EnumObjectT { enum_value_t = enum_value_t1; _ }),
         DefT (_, EnumObjectT { enum_value_t = enum_value_t2; _ })
       ) ->
