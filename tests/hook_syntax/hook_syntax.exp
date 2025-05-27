@@ -1096,21 +1096,6 @@ Hooks may not be nested directly within other components or hooks. [nested-hook]
         ^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:5:12
-
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   hooks_in_nested_component_or_hook.js:5:12
-   5|     return useState(); // error: react-rule-hook error
-                 ^^^^^^^^^^
-
-References:
-   hooks_in_nested_component_or_hook.js:5:12
-   5|     return useState(); // error: react-rule-hook error
-                 ^^^^^^^^ [1]
-
-
 Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:13:3
 
 Components may not be nested directly within other components or hooks. [nested-component]
@@ -1155,21 +1140,6 @@ Hooks may not be nested directly within other components or hooks. [nested-hook]
 
    27|   hook useNested() { // error: nested-hook
          ^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------- hooks_in_nested_component_or_hook.js:28:12
-
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
-
-   hooks_in_nested_component_or_hook.js:28:12
-   28|     return useState(); // error: react-rule-hook error
-                  ^^^^^^^^^^
-
-References:
-   hooks_in_nested_component_or_hook.js:28:12
-   28|     return useState(); // error: react-rule-hook error
-                  ^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------ hooks_in_nested_component_or_hook.js:36:3
@@ -2633,4 +2603,4 @@ References:
 
 
 
-Found 171 errors
+Found 169 errors

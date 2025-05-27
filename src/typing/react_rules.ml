@@ -770,12 +770,18 @@ type hook_call_context =
    * strictly disallowed because hook compatibility mode is off *)
   | HookCallStrictlyDisallowedWithoutCompatibilityMode
 
-let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
+let rec whole_ast_visitor tast ~under_function_or_class_body ~allow_hook_call_at_toplevel cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable hook_call_context = lazy HookCallNotAllowedUnderUnknownContext
+    val mutable hook_call_context =
+      lazy
+        ( if allow_hook_call_at_toplevel then
+          HookCallPermissivelyAllowedUnderCompatibilityMode
+        else
+          HookCallNotAllowedUnderUnknownContext
+        )
 
     (* If it's true, then we are in some context where we permissively assume can be passed with
      * a function component or hook. *)
@@ -1313,11 +1319,50 @@ and component_ast_visitor tast cx rrid =
 
     method function_component_body = super#function_body_any
 
-    method! function_body_any =
-      (whole_ast_visitor tast ~under_function_or_class_body:true cx rrid)#function_body_any
+    method! function_ expr =
+      let open Ast.Function in
+      let {
+        id = ident;
+        params;
+        body;
+        async = _;
+        generator = _;
+        effect_;
+        predicate;
+        return;
+        tparams;
+        sig_loc = _;
+        comments = _;
+      } =
+        expr
+      in
+      ignore @@ Base.Option.map ~f:this#function_identifier ident;
+      this#type_params_opt tparams (fun _ ->
+          ignore @@ this#function_params params;
+          ignore @@ this#function_return_annotation return;
+          ignore
+          @@ (whole_ast_visitor
+                tast
+                ~under_function_or_class_body:true
+                ~allow_hook_call_at_toplevel:(effect_ = Ast.Function.Hook)
+                cx
+                rrid
+             )
+               #function_body_any
+               body;
+          ignore @@ Base.Option.map ~f:this#predicate predicate;
+          expr
+      )
 
     method! class_body =
-      (whole_ast_visitor tast ~under_function_or_class_body:true cx rrid)#class_body
+      (whole_ast_visitor
+         tast
+         ~under_function_or_class_body:true
+         ~allow_hook_call_at_toplevel:false
+         cx
+         rrid
+      )
+        #class_body
 
     method! match_case ~on_case_body case =
       this#in_conditional (super#match_case ~on_case_body) case
@@ -1339,5 +1384,15 @@ let check_react_rules cx ast =
       Some opaque_id
     | _ -> None
   in
-  let _ = (whole_ast_visitor ast ~under_function_or_class_body:false cx rrid)#program ast in
+  let _ =
+    (whole_ast_visitor
+       ast
+       ~under_function_or_class_body:false
+       ~allow_hook_call_at_toplevel:false
+       cx
+       rrid
+    )
+      #program
+      ast
+  in
   ()
