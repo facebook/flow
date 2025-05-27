@@ -21,7 +21,7 @@ type scope_kind =
   | DeclareNamespace (* namespace scope *)
   | Global (* global scope *)
   | Ctor (* constructor function *)
-  | ComponentBody (* component syntax *)
+  | ComponentOrHookBody (* component or hook syntax *)
 [@@deriving show]
 
 type class_stack = ALoc.t list

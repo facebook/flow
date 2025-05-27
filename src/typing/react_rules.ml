@@ -791,7 +791,7 @@ let rec whole_ast_visitor tast ~under_function_or_class_body cx rrid =
           (Typed_ast_utils.untyped_ast_mapper#component_body body)
       in
       emit_effect_errors cx effects;
-      (component_ast_visitor tast cx rrid)#component_declaration cmp
+      (component_ast_visitor tast cx rrid)#visit_toplevel_component cmp
 
     method! expression (((loc, _), expr') as expr) =
       match expr' with
@@ -1123,6 +1123,14 @@ and component_ast_visitor tast cx rrid =
     method on_loc_annot l = l
 
     method on_type_annot l = l
+
+    method visit_toplevel_component c = super#component_declaration c
+
+    (* While nested components are bad, we already emit `nested-component` lint errors by default.
+     * There is no need to emit react-rule-hook related errors again by assuming hooks in the nested
+     * components might be called conditionally. *)
+    method! component_declaration c =
+      (component_ast_visitor tast cx rrid)#visit_toplevel_component c
 
     method! call ((call_loc, _) as annot) expr =
       let { Ast.Expression.Call.callee = ((callee_loc, callee_ty), callee_exp); _ } = expr in

@@ -694,7 +694,7 @@ let def_of_function ~tparams_map ~hints ~has_this_def ~function_loc ~statics ~ar
 let def_of_component ~tparams_map ~component_loc component =
   Component { tparams_map; component_loc; component }
 
-let func_scope_kind ?key { Ast.Function.async; generator; _ } =
+let func_scope_kind ?key { Ast.Function.async; generator; effect_; _ } =
   match (async, generator, key) with
   | ( false,
       false,
@@ -705,7 +705,10 @@ let func_scope_kind ?key { Ast.Function.async; generator; _ } =
   | (true, true, _) -> AsyncGenerator
   | (true, false, _) -> Async
   | (false, true, _) -> Generator
-  | (false, false, _) -> Ordinary
+  | (false, false, _) ->
+    (match effect_ with
+    | Ast.Function.Hook -> ComponentOrHookBody
+    | Ast.Function.Arbitrary -> Ordinary)
 
 (* Existing own properties on `Function` as defined in `lib/core.js`. We don't
    want to shadow these when creating function statics. *)
@@ -1375,7 +1378,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           return_hint_stack <- renders_hint :: return_hint_stack;
           run_loc this#block body;
           return_hint_stack <- old_stack)
-        ComponentBody
+        ComponentOrHookBody
         ()
 
     method private visit_component_param

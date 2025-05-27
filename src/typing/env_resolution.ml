@@ -420,7 +420,7 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
       );
     AnyT.at (AnyError None) component_loc
   end else begin
-    if scope_kind = ComponentBody then begin
+    if scope_kind = ComponentOrHookBody then begin
       Flow_js_utils.add_output cx Error_message.(ENestedComponent reason)
     end;
     let tparams_map = mk_tparams_map cx tparams_map in
