@@ -1161,14 +1161,6 @@ module Opts = struct
                 "module.system.haste.module_ref_prefix.standard_cjs_esm_interop cannot be disabled."
         )
       );
-      ( "module.system.haste.experimental.namespaces",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error "module.system.haste.experimental.namespaces cannot be disabled"
-        )
-      );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
       ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
