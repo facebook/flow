@@ -29,7 +29,6 @@ val mk_options :
   multi_platform:bool ->
   multi_platform_extensions:string list ->
   multi_platform_extension_group_mapping:(string * string list) list ->
-  multi_platform_ambient_supports_platform_directory_overrides:(string * string list) list ->
   node_resolver_dirnames:string list ->
   options
 
@@ -56,9 +55,6 @@ val multi_platform : options -> bool
 val multi_platform_extensions : options -> string list
 
 val multi_platform_extension_group_mapping : options -> (string * string list) list
-
-val multi_platform_ambient_supports_platform_directory_overrides :
-  options -> (string * string list) list
 
 val node_resolver_dirnames : options -> string list
 

@@ -741,12 +741,6 @@ let file_options =
     let multi_platform_extension_group_mapping =
       FlowConfig.multi_platform_extension_group_mapping flowconfig
     in
-    let multi_platform_ambient_supports_platform_directory_overrides =
-      FlowConfig.multi_platform_ambient_supports_platform_directory_overrides flowconfig
-      |> Base.List.map ~f:(fun (path, platforms) ->
-             (Files.expand_project_root_token ~root path, platforms)
-         )
-    in
     let node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig in
     Files.mk_options
       ~default_lib_dir
@@ -761,7 +755,6 @@ let file_options =
       ~multi_platform
       ~multi_platform_extensions
       ~multi_platform_extension_group_mapping
-      ~multi_platform_ambient_supports_platform_directory_overrides
       ~node_resolver_dirnames
 
 let ignore_flag prev =

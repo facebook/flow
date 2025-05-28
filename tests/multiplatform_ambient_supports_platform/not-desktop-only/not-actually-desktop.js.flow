@@ -1,2 +1,0 @@
-// missing android impl
-export const foo = 1;

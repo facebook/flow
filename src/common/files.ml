@@ -27,7 +27,6 @@ type options = {
   multi_platform: bool;
   multi_platform_extensions: string list;
   multi_platform_extension_group_mapping: (string * string list) list;
-  multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
   node_resolver_dirnames: string list;
 }
 
@@ -47,7 +46,6 @@ let mk_options
     ~multi_platform
     ~multi_platform_extensions
     ~multi_platform_extension_group_mapping
-    ~multi_platform_ambient_supports_platform_directory_overrides
     ~node_resolver_dirnames =
   {
     default_lib_dir;
@@ -65,7 +63,6 @@ let mk_options
     multi_platform;
     multi_platform_extensions;
     multi_platform_extension_group_mapping;
-    multi_platform_ambient_supports_platform_directory_overrides;
     node_resolver_dirnames;
   }
 
@@ -86,7 +83,6 @@ let default_options =
     multi_platform = false;
     multi_platform_extensions = [];
     multi_platform_extension_group_mapping = [];
-    multi_platform_ambient_supports_platform_directory_overrides = [];
     node_resolver_dirnames = ["node_modules"];
   }
 
@@ -111,9 +107,6 @@ let multi_platform options = options.multi_platform
 let multi_platform_extensions options = options.multi_platform_extensions
 
 let multi_platform_extension_group_mapping options = options.multi_platform_extension_group_mapping
-
-let multi_platform_ambient_supports_platform_directory_overrides options =
-  options.multi_platform_ambient_supports_platform_directory_overrides
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
 

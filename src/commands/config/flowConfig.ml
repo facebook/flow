@@ -106,7 +106,6 @@ module Opts = struct
     multi_platform: bool option;
     multi_platform_extensions: string list;
     multi_platform_extension_group_mapping: (string * string list) list;
-    multi_platform_ambient_supports_platform_directory_overrides: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
     natural_inference_local_primitive_literals_full: bool;
@@ -246,7 +245,6 @@ module Opts = struct
       multi_platform = None;
       multi_platform_extensions = [];
       multi_platform_extension_group_mapping = [];
-      multi_platform_ambient_supports_platform_directory_overrides = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
       natural_inference_local_primitive_literals_full = false;
@@ -793,30 +791,6 @@ module Opts = struct
                   (group_ext, platforms) :: opts.multi_platform_extension_group_mapping;
               })
 
-  let multi_platform_ambient_supports_platform_directory_overrides_parser =
-    mapping
-      ~multiple:true
-      (fun v -> Ok v)
-      (fun opts (path, platforms) ->
-        let platforms = Base.String.split ~on:',' platforms |> Base.List.map ~f:String.trim in
-        match
-          Base.List.find_map platforms ~f:(fun p ->
-              if Base.List.mem opts.multi_platform_extensions ("." ^ p) ~equal:String.equal then
-                None
-              else
-                Some ("Unknown platform '" ^ p ^ "'.")
-          )
-        with
-        | Some e -> Error e
-        | None ->
-          Ok
-            {
-              opts with
-              multi_platform_ambient_supports_platform_directory_overrides =
-                (path, platforms)
-                :: opts.multi_platform_ambient_supports_platform_directory_overrides;
-            })
-
   let multi_platform_ambient_supports_platform_project_overrides_parser =
     mapping
       ~multiple:true
@@ -1088,9 +1062,6 @@ module Opts = struct
       ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
       ( "experimental.multi_platform.extension_group_mapping",
         multi_platform_extension_group_mapping_parser
-      );
-      ( "experimental.multi_platform.ambient_supports_platform.directory_overrides",
-        multi_platform_ambient_supports_platform_directory_overrides_parser
       );
       ( "experimental.multi_platform.ambient_supports_platform.project_overrides",
         multi_platform_ambient_supports_platform_project_overrides_parser
@@ -1946,9 +1917,6 @@ let multi_platform c = c.options.Opts.multi_platform
 let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 
 let multi_platform_extension_group_mapping c = c.options.Opts.multi_platform_extension_group_mapping
-
-let multi_platform_ambient_supports_platform_directory_overrides c =
-  c.options.Opts.multi_platform_ambient_supports_platform_directory_overrides
 
 let multi_platform_ambient_supports_platform_project_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
