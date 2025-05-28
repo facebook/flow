@@ -20,6 +20,7 @@ type t =
   | HasteImportWithSpecifiedNamespace of {
       namespace: Bitset.t;
       name: string;
+      allow_implicit_platform_specific_import: bool;
     }
 [@@deriving show, ord]
 

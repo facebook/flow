@@ -534,7 +534,11 @@ let check_haste_provider_conflict cx tast =
               Context.find_require
                 cx
                 (Flow_import_specifier.HasteImportWithSpecifiedNamespace
-                   { namespace = Flow_projects.to_bitset project; name = haste_name }
+                   {
+                     namespace = Flow_projects.to_bitset project;
+                     name = haste_name;
+                     allow_implicit_platform_specific_import = false;
+                   }
                 )
             with
             | Context.MissingModule ->
@@ -603,7 +607,11 @@ let check_haste_provider_conflict cx tast =
                 Context.find_require
                   cx
                   (Flow_import_specifier.HasteImportWithSpecifiedNamespace
-                     { namespace = Flow_projects.to_bitset project; name = haste_name }
+                     {
+                       namespace = Flow_projects.to_bitset project;
+                       name = haste_name;
+                       allow_implicit_platform_specific_import = false;
+                     }
                   )
               with
               | Context.MissingModule -> None

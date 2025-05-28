@@ -41,6 +41,7 @@ and require =
   | ImportSyntheticHaste of {
       namespace: Bitset.t;
       name: string;
+      allow_implicit_platform_specific_import: bool;
     }
   | Import of {
       import_loc: Loc.t;
@@ -134,9 +135,11 @@ let require_loc_map msig =
           []
           acc
           ~combine:List.rev_append
-      | ImportSyntheticHaste { namespace; name } ->
+      | ImportSyntheticHaste { namespace; name; allow_implicit_platform_specific_import } ->
         Flow_import_specifier.Map.add
-          (Flow_import_specifier.HasteImportWithSpecifiedNamespace { namespace; name })
+          (Flow_import_specifier.HasteImportWithSpecifiedNamespace
+             { namespace; name; allow_implicit_platform_specific_import }
+          )
           []
           acc
           ~combine:List.rev_append
@@ -220,7 +223,11 @@ class requires_calculator ~file_key ~ast ~opts =
           Base.List.iter projects ~f:(fun project ->
               this#add_require
                 (ImportSyntheticHaste
-                   { namespace = Flow_projects.to_bitset project; name = haste_name }
+                   {
+                     namespace = Flow_projects.to_bitset project;
+                     name = haste_name;
+                     allow_implicit_platform_specific_import = false;
+                   }
                 )
           ))
 

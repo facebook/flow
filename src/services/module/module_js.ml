@@ -319,13 +319,13 @@ module Node = struct
       ]
 
   let ordered_allowed_implicit_platform_specific_import
-      ~file_options ~projects_options ~importing_file =
+      ~file_options ~projects_options ~importing_file ~explicit_available_platforms =
     match
       Platform_set.available_platforms
         ~file_options
         ~projects_options
         ~filename:importing_file
-        ~explicit_available_platforms:None
+        ~explicit_available_platforms
       |> Option.map (Platform_set.to_platform_string_set ~file_options)
     with
     | None -> None
@@ -373,6 +373,7 @@ module Node = struct
         ~file_options
         ~projects_options
         ~importing_file:(File_key.to_string importing_file)
+        ~explicit_available_platforms:None
     with
     | None ->
       lazy_seq
@@ -849,6 +850,7 @@ module Haste : MODULE_SYSTEM = struct
             ~file_options
             ~projects_options
             ~importing_file:file
+            ~explicit_available_platforms:None
         with
         | None ->
           lazy_seq
@@ -974,18 +976,67 @@ module Haste : MODULE_SYSTEM = struct
           | _ -> Some (Flow_import_specifier.userland_specifier import_specifier)
         in
         Error mapped_name)
-    | Flow_import_specifier.HasteImportWithSpecifiedNamespace { namespace; name } as specifier ->
+    | Flow_import_specifier.HasteImportWithSpecifiedNamespace
+        { namespace; name; allow_implicit_platform_specific_import } as specifier ->
       let importing_file_dir = Filename.dirname (File_key.to_string importing_file) in
       let import_specifier = Nel.hd (module_name_candidates ~options name) in
+      let namespace_opt = Some namespace in
       (match
-         resolve_haste_module
-           ~options
-           ~reader
-           ~phantom_acc
-           ~importing_file
-           ~importing_file_dir
-           ~namespace_opt:(Some namespace)
-           ~import_specifier
+         match
+           ( allow_implicit_platform_specific_import,
+             Node.ordered_allowed_implicit_platform_specific_import
+               ~file_options:(Options.file_options options)
+               ~projects_options:(Options.projects_options options)
+               ~importing_file:(File_key.to_string importing_file)
+               ~explicit_available_platforms:
+                 (Flow_projects.multi_platform_ambient_supports_platform_for_project
+                    ~opts:(Options.projects_options options)
+                    (Flow_projects.from_bitset_unchecked namespace)
+                 )
+           )
+         with
+         | (true, Some ordered_platforms) ->
+           lazy_seq
+             (Base.List.map ordered_platforms ~f:(fun platform ->
+                  lazy
+                    (resolve_haste_module
+                       ~options
+                       ~reader
+                       ~phantom_acc
+                       ~importing_file
+                       ~importing_file_dir
+                       ~namespace_opt
+                       ~import_specifier:(import_specifier ^ "." ^ platform)
+                    )
+              )
+             @ [
+                 lazy
+                   (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+                      ~options
+                      ~reader
+                      ~phantom_acc
+                      ~importing_file
+                      ~importing_file_dir
+                      ~namespace_opt
+                      ~import_specifier
+                   );
+               ]
+             )
+         | (false, _)
+         | (true, None) ->
+           lazy_seq
+             [
+               lazy
+                 (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
+                    ~options
+                    ~reader
+                    ~phantom_acc
+                    ~importing_file
+                    ~importing_file_dir
+                    ~namespace_opt
+                    ~import_specifier
+                 );
+             ]
        with
       | Some m -> Ok m
       | None -> Error (Some specifier))

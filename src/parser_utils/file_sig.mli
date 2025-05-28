@@ -57,6 +57,7 @@ and require =
   | ImportSyntheticHaste of {
       namespace: Bitset.t;
       name: string;
+      allow_implicit_platform_specific_import: bool;
     }
   (* import declaration with specifiers *)
   | Import of {
