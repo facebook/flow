@@ -1446,7 +1446,7 @@ module Make
       )
     | (loc, ForIn { ForIn.left; right; body; each; comments }) ->
       let eval_right () =
-        let (((_, _), _) as right_ast) = condition ~encl_ctx:OtherTestContext cx right in
+        let (((_, _), _) as right_ast) = expression cx right in
         right_ast
       in
       let (left_ast, right_ast) =
