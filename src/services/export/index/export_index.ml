@@ -118,8 +118,27 @@ let merge x y =
     y
 
 let merge_export_import add t =
-  let f k add acc = ExportMap.update k (Option.map (fun n -> n + add)) acc in
-  let f k add acc = SMap.update k (Option.map (ExportMap.fold f add)) acc in
+  let f k add acc =
+    ExportMap.update
+      k
+      (fun existing ->
+        let (source, _) = k in
+        match (source, existing) with
+        (* If the export key of an import matches export, we of course should update the count. *)
+        | (_, Some n) -> Some (n + add)
+        (* In most cases, we still want to conservatively update the count even with missing export. *)
+        | (File_key _, None) -> Some add
+        (* If the import site has Global, Builtin source, and there is no corresponding export entry,
+         * it's likely that they are unresolved on the import site. *)
+        | ((Global | Builtin _), None) -> None)
+      acc
+  in
+  let f k add acc =
+    SMap.update
+      k
+      (fun existing -> Some (Base.Option.value_map existing ~default:add ~f:(ExportMap.fold f add)))
+      acc
+  in
   SMap.fold f add t
 
 let fold_names ~f ~init t = SMap.fold (fun name exports acc -> f acc name exports) t init
