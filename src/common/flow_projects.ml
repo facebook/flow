@@ -10,6 +10,7 @@ type options = {
   projects_overlap_mapping: Bitset.t IMap.t;
   projects_path_mapping: (Str.regexp * Bitset.t) list;
   projects_strict_boundary: bool;
+  projects_strict_boundary_import_pattern_opt_outs: Str.regexp list;
   multi_platform_ambient_supports_platform_project_overrides: (Bitset.t * string list) list;
 }
 
@@ -26,6 +27,7 @@ let default_options =
     projects_overlap_mapping = IMap.empty;
     projects_path_mapping = [];
     projects_strict_boundary = false;
+    projects_strict_boundary_import_pattern_opt_outs = [];
     multi_platform_ambient_supports_platform_project_overrides = [];
   }
 
@@ -40,6 +42,7 @@ let mk_options =
       ~map_path
       ~projects_path_mapping
       ~projects_strict_boundary
+      ~projects_strict_boundary_import_pattern_opt_outs
       ~multi_platform_ambient_supports_platform_project_overrides ->
     let projects_overlap_mapping =
       SMap.fold
@@ -106,6 +109,7 @@ let mk_options =
       projects_overlap_mapping;
       projects_path_mapping;
       projects_strict_boundary;
+      projects_strict_boundary_import_pattern_opt_outs;
       multi_platform_ambient_supports_platform_project_overrides;
     }
 
@@ -135,6 +139,11 @@ let is_common_code_path ~opts path =
       (fun _ common_project_bitset -> Bitset.equal common_project_bitset projects_bitset)
       opts.projects_overlap_mapping
 
+let is_import_specifier_that_opt_out_of_strict_boundary ~opts ~import_specifier =
+  Base.List.exists opts.projects_strict_boundary_import_pattern_opt_outs ~f:(fun pattern ->
+      Str.string_match pattern import_specifier 0
+  )
+
 (**
  * Suppose we have web and native project, and some paths that can be part of both web and native.
  * Then this function will return which projects' files can be accessed by the given project.
@@ -142,7 +151,7 @@ let is_common_code_path ~opts path =
  * This is used to enforce that web code can use both web and web+native code, while web+native code
  * can only import web+native code. However, the latter is temporarily allowed for experimentation.
  *)
-let reachable_projects_bitsets_from_projects_bitset ~opts p =
+let reachable_projects_bitsets_from_projects_bitset ~opts ~import_specifier p =
   let size = Nel.length opts.projects in
   (* 1-project code can reach into common code.
    * e.g. Suppose that we have two projects web and native.
@@ -155,6 +164,33 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
           None
     )
   in
+  (* Normally, we do not allow common code importing one-project code. However, when we decide
+   * to allow it for compatibility purposes, we will pick the one project declared first in flowconfig. *)
+  let one_project_reachable_from_common_code () =
+    if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
+      Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
+          if Bitset.mem i p then
+            Some (Bitset.all_zero size |> Bitset.set i)
+          else
+            None
+      )
+    else
+      None
+  in
+  (* Unlike the one below, these imports from common code into 1-project code is explicitly allowed.
+   * To maintain sanity, we will ensure that the files from different namespaces will have the same
+   * signature as the chosen one here. *)
+  let additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs =
+    match
+      ( additional_from_common_code,
+        is_import_specifier_that_opt_out_of_strict_boundary ~opts ~import_specifier
+      )
+    with
+    | (Some _, _)
+    | (_, false) ->
+      None
+    | (None, true) -> one_project_reachable_from_common_code ()
+  in
   let additional_from_1_project_code_unsafe =
     if opts.projects_strict_boundary then
       None
@@ -165,21 +201,20 @@ let reachable_projects_bitsets_from_projects_bitset ~opts p =
        * This is of course incorrect, and we should move these web-only code into common code instead.
        * However, the temporary measure exists so that we can still have good type coverage during
        * experimentation before we can lock down the boundary. *)
-      match additional_from_common_code with
-      | Some _ -> None
-      | None ->
-        if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
-          Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
-              if Bitset.mem i p then
-                Some (Bitset.all_zero size |> Bitset.set i)
-              else
-                None
-          )
-        else
-          None
+      match
+        ( additional_from_common_code,
+          additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs
+        )
+      with
+      | (Some _, _)
+      | (_, Some _) ->
+        None
+      | (None, None) -> one_project_reachable_from_common_code ()
   in
   p
   :: (Base.Option.to_list additional_from_common_code
+     @ Base.Option.to_list
+         additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs
      @ Base.Option.to_list additional_from_1_project_code_unsafe
      )
 
@@ -211,6 +246,17 @@ let individual_projects_bitsets_from_common_project_bitset ~opts common =
     Some individual_singleton_projects
   else
     None
+
+(* Same as above, but drop the first project.
+ * This is useful for projects_strict_boundary_import_pattern_opt_outs, where we pick the file from
+ * the first project to act as common interface, but then we validate that all the other corresponding
+ * files in other projects conform to the interface of the first file.
+ *)
+let individual_projects_bitsets_from_common_project_bitset_excluding_first ~opts common =
+  match individual_projects_bitsets_from_common_project_bitset ~opts common with
+  | None -> None
+  | Some [] -> None
+  | Some (_fst :: rest) -> Some rest
 
 let multi_platform_ambient_supports_platform_for_project ~opts p =
   let p =

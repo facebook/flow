@@ -208,6 +208,50 @@ class requires_calculator ~file_key ~ast ~opts =
       in
       this#update_file_sig add
 
+    method add_synthetic_imports_for_strict_boundary_import_pattern_opt_outs =
+      if Base.Option.is_some (Files.haste_name_opt ~options:opts.file_options file_key) then
+        let opts = opts.project_options in
+        let file = File_key.to_string file_key in
+        if Flow_projects.is_common_code_path ~opts file then
+          Base.List.iter this#acc ~f:(function
+              | Require { source; _ }
+              | ImportDynamic { source; _ }
+              | Import0 { source; _ }
+              | Import { source; _ }
+              | ExportFrom { source } ->
+                let (_, import_specifier) = source in
+                if
+                  Flow_projects.is_import_specifier_that_opt_out_of_strict_boundary
+                    ~opts
+                    ~import_specifier
+                then (
+                  match
+                    Flow_projects.projects_bitset_of_path ~opts file
+                    |> Base.Option.bind
+                         ~f:
+                           (Flow_projects
+                            .individual_projects_bitsets_from_common_project_bitset_excluding_first
+                              ~opts
+                           )
+                  with
+                  | None -> ()
+                  | Some projects ->
+                    Base.List.iter projects ~f:(fun project ->
+                        this#add_require
+                          (ImportSyntheticHaste
+                             {
+                               namespace = Flow_projects.to_bitset project;
+                               name = import_specifier;
+                               allow_implicit_platform_specific_import = true;
+                             }
+                          )
+                    )
+                )
+              | ImportSyntheticUserland _
+              | ImportSyntheticHaste _ ->
+                ()
+              )
+
     method add_haste_synthetic_imports =
       match Files.haste_name_opt ~options:opts.file_options file_key with
       | None -> ()
@@ -597,5 +641,6 @@ let program ~file_key ~ast ~opts =
   | _ ->
     walk#add_haste_synthetic_imports;
     walk#add_multiplatform_synthetic_imports;
-    ignore @@ walk#program ast);
+    ignore @@ walk#program ast;
+    walk#add_synthetic_imports_for_strict_boundary_import_pattern_opt_outs);
   walk#acc

@@ -594,7 +594,10 @@ let check_haste_provider_conflict cx tast =
                 Tvar_resolver.resolve cx interface_t;
                 Tvar_resolver.resolve cx platform_specific_t;
                 let use_op =
-                  Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc })
+                  Op
+                    (ConformToCommonInterface
+                       { self_sig_loc; self_module_loc = prog_aloc; originate_from_import = false }
+                    )
                 in
                 Flow_js.flow cx (platform_specific_t, UseT (use_op, interface_t)))
         )
@@ -630,6 +633,105 @@ let check_haste_provider_conflict cx tast =
                 add_duplicate_provider_error platform_specific_provider_file
             )
         ))
+
+let validate_strict_boundary_import_pattern_opt_outs cx =
+  let validate (error_loc, import_specifier, projects) =
+    let get_exports_t specifier =
+      match Context.find_require cx specifier with
+      | Context.MissingModule -> None
+      | Context.UncheckedModule _ -> None
+      | Context.TypedModule f ->
+        (match f () with
+        | Ok ({ Type.module_reason; module_export_types; _ } as m) ->
+          if module_export_types.Type.has_every_named_export then
+            Some (Type.AnyT.at Type.Untyped error_loc)
+          else
+            (* For conformance test, we only care about the value part *)
+            let (values_t, _) =
+              Flow_js_utils.ImportModuleNsTKit.on_ModuleT
+                cx
+                ~is_common_interface_module:false
+                (module_reason, false)
+                m
+            in
+            Some values_t
+        | Error _ -> None)
+    in
+    match get_exports_t (Flow_import_specifier.userland_specifier import_specifier) with
+    | None ->
+      (* If we cannot resolve the actual import, we will already error.
+       * Therefore, we don't have to error again. *)
+      ()
+    | Some acting_common_interface_module_t ->
+      let metadata = Context.metadata cx in
+      let file_options = metadata.Context.file_options in
+      let projects_options = metadata.Context.projects_options in
+      let missing_platforms =
+        Base.List.filter_map projects ~f:(fun project ->
+            match
+              get_exports_t
+                (Flow_import_specifier.HasteImportWithSpecifiedNamespace
+                   {
+                     namespace = Flow_projects.to_bitset project;
+                     name = import_specifier;
+                     allow_implicit_platform_specific_import = true;
+                   }
+                )
+            with
+            | None ->
+              (* If we cannot find the counterparts in other Haste namespaces, we need to error.
+               * Consider the following example:
+               *
+               * ```
+               * // file:common.js
+               * import 'foo';
+               *
+               * // file: web/foo.js
+               * // missing file: native/foo.js
+               * ```
+               *
+               * The above example will cause us unable to find `foo` from `native` namespace.
+               * We should error, because it will cause missing-module error in a flowconfig that
+               * includes all of common code + `native/`.
+               *)
+              Platform_set.available_platforms
+                ~file_options
+                ~projects_options
+                ~filename:(File_key.to_string (Context.file cx))
+                ~explicit_available_platforms:
+                  (Flow_projects.multi_platform_ambient_supports_platform_for_project
+                     ~opts:projects_options
+                     project
+                  )
+              |> Option.map (Platform_set.to_platform_string_set ~file_options)
+            | Some alternative_module_t ->
+              Tvar_resolver.resolve cx acting_common_interface_module_t;
+              Tvar_resolver.resolve cx alternative_module_t;
+              let open Type in
+              let use_op =
+                Op
+                  (ConformToCommonInterface
+                     {
+                       self_sig_loc = error_loc;
+                       self_module_loc = error_loc;
+                       originate_from_import = true;
+                     }
+                  )
+              in
+              Flow_js.flow cx (alternative_module_t, UseT (use_op, acting_common_interface_module_t));
+              None
+        )
+      in
+      let missing_platforms = Base.List.fold missing_platforms ~init:SSet.empty ~f:SSet.union in
+      if SSet.cardinal missing_platforms > 0 then
+        let message =
+          Error_message.EMissingPlatformSupport { loc = error_loc; missing_platforms }
+        in
+        Flow_js_utils.add_output cx message
+  in
+  Base.List.iter
+    ~f:validate
+    (Context.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations cx)
 
 let check_multiplatform_conformance cx ast tast =
   let (prog_aloc, _) = ast in
@@ -693,7 +795,12 @@ let check_multiplatform_conformance cx ast tast =
       (* We need to fully resolve the type to prevent tvar widening. *)
       Tvar_resolver.resolve cx interface_t;
       Tvar_resolver.resolve cx self_t;
-      let use_op = Op (ConformToCommonInterface { self_sig_loc; self_module_loc = prog_aloc }) in
+      let use_op =
+        Op
+          (ConformToCommonInterface
+             { self_sig_loc; self_module_loc = prog_aloc; originate_from_import = false }
+          )
+      in
       Flow_js.flow cx (self_t, UseT (use_op, interface_t)))
   | None ->
     (match
@@ -989,7 +1096,8 @@ let post_merge_checks cx ast tast metadata =
   check_react_rules cx tast;
   if not (Context.is_lib_file cx) then (
     check_haste_provider_conflict cx tast;
-    check_multiplatform_conformance cx ast tast
+    check_multiplatform_conformance cx ast tast;
+    validate_strict_boundary_import_pattern_opt_outs cx
   );
   check_polarity cx;
   check_general_post_inference_validations cx;

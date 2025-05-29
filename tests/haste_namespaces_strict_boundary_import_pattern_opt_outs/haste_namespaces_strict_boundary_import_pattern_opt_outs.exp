@@ -1,0 +1,63 @@
+Error ---------------------------------------------------------------------------------------------- common/test.js:1:17
+
+The import resolves to a forked module that has implementations of conflicting types because number [1] is incompatible
+with string [2] in property `default`. Read the docs on Flow's multi-platform support for more information:
+https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+
+   common/test.js:1:17
+   1| import gql from 'a.graphql'; // error: conformance error
+                      ^^^^^^^^^^^
+
+References:
+   native/a.graphql.native.js:1:23
+   1| module.exports = 1 as number;
+                            ^^^^^^ [1]
+   web/a.graphql.js:1:27
+   1| module.exports = 'foo' as string;
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- common/test.js:2:20
+
+Support for the `native` platform is missing. [missing-platform-support]
+
+   2| import params from 'b$Parameters'; // error: missing in native
+                         ^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- common/test.js:6:1
+
+Cannot cast `gql` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   common/test.js:6:1
+   6| gql as number; // error: string ~> number
+      ^^^
+
+References:
+   web/a.graphql.js:1:27
+   1| module.exports = 'foo' as string;
+                                ^^^^^^ [1]
+   common/test.js:6:8
+   6| gql as number; // error: string ~> number
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- common/test.js:8:1
+
+Cannot cast `params` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   common/test.js:8:1
+   8| params as number; // error: string ~> number
+      ^^^^^^
+
+References:
+   web/b$Parameters.js:1:27
+   1| module.exports = 'foo' as string;
+                                ^^^^^^ [1]
+   common/test.js:8:11
+   8| params as number; // error: string ~> number
+                ^^^^^^ [2]
+
+
+
+Found 4 errors

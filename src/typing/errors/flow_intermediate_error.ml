@@ -475,7 +475,7 @@ let rec make_intermediate_error :
           root loc frames def (RootCannotShadowProto proto))
       | Op (Coercion { from; target }) ->
         root loc frames from (RootCannotCoerce { from = desc from; target = desc target })
-      | Op (ConformToCommonInterface { self_sig_loc; self_module_loc }) ->
+      | Op (ConformToCommonInterface { self_sig_loc; self_module_loc; originate_from_import }) ->
         let frames =
           let (all_frames, explanations) = frames in
           (all_frames, ExplanationMultiplatform :: explanations)
@@ -485,7 +485,7 @@ let rec make_intermediate_error :
           frames
           (loc_of_aloc self_module_loc)
           (loc_of_aloc self_sig_loc)
-          RootCannotConformToCommonInterface
+          (RootCannotConformToCommonInterface { originate_from_import })
       | Op (DeclareComponentRef { op }) ->
         let frames =
           let (all_frames, explanations) = frames in
@@ -1285,7 +1285,10 @@ let to_printable_error :
       ]
     | RootCannotCoerce { from; target } ->
       [text "Cannot coerce "; desc from; text " to "; desc target]
-    | RootCannotConformToCommonInterface -> [text "Cannot conform to common interface module"]
+    | RootCannotConformToCommonInterface { originate_from_import = true } ->
+      [text "The import resolves to a forked module that has implementations of conflicting types"]
+    | RootCannotConformToCommonInterface { originate_from_import = false } ->
+      [text "Cannot conform to common interface module"]
     | RootCannotCompareWithProperty { sentinel; obj; key } ->
       [text "Cannot compare "; ref sentinel; text " with property "; code key; text " of "; ref obj]
     | RootCannotCreateElement component -> [text "Cannot create "; desc component; text " element"]
@@ -3282,7 +3285,8 @@ let to_printable_error :
         Friendly.(Reference ([Text "context"], loc_of_aloc context_loc));
         text " where it was defined";
       ]
-    | MessageMissingPlatformSupport { available_platforms; required_platforms } ->
+    | MessageMissingPlatformSupportWithAvailablePlatforms
+        { available_platforms; required_platforms } ->
       let missing_platforms = SSet.diff required_platforms available_platforms |> SSet.elements in
       let platform_features = function
         | [] -> [text "no platforms"]
@@ -3300,6 +3304,20 @@ let to_printable_error :
       @ platform_features (SSet.elements required_platforms)
       @ [text ". Support for "]
       @ platform_features missing_platforms
+      @ [text " is missing."]
+    | MessageMissingPlatformSupport { missing_platforms } ->
+      let platform_features = function
+        | [] -> [text "no platforms"]
+        | [p] -> [text "the "; code p; text " platform"]
+        | p1 :: ps ->
+          let rec loop = function
+            | [] -> []
+            | p :: rest -> text ", " :: code p :: loop rest
+          in
+          text "the following platforms: " :: code p1 :: loop ps
+      in
+      [text "Support for "]
+      @ platform_features (SSet.elements missing_platforms)
       @ [text " is missing."]
     | MessageNoDefaultExport { module_name; suggestion } ->
       [

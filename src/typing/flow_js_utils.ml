@@ -2186,10 +2186,31 @@ end = struct
       let missing_platforms = SSet.diff required_platforms available_platforms in
       if SSet.cardinal missing_platforms > 0 then
         let message =
-          Error_message.EMissingPlatformSupport
+          Error_message.EMissingPlatformSupportWithAvailablePlatforms
             { loc = error_loc; available_platforms; required_platforms }
         in
         add_output cx message
+
+  let validate_projects_strict_boundary_import_pattern_opt_outs cx error_loc import_specifier =
+    if Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier then
+      let projects_options = (Context.metadata cx).Context.projects_options in
+      let file = File_key.to_string (Context.file cx) in
+      let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
+      match
+        Flow_projects.projects_bitset_of_path ~opts:projects_options file
+        |> Base.Option.bind
+             ~f:
+               (Flow_projects.individual_projects_bitsets_from_common_project_bitset_excluding_first
+                  ~opts:projects_options
+               )
+      with
+      | None -> ()
+      | Some projects ->
+        Context.add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation
+          cx
+          error_loc
+          import_specifier
+          projects
 
   let get_module_type_or_any
       cx
@@ -2219,7 +2240,10 @@ end = struct
         | Context.MissingModule -> Error (lookup_builtin_module_error cx mref loc)
       in
       let need_platform_validation =
-        perform_platform_validation && Files.multi_platform Context.((metadata cx).file_options)
+        (perform_platform_validation
+        && not (Context.is_projects_strict_boundary_import_pattern_opt_outs cx mref)
+        )
+        && Files.multi_platform Context.((metadata cx).file_options)
       in
       ( if need_platform_validation then
         match module_type_or_any with
@@ -2228,6 +2252,7 @@ end = struct
             check_platform_availability cx loc m.module_available_platforms
         | Error _ -> ()
       );
+      validate_projects_strict_boundary_import_pattern_opt_outs cx loc mref;
       module_type_or_any
 
   let get_imported_type

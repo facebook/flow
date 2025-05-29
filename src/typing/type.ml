@@ -378,6 +378,9 @@ module rec TypeTerm : sig
     | ConformToCommonInterface of {
         self_sig_loc: 'loc;
         self_module_loc: 'loc;
+        (* Whether the check originate from the import of the common module,
+         * rather than at the implementation file against the common interface. *)
+        originate_from_import: bool;
       }
     | DeclareComponentRef of { op: 'loc virtual_reason }
     | DeleteProperty of {

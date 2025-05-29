@@ -192,6 +192,8 @@ type component_t = {
   mutable post_inference_polarity_checks:
     (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list;
   mutable post_inference_validation_flows: (Type.t * Type.use_t) list;
+  mutable post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
+    (ALoc.t * string * Flow_projects.t list) list;
   mutable env_value_cache: possibly_refined_write_state IMap.t;
   mutable env_type_cache: possibly_refined_write_state IMap.t;
   (* map from annot tvar ids to nodes used during annotation processing *)
@@ -404,6 +406,7 @@ let make_ccx () =
     post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
     post_inference_validation_flows = [];
+    post_inference_projects_strict_boundary_import_pattern_opt_outs_validations = [];
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
@@ -597,6 +600,18 @@ let in_implicit_instantiation cx = cx.ccx.in_implicit_instantiation
 
 let is_checked cx = cx.metadata.checked
 
+let is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier =
+  if Base.Option.is_some (Files.haste_name_opt ~options:cx.metadata.file_options (file cx)) then
+    let projects_options = cx.metadata.projects_options in
+    let file = File_key.to_string (file cx) in
+    let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
+    Flow_projects.is_common_code_path ~opts:projects_options file
+    && Flow_projects.is_import_specifier_that_opt_out_of_strict_boundary
+         ~opts:projects_options
+         ~import_specifier
+  else
+    false
+
 let is_verbose cx =
   match cx.metadata.verbose with
   | None -> false
@@ -671,6 +686,9 @@ let post_component_tvar_forcing_states cx =
 let post_inference_polarity_checks cx = cx.ccx.post_inference_polarity_checks
 
 let post_inference_validation_flows cx = cx.ccx.post_inference_validation_flows
+
+let post_inference_projects_strict_boundary_import_pattern_opt_outs_validations cx =
+  cx.ccx.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
 
 let env_cache_find_opt cx ~for_value id =
   let cache =
@@ -813,6 +831,12 @@ let add_post_inference_validation_flow cx t use_t =
 
 let add_post_inference_subtyping_check cx l use_op u =
   add_post_inference_validation_flow cx l (Type.UseT (use_op, u))
+
+let add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation
+    cx l import_specifier projects =
+  cx.ccx.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations <-
+    (l, import_specifier, projects)
+    :: cx.ccx.post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
 
 let add_env_cache_entry cx ~for_value id t =
   if for_value then

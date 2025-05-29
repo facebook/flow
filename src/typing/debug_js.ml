@@ -1901,12 +1901,15 @@ let dump_error_message =
     | EKeySpreadProp { loc; _ } -> spf "EKeySpreadProp (%s)" (string_of_aloc loc)
     | EInvalidComponentRestParam loc -> spf "EInvalidComponentRestParam (%s)" (string_of_aloc loc)
     | EInvalidTypeCastSyntax { loc; _ } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
-    | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
+    | EMissingPlatformSupportWithAvailablePlatforms { loc; available_platforms; required_platforms }
+      ->
       spf
-        "EMissingPlatformSupport(%s, %s, %s)"
+        "EMissingPlatformSupportWithAvailablePlatforms(%s, %s, %s)"
         (string_of_aloc loc)
         (SSet.to_string available_platforms)
         (SSet.to_string required_platforms)
+    | EMissingPlatformSupport { loc; missing_platforms } ->
+      spf "EMissingPlatformSupport(%s, %s)" (string_of_aloc loc) (SSet.to_string missing_platforms)
     | EUnionPartialOptimizationNonUniqueKey { loc; _ } ->
       spf "EUnionPartialOptimizationNonUniqueKey (%s)" (string_of_aloc loc)
     | EUnionOptimization { loc; _ } -> spf "EUnionOptimization (%s)" (string_of_aloc loc)

@@ -742,7 +742,7 @@ module Haste : MODULE_SYSTEM = struct
         | None -> []
         | Some bitset ->
           bitset
-          |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts
+          |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts ~import_specifier
           |> List.map Flow_projects.to_bitset)
     in
     let mname_of_bitset namespace_bitset =

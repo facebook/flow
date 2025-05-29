@@ -264,7 +264,7 @@ type 'loc root_message =
       from: 'loc virtual_reason_desc;
       target: 'loc virtual_reason_desc;
     }
-  | RootCannotConformToCommonInterface
+  | RootCannotConformToCommonInterface of { originate_from_import: bool }
   | RootCannotCompareWithProperty of {
       sentinel: 'loc virtual_reason;
       obj: 'loc virtual_reason;
@@ -758,10 +758,11 @@ type 'loc message =
   | MessageMissingAnnotation of 'loc virtual_reason_desc
   | MessageMissingAnnotationDueToContextualTypingFailure of 'loc virtual_reason_desc
   | MessageMissingAnnotationForGenericFunction of 'loc virtual_reason_desc
-  | MessageMissingPlatformSupport of {
+  | MessageMissingPlatformSupportWithAvailablePlatforms of {
       available_platforms: SSet.t;
       required_platforms: SSet.t;
     }
+  | MessageMissingPlatformSupport of { missing_platforms: SSet.t }
   | MessageNoDefaultExport of {
       module_name: string;
       suggestion: string option;

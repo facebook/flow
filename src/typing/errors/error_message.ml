@@ -616,10 +616,14 @@ and 'loc t' =
       loc: 'loc;
       enabled_casting_syntax: Options.CastingSyntax.t;
     }
-  | EMissingPlatformSupport of {
+  | EMissingPlatformSupportWithAvailablePlatforms of {
       loc: 'loc;
       available_platforms: SSet.t;
       required_platforms: SSet.t;
+    }
+  | EMissingPlatformSupport of {
+      loc: 'loc;
+      missing_platforms: SSet.t;
     }
   | EUnionPartialOptimizationNonUniqueKey of {
       loc: 'loc;
@@ -1470,8 +1474,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EInvalidTypeCastSyntax { loc; enabled_casting_syntax } ->
     EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
-  | EMissingPlatformSupport { loc; available_platforms; required_platforms } ->
-    EMissingPlatformSupport { loc = f loc; available_platforms; required_platforms }
+  | EMissingPlatformSupportWithAvailablePlatforms { loc; available_platforms; required_platforms }
+    ->
+    EMissingPlatformSupportWithAvailablePlatforms
+      { loc = f loc; available_platforms; required_platforms }
+  | EMissingPlatformSupport { loc; missing_platforms } ->
+    EMissingPlatformSupport { loc = f loc; missing_platforms }
   | EUnionPartialOptimizationNonUniqueKey { loc; non_unique_keys } ->
     EUnionPartialOptimizationNonUniqueKey
       {
@@ -1812,6 +1820,7 @@ let util_use_op_of_msg nope util = function
   | EKeySpreadProp _
   | EInvalidRendersTypeArgument _
   | EInvalidTypeCastSyntax _
+  | EMissingPlatformSupportWithAvailablePlatforms _
   | EMissingPlatformSupport _
   | EUnionPartialOptimizationNonUniqueKey _
   | EUnionOptimization _
@@ -1999,6 +2008,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ERefComponentProp { spread = loc; _ }
   | EKeySpreadProp { spread = loc; _ }
   | ETypeGuardIncompatibleWithFunctionKind { loc; _ }
+  | EMissingPlatformSupportWithAvailablePlatforms { loc; _ }
   | EMissingPlatformSupport { loc; _ }
   | EUnionPartialOptimizationNonUniqueKey { loc; _ }
   | EUnionOptimization { loc; _ }
@@ -3059,8 +3069,14 @@ let friendly_message_of_msg = function
       )
   | EInvalidTypeCastSyntax { enabled_casting_syntax; _ } ->
     Normal (MessageInvalidTypeCastingSyntax enabled_casting_syntax)
-  | EMissingPlatformSupport { loc = _; available_platforms; required_platforms } ->
-    Normal (MessageMissingPlatformSupport { available_platforms; required_platforms })
+  | EMissingPlatformSupportWithAvailablePlatforms
+      { loc = _; available_platforms; required_platforms } ->
+    Normal
+      (MessageMissingPlatformSupportWithAvailablePlatforms
+         { available_platforms; required_platforms }
+      )
+  | EMissingPlatformSupport { loc = _; missing_platforms } ->
+    Normal (MessageMissingPlatformSupport { missing_platforms })
   | EUnionPartialOptimizationNonUniqueKey { loc = _; non_unique_keys } ->
     Normal (MessageCannotOptimizeUnionDueToNonUniqueKeys non_unique_keys)
   | EUnionOptimization { loc = _; kind } -> Normal (MessageCannotOptimizeUnionInternally kind)
@@ -3442,6 +3458,7 @@ let error_code_of_message err : error_code option =
   end
   | ETSSyntax _ -> Some TSSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
+  | EMissingPlatformSupportWithAvailablePlatforms _ -> Some MissingPlatformSupport
   | EMissingPlatformSupport _ -> Some MissingPlatformSupport
   | EUnionPartialOptimizationNonUniqueKey _ -> Some UnionPartiallyOptimizableNonUniqueKeys
   | EUnionOptimization _ -> Some UnionUnoptimizable

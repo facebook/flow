@@ -244,6 +244,9 @@ val in_implicit_instantiation : t -> bool
 
 val is_checked : t -> bool
 
+val is_projects_strict_boundary_import_pattern_opt_outs :
+  t -> Flow_import_specifier.userland -> bool
+
 val is_verbose : t -> bool
 
 val is_strict : t -> bool
@@ -308,6 +311,9 @@ val post_inference_polarity_checks :
   t -> (Type.typeparam Subst_name.Map.t * Polarity.t * Type.t) list
 
 val post_inference_validation_flows : t -> (Type.t * Type.use_t) list
+
+val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations :
+  t -> (ALoc.t * string * Flow_projects.t list) list
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
@@ -394,6 +400,9 @@ val add_post_inference_polarity_check :
 val add_post_inference_validation_flow : t -> Type.t -> Type.use_t -> unit
 
 val add_post_inference_subtyping_check : t -> Type.t -> Type.use_op -> Type.t -> unit
+
+val add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation :
+  t -> ALoc.t -> string -> Flow_projects.t list -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
