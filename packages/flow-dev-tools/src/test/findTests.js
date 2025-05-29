@@ -26,7 +26,7 @@ async function findTestSuites(testsDir: string): Promise<Array<string>> {
   const testSuites = await glob(format('%s/**/test.js', testsDir), {
     cwd: __dirname,
   });
-  // On Windows, glob still uses unix dir seperators, so we need to normalize
+  // On Windows, glob still uses unix dir separators, so we need to normalize
   return testSuites.map(normalize);
 }
 

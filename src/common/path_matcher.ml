@@ -60,9 +60,9 @@ let path_patt =
         ~f:(fun r ->
           match r with
           | Str.Text s ->
-            (* note: unix directory seperators specifiers only. Windows directory
-             * seperators will already have been normalized to unix directory
-             * seperators *)
+            (* note: unix directory separators specifiers only. Windows directory
+             * separators will already have been normalized to unix directory
+             * separators *)
             let s = Str.global_replace star "[^/]*" s in
             Str.global_replace qmark "." s
           | Str.Delim _ -> ".*")

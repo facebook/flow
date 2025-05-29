@@ -57,7 +57,7 @@ class ErrorSummaryCommand extends Base<Args> {
   static async usage(): Promise<string> {
     return `usage: ${process.argv[1]} error-summary [OPTION]... ROOT
 
-Queries Flow for the errors for ROOT. Then logs how many times each error message occured, in descending order.
+Queries Flow for the errors for ROOT. Then logs how many times each error message occurred, in descending order.
 `;
   }
 
