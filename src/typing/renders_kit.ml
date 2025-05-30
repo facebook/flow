@@ -368,64 +368,71 @@ module Make (Flow : INPUT) : S = struct
       | (RendersStar, RendersMaybe) -> RendersStar
       | (RendersStar, RendersStar) -> RendersStar
     in
-    let rec on_concretized_react_node_types cx ~drop_renders_any ~state =
+    let rec on_concretized_react_node_types cx ~gas ~drop_renders_any ~state =
       let f state t =
-        match state with
-        | FailedSynthesisState -> FailedSynthesisState
-        | IntermediateSynthesisState { normalized_render_type_collector; renders_variant } ->
-          (match t with
-          | AnyT _ ->
-            if not drop_renders_any then TypeCollector.add normalized_render_type_collector t;
-            state
-          | DefT (_, RendersT renders) ->
-            (match renders with
-            | InstrinsicRenders _
-            | NominalRenders _ ->
-              TypeCollector.add normalized_render_type_collector t;
+        if gas <= 0 then
+          FailedSynthesisState
+        else
+          match state with
+          | FailedSynthesisState -> FailedSynthesisState
+          | IntermediateSynthesisState { normalized_render_type_collector; renders_variant } ->
+            (match t with
+            | AnyT _ ->
+              if not drop_renders_any then TypeCollector.add normalized_render_type_collector t;
               state
-            | DefaultRenders -> FailedSynthesisState
-            | StructuralRenders { renders_variant = renders_variant'; renders_structural_type } ->
+            | DefT (_, RendersT renders) ->
+              (match renders with
+              | InstrinsicRenders _
+              | NominalRenders _ ->
+                TypeCollector.add normalized_render_type_collector t;
+                state
+              | DefaultRenders -> FailedSynthesisState
+              | StructuralRenders { renders_variant = renders_variant'; renders_structural_type } ->
+                on_concretized_react_node_types
+                  cx
+                  (possible_concrete_types_for_inspection
+                     cx
+                     (TypeUtil.reason_of_t renders_structural_type)
+                     renders_structural_type
+                  )
+                  ~gas:(gas - 1)
+                  ~drop_renders_any
+                  ~state:
+                    (IntermediateSynthesisState
+                       {
+                         normalized_render_type_collector;
+                         renders_variant = merge_renders_variant (renders_variant, renders_variant');
+                       }
+                    ))
+            | OpaqueT (elem_reason, ({ opaque_id; _ } as opq))
+              when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
+              let (ts, has_failed) =
+                possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq)
+              in
+              if has_failed then
+                FailedSynthesisState
+              else
+                on_concretized_react_node_types cx ~gas:(gas - 1) ~drop_renders_any ~state ts
+            | DefT (_, (NullT | VoidT | BoolT_UNSOUND false | SingletonBoolT { value = false; _ }))
+              ->
+              let renders_variant = merge_renders_variant (renders_variant, RendersMaybe) in
+              IntermediateSynthesisState { normalized_render_type_collector; renders_variant }
+            | DefT
+                (_, ArrT (ArrayAT { elem_t = t; _ } | TupleAT { elem_t = t; _ } | ROArrayAT (t, _)))
+              ->
               on_concretized_react_node_types
                 cx
-                (possible_concrete_types_for_inspection
-                   cx
-                   (TypeUtil.reason_of_t renders_structural_type)
-                   renders_structural_type
-                )
+                (possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t)
+                ~gas:(gas - 1)
                 ~drop_renders_any
                 ~state:
                   (IntermediateSynthesisState
                      {
                        normalized_render_type_collector;
-                       renders_variant = merge_renders_variant (renders_variant, renders_variant');
+                       renders_variant = merge_renders_variant (renders_variant, RendersStar);
                      }
-                  ))
-          | OpaqueT (elem_reason, ({ opaque_id; _ } as opq))
-            when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
-            let (ts, has_failed) =
-              possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq)
-            in
-            if has_failed then
-              FailedSynthesisState
-            else
-              on_concretized_react_node_types cx ~drop_renders_any ~state ts
-          | DefT (_, (NullT | VoidT | BoolT_UNSOUND false | SingletonBoolT { value = false; _ })) ->
-            let renders_variant = merge_renders_variant (renders_variant, RendersMaybe) in
-            IntermediateSynthesisState { normalized_render_type_collector; renders_variant }
-          | DefT (_, ArrT (ArrayAT { elem_t = t; _ } | TupleAT { elem_t = t; _ } | ROArrayAT (t, _)))
-            ->
-            on_concretized_react_node_types
-              cx
-              (possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t)
-              ~drop_renders_any
-              ~state:
-                (IntermediateSynthesisState
-                   {
-                     normalized_render_type_collector;
-                     renders_variant = merge_renders_variant (renders_variant, RendersStar);
-                   }
-                )
-          | _ -> FailedSynthesisState)
+                  )
+            | _ -> FailedSynthesisState)
       in
       Base.List.fold ~init:state ~f
     in
@@ -441,6 +448,7 @@ module Make (Flow : INPUT) : S = struct
         on_concretized_react_node_types
           cx
           (possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t)
+          ~gas:5
           ~drop_renders_any
           ~state
       with
