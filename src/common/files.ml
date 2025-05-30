@@ -173,16 +173,31 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   if options.multi_platform then
     Base.List.find_map options.module_file_exts ~f:(fun module_filt_ext ->
         if File_key.check_suffix file module_filt_ext then
-          let file = File_key.chop_suffix file module_filt_ext in
-          Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->
-              if File_key.check_suffix file platform_ext then
-                let base =
-                  File_key.chop_suffix file platform_ext |> File_key.to_string |> Filename.basename
-                in
-                Some ("./" ^ base ^ ".js")
-              else
-                None
-          )
+          let file_without_module_file_ext = File_key.chop_suffix file module_filt_ext in
+          match
+            Base.List.find_map options.multi_platform_extensions ~f:(fun platform_ext ->
+                if File_key.check_suffix file_without_module_file_ext platform_ext then
+                  let base =
+                    File_key.chop_suffix file_without_module_file_ext platform_ext
+                    |> File_key.to_string
+                    |> Filename.basename
+                  in
+                  Some ("./" ^ base ^ ".js")
+                else
+                  None
+            )
+          with
+          | Some mref -> Some mref
+          | None ->
+            (match grouped_platform_extension_opt ~options (File_key.to_string file) with
+            | Some (group_ext, _) ->
+              let base =
+                File_key.chop_suffix file_without_module_file_ext group_ext
+                |> File_key.to_string
+                |> Filename.basename
+              in
+              Some ("./" ^ base ^ ".js")
+            | None -> None)
         else
           None
     )

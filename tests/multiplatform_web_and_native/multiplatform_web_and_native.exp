@@ -476,6 +476,22 @@ the following platforms: `android`, `ios`, `web`. Support for the `web` platform
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------- xplat/web_native_forked.native.js:1:27
+
+Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`. Read the
+docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
+
+   xplat/web_native_forked.native.js:1:27
+   1| declare export const foo: string; // intentional conformance error so we can test which one gets imported
+                                ^^^^^^ [1]
+
+References:
+   xplat/web_native_forked.js.flow:1:27
+   1| declare export const foo: number;
+                                ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------ xplat/web_native_forked.web.js:1:27
 
 Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `foo`. Read
@@ -493,4 +509,4 @@ References:
 
 
 
-Found 41 errors
+Found 42 errors
