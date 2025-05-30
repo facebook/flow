@@ -55,7 +55,10 @@ type 'loc virtual_reason_desc =
   | RArrayElement
   | RArrayNthElement of int
   | RArrayHole
-  | RInferredUnionElemArray of { instantiable: bool }
+  | RInferredUnionElemArray of {
+      instantiable: bool;
+      is_empty: bool;
+    }
   | RROArrayType
   | RTupleType
   | RTupleElement of { name: string option }

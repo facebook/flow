@@ -248,7 +248,11 @@ let resolve_hint cx loc hint : Type_hint.concr_hint =
       Tvar.mk_where cx reason (fun tout ->
           let reason_op = reason in
           let element_reason =
-            replace_desc_reason (Reason.RInferredUnionElemArray { instantiable = false }) reason_op
+            replace_desc_reason
+              (Reason.RInferredUnionElemArray
+                 { instantiable = false; is_empty = List.is_empty elements }
+              )
+              reason_op
           in
           let elem_t = Tvar.mk cx element_reason in
           Flow_js.resolve_spread_list
@@ -547,7 +551,9 @@ let rec resolve_binding cx def_scope_kind reason loc b =
               let reason_op = reason in
               let element_reason =
                 replace_desc_reason
-                  (Reason.RInferredUnionElemArray { instantiable = false })
+                  (Reason.RInferredUnionElemArray
+                     { instantiable = false; is_empty = List.is_empty elements }
+                  )
                   reason_op
               in
               let elem_t = Tvar.mk cx element_reason in

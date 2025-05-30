@@ -32,7 +32,15 @@ end
 let in_sandbox_cx cx t ~f =
   Context.run_and_rolled_back_cache cx (fun () ->
       let original_errors = Context.errors cx in
-      let no_lowers _ = raise UnconstrainedTvarException in
+      let no_lowers r =
+        match desc_of_reason r with
+        | RInferredUnionElemArray { is_empty = true; _ } ->
+          (* Empty rest array element OpenTs are likely to have no lowers. At the
+           * same time this is unlikely to change the result of hint decomposition,
+           * so raising (and failing the whole process) is unnecessary here. *)
+          Tvar_resolver.default_no_lowers r
+        | _ -> raise UnconstrainedTvarException
+      in
       Context.reset_errors cx Flow_error.ErrorSet.empty;
       match f (Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t) with
       | (exception Flow_js_utils.SpeculationSingletonError)

@@ -8217,7 +8217,9 @@ struct
               let reason_op = arg_array_reason in
               let element_reason =
                 let instantiable = Reason.is_instantiable_reason rest_reason in
-                replace_desc_reason (Reason.RInferredUnionElemArray { instantiable }) reason_op
+                replace_desc_reason
+                  (Reason.RInferredUnionElemArray { instantiable; is_empty = List.is_empty elems })
+                  reason_op
               in
               let elem_t = Tvar.mk cx element_reason in
               ResolveSpreadsToArrayLiteral { id = mk_id (); as_const = false; elem_t; tout }

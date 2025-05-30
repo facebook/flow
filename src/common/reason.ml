@@ -89,7 +89,10 @@ type 'loc virtual_reason_desc =
   | RArrayElement
   | RArrayNthElement of int
   | RArrayHole
-  | RInferredUnionElemArray of { instantiable: bool }
+  | RInferredUnionElemArray of {
+      instantiable: bool;
+      is_empty: bool;
+    }
   | RROArrayType
   | RTupleType
   | RTupleElement of { name: string option }
@@ -815,7 +818,7 @@ let is_instantiable_reason r =
   | RThisType ->
     true
   | RImplicitInstantiation -> true
-  | RInferredUnionElemArray { instantiable } -> instantiable
+  | RInferredUnionElemArray { instantiable; is_empty = _ } -> instantiable
   | _ -> false
 
 let is_literal_object_reason r =
