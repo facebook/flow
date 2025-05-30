@@ -16,6 +16,42 @@ References:
                      ^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:29:31
+
+Cannot assign array literal to `x` because number [1] is incompatible with number literal `4` [2] in index 3.
+[incompatible-type]
+
+   test.js:29:31
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                                     ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:28:14
+   28|   const b = [4, 5];
+                    ^ [1]
+   test.js:29:21
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                           ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:29:31
+
+Cannot assign array literal to `x` because number [1] is incompatible with number literal `5` [2] in index 4.
+[incompatible-type]
+
+   test.js:29:31
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                                     ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:28:17
+   28|   const b = [4, 5];
+                       ^ [1]
+   test.js:29:23
+   29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
+                             ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:29:41
 
 Cannot assign array literal to `x` because number [1] is incompatible with number literal `30` [2] in index 2.
@@ -64,24 +100,6 @@ References:
                    ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:44:4
-
-Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
-[incompatible-cast]
-
-   test.js:44:4
-   44|   (ret1[0]: 2); // error
-          ^^^^^^^
-
-References:
-   test.js:40:21
-   40|     return [...arr, 1];
-                           ^ [1]
-   test.js:44:13
-   44|   (ret1[0]: 2); // error
-                   ^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
 Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
@@ -95,24 +113,6 @@ References:
    test.js:39:27
    39|   function foo(arr: Array<number>) {
                                  ^^^^^^ [1]
-   test.js:45:13
-   45|   (ret2[0]: 3); // error
-                   ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:45:4
-
-Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
-
-   test.js:45:4
-   45|   (ret2[0]: 3); // error
-          ^^^^^^^
-
-References:
-   test.js:40:21
-   40|     return [...arr, 1];
-                           ^ [1]
    test.js:45:13
    45|   (ret2[0]: 3); // error
                    ^ [2]

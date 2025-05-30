@@ -5,6 +5,7 @@ lib.js
 all=true
 no_flowlib=false
 enums=true
+experimental.natural_inference.local_primitive_literals=full
 
 [lints]
 deprecated-type=off

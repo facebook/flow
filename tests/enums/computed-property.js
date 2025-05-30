@@ -11,7 +11,7 @@ o as {[E]: number}; // OK
 o[E.A] as number; // OK
 o[E.B] = 1; // OK
 
-o as {A: 0, ...}; // ERROR
+o as {A: number, ...}; // ERROR
 o[E.A] as empty; // ERROR
 o['A']; // ERROR
 

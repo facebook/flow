@@ -555,6 +555,17 @@ References:
                                ^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- implicit_instantiation.js:218:22
+
+Cannot create `React.Fragment` element because number [1] is incompatible with number [1] in array element of property
+`children`. Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
+
+   218|         { a.map(_ => 3 /* TODO(T224594864) okay */) }
+                             ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
@@ -1250,4 +1261,4 @@ References:
 
 
 
-Found 89 errors
+Found 90 errors

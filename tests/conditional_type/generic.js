@@ -1,5 +1,5 @@
 // We make conditional types where we cannot decide which branch to take uninhabitable.
-function generic_in_check_type<T>(x: T) : [T] extends [string] ? boolean : number {
+function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
   if (typeof x === 'string') {
     return true; // error
   } else {
@@ -20,10 +20,13 @@ function generic_in_extends_type<T>(x: T): [string] extends [T] ? boolean : numb
   }
 }
 
-(generic_in_extends_type(''): boolean); // ok
-(generic_in_extends_type(1): number); // ok
-(generic_in_extends_type(''): empty); // error
-(generic_in_extends_type(1): empty); // error
+declare var s: string;
+declare var n: number;
+
+(generic_in_extends_type(s): boolean); // ok
+(generic_in_extends_type(n): number); // ok
+(generic_in_extends_type(s): empty); // error
+(generic_in_extends_type(n): empty); // error
 
 function assign_from_generic_conditional_type<T>(x: string extends T ? boolean : number): void {
   const y: string = x; // error

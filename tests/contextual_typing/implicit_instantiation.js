@@ -215,7 +215,7 @@ function test21() {
   function F(): React.MixedElement {
     return (
       <>
-        { a.map(_ => 3) }
+        { a.map(_ => 3 /* TODO(T224594864) okay */) }
       </>
     );
   }

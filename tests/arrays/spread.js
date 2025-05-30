@@ -14,9 +14,9 @@ bar({
   areEqual : foo((control, test) => control.foo === test.foo),
 });
 
-let x = [3, 4];
-let y = [3, "a"];
-let z = ["a"];
+let x = [3, 4] as const;
+let y = [3, "a"] as const;
+let z = ["a"] as const;
 
 ([...x][0] : 3);
 ([...x][1] : 4);
@@ -46,9 +46,9 @@ let z = ["a"];
 ([...x, ...x, ...y][1] : 4); // error
 ([...x, ...x, 1][0] : 3); // error
 
-let three = 3;
+let three = 3 as const;
 let a = [three, three];
-let b = [three, 4];
+let b = [three, 4] as const;
 ([...a, ...b][0] : 3);
 ([...a, ...b][1] : 3);
 ([...a, ...b][2] : 3);

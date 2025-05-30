@@ -593,13 +593,13 @@ Cannot cast `o` to object type because string `A` [1] is incompatible with `E` [
 [incompatible-cast]
 
    computed-property.js:14:1
-   14| o as {A: 0, ...}; // ERROR
+   14| o as {A: number, ...}; // ERROR
        ^
 
 References:
    computed-property.js:14:6
-   14| o as {A: 0, ...}; // ERROR
-            ^^^^^^^^^^^ [1]
+   14| o as {A: number, ...}; // ERROR
+            ^^^^^^^^^^^^^^^^ [1]
    computed-property.js:1:6
     1| enum E {
             ^ [2]

@@ -1,7 +1,7 @@
 // @flow
 
-function keyA() { return 'keyA' };
-function keyB() { return 'keyB' };
+function keyA() { return 'keyA' as const };
+function keyB() { return 'keyB' as const };
 function keyAny(): any { return 'keyAny' };
 
 const FIELDS = {
