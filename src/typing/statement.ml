@@ -6610,7 +6610,11 @@ module Make
     match Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value with
     | Some (loc, trimmed) ->
       Some
-        (DefT (mk_reason RJSXText (loc |> ALoc.of_loc), StrT_UNSOUND (None, OrdinaryName trimmed)))
+        (DefT
+           ( mk_reason RJSXText (loc |> ALoc.of_loc),
+             SingletonStrT { value = OrdinaryName trimmed; from_annot = false }
+           )
+        )
     | None -> None
 
   and jsx_title_member_to_string (_, member) =
