@@ -95,6 +95,7 @@ module Opts = struct
     max_literal_length: int;
     max_seconds_for_check_per_worker: float;
     max_workers: int option;
+    max_workers_down_scaling_factor: int;
     merge_timeout: int option;
     missing_module_generators: (Str.regexp * string) list;
     module_declaration_dirnames: string list;
@@ -235,6 +236,7 @@ module Opts = struct
       max_literal_length = 100;
       max_seconds_for_check_per_worker = 5.0;
       max_workers = None;
+      max_workers_down_scaling_factor = 1;
       merge_timeout = Some 100;
       missing_module_generators = [];
       module_declaration_dirnames = ["<PROJECT_ROOT>/@flowtyped"];
@@ -1194,6 +1196,9 @@ module Opts = struct
       ("saved_state.allow_reinit", saved_state_allow_reinit_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
+      ( "server.max_workers.down_scaling_factor",
+        uint (fun opts v -> Ok { opts with max_workers_down_scaling_factor = v })
+      );
       ( "server.max_workers.windows",
         uint (fun opts v ->
             if Sys.win32 then
@@ -1921,6 +1926,8 @@ let max_literal_length c = c.options.Opts.max_literal_length
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 
 let max_workers c = c.options.Opts.max_workers
+
+let max_workers_down_scaling_factor c = c.options.Opts.max_workers_down_scaling_factor
 
 let merge_timeout c = c.options.Opts.merge_timeout
 

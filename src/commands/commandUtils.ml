@@ -1397,8 +1397,9 @@ let make_options
     opt_temp_dir;
     opt_max_workers =
       Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
-      |> Base.Option.value ~default:Sys_utils.nbr_procs
-      |> min Sys_utils.nbr_procs;
+      |> Base.Option.value
+           ~default:(Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig)
+      |> min (Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig);
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
