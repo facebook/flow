@@ -1194,6 +1194,14 @@ module Opts = struct
       ("saved_state.allow_reinit", saved_state_allow_reinit_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
+      ( "server.max_workers.windows",
+        uint (fun opts v ->
+            if Sys.win32 then
+              Ok { opts with max_workers = Some v }
+            else
+              Ok opts
+        )
+      );
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
       ("suppress_type", suppress_types_parser);
