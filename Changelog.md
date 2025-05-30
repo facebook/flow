@@ -1,3 +1,8 @@
+### 0.272.2
+
+Notable bug fixes:
+* Prevent non-termination when computing code actions.
+
 ### 0.272.1
 
 Notable bug fixes:
