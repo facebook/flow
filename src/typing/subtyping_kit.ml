@@ -960,7 +960,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
     | (_, DefT (r, NumericStrKeyT (_, s))) ->
-      let u = DefT (r, StrT_UNSOUND (None, OrdinaryName s)) in
+      let u = DefT (r, SingletonStrT { value = OrdinaryName s; from_annot = false }) in
       rec_flow_t cx trace ~use_op (l, u)
     (***********************)
     (* Singletons and keys *)
@@ -1083,7 +1083,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         KeysT (reason_op, o)
       ) ->
       let reason_next = replace_desc_new_reason (RProperty (Some (OrdinaryName s))) reason_s in
-      let l = DefT (reason_s, StrT_UNSOUND (None, OrdinaryName s)) in
+      let l = DefT (reason_s, SingletonStrT { value = OrdinaryName s; from_annot = false }) in
       let u = HasOwnPropT (use_op, reason_next, l) in
       rec_flow cx trace (o, ReposLowerT { reason = reason_op; use_desc = false; use_t = u })
     | ( ( StrUtilT { reason = reason_s; op; remainder }

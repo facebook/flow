@@ -1153,7 +1153,7 @@ module rec ConsGen : S = struct
     (* Singleton primitive types *)
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
-      elab_t cx (DefT (reason, StrT_UNSOUND (None, OrdinaryName s))) op
+      elab_t cx (DefT (reason, SingletonStrT { value = OrdinaryName s; from_annot = false })) op
     | (DefT (reason, SingletonStrT { value = key; _ }), _) ->
       elab_t cx (DefT (reason, StrT_UNSOUND (None, key))) op
     | (DefT (reason, SingletonNumT { value = lit; _ }), _) ->
