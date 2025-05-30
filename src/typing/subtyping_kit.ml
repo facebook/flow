@@ -1343,7 +1343,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_prefix_exn ~prefix s in
           let reason = replace_desc_reason (RStringWithoutPrefix { prefix }) reason in
-          let str_t = DefT (reason, StrT_UNSOUND (None, OrdinaryName chopped)) in
+          let str_t =
+            DefT (reason, SingletonStrT { value = OrdinaryName chopped; from_annot = true })
+          in
           rec_flow_t cx trace ~use_op (str_t, remainder)
       )
     (* suffix *)
@@ -1369,7 +1371,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Base.Option.iter remainder ~f:(fun remainder ->
           let chopped = Base.String.chop_suffix_exn ~suffix s in
           let reason = replace_desc_reason (RStringWithoutSuffix { suffix }) reason in
-          let str_t = DefT (reason, StrT_UNSOUND (None, OrdinaryName chopped)) in
+          let str_t =
+            DefT (reason, SingletonStrT { value = OrdinaryName chopped; from_annot = true })
+          in
           rec_flow_t cx trace ~use_op (str_t, remainder)
       )
     (* both *)
