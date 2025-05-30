@@ -1033,17 +1033,10 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
       ("experimental.component_syntax.hook_compatibility", hook_compatibility_parser);
-      ("experimental.component_syntax.hooklike_functions", hook_compatibility_parser);
       ( "experimental.component_syntax.hook_compatibility.includes",
         hook_compatibility_includes_parser
       );
-      ( "experimental.component_syntax.hooklike_functions.includes",
-        hook_compatibility_includes_parser
-      );
       ( "experimental.component_syntax.hook_compatibility.excludes",
-        hook_compatibility_excludes_parser
-      );
-      ( "experimental.component_syntax.hooklike_functions.excludes",
         hook_compatibility_excludes_parser
       );
       ("experimental.facebook_module_interop", facebook_module_interop_parser);

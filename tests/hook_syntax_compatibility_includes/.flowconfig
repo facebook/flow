@@ -1,10 +1,10 @@
 [options]
 component_syntax=true
-experimental.component_syntax.hooklike_functions=false
-experimental.component_syntax.hooklike_functions.includes=<PROJECT_ROOT>/include_provider\\.js
-experimental.component_syntax.hooklike_functions.includes=<PROJECT_ROOT>/include\\.js
+experimental.component_syntax.hook_compatibility=false
+experimental.component_syntax.hook_compatibility.includes=<PROJECT_ROOT>/include_provider\\.js
+experimental.component_syntax.hook_compatibility.includes=<PROJECT_ROOT>/include\\.js
 ; Verify includes take precedence over excludes
-experimental.component_syntax.hooklike_functions.includes=<PROJECT_ROOT>/__tests__/in.*
-experimental.component_syntax.hooklike_functions.excludes=<PROJECT_ROOT>/__tests__/in.*
+experimental.component_syntax.hook_compatibility.includes=<PROJECT_ROOT>/__tests__/in.*
+experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>/__tests__/in.*
 all=true
 no_flowlib=false
