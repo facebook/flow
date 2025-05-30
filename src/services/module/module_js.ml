@@ -417,33 +417,33 @@ module Node = struct
     | "" -> ("", ".")
     | _ ->
       let initial_char = String.sub specifier 0 1 in
-      let first_seperator_index =
+      let first_separator_index =
         try Str.search_forward (Str.regexp_string Filename.dir_sep) specifier 0 with
         | Not_found -> -1
       in
-      let seperator_index =
+      let separator_index =
         match initial_char with
         | "@" ->
           (try
              Str.search_forward
                (Str.regexp_string Filename.dir_sep)
                specifier
-               (first_seperator_index + 1)
+               (first_separator_index + 1)
            with
           | Not_found -> -1)
-        | _ -> first_seperator_index
+        | _ -> first_separator_index
       in
       let package_name =
-        match seperator_index with
+        match separator_index with
         | -1 -> specifier
-        | _ -> String.sub specifier 0 seperator_index
+        | _ -> String.sub specifier 0 separator_index
       in
       let package_subpath =
         "."
         ^
-        match seperator_index with
+        match separator_index with
         | -1 -> ""
-        | _ -> Str.string_after specifier seperator_index
+        | _ -> Str.string_after specifier separator_index
       in
       (package_name, package_subpath)
 

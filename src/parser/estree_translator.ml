@@ -647,7 +647,7 @@ with type t = Impl.t = struct
           OptionalMember
             { OptionalMember.member = { Member.comments; _ } as member; optional; filtered_out = _ }
         ) ->
-        let (optional, wrap_reciever) =
+        let (optional, wrap_receiver) =
           match optional with
           | OptionalMember.Optional -> (bool true, None)
           | OptionalMember.NonOptional -> (bool false, None)
@@ -662,7 +662,7 @@ with type t = Impl.t = struct
           ?comments
           "OptionalMemberExpression"
           loc
-          (member_node_properties ?wrap_reciever member @ [("optional", optional)])
+          (member_node_properties ?wrap_receiver member @ [("optional", optional)])
       | (loc, Yield { Yield.argument; delegate; comments; result_out = _ }) ->
         node
           ?comments
@@ -2485,7 +2485,7 @@ with type t = Impl.t = struct
         ("typeArguments", option call_type_args targs);
         ("arguments", arg_list arguments);
       ]
-    and member_node_properties ?wrap_reciever { Expression.Member._object; property; comments = _ }
+    and member_node_properties ?wrap_receiver { Expression.Member._object; property; comments = _ }
         =
       let (property, computed) =
         match property with
@@ -2494,7 +2494,7 @@ with type t = Impl.t = struct
         | Expression.Member.PropertyExpression expr -> (expression expr, true)
       in
       let _object =
-        match wrap_reciever with
+        match wrap_receiver with
         | None -> expression _object
         | Some wrap -> wrap (expression _object)
       in
