@@ -520,12 +520,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:109:16
 
 Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `foo` [4].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `bar` [5].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `baz` [6].
+ - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is
+   incompatible with string literal `foo` [4].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `bar` [5].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `baz` [6].
 
    test.js:109:16
    109| if (o.type === KeyObj.ERR) {} // error
@@ -552,12 +552,12 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:110:5
 
 Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `foo` [4].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `bar` [5].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `baz` [6].
+ - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is
+   incompatible with string literal `foo` [4].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `bar` [5].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `baz` [6].
 
    test.js:110:5
    110| if (KeyObj.ERR === o.type) {} // error
@@ -584,12 +584,12 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:115:8
 
 Cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `foo` [4].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `bar` [5].
- - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string [3] is incompatible with string
-   literal `baz` [6].
+ - Either cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is
+   incompatible with string literal `foo` [4].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `bar` [5].
+ - Or cannot compare `KeyObj.ERR` [1] with property `type` of `o` [2] because string literal `err` [3] is incompatible
+   with string literal `baz` [6].
 
    test.js:115:8
    115|   case KeyObj.ERR: // error

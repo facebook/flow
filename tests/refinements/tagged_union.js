@@ -61,7 +61,7 @@ function check(n: number) {
 }
 
 // example 5
-var EnumKind = { A: 1, B: 2, C: 3};
+var EnumKind = { A: 1, B: 2, C: 3} as const;
 type A = { kind: 1, A: number };
 type B = { kind: 2, B: number };
 type C = { kind: 3, C: number };

@@ -2586,6 +2586,24 @@ References:
                              ^ [3]
 
 
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:69:2
+
+Cannot cast `key5` to string literal `a` because string [1] is incompatible with string literal `a` [2].
+[incompatible-cast]
+
+   inclusion_check_widening.js:69:2
+   69| (key5: 'a'); // error string ~> 'a'
+        ^^^^
+
+References:
+   inclusion_check_widening.js:67:23
+   67| const {key5} = {key5: 'a'};
+                             ^^^ [1]
+   inclusion_check_widening.js:69:8
+   69| (key5: 'a'); // error string ~> 'a'
+              ^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:10
 
 Refinement invalidated due to function call at [1]
@@ -7580,12 +7598,56 @@ References:
                ^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- issue-7105.js:7:13
+
+Cannot yield object literal because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `PENDING` [2] in property `type`.
+ - Or string [1] is incompatible with string literal `DONE` [3] in property `type`.
+
+   issue-7105.js:7:13
+   7|       yield { type: "PENDING" }; // TODO(T225770374)
+                  ^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue-7105.js:7:21
+   7|       yield { type: "PENDING" }; // TODO(T225770374)
+                          ^^^^^^^^^ [1]
+   issue-7105.js:2:25
+   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
+                              ^^^^^^^^^ [2]
+   issue-7105.js:2:50
+   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
+                                                       ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:15
+
+Cannot yield object literal because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `DONE` [2] in property `type`.
+ - Or property `value` is missing in object type [3] but exists in object literal [4].
+
+   issue-7105.js:9:15
+   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   issue-7105.js:9:23
+   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
+                            ^^^^^^ [1]
+   issue-7105.js:2:50
+   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
+                                                       ^^^^^^ [2]
+   issue-7105.js:2:15
+   2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
+                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
 
 Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
 
    issue-7105.js:9:39
-   9|         yield { type: "DONE", value: (box: empty).value };
+   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
                                             ^^^
 
 References:
@@ -7593,7 +7655,7 @@ References:
    4|   let box: Box = { type: "GOOD", value: t };
                  ^^^ [1]
    issue-7105.js:9:44
-   9|         yield { type: "DONE", value: (box: empty).value };
+   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
                                                  ^^^^^ [2]
 
 
@@ -7602,7 +7664,7 @@ Error --------------------------------------------------------------------------
 Refined at [1]
 
    issue-7105.js:9:39
-   9|         yield { type: "DONE", value: (box: empty).value };
+   9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
                                             ^^^
 
 References:
@@ -9547,6 +9609,20 @@ References:
    not.js:15:18
    15| function baz(x: ?number) {
                         ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- not.js:31:12
+
+Refined at [1]
+
+   not.js:31:12
+   31|       y = !y;
+                  ^
+
+References:
+   not.js:30:12
+   30|     while (y) {
+                  ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ not.js:41:5
@@ -16258,7 +16334,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ union_enum.js:9:4
 
-Cannot cast `E.A` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `E.A` to number because string literal `A` [1] is incompatible with number [2]. [incompatible-cast]
 
    union_enum.js:9:4
    9|   (E.A: number); // Error expected
@@ -16266,7 +16342,7 @@ Cannot cast `E.A` to number because string [1] is incompatible with number [2]. 
 
 References:
    union_enum.js:3:15
-   3| const E = {A: 'A', B: 'B'};
+   3| const E = {A: 'A', B: 'B'} as const;
                     ^^^ [1]
    union_enum.js:9:9
    9|   (E.A: number); // Error expected
@@ -17015,7 +17091,7 @@ References:
 
 
 
-Found 1156 errors
+Found 1160 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

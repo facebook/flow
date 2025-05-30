@@ -30,8 +30,8 @@ frozenObjectWithSpread.corge; // error corge is missing
 frozenObjectWithSpread.constructor = baz; // error baz not a function
 frozenObjectWithSpread.toString = function () {}; // error toString missing
 
-frozenObjectWithSpread as {bar: '12345', baz: 12345}; // error bar and baz are readonly
-frozenObjectWithSpread as {+bar: '1234', +baz: 12345}; // error '12345' ~> '1234'
+frozenObjectWithSpread as {bar: '12345', baz: number}; // error bar and baz are readonly
+frozenObjectWithSpread as {+bar: '1234', +baz: number}; // error '12345' ~> '1234'
 frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
 // $FlowExpectedError[unsafe-object-assign]
 Object.assign(frozenObjectWithSpread, {bar: '12345'}); // error bar is not writable

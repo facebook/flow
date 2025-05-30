@@ -1602,6 +1602,42 @@ References:
                                                                     ^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:218:7
+
+Cannot call `React.createElement` because number [1] is incompatible with number literal `1` [2] in index 0 of property
+`children` of type argument `_ValidatedProps`. [incompatible-type-arg]
+
+   test.js:218:7
+   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:218:30
+   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+                                     ^ [1]
+   test.js:217:32
+   217| declare function P({children: [1, 2]}): void;
+                                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:218:7
+
+Cannot call `React.createElement` because number [1] is incompatible with number literal `2` [2] in index 1 of property
+`children` of type argument `_ValidatedProps`. [incompatible-type-arg]
+
+   test.js:218:7
+   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:218:33
+   218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
+                                        ^ [1]
+   test.js:217:35
+   217| declare function P({children: [1, 2]}): void;
+                                          ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:219:7
 
 Cannot call `React.createElement` because rest array [1] has an unknown number of elements, so is incompatible with
@@ -1621,7 +1657,7 @@ References:
 
 
 
-Found 87 errors
+Found 89 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

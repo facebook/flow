@@ -9,7 +9,7 @@ let Foo3: Foo;
 <Foo></Foo>;
 
 // Dynamic member accesses are not allowed
-let prop = 'named1';
+let prop = 'named1' as const;
 Foo[prop];
 
 // Static member accesses are allowed

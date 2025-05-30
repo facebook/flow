@@ -70,8 +70,8 @@ jsx_instantiation.js:20:6,20:9
 
 jsx_instantiation.js:26:13
 Flags:
-component Bar<number | any>(...$ReadOnly<{n: number | any}>)
-= component Bar<number | any>(n: number | any)
+component Bar<1 | any>(...$ReadOnly<{n: 1 | any}>)
+= component Bar<1 | any>(n: 1 | any)
 
 'Bar' defined at jsx_instantiation.js:25:4
 

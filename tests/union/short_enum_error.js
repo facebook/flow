@@ -23,7 +23,7 @@ function test2() {
 }
 
 function test3() {
-    const obj = { a: 'a', b: 'b', c: 'c' };
+    const obj = { a: 'a', b: 'b', c: 'c' } as const;
 
     type T1 = 'a' | 'b' | 'c';
     type T2 = $Values<typeof obj>;

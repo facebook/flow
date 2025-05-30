@@ -104,7 +104,7 @@ const KeyObj = {
   "FOO": 'foo',
   "BAR": 'bar',
   "ERR": 'err',
-};
+} as const;
 
 if (o.type === KeyObj.ERR) {} // error
 if (KeyObj.ERR === o.type) {} // error

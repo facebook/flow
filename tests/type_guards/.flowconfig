@@ -2,3 +2,4 @@
 all=true
 no_flowlib=false
 component_syntax=true
+experimental.natural_inference.local_primitive_literals=full

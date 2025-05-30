@@ -1111,9 +1111,27 @@ References:
               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- inferred.js:80:3
+
+Cannot cast `u2` to number literal `4` because number [1] is incompatible with number literal `4` [2].
+[incompatible-cast]
+
+   inferred.js:80:3
+   80|   u2 as 4; // TODO(T225771563) okay
+         ^^
+
+References:
+   inferred.js:77:43
+   77|   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
+                                                 ^^^^^ [1]
+   inferred.js:80:9
+   80|   u2 as 4; // TODO(T225771563) okay
+               ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- inferred.js:81:3
 
-Cannot cast `u2` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
+Cannot cast `u2` to number literal `3` because number [1] is incompatible with number literal `3` [2].
 [incompatible-cast]
 
    inferred.js:81:3
@@ -1129,9 +1147,27 @@ References:
                ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- inferred.js:93:3
+
+Cannot cast `u1` to number literal `4` because number [1] is incompatible with number literal `4` [2].
+[incompatible-cast]
+
+   inferred.js:93:3
+   93|   u1 as 4; // TODO(T225771563) okay
+         ^^
+
+References:
+   inferred.js:91:45
+   91|   const [t1, u1] = takesOverloadedPolyGuard(value, x => x === 4); // picks the first overload
+                                                   ^^^^^ [1]
+   inferred.js:93:9
+   93|   u1 as 4; // TODO(T225771563) okay
+               ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- inferred.js:94:3
 
-Cannot cast `u1` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
+Cannot cast `u1` to number literal `3` because number [1] is incompatible with number literal `3` [2].
 [incompatible-cast]
 
    inferred.js:94:3
@@ -3642,7 +3678,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 219 errors
+Found 221 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

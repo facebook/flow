@@ -66,4 +66,4 @@ class D {
 
 const {key5} = {key5: 'a'};
 const _ = key5 === 'b' ? null : null;
-(key5: 'a'); // okay
+(key5: 'a'); // error string ~> 'a'

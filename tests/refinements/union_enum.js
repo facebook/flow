@@ -1,6 +1,6 @@
 type T = 'A' | 'B';
 
-const E = {A: 'A', B: 'B'};
+const E = {A: 'A', B: 'B'} as const;
 
 declare var x: T;
 

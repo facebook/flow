@@ -215,5 +215,5 @@ class N extends React.Component<{}> {}
 (React.createElement(M): ExactReactElement_DEPRECATED<Class<N>, any>); // Error
 
 declare function P({children: [1, 2]}): void;
-React.createElement(P, null, 1, 2); // OK
+React.createElement(P, null, 1, 2); // TODO(T225770118) OK
 React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR

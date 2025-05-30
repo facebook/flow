@@ -77,7 +77,7 @@ function test7() {
   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
   t2 as number;
   3 as typeof t2; // okay
-  u2 as 4; // okay
+  u2 as 4; // TODO(T225771563) okay
   u2 as 3; // error 4 ~> 3
   4 as typeof u2; // okay
   3 as typeof u2; // TODO error force this to be 4
@@ -90,7 +90,7 @@ function test8() {
   declare var value: number;
   const [t1, u1] = takesOverloadedPolyGuard(value, x => x === 4); // picks the first overload
   t1 as number; // okay
-  u1 as 4; // okay
+  u1 as 4; // TODO(T225771563) okay
   u1 as 3; // error 4 ~> 3
   4 as typeof u1; // okay
   3 as typeof u1; // TODO error force this to be 4
