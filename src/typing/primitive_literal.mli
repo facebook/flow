@@ -31,7 +31,7 @@ val is_generalization_candidate : Context.t -> Type.t -> bool
 val enclosing_context_needs_precise : Enclosing_context.enclosing_context -> bool
 
 type singleton_action =
-  | DoNotKeep of { use_sound_type: bool }  (** Generalize singleton type *)
+  | DoNotKeep  (** Generalize singleton type *)
   | KeepAsIs
       (** Keep singleton type and `from_annot` value to `false`. This is used to
           avoid generalizing singleton types that are checked against annotations
@@ -58,11 +58,10 @@ val convert_literal_type_to_const : loc_range:ALoc.t -> Context.t -> Type.t -> T
 
 val loc_has_hint : Context.t -> ALoc.t -> bool
 
-val primitive_literal :
+val adjust_precision :
   Context.t ->
   Reason.t ->
   syntactic_flags ->
-  legacy:(unit -> Type.t) ->
   precise:(unit -> Type.t) ->
   general:(unit -> Type.t) ->
   ALoc.t ->

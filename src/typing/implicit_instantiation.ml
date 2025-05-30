@@ -36,19 +36,16 @@ let generalize_singletons cx ~call_loc ~has_syntactic_hint t =
     (* Targets the case of `obj[foo('a')]` and `obj[foo('a')] = e` *)
     || Context.get_enclosing_context_for_call cx call_loc = Some Enclosing_context.IndexContext
   in
-  if Context.natural_inference_local_primitive_literals_full cx && needs_precise then
+  if needs_precise then
     t
   else
     let singleton_action loc =
-      if Context.natural_inference_local_primitive_literals_full cx then
-        if Context.is_primitive_literal_checked cx loc then
-          (* Keep singleton types that are checked against other precise types, which
-           * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
-          Primitive_literal.KeepAsIs
-        else
-          Primitive_literal.DoNotKeep { use_sound_type = true }
+      if Context.is_primitive_literal_checked cx loc then
+        (* Keep singleton types that are checked against other precise types, which
+         * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
+        Primitive_literal.KeepAsIs
       else
-        Primitive_literal.DoNotKeep { use_sound_type = false }
+        Primitive_literal.DoNotKeep
     in
     Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
 

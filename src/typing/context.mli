@@ -107,8 +107,6 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_local_primitive_literals_global_full: bool;
-  natural_inference_local_primitive_literals_full_includes: string list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
@@ -326,8 +324,6 @@ val slow_to_check_logging : t -> Slow_to_check_logging.t
 val max_workers : t -> int
 
 val missing_module_generators : t -> (Str.regexp * string) list
-
-val natural_inference_local_primitive_literals_full : t -> bool
 
 val no_unchecked_indexed_access : t -> bool
 

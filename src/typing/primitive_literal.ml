@@ -69,7 +69,7 @@ let is_literal_union r rep =
     | _ -> false)
 
 type singleton_action =
-  | DoNotKeep of { use_sound_type: bool }
+  | DoNotKeep
   | KeepAsIs
   | KeepAsConst
 
@@ -88,41 +88,25 @@ class literal_type_mapper ~singleton_action =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonStrT { from_annot = true; value })
-    | DoNotKeep { use_sound_type } ->
-      if use_sound_type then
-        DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
-      else
-        DefT (r, StrT_UNSOUND (None, value))
+    | DoNotKeep -> DefT (replace_desc_reason RString r, StrGeneralT AnyLiteral)
   in
   let singleton_num t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonNumT { from_annot = true; value })
-    | DoNotKeep { use_sound_type } ->
-      if use_sound_type then
-        DefT (replace_desc_reason RNumber r, NumGeneralT AnyLiteral)
-      else
-        DefT (r, NumT_UNSOUND (None, value))
+    | DoNotKeep -> DefT (replace_desc_reason RNumber r, NumGeneralT AnyLiteral)
   in
   let singleton_bool t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonBoolT { from_annot = true; value })
-    | DoNotKeep { use_sound_type } ->
-      if use_sound_type then
-        DefT (replace_desc_reason RBoolean r, BoolGeneralT)
-      else
-        DefT (r, BoolT_UNSOUND value)
+    | DoNotKeep -> DefT (replace_desc_reason RBoolean r, BoolGeneralT)
   in
   let singleton_bigint t r value =
     match singleton_action (loc_of_reason r) with
     | KeepAsIs -> t
     | KeepAsConst -> DefT (r, SingletonBigIntT { from_annot = true; value })
-    | DoNotKeep { use_sound_type } ->
-      if use_sound_type then
-        DefT (replace_desc_reason RBigInt r, BigIntGeneralT AnyLiteral)
-      else
-        DefT (r, BigIntT_UNSOUND (None, value))
+    | DoNotKeep -> DefT (replace_desc_reason RBigInt r, BigIntGeneralT AnyLiteral)
   in
   object (self)
     inherit [ISet.t] Type_mapper.t as super
@@ -424,10 +408,7 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
     Context.mk_placeholder cx reason
   | Context.SynthesisMode { target_loc = _ } ->
     Context.set_synthesis_produced_uncacheable_result cx;
-    if
-      Context.natural_inference_local_primitive_literals_full cx
-      && needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc
-    then
+    if needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc then
       precise ()
     else
       general ()
@@ -440,20 +421,8 @@ let adjust_precision cx reason syntactic_flags ~precise ~general loc =
 
 let try_generalize cx syntactic_flags loc t =
   if is_generalization_candidate cx t then
-    let general () =
-      convert_literal_type cx ~singleton_action:(fun _ -> DoNotKeep { use_sound_type = true }) t
-    in
+    let general () = convert_literal_type cx ~singleton_action:(fun _ -> DoNotKeep) t in
     let precise () = t in
     adjust_precision cx (TypeUtil.reason_of_t t) syntactic_flags ~precise ~general loc
   else
     t
-
-let primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc =
-  (* We need to at least have set the flag to "partial" to adjust based on hints. *)
-  let general =
-    if Context.natural_inference_local_primitive_literals_full cx then
-      general
-    else
-      legacy
-  in
-  adjust_precision cx reason syntactic_flags ~precise ~general loc

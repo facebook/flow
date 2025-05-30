@@ -1449,12 +1449,6 @@ let make_options
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
-    opt_natural_inference_local_primitive_literals_full =
-      FlowConfig.natural_inference_local_primitive_literals_full flowconfig;
-    opt_natural_inference_local_primitive_literals_full_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.natural_inference_local_primitive_literals_full_includes flowconfig);
     opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;

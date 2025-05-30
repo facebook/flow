@@ -200,10 +200,6 @@ val multi_platform_ambient_supports_platform_project_overrides :
 
 val munge_underscores : config -> bool
 
-val natural_inference_local_primitive_literals_full : config -> bool
-
-val natural_inference_local_primitive_literals_full_includes : config -> string list
-
 val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool

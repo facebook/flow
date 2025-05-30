@@ -799,22 +799,12 @@ module Make
       let reason = mk_annot_reason (RStringLit (OrdinaryName value)) loc in
       DefT (reason, SingletonStrT { from_annot = true; value = OrdinaryName value })
     else
-      let legacy () =
-        (* It's too expensive to track literal information for large strings.*)
-        let max_literal_length = Context.max_literal_length cx in
-        if max_literal_length = 0 || String.length value <= max_literal_length then
-          let reason = mk_annot_reason RString loc in
-          DefT (reason, StrT_UNSOUND (None, OrdinaryName value))
-        else
-          let reason = mk_annot_reason (RLongStringLit max_literal_length) loc in
-          DefT (reason, StrGeneralT AnyLiteral)
-      in
       let reason = mk_annot_reason RString loc in
       let precise () =
         DefT (reason, SingletonStrT { from_annot = false; value = OrdinaryName value })
       in
       let general () = DefT (reason, StrGeneralT AnyLiteral) in
-      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
+      Primitive_literal.adjust_precision cx reason syntactic_flags ~precise ~general loc
 
   let string_literal cx syntactic_flags loc { Ast.StringLiteral.value; _ } =
     string_literal_value cx syntactic_flags loc value
@@ -826,10 +816,9 @@ module Make
       DefT (reason, SingletonBoolT { from_annot = true; value })
     else
       let reason = mk_annot_reason RBoolean loc in
-      let legacy () = DefT (reason, BoolT_UNSOUND value) in
       let precise () = DefT (reason, SingletonBoolT { from_annot = false; value }) in
       let general () = DefT (reason, BoolGeneralT) in
-      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
+      Primitive_literal.adjust_precision cx reason syntactic_flags ~precise ~general loc
 
   let null_literal loc = NullT.at loc
 
@@ -840,10 +829,9 @@ module Make
       DefT (reason, SingletonNumT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RNumber loc in
-      let legacy () = DefT (reason, NumT_UNSOUND (None, (value, raw))) in
       let precise () = DefT (reason, SingletonNumT { from_annot = false; value = (value, raw) }) in
       let general () = DefT (reason, NumGeneralT AnyLiteral) in
-      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
+      Primitive_literal.adjust_precision cx reason syntactic_flags ~precise ~general loc
 
   let bigint_literal cx syntactic_flags loc { Ast.BigIntLiteral.value; raw; _ } =
     let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
@@ -852,12 +840,11 @@ module Make
       DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
     else
       let reason = mk_annot_reason RBigInt loc in
-      let legacy () = DefT (reason, BigIntT_UNSOUND (None, (value, raw))) in
       let precise () =
         DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
       in
       let general () = DefT (reason, BigIntGeneralT AnyLiteral) in
-      Primitive_literal.primitive_literal cx reason syntactic_flags ~legacy ~precise ~general loc
+      Primitive_literal.adjust_precision cx reason syntactic_flags ~precise ~general loc
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in

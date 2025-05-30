@@ -491,7 +491,7 @@ let synth_type
   let t =
     Primitive_literal.convert_literal_type
       cx
-      ~singleton_action:(fun _ -> Primitive_literal.DoNotKeep { use_sound_type = true })
+      ~singleton_action:(fun _ -> Primitive_literal.DoNotKeep)
       t
   in
   let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in

@@ -109,8 +109,6 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_local_primitive_literals_full: bool;
-    natural_inference_local_primitive_literals_full_includes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -250,8 +248,6 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
-      natural_inference_local_primitive_literals_full = false;
-      natural_inference_local_primitive_literals_full_includes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -852,23 +848,6 @@ module Opts = struct
         let module_name_mappers = v :: opts.module_name_mappers in
         Ok { opts with module_name_mappers })
 
-  let natural_inference_full_includes_parser =
-    string
-      ~init:(fun opts ->
-        {
-          opts with
-          natural_inference_local_primitive_literals_full = true;
-          natural_inference_local_primitive_literals_full_includes = [];
-        })
-      ~multiple:true
-      (fun opts v ->
-        Ok
-          {
-            opts with
-            natural_inference_local_primitive_literals_full_includes =
-              v :: opts.natural_inference_local_primitive_literals_full_includes;
-          })
-
   let module_declaration_dirnames_parser =
     string
       ~init:(fun opts -> { opts with module_declaration_dirnames = [] })
@@ -1165,10 +1144,12 @@ module Opts = struct
       ( "experimental.natural_inference.local_primitive_literals",
         enum
           [("off", false); ("false", false); ("true", true); ("full", true)]
-          (fun opts v -> Ok { opts with natural_inference_local_primitive_literals_full = v })
-      );
-      ( "experimental.natural_inference.local_primitive_literals.full.includes",
-        natural_inference_full_includes_parser
+          (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error
+                "Support for experimental.natural_inference.local_primitive_literals=false is removed.")
       );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
@@ -1955,12 +1936,6 @@ let multi_platform_ambient_supports_platform_project_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let natural_inference_local_primitive_literals_full c =
-  c.options.Opts.natural_inference_local_primitive_literals_full
-
-let natural_inference_local_primitive_literals_full_includes c =
-  c.options.Opts.natural_inference_local_primitive_literals_full_includes
 
 let no_flowlib c = c.options.Opts.no_flowlib
 
