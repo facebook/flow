@@ -795,7 +795,7 @@ let default_this_type cx ~needs_this_param func =
 
 let string_key s reason =
   let key_reason = replace_desc_reason (RPropertyIsAString s) reason in
-  DefT (key_reason, StrT_UNSOUND (None, s))
+  DefT (key_reason, SingletonStrT { value = s; from_annot = false })
 
 (* common case checking a function as an object *)
 let quick_error_fun_as_obj cx ~use_op reason statics reason_o props =
