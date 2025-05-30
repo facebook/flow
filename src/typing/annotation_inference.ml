@@ -1081,7 +1081,9 @@ module rec ConsGen : S = struct
     (********************)
     (* GetElemT / ElemT *)
     (********************)
-    | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), Annot_GetElemT (reason_op, _use_op, _index)) ->
+    | ( DefT (_, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)),
+        Annot_GetElemT (reason_op, _use_op, _index)
+      ) ->
       (* NOTE bypassing check that index is a number *)
       StrModuleT.why reason_op
     | ((DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key))
@@ -1154,8 +1156,6 @@ module rec ConsGen : S = struct
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
       elab_t cx (DefT (reason, SingletonStrT { value = OrdinaryName s; from_annot = false })) op
-    | (DefT (reason, SingletonStrT { value = key; _ }), _) ->
-      elab_t cx (DefT (reason, StrT_UNSOUND (None, key))) op
     | (DefT (reason, SingletonNumT { value = lit; _ }), _) ->
       elab_t cx (DefT (reason, NumT_UNSOUND (None, lit))) op
     | (DefT (reason, SingletonBoolT { value = b; _ }), _) ->
@@ -1234,7 +1234,7 @@ module rec ConsGen : S = struct
     (*************)
     (* ToStringT *)
     (*************)
-    | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), Annot_ToStringT _) -> t
+    | (DefT (_, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)), Annot_ToStringT _) -> t
     | (_, Annot_ToStringT { reason; _ }) -> StrModuleT.why reason
     (************)
     (* GetPropT *)
@@ -1255,7 +1255,8 @@ module rec ConsGen : S = struct
     (************************)
     (* Promoting primitives *)
     (************************)
-    | (DefT (reason, (StrGeneralT _ | StrT_UNSOUND _)), _) when primitive_promoting_op op ->
+    | (DefT (reason, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)), _)
+      when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
     | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)), _) when primitive_promoting_op op ->
