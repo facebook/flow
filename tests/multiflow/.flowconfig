@@ -8,3 +8,4 @@
 all=true
 exact_by_default=false
 no_flowlib=true
+experimental.natural_inference.local_primitive_literals=full

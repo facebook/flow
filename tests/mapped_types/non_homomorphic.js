@@ -32,7 +32,7 @@
 
 {
   // Tests using mapped types in output positions for implicit instantiation
-  declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
+  declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
 
   let keyMirroredObject = keyMirror('foo', 'bar', 'baz');
   (keyMirroredObject: {foo: 'foo', bar: 'bar', baz: 'baz'});
@@ -42,7 +42,7 @@
 
 {
   // Tests using mapped types in input positions for implicit instantiation
-  declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+  declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
   const noContext = ObjWithKeys({foo: 3, bar: 3}, 'foo', 'bar'); // OK!
   (noContext: {foo: number, bar: number}); // OK!
   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x

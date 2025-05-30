@@ -2,8 +2,8 @@
 
 var React = require('react');
 
-var Div = 'div';
-var Bad = 'bad';
+var Div = 'div' as const;
+var Bad = 'bad' as const;
 var Str: string = 'str';
 
 <Div />; // This is fine

@@ -340,13 +340,13 @@ References:
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:5:37
+Error --------------------------------------------------------------------------------------------------- spread.js:5:55
 
 Cannot call `fun` because no more than 2 arguments are expected by function [1]. [extra-arg]
 
-   spread.js:5:37
-   5| fun(...['hi'], ...[], ...[123], ...[true]); // Error - true is unused
-                                          ^^^^
+   spread.js:5:55
+   5| fun(...['hi' as const], ...[], ...[123 as const], ...[true as const]); // Error - true is unused
+                                                            ^^^^
 
 References:
    spread.js:1:1
@@ -354,13 +354,13 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:6:31
+Error --------------------------------------------------------------------------------------------------- spread.js:6:49
 
 Cannot call `fun` because no more than 2 arguments are expected by function [1]. [extra-arg]
 
-   spread.js:6:31
-   6| fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
-                                    ^^^
+   spread.js:6:49
+   6| fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
+                                                      ^^^
 
 References:
    spread.js:1:1
@@ -368,14 +368,14 @@ References:
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- spread.js:6:20
+Error --------------------------------------------------------------------------------------------------- spread.js:6:29
 
-Cannot call `fun` with boolean bound to `y` because boolean [1] is incompatible with number literal `123` [2].
-[incompatible-call]
+Cannot call `fun` with boolean literal `true` bound to `y` because boolean literal `true` [1] is incompatible with
+number literal `123` [2]. [incompatible-call]
 
-   spread.js:6:20
-   6| fun(...['hi'], ...[true], ...[123]); // Error: true ~> 123 and 123 is unused
-                         ^^^^ [1]
+   spread.js:6:29
+   6| fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
+                                  ^^^^ [1]
 
 References:
    spread.js:1:26
@@ -383,14 +383,14 @@ References:
                                ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spread.js:17:33
+Error -------------------------------------------------------------------------------------------------- spread.js:17:42
 
-Cannot call `funWithRestArray` with boolean bound to `y` because boolean [1] is incompatible with number literal
-`123` [2]. [incompatible-call]
+Cannot call `funWithRestArray` with boolean literal `true` bound to `y` because boolean literal `true` [1] is
+incompatible with number literal `123` [2]. [incompatible-call]
 
-   spread.js:17:33
-   17| funWithRestArray(...['hi'], ...[true], ...[123]); // Error: true ~> 123
-                                       ^^^^ [1]
+   spread.js:17:42
+   17| funWithRestArray(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123
+                                                ^^^^ [1]
 
 References:
    spread.js:12:39

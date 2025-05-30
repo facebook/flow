@@ -5,7 +5,7 @@
  */
 function logical1a(): number {
   // expected `: boolean`
-  var x = false;
+  var x = false as const;
   return x && '123';
 }
 
@@ -13,7 +13,7 @@ function logical1a(): number {
  * A truthy variable on the left side of &&
  */
 function logical1b(): string {
-  var x = true;
+  var x = true as const;
   return x && '123';
 }
 
@@ -164,7 +164,7 @@ function logical4(x: boolean): string {
  * A falsy variable on the left side of ||
  */
 function logical5a(): number {
-  var x = false;
+  var x = false as const;
   return x || 0;
 }
 
@@ -181,7 +181,7 @@ function logical5b(): number {
  */
 function logical5c(): string {
   // expected `: boolean`
-  var x = true;
+  var x = true as const;
   return x || 0;
 }
 
@@ -293,7 +293,7 @@ function logical7e(x: number): string {
  * circuits the && because 0 is falsy, so this should just return number.
  */
 function logical8a(): number {
-  var x = false;
+  var x = false as const;
   return (x || 0) && 'foo';
 }
 
@@ -321,7 +321,7 @@ function logical8c(): string {
  * A composite || and &&
  */
 function logical8d(): number {
-  var x = false;
+  var x = false as const;
   return x || (0 && 'foo');
 }
 
@@ -329,7 +329,7 @@ function logical8d(): number {
  * A composite || and &&
  */
 function logical8e(): string {
-  var x = false;
+  var x = false as const;
   return x || (1 && 'foo');
 }
 
@@ -394,7 +394,7 @@ function logical10c(x: number, y: string): Array<any> {
 function logical11a(): number {
   var y = 1;
   for (var x = 0; x < 5; x++) {
-    y = y || true;
+    y = y || true; // error `y` is a number
   }
   return y;
 }

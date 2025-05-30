@@ -1679,9 +1679,9 @@ Cannot cast `keyMirroredObject` to object type because string literal `bar` [1] 
           ^^^^^^^^^^^^^^^^^
 
 References:
-   non_homomorphic.js:35:69
-   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
-                                                                           ^^^ [1]
+   non_homomorphic.js:35:75
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                                 ^^^ [1]
    non_homomorphic.js:40:41
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                                ^^^^^ [2]
@@ -1697,9 +1697,9 @@ Cannot cast `keyMirroredObject` to object type because string literal `baz` [1] 
           ^^^^^^^^^^^^^^^^^
 
 References:
-   non_homomorphic.js:35:69
-   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
-                                                                           ^^^ [1]
+   non_homomorphic.js:35:75
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                                 ^^^ [1]
    non_homomorphic.js:40:53
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                                            ^^^^^ [2]
@@ -1715,9 +1715,9 @@ Cannot cast `keyMirroredObject` to object type because string literal `foo` [1] 
           ^^^^^^^^^^^^^^^^^
 
 References:
-   non_homomorphic.js:35:69
-   35|   declare function keyMirror<T>(...$ReadOnlyArray<T>): {[key in T]: key};
-                                                                           ^^^ [1]
+   non_homomorphic.js:35:75
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                                 ^^^ [1]
    non_homomorphic.js:40:29
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                    ^^^^^ [2]
@@ -1733,9 +1733,9 @@ type [2]. [prop-missing]
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:83
-   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                         ^^^^^^^^^^^^^^^^^^^^ [1]
+   non_homomorphic.js:45:89
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                               ^^^^^^^^^^^^^^^^^^^^ [1]
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1751,9 +1751,9 @@ Cannot cast `noContext` to object type because number [1] is incompatible with e
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:96
-   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                                      ^^^^^^ [1]
+   non_homomorphic.js:45:102
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                                            ^^^^^^ [1]
    non_homomorphic.js:48:33
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                                        ^^^^^ [2]
@@ -1769,9 +1769,9 @@ Cannot cast `noContext` to object type because number [1] is incompatible with e
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:96
-   45|   declare function ObjWithKeys<T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                                      ^^^^^^ [1]
+   non_homomorphic.js:45:102
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                                            ^^^^^^ [1]
    non_homomorphic.js:48:21
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                            ^^^^^ [2]

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- logical.js:9:10
 
-Cannot return `x && '123'` because boolean [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x && '123'` because boolean literal `false` [1] is incompatible with number [2]. [incompatible-return]
 
    logical.js:9:10
    9|   return x && '123';
@@ -8,7 +8,7 @@ Cannot return `x && '123'` because boolean [1] is incompatible with number [2]. 
 
 References:
    logical.js:8:11
-   8|   var x = false;
+   8|   var x = false as const;
                 ^^^^^ [1]
    logical.js:6:23
    6| function logical1a(): number {
@@ -104,7 +104,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:185:10
 
-Cannot return `x || 0` because boolean [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `x || 0` because boolean literal `true` [1] is incompatible with string [2]. [incompatible-return]
 
    logical.js:185:10
    185|   return x || 0;
@@ -112,7 +112,7 @@ Cannot return `x || 0` because boolean [1] is incompatible with string [2]. [inc
 
 References:
    logical.js:184:11
-   184|   var x = true;
+   184|   var x = true as const;
                   ^^^^ [1]
    logical.js:182:23
    182| function logical5c(): string {
@@ -231,6 +231,25 @@ References:
    logical.js:386:44
    386| function logical10c(x: number, y: string): Array<any> {
                                                    ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:397:14
+
+Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. All writes to `y` must be
+compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired.
+[incompatible-type]
+
+   logical.js:397:14
+   397|     y = y || true; // error `y` is a number
+                     ^^^^ [1]
+
+References:
+   logical.js:395:11
+   395|   var y = 1;
+                  ^ [2]
+   logical.js:395:7
+   395|   var y = 1;
+              ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:407:14
@@ -525,4 +544,4 @@ References:
 
 
 
-Found 33 errors
+Found 34 errors

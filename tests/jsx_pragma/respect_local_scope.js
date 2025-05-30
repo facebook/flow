@@ -58,7 +58,7 @@ function Foo(x: string) {}
 {
   function Foo(elem: number, props: null, child1: 'a', child2: 'b', child3: 'c') {}
   // Spread syntax in children should work
-  <Bar>{...["a", "b", "c"]}</Bar>;
+  <Bar>{...["a" as const, "b" as const, "c" as const]}</Bar>;
 }
 
 {
