@@ -4442,8 +4442,7 @@ Cannot instantiate `$ReadOnly` because enum `E` [1] is not an object. [not-an-ob
 
 Error -------------------------------------------------------------------------------------------- utility-types.js:19:1
 
-Cannot cast `'A'` to key set because an index signature declaring the expected key / value type is missing in enum
-`E` [1]. [incompatible-use]
+Cannot cast `'A'` to key set because property `A` is missing in enum `E` [1]. [incompatible-use]
 
    utility-types.js:19:1
    19| 'A' as $Keys<typeof E>; // Error: TODO: improve error

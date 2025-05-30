@@ -533,7 +533,8 @@ let error_message_kind_of_upper = function
   | HasOwnPropT
       ( _,
         r,
-        (DefT (_, StrT_UNSOUND (_, name)) | GenericT { bound = DefT (_, StrT_UNSOUND (_, name)); _ })
+        ( DefT (_, SingletonStrT { value = name; _ })
+        | GenericT { bound = DefT (_, SingletonStrT { value = name; _ }); _ } )
       ) ->
     Error_message.IncompatibleHasOwnPropT (loc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (loc_of_reason r, None)
