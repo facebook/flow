@@ -162,6 +162,13 @@ let haste_name_opt ~options =
     else
       None
 
+let grouped_platform_extension_opt ~options filename =
+  Base.List.find options.multi_platform_extension_group_mapping ~f:(fun (group_ext, _platforms) ->
+      Base.List.exists options.module_file_exts ~f:(fun module_ext ->
+          Base.String.is_suffix filename ~suffix:(group_ext ^ module_ext)
+      )
+  )
+
 let relative_interface_mref_of_possibly_platform_specific_file ~options file =
   if options.multi_platform then
     Base.List.find_map options.module_file_exts ~f:(fun module_filt_ext ->
@@ -181,13 +188,6 @@ let relative_interface_mref_of_possibly_platform_specific_file ~options file =
     )
   else
     None
-
-let grouped_platform_extension_opt ~options filename =
-  Base.List.find options.multi_platform_extension_group_mapping ~f:(fun (group_ext, _platforms) ->
-      Base.List.exists options.module_file_exts ~f:(fun module_ext ->
-          Base.String.is_suffix filename ~suffix:(group_ext ^ module_ext)
-      )
-  )
 
 let platform_specific_extensions_and_indices_opt ~options filename =
   match
