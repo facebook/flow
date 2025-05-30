@@ -2010,6 +2010,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | RArrayLit
         | RReactChildren ->
           true
+        | RRestArrayLit
+            (RCode _ | RFunctionCall _ | RConstructorCall _ | RMethodCall _ | RJSXFunctionCall _) ->
+          (* These cases correspond to calls so the rest array can be considered "literal". *)
+          true
         | _ -> false
       in
       let ts1 =
