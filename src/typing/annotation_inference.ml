@@ -1156,8 +1156,6 @@ module rec ConsGen : S = struct
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
       elab_t cx (DefT (reason, SingletonStrT { value = OrdinaryName s; from_annot = false })) op
-    | (DefT (reason, SingletonNumT { value = lit; _ }), _) ->
-      elab_t cx (DefT (reason, NumT_UNSOUND (None, lit))) op
     | (DefT (reason, SingletonBoolT { value = b; _ }), _) ->
       elab_t cx (DefT (reason, BoolT_UNSOUND b)) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
@@ -1259,7 +1257,8 @@ module rec ConsGen : S = struct
       when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
-    | (DefT (reason, (NumGeneralT _ | NumT_UNSOUND _)), _) when primitive_promoting_op op ->
+    | (DefT (reason, (NumGeneralT _ | SingletonNumT _ | NumT_UNSOUND _)), _)
+      when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
     | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), _) when primitive_promoting_op op ->
