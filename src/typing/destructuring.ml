@@ -38,7 +38,12 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
 
   let array_element cx acc i loc =
     let { init; default; _ } = acc in
-    let key = DefT (mk_reason RNumber loc, NumT_UNSOUND (None, (float i, string_of_int i))) in
+    let key =
+      DefT
+        ( mk_reason RNumber loc,
+          SingletonNumT { value = (float i, string_of_int i); from_annot = false }
+        )
+    in
     let reason = mk_reason (RArrayNthElement i) loc in
     let init =
       Base.Option.map init ~f:(fun init ->
