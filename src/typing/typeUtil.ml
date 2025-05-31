@@ -578,26 +578,45 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _)) -> false
   | (DefT (_, StrT_UNSOUND (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     expected = actual
+  | (DefT (_, SingletonStrT { value = actual; _ }), DefT (_, SingletonStrT { value = expected; _ }))
+    ->
+    let result = expected = actual in
+    if result then on_singleton_eq t1;
+    result
   | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _)) -> false
   | (DefT (_, NumT_UNSOUND (_, (actual, _))), DefT (_, SingletonNumT { value = (expected, _); _ }))
     ->
     expected = actual
+  | ( DefT (_, SingletonNumT { value = (actual, _); _ }),
+      DefT (_, SingletonNumT { value = (expected, _); _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq t1;
+    result
   | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _)) -> false
   | ( DefT (_, BigIntT_UNSOUND (_, (actual, _))),
       DefT (_, SingletonBigIntT { value = (expected, _); _ })
     ) ->
     expected = actual
+  | ( DefT (_, SingletonBigIntT { value = (actual, _); _ }),
+      DefT (_, SingletonBigIntT { value = (expected, _); _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq t1;
+    result
   | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) -> false
   | (DefT (_, BoolT_UNSOUND actual), DefT (_, SingletonBoolT { value = expected; _ })) ->
     expected = actual
+  | ( DefT (_, SingletonBoolT { value = actual; _ }),
+      DefT (_, SingletonBoolT { value = expected; _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq t1;
+    result
   | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT { value = (expected, _); _ })) ->
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     OrdinaryName actual = expected
-  | (DefT (_, (SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SingletonBigIntT _)), _) ->
-    let result = reasonless_eq t1 t2 in
-    if result then on_singleton_eq t1;
-    result
   | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function
