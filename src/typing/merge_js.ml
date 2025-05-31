@@ -452,9 +452,9 @@ let detect_literal_subtypes =
         let u_def = unwrap u_def in
         let l =
           match check with
-          | Env_api.SingletonNum (lit_loc, sense, num, raw) ->
+          | Env_api.SingletonNum (lit_loc, _sense, num, raw) ->
             let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
-            DefT (reason, NumT_UNSOUND (Some sense, (num, raw)))
+            DefT (reason, SingletonNumT { value = (num, raw); from_annot = false })
           | Env_api.SingletonBool (lit_loc, b) ->
             let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
             DefT (reason, BoolT_UNSOUND b)
