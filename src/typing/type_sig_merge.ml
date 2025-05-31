@@ -300,7 +300,7 @@ let merge_pattern file = function
     let reason = Reason.(mk_reason (RArrayNthElement i) loc) in
     let i =
       let reason = Reason.(mk_reason RNumber loc) in
-      Type.(DefT (reason, NumT_UNSOUND (None, (float i, string_of_int i))))
+      Type.(DefT (reason, SingletonNumT { value = (float i, string_of_int i); from_annot = false }))
     in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in

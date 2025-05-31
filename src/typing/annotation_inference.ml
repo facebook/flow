@@ -1109,7 +1109,7 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_ElemT { reason = reason_op; source = DefT (_, ArrT arrtype); _ }) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
-    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _)),
+    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
         Annot_ElemT
           { reason = reason_op; use_op; from_annot; source = DefT (reason_tup, ArrT arrtype) }
       ) ->
