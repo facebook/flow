@@ -492,8 +492,7 @@ let is_falsy = function
             | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND false) } )
         | SingletonStrT { value = OrdinaryName ""; _ }
         | StrT_UNSOUND (_, OrdinaryName "")
-        | SingletonNumT { value = (0., _); _ }
-        | NumT_UNSOUND (_, (0., _)) )
+        | SingletonNumT { value = (0., _); _ } )
       ) ->
     true
   | _ -> false
@@ -528,9 +527,7 @@ let is_mixed_subtype l mixed_flavor =
 
 let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   match (t1, t2) with
-  | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-      DefT (_, (NumGeneralT _ | NumT_UNSOUND _))
-    )
+  | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
   | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
       DefT (_, (StrGeneralT _ | StrT_UNSOUND _))
     )
@@ -543,9 +540,7 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
-  | ( DefT (_, NumericStrKeyT _),
-      DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _))
-    )
+  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _)))
   | (DefT (_, EmptyT), _) ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
@@ -584,9 +579,6 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
     if result then on_singleton_eq t1;
     result
   | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _)) -> false
-  | (DefT (_, NumT_UNSOUND (_, (actual, _))), DefT (_, SingletonNumT { value = (expected, _); _ }))
-    ->
-    expected = actual
   | ( DefT (_, SingletonNumT { value = (actual, _); _ }),
       DefT (_, SingletonNumT { value = (expected, _); _ })
     ) ->

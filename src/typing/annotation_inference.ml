@@ -773,7 +773,6 @@ module rec ConsGen : S = struct
     | (DefT (_, SingletonBoolT { value = false; _ }), Annot_NotT reason)
     | (DefT (_, StrT_UNSOUND (_, OrdinaryName "")), Annot_NotT reason)
     | (DefT (_, SingletonStrT { value = OrdinaryName ""; _ }), Annot_NotT reason)
-    | (DefT (_, NumT_UNSOUND (_, (0., _))), Annot_NotT reason)
     | (DefT (_, SingletonNumT { value = (0., _); _ }), Annot_NotT reason)
     | (DefT (_, NullT), Annot_NotT reason)
     | (DefT (_, VoidT), Annot_NotT reason) ->
@@ -1109,7 +1108,7 @@ module rec ConsGen : S = struct
     | (AnyT _, Annot_ElemT { reason = reason_op; source = DefT (_, ArrT arrtype); _ }) ->
       let value = elemt_of_arrtype arrtype in
       reposition cx (loc_of_reason reason_op) value
-    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+    | ( DefT (_, (NumGeneralT _ | SingletonNumT _)),
         Annot_ElemT
           { reason = reason_op; use_op; from_annot; source = DefT (reason_tup, ArrT arrtype) }
       ) ->
@@ -1257,8 +1256,7 @@ module rec ConsGen : S = struct
       when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
-    | (DefT (reason, (NumGeneralT _ | SingletonNumT _ | NumT_UNSOUND _)), _)
-      when primitive_promoting_op op ->
+    | (DefT (reason, (NumGeneralT _ | SingletonNumT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
     | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), _) when primitive_promoting_op op ->

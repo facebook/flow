@@ -83,7 +83,6 @@ class ['a] t =
     method def_type cx pole acc =
       function
       | NumGeneralT _
-      | NumT_UNSOUND _
       | StrGeneralT _
       | StrT_UNSOUND _
       | BoolGeneralT

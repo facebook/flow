@@ -168,7 +168,6 @@ let visitor =
       | DefT (_, InstanceT _)
       | DefT (_, MixedT _)
       | DefT (_, NumGeneralT _)
-      | DefT (_, NumT_UNSOUND _)
       | DefT (_, NullT)
       | DefT (_, SymbolT)
       | DefT (_, ObjT _)

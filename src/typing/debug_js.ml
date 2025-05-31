@@ -137,7 +137,6 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, NumT_UNSOUND (_, (_, raw))) -> p ~extra:raw t
     | DefT (_, StrGeneralT c) ->
       p
         ~extra:

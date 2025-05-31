@@ -235,7 +235,6 @@ class virtual ['a] t =
     method def_type cx map_cx t =
       match t with
       | NumGeneralT _
-      | NumT_UNSOUND _
       | StrGeneralT _
       | StrT_UNSOUND _
       | BoolGeneralT

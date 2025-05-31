@@ -2434,8 +2434,7 @@ module Make
         | AnyT _ ->
           ObjectExpressionAcc.ComputedProp.NonLiteralKey
             { key_loc; key; value; reason_obj; named_set_opt = None }
-        | DefT (reason_key, SingletonNumT { value = (value, _); _ })
-        | DefT (reason_key, NumT_UNSOUND (_, (value, _))) ->
+        | DefT (reason_key, SingletonNumT { value = (value, _); _ }) ->
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
           Flow_js_utils.add_output
             cx
@@ -3488,7 +3487,6 @@ module Make
                        )
                 |> Base.List.iter ~f:(function
                        | DefT (_, NumGeneralT _)
-                       | DefT (_, NumT_UNSOUND _)
                        | DefT (_, SingletonNumT _)
                        | DefT (_, BigIntGeneralT _)
                        | DefT (_, BigIntT_UNSOUND _)

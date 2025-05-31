@@ -721,10 +721,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*******************************)
     (* common implicit conversions *)
     (*******************************)
-    | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-        DefT (_, (NumGeneralT _ | NumT_UNSOUND _))
-      ) ->
-      ()
+    | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _)) -> ()
     | (DefT (r, (NullT | VoidT)), MaybeT (_, tout)) ->
       rec_flow_t cx trace ~use_op (EmptyT.why r, tout)
     | (DefT (r, MixedT Mixed_everything), MaybeT (_, tout)) ->
@@ -940,10 +937,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        o as {[string]: boolean}: // OK
        ```
     *)
-    | ( DefT (_, NumericStrKeyT _),
-        DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _))
-      ) ->
-      ()
+    | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _))) -> ()
     | (DefT (rl, NumericStrKeyT (actual, _)), DefT (ru, SingletonNumT { value = (expected, _); _ }))
       ->
       if actual = expected then
@@ -1002,7 +996,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedStringLit { reason_lower = rl; reason_upper = ru; use_op })
-    | ( DefT (rl, (NumT_UNSOUND (_, (actual, _)) | SingletonNumT { value = (actual, _); _ })),
+    | ( DefT (rl, SingletonNumT { value = (actual, _); _ }),
         DefT (ru, SingletonNumT { value = (expected, _); _ })
       ) ->
       if expected = actual then
@@ -1185,7 +1179,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         match u with
         | DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ })) -> check (UnionEnum.Str x)
         | DefT (_, (BoolT_UNSOUND x | SingletonBoolT { value = x; _ })) -> check (UnionEnum.Bool x)
-        | DefT (_, (NumT_UNSOUND (_, x) | SingletonNumT { value = x; _ })) -> check (UnionEnum.Num x)
+        | DefT (_, SingletonNumT { value = x; _ }) -> check (UnionEnum.Num x)
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (_, IntersectionT (_, rep)) ->
@@ -2309,7 +2303,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Boolean })
-    | ( DefT (reason, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
+    | ( DefT (reason, (NumGeneralT _ | SingletonNumT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2493,7 +2487,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT (_, SingletonBoolT _) ->
           Some "boolean"
         | DefT (_, NumGeneralT _)
-        | DefT (_, NumT_UNSOUND _)
         | DefT (_, SingletonNumT _) ->
           Some "number"
         | DefT (_, StrGeneralT _)

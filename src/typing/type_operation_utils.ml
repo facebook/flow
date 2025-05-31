@@ -107,9 +107,7 @@ module Operators = struct
       | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
           DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))
         )
-      | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
-        )
+      | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
       | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
           DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
         )
@@ -154,9 +152,9 @@ module Operators = struct
     let will_fail_check_if_unmatched = function
       | DefT
           ( _,
-            ( NumGeneralT _ | NumT_UNSOUND _ | StrGeneralT _ | StrT_UNSOUND _ | BoolGeneralT
-            | BoolT_UNSOUND _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SymbolT
-            | EnumObjectT _ | EnumValueT _ )
+            ( NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _ | BoolGeneralT | BoolT_UNSOUND _
+            | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SymbolT | EnumObjectT _
+            | EnumValueT _ )
           ) ->
         true
       | _ -> false
@@ -172,9 +170,7 @@ module Operators = struct
     in
     (* If we allow `==` on these two types. *)
     let equatable = function
-      | ( DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)),
-          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _))
-        )
+      | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
       | ( (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _),
           (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _)
         )
@@ -389,7 +385,7 @@ module Operators = struct
         |> Base.List.iter ~f:(fun left ->
                begin
                  match left with
-                 | DefT (reason, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)) ->
+                 | DefT (reason, (NumGeneralT _ | SingletonNumT _)) ->
                    Flow_js_utils.add_output
                      cx
                      (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
@@ -469,7 +465,6 @@ module Operators = struct
       | DefT (_, SingletonBoolT { value = false; _ })
       | DefT (_, StrT_UNSOUND (_, OrdinaryName ""))
       | DefT (_, SingletonStrT { value = OrdinaryName ""; _ })
-      | DefT (_, NumT_UNSOUND (_, (0., _)))
       | DefT (_, SingletonNumT { value = (0., _); _ })
       | DefT (_, NullT)
       | DefT (_, VoidT) ->
@@ -785,7 +780,6 @@ module TypeAssertions = struct
       | DefT (_, SingletonStrT _) ->
         ()
       | DefT (_, NumGeneralT _)
-      | DefT (_, NumT_UNSOUND _)
       | DefT (_, SingletonNumT _) ->
         ()
       | l -> add_output cx (Error_message.EBinaryInLHS (reason_of_t l))

@@ -51,7 +51,6 @@ end = struct
     | DefT (_, MixedT _)
     | DefT (_, NullT)
     | DefT (_, NumGeneralT _)
-    | DefT (_, NumT_UNSOUND _)
     | DefT (_, NumericStrKeyT _)
     | DefT (_, SingletonBoolT _)
     | DefT (_, SingletonNumT _)

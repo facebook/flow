@@ -114,7 +114,6 @@ let detect_sketchy_null_checks cx tast =
             | DefT (_, StrT_UNSOUND _) ->
               { exists_check with string_loc = t_loc }
             | DefT (_, NumGeneralT _)
-            | DefT (_, NumT_UNSOUND _)
             | DefT (_, SingletonNumT _) ->
               { exists_check with number_loc = t_loc }
             | DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)) ->
@@ -162,22 +161,14 @@ let detect_sketchy_null_checks cx tast =
                 ( _,
                   EnumValueT
                     (ConcreteEnum
-                      {
-                        representation_t =
-                          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _));
-                        _;
-                      }
+                      { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)); _ }
                       )
                 )
             | DefT
                 ( _,
                   EnumValueT
                     (AbstractEnum
-                      {
-                        representation_t =
-                          DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _));
-                        _;
-                      }
+                      { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)); _ }
                       )
                 ) ->
               { exists_check with enum_number_loc = t_loc }
@@ -357,8 +348,7 @@ let detect_matching_props_violations cx =
     match drop_generic t with
     | DefT
         ( _,
-          ( BoolT_UNSOUND _ | SingletonBoolT _ | StrT_UNSOUND _ | SingletonStrT _ | NumT_UNSOUND _
-          | SingletonNumT _ )
+          (BoolT_UNSOUND _ | SingletonBoolT _ | StrT_UNSOUND _ | SingletonStrT _ | SingletonNumT _)
         ) ->
       true
     | _ -> false

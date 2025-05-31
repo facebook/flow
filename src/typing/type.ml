@@ -181,7 +181,6 @@ module rec TypeTerm : sig
 
   and def_t =
     | NumGeneralT of literal
-    | NumT_UNSOUND of bool option * number_literal
     (* TODO StrT should perhaps not allow internal names *)
     | StrGeneralT of literal
     | StrT_UNSOUND of bool option * name
@@ -2431,9 +2430,7 @@ end = struct
       | DefT (_, StrT_UNSOUND (_, lit)) ->
         Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
-      | DefT (_, SingletonNumT { value = lit; _ })
-      | DefT (_, NumT_UNSOUND (_, lit)) ->
-        Some (UnionEnum.Num lit)
+      | DefT (_, SingletonNumT { value = lit; _ }) -> Some (UnionEnum.Num lit)
       | DefT (_, SingletonBigIntT { value = lit; _ })
       | DefT (_, BigIntT_UNSOUND (_, lit)) ->
         Some (UnionEnum.BigInt lit)
@@ -2519,9 +2516,7 @@ end = struct
       Some StrTag
     | DefT (_, NumericStrKeyT _) -> Some NumericStrKeyTag
     | DefT (_, SingletonNumT _) -> Some SingletonNumTag
-    | DefT (_, NumGeneralT _)
-    | DefT (_, NumT_UNSOUND _) ->
-      Some NumTag
+    | DefT (_, NumGeneralT _) -> Some NumTag
     | DefT (_, SingletonBigIntT _) -> Some SingletonBigIntTag
     | DefT (_, BigIntGeneralT _)
     | DefT (_, BigIntT_UNSOUND _) ->
@@ -4007,7 +4002,6 @@ let string_of_def_ctor = function
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
   | NumGeneralT _ -> "NumT"
-  | NumT_UNSOUND _ -> "NumT_UNSOUND"
   | ObjT _ -> "ObjT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"

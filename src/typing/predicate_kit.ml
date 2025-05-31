@@ -210,8 +210,8 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (*********************)
   (* _ ~ some number n *)
   (*********************)
-  | SingletonNumP (expected_loc, sense, lit) ->
-    let filtered_num = Type_filter.number_literal expected_loc sense lit l in
+  | SingletonNumP (expected_loc, _sense, lit) ->
+    let filtered_num = Type_filter.number_literal expected_loc lit l in
     report_filtering_result_to_predicate_result filtered_num result_collector
   | NotP (SingletonNumP (_, _, lit)) ->
     let filtered_num = Type_filter.not_number_literal lit l in
@@ -552,9 +552,7 @@ and intersect =
         DefT (_, (SingletonStrT { value = v2; _ } | StrT_UNSOUND (_, v2)))
       ) ->
       v1 <> v2
-    | ( DefT (_, (SingletonNumT { value = v1; _ } | NumT_UNSOUND (_, v1))),
-        DefT (_, (SingletonNumT { value = v2; _ } | NumT_UNSOUND (_, v2)))
-      ) ->
+    | (DefT (_, SingletonNumT { value = v1; _ }), DefT (_, SingletonNumT { value = v2; _ })) ->
       v1 <> v2
     | ( DefT (_, (SingletonBoolT { value = v1; _ } | BoolT_UNSOUND v1)),
         DefT (_, (SingletonBoolT { value = v2; _ } | BoolT_UNSOUND v2))
@@ -1151,9 +1149,7 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
     | DefT (_, StrT_UNSOUND (_, value))
     | DefT (_, SingletonStrT { value; _ }) ->
       Some UnionEnum.(One (Str value))
-    | DefT (_, NumT_UNSOUND (_, value))
-    | DefT (_, SingletonNumT { value; _ }) ->
-      Some UnionEnum.(One (Num value))
+    | DefT (_, SingletonNumT { value; _ }) -> Some UnionEnum.(One (Num value))
     | DefT (_, BoolT_UNSOUND value)
     | DefT (_, SingletonBoolT { value; _ }) ->
       Some UnionEnum.(One (Bool value))
@@ -1322,11 +1318,10 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_string_literal value left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, NumT_UNSOUND (_, value))
   | DefT (_, SingletonNumT { value; _ }) ->
     let filtered =
       if sense then
-        Type_filter.number_literal expected_loc sense value left
+        Type_filter.number_literal expected_loc value left
       else
         Type_filter.not_number_literal value left
     in

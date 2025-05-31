@@ -801,11 +801,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
-      | DefT (_, NumT_UNSOUND (_, (_, x))) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Num (Some x))
-      | DefT (_, NumGeneralT _)
-      | DefT (_, NumT_UNSOUND _) ->
-        return (Ty.Num None)
+      | DefT (_, NumGeneralT _) -> return (Ty.Num None)
       | DefT (_, StrT_UNSOUND (_, x)) when Env.preserve_inferred_literal_types env ->
         return (Ty.Str (Some x))
       | DefT (_, StrGeneralT _)
@@ -2419,7 +2415,7 @@ module Make (I : INPUT) : S = struct
             type_variable ~env ~cont:(type__ ~inherited ~source ~imode) id'
       | AnnotT (_, t, _) -> type__ ~env ~inherited ~source ~imode t
       | ThisTypeAppT (_, c, _, _) -> type__ ~env ~inherited ~source ~imode c
-      | DefT (r, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)) -> primitive ~env r "Number"
+      | DefT (r, (NumGeneralT _ | SingletonNumT _)) -> primitive ~env r "Number"
       | DefT (r, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, SymbolT) -> primitive ~env r "Symbol"

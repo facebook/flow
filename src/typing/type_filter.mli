@@ -35,7 +35,7 @@ val string_literal : ALoc.t -> bool -> Reason.name -> Type.t -> filter_result
 
 val not_string_literal : Reason.name -> Type.t -> filter_result
 
-val number_literal : ALoc.t -> bool -> Type.number_literal -> Type.t -> filter_result
+val number_literal : ALoc.t -> Type.number_literal -> Type.t -> filter_result
 
 val not_number_literal : Type.number_literal -> Type.t -> filter_result
 

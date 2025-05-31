@@ -157,7 +157,6 @@ let rec not_truthy cx t =
           | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | ReactAbstractComponentT _
           | SingletonNumT _
           | NumGeneralT Truthy
-          | NumT_UNSOUND _
           | EnumValueT
               ( ConcreteEnum { representation_t = DefT (_, NumGeneralT Truthy); _ }
               | AbstractEnum { representation_t = DefT (_, NumGeneralT Truthy) } )
@@ -304,7 +303,7 @@ let not_string_literal expected = function
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
-let number_literal expected_loc sense expected t =
+let number_literal expected_loc expected t =
   let (_, expected_raw) = expected in
   let expected_desc = RNumberLit expected_raw in
   let lit_reason = replace_desc_new_reason expected_desc in
@@ -314,12 +313,6 @@ let number_literal expected_loc sense expected t =
       unchanged_result t
     else
       DefT (mk_reason expected_desc expected_loc, SingletonNumT { from_annot; value = expected })
-      |> changed_result
-  | DefT (_, NumT_UNSOUND (_, (_, actual_raw))) ->
-    if actual_raw = expected_raw then
-      unchanged_result t
-    else
-      DefT (mk_reason expected_desc expected_loc, NumT_UNSOUND (Some sense, expected))
       |> changed_result
   | DefT (r, NumGeneralT Truthy) when snd expected <> "0" ->
     DefT (lit_reason r, SingletonNumT { from_annot = false; value = expected }) |> changed_result
@@ -331,9 +324,7 @@ let number_literal expected_loc sense expected t =
   | _ -> DefT (reason_of_t t, EmptyT) |> changed_result
 
 let not_number_literal expected = function
-  | DefT (r, SingletonNumT { value = actual; _ })
-  | DefT (r, NumT_UNSOUND (_, actual))
-    when snd actual = snd expected ->
+  | DefT (r, SingletonNumT { value = actual; _ }) when snd actual = snd expected ->
     DefT (r, EmptyT) |> changed_result
   | t -> unchanged_result t
 
@@ -528,14 +519,11 @@ let number loc t =
     DefT (mk_reason RNumber loc, NumGeneralT AnyLiteral) |> changed_result
   | DefT (_, NumGeneralT _)
   | DefT (_, SingletonNumT _)
-  | DefT (_, NumT_UNSOUND _)
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum
-              { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)); _ }
-          | AbstractEnum
-              { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)) } )
+          ( ConcreteEnum { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -546,14 +534,11 @@ let not_number t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum
-              { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)); _ }
-          | AbstractEnum
-              { representation_t = DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)) } )
+          ( ConcreteEnum { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (NumGeneralT _ | SingletonNumT _)) } )
       )
   | DefT (_, NumGeneralT _)
-  | DefT (_, SingletonNumT _)
-  | DefT (_, NumT_UNSOUND _) ->
+  | DefT (_, SingletonNumT _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
@@ -743,7 +728,6 @@ let sentinel_refinement =
       when value = sentinel != sense ->
       true
     | (DefT (_, SingletonNumT { value = (value, _); _ }), Num (sentinel, _))
-    | (DefT (_, NumT_UNSOUND (_, (value, _))), Num (sentinel, _))
       when value = sentinel != sense ->
       true
     | (DefT (_, SingletonBoolT { value; _ }), Bool sentinel)
@@ -766,7 +750,7 @@ let sentinel_refinement =
       | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)), One (Str sentinel))
         when enum_match sense (v, Str sentinel) ->
         true
-      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)), One (Num sentinel))
+      | (DefT (_, (NumGeneralT _ | SingletonNumT _)), One (Num sentinel))
         when enum_match sense (v, Num sentinel) ->
         true
       | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)), One (Bool sentinel))
@@ -779,9 +763,9 @@ let sentinel_refinement =
         true
       | ( DefT
             ( _,
-              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | NumT_UNSOUND _
-              | SingletonNumT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _
-              | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
+              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _
+              | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _
+              | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
             ),
           Many enums
         )
@@ -794,16 +778,16 @@ let sentinel_refinement =
                  true
            )
       | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)), One (Str _))
-      | (DefT (_, (NumGeneralT _ | NumT_UNSOUND _ | SingletonNumT _)), One (Num _))
+      | (DefT (_, (NumGeneralT _ | SingletonNumT _)), One (Num _))
       | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)), One (Bool _))
       | (DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), One (BigInt _))
       | (DefT (_, NullT), One Null)
       | (DefT (_, VoidT), One Void)
       | ( DefT
             ( _,
-              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | NumT_UNSOUND _
-              | SingletonNumT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _
-              | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
+              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _
+              | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _
+              | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
             ),
           Many _
         ) ->
@@ -814,9 +798,9 @@ let sentinel_refinement =
          we have to be wary of toString and valueOf on objects/instances. *)
       | ( DefT
             ( _,
-              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | NumT_UNSOUND _
-              | SingletonNumT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _
-              | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
+              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _
+              | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _
+              | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
             ),
           _
         )
@@ -824,9 +808,9 @@ let sentinel_refinement =
         true
       | ( DefT
             ( _,
-              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | NumT_UNSOUND _
-              | SingletonNumT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _
-              | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
+              ( StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _
+              | BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _
+              | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT | VoidT )
             ),
           _
         )
@@ -925,8 +909,7 @@ let rec tag_of_def_t cx = function
   | StrT_UNSOUND _ ->
     Some (TypeTagSet.singleton StringTag)
   | SingletonNumT _
-  | NumGeneralT _
-  | NumT_UNSOUND _ ->
+  | NumGeneralT _ ->
     Some (TypeTagSet.singleton NumberTag)
   | BigIntGeneralT _
   | BigIntT_UNSOUND _
