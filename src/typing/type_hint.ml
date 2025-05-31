@@ -384,7 +384,7 @@ and type_of_hint_decomposition cx opts op reason t =
       | Decomp_ArrElement index ->
         let num =
           match index with
-          | Some i -> NumT_UNSOUND (None, (float_of_int i, string_of_int i))
+          | Some i -> SingletonNumT { value = (float_of_int i, string_of_int i); from_annot = true }
           | None -> NumGeneralT AnyLiteral
         in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
