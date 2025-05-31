@@ -33,12 +33,12 @@ component C() {
     const badName = useBadHook;
     badName([], (42: any)); // error
 
-    if (42) {
+    if (true) {
         useBadHook([], (42: any)); // error
     }
 
     let f;
-    if (42) {
+    if (true) {
         f = useBadHook
     } else {
         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
@@ -55,12 +55,12 @@ hook useC() {
     const badName = useBadHook;
     badName([], (42: any)); // error
 
-    if (42) {
+    if (true) {
         useBadHook([], (42: any)); // error
     }
 
     let f;
-    if (42) {
+    if (true) {
         f = useBadHook
     } else {
         function badhook(x: Array<number>, y: React.RefObject<number>): void { }
