@@ -153,7 +153,12 @@ let rec synthesizable_expression cx ?(encl_ctx = NoContext) exp =
 
 let mk_selector_reason_has_default cx loc = function
   | Selector.Elem { index = n; has_default } ->
-    let key = DefT (mk_reason RNumber loc, NumT_UNSOUND (None, (float n, string_of_int n))) in
+    let key =
+      DefT
+        ( mk_reason RNumber loc,
+          SingletonNumT { value = (float n, string_of_int n); from_annot = false }
+        )
+    in
     (Type.Elem key, mk_reason (RArrayNthElement n) loc, has_default)
   | Selector.Prop { prop; prop_loc; has_default } ->
     ( Type.Prop (prop, has_default),
