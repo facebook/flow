@@ -643,12 +643,12 @@ class stylize_ty_mapper ?(imports_react = false) () =
           (* If element of a base type and the base type is already present in the union
            * ignore the element *)
           | ((Bool None | BoolLit _), { bools = [Bool None]; _ })
-          | ((Num None | NumLit _), { nums = [Num None]; _ })
+          | ((Num | NumLit _), { nums = [Num]; _ })
           | ((Str None | StrLit _), { strings = [Str None]; _ }) ->
             a
           (* Otherwise, if we see the base element automatically discard all other elements *)
           | (Bool None, _) -> { a with bools = [t] }
-          | (Num None, _) -> { a with nums = [t] }
+          | (Num, _) -> { a with nums = [t] }
           | (Str None, _) -> { a with strings = [t] }
           (* Otherwise, if it is bool check to see if we have enumerated both element *)
           | (BoolLit true, { bools = [BoolLit false]; _ })
@@ -695,13 +695,6 @@ module PreserveLiterals = struct
         else
           Ty.Str None
     in
-    let enforce_number =
-      match mode with
-      | Always -> t
-      | Never
-      | Auto ->
-        Ty.Num None
-    in
     let enforce_bool =
       match mode with
       | Always -> t
@@ -713,7 +706,6 @@ module PreserveLiterals = struct
     | Ty.Str (Some s) ->
       (* TODO consider handling internal names explicitly *)
       enforce_string (Reason.display_string_of_name s)
-    | Ty.Num (Some _) -> enforce_number
     | Ty.Bool (Some _) -> enforce_bool
     | _ -> t
 end
@@ -976,7 +968,6 @@ class type_normalization_hardcoded_fixes_mapper
           List.filter
             (function
               | Ty.Obj { Ty.obj_literal = Some true; _ }
-              | Ty.Num (Some _)
               | Ty.Str (Some _)
               | Ty.Bool (Some _) ->
                 false
@@ -1196,7 +1187,7 @@ class type_normalization_hardcoded_fixes_mapper
         add_warning loc Warning.Empty_SomeKnownUpper;
         this#on_t env ub
       (* Heuristic: These are rarely useful as full precision literal types *)
-      | Ty.Num _
+      | Ty.Num
       | Ty.Bool _
       | Ty.Str _ ->
         PreserveLiterals.enforce ~mode:preserve_literals t

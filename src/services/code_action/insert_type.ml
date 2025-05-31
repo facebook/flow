@@ -68,11 +68,6 @@ let fail_on_ambiguity =
     object
       inherit use_upper_bound_mapper as super
 
-      method! on_Num () t =
-        function
-        | Some _lit -> raise FoundAmbiguousType
-        | n -> super#on_Num () t n
-
       method! on_Bool () t =
         function
         | Some _lit -> raise FoundAmbiguousType
@@ -102,11 +97,6 @@ let fail_on_ambiguity =
 class generalize_temporary_types_mapper =
   object
     inherit use_upper_bound_mapper as super
-
-    method! on_Num () t =
-      function
-      | Some _lit -> Ty.Num None
-      | n -> super#on_Num () t n
 
     method! on_Bool () t =
       function
@@ -139,11 +129,6 @@ class specialize_temporary_types_mapper =
   object
     inherit use_upper_bound_mapper as super
 
-    method! on_Num () t =
-      function
-      | Some lit -> Ty.NumLit lit
-      | n -> super#on_Num () t n
-
     method! on_Bool () t =
       function
       | Some lit -> Ty.BoolLit lit
@@ -161,11 +146,6 @@ let fixme_ambiguous_types =
   let visitor =
     object
       inherit use_upper_bound_mapper as super
-
-      method! on_Num () t =
-        function
-        | Some _ -> Utils.Builtins.flowfixme_ty_default
-        | n -> super#on_Num () t n
 
       method! on_Bool () t =
         function

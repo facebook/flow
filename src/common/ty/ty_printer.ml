@@ -88,7 +88,7 @@ let layout_of_elt
     | Bot _ -> Atom "empty"
     | Void -> Atom "void"
     | Null -> Atom "null"
-    | Num _ -> Atom "number"
+    | Num -> Atom "number"
     | Str _ -> Atom "string"
     | Bool _ -> Atom "boolean"
     | BigInt _ -> Atom "bigint"

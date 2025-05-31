@@ -14,8 +14,8 @@ let tests =
   "insert_type_utils"
   >::: [
          ( "stylize_union_number_with_number_literal" >:: fun ctxt ->
-           let t_in = Union (false, Num None, NumLit "1", []) in
-           let t_exp = Num None in
+           let t_in = Union (false, Num, NumLit "1", []) in
+           let t_exp = Num in
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in)
          );
          ( "stylize_union_string_with_string_literal" >:: fun ctxt ->

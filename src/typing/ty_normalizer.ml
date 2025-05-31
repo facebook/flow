@@ -801,7 +801,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, MixedT _) -> return Ty.Top
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
-      | DefT (_, NumGeneralT _) -> return (Ty.Num None)
+      | DefT (_, NumGeneralT _) -> return Ty.Num
       | DefT (_, StrT_UNSOUND (_, x)) when Env.preserve_inferred_literal_types env ->
         return (Ty.Str (Some x))
       | DefT (_, StrGeneralT _)

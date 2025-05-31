@@ -31,8 +31,7 @@ module UnionSimplification = struct
                       Ty.NamedProp
                         {
                           name = Reason.OrdinaryName "f";
-                          prop =
-                            Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
+                          prop = Ty.Field { t = Ty.Num; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
                           def_locs = [];
@@ -49,8 +48,7 @@ module UnionSimplification = struct
                       Ty.NamedProp
                         {
                           name = Reason.OrdinaryName "f";
-                          prop =
-                            Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
+                          prop = Ty.Field { t = Ty.Num; polarity = Ty.Neutral; optional = false };
                           inherited = false;
                           source = Ty.Other;
                           def_locs = [];
@@ -72,7 +70,7 @@ module UnionSimplification = struct
                   Ty.NamedProp
                     {
                       name = Reason.OrdinaryName "f";
-                      prop = Ty.Field { t = Ty.Num None; polarity = Ty.Neutral; optional = false };
+                      prop = Ty.Field { t = Ty.Num; polarity = Ty.Neutral; optional = false };
                       inherited = false;
                       source = Ty.Other;
                       def_locs = [];
@@ -101,8 +99,7 @@ module UnionSimplification = struct
                       Ty.NamedProp
                         {
                           name = Reason.OrdinaryName "f";
-                          prop =
-                            Ty.Field { t = Ty.Num None; polarity = Ty.Positive; optional = false };
+                          prop = Ty.Field { t = Ty.Num; polarity = Ty.Positive; optional = false };
                           inherited = false;
                           source = Ty.Other;
                           def_locs = [];
@@ -119,8 +116,7 @@ module UnionSimplification = struct
                       Ty.NamedProp
                         {
                           name = Reason.OrdinaryName "f";
-                          prop =
-                            Ty.Field { t = Ty.Num None; polarity = Ty.Negative; optional = false };
+                          prop = Ty.Field { t = Ty.Num; polarity = Ty.Negative; optional = false };
                           inherited = false;
                           source = Ty.Other;
                           def_locs = [];
@@ -282,7 +278,7 @@ module Sorting = struct
 
   let simplify_sort = simplify_type ~merge_kinds:false ~sort:true
 
-  let t0 = Union (false, Any (Annotated ALoc.none), Num None, [NumLit "42"])
+  let t0 = Union (false, Any (Annotated ALoc.none), Num, [NumLit "42"])
 
   let t1 = Union (false, NumLit "1", NumLit "2", [NumLit "42"])
 
@@ -297,7 +293,7 @@ module Sorting = struct
   let t6 = Union (false, t3, t2, [t4; t0; t1; t5])
 
   let t6_sorted =
-    Union (false, Any (Annotated ALoc.none), NumLit "1", [NumLit "2"; NumLit "42"; Num None])
+    Union (false, Any (Annotated ALoc.none), NumLit "1", [NumLit "2"; NumLit "42"; Num])
 
   let tests =
     [

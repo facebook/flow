@@ -66,7 +66,7 @@ let type_ options =
     | Void -> just (T.Void None)
     | Null -> just (T.Null None)
     | Symbol -> just (T.Symbol None)
-    | Num _ -> just (T.Number None)
+    | Num -> just (T.Number None)
     | Str _ -> just (T.String None)
     | Bool _ -> just (T.Boolean { raw = `Boolean; comments = None })
     | BigInt _ -> just (T.BigInt None)
