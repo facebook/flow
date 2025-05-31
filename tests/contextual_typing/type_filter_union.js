@@ -2,7 +2,7 @@
 
 declare var deviceThumbnailsToShow: ?Array<mixed>;
 
-const thumbnails = (42 as any)
+const thumbnails = true
   ? deviceThumbnailsToShow
   : deviceThumbnailsToShow;
 
