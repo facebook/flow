@@ -539,6 +539,8 @@ let evaluated cx = cx.ccx.sig_cx.evaluated
 
 let exact_by_default cx = cx.metadata.exact_by_default
 
+let file_options cx = cx.metadata.file_options
+
 let aloc_tables cx = cx.ccx.aloc_tables
 
 let find_props cx id =
@@ -608,6 +610,8 @@ let property_maps cx = cx.ccx.sig_cx.property_maps
 let call_props cx = cx.ccx.sig_cx.call_props
 
 let export_maps cx = cx.ccx.sig_cx.export_maps
+
+let projects_options cx = cx.metadata.projects_options
 
 let react_custom_jsx_typing cx = cx.metadata.react_custom_jsx_typing
 

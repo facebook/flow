@@ -184,7 +184,7 @@ let coverage ~cx ~typed_ast ~force file content =
         Docblock_parser.(
           parse_docblock
             ~max_tokens:docblock_max_tokens
-            ~file_options:(Context.metadata cx).Context.file_options
+            ~file_options:(Context.file_options cx)
             file
             content
         )

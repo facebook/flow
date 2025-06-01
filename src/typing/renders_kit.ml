@@ -88,14 +88,11 @@ module Make (Flow : INPUT) : S = struct
       ) ->
       if
         ALoc.equal_id id1 id2
-        ||
-        let file_options = Context.((metadata cx).file_options) in
-        let projects_options = Context.((metadata cx).projects_options) in
-        TypeUtil.nominal_id_have_same_logical_module
-          ~file_options
-          ~projects_options
-          (id1, Some name_1)
-          (id2, Some name_2)
+        || TypeUtil.nominal_id_have_same_logical_module
+             ~file_options:(Context.file_options cx)
+             ~projects_options:(Context.projects_options cx)
+             (id1, Some name_1)
+             (id2, Some name_2)
       then
         ()
       else

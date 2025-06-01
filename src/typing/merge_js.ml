@@ -472,14 +472,13 @@ let check_general_post_inference_validations cx =
 let check_react_rules cx tast = React_rules.check_react_rules cx tast
 
 let check_haste_provider_conflict cx tast =
-  let metadata = Context.metadata cx in
-  let file_options = metadata.Context.file_options in
+  let file_options = Context.file_options cx in
   let filename = Context.file cx in
   match Files.haste_name_opt ~options:file_options filename with
   | None -> ()
   | Some haste_name ->
     (match
-       let opts = metadata.Context.projects_options in
+       let opts = Context.projects_options cx in
        Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
        |> Base.Option.bind
             ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
@@ -653,9 +652,8 @@ let validate_strict_boundary_import_pattern_opt_outs cx =
        * Therefore, we don't have to error again. *)
       ()
     | Some acting_common_interface_module_t ->
-      let metadata = Context.metadata cx in
-      let file_options = metadata.Context.file_options in
-      let projects_options = metadata.Context.projects_options in
+      let file_options = Context.file_options cx in
+      let projects_options = Context.projects_options cx in
       let missing_platforms =
         Base.List.filter_map projects ~f:(fun project ->
             match
@@ -726,7 +724,7 @@ let validate_strict_boundary_import_pattern_opt_outs cx =
 let check_multiplatform_conformance cx ast tast =
   let (prog_aloc, _) = ast in
   let filename = Context.file cx in
-  let file_options = (Context.metadata cx).Context.file_options in
+  let file_options = Context.file_options cx in
   let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
   match
     Files.relative_interface_mref_of_possibly_platform_specific_file ~options:file_options filename

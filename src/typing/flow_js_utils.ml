@@ -2174,7 +2174,7 @@ end = struct
     | (Some _, None) ->
       ()
     | (Some required_platforms, Some available_platforms) ->
-      let file_options = Context.((metadata cx).file_options) in
+      let file_options = Context.file_options cx in
       let required_platforms =
         Platform_set.to_platform_string_set ~file_options required_platforms
       in
@@ -2191,7 +2191,7 @@ end = struct
 
   let validate_projects_strict_boundary_import_pattern_opt_outs cx error_loc import_specifier =
     if Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier then
-      let projects_options = (Context.metadata cx).Context.projects_options in
+      let projects_options = Context.projects_options cx in
       let file = File_key.to_string (Context.file cx) in
       let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
       match
@@ -2241,7 +2241,7 @@ end = struct
         (perform_platform_validation
         && not (Context.is_projects_strict_boundary_import_pattern_opt_outs cx mref)
         )
-        && Files.multi_platform Context.((metadata cx).file_options)
+        && Files.multi_platform (Context.file_options cx)
       in
       ( if need_platform_validation then
         match module_type_or_any with

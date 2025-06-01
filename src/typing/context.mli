@@ -218,6 +218,8 @@ val evaluated : t -> Type.t Type.Eval.Map.t
 
 val exact_by_default : t -> bool
 
+val file_options : t -> Files.options
+
 val file : t -> File_key.t
 
 val is_lib_file : t -> bool
@@ -264,6 +266,8 @@ val property_maps : t -> Type.Properties.map
 val call_props : t -> Type.t IMap.t
 
 val export_maps : t -> Type.Exports.map
+
+val projects_options : t -> Flow_projects.options
 
 val react_custom_jsx_typing : t -> bool
 
