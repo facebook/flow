@@ -209,7 +209,11 @@ class requires_calculator ~file_key ~ast ~opts =
       this#update_file_sig add
 
     method add_synthetic_imports_for_strict_boundary_import_pattern_opt_outs =
-      if Base.Option.is_some (Files.haste_name_opt ~options:opts.file_options file_key) then
+      if
+        Flow_projects.projects_strict_boundary_validate_import_pattern_opt_outs
+          ~opts:opts.project_options
+        && Base.Option.is_some (Files.haste_name_opt ~options:opts.file_options file_key)
+      then
         let opts = opts.project_options in
         let file = File_key.to_string file_key in
         if Flow_projects.is_common_code_path ~opts file then

@@ -17,6 +17,7 @@ val mk_options :
   map_path:(string -> Str.regexp) ->
   projects_path_mapping:(string * string list) list ->
   projects_strict_boundary:bool ->
+  projects_strict_boundary_validate_import_pattern_opt_outs:bool ->
   projects_strict_boundary_import_pattern_opt_outs:Str.regexp list ->
   multi_platform_ambient_supports_platform_project_overrides:(string * string list) list ->
   options
@@ -32,6 +33,8 @@ val bitset_of_project_string : opts:options -> string -> t
 val projects_bitset_of_path : opts:options -> string -> t option
 
 val is_common_code_path : opts:options -> string -> bool
+
+val projects_strict_boundary_validate_import_pattern_opt_outs : opts:options -> bool
 
 val is_import_specifier_that_opt_out_of_strict_boundary :
   opts:options -> import_specifier:string -> bool

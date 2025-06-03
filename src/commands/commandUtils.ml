@@ -1469,6 +1469,8 @@ let make_options
         ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
         ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig)
         ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig)
+        ~projects_strict_boundary_validate_import_pattern_opt_outs:
+          (FlowConfig.projects_strict_boundary_validate_import_pattern_opt_outs flowconfig)
         ~projects_strict_boundary_import_pattern_opt_outs:
           (FlowConfig.projects_strict_boundary_import_pattern_opt_outs flowconfig)
         ~multi_platform_ambient_supports_platform_project_overrides:

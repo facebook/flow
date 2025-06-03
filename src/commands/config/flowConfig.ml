@@ -122,6 +122,7 @@ module Opts = struct
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
     projects_strict_boundary: bool;
+    projects_strict_boundary_validate_import_pattern_opt_outs: bool;
     projects_strict_boundary_import_pattern_opt_outs: Str.regexp list;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -261,6 +262,7 @@ module Opts = struct
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
       projects_strict_boundary = false;
+      projects_strict_boundary_validate_import_pattern_opt_outs = true;
       projects_strict_boundary_import_pattern_opt_outs = [];
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;
@@ -1069,6 +1071,11 @@ module Opts = struct
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
         boolean (fun opts v -> Ok { opts with projects_strict_boundary = v })
+      );
+      ( "experimental.projects.strict_boundary.import_pattern_opt_outs.validate",
+        boolean (fun opts v ->
+            Ok { opts with projects_strict_boundary_validate_import_pattern_opt_outs = v }
+        )
       );
       ( "experimental.projects.strict_boundary.import_pattern_opt_outs",
         projects_strict_boundary_import_pattern_opt_outs_parser
@@ -1955,6 +1962,9 @@ let projects_overlap_mapping c = c.options.Opts.projects_overlap_mapping
 let projects_path_mapping c = c.options.Opts.projects_path_mapping
 
 let projects_strict_boundary c = c.options.Opts.projects_strict_boundary
+
+let projects_strict_boundary_validate_import_pattern_opt_outs c =
+  c.options.Opts.projects_strict_boundary_validate_import_pattern_opt_outs
 
 let projects_strict_boundary_import_pattern_opt_outs c =
   c.options.Opts.projects_strict_boundary_import_pattern_opt_outs

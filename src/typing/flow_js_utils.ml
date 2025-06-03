@@ -2187,7 +2187,11 @@ end = struct
         add_output cx message
 
   let validate_projects_strict_boundary_import_pattern_opt_outs cx error_loc import_specifier =
-    if Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier then
+    if
+      Flow_projects.projects_strict_boundary_validate_import_pattern_opt_outs
+        ~opts:(Context.projects_options cx)
+      && Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier
+    then
       let projects_options = Context.projects_options cx in
       let file = File_key.to_string (Context.file cx) in
       let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in

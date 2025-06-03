@@ -1,0 +1,36 @@
+Error ----------------------------------------------------------------------------------------------- common/test.js:6:1
+
+Cannot cast `gql` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   common/test.js:6:1
+   6| gql as number; // error: string ~> number
+      ^^^
+
+References:
+   web/a.graphql.js:1:27
+   1| module.exports = 'foo' as string;
+                                ^^^^^^ [1]
+   common/test.js:6:8
+   6| gql as number; // error: string ~> number
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- common/test.js:8:1
+
+Cannot cast `params` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   common/test.js:8:1
+   8| params as number; // error: string ~> number
+      ^^^^^^
+
+References:
+   web/b$Parameters.js:1:27
+   1| module.exports = 'foo' as string;
+                                ^^^^^^ [1]
+   common/test.js:8:11
+   8| params as number; // error: string ~> number
+                ^^^^^^ [2]
+
+
+
+Found 2 errors

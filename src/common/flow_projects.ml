@@ -10,6 +10,7 @@ type options = {
   projects_overlap_mapping: Bitset.t IMap.t;
   projects_path_mapping: (Str.regexp * Bitset.t) list;
   projects_strict_boundary: bool;
+  projects_strict_boundary_validate_import_pattern_opt_outs: bool;
   projects_strict_boundary_import_pattern_opt_outs: Str.regexp list;
   multi_platform_ambient_supports_platform_project_overrides: (Bitset.t * string list) list;
 }
@@ -27,6 +28,7 @@ let default_options =
     projects_overlap_mapping = IMap.empty;
     projects_path_mapping = [];
     projects_strict_boundary = false;
+    projects_strict_boundary_validate_import_pattern_opt_outs = false;
     projects_strict_boundary_import_pattern_opt_outs = [];
     multi_platform_ambient_supports_platform_project_overrides = [];
   }
@@ -42,6 +44,7 @@ let mk_options =
       ~map_path
       ~projects_path_mapping
       ~projects_strict_boundary
+      ~projects_strict_boundary_validate_import_pattern_opt_outs
       ~projects_strict_boundary_import_pattern_opt_outs
       ~multi_platform_ambient_supports_platform_project_overrides ->
     let projects_overlap_mapping =
@@ -109,6 +112,7 @@ let mk_options =
       projects_overlap_mapping;
       projects_path_mapping;
       projects_strict_boundary;
+      projects_strict_boundary_validate_import_pattern_opt_outs;
       projects_strict_boundary_import_pattern_opt_outs;
       multi_platform_ambient_supports_platform_project_overrides;
     }
@@ -138,6 +142,9 @@ let is_common_code_path ~opts path =
     IMap.exists
       (fun _ common_project_bitset -> Bitset.equal common_project_bitset projects_bitset)
       opts.projects_overlap_mapping
+
+let projects_strict_boundary_validate_import_pattern_opt_outs ~opts =
+  opts.projects_strict_boundary_validate_import_pattern_opt_outs
 
 let is_import_specifier_that_opt_out_of_strict_boundary ~opts ~import_specifier =
   Base.List.exists opts.projects_strict_boundary_import_pattern_opt_outs ~f:(fun pattern ->

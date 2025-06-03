@@ -1,0 +1,18 @@
+[options]
+all=true
+module.system=haste
+experimental.projects=web
+experimental.projects=native
+experimental.projects_path_mapping='<PROJECT_ROOT>/common/' -> 'web,native'
+experimental.projects_path_mapping='<PROJECT_ROOT>/web/' -> 'web'
+experimental.projects_path_mapping='<PROJECT_ROOT>/native/' -> 'native'
+experimental.projects.strict_boundary=true
+experimental.projects.strict_boundary.import_pattern_opt_outs=.*\\.graphql$
+experimental.projects.strict_boundary.import_pattern_opt_outs=.*\\$Parameters$
+experimental.projects.strict_boundary.import_pattern_opt_outs.validate=false
+
+experimental.multi_platform=true
+experimental.multi_platform.extensions=.web
+experimental.multi_platform.extensions=.native
+experimental.multi_platform.ambient_supports_platform.project_overrides='web' -> 'web'
+experimental.multi_platform.ambient_supports_platform.project_overrides='native' -> 'native'
