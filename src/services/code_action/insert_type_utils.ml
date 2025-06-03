@@ -644,12 +644,12 @@ class stylize_ty_mapper ?(imports_react = false) () =
            * ignore the element *)
           | ((Bool None | BoolLit _), { bools = [Bool None]; _ })
           | ((Num | NumLit _), { nums = [Num]; _ })
-          | ((Str None | StrLit _), { strings = [Str None]; _ }) ->
+          | ((Str | StrLit _), { strings = [Str]; _ }) ->
             a
           (* Otherwise, if we see the base element automatically discard all other elements *)
           | (Bool None, _) -> { a with bools = [t] }
           | (Num, _) -> { a with nums = [t] }
-          | (Str None, _) -> { a with strings = [t] }
+          | (Str, _) -> { a with strings = [t] }
           (* Otherwise, if it is bool check to see if we have enumerated both element *)
           | (BoolLit true, { bools = [BoolLit false]; _ })
           | (BoolLit false, { bools = [BoolLit true]; _ }) ->
@@ -685,16 +685,6 @@ module PreserveLiterals = struct
   let tag_like_regex = Str.regexp "^[a-zA-Z0-9-_]+$"
 
   let enforce ~mode t =
-    let enforce_string s =
-      match mode with
-      | Always -> t
-      | Never -> Ty.Str None
-      | Auto ->
-        if Str.string_match tag_like_regex s 0 then
-          t
-        else
-          Ty.Str None
-    in
     let enforce_bool =
       match mode with
       | Always -> t
@@ -703,9 +693,6 @@ module PreserveLiterals = struct
         Ty.Bool None
     in
     match t with
-    | Ty.Str (Some s) ->
-      (* TODO consider handling internal names explicitly *)
-      enforce_string (Reason.display_string_of_name s)
     | Ty.Bool (Some _) -> enforce_bool
     | _ -> t
 end
@@ -968,7 +955,6 @@ class type_normalization_hardcoded_fixes_mapper
           List.filter
             (function
               | Ty.Obj { Ty.obj_literal = Some true; _ }
-              | Ty.Str (Some _)
               | Ty.Bool (Some _) ->
                 false
               | _ -> true)
@@ -1009,7 +995,7 @@ class type_normalization_hardcoded_fixes_mapper
           if has_fbt && from_bounds then
             List.filter
               (function
-                | Ty.Str _ -> false
+                | Ty.Str -> false
                 | _ -> true)
               ts
           else
@@ -1189,7 +1175,7 @@ class type_normalization_hardcoded_fixes_mapper
       (* Heuristic: These are rarely useful as full precision literal types *)
       | Ty.Num
       | Ty.Bool _
-      | Ty.Str _ ->
+      | Ty.Str ->
         PreserveLiterals.enforce ~mode:preserve_literals t
       (* E.g. React$Element<'div'> will become React.MixedElement *)
       | Ty.Generic
@@ -1201,7 +1187,7 @@ class type_normalization_hardcoded_fixes_mapper
               } as symbol
             ),
             kind,
-            Some [(Ty.Str _ | Ty.StrLit _)]
+            Some [(Ty.Str | Ty.StrLit _)]
           )
         when is_react_loc sym_def_loc ->
         let name = "React.MixedElement" in

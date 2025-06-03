@@ -73,11 +73,6 @@ let fail_on_ambiguity =
         | Some _lit -> raise FoundAmbiguousType
         | n -> super#on_Bool () t n
 
-      method! on_Str () t =
-        function
-        | Some _lit -> raise FoundAmbiguousType
-        | n -> super#on_Str () t n
-
       method! on_Arr () t =
         function
         | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
@@ -102,11 +97,6 @@ class generalize_temporary_types_mapper =
       function
       | Some _lit -> Ty.Bool None
       | n -> super#on_Bool () t n
-
-    method! on_Str () t =
-      function
-      | Some _lit -> Ty.Str None
-      | n -> super#on_Str () t n
 
     method! on_Arr () t =
       function
@@ -133,11 +123,6 @@ class specialize_temporary_types_mapper =
       function
       | Some lit -> Ty.BoolLit lit
       | n -> super#on_Bool () t n
-
-    method! on_Str () t =
-      function
-      | Some lit -> Ty.StrLit lit
-      | n -> super#on_Str () t n
   end
 
 let specialize_temporary_types = (new specialize_temporary_types_mapper)#on_t ()
@@ -151,11 +136,6 @@ let fixme_ambiguous_types =
         function
         | Some _ -> Utils.Builtins.flowfixme_ty_default
         | n -> super#on_Bool () t n
-
-      method! on_Str () t =
-        function
-        | Some _ -> Utils.Builtins.flowfixme_ty_default
-        | n -> super#on_Str () t n
 
       method! on_Arr () t =
         function

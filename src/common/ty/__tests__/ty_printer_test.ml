@@ -15,7 +15,7 @@ let tests =
              Ty.NamedProp
                {
                  name = Reason.OrdinaryName "foo";
-                 prop = Ty.Get (Ty.Str None);
+                 prop = Ty.Get Ty.Str;
                  inherited = false;
                  source = Ty.Other;
                  def_locs = [];
@@ -38,7 +38,7 @@ let tests =
              Ty.NamedProp
                {
                  name = Reason.OrdinaryName "foo";
-                 prop = Ty.Set (Ty.Str None);
+                 prop = Ty.Set Ty.Str;
                  inherited = false;
                  source = Ty.Other;
                  def_locs = [];

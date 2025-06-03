@@ -121,7 +121,7 @@ let lsp_completion_of_type =
   | Void
   | Symbol
   | Num
-  | Str _
+  | Str
   | Bool _
   | BigInt _
   | Arr _

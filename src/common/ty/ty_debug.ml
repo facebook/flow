@@ -24,7 +24,7 @@ let string_of_ctor_t = function
   | Null -> "Null"
   | Symbol -> "Symbol"
   | Num -> "Num"
-  | Str _ -> "Str"
+  | Str -> "Str"
   | Bool _ -> "Bool"
   | BigInt _ -> "BigInt"
   | NumLit _ -> "NumLit"
@@ -324,8 +324,7 @@ struct
       | Symbol -> "Symbol"
       | Num -> "Num"
       | NumLit s -> spf "\"%s\"" s
-      | Str (Some x) -> spf "Str (%s)" (Reason.display_string_of_name x)
-      | Str None -> "Str"
+      | Str -> "Str"
       | StrLit s -> spf "\"%s\"" (Reason.display_string_of_name s)
       | Bool (Some x) -> spf "Bool (%b)" x
       | Bool None -> "Bool"
@@ -516,7 +515,7 @@ struct
         | Null
         | Symbol
         | Num
-        | Str _
+        | Str
         | Bool _
         | BigInt _ ->
           []

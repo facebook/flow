@@ -89,7 +89,7 @@ let layout_of_elt
     | Void -> Atom "void"
     | Null -> Atom "null"
     | Num -> Atom "number"
-    | Str _ -> Atom "string"
+    | Str -> Atom "string"
     | Bool _ -> Atom "boolean"
     | BigInt _ -> Atom "bigint"
     | Symbol -> Atom "symbol"

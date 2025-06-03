@@ -19,8 +19,8 @@ let tests =
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in)
          );
          ( "stylize_union_string_with_string_literal" >:: fun ctxt ->
-           let t_in = Union (false, StrLit (Reason.OrdinaryName "foo"), Str None, []) in
-           let t_exp = Str None in
+           let t_in = Union (false, StrLit (Reason.OrdinaryName "foo"), Str, []) in
+           let t_exp = Str in
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in)
          );
          ( "stylize_union_true_and_false" >:: fun ctxt ->
@@ -34,8 +34,8 @@ let tests =
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in)
          );
          ( "stylize_union_string_number_literals" >:: fun ctxt ->
-           let t_in = Union (false, Str None, NumLit "1", [NumLit "2"]) in
-           let t_exp = Union (false, NumLit "1", NumLit "2", [Str None]) in
+           let t_in = Union (false, Str, NumLit "1", [NumLit "2"]) in
+           let t_exp = Union (false, NumLit "1", NumLit "2", [Str]) in
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in)
          );
          (* These tests just document that sorting is working in a sane order *)
@@ -56,10 +56,10 @@ let tests =
          );
          ( "sort_types_any_first" >:: fun ctxt ->
            let t_in =
-             Union (false, Void, Any (Annotated ALoc.none), [Null; Str None; NumLit "5"; Bool None])
+             Union (false, Void, Any (Annotated ALoc.none), [Null; Str; NumLit "5"; Bool None])
            in
            let t_exp =
-             Union (false, Any (Annotated ALoc.none), Void, [Null; Bool None; NumLit "5"; Str None])
+             Union (false, Any (Annotated ALoc.none), Void, [Null; Bool None; NumLit "5"; Str])
            in
            assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in)
          );
