@@ -64,7 +64,7 @@
 }
 
 {
-  declare class MyMap<K, +V> {
+  declare class MyMap<+K, +V> {
     static <K, V>({+[k: K]: V, ...}): MyMap<K, V>;
   }
   const map = MyMap({'1': true});

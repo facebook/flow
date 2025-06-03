@@ -2458,7 +2458,7 @@ let is_str_intlike str = Str.string_match int_regex str 0
 let type_of_key_name cx name reason =
   let str_key () =
     let key_reason = replace_desc_reason (RPropertyIsAString name) reason in
-    DefT (key_reason, StrT_UNSOUND (None, name))
+    DefT (key_reason, SingletonStrT { value = name; from_annot = true })
   in
   let str = display_string_of_name name in
   (* We don't want the `NumericStrKeyT` type to leak out of the obj-to-obj

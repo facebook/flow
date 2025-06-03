@@ -268,3 +268,13 @@ function subtype_optional_c_to_dict(x: {|p?: C|}): {[k: string]: B} {
   // error: C ~> B
   return x;
 }
+
+function inferred_generic_dict_key() {
+  declare function getAKey<TKey>(x: {[key: TKey]: mixed}): Array<TKey>;
+  const x = getAKey({a: 'a', b: 'b'}); // will infer Array<'a'|'b'>
+
+  if (true) {
+    x[0] = 'c'; // Error 'c' is not 'a' or 'b'
+  }
+  x[0] as 'a'|'b'; // okay
+}
