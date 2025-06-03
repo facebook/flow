@@ -937,7 +937,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        o as {[string]: boolean}: // OK
        ```
     *)
-    | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _))) -> ()
+    | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _))) -> ()
     | (DefT (rl, NumericStrKeyT (actual, _)), DefT (ru, SingletonNumT { value = (expected, _); _ }))
       ->
       if actual = expected then
@@ -971,15 +971,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * describing a keyset can be modeled using unions of singleton strings.
 
      * One may also legitimately wonder why SingletonStrT(_, key) cannot be
-     * always replaced by StrT_UNSOUND(_, Some key). The reason is that types of the
+     * always replaced by SingletonStrT(Some key). The reason is that types of the
      * latter form (string literal types) are inferred to be the type of string
      * literals appearing as values, and we don't want to prematurely narrow
      * down the type of the location where such values may appear, since that
      * would preclude other strings to be stored in that location. Thus, by
-     * necessity we allow all string types to flow to StrT_UNSOUND (whereas only
+     * necessity we allow all string types to flow to SingletonStrT (whereas only
      * exactly matching string literal types may flow to SingletonStrT).
      * *)
-    | ( DefT (rl, (StrT_UNSOUND (_, actual) | SingletonStrT { value = actual; _ })),
+    | ( DefT (rl, SingletonStrT { value = actual; _ }),
         DefT (ru, SingletonStrT { value = expected; _ })
       ) ->
       if expected = actual then
@@ -1050,13 +1050,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
-    | ( ( DefT (reason_s, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }))
-        | GenericT
-            {
-              reason = reason_s;
-              bound = DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }));
-              _;
-            } ),
+    | ( ( DefT (reason_s, SingletonStrT { value = x; _ })
+        | GenericT { reason = reason_s; bound = DefT (_, SingletonStrT { value = x; _ }); _ } ),
         KeysT (reason_op, o)
       ) ->
       Flow_js_utils.update_lit_type_from_annot cx l;
@@ -1177,7 +1172,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       begin
         match u with
-        | DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ })) -> check (UnionEnum.Str x)
+        | DefT (_, SingletonStrT { value = x; _ }) -> check (UnionEnum.Str x)
         | DefT (_, (BoolT_UNSOUND x | SingletonBoolT { value = x; _ })) -> check (UnionEnum.Bool x)
         | DefT (_, SingletonNumT { value = x; _ }) -> check (UnionEnum.Num x)
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
@@ -1192,9 +1187,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* String enum sets can be handled in logarithmic time by just
      * checking for membership in the set.
      *)
-    | ( DefT (reason_l, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ })),
-        UnionT (reason_u, rep)
-      )
+    | (DefT (reason_l, SingletonStrT { value = x; _ }), UnionT (reason_u, rep))
       when match UnionRep.check_enum rep with
            | Some enums ->
              if not (UnionEnumSet.mem (UnionEnum.Str x) enums) then
@@ -1326,10 +1319,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when prefix1 = prefix2 ->
       let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT
-          ( reason,
-            (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT { value = OrdinaryName s; _ })
-          ),
+    | ( DefT (reason, SingletonStrT { value = OrdinaryName s; _ }),
         StrUtilT { reason = _; op = StrPrefix prefix; remainder }
       )
       when String.starts_with ~prefix s ->
@@ -1354,10 +1344,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when suffix1 = suffix2 ->
       let remainder1 = Option.value ~default:(StrModuleT.why reason) remainder1 in
       rec_flow_t cx trace ~use_op (remainder1, remainder2)
-    | ( DefT
-          ( reason,
-            (StrT_UNSOUND (None, OrdinaryName s) | SingletonStrT { value = OrdinaryName s; _ })
-          ),
+    | ( DefT (reason, SingletonStrT { value = OrdinaryName s; _ }),
         StrUtilT { reason = _; op = StrSuffix suffix; remainder }
       )
       when String.ends_with ~suffix s ->
@@ -2309,7 +2296,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `Number })
-    | ( DefT (reason, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
+    | ( DefT (reason, (StrGeneralT _ | SingletonStrT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2490,8 +2477,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT (_, SingletonNumT _) ->
           Some "number"
         | DefT (_, StrGeneralT _)
-        | DefT (_, SingletonStrT _)
-        | DefT (_, StrT_UNSOUND _) ->
+        | DefT (_, SingletonStrT _) ->
           Some "string"
         | DefT (_, SymbolT) -> Some "symbol"
         | DefT (_, BigIntGeneralT _)

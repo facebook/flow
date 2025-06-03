@@ -31,7 +31,7 @@ let rec merge_type cx =
   let create_union rep = UnionT (locationless_reason (RCustom "union"), rep) in
   function
   | (DefT (_, NumGeneralT _), (DefT (_, NumGeneralT _) as t))
-  | (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)), (DefT (_, (StrGeneralT _ | StrT_UNSOUND _)) as t))
+  | (DefT (_, StrGeneralT _), (DefT (_, StrGeneralT _) as t))
   | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)), (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)) as t))
   | (DefT (_, NullT), (DefT (_, NullT) as t))
   | (DefT (_, VoidT), (DefT (_, VoidT) as t)) ->
@@ -571,7 +571,6 @@ let rec extract_type cx this_t =
   | StrUtilT { reason; _ }
   | DefT (reason, SingletonStrT _)
   | DefT (reason, StrGeneralT _)
-  | DefT (reason, StrT_UNSOUND _)
   | DefT (reason, NumericStrKeyT _) ->
     get_builtin_type cx reason "String" |> extract_type cx
   | DefT (reason, SingletonNumT _)

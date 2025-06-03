@@ -2428,7 +2428,6 @@ module Make
       | Computed key ->
         (match key with
         | DefT (_, StrGeneralT _)
-        | DefT (_, StrT_UNSOUND _)
         | DefT (_, NumGeneralT _)
         | DefT (_, EnumValueT _)
         | AnyT _ ->

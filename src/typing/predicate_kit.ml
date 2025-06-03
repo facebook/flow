@@ -201,8 +201,8 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (*********************)
   (* _ ~ "some string" *)
   (*********************)
-  | SingletonStrP (expected_loc, sense, lit) ->
-    let filtered_str = Type_filter.string_literal expected_loc sense (OrdinaryName lit) l in
+  | SingletonStrP (expected_loc, _sense, lit) ->
+    let filtered_str = Type_filter.string_literal expected_loc (OrdinaryName lit) l in
     report_filtering_result_to_predicate_result filtered_str result_collector
   | NotP (SingletonStrP (_, _, lit)) ->
     let filtered_str = Type_filter.not_string_literal (OrdinaryName lit) l in
@@ -548,9 +548,7 @@ and intersect =
    * handling a few cases here explicitly. *)
   let ground_types_differ t1 t2 =
     match (C.unwrap t1, C.unwrap t2) with
-    | ( DefT (_, (SingletonStrT { value = v1; _ } | StrT_UNSOUND (_, v1))),
-        DefT (_, (SingletonStrT { value = v2; _ } | StrT_UNSOUND (_, v2)))
-      ) ->
+    | (DefT (_, SingletonStrT { value = v1; _ }), DefT (_, SingletonStrT { value = v2; _ })) ->
       v1 <> v2
     | (DefT (_, SingletonNumT { value = v1; _ }), DefT (_, SingletonNumT { value = v2; _ })) ->
       v1 <> v2
@@ -1146,9 +1144,7 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
         report_unchanged_filtering_result_to_predicate_result orig_obj result_collector
   in
   let sentinel_of_literal = function
-    | DefT (_, StrT_UNSOUND (_, value))
-    | DefT (_, SingletonStrT { value; _ }) ->
-      Some UnionEnum.(One (Str value))
+    | DefT (_, SingletonStrT { value; _ }) -> Some UnionEnum.(One (Str value))
     | DefT (_, SingletonNumT { value; _ }) -> Some UnionEnum.(One (Num value))
     | DefT (_, BoolT_UNSOUND value)
     | DefT (_, SingletonBoolT { value; _ }) ->
@@ -1309,11 +1305,10 @@ and concretize_and_run_sentinel_prop_test
 and eq_test cx _trace result_collector (sense, left, right) =
   let expected_loc = loc_of_t right in
   match right with
-  | DefT (_, StrT_UNSOUND (_, value))
   | DefT (_, SingletonStrT { value; _ }) ->
     let filtered =
       if sense then
-        Type_filter.string_literal expected_loc sense value left
+        Type_filter.string_literal expected_loc value left
       else
         Type_filter.not_string_literal value left
     in

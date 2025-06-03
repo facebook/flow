@@ -491,7 +491,6 @@ let is_falsy = function
             ( ConcreteEnum { representation_t = DefT (_, BoolT_UNSOUND false); _ }
             | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND false) } )
         | SingletonStrT { value = OrdinaryName ""; _ }
-        | StrT_UNSOUND (_, OrdinaryName "")
         | SingletonNumT { value = (0., _); _ } )
       ) ->
     true
@@ -528,9 +527,7 @@ let is_mixed_subtype l mixed_flavor =
 let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   match (t1, t2) with
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
-  | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
-      DefT (_, (StrGeneralT _ | StrT_UNSOUND _))
-    )
+  | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
   | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
       DefT (_, (BoolGeneralT | BoolT_UNSOUND _))
     )
@@ -540,7 +537,7 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
-  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _)))
+  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _)))
   | (DefT (_, EmptyT), _) ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
@@ -548,20 +545,10 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
     true
-  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
-      StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
-    )
-    when String.starts_with ~prefix s ->
-    true
   | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
       StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
-    true
-  | ( DefT (_, StrT_UNSOUND (None, OrdinaryName s)),
-      StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
-    )
-    when String.ends_with ~suffix s ->
     true
   | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
       DefT (_, StrGeneralT Truthy)
@@ -571,8 +558,6 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral)) -> true
   | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
   | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _)) -> false
-  | (DefT (_, StrT_UNSOUND (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
-    expected = actual
   | (DefT (_, SingletonStrT { value = actual; _ }), DefT (_, SingletonStrT { value = expected; _ }))
     ->
     let result = expected = actual in

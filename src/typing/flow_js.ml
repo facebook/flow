@@ -1399,16 +1399,14 @@ struct
           ) ->
           (match (drop_generic key, flags.obj_kind) with
           (* If we have a literal string and that property exists *)
-          | (DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ })), _)
-            when Context.has_prop cx mapr x ->
-            ()
+          | (DefT (_, SingletonStrT { value = x; _ }), _) when Context.has_prop cx mapr x -> ()
           (* If we have a dictionary, try that next *)
           | (_, Indexed { key = expected_key; _ }) ->
             rec_flow_t ~use_op cx trace (mod_reason_of_t (Fun.const reason_op) key, expected_key)
           | _ ->
             let (prop, suggestion) =
               match drop_generic key with
-              | DefT (_, (StrT_UNSOUND (_, prop) | SingletonStrT { value = prop; _ })) ->
+              | DefT (_, SingletonStrT { value = prop; _ }) ->
                 (Some prop, prop_typo_suggestion cx [mapr] (display_string_of_name prop))
               | _ -> (None, None)
             in
@@ -1427,12 +1425,8 @@ struct
             HasOwnPropT
               ( use_op,
                 reason_op,
-                ( ( DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }))
-                  | GenericT
-                      {
-                        bound = DefT (_, (StrT_UNSOUND (_, x) | SingletonStrT { value = x; _ }));
-                        _;
-                      } ) as key
+                ( ( DefT (_, SingletonStrT { value = x; _ })
+                  | GenericT { bound = DefT (_, SingletonStrT { value = x; _ }); _ } ) as key
                 )
               )
           ) ->
@@ -3570,7 +3564,7 @@ struct
         (******************************************)
         (* strings may have their characters read *)
         (******************************************)
-        | ( DefT (reason_s, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
+        | ( DefT (reason_s, (StrGeneralT _ | SingletonStrT _)),
             GetElemT
               {
                 use_op;
@@ -4755,7 +4749,7 @@ struct
           | OpenT _ ->
             let loc = loc_of_t elem_t in
             add_output cx Error_message.(EInternal (loc, PropRefComputedOpen))
-          | DefT (_, (StrT_UNSOUND _ | SingletonStrT _)) ->
+          | DefT (_, SingletonStrT _) ->
             let loc = loc_of_t elem_t in
             add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
           | AnyT (_, src) ->
@@ -4952,13 +4946,9 @@ struct
         (*******************************)
 
         (* ToStringT passes through strings unchanged, and flows a generic StrT otherwise *)
-        | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
-            ToStringT { orig_t = None; t_out; _ }
-          ) ->
+        | (DefT (_, (StrGeneralT _ | SingletonStrT _)), ToStringT { orig_t = None; t_out; _ }) ->
           rec_flow cx trace (l, t_out)
-        | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
-            ToStringT { orig_t = Some t; t_out; _ }
-          ) ->
+        | (DefT (_, (StrGeneralT _ | SingletonStrT _)), ToStringT { orig_t = Some t; t_out; _ }) ->
           rec_flow cx trace (t, t_out)
         | (_, ToStringT { reason; t_out; _ }) -> rec_flow cx trace (StrModuleT.why reason, t_out)
         (**********************)
@@ -5063,8 +5053,7 @@ struct
         (***********************)
         (* String library call *)
         (***********************)
-        | (DefT (reason, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)), u)
-          when primitive_promoting_use_t u ->
+        | (DefT (reason, (StrGeneralT _ | SingletonStrT _)), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "String", u)
         (***********************)
         (* Number library call *)
@@ -5163,7 +5152,7 @@ struct
         (* computed properties *)
         | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
           TypeCollector.add collector t
-        | (DefT (lreason, (StrT_UNSOUND _ | SingletonStrT _)), WriteComputedObjPropCheckT _) ->
+        | (DefT (lreason, SingletonStrT _), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
           add_output cx Error_message.(EInternal (loc, PropRefComputedLiteral))
         | (AnyT (_, src), WriteComputedObjPropCheckT { reason; value_t; _ }) ->
@@ -5411,7 +5400,7 @@ struct
       | TestPropT _
       | OptionalChainT _
       | OptionalIndexedAccessT _
-      | UseT (Op (Coercion _), DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))) ->
+      | UseT (Op (Coercion _), DefT (_, (StrGeneralT _ | SingletonStrT _))) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
         true
       | ReactKitT _ ->

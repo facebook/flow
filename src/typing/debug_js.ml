@@ -144,7 +144,6 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, StrT_UNSOUND (_, s)) -> p ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, BoolGeneralT) -> p t
     | DefT (_, BoolT_UNSOUND b) -> p ~extra:(spf "%B" b) t
     | DefT (_, BigIntGeneralT lit) ->

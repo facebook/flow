@@ -236,7 +236,6 @@ class virtual ['a] t =
       match t with
       | NumGeneralT _
       | StrGeneralT _
-      | StrT_UNSOUND _
       | BoolGeneralT
       | BoolT_UNSOUND _
       | BigIntGeneralT _

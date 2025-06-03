@@ -84,7 +84,6 @@ class ['a] t =
       function
       | NumGeneralT _
       | StrGeneralT _
-      | StrT_UNSOUND _
       | BoolGeneralT
       | BoolT_UNSOUND _
       | BigIntGeneralT _

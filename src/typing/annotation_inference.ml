@@ -771,7 +771,6 @@ module rec ConsGen : S = struct
     (* !x when x is falsy *)
     | (DefT (_, BoolT_UNSOUND false), Annot_NotT reason)
     | (DefT (_, SingletonBoolT { value = false; _ }), Annot_NotT reason)
-    | (DefT (_, StrT_UNSOUND (_, OrdinaryName "")), Annot_NotT reason)
     | (DefT (_, SingletonStrT { value = OrdinaryName ""; _ }), Annot_NotT reason)
     | (DefT (_, SingletonNumT { value = (0., _); _ }), Annot_NotT reason)
     | (DefT (_, NullT), Annot_NotT reason)
@@ -1080,9 +1079,7 @@ module rec ConsGen : S = struct
     (********************)
     (* GetElemT / ElemT *)
     (********************)
-    | ( DefT (_, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)),
-        Annot_GetElemT (reason_op, _use_op, _index)
-      ) ->
+    | (DefT (_, (StrGeneralT _ | SingletonStrT _)), Annot_GetElemT (reason_op, _use_op, _index)) ->
       (* NOTE bypassing check that index is a number *)
       StrModuleT.why reason_op
     | ((DefT (_, (ObjT _ | ArrT _ | InstanceT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key))
@@ -1231,7 +1228,7 @@ module rec ConsGen : S = struct
     (*************)
     (* ToStringT *)
     (*************)
-    | (DefT (_, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)), Annot_ToStringT _) -> t
+    | (DefT (_, (StrGeneralT _ | SingletonStrT _)), Annot_ToStringT _) -> t
     | (_, Annot_ToStringT { reason; _ }) -> StrModuleT.why reason
     (************)
     (* GetPropT *)
@@ -1252,8 +1249,7 @@ module rec ConsGen : S = struct
     (************************)
     (* Promoting primitives *)
     (************************)
-    | (DefT (reason, (StrGeneralT _ | SingletonStrT _ | StrT_UNSOUND _)), _)
-      when primitive_promoting_op op ->
+    | (DefT (reason, (StrGeneralT _ | SingletonStrT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "String" in
       elab_t cx builtin op
     | (DefT (reason, (NumGeneralT _ | SingletonNumT _)), _) when primitive_promoting_op op ->

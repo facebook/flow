@@ -104,9 +104,7 @@ module Operators = struct
 
   let check_comparator =
     let check_base cx = function
-      | ( DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)),
-          DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _))
-        )
+      | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, (StrGeneralT _ | SingletonStrT _)))
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
       | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)),
           DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
@@ -152,9 +150,8 @@ module Operators = struct
     let will_fail_check_if_unmatched = function
       | DefT
           ( _,
-            ( NumGeneralT _ | StrGeneralT _ | StrT_UNSOUND _ | BoolGeneralT | BoolT_UNSOUND _
-            | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _ | SymbolT | EnumObjectT _
-            | EnumValueT _ )
+            ( NumGeneralT _ | StrGeneralT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonNumT _
+            | SingletonStrT _ | SingletonBoolT _ | SymbolT | EnumObjectT _ | EnumValueT _ )
           ) ->
         true
       | _ -> false
@@ -171,8 +168,8 @@ module Operators = struct
     (* If we allow `==` on these two types. *)
     let equatable = function
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
-      | ( (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _),
-          (DefT (_, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) | StrUtilT _)
+      | ( (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _),
+          (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _)
         )
       | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
           DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _))
@@ -463,7 +460,6 @@ module Operators = struct
       (* !x when x is falsy *)
       | DefT (_, BoolT_UNSOUND false)
       | DefT (_, SingletonBoolT { value = false; _ })
-      | DefT (_, StrT_UNSOUND (_, OrdinaryName ""))
       | DefT (_, SingletonStrT { value = OrdinaryName ""; _ })
       | DefT (_, SingletonNumT { value = (0., _); _ })
       | DefT (_, NullT)
@@ -776,7 +772,6 @@ module TypeAssertions = struct
       (* the left-hand side of a `(x in y)` expression is a string or number
          TODO: also, symbols *)
       | DefT (_, StrGeneralT _)
-      | DefT (_, StrT_UNSOUND _)
       | DefT (_, SingletonStrT _) ->
         ()
       | DefT (_, NumGeneralT _)
@@ -947,7 +942,7 @@ module TypeAssertions = struct
   let check_specialized_assert_operator_lookup =
     let check_base cx ~op_reason ~obj_reason (obj, prop) =
       match prop with
-      | DefT (_, (StrT_UNSOUND (_, value) | SingletonStrT { value; _ })) ->
+      | DefT (_, SingletonStrT { value; _ }) ->
         assert_operator_receiver_base cx ~op_reason ~obj_reason obj (Some value)
       | _ -> assert_operator_receiver_base cx ~op_reason ~obj_reason obj None
     in

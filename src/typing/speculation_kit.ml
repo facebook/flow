@@ -439,8 +439,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         match l with
         | DefT
             ( _,
-              ( StrT_UNSOUND _ | BoolT_UNSOUND _ | SingletonStrT _ | SingletonNumT _
-              | SingletonBoolT _ | SingletonBigIntT _ | BigIntT_UNSOUND _ | VoidT | NullT )
+              ( BoolT_UNSOUND _ | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _
+              | SingletonBigIntT _ | BigIntT_UNSOUND _ | VoidT | NullT )
             ) ->
           shortcut_enum cx trace reason_op use_op l rep
         (* Types that are definitely incompatible with enums, after the above case. *)

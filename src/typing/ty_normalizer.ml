@@ -429,7 +429,7 @@ module Make (I : INPUT) : S = struct
     let open T in
     match d with
     | PropertyType _
-    | ElementType { index_type = DefT (_, (SingletonStrT _ | StrGeneralT _ | StrT_UNSOUND _)) }
+    | ElementType { index_type = DefT (_, (SingletonStrT _ | StrGeneralT _)) }
     | OptionalIndexedAccessNonMaybeType _
     | OptionalIndexedAccessResultType _ ->
       (match unwrap_unless_aliased ~env t with
@@ -802,11 +802,7 @@ module Make (I : INPUT) : S = struct
       | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, VoidT) -> return Ty.Void
       | DefT (_, NumGeneralT _) -> return Ty.Num
-      | DefT (_, StrT_UNSOUND (_, x)) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Str (Some x))
-      | DefT (_, StrGeneralT _)
-      | DefT (_, StrT_UNSOUND _) ->
-        return (Ty.Str None)
+      | DefT (_, StrGeneralT _) -> return (Ty.Str None)
       | DefT (_, BoolT_UNSOUND x) when Env.preserve_inferred_literal_types env ->
         return (Ty.Bool (Some x))
       | DefT (_, BoolGeneralT)
@@ -2416,7 +2412,7 @@ module Make (I : INPUT) : S = struct
       | AnnotT (_, t, _) -> type__ ~env ~inherited ~source ~imode t
       | ThisTypeAppT (_, c, _, _) -> type__ ~env ~inherited ~source ~imode c
       | DefT (r, (NumGeneralT _ | SingletonNumT _)) -> primitive ~env r "Number"
-      | DefT (r, (StrGeneralT _ | StrT_UNSOUND _ | SingletonStrT _)) -> primitive ~env r "String"
+      | DefT (r, (StrGeneralT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, SymbolT) -> primitive ~env r "Symbol"
       | DefT (_, EnumValueT _) -> return no_members

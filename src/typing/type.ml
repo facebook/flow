@@ -183,7 +183,6 @@ module rec TypeTerm : sig
     | NumGeneralT of literal
     (* TODO StrT should perhaps not allow internal names *)
     | StrGeneralT of literal
-    | StrT_UNSOUND of bool option * name
     | BoolGeneralT
     | BoolT_UNSOUND of bool
     | BigIntGeneralT of literal
@@ -2426,9 +2425,7 @@ end = struct
   let canon =
     TypeTerm.(
       function
-      | DefT (_, SingletonStrT { value = lit; _ })
-      | DefT (_, StrT_UNSOUND (_, lit)) ->
-        Some (UnionEnum.Str lit)
+      | DefT (_, SingletonStrT { value = lit; _ }) -> Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
       | DefT (_, SingletonNumT { value = lit; _ }) -> Some (UnionEnum.Num lit)
       | DefT (_, SingletonBigIntT { value = lit; _ })
@@ -2511,9 +2508,7 @@ end = struct
     let open UnionEnum in
     function
     | DefT (_, SingletonStrT _) -> Some SingletonStrTag
-    | DefT (_, StrGeneralT _)
-    | DefT (_, StrT_UNSOUND _) ->
-      Some StrTag
+    | DefT (_, StrGeneralT _) -> Some StrTag
     | DefT (_, NumericStrKeyT _) -> Some NumericStrKeyTag
     | DefT (_, SingletonNumT _) -> Some SingletonNumTag
     | DefT (_, NumGeneralT _) -> Some NumTag
@@ -4012,7 +4007,6 @@ let string_of_def_ctor = function
   | SingletonStrT _ -> "SingletonStrT"
   | SingletonBigIntT _ -> "SingletonBigIntT"
   | StrGeneralT _ -> "StrT"
-  | StrT_UNSOUND _ -> "StrT_UNSOUND"
   | SymbolT -> "SymbolT"
   | TypeT _ -> "TypeT"
   | VoidT -> "VoidT"

@@ -31,7 +31,7 @@ val undefined : Type.t -> filter_result
 
 val not_undefined : Context.t -> Type.t -> filter_result
 
-val string_literal : ALoc.t -> bool -> Reason.name -> Type.t -> filter_result
+val string_literal : ALoc.t -> Reason.name -> Type.t -> filter_result
 
 val not_string_literal : Reason.name -> Type.t -> filter_result
 

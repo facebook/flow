@@ -179,7 +179,6 @@ let visitor =
       | DefT (_, SingletonBigIntT _)
       | DefT (_, SingletonBoolT _)
       | DefT (_, StrGeneralT _)
-      | DefT (_, StrT_UNSOUND _)
       | DefT (_, VoidT)
       | DefT (_, EnumObjectT _)
       | DefT (_, EnumValueT _) ->
