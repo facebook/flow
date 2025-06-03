@@ -4195,6 +4195,19 @@ let to_printable_error :
         text " cannot be declared as 'const'. ";
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
+    | MessageConstantCondition { is_truthy } ->
+      [
+        text "Constant condition. ";
+        text
+          (spf
+             "The condition will always be %s."
+             ( if is_truthy then
+               "truthy"
+             else
+               "falsy"
+             )
+          );
+      ]
   in
   let rec convert_error_message
       { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =

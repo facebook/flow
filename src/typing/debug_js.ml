@@ -1959,6 +1959,8 @@ let dump_error_message =
       spf "ETypeParamConstIncompatibility (%s)" (dump_reason cx reason)
     | ETypeParamConstInvalidPosition reason ->
       spf "ETypeParamConstInvalidPosition (%s)" (dump_reason cx reason)
+    | EConstantCondition { loc; is_truthy } ->
+      spf "EInvalidComparison (%s). is_truthy=%s" (string_of_aloc loc) (string_of_bool is_truthy)
 
 module Verbose = struct
   let print_if_verbose_lazy

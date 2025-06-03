@@ -187,6 +187,7 @@ type error_code =
   | NestedHook
   | TypeParamConstCode
   | IllegalAssertOperator
+  | ConstantCondition
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -423,3 +424,4 @@ let string_of_code : error_code -> string = function
   | InvalidComponentProp -> "invalid-component-prop"
   | TypeParamConstCode -> "incompatible-type-param-const"
   | IllegalAssertOperator -> "illegal-assert-operator"
+  | ConstantCondition -> "constant-condition"

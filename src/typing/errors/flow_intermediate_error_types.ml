@@ -939,6 +939,7 @@ type 'loc message =
   | MessageMatchInvalidPatternReference of { binding_reason: 'loc virtual_reason }
   | MessageMatchInvalidObjectShorthand of { name: string }
   | MessageMatchStatementInvalidBody
+  | MessageConstantCondition of { is_truthy: bool }
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;
