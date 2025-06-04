@@ -192,8 +192,7 @@ let add_imports imports resolved_modules provider (index : Export_index.t) =
         in
         let kind_and_name module_name =
           match import.Imports.kind with
-          | Imports.Default ->
-            (Export_index.Default, Flow_import_specifier.display_userland module_name)
+          | Imports.Default -> (Export_index.Default, import.export)
           | Imports.Named -> (Export_index.Named, import.export)
           | Imports.Namespace ->
             (Export_index.Namespace, Flow_import_specifier.display_userland module_name)
