@@ -1,0 +1,4 @@
+[options]
+all=true
+enums=true
+autoimports_ranked_by_usage=true
