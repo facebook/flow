@@ -40,13 +40,15 @@ let of_file_sig (file_sig : File_sig.t) =
         let source = Flow_import_specifier.userland (snd require.source) in
         let acc =
           SMap.fold
-            (fun export _elem acc ->
-              let item =
-                match export with
-                | "default" -> { export = ""; kind = Default; source = Unresolved_source source }
-                | _ -> { export; kind = Named; source = Unresolved_source source }
-              in
-              item :: acc)
+            (fun export names acc ->
+              match export with
+              | "default" ->
+                SMap.fold
+                  (fun name _imported_locs acc ->
+                    { export = name; kind = Default; source = Unresolved_source source } :: acc)
+                  names
+                  acc
+              | _ -> { export; kind = Named; source = Unresolved_source source } :: acc)
             require.named
             acc
         in
