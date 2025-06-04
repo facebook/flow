@@ -114,7 +114,7 @@ jsx.js:7:35 = {
   "end":36
 }
 jsx.js:7:48 = {
-  "types":{"unevaluated":{"type":"boolean"},"evaluated":null},
+  "types":{"unevaluated":{"type":"true"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"jsx.js",

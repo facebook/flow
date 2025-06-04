@@ -6278,7 +6278,13 @@ module Make
                 let t = EmptyT.at attr_loc in
                 (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
               (* <element name /> *)
-              | None -> (DefT (mk_reason RBoolean attr_loc, BoolT_UNSOUND true), None)
+              | None ->
+                ( DefT
+                    ( mk_reason RBoolean attr_loc,
+                      SingletonBoolT { value = true; from_annot = false }
+                    ),
+                  None
+                )
             in
             let acc =
               if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc then
