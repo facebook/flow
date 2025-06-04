@@ -124,6 +124,34 @@ Cannot resolve name `a`. [cannot-resolve-name]
           ^
 
 
+Error --------------------------------------------------------------------------------------------- expression.js:144:10
+
+Cannot assign `match` to `x` because number [1] is incompatible with union type [2]. [incompatible-type]
+
+   expression.js:144:10
+   144|     1 => 2, // ERROR: 2 is not a subtype of 0|1
+                 ^ [1]
+
+References:
+   expression.js:142:12
+   142|   const x: 0|1 = match (n) {
+                   ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- expression.js:153:10
+
+Cannot get `dict[match]` because property `2` is missing in object type [1]. [prop-missing]
+
+   expression.js:153:10
+   153|     1 => 2, // ERROR: 2 is not a subtype of 0|1
+                 ^
+
+References:
+   expression.js:150:21
+   150|   declare var dict: {[0|1]: number};
+                            ^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ matching.js:15:14
 
 `match` is not exhaustively checked: number literal `-2` [1] has not been fully checked against by the match patterns
@@ -995,4 +1023,4 @@ Invalid `match` statement case body. A block is required for each case body. Wra
 
 
 
-Found 82 errors
+Found 84 errors

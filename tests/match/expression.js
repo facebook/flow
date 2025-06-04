@@ -135,3 +135,22 @@ function f2() {
 
   a as Array<number>; // OK
 }
+
+{
+  declare var n: number;
+
+  const x: 0|1 = match (n) {
+    0 => 1, // OK
+    1 => 2, // ERROR: 2 is not a subtype of 0|1
+    _ => 1, // OK
+  };
+}
+
+{
+  declare var dict: {[0|1]: number};
+  dict[match (n) {
+    0 => 1, // OK
+    1 => 2, // ERROR: 2 is not a subtype of 0|1
+    _ => 1,
+  }];
+}

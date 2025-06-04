@@ -2973,6 +2973,7 @@ module Make
       ) else
         let reason = mk_reason RMatch loc in
         let arg = expression cx ~as_const:true arg in
+        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, ts_rev, all_throws) =
@@ -3004,7 +3005,9 @@ module Make
                 | None -> (None, false)
               in
               let ((((_, t), _) as body), body_throws) =
-                Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ?decl body)
+                Abnormal.catch_expr_control_flow_exception (fun () ->
+                    expression cx ~has_hint ~encl_ctx ?decl body
+                )
               in
               let case_ast = (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) in
               let throws = guard_throws || body_throws in
