@@ -1,0 +1,9 @@
+test.js:1:10
+Flags: --pretty --imports --imports-ranked-usage
+{
+  "result":[
+    {"name":"ExportProducer","type":"Import default from ./ExportProducer"},
+    {"name":"ExportProvider","type":"Import default from ./ExportProducer"}
+  ]
+}
+
