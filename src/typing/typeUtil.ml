@@ -943,7 +943,7 @@ let mk_possibly_generic_render_type ~variant reason t =
           Nel.to_list generic_ts
           |> List.cons (DefT (reason, NullT))
           |> List.cons (DefT (reason, VoidT))
-          |> List.cons (DefT (reason, BoolT_UNSOUND false))
+          |> List.cons (DefT (reason, SingletonBoolT { value = false; from_annot = true }))
           |> List.rev
           |> union_of_ts reason
         | Renders.Star -> failwith "Already banned above"

@@ -149,7 +149,7 @@ module Make (Flow : INPUT) : S = struct
         rec_flow_t cx trace ~use_op (null_t, u_type);
         let void_t = DefT (reason, VoidT) in
         rec_flow_t cx trace ~use_op (void_t, u_type);
-        let false_t = DefT (reason, BoolT_UNSOUND false) in
+        let false_t = DefT (reason, SingletonBoolT { value = false; from_annot = false }) in
         rec_flow_t cx trace ~use_op (false_t, u_type)
       | RendersMaybe -> ()
       | RendersStar -> ());
