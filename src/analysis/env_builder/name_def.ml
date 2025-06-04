@@ -2884,6 +2884,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | Ast.Expression.Object _
         | Ast.Expression.Logical _
         | Ast.Expression.Conditional _
+        | Ast.Expression.Match _
         | Ast.Expression.Identifier _
         | Ast.Expression.StringLiteral _
         | Ast.Expression.NumberLiteral _
