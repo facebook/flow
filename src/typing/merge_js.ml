@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module ALocMap = Loc_collections.ALocMap
 module SpeculationKit = Speculation_kit.Make (Flow_js.FlowJs)
 module Ast = Flow_ast
 
@@ -214,6 +215,169 @@ let detect_test_prop_misses cx =
         cx
         (Error_message.EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion }))
     misses
+
+type check_condition_result =
+  | ConditionAllowed
+  | ConditionBanned of { is_truthy: bool }
+
+let condition_banned_and_TRUTHY = ConditionBanned { is_truthy = true }
+
+let condition_banned_and_FALSY = ConditionBanned { is_truthy = false }
+
+let condition_allowed = ConditionAllowed
+
+let rec check_conditional
+    ?(should_report_error = true) cx e (cached_results : check_condition_result ALocMap.t ref) :
+    check_condition_result =
+  let should_report_error_ref = ref should_report_error in
+  let (loc, exp) = e in
+  match ALocMap.find_opt loc !cached_results with
+  | Some result -> result
+  | None ->
+    let open Ast.Expression in
+    let check_condition_result =
+      match exp with
+      | StringLiteral lit ->
+        if lit.Ast.StringLiteral.value <> "" then
+          condition_banned_and_TRUTHY
+        else
+          condition_banned_and_FALSY
+      | BooleanLiteral _ ->
+        (* true/false is allowed because it's likely intentional
+           and could be useful for debugging / iterating *)
+        condition_allowed
+      | NullLiteral _ -> condition_banned_and_FALSY
+      | NumberLiteral lit ->
+        if lit.Ast.NumberLiteral.value <> 0. && lit.Ast.NumberLiteral.value <> 1. then
+          condition_banned_and_TRUTHY
+        else
+          condition_allowed
+      | BigIntLiteral lit ->
+        (match lit.Ast.BigIntLiteral.value with
+        | Some (0L | 1L) -> condition_allowed
+        | _ -> condition_banned_and_TRUTHY)
+      | RegExpLiteral _ -> condition_banned_and_TRUTHY
+      | ModuleRefLiteral _ -> condition_banned_and_TRUTHY
+      | Identifier _ -> condition_allowed
+      | This _ -> condition_allowed
+      | Super _ -> condition_banned_and_TRUTHY
+      | Unary { Unary.operator; argument; _ } ->
+        (match operator with
+        | Ast.Expression.Unary.Minus
+        | Ast.Expression.Unary.Plus
+        | Ast.Expression.Unary.Not
+        | Ast.Expression.Unary.BitNot
+        | Ast.Expression.Unary.Typeof ->
+          check_conditional cx argument cached_results ~should_report_error:false
+        | Ast.Expression.Unary.Void -> condition_banned_and_FALSY
+        | Ast.Expression.Unary.Delete
+        | Ast.Expression.Unary.Await
+        | Ast.Expression.Unary.Nonnull ->
+          condition_allowed)
+      | Update { Update.argument; _ } ->
+        check_conditional cx argument cached_results ~should_report_error:false
+      | Binary _ -> condition_allowed
+      | Logical { Logical.operator; Logical.left; Logical.right; _ } ->
+        (match operator with
+        | Ast.Expression.Logical.Or
+        | Ast.Expression.Logical.And ->
+          let left_result = check_conditional cx left cached_results ~should_report_error:false in
+          let right_result = check_conditional cx right cached_results ~should_report_error:false in
+          (match (left_result, right_result) with
+          | ( ConditionBanned { is_truthy = left_truthy },
+              ConditionBanned { is_truthy = right_truthy }
+            )
+            when left_truthy = right_truthy ->
+            if left_truthy then
+              condition_banned_and_TRUTHY
+            else
+              condition_banned_and_FALSY
+          | _ -> condition_allowed)
+        | Ast.Expression.Logical.NullishCoalesce -> condition_allowed)
+      | TypeCast { TypeCast.expression; _ } ->
+        should_report_error_ref := false;
+        check_conditional cx expression cached_results ~should_report_error
+      | AsExpression { AsExpression.expression; _ } ->
+        should_report_error_ref := false;
+        check_conditional cx expression cached_results ~should_report_error
+      | AsConstExpression { AsConstExpression.expression; _ } ->
+        should_report_error_ref := false;
+        check_conditional cx expression cached_results ~should_report_error
+      | TSSatisfies { TSSatisfies.expression; _ } ->
+        should_report_error_ref := false;
+        check_conditional cx expression cached_results ~should_report_error
+      | Match _ -> condition_allowed
+      | Member _ -> condition_allowed
+      | OptionalMember _ -> condition_allowed
+      | Object _ -> condition_banned_and_TRUTHY
+      | Array _ -> condition_banned_and_TRUTHY
+      | New _ -> condition_banned_and_TRUTHY
+      | Call _ -> condition_allowed
+      | OptionalCall _ -> condition_allowed
+      | Conditional { Conditional.consequent; alternate; _ } ->
+        (* we don't need to check or unnest `test` here because they are unnested and checked
+           in `expression` function *)
+        let left_result =
+          check_conditional cx consequent cached_results ~should_report_error:false
+        in
+        let right_result =
+          check_conditional cx alternate cached_results ~should_report_error:false
+        in
+        (match (left_result, right_result) with
+        | (ConditionBanned { is_truthy = left_truthy }, ConditionBanned { is_truthy = right_truthy })
+          when left_truthy = right_truthy ->
+          if left_truthy then
+            condition_banned_and_TRUTHY
+          else
+            condition_banned_and_FALSY
+        | _ -> condition_allowed)
+      | Assignment { Assignment.operator; left = _; right; comments = _ } ->
+        (match operator with
+        (* vanilla assignment (e.g. `a='test_str'`) is represented by `None` *)
+        | None ->
+          should_report_error_ref := false;
+          check_conditional cx right cached_results ~should_report_error
+        | Some _ -> condition_allowed)
+      | Sequence { Sequence.expressions; _ } ->
+        let last = Base.List.last_exn expressions in
+        should_report_error_ref := false;
+        check_conditional cx last cached_results ~should_report_error
+      | Function _ -> condition_banned_and_TRUTHY
+      | ArrowFunction _ -> condition_banned_and_TRUTHY
+      | TaggedTemplate _ -> condition_banned_and_TRUTHY
+      | TemplateLiteral _ -> condition_banned_and_TRUTHY
+      | JSXElement _ -> condition_banned_and_TRUTHY
+      | JSXFragment _ -> condition_banned_and_TRUTHY
+      | Class _ -> condition_banned_and_TRUTHY
+      | Yield _ -> condition_banned_and_TRUTHY
+      | MetaProperty _ -> condition_allowed
+      | Import _ -> condition_banned_and_TRUTHY
+    in
+    if !should_report_error_ref then (
+      cached_results := ALocMap.add loc check_condition_result !cached_results;
+      check_condition_result
+    ) else
+      check_condition_result
+
+let detect_constant_conditions cx =
+  let all_conditions = Context.get_all_conditions cx in
+  let all_condition_results : check_condition_result ALocMap.t ref = ref ALocMap.empty in
+  Base.List.iter
+    ~f:(fun condition -> ignore (check_conditional cx condition all_condition_results))
+    all_conditions;
+  let banned_conditions =
+    ALocMap.fold
+      (fun loc check_condition_result acc ->
+        match check_condition_result with
+        | ConditionAllowed -> acc
+        | ConditionBanned { is_truthy } -> (loc, is_truthy) :: acc)
+      !all_condition_results
+      []
+  in
+  Base.List.iter
+    ~f:(fun (loc, is_truthy) ->
+      Flow_js_utils.add_output cx (Error_message.EConstantCondition { loc; is_truthy }))
+    banned_conditions
 
 let detect_unnecessary_optional_chains cx =
   Base.List.iter
@@ -1089,6 +1253,7 @@ let post_merge_checks cx ast tast metadata =
   detect_non_voidable_properties cx;
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
+  detect_constant_conditions cx;
   detect_import_export_errors cx ast metadata;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;

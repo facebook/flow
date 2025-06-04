@@ -687,6 +687,14 @@ References:
                                 ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- expression.js:35:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
+           ^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- expression.js:36:1
 
 Cannot cast `function () { ... }.p` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1602,4 +1610,4 @@ References:
 
 
 
-Found 102 errors
+Found 103 errors

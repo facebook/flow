@@ -29,6 +29,38 @@ References:
                              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:39:10
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   39|   return '' && 123;
+                ^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:53:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   53|   return 'foo' && 123;
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:60:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   60|   return 123 && 'foo';
+                ^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:67:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   67|   return [1, 2, 3] && 'foo';
+                ^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------ logical.js:126:10
 
 Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2]. [incompatible-return]
@@ -119,6 +151,14 @@ References:
                               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ logical.js:206:10
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   206|   return '' || 123;
+                 ^^
+
+
 Error ------------------------------------------------------------------------------------------------ logical.js:214:10
 
 Cannot return `true || '123'` because boolean [1] is incompatible with number [2]. [incompatible-return]
@@ -131,6 +171,22 @@ References:
    logical.js:212:23
    212| function logical6d(): number {
                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:221:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   221|   return 'foo' || 123;
+                 ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:228:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   228|   return 123 || 'foo';
+                 ^^^
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:342:10
@@ -167,6 +223,14 @@ References:
    logical.js:348:52
    348| function logical9a(x: number, y: string): number | string {
                                                            ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:364:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   364|   return 'a' || x || y;
+                 ^^^
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:372:20
@@ -345,6 +409,30 @@ References:
                                                  ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:445:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   445|     {x: 'foo' && 'bar'},
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:446:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   446|     {x: 'foo' && 'bar'},
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:447:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   447|     {x: 'foo' && 'bar'},
+                ^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- logical.js:456:9
 
 Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
@@ -391,6 +479,30 @@ References:
    logical.js:454:42
    454| function logical14(x: number): Array<{x: string}> {
                                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:461:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   461|     {x: 'foo' || 'bar'},
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:462:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   462|     {x: 'foo' || 'bar'},
+                ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:463:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   463|     {x: 'foo' || 'bar'},
+                ^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:569:10
@@ -544,4 +656,4 @@ References:
 
 
 
-Found 34 errors
+Found 48 errors

@@ -2940,6 +2940,14 @@ References:
                      ^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:57:14
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   57|   if (a.b) { null ?? f();                     a.b.c; } // error
+                    ^^^^
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:47
 
 Refinement invalidated due to function call at [1]
@@ -6694,6 +6702,14 @@ References:
    invalidation.js:37:15
     37| type A = {b?: {c: boolean}};
                       ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:254:14
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   254|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
+                     ^^^^
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:254:47
@@ -17091,7 +17107,7 @@ References:
 
 
 
-Found 1160 errors
+Found 1162 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

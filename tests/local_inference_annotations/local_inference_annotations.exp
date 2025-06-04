@@ -507,6 +507,14 @@ Missing an annotation on `y`. [missing-local-annot]
                      ^
 
 
+Error ------------------------------------------------------------------------------------------------ do_while.js:11:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   11|   while ((x) => 3); // guard is not covered!
+                ^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------ do_while.js:11:11
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -529,6 +537,14 @@ Missing an annotation on `x`. [missing-local-annot]
 
    7|   for ((x) => true; (x) => true; 1) { // init, and test are all not covered by the annot
               ^
+
+
+Error ------------------------------------------------------------------------------------------------------ for.js:7:21
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   7|   for ((x) => true; (x) => true; 1) { // init, and test are all not covered by the annot
+                          ^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ for.js:7:22
@@ -665,12 +681,124 @@ Missing an annotation on `x`. [missing-local-annot]
                    ^
 
 
+Error --------------------------------------------------------------------------------------------------- logical.js:5:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   5| f = (x => {}) || (y => {});
+           ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- logical.js:6:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   6| f = (x => {}) || (y => {}) || (z => {});
+          ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- logical.js:6:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   6| f = (x => {}) || (y => {}) || (z => {});
+           ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- logical.js:7:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   7| f = ((x: string | number) => {}) || (y => {}); // NOTE: `string => void` should be preferred as hint
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:9:13
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   9| const or = ((x: number) => {}) || (y => {}); // NOTE: `number => void` should be used as hint
+                  ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:11:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   11| f = (x => {}) && (y => {});
+            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:12:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   12| f = (x => {}) && (y => {}) && (z => {});
+           ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:12:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   12| f = (x => {}) && (y => {}) && (z => {});
+            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:13:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   13| f = ((x: string | number) => {}) && (y => {}); // NOTE: `string => void` should be preferred as hint
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:15:14
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   15| const and = ((x: number) => {}) && (y => {}); // Error `y` missing annotation
+                    ^^^^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------- logical.js:15:37
 
 Missing an annotation on `y`. [missing-local-annot]
 
    15| const and = ((x: number) => {}) && (y => {}); // Error `y` missing annotation
                                            ^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:17:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   17| f = (x => {}) ?? (y => {});
+            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:18:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   18| f = (x => {}) ?? (y => {}) ?? (z => {});
+            ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:19:6
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   19| f = ((x: string | number) => {}) ?? (y => {}); // NOTE: `string => void` should be preferred as hint
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:21:14
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   21| const nco = ((x: number) => {}) ?? (y => {}); // NOTE: `number => void` should be used as hint
+                    ^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------ no_annots.js:3:12
@@ -905,6 +1033,14 @@ Missing an annotation on `x`. [missing-local-annot]
                       ^
 
 
+Error ---------------------------------------------------------------------------------------------------- while.js:7:10
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   7|   while ((x) => 3) { // Only the body is covered, missing annot!
+               ^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- while.js:7:11
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -922,4 +1058,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 107 errors
+Found 124 errors

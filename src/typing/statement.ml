@@ -1418,7 +1418,6 @@ module Make
           Some (For.InitDeclaration (decl_loc, variables cx decl))
         | Some (For.InitExpression expr) -> Some (For.InitExpression (expression cx expr))
       in
-
       let test_ast =
         match test with
         | None -> None
@@ -5338,7 +5337,7 @@ module Make
         let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
         (Operators.logical_and cx reason t1 t2, { operator = And; left; right; comments })
       | NullishCoalesce ->
-        let (((_, t1), _) as left) = expression cx ~encl_ctx ?decl ~has_hint left in
+        let (((_, t1), _) as left) = condition cx ~encl_ctx ?decl ~has_hint left in
         let ((((_, t2), _) as right), right_throws) =
           Abnormal.catch_expr_control_flow_exception (fun () ->
               expression cx ~encl_ctx ?decl ~has_hint right
@@ -6693,6 +6692,7 @@ module Make
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
   and condition cx ~encl_ctx ?decl ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
+    let _ = Context.add_condition cx e in
     expression ~encl_ctx ?decl ?has_hint cx e
 
   and get_private_field_opt_use cx reason ~use_op name =

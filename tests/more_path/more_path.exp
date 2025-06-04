@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------------ Condition.js:2:24
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   2| function g() { return (42 || "hello"); }
+                             ^^
+
+
+Error ----------------------------------------------------------------------------------------------- Condition.js:11:24
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   11| function h() { return (42 || new A()); }
+                              ^^
+
+
 Error ---------------------------------------------------------------------------------------------------- Sigma.js:10:7
 
 Cannot call `x.c` because property `c` is missing in `B` [1]. [prop-missing]
@@ -55,4 +71,4 @@ References:
 
 
 
-Found 4 errors
+Found 6 errors
