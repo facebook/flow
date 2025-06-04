@@ -769,18 +769,17 @@ module rec ConsGen : S = struct
     | (DefT (_, NumGeneralT AnyLiteral), Annot_NotT reason) ->
       BoolModuleT.at (loc_of_reason reason)
     (* !x when x is falsy *)
-    | (DefT (_, BoolT_UNSOUND false), Annot_NotT reason)
     | (DefT (_, SingletonBoolT { value = false; _ }), Annot_NotT reason)
     | (DefT (_, SingletonStrT { value = OrdinaryName ""; _ }), Annot_NotT reason)
     | (DefT (_, SingletonNumT { value = (0., _); _ }), Annot_NotT reason)
     | (DefT (_, NullT), Annot_NotT reason)
     | (DefT (_, VoidT), Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit true) reason in
-      DefT (reason, BoolT_UNSOUND true)
+      DefT (reason, SingletonBoolT { value = true; from_annot = false })
     (* !x when x is truthy *)
     | (_, Annot_NotT reason) ->
       let reason = replace_desc_reason (RBooleanLit false) reason in
-      DefT (reason, BoolT_UNSOUND false)
+      DefT (reason, SingletonBoolT { value = false; from_annot = false })
     (**********)
     (* Mixins *)
     (**********)
@@ -1152,8 +1151,6 @@ module rec ConsGen : S = struct
     (*****************************)
     | (DefT (reason, NumericStrKeyT (_, s)), _) ->
       elab_t cx (DefT (reason, SingletonStrT { value = OrdinaryName s; from_annot = false })) op
-    | (DefT (reason, SingletonBoolT { value = b; _ }), _) ->
-      elab_t cx (DefT (reason, BoolT_UNSOUND b)) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, NullT)) op
     (********************)
     (* Function Statics *)
@@ -1255,7 +1252,7 @@ module rec ConsGen : S = struct
     | (DefT (reason, (NumGeneralT _ | SingletonNumT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Number" in
       elab_t cx builtin op
-    | (DefT (reason, (BoolGeneralT | BoolT_UNSOUND _)), _) when primitive_promoting_op op ->
+    | (DefT (reason, (BoolGeneralT | SingletonBoolT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Boolean" in
       elab_t cx builtin op
     | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->
