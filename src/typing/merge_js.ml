@@ -107,6 +107,7 @@ let detect_sketchy_null_checks cx tast =
               |> type_of_filtering_result
             with
             | DefT (_, BoolGeneralT)
+            | DefT (_, SingletonBoolT _)
             | DefT (_, BoolT_UNSOUND _) ->
               { exists_check with bool_loc = t_loc }
             | DefT (_, StrGeneralT _)
@@ -122,14 +123,22 @@ let detect_sketchy_null_checks cx tast =
                 ( _,
                   EnumValueT
                     (ConcreteEnum
-                      { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+                      {
+                        representation_t =
+                          DefT (_, (BoolGeneralT | SingletonBoolT _ | BoolT_UNSOUND _));
+                        _;
+                      }
                       )
                 )
             | DefT
                 ( _,
                   EnumValueT
                     (AbstractEnum
-                      { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _)); _ }
+                      {
+                        representation_t =
+                          DefT (_, (BoolGeneralT | SingletonBoolT _ | BoolT_UNSOUND _));
+                        _;
+                      }
                       )
                 ) ->
               { exists_check with enum_bool_loc = t_loc }

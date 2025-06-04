@@ -350,8 +350,44 @@ References:
                            ^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:69:7
 
-Found 21 errors
+Sketchy null check on boolean [1] which is potentially false. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-bool]
+
+   simple_sketchies.js:69:7
+   69|   if (x) { /* sketchy boolean */ }
+             ^
+
+References:
+   simple_sketchies.js:68:42
+   68| function singletonBooleanFalse(x: null | false | Array<mixed>) {
+                                                ^^^^^ [1]
+   simple_sketchies.js:68:35
+   68| function singletonBooleanFalse(x: null | false | Array<mixed>) {
+                                         ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- simple_sketchies.js:73:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   simple_sketchies.js:73:7
+   73|   if (x) { /* sketchy num */ }
+             ^
+
+References:
+   simple_sketchies.js:72:34
+   72| function singletonNum0(x: null | 0 | Array<mixed>) {
+                                        ^ [1]
+   simple_sketchies.js:72:27
+   72| function singletonNum0(x: null | 0 | Array<mixed>) {
+                                 ^^^^ [2]
+
+
+
+Found 23 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

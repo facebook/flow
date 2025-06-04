@@ -64,3 +64,19 @@ if (is && is.a) { }
 
 declare var hh: {a: mixed};
 if (hh.a && hh.a.b) { }
+
+function singletonBooleanFalse(x: null | false | Array<mixed>) {
+  if (x) { /* sketchy boolean */ }
+}
+
+function singletonNum0(x: null | 0 | Array<mixed>) {
+  if (x) { /* sketchy num */ }
+}
+
+function singletonBooleanTrue(x: null | true | Array<mixed>) {
+  if (x) { /* NOT sketchy */ }
+}
+
+function singletonNum1(x: null | 1 | Array<mixed>) {
+  if (x) { /* NOT sketchy */ }
+}
