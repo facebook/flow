@@ -593,13 +593,13 @@ let detect_literal_subtypes =
         let u_def = unwrap u_def in
         let l =
           match check with
-          | Env_api.SingletonNum (lit_loc, _sense, num, raw) ->
+          | Env_api.SingletonNum (lit_loc, num, raw) ->
             let reason = lit_loc |> Reason.(mk_reason (RNumberLit raw)) in
             DefT (reason, SingletonNumT { value = (num, raw); from_annot = false })
           | Env_api.SingletonBool (lit_loc, b) ->
             let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
             DefT (reason, SingletonBoolT { value = b; from_annot = false })
-          | Env_api.SingletonStr (lit_loc, _sense, str) ->
+          | Env_api.SingletonStr (lit_loc, str) ->
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
             DefT (reason, SingletonStrT { value = Reason.OrdinaryName str; from_annot = false })
         in

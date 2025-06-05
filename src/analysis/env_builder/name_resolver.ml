@@ -1040,16 +1040,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
     let rec add_literal_subtype_test refinee_loc literal =
       match literal with
-      | SingletonNumR { loc; lit = (num, raw); sense } ->
+      | SingletonNumR { loc; lit = (num, raw); sense = _ } ->
         Context.add_literal_subtypes
           cx
-          (refinee_loc, PostInferenceCheck.SingletonNum (loc, sense, num, raw))
+          (refinee_loc, PostInferenceCheck.SingletonNum (loc, num, raw))
       | SingletonBoolR { loc; lit; sense = _ } ->
         Context.add_literal_subtypes cx (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
-      | SingletonStrR { loc; lit; sense } ->
-        Context.add_literal_subtypes
-          cx
-          (refinee_loc, PostInferenceCheck.SingletonStr (loc, sense, lit))
+      | SingletonStrR { loc; lit; sense = _ } ->
+        Context.add_literal_subtypes cx (refinee_loc, PostInferenceCheck.SingletonStr (loc, lit))
       | NotR r -> add_literal_subtype_test refinee_loc r
       | AndR (r1, r2)
       | OrR (r1, r2) ->

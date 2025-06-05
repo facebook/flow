@@ -58,9 +58,9 @@ module type S = sig
   module EnvSet : Flow_set.S with type elt = EnvKey.t
 
   type literal_check =
-    | SingletonNum of ALoc.t * bool * float * string
+    | SingletonNum of ALoc.t * float * string
     | SingletonBool of ALoc.t * bool
-    | SingletonStr of ALoc.t * bool * string
+    | SingletonStr of ALoc.t * string
 
   type read_loc = L.t
 
@@ -338,9 +338,9 @@ module Make
     | BuiltinNameLookupFailed of string
 
   type literal_check =
-    | SingletonNum of ALoc.t * bool * float * string
+    | SingletonNum of ALoc.t * float * string
     | SingletonBool of ALoc.t * bool
-    | SingletonStr of ALoc.t * bool * string
+    | SingletonStr of ALoc.t * string
 
   type def_loc_type =
     | OrdinaryNameLoc
