@@ -125,10 +125,6 @@ module Annotate_exports_command = struct
     "Annotates parts of input that are visible from the exports as required by Flow types-first mode."
 
   let spec =
-    let module Literals = Insert_type_utils.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
     {
       CommandSpec.name = "annotate-exports";
       doc;
@@ -137,19 +133,10 @@ module Annotate_exports_command = struct
           "Usage: %s codemod annotate-exports [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> common_annotate_flags
-        );
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags |> common_annotate_flags);
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any () =
+  let main codemod_flags max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_exports.Acc
 
@@ -162,7 +149,7 @@ module Annotate_exports_command = struct
       let expand_roots ~env:_ files = files
 
       let visit =
-        let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
+        let mapper = Annotate_exports.mapper ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
@@ -204,29 +191,16 @@ module Annotate_optional_properties_command = struct
   let doc = "Inserts optional properties on object definitions where properties are missing."
 
   let spec =
-    let module Literals = Insert_type_utils.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
     let name = "annotate-optional-properties" in
     {
       CommandSpec.name;
       doc;
       usage =
         Printf.sprintf "Usage: %s codemod %s [OPTION]... [FILE]\n\n%s\n" name Utils_js.exe_name doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> common_annotate_flags
-        );
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags |> common_annotate_flags);
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any () =
+  let main codemod_flags max_type_size default_any () =
     let open Codemod_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_optional_properties.Acc
@@ -240,9 +214,7 @@ module Annotate_optional_properties_command = struct
       let check_options o = o
 
       let visit =
-        let mapper =
-          Annotate_optional_properties.mapper ~preserve_literals ~max_type_size ~default_any
-        in
+        let mapper = Annotate_optional_properties.mapper ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()

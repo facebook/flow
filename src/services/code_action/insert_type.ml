@@ -134,7 +134,6 @@ let serialize
       ~lint_severities:LintSettings.empty_severities
       ~suppress_types:SSet.empty (* Make autofix insert any *)
       ~imports_react
-      ~preserve_literals:Utils.PreserveLiterals.Auto
       ~generalize_maybe:true
       ~generalize_react_mixed_element:true
       ~add_warning:(fun _ _ -> ()

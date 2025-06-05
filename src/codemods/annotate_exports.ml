@@ -46,8 +46,8 @@ module Let_syntax = struct
 end
 
 module SignatureVerification = struct
-  let supported_error_kind cctx ~preserve_literals ~max_type_size acc loc =
-    let ty_result = Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size loc in
+  let supported_error_kind cctx ~max_type_size acc loc =
+    let ty_result = Codemod_annotator.get_validated_ty cctx ~max_type_size loc in
     LMap.add loc ty_result acc
 
   let unsupported_error_kind ~default_any acc loc =
@@ -56,7 +56,7 @@ module SignatureVerification = struct
     else
       acc
 
-  let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size ast =
+  let collect_annotations cctx ~default_any ~max_type_size ast =
     let { Codemod_context.Typed.options; docblock; file; _ } = cctx in
     let prevent_munge =
       let should_munge = Options.should_munge_underscores options in
@@ -109,7 +109,7 @@ module SignatureVerification = struct
           | EmptyObject loc
           | UnexpectedArraySpread (loc, _) ->
             let loc = Type_sig_collections.Locs.get locs loc in
-            (tot_errors + 1, supported_error_kind cctx ~preserve_literals ~max_type_size acc loc)
+            (tot_errors + 1, supported_error_kind cctx ~max_type_size acc loc)
           | UnexpectedArrayHole loc ->
             let loc = Type_sig_collections.Locs.get locs loc in
             (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))
@@ -159,7 +159,7 @@ end
 module Codemod_exports_annotator = Codemod_annotator.Make (SignatureVerificationErrorStats)
 module Acc = Acc (SignatureVerificationErrorStats)
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
 
@@ -172,7 +172,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~generalize_react_mixed_element:true
         ~lint_severities
         ~max_type_size
-        ~preserve_literals
         ~merge_arrays:false
         () as super
 
@@ -405,12 +404,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
     method! program prog =
       let (total_errors_, sig_verification_loc_tys_) =
-        SignatureVerification.collect_annotations
-          cctx
-          ~preserve_literals
-          ~default_any
-          ~max_type_size
-          prog
+        SignatureVerification.collect_annotations cctx ~default_any ~max_type_size prog
       in
       total_errors <- total_errors_;
       sig_verification_loc_tys <- sig_verification_loc_tys_;

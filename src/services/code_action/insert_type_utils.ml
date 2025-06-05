@@ -674,19 +674,6 @@ class stylize_ty_mapper ?(imports_react = false) () =
 (* Returns true if the location given a zero width location. *)
 let is_point loc = Loc.(loc.start = loc._end)
 
-module PreserveLiterals = struct
-  type mode =
-    | Always
-    | Never
-    | Auto
-
-  (* A string literal that contains alphabetic characters of underscores is likely
-   * to be a tag *)
-  let tag_like_regex = Str.regexp "^[a-zA-Z0-9-_]+$"
-
-  let enforce ~mode:_ t = t
-end
-
 (* Given a GraphQL file foo.graphql.js exporting a type
  *
  *   export type Foo = {|
@@ -899,7 +886,6 @@ class type_normalization_hardcoded_fixes_mapper
   ~lint_severities
   ~suppress_types
   ~imports_react
-  ~preserve_literals
   ~generalize_maybe
   ~generalize_react_mixed_element
   ~add_warning =
@@ -1160,11 +1146,6 @@ class type_normalization_hardcoded_fixes_mapper
         (* empty with `UseT ub` upper bounds becomes `ub` *)
         add_warning loc Warning.Empty_SomeKnownUpper;
         this#on_t env ub
-      (* Heuristic: These are rarely useful as full precision literal types *)
-      | Ty.Num
-      | Ty.Bool
-      | Ty.Str ->
-        PreserveLiterals.enforce ~mode:preserve_literals t
       (* E.g. React$Element<'div'> will become React.MixedElement *)
       | Ty.Generic
           ( ( {
@@ -1282,7 +1263,6 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
       ~get_ast_from_shared_mem
       ~file_sig
       ~typed_ast
-      ~preserve_literals
       ~generalize_maybe
       ~generalize_react_mixed_element
       ~merge_arrays
@@ -1304,7 +1284,6 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
         ~lint_severities
         ~suppress_types
         ~imports_react
-        ~preserve_literals
         ~generalize_maybe
         ~generalize_react_mixed_element
         ~add_warning

@@ -70,7 +70,7 @@ end
 module Codemod_lti_annotator = Codemod_annotator.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
   let flowfixme_ast = Codemod_context.Typed.flowfixme_ast ~lint_severities cctx in
   object (this)
@@ -82,7 +82,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~lint_severities
         ~max_type_size
         ~merge_arrays:false
-        ~preserve_literals
         cctx
         () as super
 
@@ -156,8 +155,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
               let ts =
                 Base.List.(
                   init_locs
-                  >>= Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size
-                      %> Result.to_list
+                  >>= Codemod_annotator.get_validated_ty cctx ~max_type_size %> Result.to_list
                   >>= remove_anys
                   >>| access_prop prop_accesses
                 )
@@ -200,9 +198,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                 Ast.Pattern.Identifier
                   { annot = Ast.Type.Missing _ as annot; Ast.Pattern.Identifier.name; optional }
               ) ->
-              (match
-                 Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size ploc
-               with
+              (match Codemod_annotator.get_validated_ty cctx ~max_type_size ploc with
               | Ok (Ty.Obj ty) ->
                 let ty_obj =
                   { ty with Ty.obj_props = obj_props @ ty.Ty.obj_props |> this#dedup_props }

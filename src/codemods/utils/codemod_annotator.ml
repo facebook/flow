@@ -105,27 +105,16 @@ let validate_ty cctx ~max_type_size ty =
   | errs -> Error (List.map (fun e -> Error.Validation_error e) errs)
 
 (* Used to infer the type for an annotation from an error loc *)
-let get_ty cctx ~preserve_literals loc =
-  let lits =
-    PreserveLiterals.(
-      match preserve_literals with
-      | Always
-      | Auto ->
-        true
-      | Never -> false
-    )
-  in
-  let norm_opts =
-    Ty_normalizer_env.{ default_codemod_options with preserve_inferred_literal_types = lits }
-  in
+let get_ty cctx loc =
+  let norm_opts = Ty_normalizer_env.default_codemod_options in
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
   | Ok elt ->
     Ty_utils.typify_elt elt
     |> Base.Result.of_option ~error:[Error.Missing_annotation_or_normalizer_error]
   | Error _ -> Error [Error.Missing_annotation_or_normalizer_error]
 
-let get_validated_ty cctx ~preserve_literals ~max_type_size loc =
-  let ty = get_ty cctx ~preserve_literals loc in
+let get_validated_ty cctx ~max_type_size loc =
+  let ty = get_ty cctx loc in
   ty >>= validate_ty cctx ~max_type_size
 
 module Make (Extra : BASE_STATS) = struct
@@ -140,7 +129,6 @@ module Make (Extra : BASE_STATS) = struct
     ~generalize_react_mixed_element
     ~lint_severities
     ~max_type_size
-    ~preserve_literals
     ~merge_arrays
     ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
     ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
@@ -178,7 +166,6 @@ module Make (Extra : BASE_STATS) = struct
               ~lint_severities
               ~suppress_types
               ~imports_react
-              ~preserve_literals
               ~generalize_maybe
               ~generalize_react_mixed_element
               ~merge_arrays
@@ -221,7 +208,6 @@ module Make (Extra : BASE_STATS) = struct
               ~lint_severities
               ~suppress_types
               ~imports_react
-              ~preserve_literals
               ~generalize_maybe
               ~generalize_react_mixed_element
               ~merge_arrays
