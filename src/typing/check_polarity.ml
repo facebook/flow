@@ -42,7 +42,6 @@ end = struct
     | AnnotT _ -> ()
     | AnyT _
     | DefT (_, BoolGeneralT)
-    | DefT (_, BoolT_UNSOUND _)
     | DefT (_, BigIntGeneralT _)
     | DefT (_, BigIntT_UNSOUND _)
     | DefT (_, EmptyT)

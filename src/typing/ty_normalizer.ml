@@ -803,11 +803,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, VoidT) -> return Ty.Void
       | DefT (_, NumGeneralT _) -> return Ty.Num
       | DefT (_, StrGeneralT _) -> return Ty.Str
-      | DefT (_, BoolT_UNSOUND x) when Env.preserve_inferred_literal_types env ->
-        return (Ty.Bool (Some x))
-      | DefT (_, BoolGeneralT)
-      | DefT (_, BoolT_UNSOUND _) ->
-        return (Ty.Bool None)
+      | DefT (_, BoolGeneralT) -> return (Ty.Bool None)
       | DefT (_, BigIntT_UNSOUND (_, (_, x))) when Env.preserve_inferred_literal_types env ->
         return (Ty.BigInt (Some x))
       | DefT (_, BigIntGeneralT _)
@@ -2413,7 +2409,7 @@ module Make (I : INPUT) : S = struct
       | ThisTypeAppT (_, c, _, _) -> type__ ~env ~inherited ~source ~imode c
       | DefT (r, (NumGeneralT _ | SingletonNumT _)) -> primitive ~env r "Number"
       | DefT (r, (StrGeneralT _ | SingletonStrT _)) -> primitive ~env r "String"
-      | DefT (r, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)) -> primitive ~env r "Boolean"
+      | DefT (r, (BoolGeneralT | SingletonBoolT _)) -> primitive ~env r "Boolean"
       | DefT (r, SymbolT) -> primitive ~env r "Symbol"
       | DefT (_, EnumValueT _) -> return no_members
       | ObjProtoT r -> primitive ~env r "Object"
@@ -2550,9 +2546,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, SingletonNumT { value = (_, lit); _ }) -> return (Ty.NumLit lit)
       | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT { value = lit; _ }) -> return (Ty.BoolLit lit)
-      | DefT (_, BoolGeneralT)
-      | DefT (_, BoolT_UNSOUND _) ->
-        return (Ty.Bool None)
+      | DefT (_, BoolGeneralT) -> return (Ty.Bool None)
       | DefT (_, NullT) -> return Ty.Null
       | _ -> return empty_type
 

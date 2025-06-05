@@ -1013,7 +1013,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedNumberLit { reason_lower = rl; reason_upper = ru; use_op })
-    | ( DefT (rl, (BoolT_UNSOUND actual | SingletonBoolT { value = actual; _ })),
+    | ( DefT (rl, SingletonBoolT { value = actual; _ }),
         DefT (ru, SingletonBoolT { value = expected; _ })
       ) ->
       if expected = actual then
@@ -1173,7 +1173,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       begin
         match u with
         | DefT (_, SingletonStrT { value = x; _ }) -> check (UnionEnum.Str x)
-        | DefT (_, (BoolT_UNSOUND x | SingletonBoolT { value = x; _ })) -> check (UnionEnum.Bool x)
+        | DefT (_, SingletonBoolT { value = x; _ }) -> check (UnionEnum.Bool x)
         | DefT (_, SingletonNumT { value = x; _ }) -> check (UnionEnum.Num x)
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
@@ -2284,7 +2284,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (DefT (_, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ }) as i)
       ) ->
       rec_flow cx trace (i, ImplementsT (use_op, l))
-    | ( DefT (reason, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
+    | ( DefT (reason, (BoolGeneralT | SingletonBoolT _)),
         DefT (interface_reason, InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ })
       ) ->
       add_output
@@ -2470,7 +2470,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let representation_type =
         match representation_t with
         | DefT (_, BoolGeneralT)
-        | DefT (_, BoolT_UNSOUND _)
         | DefT (_, SingletonBoolT _) ->
           Some "boolean"
         | DefT (_, NumGeneralT _)

@@ -32,7 +32,7 @@ let rec merge_type cx =
   function
   | (DefT (_, NumGeneralT _), (DefT (_, NumGeneralT _) as t))
   | (DefT (_, StrGeneralT _), (DefT (_, StrGeneralT _) as t))
-  | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)), (DefT (_, (BoolGeneralT | BoolT_UNSOUND _)) as t))
+  | (DefT (_, BoolGeneralT), (DefT (_, BoolGeneralT) as t))
   | (DefT (_, NullT), (DefT (_, NullT) as t))
   | (DefT (_, VoidT), (DefT (_, VoidT) as t)) ->
     t
@@ -577,8 +577,7 @@ let rec extract_type cx this_t =
   | DefT (reason, NumGeneralT _) ->
     get_builtin_type cx reason "Number" |> extract_type cx
   | DefT (reason, SingletonBoolT _)
-  | DefT (reason, BoolGeneralT)
-  | DefT (reason, BoolT_UNSOUND _) ->
+  | DefT (reason, BoolGeneralT) ->
     get_builtin_type cx reason "Boolean" |> extract_type cx
   | DefT (reason, SingletonBigIntT _)
   | DefT (reason, BigIntGeneralT _)

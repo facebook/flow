@@ -237,7 +237,6 @@ class virtual ['a] t =
       | NumGeneralT _
       | StrGeneralT _
       | BoolGeneralT
-      | BoolT_UNSOUND _
       | BigIntGeneralT _
       | BigIntT_UNSOUND _
       | EmptyT

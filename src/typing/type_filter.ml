@@ -144,11 +144,10 @@ let rec not_truthy cx t =
     (* truthy things get removed *)
     | DefT
         ( r,
-          ( SingletonBoolT _ | BoolT_UNSOUND _
+          ( SingletonBoolT _
           | EnumValueT
-              ( ConcreteEnum { representation_t = DefT (_, (SingletonBoolT _ | BoolT_UNSOUND _)); _ }
-              | AbstractEnum { representation_t = DefT (_, (SingletonBoolT _ | BoolT_UNSOUND _)) }
-                )
+              ( ConcreteEnum { representation_t = DefT (_, SingletonBoolT _); _ }
+              | AbstractEnum { representation_t = DefT (_, SingletonBoolT _) } )
           | SingletonStrT _ | NumericStrKeyT _
           | StrGeneralT Truthy
           | EnumValueT
@@ -359,7 +358,6 @@ let true_ t =
   match t with
   | DefT (r, SingletonBoolT { from_annot; value = true }) ->
     DefT (lit_reason r, SingletonBoolT { from_annot; value = true }) |> unchanged_result
-  | DefT (r, BoolT_UNSOUND true) -> DefT (lit_reason r, BoolT_UNSOUND true) |> unchanged_result
   | DefT (r, BoolGeneralT) ->
     DefT (lit_reason r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
   | DefT (r, MixedT _) ->
@@ -370,9 +368,7 @@ let true_ t =
 let not_true t =
   let lit_reason = replace_desc_new_reason (RBooleanLit false) in
   match t with
-  | DefT (r, SingletonBoolT { value = true; _ })
-  | DefT (r, BoolT_UNSOUND true) ->
-    DefT (r, EmptyT) |> changed_result
+  | DefT (r, SingletonBoolT { value = true; _ }) -> DefT (r, EmptyT) |> changed_result
   | DefT (r, BoolGeneralT) ->
     DefT (lit_reason r, SingletonBoolT { from_annot = false; value = false }) |> changed_result
   | t -> unchanged_result t
@@ -382,7 +378,6 @@ let false_ t =
   match t with
   | DefT (r, SingletonBoolT { from_annot; value = false }) ->
     DefT (lit_reason r, SingletonBoolT { from_annot; value = false }) |> unchanged_result
-  | DefT (r, BoolT_UNSOUND false) -> DefT (lit_reason r, BoolT_UNSOUND false) |> unchanged_result
   | DefT (r, BoolGeneralT) ->
     DefT (lit_reason r, SingletonBoolT { from_annot = false; value = false }) |> changed_result
   | DefT (r, MixedT _) ->
@@ -393,9 +388,7 @@ let false_ t =
 let not_false t =
   let lit_reason = replace_desc_new_reason (RBooleanLit true) in
   match t with
-  | DefT (r, SingletonBoolT { value = false; _ })
-  | DefT (r, BoolT_UNSOUND false) ->
-    DefT (r, EmptyT) |> changed_result
+  | DefT (r, SingletonBoolT { value = false; _ }) -> DefT (r, EmptyT) |> changed_result
   | DefT (r, BoolGeneralT) ->
     DefT (lit_reason r, SingletonBoolT { from_annot = false; value = true }) |> changed_result
   | t -> unchanged_result t
@@ -413,18 +406,11 @@ let boolean loc t =
     DefT (mk_reason RBoolean loc, BoolGeneralT) |> changed_result
   | DefT (_, BoolGeneralT)
   | DefT (_, SingletonBoolT _)
-  | DefT (_, BoolT_UNSOUND _)
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum
-              {
-                representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _));
-                _;
-              }
-          | AbstractEnum
-              { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)) }
-            )
+          ( ConcreteEnum { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)) } )
       ) ->
     unchanged_result t
   | DefT (r, _) -> DefT (r, EmptyT) |> changed_result
@@ -435,18 +421,11 @@ let not_boolean t =
   | DefT
       ( _,
         EnumValueT
-          ( ConcreteEnum
-              {
-                representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _));
-                _;
-              }
-          | AbstractEnum
-              { representation_t = DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)) }
-            )
+          ( ConcreteEnum { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ }
+          | AbstractEnum { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)) } )
       )
   | DefT (_, BoolGeneralT)
-  | DefT (_, SingletonBoolT _)
-  | DefT (_, BoolT_UNSOUND _) ->
+  | DefT (_, SingletonBoolT _) ->
     DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
@@ -714,10 +693,7 @@ let sentinel_refinement =
     | (DefT (_, SingletonNumT { value = (value, _); _ }), Num (sentinel, _))
       when value = sentinel != sense ->
       true
-    | (DefT (_, SingletonBoolT { value; _ }), Bool sentinel)
-    | (DefT (_, BoolT_UNSOUND value), Bool sentinel)
-      when value = sentinel != sense ->
-      true
+    | (DefT (_, SingletonBoolT { value; _ }), Bool sentinel) when value = sentinel != sense -> true
     | (DefT (_, SingletonBigIntT { value = (value, _); _ }), BigInt (sentinel, _))
     | (DefT (_, BigIntT_UNSOUND (_, (value, _))), BigInt (sentinel, _))
       when value = sentinel != sense ->
@@ -737,7 +713,7 @@ let sentinel_refinement =
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), One (Num sentinel))
         when enum_match sense (v, Num sentinel) ->
         true
-      | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)), One (Bool sentinel))
+      | (DefT (_, (BoolGeneralT | SingletonBoolT _)), One (Bool sentinel))
         when enum_match sense (v, Bool sentinel) ->
         true
       | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
@@ -748,8 +724,8 @@ let sentinel_refinement =
       | ( DefT
             ( _,
               ( StrGeneralT _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _ | BoolGeneralT
-              | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _
-              | SingletonBigIntT _ | NullT | VoidT )
+              | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT
+              | VoidT )
             ),
           Many enums
         )
@@ -763,15 +739,15 @@ let sentinel_refinement =
            )
       | (DefT (_, (StrGeneralT _ | SingletonStrT _)), One (Str _))
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), One (Num _))
-      | (DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)), One (Bool _))
+      | (DefT (_, (BoolGeneralT | SingletonBoolT _)), One (Bool _))
       | (DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), One (BigInt _))
       | (DefT (_, NullT), One Null)
       | (DefT (_, VoidT), One Void)
       | ( DefT
             ( _,
               ( StrGeneralT _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _ | BoolGeneralT
-              | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _
-              | SingletonBigIntT _ | NullT | VoidT )
+              | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT
+              | VoidT )
             ),
           Many _
         ) ->
@@ -783,8 +759,8 @@ let sentinel_refinement =
       | ( DefT
             ( _,
               ( StrGeneralT _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _ | BoolGeneralT
-              | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _
-              | SingletonBigIntT _ | NullT | VoidT )
+              | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT
+              | VoidT )
             ),
           _
         )
@@ -793,8 +769,8 @@ let sentinel_refinement =
       | ( DefT
             ( _,
               ( StrGeneralT _ | SingletonStrT _ | NumGeneralT _ | SingletonNumT _ | BoolGeneralT
-              | BoolT_UNSOUND _ | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _
-              | SingletonBigIntT _ | NullT | VoidT )
+              | SingletonBoolT _ | BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _ | NullT
+              | VoidT )
             ),
           _
         )
@@ -884,8 +860,7 @@ let rec tag_of_def_t cx = function
   | SymbolT -> Some (TypeTagSet.singleton SymbolTag)
   | FunT _ -> Some (TypeTagSet.singleton FunTag)
   | SingletonBoolT _
-  | BoolGeneralT
-  | BoolT_UNSOUND _ ->
+  | BoolGeneralT ->
     Some (TypeTagSet.singleton BoolTag)
   | SingletonStrT _
   | NumericStrKeyT _

@@ -184,7 +184,6 @@ module rec TypeTerm : sig
     (* TODO StrT should perhaps not allow internal names *)
     | StrGeneralT of literal
     | BoolGeneralT
-    | BoolT_UNSOUND of bool
     | BigIntGeneralT of literal
     | BigIntT_UNSOUND of bool option * bigint_literal
     | EmptyT
@@ -2431,9 +2430,7 @@ end = struct
       | DefT (_, SingletonBigIntT { value = lit; _ })
       | DefT (_, BigIntT_UNSOUND (_, lit)) ->
         Some (UnionEnum.BigInt lit)
-      | DefT (_, SingletonBoolT { value = lit; _ })
-      | DefT (_, BoolT_UNSOUND lit) ->
-        Some (UnionEnum.Bool lit)
+      | DefT (_, SingletonBoolT { value = lit; _ }) -> Some (UnionEnum.Bool lit)
       | DefT (_, VoidT) -> Some UnionEnum.Void
       | DefT (_, NullT) -> Some UnionEnum.Null
       | _ -> None
@@ -2517,9 +2514,7 @@ end = struct
     | DefT (_, BigIntT_UNSOUND _) ->
       Some BingIntTag
     | DefT (_, SingletonBoolT _) -> Some SingletonBoolTag
-    | DefT (_, BoolGeneralT)
-    | DefT (_, BoolT_UNSOUND _) ->
-      Some BoolTag
+    | DefT (_, BoolGeneralT) -> Some BoolTag
     | DefT (_, VoidT) -> Some VoidTag
     | DefT (_, NullT) -> Some NullTag
     | _ -> None
@@ -3987,7 +3982,6 @@ let string_of_def_ctor = function
   | BigIntGeneralT _ -> "BigIntT"
   | BigIntT_UNSOUND _ -> "BigIntT_UNSOUND"
   | BoolGeneralT -> "BoolT"
-  | BoolT_UNSOUND _ -> "BoolT_UNSOUND"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"
   | EnumValueT _ -> "EnumValueT"

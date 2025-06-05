@@ -150,8 +150,8 @@ module Operators = struct
     let will_fail_check_if_unmatched = function
       | DefT
           ( _,
-            ( NumGeneralT _ | StrGeneralT _ | BoolGeneralT | BoolT_UNSOUND _ | SingletonNumT _
-            | SingletonStrT _ | SingletonBoolT _ | SymbolT | EnumObjectT _ | EnumValueT _ )
+            ( NumGeneralT _ | StrGeneralT _ | BoolGeneralT | SingletonNumT _ | SingletonStrT _
+            | SingletonBoolT _ | SymbolT | EnumObjectT _ | EnumValueT _ )
           ) ->
         true
       | _ -> false
@@ -171,9 +171,7 @@ module Operators = struct
       | ( (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _),
           (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _)
         )
-      | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
-          DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _))
-        )
+      | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, (BoolGeneralT | SingletonBoolT _)))
       | (DefT (_, SymbolT), DefT (_, SymbolT)) ->
         true
       | (t1, t2) -> (not (will_fail_check_if_unmatched t1)) && not (will_fail_check_if_unmatched t2)
@@ -458,7 +456,6 @@ module Operators = struct
       | DefT (_, NumGeneralT AnyLiteral) ->
         BoolModuleT.at (loc_of_reason reason)
       (* !x when x is falsy *)
-      | DefT (_, BoolT_UNSOUND false)
       | DefT (_, SingletonBoolT { value = false; _ })
       | DefT (_, SingletonStrT { value = OrdinaryName ""; _ })
       | DefT (_, SingletonNumT { value = (0., _); _ })

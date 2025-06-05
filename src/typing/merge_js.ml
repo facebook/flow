@@ -108,8 +108,7 @@ let detect_sketchy_null_checks cx tast =
               |> type_of_filtering_result
             with
             | DefT (_, BoolGeneralT)
-            | DefT (_, SingletonBoolT _)
-            | DefT (_, BoolT_UNSOUND _) ->
+            | DefT (_, SingletonBoolT _) ->
               { exists_check with bool_loc = t_loc }
             | DefT (_, StrGeneralT _)
             | DefT (_, SingletonStrT _) ->
@@ -124,22 +123,14 @@ let detect_sketchy_null_checks cx tast =
                 ( _,
                   EnumValueT
                     (ConcreteEnum
-                      {
-                        representation_t =
-                          DefT (_, (BoolGeneralT | SingletonBoolT _ | BoolT_UNSOUND _));
-                        _;
-                      }
+                      { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ }
                       )
                 )
             | DefT
                 ( _,
                   EnumValueT
                     (AbstractEnum
-                      {
-                        representation_t =
-                          DefT (_, (BoolGeneralT | SingletonBoolT _ | BoolT_UNSOUND _));
-                        _;
-                      }
+                      { representation_t = DefT (_, (BoolGeneralT | SingletonBoolT _)); _ }
                       )
                 ) ->
               { exists_check with enum_bool_loc = t_loc }
@@ -510,7 +501,7 @@ let detect_matching_props_violations cx =
   in
   let is_lit t =
     match drop_generic t with
-    | DefT (_, (BoolT_UNSOUND _ | SingletonBoolT _ | SingletonStrT _ | SingletonNumT _)) -> true
+    | DefT (_, (SingletonBoolT _ | SingletonStrT _ | SingletonNumT _)) -> true
     | _ -> false
   in
   let matching_props_checks =

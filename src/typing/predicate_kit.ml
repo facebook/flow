@@ -552,9 +552,7 @@ and intersect =
       v1 <> v2
     | (DefT (_, SingletonNumT { value = v1; _ }), DefT (_, SingletonNumT { value = v2; _ })) ->
       v1 <> v2
-    | ( DefT (_, (SingletonBoolT { value = v1; _ } | BoolT_UNSOUND v1)),
-        DefT (_, (SingletonBoolT { value = v2; _ } | BoolT_UNSOUND v2))
-      ) ->
+    | (DefT (_, SingletonBoolT { value = v1; _ }), DefT (_, SingletonBoolT { value = v2; _ })) ->
       v1 <> v2
     | (_, _) -> false
   in
@@ -1146,9 +1144,7 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
   let sentinel_of_literal = function
     | DefT (_, SingletonStrT { value; _ }) -> Some UnionEnum.(One (Str value))
     | DefT (_, SingletonNumT { value; _ }) -> Some UnionEnum.(One (Num value))
-    | DefT (_, BoolT_UNSOUND value)
-    | DefT (_, SingletonBoolT { value; _ }) ->
-      Some UnionEnum.(One (Bool value))
+    | DefT (_, SingletonBoolT { value; _ }) -> Some UnionEnum.(One (Bool value))
     | DefT (_, BigIntT_UNSOUND (_, value))
     | DefT (_, SingletonBigIntT { value; _ }) ->
       Some UnionEnum.(One (BigInt value))
@@ -1321,7 +1317,6 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_number_literal value left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BoolT_UNSOUND true)
   | DefT (_, SingletonBoolT { value = true; _ }) ->
     let filtered =
       if sense then
@@ -1330,7 +1325,6 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_true left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BoolT_UNSOUND false)
   | DefT (_, SingletonBoolT { value = false; _ }) ->
     let filtered =
       if sense then

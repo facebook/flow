@@ -119,7 +119,6 @@ end = struct
         | DefT (_, NumGeneralT _)
         | DefT (_, StrGeneralT _)
         | DefT (_, BoolGeneralT)
-        | DefT (_, BoolT_UNSOUND _)
         | DefT (_, BigIntGeneralT _)
         | DefT (_, BigIntT_UNSOUND _)
         | DefT (_, EmptyT)
@@ -295,9 +294,7 @@ let ground_subtype cx (l, u) =
   | (UnionT _, _) -> false
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), UseT (_, DefT (_, NumGeneralT _)))
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), UseT (_, DefT (_, StrGeneralT _)))
-  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
-      UseT (_, DefT (_, (BoolGeneralT | BoolT_UNSOUND _)))
-    )
+  | (DefT (_, (BoolGeneralT | SingletonBoolT _)), UseT (_, DefT (_, BoolGeneralT)))
   | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
       UseT (_, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)))
     )
@@ -3409,7 +3406,6 @@ end = struct
         )
 
   let on_concretized_bad_non_element_normalization normalization_cx = function
-    | DefT (invalid_type_reason, BoolT_UNSOUND false)
     | DefT (invalid_type_reason, SingletonBoolT { value = false; _ })
     | DefT (invalid_type_reason, NullT)
     | DefT (invalid_type_reason, VoidT) ->

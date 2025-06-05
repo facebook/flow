@@ -486,19 +486,9 @@ let is_falsy = function
       ( _,
         ( NullT | VoidT
         | SingletonBoolT { value = false; _ }
-        | BoolT_UNSOUND false
         | EnumValueT
-            ( ConcreteEnum
-                {
-                  representation_t =
-                    DefT (_, (SingletonBoolT { value = false; _ } | BoolT_UNSOUND false));
-                  _;
-                }
-            | AbstractEnum
-                {
-                  representation_t =
-                    DefT (_, (SingletonBoolT { value = false; _ } | BoolT_UNSOUND false));
-                } )
+            ( ConcreteEnum { representation_t = DefT (_, SingletonBoolT { value = false; _ }); _ }
+            | AbstractEnum { representation_t = DefT (_, SingletonBoolT { value = false; _ }) } )
         | SingletonStrT { value = OrdinaryName ""; _ }
         | SingletonNumT { value = (0., _); _ } )
       ) ->
@@ -537,9 +527,7 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   match (t1, t2) with
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
-  | ( DefT (_, (BoolGeneralT | BoolT_UNSOUND _ | SingletonBoolT _)),
-      DefT (_, (BoolGeneralT | BoolT_UNSOUND _))
-    )
+  | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, BoolGeneralT))
   | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
       DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
     )
@@ -591,8 +579,6 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
     if result then on_singleton_eq t1;
     result
   | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) -> false
-  | (DefT (_, BoolT_UNSOUND actual), DefT (_, SingletonBoolT { value = expected; _ })) ->
-    expected = actual
   | ( DefT (_, SingletonBoolT { value = actual; _ }),
       DefT (_, SingletonBoolT { value = expected; _ })
     ) ->

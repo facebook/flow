@@ -145,7 +145,6 @@ let rec dump_t_ (depth, tvars) cx t =
           | AnyLiteral -> "")
         t
     | DefT (_, BoolGeneralT) -> p t
-    | DefT (_, BoolT_UNSOUND b) -> p ~extra:(spf "%B" b) t
     | DefT (_, BigIntGeneralT lit) ->
       p
         ~extra:
