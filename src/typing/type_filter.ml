@@ -173,7 +173,8 @@ let rec not_truthy cx t =
       let (TypeFilterResult { type_ = t; changed }) = not_truthy cx t in
       TypeFilterResult
         { type_ = UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) [t]); changed }
-    | DefT (r, BoolGeneralT) -> DefT (r, BoolT_UNSOUND false) |> changed_result
+    | DefT (r, BoolGeneralT) ->
+      DefT (r, SingletonBoolT { value = false; from_annot = true }) |> changed_result
     | DefT (r, StrGeneralT AnyLiteral) ->
       DefT (r, SingletonStrT { from_annot = false; value = OrdinaryName "" }) |> changed_result
     | DefT (r, NumGeneralT AnyLiteral) ->

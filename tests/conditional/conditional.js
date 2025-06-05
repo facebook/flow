@@ -12,8 +12,8 @@ function b(): number {
 
 function c(): number {
   // equivalent to `return (x && 1) || 0`
-  var x = false;
-  var temp = (x ? 1 : x);
+  const x = false;
+  const temp = (x ? 1 : x);
   return temp ? temp : 0;
 }
 
