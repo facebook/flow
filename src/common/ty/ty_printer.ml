@@ -90,7 +90,7 @@ let layout_of_elt
     | Null -> Atom "null"
     | Num -> Atom "number"
     | Str -> Atom "string"
-    | Bool _ -> Atom "boolean"
+    | Bool -> Atom "boolean"
     | BigInt _ -> Atom "bigint"
     | Symbol -> Atom "symbol"
     | Fun func -> type_function ~depth ~sep:(fuse [pretty_space; Atom "=>"]) func

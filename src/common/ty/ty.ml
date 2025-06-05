@@ -47,7 +47,7 @@ type t =
   | Symbol
   | Num
   | Str
-  | Bool of bool option
+  | Bool
   | BigInt of string option
   | NumLit of string
   | StrLit of Reason.name
@@ -571,7 +571,7 @@ class ['A] comparator_ty =
       | Void -> 3
       | Null -> 4
       | BoolLit _ -> 5
-      | Bool _ -> 6
+      | Bool -> 6
       | NumLit _ -> 7
       | Num -> 8
       | BigIntLit _ -> 9
@@ -800,7 +800,7 @@ let mk_exact ty =
   | Symbol
   | Num
   | Str
-  | Bool _
+  | Bool
   | BigInt _
   | NumLit _
   | StrLit _

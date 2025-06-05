@@ -642,18 +642,18 @@ class stylize_ty_mapper ?(imports_react = false) () =
           match (t, a) with
           (* If element of a base type and the base type is already present in the union
            * ignore the element *)
-          | ((Bool None | BoolLit _), { bools = [Bool None]; _ })
+          | ((Bool | BoolLit _), { bools = [Bool]; _ })
           | ((Num | NumLit _), { nums = [Num]; _ })
           | ((Str | StrLit _), { strings = [Str]; _ }) ->
             a
           (* Otherwise, if we see the base element automatically discard all other elements *)
-          | (Bool None, _) -> { a with bools = [t] }
+          | (Bool, _) -> { a with bools = [t] }
           | (Num, _) -> { a with nums = [t] }
           | (Str, _) -> { a with strings = [t] }
           (* Otherwise, if it is bool check to see if we have enumerated both element *)
           | (BoolLit true, { bools = [BoolLit false]; _ })
           | (BoolLit false, { bools = [BoolLit true]; _ }) ->
-            { a with bools = [Bool None] }
+            { a with bools = [Bool] }
           (* Otherwise, add literal types to the union *)
           | (BoolLit _, { bools; _ }) -> { a with bools = t :: bools }
           | (NumLit _, { nums; _ }) -> { a with nums = t :: nums }
@@ -684,17 +684,7 @@ module PreserveLiterals = struct
    * to be a tag *)
   let tag_like_regex = Str.regexp "^[a-zA-Z0-9-_]+$"
 
-  let enforce ~mode t =
-    let enforce_bool =
-      match mode with
-      | Always -> t
-      | Never
-      | Auto ->
-        Ty.Bool None
-    in
-    match t with
-    | Ty.Bool (Some _) -> enforce_bool
-    | _ -> t
+  let enforce ~mode:_ t = t
 end
 
 (* Given a GraphQL file foo.graphql.js exporting a type
@@ -954,9 +944,7 @@ class type_normalization_hardcoded_fixes_mapper
         if has_type_aliases && from_bounds then
           List.filter
             (function
-              | Ty.Obj { Ty.obj_literal = Some true; _ }
-              | Ty.Bool (Some _) ->
-                false
+              | Ty.Obj { Ty.obj_literal = Some true; _ } -> false
               | _ -> true)
             ts
         else
@@ -1174,7 +1162,7 @@ class type_normalization_hardcoded_fixes_mapper
         this#on_t env ub
       (* Heuristic: These are rarely useful as full precision literal types *)
       | Ty.Num
-      | Ty.Bool _
+      | Ty.Bool
       | Ty.Str ->
         PreserveLiterals.enforce ~mode:preserve_literals t
       (* E.g. React$Element<'div'> will become React.MixedElement *)

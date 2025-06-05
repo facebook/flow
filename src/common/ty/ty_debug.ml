@@ -25,7 +25,7 @@ let string_of_ctor_t = function
   | Symbol -> "Symbol"
   | Num -> "Num"
   | Str -> "Str"
-  | Bool _ -> "Bool"
+  | Bool -> "Bool"
   | BigInt _ -> "BigInt"
   | NumLit _ -> "NumLit"
   | StrLit _ -> "StrLit"
@@ -326,8 +326,7 @@ struct
       | NumLit s -> spf "\"%s\"" s
       | Str -> "Str"
       | StrLit s -> spf "\"%s\"" (Reason.display_string_of_name s)
-      | Bool (Some x) -> spf "Bool (%b)" x
-      | Bool None -> "Bool"
+      | Bool -> "Bool"
       | BoolLit b -> spf "\"%b\"" b
       | BigInt (Some x) -> spf "BigInt (%s)" x
       | BigInt None -> "BigInt"
@@ -516,7 +515,7 @@ struct
         | Symbol
         | Num
         | Str
-        | Bool _
+        | Bool
         | BigInt _ ->
           []
         | NumLit s -> [("literal", JSON_String s)]

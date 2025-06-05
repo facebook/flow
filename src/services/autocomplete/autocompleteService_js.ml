@@ -122,7 +122,7 @@ let lsp_completion_of_type =
   | Symbol
   | Num
   | Str
-  | Bool _
+  | Bool
   | BigInt _
   | Arr _
   | TypeOf _
@@ -615,7 +615,7 @@ let rec literals_of_ty acc ty =
   | Ty.BoolLit _
   | Ty.Null ->
     ty :: acc
-  | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
+  | Ty.Bool -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
 
 let quote_kind token =

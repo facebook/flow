@@ -68,11 +68,6 @@ let fail_on_ambiguity =
     object
       inherit use_upper_bound_mapper as super
 
-      method! on_Bool () t =
-        function
-        | Some _lit -> raise FoundAmbiguousType
-        | n -> super#on_Bool () t n
-
       method! on_Arr () t =
         function
         | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
@@ -93,11 +88,6 @@ class generalize_temporary_types_mapper =
   object
     inherit use_upper_bound_mapper as super
 
-    method! on_Bool () t =
-      function
-      | Some _lit -> Ty.Bool None
-      | n -> super#on_Bool () t n
-
     method! on_Arr () t =
       function
       | Ty.{ arr_literal = Some true; _ } as arr ->
@@ -115,27 +105,12 @@ class generalize_temporary_types_mapper =
 
 let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
 
-class specialize_temporary_types_mapper =
-  object
-    inherit use_upper_bound_mapper as super
-
-    method! on_Bool () t =
-      function
-      | Some lit -> Ty.BoolLit lit
-      | n -> super#on_Bool () t n
-  end
-
-let specialize_temporary_types = (new specialize_temporary_types_mapper)#on_t ()
+let specialize_temporary_types = (new use_upper_bound_mapper)#on_t ()
 
 let fixme_ambiguous_types =
   let visitor =
     object
       inherit use_upper_bound_mapper as super
-
-      method! on_Bool () t =
-        function
-        | Some _ -> Utils.Builtins.flowfixme_ty_default
-        | n -> super#on_Bool () t n
 
       method! on_Arr () t =
         function

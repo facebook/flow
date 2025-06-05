@@ -803,7 +803,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, VoidT) -> return Ty.Void
       | DefT (_, NumGeneralT _) -> return Ty.Num
       | DefT (_, StrGeneralT _) -> return Ty.Str
-      | DefT (_, BoolGeneralT) -> return (Ty.Bool None)
+      | DefT (_, BoolGeneralT) -> return Ty.Bool
       | DefT (_, BigIntT_UNSOUND (_, (_, x))) when Env.preserve_inferred_literal_types env ->
         return (Ty.BigInt (Some x))
       | DefT (_, BigIntGeneralT _)
@@ -2546,7 +2546,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, SingletonNumT { value = (_, lit); _ }) -> return (Ty.NumLit lit)
       | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
       | DefT (_, SingletonBoolT { value = lit; _ }) -> return (Ty.BoolLit lit)
-      | DefT (_, BoolGeneralT) -> return (Ty.Bool None)
+      | DefT (_, BoolGeneralT) -> return Ty.Bool
       | DefT (_, NullT) -> return Ty.Null
       | _ -> return empty_type
 
