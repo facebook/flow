@@ -614,3 +614,18 @@ function logicalWithTypeApp() {
   const nullableStringOrNumber = nullable ?? 0;
   nullableStringOrNumber as string; // error: number ~> string
 }
+
+function not_truhty() {
+  declare var n: number;
+  declare var s: string;
+  declare var b: boolean;
+  let n_ = n && {};
+  let s_ = s && {};
+  let b_ = b && {};
+  n_ as 0 | {}; // okay
+  s_ as "" | {}; // okay
+  b_ as false | {}; // okay
+  n_ = 1; // error number ~> 1
+  s_ = "1"; // error "1" ~> ""
+  b_ = true; // error true ~> false
+}

@@ -655,5 +655,83 @@ References:
                                     ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- logical.js:628:8
 
-Found 48 errors
+Cannot assign `1` to `n_` because: [incompatible-type]
+ - Either number [1] is incompatible with number [2].
+ - Or number [1] is incompatible with object literal [3].
+
+All writes to `n_` must be compatible with the type of its initializer [4]. Add an annotation to `n_` [4] if a different
+type is desired.
+
+   logical.js:628:8
+   628|   n_ = 1; // error number ~> 1
+               ^ [1]
+
+References:
+   logical.js:619:18
+   619|   declare var n: number;
+                         ^^^^^^ [2]
+   logical.js:622:17
+   622|   let n_ = n && {};
+                        ^^ [3]
+   logical.js:622:7
+   622|   let n_ = n && {};
+              ^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:629:8
+
+Cannot assign `"1"` to `s_` because: [incompatible-type]
+ - Either string [1] is incompatible with string [2].
+ - Or string [1] is incompatible with object literal [3].
+
+All writes to `s_` must be compatible with the type of its initializer [4]. Add an annotation to `s_` [4] if a different
+type is desired.
+
+   logical.js:629:8
+   629|   s_ = "1"; // error "1" ~> ""
+               ^^^ [1]
+
+References:
+   logical.js:620:18
+   620|   declare var s: string;
+                         ^^^^^^ [2]
+   logical.js:623:17
+   623|   let s_ = s && {};
+                        ^^ [3]
+   logical.js:623:7
+   623|   let s_ = s && {};
+              ^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:630:8
+
+Cannot assign `true` to `b_` because: [incompatible-type]
+ - Either boolean [1] is incompatible with boolean [2].
+ - Or boolean [1] is incompatible with object literal [3].
+
+All writes to `b_` must be compatible with the type of its initializer [4]. Add an annotation to `b_` [4] if a different
+type is desired.
+
+   logical.js:630:8
+   630|   b_ = true; // error true ~> false
+               ^^^^ [1]
+
+References:
+   logical.js:621:18
+   621|   declare var b: boolean;
+                         ^^^^^^^ [2]
+   logical.js:624:17
+   624|   let b_ = b && {};
+                        ^^ [3]
+   logical.js:624:7
+   624|   let b_ = b && {};
+              ^^ [4]
+
+
+
+Found 51 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

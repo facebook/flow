@@ -176,9 +176,9 @@ let rec not_truthy cx t =
     | DefT (r, BoolGeneralT) ->
       DefT (r, SingletonBoolT { value = false; from_annot = true }) |> changed_result
     | DefT (r, StrGeneralT AnyLiteral) ->
-      DefT (r, SingletonStrT { from_annot = false; value = OrdinaryName "" }) |> changed_result
+      DefT (r, SingletonStrT { from_annot = true; value = OrdinaryName "" }) |> changed_result
     | DefT (r, NumGeneralT AnyLiteral) ->
-      DefT (r, SingletonNumT { from_annot = false; value = (0., "0") }) |> changed_result
+      DefT (r, SingletonNumT { from_annot = true; value = (0., "0") }) |> changed_result
     (* an intersection passes through iff all of its members pass through *)
     | IntersectionT (r, rep) ->
       recurse_into_intersection cx (not_truthy cx) (r, InterRep.members rep)
