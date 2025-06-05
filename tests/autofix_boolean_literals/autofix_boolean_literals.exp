@@ -5,7 +5,7 @@
 declare var cond: boolean;
 
 module.exports = (): boolean => (cond ? true : false);
-> autofix insert-type b.js 5 20 --strategy=specialize
+> autofix insert-type b.js 5 20
 > cat b.js
 // @flow
 

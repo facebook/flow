@@ -15,7 +15,7 @@ test_file(){
 
 test_file a.js 6 15
 test_file b.js 6 15 --strategy=generalize
-test_file c.js 6 15 --strategy=specialize
+test_file c.js 6 15
 
 echo "> flow status"
 assert_errors "$FLOW" status --strip-root

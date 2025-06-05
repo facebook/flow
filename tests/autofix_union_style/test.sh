@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 spec_it () {
-  assert_ok "$FLOW" autofix insert-type --in-place --strategy=specialize "$@"
+  assert_ok "$FLOW" autofix insert-type --in-place "$@"
 }
 
 spec_it a.js 8 9

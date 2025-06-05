@@ -20,7 +20,7 @@ test_file () {
 }
 
 test_file a.js 5 20 --strategy=generalize
-test_file b.js 5 20 --strategy=specialize
+test_file b.js 5 20
 
 echo "> flow status"
 assert_ok "$FLOW" status

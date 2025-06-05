@@ -50,23 +50,11 @@ let expected err = FailedToInsertType (Expected err)
 
 let unexpected err = FailedToInsertType (Unexpected err)
 
-class use_upper_bound_mapper =
-  object (this)
-    inherit [_] Ty.endo_ty as super
-
-    method! on_Bot () t =
-      Ty.(
-        function
-        | NoLowerWithUpper (SomeKnownUpper ub) -> this#on_t () ub
-        | b -> super#on_Bot () t b
-      )
-  end
-
 let fail_on_ambiguity =
   let exception FoundAmbiguousType in
   let visitor =
     object
-      inherit use_upper_bound_mapper as super
+      inherit [_] Ty.endo_ty as super
 
       method! on_Arr () t =
         function
@@ -86,7 +74,7 @@ let fail_on_ambiguity =
 
 class generalize_temporary_types_mapper =
   object
-    inherit use_upper_bound_mapper as super
+    inherit [_] Ty.endo_ty as super
 
     method! on_Arr () t =
       function
@@ -105,12 +93,10 @@ class generalize_temporary_types_mapper =
 
 let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
 
-let specialize_temporary_types = (new use_upper_bound_mapper)#on_t ()
-
 let fixme_ambiguous_types =
   let visitor =
     object
-      inherit use_upper_bound_mapper as super
+      inherit [_] Ty.endo_ty as super
 
       method! on_Arr () t =
         function
@@ -179,15 +165,15 @@ let remove_ambiguous_types
         (MulipleTypesPossibleAtPoint
            {
              specialized =
-               specialize_temporary_types ty
-               |> serialize
-                    ~cx
-                    ~loc_of_aloc
-                    ~get_ast_from_shared_mem
-                    ~file_sig
-                    ~typed_ast
-                    ~exact_by_default
-                    loc;
+               serialize
+                 ~cx
+                 ~loc_of_aloc
+                 ~get_ast_from_shared_mem
+                 ~file_sig
+                 ~typed_ast
+                 ~exact_by_default
+                 loc
+                 ty;
              generalized =
                generalize_temporary_types ty
                |> serialize
@@ -202,7 +188,6 @@ let remove_ambiguous_types
         )
   end
   | Generalize -> Ok (generalize_temporary_types ty)
-  | Specialize -> Ok (specialize_temporary_types ty)
   | Fixme -> Ok (fixme_ambiguous_types ty)
   | Suppress -> Ok Utils.Builtins.flowfixme_ty_default
 

@@ -8,15 +8,8 @@
 type ambiguity_strategy =
   | Fail
   | Generalize
-  | Specialize
   | Fixme
   | Suppress
 
 let ambiguity_strategies =
-  [
-    ("fail", Fail);
-    ("generalize", Generalize);
-    ("specialize", Specialize);
-    ("fixme", Fixme);
-    ("suppress", Suppress);
-  ]
+  [("fail", Fail); ("generalize", Generalize); ("fixme", Fixme); ("suppress", Suppress)]
