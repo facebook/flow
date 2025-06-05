@@ -247,7 +247,7 @@ type t = {
   hint_map_jsx_cache: (Reason.t * string * ALoc.t list * ALoc.t, Type.t Lazy.t) Hashtbl.t;
   mutable hint_eval_cache: Type.t option IMap.t;
   mutable environment: Loc_env.t;
-  mutable typing_mode: typing_mode Nel.t;
+  mutable typing_mode: typing_mode;
   (* A subset of all transitive dependencies of the current file as determined by import/require.
    * This set will only be populated with type sig files that are actually forced. *)
   mutable reachable_deps: Utils_js.FilenameSet.t;
@@ -447,7 +447,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
         hint_map_jsx_cache = Hashtbl.create 0;
         hint_eval_cache = IMap.empty;
         environment = Loc_env.empty Name_def.Global;
-        typing_mode = Nel.one CheckingMode;
+        typing_mode = CheckingMode;
         reachable_deps = Utils_js.FilenameSet.empty;
         node_cache = Node_cache.mk_empty ();
         refined_locations = ALocMap.empty;
@@ -704,9 +704,7 @@ let reachable_deps cx = cx.reachable_deps
 
 let environment cx = cx.environment
 
-let full_typing_mode cx = cx.typing_mode
-
-let typing_mode cx = Nel.hd cx.typing_mode
+let typing_mode cx = cx.typing_mode
 
 let show_typing_mode_frame = function
   | CheckingMode -> "CheckingMode"
@@ -776,7 +774,7 @@ let add_tvar cx id bounds =
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph }
 
 let set_synthesis_produced_uncacheable_result cx =
-  match Nel.hd cx.typing_mode with
+  match cx.typing_mode with
   | SynthesisMode { target_loc = _ } -> cx.ccx.synthesis_produced_uncacheable_result <- true
   | _ -> ()
 
@@ -964,7 +962,7 @@ let run_in_synthesis_mode cx ?(reset_forcing_state = false) ~target_loc f =
   let old_delayed_forcing_tvars = cx.ccx.delayed_forcing_tvars in
   let old_post_component_tvar_forcing_states = cx.ccx.post_component_tvar_forcing_states in
   cx.ccx.synthesis_produced_uncacheable_result <- false;
-  cx.typing_mode <- Nel.cons (SynthesisMode { target_loc }) cx.typing_mode;
+  cx.typing_mode <- SynthesisMode { target_loc };
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
   let synthesis_produced_uncacheable_result = ref false in
@@ -1005,7 +1003,7 @@ let run_in_signature_tvar_env cx f =
   let saved_instantiation_stack = !(cx.ccx.instantiation_stack) in
   cx.ccx.speculation_state := [];
   cx.ccx.instantiation_stack := [];
-  cx.typing_mode <- Nel.cons CheckingMode cx.typing_mode;
+  cx.typing_mode <- CheckingMode;
   Exception.protect ~f ~finally:(fun () ->
       cx.typing_mode <- saved_typing_mode;
       cx.ccx.speculation_state := saved_speculation_state;
@@ -1018,7 +1016,7 @@ let run_in_hint_eval_mode cx f =
    * independent unit of type evaluation that's separate from an ongoing speculation. *)
   let saved_speculation_state = !(cx.ccx.speculation_state) in
   cx.ccx.speculation_state := [];
-  cx.typing_mode <- Nel.cons HintEvaluationMode cx.typing_mode;
+  cx.typing_mode <- HintEvaluationMode;
   let cache_snapshot = take_cache_snapshot cx in
   cx.ccx.instantiation_stack := [];
   Exception.protect ~f ~finally:(fun () ->
