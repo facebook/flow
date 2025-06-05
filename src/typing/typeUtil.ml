@@ -488,8 +488,17 @@ let is_falsy = function
         | SingletonBoolT { value = false; _ }
         | BoolT_UNSOUND false
         | EnumValueT
-            ( ConcreteEnum { representation_t = DefT (_, BoolT_UNSOUND false); _ }
-            | AbstractEnum { representation_t = DefT (_, BoolT_UNSOUND false) } )
+            ( ConcreteEnum
+                {
+                  representation_t =
+                    DefT (_, (SingletonBoolT { value = false; _ } | BoolT_UNSOUND false));
+                  _;
+                }
+            | AbstractEnum
+                {
+                  representation_t =
+                    DefT (_, (SingletonBoolT { value = false; _ } | BoolT_UNSOUND false));
+                } )
         | SingletonStrT { value = OrdinaryName ""; _ }
         | SingletonNumT { value = (0., _); _ } )
       ) ->

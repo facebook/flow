@@ -8740,7 +8740,7 @@ module Make
         in
         let boolt =
           match bool_type with
-          | Some b -> BoolT_UNSOUND b
+          | Some b -> SingletonBoolT { value = b; from_annot = false }
           | None -> BoolGeneralT
         in
         (DefT (reason, boolt), members, has_unknown_members)

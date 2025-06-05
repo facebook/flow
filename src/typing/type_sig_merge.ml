@@ -240,7 +240,8 @@ let merge_enum file reason id_loc enum_name rep members has_unknown_members =
     let open Type in
     match rep with
     | BoolRep None -> rep_t Reason.RBoolean BoolGeneralT
-    | BoolRep (Some lit) -> rep_t Reason.RBoolean (BoolT_UNSOUND lit)
+    | BoolRep (Some lit) ->
+      rep_t Reason.RBoolean (SingletonBoolT { value = lit; from_annot = false })
     | NumberRep { truthy } ->
       let lit =
         if truthy then
