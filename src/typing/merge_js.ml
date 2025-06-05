@@ -607,7 +607,7 @@ let detect_literal_subtypes =
             DefT (reason, SingletonNumT { value = (num, raw); from_annot = false })
           | Env_api.SingletonBool (lit_loc, b) ->
             let reason = lit_loc |> Reason.(mk_reason (RBooleanLit b)) in
-            DefT (reason, BoolT_UNSOUND b)
+            DefT (reason, SingletonBoolT { value = b; from_annot = false })
           | Env_api.SingletonStr (lit_loc, _sense, str) ->
             let reason = lit_loc |> Reason.(mk_reason (RStringLit (OrdinaryName str))) in
             DefT (reason, SingletonStrT { value = Reason.OrdinaryName str; from_annot = false })
