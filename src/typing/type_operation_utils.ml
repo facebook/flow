@@ -465,11 +465,11 @@ module Operators = struct
       | DefT (_, NullT)
       | DefT (_, VoidT) ->
         let reason = replace_desc_reason (RBooleanLit true) reason in
-        DefT (reason, BoolT_UNSOUND true)
+        DefT (reason, SingletonBoolT { value = true; from_annot = false })
       (* !x when x is truthy *)
       | _ ->
         let reason = replace_desc_reason (RBooleanLit false) reason in
-        DefT (reason, BoolT_UNSOUND false)
+        DefT (reason, SingletonBoolT { value = false; from_annot = false })
     in
     fun cx reason t ->
       Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->
