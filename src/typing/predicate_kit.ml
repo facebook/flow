@@ -226,8 +226,8 @@ and predicate_no_concretization cx trace result_collector l ~p =
   (*********************)
   (* _ ~ some bigint n *)
   (*********************)
-  | SingletonBigIntP (expected_loc, sense, lit) ->
-    let filtered_bigint = Type_filter.bigint_literal expected_loc sense lit l in
+  | SingletonBigIntP (expected_loc, _sense, lit) ->
+    let filtered_bigint = Type_filter.bigint_literal expected_loc lit l in
     report_filtering_result_to_predicate_result filtered_bigint result_collector
   | NotP (SingletonBigIntP (_, _, lit)) ->
     let filtered_bigint = Type_filter.not_bigint_literal lit l in
@@ -1145,9 +1145,7 @@ and sentinel_prop_test_generic key cx trace result_collector orig_obj =
     | DefT (_, SingletonStrT { value; _ }) -> Some UnionEnum.(One (Str value))
     | DefT (_, SingletonNumT { value; _ }) -> Some UnionEnum.(One (Num value))
     | DefT (_, SingletonBoolT { value; _ }) -> Some UnionEnum.(One (Bool value))
-    | DefT (_, BigIntT_UNSOUND (_, value))
-    | DefT (_, SingletonBigIntT { value; _ }) ->
-      Some UnionEnum.(One (BigInt value))
+    | DefT (_, SingletonBigIntT { value; _ }) -> Some UnionEnum.(One (BigInt value))
     | DefT (_, VoidT) -> Some UnionEnum.(One Void)
     | DefT (_, NullT) -> Some UnionEnum.(One Null)
     | UnionT (_, rep) -> begin
@@ -1333,11 +1331,10 @@ and eq_test cx _trace result_collector (sense, left, right) =
         Type_filter.not_false left
     in
     report_filtering_result_to_predicate_result filtered result_collector
-  | DefT (_, BigIntT_UNSOUND (_, value))
   | DefT (_, SingletonBigIntT { value; _ }) ->
     let filtered =
       if sense then
-        Type_filter.bigint_literal expected_loc sense value left
+        Type_filter.bigint_literal expected_loc value left
       else
         Type_filter.not_bigint_literal value left
     in

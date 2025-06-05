@@ -43,7 +43,6 @@ end = struct
     | AnyT _
     | DefT (_, BoolGeneralT)
     | DefT (_, BigIntGeneralT _)
-    | DefT (_, BigIntT_UNSOUND _)
     | DefT (_, EmptyT)
     | DefT (_, EnumObjectT _)
     | DefT (_, EnumValueT _)

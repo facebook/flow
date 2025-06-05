@@ -804,11 +804,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, NumGeneralT _) -> return Ty.Num
       | DefT (_, StrGeneralT _) -> return Ty.Str
       | DefT (_, BoolGeneralT) -> return Ty.Bool
-      | DefT (_, BigIntT_UNSOUND (_, (_, x))) when Env.preserve_inferred_literal_types env ->
-        return (Ty.BigInt (Some x))
-      | DefT (_, BigIntGeneralT _)
-      | DefT (_, BigIntT_UNSOUND _) ->
-        return (Ty.BigInt None)
+      | DefT (_, BigIntGeneralT _) -> return Ty.BigInt
       | DefT (_, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, NullT) -> return Ty.Null
       | DefT (_, SymbolT) -> return Ty.Symbol

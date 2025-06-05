@@ -3490,7 +3490,6 @@ module Make
                        | DefT (_, NumGeneralT _)
                        | DefT (_, SingletonNumT _)
                        | DefT (_, BigIntGeneralT _)
-                       | DefT (_, BigIntT_UNSOUND _)
                        | DefT (_, SingletonBigIntT _) ->
                          ()
                        | t ->

@@ -39,7 +39,7 @@ val number_literal : ALoc.t -> Type.number_literal -> Type.t -> filter_result
 
 val not_number_literal : Type.number_literal -> Type.t -> filter_result
 
-val bigint_literal : ALoc.t -> bool -> Type.bigint_literal -> Type.t -> filter_result
+val bigint_literal : ALoc.t -> Type.bigint_literal -> Type.t -> filter_result
 
 val not_bigint_literal : Type.bigint_literal -> Type.t -> filter_result
 

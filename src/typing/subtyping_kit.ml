@@ -1030,7 +1030,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedBooleanLit { reason_lower = rl; reason_upper = ru; use_op })
-    | ( DefT (rl, (BigIntT_UNSOUND (_, (actual, _)) | SingletonBigIntT { value = (actual, _); _ })),
+    | ( DefT (rl, SingletonBigIntT { value = (actual, _); _ }),
         DefT (ru, SingletonBigIntT { value = (expected, _); _ })
       ) ->
       if expected = actual then
@@ -2480,7 +2480,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           Some "string"
         | DefT (_, SymbolT) -> Some "symbol"
         | DefT (_, BigIntGeneralT _)
-        | DefT (_, BigIntT_UNSOUND _) ->
+        | DefT (_, SingletonBigIntT _) ->
           Some "bigint"
         | _ -> None
       in

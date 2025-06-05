@@ -123,7 +123,7 @@ let lsp_completion_of_type =
   | Num
   | Str
   | Bool
-  | BigInt _
+  | BigInt
   | Arr _
   | TypeOf _
   | Utility _

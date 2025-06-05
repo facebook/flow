@@ -120,7 +120,6 @@ end = struct
         | DefT (_, StrGeneralT _)
         | DefT (_, BoolGeneralT)
         | DefT (_, BigIntGeneralT _)
-        | DefT (_, BigIntT_UNSOUND _)
         | DefT (_, EmptyT)
         | DefT (_, MixedT _)
         | DefT (_, NullT)
@@ -295,9 +294,7 @@ let ground_subtype cx (l, u) =
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), UseT (_, DefT (_, NumGeneralT _)))
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), UseT (_, DefT (_, StrGeneralT _)))
   | (DefT (_, (BoolGeneralT | SingletonBoolT _)), UseT (_, DefT (_, BoolGeneralT)))
-  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
-      UseT (_, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _)))
-    )
+  | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), UseT (_, DefT (_, BigIntGeneralT _)))
   | (DefT (_, SymbolT), UseT (_, DefT (_, SymbolT)))
   | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
   | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
@@ -3046,25 +3043,18 @@ let flow_unary_arith cx l reason kind =
     let (reason, lit) = unary_negate_lit ~annot_loc:(loc_of_reason reason) lreason lit in
     DefT (reason, SingletonNumT { from_annot; value = lit })
   | (Minus, DefT (_, NumGeneralT _)) -> l
-  | (Minus, DefT (lreason, BigIntT_UNSOUND (_, (value, raw)))) ->
-    let (reason, lit) =
-      unary_negate_bigint_lit ~annot_loc:(loc_of_reason reason) lreason (value, raw)
-    in
-    DefT (reason, BigIntT_UNSOUND (None, lit))
   | (Minus, DefT (lreason, SingletonBigIntT { from_annot; value = lit })) ->
     let (reason, lit) = unary_negate_bigint_lit ~annot_loc:(loc_of_reason reason) lreason lit in
     DefT (reason, SingletonBigIntT { from_annot; value = lit })
   | (Minus, DefT (_, BigIntGeneralT _)) -> l
-  | (Plus, DefT (reason_bigint, (BigIntGeneralT _ | BigIntT_UNSOUND _))) ->
+  | (Plus, DefT (reason_bigint, BigIntGeneralT _)) ->
     add_output cx (Error_message.EBigIntNumCoerce reason_bigint);
     AnyT.error reason
   | (Plus, _) -> NumModuleT.why reason
   | (BitNot, DefT (_, (NumGeneralT _ | SingletonNumT _))) -> NumModuleT.why reason
-  | (BitNot, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))) ->
-    BigIntModuleT.why reason
+  | (BitNot, DefT (_, (BigIntGeneralT _ | SingletonBigIntT _))) -> BigIntModuleT.why reason
   | (Update, DefT (_, (NumGeneralT _ | SingletonNumT _))) -> NumModuleT.why reason
-  | (Update, DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))) ->
-    BigIntModuleT.why reason
+  | (Update, DefT (_, (BigIntGeneralT _ | SingletonBigIntT _))) -> BigIntModuleT.why reason
   | (_, AnyT (_, src)) ->
     let src = any_mod_src_keep_placeholder Untyped src in
     AnyT.why src reason
@@ -3089,13 +3079,13 @@ let flow_arith cx reason l r kind =
   (* num <> num *)
   | (_, DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _))) ->
     NumModuleT.why reason
-  | (RShift3, DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), _) ->
+  | (RShift3, DefT (reason, (BigIntGeneralT _ | SingletonBigIntT _)), _) ->
     add_output cx (Error_message.EBigIntRShift3 reason);
     AnyT.error reason
   (* bigint <> bigint *)
   | ( _,
-      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
-      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _))
+      DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)),
+      DefT (_, (BigIntGeneralT _ | SingletonBigIntT _))
     ) ->
     BigIntModuleT.why reason
   (* str + str *)

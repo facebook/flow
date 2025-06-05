@@ -152,7 +152,6 @@ let rec dump_t_ (depth, tvars) cx t =
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
-    | DefT (_, BigIntT_UNSOUND (_, (_, raw))) -> p ~extra:raw t
     | DefT (_, FunT (_, { params; rest_param; return_t; this_t; type_guard; _ })) ->
       p
         ~extra:

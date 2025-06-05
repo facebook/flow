@@ -5068,7 +5068,7 @@ struct
         (***********************)
         (* BigInt library call *)
         (***********************)
-        | (DefT (reason, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)), u)
+        | (DefT (reason, (BigIntGeneralT _ | SingletonBigIntT _)), u)
           when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "BigInt", u)
         (***********************)

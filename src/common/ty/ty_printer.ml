@@ -91,7 +91,7 @@ let layout_of_elt
     | Num -> Atom "number"
     | Str -> Atom "string"
     | Bool -> Atom "boolean"
-    | BigInt _ -> Atom "bigint"
+    | BigInt -> Atom "bigint"
     | Symbol -> Atom "symbol"
     | Fun func -> type_function ~depth ~sep:(fuse [pretty_space; Atom "=>"]) func
     | Obj obj -> type_object ~depth obj

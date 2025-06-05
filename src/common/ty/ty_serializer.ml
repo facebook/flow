@@ -69,7 +69,7 @@ let type_ options =
     | Num -> just (T.Number None)
     | Str -> just (T.String None)
     | Bool -> just (T.Boolean { raw = `Boolean; comments = None })
-    | BigInt _ -> just (T.BigInt None)
+    | BigInt -> just (T.BigInt None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
     | StrLit lit -> just (T.StringLiteral (str_lit (Reason.display_string_of_name lit)))
     | BoolLit lit -> just (T.BooleanLiteral (bool_lit lit))

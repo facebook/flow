@@ -185,7 +185,6 @@ module rec TypeTerm : sig
     | StrGeneralT of literal
     | BoolGeneralT
     | BigIntGeneralT of literal
-    | BigIntT_UNSOUND of bool option * bigint_literal
     | EmptyT
     | MixedT of mixed_flavor
     | NullT
@@ -2427,9 +2426,7 @@ end = struct
       | DefT (_, SingletonStrT { value = lit; _ }) -> Some (UnionEnum.Str lit)
       | DefT (_, NumericStrKeyT (_, s)) -> Some (UnionEnum.Str (OrdinaryName s))
       | DefT (_, SingletonNumT { value = lit; _ }) -> Some (UnionEnum.Num lit)
-      | DefT (_, SingletonBigIntT { value = lit; _ })
-      | DefT (_, BigIntT_UNSOUND (_, lit)) ->
-        Some (UnionEnum.BigInt lit)
+      | DefT (_, SingletonBigIntT { value = lit; _ }) -> Some (UnionEnum.BigInt lit)
       | DefT (_, SingletonBoolT { value = lit; _ }) -> Some (UnionEnum.Bool lit)
       | DefT (_, VoidT) -> Some UnionEnum.Void
       | DefT (_, NullT) -> Some UnionEnum.Null
@@ -2510,9 +2507,7 @@ end = struct
     | DefT (_, SingletonNumT _) -> Some SingletonNumTag
     | DefT (_, NumGeneralT _) -> Some NumTag
     | DefT (_, SingletonBigIntT _) -> Some SingletonBigIntTag
-    | DefT (_, BigIntGeneralT _)
-    | DefT (_, BigIntT_UNSOUND _) ->
-      Some BingIntTag
+    | DefT (_, BigIntGeneralT _) -> Some BingIntTag
     | DefT (_, SingletonBoolT _) -> Some SingletonBoolTag
     | DefT (_, BoolGeneralT) -> Some BoolTag
     | DefT (_, VoidT) -> Some VoidTag
@@ -3980,7 +3975,6 @@ end
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
   | BigIntGeneralT _ -> "BigIntT"
-  | BigIntT_UNSOUND _ -> "BigIntT_UNSOUND"
   | BoolGeneralT -> "BoolT"
   | ClassT _ -> "ClassT"
   | EmptyT -> "EmptyT"

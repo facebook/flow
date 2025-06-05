@@ -160,7 +160,7 @@ let visitor =
       | OptionalT _ ->
         Kind.Checked
       | DefT (_, ArrT _)
-      | DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
+      | DefT (_, BigIntGeneralT _)
       | DefT (_, BoolGeneralT)
       | DefT (_, ClassT _)
       | DefT (_, FunT _)

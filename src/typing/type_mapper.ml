@@ -238,7 +238,6 @@ class virtual ['a] t =
       | StrGeneralT _
       | BoolGeneralT
       | BigIntGeneralT _
-      | BigIntT_UNSOUND _
       | EmptyT
       | MixedT _
       | SymbolT

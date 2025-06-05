@@ -528,9 +528,7 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
   | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, BoolGeneralT))
-  | ( DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _ | SingletonBigIntT _)),
-      DefT (_, (BigIntGeneralT _ | BigIntT_UNSOUND _))
-    )
+  | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), DefT (_, BigIntGeneralT _))
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
@@ -568,10 +566,6 @@ let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
     if result then on_singleton_eq t1;
     result
   | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _)) -> false
-  | ( DefT (_, BigIntT_UNSOUND (_, (actual, _))),
-      DefT (_, SingletonBigIntT { value = (expected, _); _ })
-    ) ->
-    expected = actual
   | ( DefT (_, SingletonBigIntT { value = (actual, _); _ }),
       DefT (_, SingletonBigIntT { value = (expected, _); _ })
     ) ->
