@@ -1,3 +1,163 @@
+Error -------------------------------------------------------------------------------------------- string_literal.js:2:9
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   2|     if ('') {} // ERROR
+              ^^
+
+
+Error -------------------------------------------------------------------------------------------- string_literal.js:3:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   3|     if ('\'') {} // ERROR
+              ^^^^
+
+
+Error -------------------------------------------------------------------------------------------- string_literal.js:4:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   4|     if ('a') {} // ERROR
+              ^^^
+
+
+Error -------------------------------------------------------------------------------------------- string_literal.js:5:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   5|     if ('hfudiashfkdsnfsa') {} // ERROR
+              ^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- string_literal.js:8:9
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   8|     x = '' ? 5 : 6; // ERROR
+              ^^
+
+
+Error -------------------------------------------------------------------------------------------- string_literal.js:9:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   9|     x = '\'' ? 5 : 6; // ERROR
+              ^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:10:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   10|     x = 'a' ? 5 : 6; // ERROR
+               ^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:11:9
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   11|     x = 'fdsgfdgsfdga' ? 5 : 6; // ERROR
+               ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:13:5
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   13|     '' && 5; // ERROR
+           ^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:14:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   14|     '\'' && 5; // ERROR
+           ^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:15:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   15|     'a' && 5; // ERROR
+           ^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:16:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   16|     'fdsgfdgsfdga' && 5; // ERROR
+           ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:18:5
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   18|     '' || 5; // ERROR
+           ^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:19:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   19|     '\'' || 5; // ERROR
+           ^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:20:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   20|     'a' || 5; // ERROR
+           ^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:21:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   21|     'fdsgfdgsfdga' || 5; // ERROR
+           ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:23:5
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   23|     '' ?? 5; // ERROR
+           ^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:24:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   24|     '\'' ?? 5; // ERROR
+           ^^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:25:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   25|     'a' ?? 5; // ERROR
+           ^^^
+
+
+Error ------------------------------------------------------------------------------------------- string_literal.js:26:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   26|     'fdsgfdgsfdga' ?? 5; // ERROR
+           ^^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:4:7
 
 Constant condition. The condition will always be falsy. [constant-condition]
@@ -651,4 +811,4 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 
 
-Found 81 errors
+Found 101 errors
