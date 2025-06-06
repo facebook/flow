@@ -1,3 +1,15 @@
+### 0.273.0
+
+Likely to cause new Flow errors:
+* We are announcing Natural Inference for Flow, an improved way to infer types for primitive values, that resolves a long-standing correctness gap and source of confusion. See more in [this post](https://medium.com/flow-type/flow-natural-inference-for-primitives-df27149109bb).
+* Added `nested-hook` and `nested-component` lint errors which detect nested hook or component syntax within component or hook syntax. This is on by default.
+
+Notable bug fixes:
+* For default imports, the autoimport ranking will now consider the names of the importing side. (e.g. Previously we completely ignored the name of `foo` in `import foo from './bar'`, but now we will count foo. If the pattern of `import foo from './bar'` happens a lot, then the autoimport algorithm will be more likely to suggest `import foo from './bar'` rather than `import bar from './bar'`).
+* Flow will infer a correct type when viewing the type of an object literal as a dictionary type. For example, the error in [this try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSGieVGwAAIYA9lHBoFKcRIANLYWgkAA8ABU1bQAHwACnkyClwAA2jtaKbdeqALqmoolNgCgCUpoAgtQ6Dq9fqANwAHSgwds9il8ilAF4lbs9SRDcAMKaAOQYFO8KVoVNoFNuoMhqBwGCGqQyV1m4NSiPmgAMdujUpTYBT-qlAHp21KAOqsqVQCASKXAqUmSi8rOaXmyKUAdzgx37EFnk+HUFH1F5wYFweD8jrDb7aZTAB8U7m252pRAtnRJzBp2u2MOYHjd1BciAGiYSAqP8gv1rKwACYAHZgJAkABSAA) will be raised.
+* Previously, we undercounted some imports during indexing, which causes autoimport ranking to behave incorrectly. The issue is now fixed.
+* Flow will no longer emit `react-rule-hook-conditional` error for hooks called in a conditionally defined nested component.
+
 ### 0.272.2
 
 Notable bug fixes:
