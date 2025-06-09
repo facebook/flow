@@ -30,7 +30,7 @@ const {y = Foo} = Foo;
 
 // Error on use of rest element in destructuring
 const {named1: renamed3, ...rest} = Foo;
-let z = {};
+let z: {...} = {};
 ({named1: x, ...z}) = Foo;
 
 // Error on use of computed property in destructuring pattern

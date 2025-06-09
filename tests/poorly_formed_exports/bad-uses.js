@@ -41,7 +41,7 @@ function g() {
 
 function f() {
   let module: {[string]: {[string]: mixed}} = {};
-  let exports = {};
+  let exports: {[string]: mixed} = {};
   // These should all be fine, since `module` and `exports` have been shadowed.
   module.exports = ({}: {[string]: mixed}); // OK
   exports = ({}: {[string]: mixed}); // OK
