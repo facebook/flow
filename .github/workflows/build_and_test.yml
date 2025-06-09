@@ -255,7 +255,7 @@ jobs:
   build_win:
     runs-on: windows-2022
     env:
-      FLOW_TMP_DIR: C:\tmp\flow
+      FLOW_TMP_DIR: D:\tmp\flow
       OPAMDOWNLOADJOBS: 1
     steps:
     - uses: actions/checkout@v3.6.0
