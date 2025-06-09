@@ -12,7 +12,9 @@ let get_object_literal_loc ty : ALoc.t option =
   let open Reason in
   let reason_desc = reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false in
   match reason_desc with
-  | RObjectLit -> Some (def_loc_of_t ty)
+  | RObjectLit
+  | RObjectLit_UNSOUND ->
+    Some (def_loc_of_t ty)
   | _ -> None
 
 let with_obj_to_obj_hook ~enabled ~loc_of_aloc ~f =

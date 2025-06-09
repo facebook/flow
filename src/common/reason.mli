@@ -43,6 +43,7 @@ type 'loc virtual_reason_desc =
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
+  | RObjectLit_UNSOUND
   | RConstObjectLit
   | RObjectType
   | RMappedType

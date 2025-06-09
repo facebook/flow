@@ -77,6 +77,7 @@ type 'loc virtual_reason_desc =
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
+  | RObjectLit_UNSOUND
   | RConstObjectLit
   | RObjectType
   | RMappedType
@@ -258,14 +259,14 @@ let rec map_desc_locs f = function
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RStringPrefix _ | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit | REmptyArrayLit
-    | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType | RTupleType
-    | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _ | RTupleUnknownElementFromInexact
-    | RFunction _ | RFunctionType | RFunctionBody | RFunctionUnusedArgument | RJSXChild
-    | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-    | RUninitialized | RPossiblyUninitialized | RUnannotatedNext | REmptyArrayElement | RMappedType
-    | RTypeGuard | RTypeGuardParam _ | RComponent _ | RComponentType | RInferredUnionElemArray _ )
-    as r ->
+    | RObjectLit_UNSOUND | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit
+    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
+    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
+    | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
+    | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
+    | RUnannotatedNext | REmptyArrayElement | RMappedType | RTypeGuard | RTypeGuardParam _
+    | RComponent _ | RComponentType | RInferredUnionElemArray _ ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -500,7 +501,7 @@ let mk_obj_lit_reason ~as_const ~frozen loc =
     else if as_const then
       RConstObjectLit
     else
-      RObjectLit
+      RObjectLit_UNSOUND
   in
   mk_reason desc loc
 
@@ -556,7 +557,9 @@ let rec string_of_desc = function
   | RMatch -> "match"
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
-  | RObjectLit -> "object literal"
+  | RObjectLit
+  | RObjectLit_UNSOUND ->
+    "object literal"
   | RConstObjectLit -> "const object literal"
   | RObjectType -> "object type"
   | RMappedType -> "mapped type"
@@ -823,7 +826,7 @@ let is_instantiable_reason r =
 
 let is_literal_object_reason r =
   match desc_of_reason r with
-  | RObjectLit
+  | RObjectLit_UNSOUND
   | RObjectPatternRestProp
   | RFunction _
   | RStatics (RFunction _)
@@ -1250,7 +1253,7 @@ let rec mk_generic_expression_reason :
   fun ~f -> function
     | (loc, TypeCast { TypeCast.expression; _ }) ->
       repos_reason (f loc) (mk_generic_expression_reason ~f expression)
-    | (loc, Object _) -> f loc |> mk_reason RObjectLit
+    | (loc, Object _) -> f loc |> mk_reason RObjectLit_UNSOUND
     | (loc, Array _) -> f loc |> mk_reason RArrayLit
     | (loc, ArrowFunction { Ast.Function.async; _ }) -> f loc |> func_reason ~async ~generator:false
     | (loc, Function { Ast.Function.async; generator; _ }) -> f loc |> func_reason ~async ~generator
@@ -1355,6 +1358,7 @@ let classification_of_reason_desc desc =
   | RMatchingProp _
   | RObject
   | RObjectLit
+  | RObjectLit_UNSOUND
   | RConstObjectLit
   | RObjectType
   | RMappedType
