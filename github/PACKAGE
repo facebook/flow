@@ -1,0 +1,8 @@
+load("@fbcode_macros//build_defs/lib:third_party.bzl", "third_party")
+load("@prelude//cfg/modifier:set_cfg_modifiers.bzl", "set_cfg_modifiers")
+
+modifiers_list = third_party.gen_overrides({
+    "llvm-fb": "19",
+})
+
+set_cfg_modifiers(cfg_modifiers = modifiers_list)
