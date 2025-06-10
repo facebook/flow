@@ -296,13 +296,15 @@ jobs:
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
     - name: Init opam
-      run: opam init --bare --disable-sandboxing --no-setup --yes
+      run: |
+        cd $(realpath ${GITHUB_WORKSPACE});
+        opam init --bare --disable-sandboxing --no-setup --yes
       shell: C:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Create opam switch
       run: |
-        cd $(realpath ${GITHUB_WORKSPACE}) ;
+        cd $(realpath ${GITHUB_WORKSPACE});
         make deps
       shell: C:\cygwin\bin\bash.exe '{0}'
       env:
