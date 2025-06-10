@@ -494,14 +494,16 @@ let def_loc_of_reason r =
 
 let annot_loc_of_reason r = r.annot_loc_opt
 
-let mk_obj_lit_reason ~as_const ~frozen loc =
+let mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback loc =
   let desc =
     if frozen then
       RFrozen RObjectLit
     else if as_const then
       RConstObjectLit
-    else
+    else if Lazy.force use_unsound_fallback then
       RObjectLit_UNSOUND
+    else
+      RObjectLit
   in
   mk_reason desc loc
 

@@ -2488,7 +2488,7 @@ module Make
   and object_ cx ~frozen ~as_const ~has_hint loc props =
     let open Ast.Expression.Object in
     error_on_this_uses_in_object_methods cx props;
-    let reason = Reason.mk_obj_lit_reason ~as_const ~frozen loc in
+    let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:(lazy true) loc in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
