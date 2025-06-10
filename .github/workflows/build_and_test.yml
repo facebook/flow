@@ -255,8 +255,9 @@ jobs:
   build_win:
     runs-on: windows-2022
     env:
-      FLOW_TMP_DIR: C:\tmp\flow
+      FLOW_TMP_DIR: D:\tmp\flow
       OPAMDOWNLOADJOBS: 1
+      OPAMROOT: D:\a\flow\flow\_opam
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Set up workspace
@@ -302,12 +303,12 @@ jobs:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Git Safe Directory
       run: git config --global --add safe.directory /cygdrive/d/a/flow/flow
-      shell: C:\cygwin\bin\bash.exe '{0}'
+      shell: D:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Create opam switch
       run: make deps
-      shell: C:\cygwin\bin\bash.exe '{0}'
+      shell: D:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build flow.exe
@@ -318,7 +319,7 @@ jobs:
         make bin/flow.exe dist/flow.zip ;
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe ;
         cp dist/flow.zip dist/flow-win64.zip
-      shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
+      shell: D:\cygwin\bin\bash.exe -leo pipefail '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build parser test runner
@@ -327,7 +328,7 @@ jobs:
         eval $(opam env) ;
         dune build src/parser/test/run_tests.exe ;
         cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
-      shell: C:\cygwin\bin\bash.exe -leo pipefail '{0}'
+      shell: D:\cygwin\bin\bash.exe -leo pipefail '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - uses: actions/upload-artifact@v4.4.0
