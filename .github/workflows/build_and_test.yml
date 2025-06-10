@@ -307,9 +307,9 @@ jobs:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build flow.exe
       run: >-
+        cd $(realpath ${GITHUB_WORKSPACE});
         echo $(opam env);
         eval $(opam env);
-        cd $(realpath ${GITHUB_WORKSPACE});
         make bin/flow.exe dist/flow.zip;
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe;
         cp dist/flow.zip dist/flow-win64.zip
