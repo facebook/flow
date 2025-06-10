@@ -173,6 +173,13 @@ jobs:
     - name: Create cache breaker
       run: arch --x86_64 .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
       shell: bash
+    - name: opam cache
+      uses: actions/cache@v4
+      with:
+        path: |-
+          ~/.opam
+          _opam
+        key: v1-opam-cache-${{ runner.os }}-x86_64_on_arm-${{ hashFiles('.circleci/opamcachebreaker') }}
     - name: Init opam
       run: arch --x86_64 .circleci/opam_init.sh
     - name: Install deps from opam
@@ -281,13 +288,6 @@ jobs:
     - name: Install opam
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
-    - name: Cache
-      uses: actions/cache@v4
-      with:
-        key: opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flowtype.opam', 'flow_parser.opam', '.circleci/config.yml') }}
-        path: |
-          $Env:HOME/.opam
-          _opam
     - name: Init opam
       run: opam init --bare --disable-sandboxing --no-setup --yes
       shell: C:\cygwin\bin\bash.exe '{0}'
