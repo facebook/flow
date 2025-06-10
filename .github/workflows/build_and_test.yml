@@ -288,13 +288,6 @@ jobs:
     - name: Install opam
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
-    - name: Cache
-      uses: actions/cache@v4
-      with:
-        key: opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('flowtype.opam', 'flow_parser.opam', '.circleci/config.yml') }}
-        path: |
-          $Env:HOME/.opam
-          _opam
     - name: Init opam
       run: opam init --bare --disable-sandboxing --no-setup --yes
       shell: C:\cygwin\bin\bash.exe '{0}'
