@@ -323,7 +323,7 @@ jobs:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build parser test runner
       run: >-
-        cd ${GITHUB_WORKSPACE} ;
+        cd $(realpath ${GITHUB_WORKSPACE}) ;
         eval $(opam env) ;
         dune build src/parser/test/run_tests.exe ;
         cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
