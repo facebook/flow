@@ -285,18 +285,18 @@ jobs:
           mingw64-x86_64-gcc-libs
           coreutils
           moreutils
+    - name: Git Safe Directory
+      run: |
+        git config --global --add safe.directory /cygdrive/c/a/flow/flow
+        git config --global --add safe.directory /cygdrive/d/a/flow/flow
+      shell: C:\cygwin\bin\bash.exe '{0}'
+      env:
+        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Install opam
       run: .\scripts\windows\install_opam.ps1
       shell: pwsh
     - name: Init opam
       run: opam init --bare --disable-sandboxing --no-setup --yes
-      shell: C:\cygwin\bin\bash.exe '{0}'
-      env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
-    - name: Git Safe Directory
-      run: |
-        git config --global --add safe.directory /cygdrive/c/a/flow/flow
-        git config --global --add safe.directory /cygdrive/d/a/flow/flow
       shell: C:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
