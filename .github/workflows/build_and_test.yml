@@ -299,7 +299,9 @@ jobs:
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Create opam switch
-      run: make deps
+      run: |
+        cd $(realpath ${GITHUB_WORKSPACE}) ;
+        make deps
       shell: C:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
