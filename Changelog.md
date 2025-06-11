@@ -1,3 +1,9 @@
+### 0.273.1
+
+Notable bug fixes:
+* Fixed windows builds.
+* Fixed crash when loading saved state.
+
 ### 0.273.0
 
 Likely to cause new Flow errors:
