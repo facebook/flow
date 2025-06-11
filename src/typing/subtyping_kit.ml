@@ -208,33 +208,44 @@ module Make (Flow : INPUT) : OUTPUT = struct
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
       if not (Obj_type.is_exact lflags.obj_kind) then
         exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason (DefT (lreason, ObjT l_obj));
-      Context.iter_real_props cx lflds (fun name _ ->
-          if not (Context.has_prop cx uflds name) then
-            let use_op =
-              Frame
-                ( PropertyCompatibility
-                    {
-                      prop = Some name;
-                      (* Lower and upper are reversed in this case since the lower object
-                       * is the one requiring the prop. *)
-                      lower = ureason;
-                      upper = lreason;
-                    },
-                  use_op
-                )
-            in
-            let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
-            let err =
-              Error_message.EPropNotFound
-                {
-                  prop_name = Some name;
-                  reason_prop;
-                  reason_obj = ureason;
-                  use_op;
-                  suggestion = None;
-                }
-            in
-            add_output cx err
+      let missing_props =
+        Context.fold_real_props
+          cx
+          lflds
+          (fun name _ acc ->
+            if Context.has_prop cx uflds name then
+              acc
+            else
+              name :: acc)
+          []
+        |> List.rev
+      in
+      Base.List.iter missing_props ~f:(fun name ->
+          let use_op =
+            Frame
+              ( PropertyCompatibility
+                  {
+                    prop = Some name;
+                    (* Lower and upper are reversed in this case since the lower object
+                     * is the one requiring the prop. *)
+                    lower = ureason;
+                    upper = lreason;
+                  },
+                use_op
+              )
+          in
+          let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
+          let err =
+            Error_message.EPropNotFound
+              {
+                prop_name = Some name;
+                reason_prop;
+                reason_obj = ureason;
+                use_op;
+                suggestion = None;
+              }
+          in
+          add_output cx err
       );
       Base.Option.iter lcall ~f:(fun _ ->
           if Base.Option.is_none ucall then
