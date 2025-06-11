@@ -47,20 +47,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:49:20
 
-Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is missing in
-`ExactPerson` [1] but exists in object literal [2]. [prop-missing]
+Cannot call `takesExactlyPerson` with `subtypeOfPerson` bound to `person` because property `first` is extra in object
+literal [1] but missing in `ExactPerson` [2]. Exact objects do not accept extra props. [prop-missing]
 
    exact_basics.js:49:20
    49| takesExactlyPerson(subtypeOfPerson); // error
                           ^^^^^^^^^^^^^^^
 
 References:
-   exact_basics.js:43:45
-   43| declare function takesExactlyPerson(person: ExactPerson): void;
-                                                   ^^^^^^^^^^^ [1]
    exact_basics.js:41:23
    41| var subtypeOfPerson = { salutation: "Mr", first: "Bob", last: "Dobalina" };
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   exact_basics.js:43:45
+   43| declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:61:20
@@ -83,20 +83,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:71:20
 
-Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is missing in
-`ExactPerson` [1] but exists in `ExactPerson2` [2]. [prop-missing]
+Cannot call `takesExactlyPerson` with `returnsExactlyPerson2()` bound to `person` because property `first` is extra in
+`ExactPerson2` [1] but missing in `ExactPerson` [2]. Exact objects do not accept extra props. [prop-missing]
 
    exact_basics.js:71:20
    71| takesExactlyPerson(returnsExactlyPerson2()); // error
                           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   exact_basics.js:43:45
-   43| declare function takesExactlyPerson(person: ExactPerson): void;
-                                                   ^^^^^^^^^^^ [1]
    exact_basics.js:68:43
    68| declare function returnsExactlyPerson2(): ExactPerson2;
-                                                 ^^^^^^^^^^^^ [2]
+                                                 ^^^^^^^^^^^^ [1]
+   exact_basics.js:43:45
+   43| declare function takesExactlyPerson(person: ExactPerson): void;
+                                                   ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:85:23
@@ -123,6 +123,32 @@ Cannot create exact type from `PersonPred` [1]. [invalid-exact]
 
    91| declare function returnsExactlyPersonPred(): $Exact<PersonPred>; // error
                                                            ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- multiple_props.js:10:1
+
+Cannot cast `foo` to object type because property `a`, property `b`, property `c`, property `d`, and 2 others are extra
+in object type [1] but missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
+
+   multiple_props.js:10:1
+   10| foo as {||}; // error
+       ^^^
+
+References:
+   multiple_props.js:1:20
+                          v-
+    1| declare const foo: {|
+    2|     a: string,
+    3|     b: string,
+    4|     c: string,
+    5|     d: string,
+    6|     e: string,
+    7|     f: string,
+    8| |};
+       -^ [1]
+   multiple_props.js:10:8
+   10| foo as {||}; // error
+              ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:18:4
@@ -464,17 +490,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objmap.js:13:35
 
-Cannot assign object literal to `shouldntWork` because property `b` is missing in mapped type [1] but exists in object
-literal [2]. [prop-missing]
+Cannot assign object literal to `shouldntWork` because property `b` is extra in object literal [1] but missing in mapped
+type [2]. Exact objects do not accept extra props. [prop-missing]
 
    objmap.js:13:35
    13| const shouldntWork: MappedThing = {a: 2, b: 1};
-                                         ^^^^^^^^^^^^ [2]
+                                         ^^^^^^^^^^^^ [1]
 
 References:
    objmap.js:13:21
    13| const shouldntWork: MappedThing = {a: 2, b: 1};
-                           ^^^^^^^^^^^ [1]
+                           ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:1:47
@@ -513,8 +539,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- other_utilities.js:20:13
 
-Cannot assign object literal to `c1` because property `f` is missing in object type [1] but exists in object
-literal [2]. [prop-missing]
+Cannot assign object literal to `c1` because property `f` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    other_utilities.js:20:13
                    v
@@ -522,18 +548,18 @@ literal [2]. [prop-missing]
    21|   f: '', // Should cause an error
    22|   d: null,
    23| };
-       ^ [2]
+       ^ [1]
 
 References:
    other_utilities.js:20:9
    20| let c1: C = {
-               ^ [1]
+               ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- other_utilities.js:24:21
 
-Cannot assign object literal to `c2` because property `f` is missing in object type [1] but exists in object
-literal [2]. [prop-missing]
+Cannot assign object literal to `c2` because property `f` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    other_utilities.js:24:21
                            v
@@ -541,12 +567,12 @@ literal [2]. [prop-missing]
    25|   f: '',
    26|   d: null,
    27| };
-       ^ [2]
+       ^ [1]
 
 References:
    other_utilities.js:24:9
    24| let c2: $Exact<C> = {
-               ^^^^^^^^^ [1]
+               ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:9
@@ -580,17 +606,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:3:2
 
-Cannot cast object literal to union type because property `q` is missing in object type [1] but exists in object
-literal [2]. [prop-missing]
+Cannot cast object literal to union type because property `q` is extra in object literal [1] but missing in object
+type [2]. Exact objects do not accept extra props. [prop-missing]
 
    union.js:3:2
    3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
-       ^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^ [1]
 
 References:
    union.js:3:22
    3| ({p:'A',q:0}: $Exact<{p:'A'}|{p:'B'}>); // error: extra prop
-                           ^^^^^^^ [1]
+                           ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- union.js:4:2
@@ -645,4 +671,4 @@ References:
 
 
 
-Found 44 errors
+Found 45 errors

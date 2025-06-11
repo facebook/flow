@@ -126,20 +126,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:4
 
-Cannot create `Com` element because property `bar` is missing in object type [1] but exists in props [2] in the second
-argument. [prop-missing]
+Cannot create `Com` element because property `bar` is extra in props [1] but missing in object type [2]. Exact objects
+do not accept extra props in the second argument. [prop-missing]
 
    test.js:21:4
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
           ^^^
 
 References:
-   react.js:3:53
-    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
-                                                           ^^^^^^^^^^^^^ [1]
    test.js:21:3
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   react.js:3:53
+    3| type React$CustomJSXFactory = (component: C, props: {foo: string}, child1: 1, child2: 2) => 3;
+                                                           ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:13

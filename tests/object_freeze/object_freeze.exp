@@ -178,20 +178,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:29:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is missing in object type [1] but exists in
-frozen object literal [2]. [prop-missing]
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
+missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
 
    downstream.js:29:1
    29| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   downstream.js:29:27
-   29| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
-                                 ^^^^^^^^^^^^^^^^^ [1]
    object_freeze.js:12:53
    12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
-                                                           ^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   downstream.js:29:27
+   29| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
+                                 ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:31:1
@@ -453,20 +453,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:35:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is missing in object type [1] but exists in
-frozen object literal [2]. [prop-missing]
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
+missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
 
    object_freeze.js:35:1
    35| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_freeze.js:35:27
-   35| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
-                                 ^^^^^^^^^^^^^^^^^ [1]
    object_freeze.js:12:53
    12| export const frozenObjectWithSpread = Object.freeze({bar: '12345', ...baz});
-                                                           ^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_freeze.js:35:27
+   35| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
+                                 ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:37:1

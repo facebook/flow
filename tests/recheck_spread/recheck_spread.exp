@@ -19,17 +19,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:14
 
-Cannot assign object literal to `x` because property `foo` is missing in `X` [1] but exists in object literal [2].
-[prop-missing]
+Cannot assign object literal to `x` because property `foo` is extra in object literal [1] but missing in `X` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    test.js:5:14
    5| const x: X = {foo: 3};
-                   ^^^^^^^^ [2]
+                   ^^^^^^^^ [1]
 
 References:
    test.js:5:10
    5| const x: X = {foo: 3};
-               ^ [1]
+               ^ [2]
 
 
 

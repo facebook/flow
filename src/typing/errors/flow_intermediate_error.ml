@@ -997,6 +997,13 @@ let rec make_intermediate_error :
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion reason_indexer
     | ( None,
+        PropsExtraAgainstExactObject { props; reason_l_obj = lower; reason_r_obj = upper; use_op }
+      ) ->
+      mk_use_op_error
+        (loc_of_reason lower)
+        use_op
+        (MessagePropExtraAgainstExactObject { lower; upper; props })
+    | ( None,
         PropPolarityMismatch
           { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
       ) ->
@@ -3414,6 +3421,40 @@ let to_printable_error :
         text "Read the docs on Flow's multi-platform support for more information: ";
         text "https://flow.org/en/docs/react/multiplatform";
       ]
+    | MessagePropExtraAgainstExactObject { lower; upper; props = (first_prop, rest_props) } ->
+      let prop_message =
+        let props = first_prop :: rest_props in
+        let number_to_check = List.length props in
+        if number_to_check > 5 then
+          let max_display_amount = 4 in
+          (Base.List.take props max_display_amount
+          |> Base.List.bind ~f:(fun prop -> mk_prop_message (Some prop) @ [text ", "])
+          )
+          @ [text (spf "and %d others" (number_to_check - max_display_amount))]
+        else
+          Flow_errors_utils.Friendly.conjunction_concat
+            (Base.List.map (first_prop :: rest_props) ~f:(fun prop -> mk_prop_message (Some prop)))
+      in
+      let plural =
+        match rest_props with
+        | [] -> false
+        | _ :: _ -> true
+      in
+      prop_message
+      @ [
+          text " ";
+          text
+            ( if plural then
+              "are"
+            else
+              "is"
+            );
+          text " extra in ";
+          ref lower;
+        ]
+      @ [text " but missing in "]
+      @ [ref upper]
+      @ [text ". Exact objects do not accept extra props"]
     | MessagePropMissing { lower; upper; prop; suggestion; reason_indexer } ->
       (* If we were subtyping that add to the error message so our user knows what
        * object required the missing property. *)

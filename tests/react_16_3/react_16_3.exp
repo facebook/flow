@@ -18,20 +18,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:13:13
 
-Cannot create `FancyButton` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `FancyButton` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    forwardRef.js:13:13
    13| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
                    ^^^^^^^^^^^
 
 References:
-   forwardRef.js:5:38
-    5| const FancyButton = React.forwardRef<Props, ButtonInstance>((props, ref) => (
-                                            ^^^^^ [1]
    forwardRef.js:13:12
    13| const _c = <FancyButton foo={3} bar={3} />; // Error bar, not allowed in exact props
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   forwardRef.js:5:38
+    5| const FancyButton = React.forwardRef<Props, ButtonInstance>((props, ref) => (
+                                            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:19:38

@@ -277,17 +277,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is missing in object type [1] but exists in object literal [2].
-[prop-missing]
+Cannot cast object literal to `O5` because property `q` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    type.js:50:2
    50| ({p:x,q:y}: O5); // error: additional property `q` found
-        ^^^^^^^^^ [2]
+        ^^^^^^^^^ [1]
 
 References:
    type.js:50:13
    50| ({p:x,q:y}: O5); // error: additional property `q` found
-                   ^^ [1]
+                   ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:56:6
@@ -1329,17 +1329,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
-Cannot cast object literal to `O2` because property `p` is missing in object type [1] but exists in object literal [2].
-[prop-missing]
+Cannot cast object literal to `O2` because property `p` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    type_void.js:21:2
    21| ({p:x}: O2); // error
-        ^^^^^ [2]
+        ^^^^^ [1]
 
 References:
    type_void.js:21:9
    21| ({p:x}: O2); // error
-               ^^ [1]
+               ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:26:2
@@ -1398,17 +1398,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
-Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object literal [2].
-[prop-missing]
+Cannot cast object literal to `O4` because property `p` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    type_void.js:37:2
    37| ({p:x}: O4); // error
-        ^^^^^ [2]
+        ^^^^^ [1]
 
 References:
    type_void.js:37:9
    37| ({p:x}: O4); // error
-               ^^ [1]
+               ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:41:2

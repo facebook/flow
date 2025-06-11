@@ -17,20 +17,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `x` to object type because property `foo` is missing in object type [1] but exists in `U` [2].
-[prop-missing]
+Cannot cast `x` to object type because property `foo` is extra in `U` [1] but missing in object type [2]. Exact objects
+do not accept extra props. [prop-missing]
 
    test.js:8:1
    8| x as {||}; // Error, inexact vs. exact
       ^
 
 References:
-   test.js:8:6
-   8| x as {||}; // Error, inexact vs. exact
-           ^^^^ [1]
    test.js:5:16
    5| declare var x: U;
-                     ^ [2]
+                     ^ [1]
+   test.js:8:6
+   8| x as {||}; // Error, inexact vs. exact
+           ^^^^ [2]
 
 
 

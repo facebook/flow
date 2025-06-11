@@ -143,20 +143,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:20:13
 
-Cannot create `LazyFunctionComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `LazyFunctionComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
+Exact objects do not accept extra props. [prop-missing]
 
    lazy.js:20:13
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
                    ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   lazy.js:6:31
-    6| function FunctionComponent(x: Props): React.Node { return null }
-                                     ^^^^^ [1]
    lazy.js:20:12
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   lazy.js:6:31
+    6| function FunctionComponent(x: Props): React.Node { return null }
+                                     ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:21:39
@@ -194,20 +194,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
-Cannot create `LazyClassComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `LazyClassComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
+Exact objects do not accept extra props. [prop-missing]
 
    lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
                    ^^^^^^^^^^^^^^^^^^
 
 References:
-   lazy.js:7:46
-    7| class ClassComponent extends React.Component<Props> {}
-                                                    ^^^^^ [1]
    lazy.js:29:12
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   lazy.js:7:46
+    7| class ClassComponent extends React.Component<Props> {}
+                                                    ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36
@@ -259,20 +259,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:13:13
 
-Cannot create `MemoComponent` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `MemoComponent` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    memo.js:13:13
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
                    ^^^^^^^^^^^^^
 
 References:
-   memo.js:7:23
-    7| function Component(x: Props): React.Node { return null }
-                             ^^^^^ [1]
    memo.js:13:12
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   memo.js:7:23
+    7| function Component(x: Props): React.Node { return null }
+                             ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:14:31
@@ -310,20 +310,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:20:13
 
-Cannot create `MemoComponentWithEqual` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `MemoComponentWithEqual` element because property `bar` is extra in props [1] but missing in `Props` [2].
+Exact objects do not accept extra props. [prop-missing]
 
    memo.js:20:13
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
                    ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   memo.js:7:23
-    7| function Component(x: Props): React.Node { return null }
-                             ^^^^^ [1]
    memo.js:20:12
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   memo.js:7:23
+    7| function Component(x: Props): React.Node { return null }
+                             ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:21:40

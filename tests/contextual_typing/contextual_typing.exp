@@ -542,17 +542,17 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:188:7
 
-Cannot call `foo` with object literal bound to the first parameter because property `bar` is missing in object type [1]
-but exists in object literal [2]. [prop-missing]
+Cannot call `foo` with object literal bound to the first parameter because property `bar` is extra in object literal [1]
+but missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
 
    implicit_instantiation.js:188:7
    188|   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
-              ^^^^^^^^^^^^^^^^^^^^ [2]
+              ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    implicit_instantiation.js:187:24
    187|   declare function foo({||}): void;
-                               ^^^^ [1]
+                               ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:218:22

@@ -84,20 +84,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_position.js:11:1
 
-Cannot cast `foo` to `typeof bar` because property `x` is missing in object type [1] but exists in object type [2] in
-the first parameter. [prop-missing]
+Cannot cast `foo` to `typeof bar` because property `x` is extra in object type [1] but missing in object type [2]. Exact
+objects do not accept extra props in the first parameter. [prop-missing]
 
    error_position.js:11:1
    11| foo as typeof bar;
        ^^^
 
 References:
-   error_position.js:7:30
-    7| declare function foo<TValue>(Props<TValue>): null;
-                                    ^^^^^^^^^^^^^ [1]
    error_position.js:9:37
     9| declare function bar<TValue>(props: Props2<TValue>): null;
-                                           ^^^^^^^^^^^^^^ [2]
+                                           ^^^^^^^^^^^^^^ [1]
+   error_position.js:7:30
+    7| declare function foo<TValue>(Props<TValue>): null;
+                                    ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:17:8

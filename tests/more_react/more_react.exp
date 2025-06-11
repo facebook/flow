@@ -1,73 +1,55 @@
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
-Cannot create `Component2` element because property `bar` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `Component2` element because property `bar` and property `foo` are extra in props [1] but missing in
+`Props` [2]. Exact objects do not accept extra props. [prop-missing]
 
    inexact_config.js:12:13
    12| const _c = <Component2 foo={3} bar={3} />; // error
                    ^^^^^^^^^^
 
 References:
-   inexact_config.js:10:29
-   10| function Component2(props : Props) : React.Node { return null; }
-                                   ^^^^^ [1]
    inexact_config.js:12:12
    12| const _c = <Component2 foo={3} bar={3} />; // error
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
-
-Cannot create `Component2` element because property `foo` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
-
-   inexact_config.js:12:13
-   12| const _c = <Component2 foo={3} bar={3} />; // error
-                   ^^^^^^^^^^
-
-References:
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inexact_config.js:10:29
    10| function Component2(props : Props) : React.Node { return null; }
-                                   ^^^^^ [1]
-   inexact_config.js:12:12
-   12| const _c = <Component2 foo={3} bar={3} />; // error
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                   ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:13:13
 
-Cannot create `Component2` element because property `children` is missing in `Props` [1] but exists in props [2].
-[prop-missing]
+Cannot create `Component2` element because property `children` is extra in props [1] but missing in `Props` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    inexact_config.js:13:13
    13| const _d = <Component2>{"foo"}</Component2>; //error
                    ^^^^^^^^^^
 
 References:
-   inexact_config.js:10:29
-   10| function Component2(props : Props) : React.Node { return null; }
-                                   ^^^^^ [1]
    inexact_config.js:13:12
    13| const _d = <Component2>{"foo"}</Component2>; //error
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React.Node { return null; }
+                                   ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:22:13
 
-Cannot create `Component4` element because property `bar` is missing in object type [1] but exists in props [2].
-[prop-missing]
+Cannot create `Component4` element because property `bar` is extra in props [1] but missing in object type [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    inexact_config.js:22:13
    22| const _g = <Component4 foo={3} bar={3} />; //error
                    ^^^^^^^^^^
 
 References:
-   inexact_config.js:20:29
-   20| function Component4(props : {| foo : number |}) : React.Node { return null; }
-                                   ^^^^^^^^^^^^^^^^^^ [1]
    inexact_config.js:22:12
    22| const _g = <Component4 foo={3} bar={3} />; //error
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inexact_config.js:20:29
+   20| function Component4(props : {| foo : number |}) : React.Node { return null; }
+                                   ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:23:13
@@ -90,19 +72,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexact_props.js:19:2
 
-Cannot create `B` element because property `z` is missing in `Props2` [1] but exists in props [2]. [prop-missing]
+Cannot create `B` element because property `z` is extra in props [1] but missing in `Props2` [2]. Exact objects do not
+accept extra props. [prop-missing]
 
    inexact_props.js:19:2
    19| <B x={4} y={"hello"} z={3}></B>; // error
         ^
 
 References:
-   inexact_props.js:16:33
-   16| class B extends React.Component<Props2> {}
-                                       ^^^^^^ [1]
    inexact_props.js:19:1
    19| <B x={4} y={"hello"} z={3}></B>; // error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inexact_props.js:16:33
+   16| class B extends React.Component<Props2> {}
+                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- inexact_props.js:44:34
@@ -241,7 +224,7 @@ References:
 
 
 
-Found 13 errors
+Found 12 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

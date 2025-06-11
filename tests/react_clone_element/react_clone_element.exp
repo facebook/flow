@@ -134,7 +134,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either statics of `A` [1] is incompatible with string [2] in type argument `ElementType` [3].
- - Or property `bar` is missing in object type [4] but exists in object literal [5].
+ - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
+   props.
 
    test.js:31:7
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
@@ -150,12 +151,12 @@ References:
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                             ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:173:32
-    173|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:31:23
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
-                               ^^^^^^^^^^^^^^^^ [5]
+                               ^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:173:32
+    173|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
@@ -473,7 +474,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.cloneElement` because: [incompatible-call]
  - Either function type [1] is incompatible with string [2] in type argument `ElementType` [3].
- - Or property `bar` is missing in object type [4] but exists in object literal [5].
+ - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
+   props.
 
    test.js:76:7
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
@@ -489,12 +491,12 @@ References:
    <BUILTINS>/react.js:58:36
      58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                             ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:173:32
-    173|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    test.js:76:27
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
-                                   ^^^^^^^^^^^^^^^^ [5]
+                                   ^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:173:32
+    173|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9

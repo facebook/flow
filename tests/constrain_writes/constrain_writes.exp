@@ -224,21 +224,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:22:15
 
-Cannot assign function to `Component` because property `prop` is missing in `OtherProps` [1] but exists in `Props` [2]
-in the first parameter. All writes to `Component` must be compatible with the type of its initializer [3]. Add an
-annotation to `Component` [3] if a different type is desired. [prop-missing]
+Cannot assign function to `Component` because property `prop` is extra in `Props` [1] but missing in `OtherProps` [2].
+Exact objects do not accept extra props in the first parameter. All writes to `Component` must be compatible with the
+type of its initializer [3]. Add an annotation to `Component` [3] if a different type is desired. [prop-missing]
 
    wiki_examples.js:22:15
    22|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   wiki_examples.js:22:30
-   22|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
-                                    ^^^^^^^^^^ [1]
    wiki_examples.js:12:28
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                  ^^^^^ [2]
+                                  ^^^^^ [1]
+   wiki_examples.js:22:30
+   22|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
+                                    ^^^^^^^^^^ [2]
    wiki_examples.js:12:7
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
              ^^^^^^^^^ [3]
@@ -246,21 +246,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
 
-Cannot assign `<OtherComponent />` to `element` because property `other_prop` is missing in `Props` [1] but exists in
-`OtherProps` [2] in type argument `P` [3]. All writes to `element` must be compatible with the type of its
-initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+Cannot assign `<OtherComponent />` to `element` because property `other_prop` is extra in `OtherProps` [1] but missing
+in `Props` [2]. Exact objects do not accept extra props in type argument `P` [3]. All writes to `element` must be
+compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired.
+[prop-missing]
 
    wiki_examples.js:23:13
    23|   element = <OtherComponent {...other_props} />; // Error
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   wiki_examples.js:12:28
-   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                  ^^^^^ [1]
    wiki_examples.js:18:32
    18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                      ^^^^^^^^^^ [2]
+                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:12:28
+   12|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [2]
    <BUILTINS>/react.js:58:69
    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                            ^ [3]
@@ -321,21 +322,22 @@ References:
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:14
 
-Cannot assign `<OtherComponent />` to `element` because property `prop` is missing in `OtherProps` [1] but exists in
-`Props` [2] in the first parameter of type argument `ElementType` [3]. All writes to `element` must be compatible with
-the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+Cannot assign `<OtherComponent />` to `element` because property `prop` is extra in `Props` [1] but missing in
+`OtherProps` [2]. Exact objects do not accept extra props in the first parameter of type argument `ElementType` [3]. All
+writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
+different type is desired. [prop-missing]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
                     ^^^^^^^^^^^^^^
 
 References:
-   wiki_examples.js:18:32
-   18|   declare var OtherComponent: (OtherProps) => React.Node;
-                                      ^^^^^^^^^^ [1]
    wiki_examples.js:12:28
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
-                                  ^^^^^ [2]
+                                  ^^^^^ [1]
+   wiki_examples.js:18:32
+   18|   declare var OtherComponent: (OtherProps) => React.Node;
+                                      ^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:36
    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                           ^^^^^^^^^^^ [3]

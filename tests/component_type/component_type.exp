@@ -389,20 +389,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
 
-Cannot create `WrappedBoth` element because property `bar` is missing in object type [1] but exists in props [2].
-[prop-missing]
+Cannot create `WrappedBoth` element because property `bar` is extra in props [1] but missing in object type [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    double_wrapped.js:23:13
    23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
                    ^^^^^^^^^^^
 
 References:
-   double_wrapped.js:4:43
-    4| class MyComponent extends React.Component<{| foo: number |}> {
-                                                 ^^^^^^^^^^^^^^^^^ [1]
    double_wrapped.js:23:12
    23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   double_wrapped.js:4:43
+    4| class MyComponent extends React.Component<{| foo: number |}> {
+                                                 ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:13

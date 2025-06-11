@@ -786,6 +786,11 @@ type 'loc message =
     }
   | MessageParseError of Parse_error.t
   | MessagePlatformSpecificImplementationModuleLookupFailed of string
+  | MessagePropExtraAgainstExactObject of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+      props: string Nel.t;
+    }
   | MessagePropMissing of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason option;

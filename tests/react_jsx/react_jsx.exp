@@ -1,55 +1,55 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:25:2
 
-Cannot create `ClassExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `ClassExact_NoProps` element because property `foo` is extra in props [1] but missing in
+`Props_NoProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:25:2
    25| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:23:50
-   23| class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
-                                                        ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:25:1
    25| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:23:50
+   23| class ClassExact_NoProps extends React.Component<$Exact<Props_NoProps>> {}
+                                                        ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:2
 
-Cannot create `FunctionExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `FunctionExact_NoProps` element because property `foo` is extra in props [1] but missing in
+`Props_NoProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:37:2
    37| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:35:39
-   35| const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
-                                             ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:37:1
    37| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:35:39
+   35| const FunctionExact_NoProps = (props: $Exact<Props_NoProps>) => any;
+                                             ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:2
 
-Cannot create `AbstractExact_NoProps` element because property `foo` is missing in `Props_NoProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `AbstractExact_NoProps` element because property `foo` is extra in props [1] but missing in
+`Props_NoProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:45:2
    45| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:43:57
-   43| const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
-                                                               ^^^^^^^^^^^^^ [1]
    test.js:45:1
    45| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:43:57
+   43| const AbstractExact_NoProps: React.ComponentType<$Exact<Props_NoProps>> = any;
+                                                               ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:72:2
@@ -346,17 +346,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:2
 
-Cannot create `ClassExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in props [1]
+but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:142:2
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:52
-   133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:142:1
         v-----------------------------------------------------------
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -369,63 +366,10 @@ References:
    149|   b={2}
    150|   c={3}
    151| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:142:2
-
-Cannot create `ClassExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:142:2
-   142| <ClassExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:142:1
-        v-----------------------------------------------------------
-   142| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   143|   string1="foo"
-   144|   string2={'bar'}
-   145|   boolean1
-   146|   boolean2={false}
-   147|   number={42}
-   148|   a={1}
-   149|   b={2}
-   150|   c={3}
-   151| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:142:2
-
-Cannot create `ClassExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:142:2
-   142| <ClassExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:133:52
-   133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:142:1
-        v-----------------------------------------------------------
-   142| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   143|   string1="foo"
-   144|   string2={'bar'}
-   145|   boolean1
-   146|   boolean2={false}
-   147|   number={42}
-   148|   a={1}
-   149|   b={2}
-   150|   c={3}
-   151| />;
-        -^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:153:12
@@ -527,17 +471,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:175:2
 
-Cannot create `ClassExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in props [1]
+but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:175:2
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:133:52
-   133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:175:1
         v-----------------------------------------------------------
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -547,57 +488,10 @@ References:
    179|   boolean2={false}
    180|   {...{number: 42, a: 1, b: 2, c: 3}}
    181| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:175:2
-
-Cannot create `ClassExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:175:2
-   175| <ClassExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:133:52
    133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:175:1
-        v-----------------------------------------------------------
-   175| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   176|   string1="foo"
-   177|   string2={'bar'}
-   178|   boolean1
-   179|   boolean2={false}
-   180|   {...{number: 42, a: 1, b: 2, c: 3}}
-   181| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:175:2
-
-Cannot create `ClassExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:175:2
-   175| <ClassExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:133:52
-   133| class ClassExact_ManyProps extends React.Component<$Exact<Props_ManyProps>> {}
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:175:1
-        v-----------------------------------------------------------
-   175| <ClassExact_ManyProps // Error: Extra props are not allowed.
-   176|   string1="foo"
-   177|   string2={'bar'}
-   178|   boolean1
-   179|   boolean2={false}
-   180|   {...{number: 42, a: 1, b: 2, c: 3}}
-   181| />;
-        -^ [2]
+                                                           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:192:54
@@ -1111,17 +1005,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:328:2
 
-Cannot create `FunctionExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `FunctionExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:328:2
    328| <FunctionExact_ManyProps // OK: Other props are allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:41
-   319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:328:1
         v-------------------------------------------------------
    328| <FunctionExact_ManyProps // OK: Other props are allowed.
@@ -1134,63 +1025,10 @@ References:
    335|   b={2}
    336|   c={3}
    337| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:328:2
-
-Cannot create `FunctionExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:328:2
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:328:1
-        v-------------------------------------------------------
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
-   329|   string1="foo"
-   330|   string2={'bar'}
-   331|   boolean1
-   332|   boolean2={false}
-   333|   number={42}
-   334|   a={1}
-   335|   b={2}
-   336|   c={3}
-   337| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:328:2
-
-Cannot create `FunctionExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:328:2
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:319:41
-   319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:328:1
-        v-------------------------------------------------------
-   328| <FunctionExact_ManyProps // OK: Other props are allowed.
-   329|   string1="foo"
-   330|   string2={'bar'}
-   331|   boolean1
-   332|   boolean2={false}
-   333|   number={42}
-   334|   a={1}
-   335|   b={2}
-   336|   c={3}
-   337| />;
-        -^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:339:12
@@ -1292,17 +1130,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:361:2
 
-Cannot create `FunctionExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `FunctionExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:361:2
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:319:41
-   319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:361:1
         v--------------------------------------------------------------
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
@@ -1312,57 +1147,10 @@ References:
    365|   boolean2={false}
    366|   {...{number: 42, a: 1, b: 2, c: 3}}
    367| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:361:2
-
-Cannot create `FunctionExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:361:2
-   361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:319:41
    319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:361:1
-        v--------------------------------------------------------------
-   361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   362|   string1="foo"
-   363|   string2={'bar'}
-   364|   boolean1
-   365|   boolean2={false}
-   366|   {...{number: 42, a: 1, b: 2, c: 3}}
-   367| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:361:2
-
-Cannot create `FunctionExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:361:2
-   361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:319:41
-   319| const FunctionExact_ManyProps = (props: $Exact<Props_ManyProps>) => any;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:361:1
-        v--------------------------------------------------------------
-   361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
-   362|   string1="foo"
-   363|   string2={'bar'}
-   364|   boolean1
-   365|   boolean2={false}
-   366|   {...{number: 42, a: 1, b: 2, c: 3}}
-   367| />;
-        -^ [2]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:378:54
@@ -1674,17 +1462,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:453:2
 
-Cannot create `AbstractExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `AbstractExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:453:2
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
-   443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
    test.js:453:1
         v--------------------------------------------------------------
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1697,63 +1482,10 @@ References:
    460|   b={2}
    461|   c={3}
    462| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:453:2
-
-Cannot create `AbstractExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:453:2
-   453| <AbstractExact_ManyProps // Error: Other props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:443:59
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
-   test.js:453:1
-        v--------------------------------------------------------------
-   453| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   454|   string1="foo"
-   455|   string2={'bar'}
-   456|   boolean1
-   457|   boolean2={false}
-   458|   number={42}
-   459|   a={1}
-   460|   b={2}
-   461|   c={3}
-   462| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:453:2
-
-Cannot create `AbstractExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:453:2
-   453| <AbstractExact_ManyProps // Error: Other props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:443:59
-   443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
-   test.js:453:1
-        v--------------------------------------------------------------
-   453| <AbstractExact_ManyProps // Error: Other props are not allowed.
-   454|   string1="foo"
-   455|   string2={'bar'}
-   456|   boolean1
-   457|   boolean2={false}
-   458|   number={42}
-   459|   a={1}
-   460|   b={2}
-   461|   c={3}
-   462| />;
-        -^ [2]
+                                                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:464:12
@@ -1855,17 +1587,14 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:486:2
 
-Cannot create `AbstractExact_ManyProps` element because property `a` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
+Cannot create `AbstractExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [prop-missing]
 
    test.js:486:2
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:443:59
-   443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
    test.js:486:1
         v--------------------------------------------------------------
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
@@ -1875,57 +1604,10 @@ References:
    490|   boolean2={false}
    491|   {...{number: 42, a: 1, b: 2, c: 3}}
    492| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:486:2
-
-Cannot create `AbstractExact_ManyProps` element because property `b` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:486:2
-   486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
+        -^ [1]
    test.js:443:59
    443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
-   test.js:486:1
-        v--------------------------------------------------------------
-   486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   487|   string1="foo"
-   488|   string2={'bar'}
-   489|   boolean1
-   490|   boolean2={false}
-   491|   {...{number: 42, a: 1, b: 2, c: 3}}
-   492| />;
-        -^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:486:2
-
-Cannot create `AbstractExact_ManyProps` element because property `c` is missing in `Props_ManyProps` [1] but exists in
-props [2]. [prop-missing]
-
-   test.js:486:2
-   486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   test.js:443:59
-   443| const AbstractExact_ManyProps: React.ComponentType<$Exact<Props_ManyProps>>
-                                                                  ^^^^^^^^^^^^^^^ [1]
-   test.js:486:1
-        v--------------------------------------------------------------
-   486| <AbstractExact_ManyProps // Error: Extra props are not allowed.
-   487|   string1="foo"
-   488|   string2={'bar'}
-   489|   boolean1
-   490|   boolean2={false}
-   491|   {...{number: 42, a: 1, b: 2, c: 3}}
-   492| />;
-        -^ [2]
+                                                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:503:54
@@ -3151,4 +2833,4 @@ References:
 
 
 
-Found 177 errors
+Found 165 errors

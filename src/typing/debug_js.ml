@@ -1234,6 +1234,17 @@ let dump_error_message =
         (dump_reason cx reason_obj)
         (dump_reason cx reason_indexer)
         (string_of_use_op use_op)
+    | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
+      spf
+        "EPropsExtraAgainstExactObject ([%s], %s, %s, %s)"
+        (prop_names
+        |> Nel.to_list
+        |> List.map display_string_of_name
+        |> Base.String.concat ~sep:", "
+        )
+        (dump_reason cx reason_l_obj)
+        (dump_reason cx reason_r_obj)
+        (string_of_use_op use_op)
     | EPropNotReadable { reason_prop; prop_name; use_op } ->
       spf
         "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"

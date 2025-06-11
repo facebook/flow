@@ -103,17 +103,17 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:25
 
-Cannot assign object literal to `b9` because property `z` is missing in `Foo` [1] but exists in object literal [2].
-[prop-missing]
+Cannot assign object literal to `b9` because property `z` is extra in object literal [1] but missing in `Foo` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    test.js:11:25
    11| let b9 : Partial<Foo> = {z : ""}; // error
-                               ^^^^^^^^ [2]
+                               ^^^^^^^^ [1]
 
 References:
    test.js:11:18
    11| let b9 : Partial<Foo> = {z : ""}; // error
-                        ^^^ [1]
+                        ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:17

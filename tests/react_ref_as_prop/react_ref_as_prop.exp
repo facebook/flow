@@ -229,20 +229,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_checking.js:8:2
 
-Cannot create `FnWithoutRefProp` element because property `ref` is missing in object type [1] but exists in props [2].
-[prop-missing]
+Cannot create `FnWithoutRefProp` element because property `ref` is extra in props [1] but missing in object type [2].
+Exact objects do not accept extra props. [prop-missing]
 
    jsx_checking.js:8:2
    8| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
        ^^^^^^^^^^^^^^^^
 
 References:
-   fn_components.js:1:49
-   1| declare export function FnWithoutRefProp(props: {foo: string}): React.Node;
-                                                      ^^^^^^^^^^^^^ [1]
    jsx_checking.js:8:1
    8| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn_components.js:1:49
+   1| declare export function FnWithoutRefProp(props: {foo: string}): React.Node;
+                                                      ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:8:39
@@ -286,20 +286,20 @@ References:
 
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:18:2
 
-Cannot create `CompWithoutRefProp` element because property `ref` is missing in props of component
-CompWithoutRefProp [1] but exists in props [2]. [prop-missing]
+Cannot create `CompWithoutRefProp` element because property `ref` is extra in props [1] but missing in props of
+component CompWithoutRefProp [2]. Exact objects do not accept extra props. [prop-missing]
 
    jsx_checking.js:18:2
    18| <CompWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
         ^^^^^^^^^^^^^^^^^^
 
 References:
-   component_syntax_components.js:1:44
-    1| declare export component CompWithoutRefProp(foo: string);
-                                                  ^^^^^^^^^^^^^ [1]
    jsx_checking.js:18:1
    18| <CompWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   component_syntax_components.js:1:44
+    1| declare export component CompWithoutRefProp(foo: string);
+                                                  ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- jsx_checking.js:18:41

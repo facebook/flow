@@ -18,20 +18,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
-Cannot call `o['fun']` with `data` bound to `data` because property `z` is missing in `Data` [1] but exists in object
-literal [2]. [prop-missing]
+Cannot call `o['fun']` with `data` bound to `data` because property `z` is extra in object literal [1] but missing in
+`Data` [2]. Exact objects do not accept extra props. [prop-missing]
 
    b.js:19:12
    19|   o['fun'](data); // Error: { z: 0 } ~> Data
                   ^^^^
 
 References:
-   b.js:5:28
-    5| declare function foo(data: Data): void;
-                                  ^^^^ [1]
    b.js:18:14
    18|   var data = { z: 0 };
-                    ^^^^^^^^ [2]
+                    ^^^^^^^^ [1]
+   b.js:5:28
+    5| declare function foo(data: Data): void;
+                                  ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:16

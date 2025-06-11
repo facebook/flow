@@ -185,7 +185,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with empty [2] in property `bar`.
- - Or property `bar` is missing in object type [3] but exists in mapped type [4].
+ - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
+   props.
 
    distributivity.js:8:4
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
@@ -198,19 +199,20 @@ References:
    distributivity.js:8:28
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
                                  ^^^^^ [2]
-   distributivity.js:8:7
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-            ^^^^^^^^^^^^ [3]
    distributivity.js:6:20
    6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   distributivity.js:8:7
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+            ^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
 Cannot cast `o` to union type because: [incompatible-cast]
  - Either number [1] is incompatible with empty [2] in property `foo`.
- - Or property `foo` is missing in object type [3] but exists in mapped type [4].
+ - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
+   props.
 
    distributivity.js:8:4
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
@@ -223,30 +225,30 @@ References:
    distributivity.js:8:13
    8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
                   ^^^^^ [2]
-   distributivity.js:8:22
-   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
-                           ^^^^^^^^^^^^ [3]
    distributivity.js:6:20
    6|   declare const o: Homomorphic<{foo: number} | {bar: number}>; // OK
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   distributivity.js:8:22
+   8|   (o: {foo: empty} | {bar: empty}); // ERROR x2
+                           ^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:15:4
 
-Cannot cast `o` to object type because property `foo` is missing in object type [1] but exists in mapped type [2].
-[prop-missing]
+Cannot cast `o` to object type because property `foo` is extra in mapped type [1] but missing in object type [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    distributivity.js:15:4
    15|   (o: {}); // ERROR
           ^
 
 References:
-   distributivity.js:15:7
-   15|   (o: {}); // ERROR
-             ^^ [1]
    distributivity.js:13:20
    13|   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   distributivity.js:15:7
+   15|   (o: {}); // ERROR
+             ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
@@ -1269,7 +1271,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `homomorphic` to union type because: [incompatible-cast]
  - Either property `bar` is read-only in object type [1] but writable in object type [2].
- - Or property `bar` is missing in object type [3] but exists in object type [1].
+ - Or property `bar` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
+   props.
 
    import.js:89:4
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
@@ -1291,7 +1294,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `homomorphic` to union type because: [incompatible-cast]
  - Either property `foo` is read-only in object type [1] but writable in object type [2].
- - Or property `foo` is missing in object type [3] but exists in object type [1].
+ - Or property `foo` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
+   props.
 
    import.js:89:4
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
@@ -1967,17 +1971,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
-Cannot call `omitInput` with object literal bound to `x` because property `foo` is missing in `Omit` [1] but exists in
-object literal [2]. [prop-missing]
+Cannot call `omitInput` with object literal bound to `x` because property `foo` is extra in object literal [1] but
+missing in `Omit` [2]. Exact objects do not accept extra props. [prop-missing]
 
    pick_and_omit.js:49:47
    49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
-                                                     ^^^^^^^^ [2]
+                                                     ^^^^^^^^ [1]
 
 References:
    pick_and_omit.js:45:8
    45|     x: Omit<O, Keys>,
-              ^^^^^^^^^^^^^ [1]
+              ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:63:11
@@ -1996,17 +2000,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
-Cannot call `pickInput` with object literal bound to `x` because property `bar` is missing in `Pick` [1] but exists in
-object literal [2]. [prop-missing]
+Cannot call `pickInput` with object literal bound to `x` because property `bar` is extra in object literal [1] but
+missing in `Pick` [2]. Exact objects do not accept extra props. [prop-missing]
 
    pick_and_omit.js:83:47
    83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
-                                                     ^^^^^^^^ [2]
+                                                     ^^^^^^^^ [1]
 
 References:
    pick_and_omit.js:78:8
    78|     x: Pick<O, Keys>,
-              ^^^^^^^^^^^^^ [1]
+              ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
@@ -2219,20 +2223,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:4
 
-Cannot cast `badKey` to `Mapped` because property `bar` is missing in `Mapped` [1] but exists in object type [2].
-[prop-missing]
+Cannot cast `badKey` to `Mapped` because property `bar` is extra in object type [1] but missing in `Mapped` [2]. Exact
+objects do not accept extra props. [prop-missing]
 
    test.js:42:4
    42|   (badKey: Mapped<O>); // ERROR
           ^^^^^^
 
 References:
-   test.js:42:12
-   42|   (badKey: Mapped<O>); // ERROR
-                  ^^^^^^^^^ [1]
    test.js:41:25
    41|   declare const badKey: {bar: {contents: number}};
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:42:12
+   42|   (badKey: Mapped<O>); // ERROR
+                  ^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:4

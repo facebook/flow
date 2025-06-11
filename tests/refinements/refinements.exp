@@ -7640,11 +7640,12 @@ Error --------------------------------------------------------------------------
 
 Cannot yield object literal because: [incompatible-type]
  - Either string [1] is incompatible with string literal `DONE` [2] in property `type`.
- - Or property `value` is missing in object type [3] but exists in object literal [4].
+ - Or property `value` is extra in object literal [3] but missing in object type [4]. Exact objects do not accept extra
+   props.
 
    issue-7105.js:9:15
    9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
    issue-7105.js:9:23
@@ -7655,7 +7656,7 @@ References:
                                                        ^^^^^^ [2]
    issue-7105.js:2:15
    2| type Result = {| +type: "PENDING" |} | {| +type: "DONE", value: number |};
-                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
+                    ^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39

@@ -220,33 +220,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
           []
         |> List.rev
       in
-      Base.List.iter missing_props ~f:(fun name ->
-          let use_op =
-            Frame
-              ( PropertyCompatibility
-                  {
-                    prop = Some name;
-                    (* Lower and upper are reversed in this case since the lower object
-                     * is the one requiring the prop. *)
-                    lower = ureason;
-                    upper = lreason;
-                  },
-                use_op
-              )
-          in
-          let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
-          let err =
-            Error_message.EPropNotFound
-              {
-                prop_name = Some name;
-                reason_prop;
-                reason_obj = ureason;
-                use_op;
-                suggestion = None;
-              }
-          in
-          add_output cx err
-      );
+      (match Nel.of_list missing_props with
+      | None -> ()
+      | Some missing_props ->
+        let err =
+          Error_message.EPropsExtraAgainstExactObject
+            { prop_names = missing_props; reason_l_obj = lreason; reason_r_obj = ureason; use_op }
+        in
+        add_output cx err);
       Base.Option.iter lcall ~f:(fun _ ->
           if Base.Option.is_none ucall then
             let prop = Some (OrdinaryName "$call") in
