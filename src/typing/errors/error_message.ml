@@ -1550,135 +1550,47 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* A utility function for getting and updating the use_op in error messages. *)
 let util_use_op_of_msg nope util = function
-  | EIncompatible { use_op; lower; upper } ->
-    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
-        util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper })
-    )
-  | EIncompatibleSpeculation { use_op; loc; branches } ->
-    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
-        util use_op (fun use_op -> EIncompatibleSpeculation { use_op = Some use_op; loc; branches })
-    )
-  | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
-    util use_op (fun use_op -> EIncompatibleDefs { use_op; reason_lower; reason_upper; branches })
-  | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
-    Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
-        util use_op (fun use_op ->
-            EIncompatibleProp { use_op = Some use_op; prop; reason_prop; reason_obj; special }
-        )
-    )
-  | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-    util use_op (fun use_op -> EExpectedStringLit { reason_lower; reason_upper; use_op })
-  | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-    util use_op (fun use_op -> EExpectedNumberLit { reason_lower; reason_upper; use_op })
-  | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-    util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
-  | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
-    util use_op (fun use_op -> EExpectedBigIntLit { reason_lower; reason_upper; use_op })
-  | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
-    util use_op (fun use_op ->
-        EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion }
-    )
-  | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
-    util use_op (fun use_op ->
-        EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op }
-    )
-  | EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op } ->
-    util use_op (fun use_op ->
-        EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op }
-    )
-  | EPropNotReadable { reason_prop; prop_name; use_op } ->
-    util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
-  | EPropNotWritable { reason_prop; prop_name; use_op } ->
-    util use_op (fun use_op -> EPropNotWritable { reason_prop; prop_name; use_op })
-  | EPropPolarityMismatch (rs, p, ps, op) ->
-    util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
-  | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
-  | ETupleArityMismatch
-      {
-        use_op;
-        lower_reason;
-        lower_arity;
-        lower_inexact;
-        upper_reason;
-        upper_arity;
-        upper_inexact;
-        unify;
-      } ->
-    util use_op (fun use_op ->
-        ETupleArityMismatch
-          {
-            use_op;
-            lower_reason;
-            lower_arity;
-            lower_inexact;
-            upper_reason;
-            upper_arity;
-            upper_inexact;
-            unify;
-          }
-    )
-  | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
-  | ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index } ->
-    util use_op (fun use_op ->
-        ETupleOutOfBounds { use_op; reason; reason_op; inexact; length; index }
-    )
-  | ETupleNonIntegerIndex { use_op; reason; index } ->
-    util use_op (fun use_op -> ETupleNonIntegerIndex { use_op; reason; index })
-  | ETupleUnsafeWrite { reason; use_op } ->
-    util use_op (fun use_op -> ETupleUnsafeWrite { reason; use_op })
-  | ETupleElementNotReadable { reason; index; name; use_op } ->
-    util use_op (fun use_op -> ETupleElementNotReadable { reason; index; name; use_op })
-  | ETupleElementNotWritable { reason; index; name; use_op } ->
-    util use_op (fun use_op -> ETupleElementNotWritable { reason; index; name; use_op })
-  | ETupleElementPolarityMismatch
-      { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op } ->
-    util use_op (fun use_op ->
-        ETupleElementPolarityMismatch
-          { index; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
-    )
-  | EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
-  | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
-    util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; op_reasons; branches })
-  | EIncompatibleWithExact (rs, op, kind) ->
-    util op (fun op -> EIncompatibleWithExact (rs, op, kind))
-  | EFunctionIncompatibleWithIndexer (rs, op) ->
-    util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
-  | EInvalidObjectKit { reason; reason_op; use_op } ->
-    util use_op (fun use_op -> EInvalidObjectKit { reason; reason_op; use_op })
-  | EIncompatibleWithUseOp ({ use_op; _ } as contents) ->
-    util use_op (fun use_op -> EIncompatibleWithUseOp { contents with use_op })
-  | EEnumIncompatible ({ use_op; _ } as contents) ->
-    util use_op (fun use_op -> EEnumIncompatible { contents with use_op })
-  | ENotAReactComponent { reason; use_op } ->
-    util use_op (fun use_op -> ENotAReactComponent { reason; use_op })
-  | EFunctionCallExtraArg (rl, ru, n, op) ->
-    util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
-  | EPrimitiveAsInterface { use_op; reason; interface_reason; kind } ->
-    util use_op (fun use_op -> EPrimitiveAsInterface { use_op; reason; interface_reason; kind })
-  | ECannotSpreadInterface { spread_reason; interface_reason; use_op } ->
-    util use_op (fun use_op -> ECannotSpreadInterface { spread_reason; interface_reason; use_op })
-  | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
-    util use_op (fun use_op ->
-        ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op }
-    )
-  | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
-    ->
-    util use_op (fun use_op ->
-        EUnableToSpread
-          { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
-    )
-  | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
-    ->
-    util use_op (fun use_op ->
-        EInexactMayOverwriteIndexer
-          { spread_reason; key_reason; value_reason; object2_reason; use_op }
-    )
-  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op } ->
-    util use_op (fun use_op ->
-        EImplicitInstantiationUnderconstrainedError { reason_call; reason_tparam; bound; use_op }
-    )
-  | EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc } ->
-    util use_op (fun use_op -> EIncompatibleReactDeepReadOnly { lower; upper; use_op; dro_loc })
+  | EIncompatible { use_op; _ } ->
+    Base.Option.value_map use_op ~default:nope ~f:(fun use_op -> util use_op)
+  | EIncompatibleSpeculation { use_op; _ } ->
+    Base.Option.value_map use_op ~default:nope ~f:(fun use_op -> util use_op)
+  | EIncompatibleDefs { use_op; _ } -> util use_op
+  | EIncompatibleProp { use_op; _ } -> Base.Option.value_map use_op ~default:nope ~f:util
+  | EExpectedStringLit { use_op; _ } -> util use_op
+  | EExpectedNumberLit { use_op; _ } -> util use_op
+  | EExpectedBooleanLit { use_op; _ } -> util use_op
+  | EExpectedBigIntLit { use_op; _ } -> util use_op
+  | EPropNotFound { use_op; _ } -> util use_op
+  | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
+  | EIndexerCheckFailed { use_op; _ } -> util use_op
+  | EPropNotReadable { use_op; _ } -> util use_op
+  | EPropNotWritable { use_op; _ } -> util use_op
+  | EPropPolarityMismatch (_, _, _, use_op) -> util use_op
+  | EPrivateLookupFailed (_, _, use_op) -> util use_op
+  | ETupleArityMismatch { use_op; _ } -> util use_op
+  | ENonLitArrayToTuple (_, use_op) -> util use_op
+  | ETupleOutOfBounds { use_op; _ } -> util use_op
+  | ETupleNonIntegerIndex { use_op; _ } -> util use_op
+  | ETupleUnsafeWrite { use_op; _ } -> util use_op
+  | ETupleElementNotReadable { use_op; _ } -> util use_op
+  | ETupleElementNotWritable { use_op; _ } -> util use_op
+  | ETupleElementPolarityMismatch { use_op; _ } -> util use_op
+  | EROArrayWrite (_, use_op) -> util use_op
+  | EUnionSpeculationFailed { use_op; _ } -> util use_op
+  | EIncompatibleWithExact (_, use_op, _) -> util use_op
+  | EFunctionIncompatibleWithIndexer (_, use_op) -> util use_op
+  | EInvalidObjectKit { use_op; _ } -> util use_op
+  | EIncompatibleWithUseOp { use_op; _ } -> util use_op
+  | EEnumIncompatible { use_op; _ } -> util use_op
+  | ENotAReactComponent { use_op; _ } -> util use_op
+  | EFunctionCallExtraArg (_, _, _, use_op) -> util use_op
+  | EPrimitiveAsInterface { use_op; _ } -> util use_op
+  | ECannotSpreadInterface { use_op; _ } -> util use_op
+  | ECannotSpreadIndexerOnRight { use_op; _ } -> util use_op
+  | EUnableToSpread { use_op; _ } -> util use_op
+  | EInexactMayOverwriteIndexer { use_op; _ } -> util use_op
+  | EImplicitInstantiationUnderconstrainedError { use_op; _ } -> util use_op
+  | EIncompatibleReactDeepReadOnly { use_op; _ } -> util use_op
   | EDevOnlyRefinedLocInfo { refined_loc = _; refining_locs = _ }
   | EDevOnlyInvalidatedRefinementInfo { read_loc = _; invalidation_info = _ }
   | ETemporaryHardcodedErrorForPrototyping (_, _)

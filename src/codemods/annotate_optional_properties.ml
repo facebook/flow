@@ -41,7 +41,7 @@ let data_of_prop_missing_error loc_of_aloc error =
   let open Type in
   let open Error_message in
   let msg = Flow_error.msg_of_error error in
-  let op = util_use_op_of_msg unknown_use (fun op _ -> op) msg in
+  let op = util_use_op_of_msg unknown_use (fun op -> op) msg in
   match (root_of_use_op op, msg) with
   | (SetProperty { value; _ }, EIncompatibleProp { reason_obj; prop = Some name; _ })
   | (SetProperty { value; _ }, EPropNotFound { reason_obj; prop_name = Some name; _ })

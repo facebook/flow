@@ -128,7 +128,7 @@ let score_of_msg msg =
    * the message does not have a use_op then we return 0. This score
    * contribution declares that greater complexity in the use is more likely to
    * cause a match. *)
-  let score = util_use_op_of_msg 0 (fun op _ -> score_of_use_op op) msg in
+  let score = util_use_op_of_msg 0 score_of_use_op msg in
   (* Special cases for messages which increment the score. *)
   let score =
     score
