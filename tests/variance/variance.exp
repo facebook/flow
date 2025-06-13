@@ -852,5 +852,45 @@ References:
                                              ^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:230:3
 
-Found 50 errors
+Cannot cast `x1` to `T1` because property `f1` is read-only in mapped type [1] but writable in mapped type [2], property
+`f2` is read-only in mapped type [1] but writable in mapped type [2], property `f3` is read-only in mapped type [1] but
+writable in mapped type [2], property `f4` is read-only in mapped type [1] but writable in mapped type [2], and property
+`f5` is read-only in mapped type [1] but writable in mapped type [2]. [incompatible-variance]
+
+   test.js:230:3
+   230|   x1 as T1; // error f1...f5 incompatible
+          ^^
+
+References:
+   test.js:229:29
+   229|   declare var x1: $ReadOnly<T1>;
+                                    ^^ [1]
+   test.js:230:9
+   230|   x1 as T1; // error f1...f5 incompatible
+                ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:235:3
+
+Cannot cast `x2` to `T2` because property `f1` is read-only in object type [1] but writable in object type [2], property
+`f2` is read-only in object type [1] but writable in object type [2], property `f3` is read-only in object type [1] but
+writable in object type [2], property `f4` is read-only in object type [1] but writable in object type [2], and 2 other
+properties are incompatible. [incompatible-variance]
+
+   test.js:235:3
+   235|   x2 as T2; // error f1...f4 and others incompatible
+          ^^
+
+References:
+   test.js:234:29
+   234|   declare var x2: $ReadOnly<T2>;
+                                    ^^ [1]
+   test.js:235:9
+   235|   x2 as T2; // error f1...f4 and others incompatible
+                ^^ [2]
+
+
+
+Found 52 errors

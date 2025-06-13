@@ -973,19 +973,17 @@ let rec make_intermediate_error :
    * "invariant". Generally these terms are impenatrable to the average
    * JavaScript developer. If we had more documentation explaining these terms
    * it may be fair to use them in error messages. *)
-  let mk_prop_polarity_mismatch_error prop (lower, lpole) (upper, upole) use_op =
-    (* Remove redundant PropertyCompatibility if one exists. *)
+  let mk_prop_polarity_mismatch_error lower upper props use_op =
     let use_op =
       match use_op with
       | Frame (PropertyCompatibility c, use_op)
-        when Base.Option.map ~f:display_string_of_name c.prop = prop ->
+        when Nel.exists
+               (fun (prop, _, _) -> Base.Option.map ~f:display_string_of_name c.prop = prop)
+               props ->
         use_op
       | _ -> use_op
     in
-    mk_use_op_error_reason
-      lower
-      use_op
-      (MessagePropPolarityMismatch { lower; upper; lpole; upole; prop })
+    mk_use_op_error_reason lower use_op (MessagePropPolarityMismatch { lower; upper; props })
   in
 
   let intermediate_error =
@@ -1003,15 +1001,8 @@ let rec make_intermediate_error :
         (loc_of_reason lower)
         use_op
         (MessagePropExtraAgainstExactObject { lower; upper; props })
-    | ( None,
-        PropPolarityMismatch
-          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
-      ) ->
-      mk_prop_polarity_mismatch_error
-        prop
-        (reason_lower, polarity_lower)
-        (reason_upper, polarity_upper)
-        use_op
+    | (None, PropPolarityMismatch { reason_lower; reason_upper; props; use_op }) ->
+      mk_prop_polarity_mismatch_error reason_lower reason_upper props use_op
     | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
       mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
     | (None, Incompatible { reason_lower; reason_upper; use_op; explanation }) ->
@@ -3488,20 +3479,41 @@ let to_printable_error :
         (match prop with
         | None when is_nullish_reason lower -> [ref lower; text " does not have properties"]
         | _ -> prop_message @ suggestion @ [text " is missing in "; ref lower]))
-    | MessagePropPolarityMismatch { lower; upper; lpole; upole; prop } ->
-      let expected = polarity_explanation (lpole, upole) in
-      let actual = polarity_explanation (upole, lpole) in
-      mk_prop_message prop
-      @ [
-          text " is ";
-          text expected;
-          text " in ";
-          ref lower;
-          text " but ";
-          text actual;
-          text " in ";
-          ref upper;
-        ]
+    | MessagePropPolarityMismatch { lower; upper; props } ->
+      let f (prop, lpole, upole) =
+        let expected = polarity_explanation (lpole, upole) in
+        let actual = polarity_explanation (upole, lpole) in
+        mk_prop_message prop
+        @ [
+            text " is ";
+            text expected;
+            text " in ";
+            ref lower;
+            text " but ";
+            text actual;
+            text " in ";
+            ref upper;
+          ]
+      in
+      let props =
+        Nel.to_list props |> Base.List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
+      in
+      let number_to_check = List.length props in
+      let props =
+        if number_to_check > 5 then
+          let max_display_amount = 4 in
+          let cropped_props = Base.List.take props max_display_amount in
+          let others =
+            [
+              text
+                (spf "%d other properties are incompatible" (number_to_check - max_display_amount));
+            ]
+          in
+          Base.List.map ~f cropped_props @ [others]
+        else
+          Base.List.map ~f props
+      in
+      Flow_errors_utils.Friendly.conjunction_concat props
     | MessagePropNotReadable x ->
       mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not readable"]
     | MessagePropNotWritable x ->

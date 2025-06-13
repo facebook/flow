@@ -801,9 +801,7 @@ type 'loc message =
   | MessagePropPolarityMismatch of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
-      lpole: Polarity.t;
-      upole: Polarity.t;
-      prop: string option;
+      props: (string option * Polarity.t * Polarity.t) Nel.t;
     }
   | MessagePropNotReadable of name option
   | MessagePropNotWritable of name option

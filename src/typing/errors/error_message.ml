@@ -106,11 +106,12 @@ and 'loc t' =
       prop_name: name option;
       use_op: 'loc virtual_use_op;
     }
-  | EPropPolarityMismatch of
-      ('loc virtual_reason * 'loc virtual_reason)
-      * name option
-      * (Polarity.t * Polarity.t)
-      * 'loc virtual_use_op
+  | EPropPolarityMismatch of {
+      lreason: 'loc virtual_reason;
+      ureason: 'loc virtual_reason;
+      props: (name option * (Polarity.t * Polarity.t)) Nel.t;
+      use_op: 'loc virtual_use_op;
+    }
   | EPolarityMismatch of {
       reason: 'loc virtual_reason;
       name: string;
@@ -979,8 +980,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EPropNotReadable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
     EPropNotWritable { reason_prop = map_reason reason_prop; prop_name; use_op = map_use_op use_op }
-  | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
-    EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
+  | EPropPolarityMismatch { lreason; ureason; props; use_op } ->
+    EPropPolarityMismatch
+      {
+        lreason = map_reason lreason;
+        ureason = map_reason ureason;
+        props;
+        use_op = map_use_op use_op;
+      }
   | EBuiltinNameLookupFailed { loc; name } -> EBuiltinNameLookupFailed { loc = f loc; name }
   | EBuiltinModuleLookupFailed { loc; name; potential_generator } ->
     EBuiltinModuleLookupFailed { loc = f loc; name; potential_generator }
@@ -1565,7 +1572,7 @@ let util_use_op_of_msg nope util = function
   | EIndexerCheckFailed { use_op; _ } -> util use_op
   | EPropNotReadable { use_op; _ } -> util use_op
   | EPropNotWritable { use_op; _ } -> util use_op
-  | EPropPolarityMismatch (_, _, _, use_op) -> util use_op
+  | EPropPolarityMismatch { use_op; _ } -> util use_op
   | EPrivateLookupFailed (_, _, use_op) -> util use_op
   | ETupleArityMismatch { use_op; _ } -> util use_op
   | ENonLitArrayToTuple (_, use_op) -> util use_op
@@ -2243,11 +2250,9 @@ type 'loc friendly_message_recipe =
       explanation: 'loc explanation option;
     }
   | PropPolarityMismatch of {
-      prop: string option;
       reason_lower: 'loc Reason.virtual_reason;
-      polarity_lower: Polarity.t;
       reason_upper: 'loc Reason.virtual_reason;
-      polarity_upper: Polarity.t;
+      props: (string option * Polarity.t * Polarity.t) Nel.t;
       use_op: 'loc Type.virtual_use_op;
     }
 
@@ -2382,15 +2387,16 @@ let friendly_message_of_msg = function
         use_op;
         explanation = None;
       }
-  | EPropPolarityMismatch
-      ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
+  | EPropPolarityMismatch { lreason = reason_lower; ureason = reason_upper; props; use_op } ->
     PropPolarityMismatch
       {
-        prop = Base.Option.map ~f:display_string_of_name prop;
         reason_lower;
-        polarity_lower;
         reason_upper;
-        polarity_upper;
+        props =
+          Nel.map
+            (fun (prop, (polarity_lower, polarity_upper)) ->
+              (Base.Option.map ~f:display_string_of_name prop, polarity_lower, polarity_upper))
+            props;
         use_op;
       }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->

@@ -7950,7 +7950,14 @@ struct
       if not (Polarity.equal (polarity1, polarity2)) then
         add_output
           cx
-          (Error_message.EPropPolarityMismatch ((r1, r2), Some x, (polarity1, polarity2), use_op))
+          (Error_message.EPropPolarityMismatch
+             {
+               lreason = r1;
+               ureason = r2;
+               props = Nel.one (Some x, (polarity1, polarity2));
+               use_op;
+             }
+          )
 
   (* If some property `x` exists in one object but not another, ensure the
      property is compatible with a dictionary, or error if none. *)

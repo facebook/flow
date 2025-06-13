@@ -1261,14 +1261,20 @@ let dump_error_message =
         | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
         (string_of_use_op use_op)
-    | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
+    | EPropPolarityMismatch { lreason = reason1; ureason = reason2; props; _ } ->
       spf
         "EPropPolarityMismatch ((%s, %s), %s, _, _)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
-        (match x with
-        | Some x -> spf "%S" (display_string_of_name x)
-        | None -> "(computed)")
+        (props
+        |> Nel.to_list
+        |> Base.List.map ~f:(fun (x, _) ->
+               match x with
+               | Some x -> spf "%S" (display_string_of_name x)
+               | None -> "(computed)"
+           )
+        |> Base.String.concat ~sep:", "
+        )
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       spf
         "EPolarityMismatch { reason=%s; name=%S; expected_polarity=%s; actual_polarity=%s }"

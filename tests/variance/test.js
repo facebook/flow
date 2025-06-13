@@ -221,3 +221,16 @@ declare var dwoB: dWOB;
   (([woA]: Array<{-p:A,...}>): Array<{-p:A,...}>); // ok
 
 }
+
+// summarized [incompatible-variance] error
+{
+  type T1 = {[k in 'f1'|'f2'|'f3'|'f4'|'f5']: number};
+
+  declare var x1: $ReadOnly<T1>;
+  x1 as T1; // error f1...f5 incompatible
+
+  type T2 = {...T1, f6: number};
+
+  declare var x2: $ReadOnly<T2>;
+  x2 as T2; // error f1...f4 and others incompatible
+}

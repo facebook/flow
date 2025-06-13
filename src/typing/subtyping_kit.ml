@@ -51,11 +51,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
   let flow_all_in_union cx trace rep u =
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
-  let add_output_prop_polarity_mismatch cx use_op reasons errs =
-    Base.List.iter
-      ~f:(fun (name, polarity) ->
-        add_output cx (Error_message.EPropPolarityMismatch (reasons, name, polarity, use_op)))
-      errs
+  let add_output_prop_polarity_mismatch cx use_op (lreason, ureason) props =
+    match Nel.of_list props with
+    | None -> ()
+    | Some props ->
+      add_output cx (Error_message.EPropPolarityMismatch { lreason; ureason; props; use_op })
 
   let polarity_error_content propref lp up =
     let lpol = Property.polarity_of_property_type lp in
