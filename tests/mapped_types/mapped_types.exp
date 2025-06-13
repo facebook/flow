@@ -1220,6 +1220,31 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
 Cannot cast `semi` to union type because: [incompatible-cast]
+ - Either number [1] is incompatible with string [2] in property `foo`.
+ - Or property `foo` is read-only in object type [3] but writable in object type [4].
+
+   import.js:85:4
+   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
+          ^^^^
+
+References:
+   import.js:83:46
+   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
+                                                    ^^^^^^ [1]
+   import.js:85:32
+   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
+                                      ^^^^^^ [2]
+   import.js:83:23
+   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   import.js:85:10
+   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
+                ^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:85:4
+
+Cannot cast `semi` to union type because: [incompatible-cast]
  - Either string [1] is incompatible with number [2] in property `foo`.
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
@@ -1242,37 +1267,12 @@ References:
                                 ^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:85:4
-
-Cannot cast `semi` to union type because: [incompatible-cast]
- - Either property `foo` is read-only in object type [1] but writable in object type [2].
- - Or number [3] is incompatible with string [4] in property `foo`.
-
-   import.js:85:4
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-          ^^^^
-
-References:
-   import.js:83:23
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import.js:85:10
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                ^^^^^^^^^^^^^ [2]
-   import.js:83:46
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                                                    ^^^^^^ [3]
-   import.js:85:32
-   85|   (semi: {foo: number} | {foo: string}); // ERROR 2x
-                                      ^^^^^^ [4]
-
-
 Error --------------------------------------------------------------------------------------------------- import.js:89:4
 
 Cannot cast `homomorphic` to union type because: [incompatible-cast]
- - Either property `bar` is read-only in object type [1] but writable in object type [2].
- - Or property `bar` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
+ - Either property `bar` is extra in object type [1] but missing in object type [2]. Exact objects do not accept extra
    props.
+ - Or property `bar` is read-only in object type [1] but writable in object type [3].
 
    import.js:89:4
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
@@ -1282,12 +1282,12 @@ References:
    import.js:87:30
    87|   declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import.js:89:33
-   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                                       ^^^^^^^^^^^^^ [2]
    import.js:89:17
    89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
-                       ^^^^^^^^^^^^^ [3]
+                       ^^^^^^^^^^^^^ [2]
+   import.js:89:33
+   89|   (homomorphic: {foo: number} | {bar: number}); // ERROR 2x
+                                       ^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:89:4

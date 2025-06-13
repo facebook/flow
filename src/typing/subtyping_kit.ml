@@ -51,11 +51,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
   let flow_all_in_union cx trace rep u =
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
-  let add_output_prop_polarity_mismatch cx reasons errs =
+  let add_output_prop_polarity_mismatch cx use_op reasons errs =
     Base.List.iter
-      ~f:(fun (name, polarity, use_op) ->
+      ~f:(fun (name, polarity) ->
         add_output cx (Error_message.EPropPolarityMismatch (reasons, name, polarity, use_op)))
       errs
+
+  let polarity_error_content propref lp up =
+    let lpol = Property.polarity_of_property_type lp in
+    let upol = Property.polarity_of_property_type up in
+    (propref, (lpol, upol))
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) propref = function
     (* unification cases *)
@@ -72,13 +77,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | (Some lt, Some ut) ->
           flow_opt cx ?trace (lt, UseT (use_op, ut));
           []
-        | (None, Some _) when report_polarity ->
-          [
-            ( propref_error,
-              (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
-              use_op
-            );
-          ]
+        | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
         | _ -> []
       in
       let errs2 =
@@ -86,13 +85,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | (Some lt, Some ut) ->
           flow_opt cx ?trace (ut, UseT (use_op, lt));
           []
-        | (None, Some _) when report_polarity ->
-          [
-            ( propref_error,
-              (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
-              use_op
-            );
-          ]
+        | (None, Some _) when report_polarity -> [polarity_error_content propref_error lp up]
         | _ -> []
       in
       errs1 @ errs2
@@ -197,7 +190,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
             )
         in
-        add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+        add_output_prop_polarity_mismatch cx use_op_k (lreason, ureason) errs
       );
       let use_op_v =
         Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
@@ -215,7 +208,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
             )
         in
-        add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+        add_output_prop_polarity_mismatch cx use_op_v (lreason, ureason) errs
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
@@ -427,7 +420,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               acc))
         []
     in
-    add_output_prop_polarity_mismatch cx (lreason, ureason) errs;
+    add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs;
 
     (* Any properties in l but not u must match indexer *)
     (match udict with
@@ -461,7 +454,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
             in
             let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
-            add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+            add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
         end
       in
       (* If we are in implicit instantiation then we should always flow missing keys & value types to the
@@ -569,7 +562,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
           let propref = mk_named_prop ~reason:reason_prop name in
           let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
-          add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+          add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
       | _ -> ()));
 
     rec_flow cx trace (uproto, ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
@@ -1972,7 +1965,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               acc)
           []
       in
-      add_output_prop_polarity_mismatch cx (lreason, ureason) errs;
+      add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs;
       rec_flow cx trace (l, UseT (use_op, uproto))
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
      * object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
@@ -2594,5 +2587,5 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref p =
     let errs = rec_flow_p cx ?trace ~use_op ~report_polarity propref p in
-    add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+    add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
 end
