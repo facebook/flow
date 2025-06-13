@@ -1473,7 +1473,8 @@ module Observer : OBSERVER = struct
     )
 end
 
-module Pierce : functor (Flow : Flow_common.S) -> S with module Flow = Flow = Make (Observer)
+module Make_instantiation_solver : functor (Flow : Flow_common.S) -> S with module Flow = Flow =
+  Make (Observer)
 
 module type KIT = sig
   module Flow : Flow_common.S
@@ -1525,7 +1526,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   KIT = struct
   module Flow = FlowJs
   module Instantiation_helper = Instantiation_helper
-  module Pierce = Pierce (Flow)
+  module Instantiation_solver = Make_instantiation_solver (Flow)
   module SpeculationKit = Speculation_kit.Make (Flow)
   open Instantiation_helper
 
@@ -1581,7 +1582,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     Context.run_in_implicit_instantiation_mode cx (fun () ->
         let (_, _, t) = check.Implicit_instantiation_check.poly_t in
         let (soln, inferred_targs) =
-          Pierce.solve_targs
+          Instantiation_solver.solve_targs
             cx
             ~use_op
             ~allow_underconstrained
@@ -1613,7 +1614,9 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         }
       in
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          let (map, _) = Pierce.solve_targs cx ~use_op ~allow_underconstrained:false check in
+          let (map, _) =
+            Instantiation_solver.solve_targs cx ~use_op ~allow_underconstrained:false check
+          in
           let { inferred; _ } = Subst_name.Map.find name map in
           inferred
       )
@@ -1642,7 +1645,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     in
     match
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          Pierce.solve_conditional_type_targs
+          Instantiation_solver.solve_conditional_type_targs
             cx
             Type.DepthTrace.dummy_trace
             ~use_op
@@ -1693,7 +1696,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     in
     match
       Context.run_in_implicit_instantiation_mode cx (fun () ->
-          Pierce.solve_conditional_type_targs
+          Instantiation_solver.solve_conditional_type_targs
             cx
             Type.DepthTrace.dummy_trace
             ~use_op
@@ -1719,7 +1722,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       Nel.fold_left
         (fun subst_map tparam ->
           let inferred =
-            Pierce.pin_type
+            Instantiation_solver.pin_type
               cx
               ~use_op
               tparam
@@ -1761,7 +1764,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
       let t =
         match
           Context.run_in_implicit_instantiation_mode cx (fun () ->
-              Pierce.solve_conditional_type_targs
+              Instantiation_solver.solve_conditional_type_targs
                 cx
                 trace
                 ~use_op

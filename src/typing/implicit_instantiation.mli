@@ -16,7 +16,7 @@ module PinTypes (_ : Flow_common.S) : sig
   val pin_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
-module Pierce (_ : Flow_common.S) : sig
+module Make_instantiation_solver (_ : Flow_common.S) : sig
   val pin_type :
     Context.t ->
     use_op:Type.use_op ->

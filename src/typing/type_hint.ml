@@ -10,7 +10,7 @@ open Type
 open TypeUtil
 open Hint
 open Utils_js
-module ImplicitInstantiation = Implicit_instantiation.Pierce (Flow_js.FlowJs)
+module ImplicitInstantiation = Implicit_instantiation.Make_instantiation_solver (Flow_js.FlowJs)
 module PinTypes = Implicit_instantiation.PinTypes (Flow_js.FlowJs)
 module SpeculationFlow = Speculation_flow
 
