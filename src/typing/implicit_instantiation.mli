@@ -12,32 +12,11 @@ type inferred_targ = {
   inferred: Type.t;
 }
 
-module type OBSERVER = sig
-  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> inferred_targ
-
-  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> inferred_targ
-
-  val on_missing_bounds :
-    Context.t ->
-    use_op:Type.use_op ->
-    Type.typeparam ->
-    tparam_binder_reason:Reason.reason ->
-    instantiation_reason:Reason.reason ->
-    inferred_targ
-
-  val on_upper_non_t :
-    Context.t ->
-    use_op:Type.use_op ->
-    Type.use_t ->
-    Type.typeparam ->
-    tparam_binder_reason:Reason.reason ->
-    instantiation_reason:Reason.reason ->
-    inferred_targ
+module PinTypes (_ : Flow_common.S) : sig
+  val pin_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
 end
 
-module type S = sig
-  module Flow : Flow_common.S
-
+module Pierce (_ : Flow_common.S) : sig
   val pin_type :
     Context.t ->
     use_op:Type.use_op ->
@@ -56,35 +35,7 @@ module type S = sig
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
     inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
-
-  val solve_conditional_type_targs :
-    Context.t ->
-    Type.DepthTrace.t ->
-    use_op:Type.use_op ->
-    reason:Reason.reason ->
-    tparams:Type.typeparam list ->
-    check_t:Type.t ->
-    extends_t:Type.t ->
-    true_t:Type.t ->
-    Type.t Subst_name.Map.t option
-
-  val fold :
-    implicit_instantiation_cx:Context.t ->
-    cx:Context.t ->
-    f:(Context.t -> 'acc -> Check.t -> inferred_targ Subst_name.Map.t -> 'acc) ->
-    init:'acc ->
-    post:(cx:Context.t -> implicit_instantiation_cx:Context.t -> unit) ->
-    Check.t list ->
-    'acc
 end
-
-module Make (_ : OBSERVER) (Flow : Flow_common.S) : S with module Flow = Flow
-
-module PinTypes (_ : Flow_common.S) : sig
-  val pin_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
-end
-
-module Pierce (Flow : Flow_common.S) : S with module Flow = Flow
 
 module type KIT = sig
   module Flow : Flow_common.S
