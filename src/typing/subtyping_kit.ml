@@ -51,41 +51,51 @@ module Make (Flow : INPUT) : OUTPUT = struct
   let flow_all_in_union cx trace rep u =
     iter_union ~f:rec_flow ~init:() ~join:(fun _ _ -> ()) cx trace rep u
 
-  let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref = function
+  let add_output_prop_polarity_mismatch cx reasons errs =
+    Base.List.iter
+      ~f:(fun (name, polarity, use_op) ->
+        add_output cx (Error_message.EPropPolarityMismatch (reasons, name, polarity, use_op)))
+      errs
+
+  let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) propref = function
     (* unification cases *)
     | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
         OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
       ) ->
-      unify_opt cx ?trace ~use_op lt ut
+      unify_opt cx ?trace ~use_op lt ut;
+      []
     (* directional cases *)
     | (lp, up) ->
       let propref_error = name_of_propref propref in
-      (match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
-      | (Some lt, Some ut) -> flow_opt cx ?trace (lt, UseT (use_op, ut))
-      | (None, Some _) when report_polarity ->
-        add_output
-          cx
-          (Error_message.EPropPolarityMismatch
-             ( (lreason, ureason),
-               propref_error,
-               (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
-               use_op
-             )
-          )
-      | _ -> ());
-      (match (Property.write_t_of_property_type lp, Property.write_t_of_property_type up) with
-      | (Some lt, Some ut) -> flow_opt cx ?trace (ut, UseT (use_op, lt))
-      | (None, Some _) when report_polarity ->
-        add_output
-          cx
-          (Error_message.EPropPolarityMismatch
-             ( (lreason, ureason),
-               propref_error,
-               (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
-               use_op
-             )
-          )
-      | _ -> ())
+      let errs1 =
+        match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
+        | (Some lt, Some ut) ->
+          flow_opt cx ?trace (lt, UseT (use_op, ut));
+          []
+        | (None, Some _) when report_polarity ->
+          [
+            ( propref_error,
+              (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
+              use_op
+            );
+          ]
+        | _ -> []
+      in
+      let errs2 =
+        match (Property.write_t_of_property_type lp, Property.write_t_of_property_type up) with
+        | (Some lt, Some ut) ->
+          flow_opt cx ?trace (ut, UseT (use_op, lt));
+          []
+        | (None, Some _) when report_polarity ->
+          [
+            ( propref_error,
+              (Property.polarity_of_property_type lp, Property.polarity_of_property_type up),
+              use_op
+            );
+          ]
+        | _ -> []
+      in
+      errs1 @ errs2
 
   let index_of_param params x =
     Base.List.find_mapi params ~f:(fun i p ->
@@ -171,38 +181,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Some { key = uk; value = uv; dict_polarity = upolarity; _ }
       ) ->
       let use_op_k = Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op) in
-      if lit then
+      ( if lit then
         rec_flow_t cx trace ~use_op:use_op_k (mod_t None ldro lk, mod_t None udro uk)
       else
         (* Don't report polarity errors when checking the indexer key. We would
          * report these errors again a second time when checking values. *)
-        rec_flow_p
-          cx
-          ~trace
-          ~report_polarity:false
-          ~use_op:use_op_k
-          lreason
-          ureason
-          (Computed uk)
-          ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
-            OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
-          );
+        let errs =
+          rec_flow_p
+            cx
+            ~trace
+            ~report_polarity:false
+            ~use_op:use_op_k
+            (Computed uk)
+            ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
+              OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
+            )
+        in
+        add_output_prop_polarity_mismatch cx (lreason, ureason) errs
+      );
       let use_op_v =
         Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
       in
       if lit then
         rec_flow_t cx trace ~use_op:use_op_v (mod_t None ldro lv, mod_t None udro uv)
       else
-        rec_flow_p
-          cx
-          ~trace
-          ~use_op:use_op_v
-          lreason
-          ureason
-          (Computed uv)
-          ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
-            OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
-          )
+        let errs =
+          rec_flow_p
+            cx
+            ~trace
+            ~use_op:use_op_v
+            (Computed uv)
+            ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
+              OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
+            )
+        in
+        add_output_prop_polarity_mismatch cx (lreason, ureason) errs
     | _ -> ());
 
     if rflags.obj_kind = Exact && not (is_literal_object_reason ureason) then (
@@ -272,131 +285,149 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
-    Context.iter_real_props cx uflds (fun name up ->
-        let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
-        let propref = mk_named_prop ~reason:reason_prop name in
-        let use_op' = use_op in
-        let use_op =
-          Frame
-            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op')
-        in
-        match (Context.get_prop cx lflds name, ldict) with
-        | (Some lp, _) ->
-          if lit then
-            (* prop from unaliased LB: check <: *)
-            match (Property.read_t lp, Property.read_t up) with
-            | (Some lt, Some ut) ->
-              rec_flow cx trace (mod_t (Some name) ldro lt, UseT (use_op, mod_t (Some name) udro ut))
-            | _ -> ()
-          else
-            (* prop from aliased LB *)
-            rec_flow_p
-              cx
-              ~trace
-              ~use_op
-              lreason
-              ureason
-              propref
-              ( Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro),
-                Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
-              )
-        | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
-          let subtype_against_indexer () =
-            let lp =
-              OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
-            in
-            let up =
-              match up with
-              | Field
-                  {
-                    preferred_def_locs = _;
-                    key_loc = _;
-                    type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
-                    polarity;
-                  } ->
-                OrdinaryField { type_ = mod_t (Some name) udro ut; polarity }
-              | _ -> Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
-            in
-            if lit then
-              match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
-              | (Some lt, Some ut) -> rec_flow cx trace (lt, UseT (use_op, ut))
-              | _ -> ()
-            else
-              rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+    let errs =
+      Context.fold_real_props
+        cx
+        uflds
+        (fun name up acc ->
+          let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
+          let propref = mk_named_prop ~reason:reason_prop name in
+          let use_op' = use_op in
+          let use_op =
+            Frame
+              (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op')
           in
-          (match up with
-          (* If the upper property is optional and readonly (or this is a lit check) then we only
-           * need to check the lower indexer type against the upper property type if the upper
-           * property key is covered by the lower property's indexer, otherwise we can omit the
-           * check. We already check elsewhere that the upper dictionary is compatible with the
-           * lower dictionary, so we are not risking any issues with exactness here.
-           *
-           * We only do this outside of implicit instantiation to avoid accidentally underconstraining tvars by avoiding flows *)
-          | Field { type_ = OptionalT _; polarity; _ }
-            when (lit || polarity = Polarity.Positive) && not (Context.in_implicit_instantiation cx)
-            ->
-            if speculative_subtyping_succeeds cx (type_of_key_name cx name reason_prop) key then
-              subtype_against_indexer ()
+          match (Context.get_prop cx lflds name, ldict) with
+          | (Some lp, _) ->
+            if lit then
+              (* prop from unaliased LB: check <: *)
+              match (Property.read_t lp, Property.read_t up) with
+              | (Some lt, Some ut) ->
+                rec_flow
+                  cx
+                  trace
+                  (mod_t (Some name) ldro lt, UseT (use_op, mod_t (Some name) udro ut));
+                acc
+              | _ -> acc
             else
-              ()
-          | _ ->
-            rec_flow
-              cx
-              trace
-              ( type_of_key_name cx name reason_prop,
-                UseT
-                  ( Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'),
-                    key
+              (* prop from aliased LB *)
+              let errs =
+                rec_flow_p
+                  cx
+                  ~trace
+                  ~use_op
+                  propref
+                  ( Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro),
+                    Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
                   )
-              );
-            subtype_against_indexer ())
-        | _ ->
-          (* property doesn't exist in inflowing type *)
-          (match up with
-          | Field { type_ = OptionalT _; _ } when lit -> ()
-          | Field { type_ = OptionalT _ as type_; polarity = Polarity.Positive; _ }
-            when Obj_type.is_exact lflags.obj_kind ->
-            rec_flow
-              cx
-              trace
-              ( lproto,
-                LookupT
-                  {
-                    reason = ureason;
-                    lookup_kind = NonstrictReturning (None, None);
-                    try_ts_on_failure = [];
-                    propref;
-                    lookup_action =
-                      LookupProp (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
-                    method_accessible = true;
-                    ids = None;
-                    ignore_dicts = false;
-                  }
-              )
-          | _ ->
-            (* look up the property in the prototype *)
-            let lookup_kind =
-              match ldict with
-              | None -> Strict lreason
-              | _ -> NonstrictReturning (None, None)
+              in
+              Base.List.rev_append errs acc
+          | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
+            let subtype_against_indexer err_acc () =
+              let lp =
+                OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
+              in
+              let up =
+                match up with
+                | Field
+                    {
+                      preferred_def_locs = _;
+                      key_loc = _;
+                      type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
+                      polarity;
+                    } ->
+                  OrdinaryField { type_ = mod_t (Some name) udro ut; polarity }
+                | _ -> Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
+              in
+              if lit then
+                match
+                  (Property.read_t_of_property_type lp, Property.read_t_of_property_type up)
+                with
+                | (Some lt, Some ut) ->
+                  rec_flow cx trace (lt, UseT (use_op, ut));
+                  err_acc
+                | _ -> err_acc
+              else
+                let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+                Base.List.rev_append errs err_acc
             in
-            rec_flow
-              cx
-              trace
-              ( lproto,
-                LookupT
-                  {
-                    reason = ureason;
-                    lookup_kind;
-                    try_ts_on_failure = [];
-                    propref;
-                    lookup_action = LookupProp (use_op, Property.type_ up);
-                    method_accessible = true;
-                    ids = None;
-                    ignore_dicts = false;
-                  }
-              ))
-    );
+            (match up with
+            (* If the upper property is optional and readonly (or this is a lit check) then we only
+             * need to check the lower indexer type against the upper property type if the upper
+             * property key is covered by the lower property's indexer, otherwise we can omit the
+             * check. We already check elsewhere that the upper dictionary is compatible with the
+             * lower dictionary, so we are not risking any issues with exactness here.
+             *
+             * We only do this outside of implicit instantiation to avoid accidentally underconstraining tvars by avoiding flows *)
+            | Field { type_ = OptionalT _; polarity; _ }
+              when (lit || polarity = Polarity.Positive)
+                   && not (Context.in_implicit_instantiation cx) ->
+              if speculative_subtyping_succeeds cx (type_of_key_name cx name reason_prop) key then
+                subtype_against_indexer acc ()
+              else
+                acc
+            | _ ->
+              rec_flow
+                cx
+                trace
+                ( type_of_key_name cx name reason_prop,
+                  UseT
+                    ( Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op'),
+                      key
+                    )
+                );
+              subtype_against_indexer acc ())
+          | _ ->
+            (* property doesn't exist in inflowing type *)
+            (match up with
+            | Field { type_ = OptionalT _; _ } when lit -> acc
+            | Field { type_ = OptionalT _ as type_; polarity = Polarity.Positive; _ }
+              when Obj_type.is_exact lflags.obj_kind ->
+              rec_flow
+                cx
+                trace
+                ( lproto,
+                  LookupT
+                    {
+                      reason = ureason;
+                      lookup_kind = NonstrictReturning (None, None);
+                      try_ts_on_failure = [];
+                      propref;
+                      lookup_action =
+                        LookupProp (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
+                      method_accessible = true;
+                      ids = None;
+                      ignore_dicts = false;
+                    }
+                );
+              acc
+            | _ ->
+              (* look up the property in the prototype *)
+              let lookup_kind =
+                match ldict with
+                | None -> Strict lreason
+                | _ -> NonstrictReturning (None, None)
+              in
+              rec_flow
+                cx
+                trace
+                ( lproto,
+                  LookupT
+                    {
+                      reason = ureason;
+                      lookup_kind;
+                      try_ts_on_failure = [];
+                      propref;
+                      lookup_action = LookupProp (use_op, Property.type_ up);
+                      method_accessible = true;
+                      ids = None;
+                      ignore_dicts = false;
+                    }
+                );
+              acc))
+        []
+    in
+    add_output_prop_polarity_mismatch cx (lreason, ureason) errs;
 
     (* Any properties in l but not u must match indexer *)
     (match udict with
@@ -429,7 +460,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let propref =
               mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
             in
-            rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+            let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+            add_output_prop_polarity_mismatch cx (lreason, ureason) errs
         end
       in
       (* If we are in implicit instantiation then we should always flow missing keys & value types to the
@@ -536,7 +568,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let name = OrdinaryName name in
           let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
           let propref = mk_named_prop ~reason:reason_prop name in
-          rec_flow_p cx ~trace ~use_op lreason ureason propref (lp, up)
+          let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+          add_output_prop_polarity_mismatch cx (lreason, ureason) errs
       | _ -> ()));
 
     rec_flow cx trace (uproto, ReposUseT (ureason, false, use_op, DefT (lreason, ObjT l_obj)))
@@ -1888,55 +1921,58 @@ module Make (Flow : INPUT) : OUTPUT = struct
             in
             add_output cx error_message
       );
-
-      Context.iter_real_props cx uflds (fun name up ->
-          let use_op =
-            Frame
-              (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
-          in
-          let propref =
-            mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) ureason) name
-          in
-          match NameUtils.Map.find_opt name lflds with
-          | Some lp ->
-            rec_flow_p
-              cx
-              ~trace
-              ~use_op
-              lreason
-              ureason
-              propref
-              (Property.type_ lp, Property.type_ up)
-          | _ ->
-            let lookup_kind =
-              match up with
-              | Field { type_ = OptionalT _; _ } -> NonstrictReturning (None, None)
-              | _ -> Strict lreason
+      let errs =
+        Context.fold_real_props
+          cx
+          uflds
+          (fun name up acc ->
+            let use_op =
+              Frame
+                ( PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason },
+                  use_op
+                )
             in
-            rec_flow
-              cx
-              trace
-              ( super,
-                ReposLowerT
-                  {
-                    reason = lreason;
-                    use_desc = false;
-                    use_t =
-                      LookupT
-                        {
-                          reason = ureason;
-                          lookup_kind;
-                          try_ts_on_failure = [];
-                          propref;
-                          lookup_action = LookupProp (use_op, Property.type_ up);
-                          method_accessible = false;
-                          ids = Some (Properties.Set.of_list [lown; lproto]);
-                          ignore_dicts = false;
-                        };
-                  }
-              )
-      );
-
+            let propref =
+              mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) ureason) name
+            in
+            match NameUtils.Map.find_opt name lflds with
+            | Some lp ->
+              let errs =
+                rec_flow_p cx ~trace ~use_op propref (Property.type_ lp, Property.type_ up)
+              in
+              Base.List.rev_append errs acc
+            | _ ->
+              let lookup_kind =
+                match up with
+                | Field { type_ = OptionalT _; _ } -> NonstrictReturning (None, None)
+                | _ -> Strict lreason
+              in
+              rec_flow
+                cx
+                trace
+                ( super,
+                  ReposLowerT
+                    {
+                      reason = lreason;
+                      use_desc = false;
+                      use_t =
+                        LookupT
+                          {
+                            reason = ureason;
+                            lookup_kind;
+                            try_ts_on_failure = [];
+                            propref;
+                            lookup_action = LookupProp (use_op, Property.type_ up);
+                            method_accessible = false;
+                            ids = Some (Properties.Set.of_list [lown; lproto]);
+                            ignore_dicts = false;
+                          };
+                    }
+                );
+              acc)
+          []
+      in
+      add_output_prop_polarity_mismatch cx (lreason, ureason) errs;
       rec_flow cx trace (l, UseT (use_op, uproto))
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
      * object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
@@ -2555,4 +2591,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
              explanation = None;
            }
         )
+
+  let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref p =
+    let errs = rec_flow_p cx ?trace ~use_op ~report_polarity propref p in
+    add_output_prop_polarity_mismatch cx (lreason, ureason) errs
 end
