@@ -7,10 +7,17 @@
 
 module Check = Implicit_instantiation_check
 
-type inferred_targ = {
-  tparam: Type.typeparam;
-  inferred: Type.t;
-}
+module Inferred_targ : sig
+  type t
+
+  val to_type : t -> Type.t
+end
+
+module Generalized_targ : sig
+  type t
+
+  val to_type : t -> Type.t
+end
 
 module PinTypes (_ : Flow_common.S) : sig
   val pin_type : Context.t -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
@@ -25,7 +32,7 @@ module Make_instantiation_solver (_ : Flow_common.S) : sig
     default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
-    inferred_targ
+    Inferred_targ.t
 
   val solve_targs :
     Context.t ->
@@ -34,7 +41,7 @@ module Make_instantiation_solver (_ : Flow_common.S) : sig
     ?has_syntactic_hint:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
-    inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
+    Generalized_targ.t Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
 end
 
 module type KIT = sig

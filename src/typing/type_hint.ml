@@ -223,7 +223,7 @@ let rec instantiate_callee cx opts target_reason fn instantiation_hint =
           Context.run_in_implicit_instantiation_mode cx (fun () ->
               ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
               |> fst
-              |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
+              |> Subst_name.Map.map Implicit_instantiation.Generalized_targ.to_type
           )
         in
         Flow_js.subst cx subst_map t_out)
@@ -275,7 +275,7 @@ and instantiate_component cx opts component instantiation_hint =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
           ImplicitInstantiation.solve_targs cx ~use_op:unknown_use ?return_hint check
           |> fst
-          |> Subst_name.Map.map (fun solution -> solution.Implicit_instantiation.inferred)
+          |> Subst_name.Map.map Implicit_instantiation.Generalized_targ.to_type
       )
     in
     Flow_js.subst cx subst_map t_out

@@ -49,15 +49,29 @@ let generalize_singletons cx ~call_loc ~has_syntactic_hint t =
     in
     Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
 
-type inferred_targ = {
-  tparam: Type.typeparam;
-  inferred: Type.t;
-}
+module Inferred_targ = struct
+  type t = {
+    tparam: Type.typeparam;
+    inferred: Type.t;
+  }
+
+  let to_type { inferred = t; _ } = t
+end
+
+module Generalized_targ = struct
+  type t = {
+    tparam: Type.typeparam;
+    inferred: Type.t;
+    generalized: Type.t;
+  }
+
+  let to_type { generalized = t; _ } = t
+end
 
 module type OBSERVER = sig
-  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> inferred_targ
+  val on_pinned_tparam : Context.t -> Type.typeparam -> Type.t -> Inferred_targ.t
 
-  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> inferred_targ
+  val on_constant_tparam_missing_bounds : Context.t -> Type.typeparam -> Inferred_targ.t
 
   val on_missing_bounds :
     Context.t ->
@@ -65,7 +79,7 @@ module type OBSERVER = sig
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
-    inferred_targ
+    Inferred_targ.t
 
   val on_upper_non_t :
     Context.t ->
@@ -74,7 +88,7 @@ module type OBSERVER = sig
     Type.typeparam ->
     tparam_binder_reason:Reason.reason ->
     instantiation_reason:Reason.reason ->
-    inferred_targ
+    Inferred_targ.t
 end
 
 module type S = sig
@@ -88,7 +102,7 @@ module type S = sig
     default_bound:Type.t option ->
     Reason.reason ->
     Type.t ->
-    inferred_targ
+    Inferred_targ.t
 
   val solve_targs :
     Context.t ->
@@ -97,7 +111,7 @@ module type S = sig
     ?has_syntactic_hint:bool ->
     ?return_hint:Type.t * Hint.hint_kind ->
     Check.t ->
-    inferred_targ Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
+    Generalized_targ.t Subst_name.Map.t * (Type.t * Subst_name.Name.t) list
 
   val solve_conditional_type_targs :
     Context.t ->
@@ -113,7 +127,7 @@ module type S = sig
   val fold :
     implicit_instantiation_cx:Context.t ->
     cx:Context.t ->
-    f:(Context.t -> 'acc -> Check.t -> inferred_targ Subst_name.Map.t -> 'acc) ->
+    f:(Context.t -> 'acc -> Check.t -> Generalized_targ.t Subst_name.Map.t -> 'acc) ->
     init:'acc ->
     post:(cx:Context.t -> implicit_instantiation_cx:Context.t -> unit) ->
     Check.t list ->
@@ -1092,7 +1106,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           else
             Marked.get name marked_tparams
         in
-        let result =
+        let { Inferred_targ.tparam; inferred } =
           if is_inferred then
             let default_bound =
               if has_new_errors then
@@ -1111,20 +1125,20 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let bound_t = Type_subst.subst cx ~use_op:unknown_use subst_map bound in
         Flow.flow_t cx (t, bound_t);
         let call_loc = loc_of_reason instantiation_reason in
-        let inferred =
+        let generalized =
           match op with
           | Check.Call _
           | Check.Constructor _
             when tparam.is_const ->
             (* Adjust 'const' type parameters. Keeping container reasons for
              * compatibility with existing code. *)
-            Primitive_literal.convert_literal_type_to_const ~loc_range:call_loc cx result.inferred
+            Primitive_literal.convert_literal_type_to_const ~loc_range:call_loc cx inferred
           | _ ->
             (* Prevent leaking of precise singleton types *)
-            generalize_singletons cx ~call_loc ~has_syntactic_hint result.inferred
+            generalize_singletons cx ~call_loc ~has_syntactic_hint inferred
         in
-        let result = { result with inferred } in
-        (Subst_name.Map.add name result acc, (inferred, name) :: inferred_targ_list_acc))
+        let result = { Generalized_targ.tparam; inferred; generalized } in
+        (Subst_name.Map.add name result acc, (generalized, name) :: inferred_targ_list_acc))
       inferred_targ_list
       (Subst_name.Map.empty, [])
 
@@ -1325,7 +1339,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         ~f:(fun map (name, targ, bound) ->
           let tparam = Subst_name.Map.find name tparams_map in
           let polarity = Marked.get name marked_tparams in
-          let { inferred; _ } =
+          let { Inferred_targ.inferred; _ } =
             pin_type cx ~use_op tparam polarity ~default_bound:(Some bound) reason targ
           in
           if speculative_subtyping_succeeds cx trace unknown_use inferred bound then
@@ -1360,15 +1374,15 @@ module PinTypes (Flow : Flow_common.S) = struct
               ImplicitInstantiationInvariant "Constant tparam is unsupported."
             )
         );
-      { tparam; inferred = Type.AnyT.error tparam.Type.reason }
+      { Inferred_targ.tparam; inferred = Type.AnyT.error tparam.Type.reason }
 
-    let on_pinned_tparam _cx tparam inferred = { tparam; inferred }
+    let on_pinned_tparam _cx tparam inferred = { Inferred_targ.tparam; inferred }
 
     let on_missing_bounds cx ~use_op:_ tparam ~tparam_binder_reason ~instantiation_reason:_ =
-      { tparam; inferred = Tvar.mk cx tparam_binder_reason }
+      { Inferred_targ.tparam; inferred = Tvar.mk cx tparam_binder_reason }
 
     let on_upper_non_t cx ~use_op:_ _u tparam ~tparam_binder_reason ~instantiation_reason:_ =
-      { tparam; inferred = Tvar.mk cx tparam_binder_reason }
+      { Inferred_targ.tparam; inferred = Tvar.mk cx tparam_binder_reason }
   end
 
   module M : S with module Flow = Flow = Make (Observer) (Flow)
@@ -1386,7 +1400,7 @@ module PinTypes (Flow : Flow_common.S) = struct
         is_const = false;
       }
     in
-    let { inferred; _ } =
+    let { Inferred_targ.inferred; _ } =
       M.pin_type cx ~use_op tparam (Some polarity) ~default_bound:None reason t
     in
     inferred
@@ -1417,7 +1431,7 @@ module Observer : OBSERVER = struct
             (Debug_js.dump_t cx ~depth:3 inferred);
         ]
         );
-    { tparam; inferred }
+    { Inferred_targ.tparam; inferred }
 
   let on_pinned_tparam cx tparam inferred =
     Debug_js.Verbose.print_if_verbose_lazy
@@ -1430,14 +1444,14 @@ module Observer : OBSERVER = struct
             (Debug_js.dump_t cx ~depth:3 inferred);
         ]
         );
-    { tparam; inferred }
+    { Inferred_targ.tparam; inferred }
 
   let on_missing_bounds cx ~use_op tparam ~tparam_binder_reason ~instantiation_reason =
     match tparam.default with
-    | Some inferred -> { tparam; inferred = mod_inferred_default inferred }
+    | Some inferred -> { Inferred_targ.tparam; inferred = mod_inferred_default inferred }
     | None ->
       if Context.typing_mode cx <> Context.CheckingMode then
-        { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
+        { Inferred_targ.tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
       else (
         Flow_js_utils.add_output
           cx
@@ -1449,12 +1463,12 @@ module Observer : OBSERVER = struct
                use_op;
              }
           );
-        { tparam; inferred = any_error tparam_binder_reason }
+        { Inferred_targ.tparam; inferred = any_error tparam_binder_reason }
       )
 
   let on_upper_non_t cx ~use_op u tparam ~tparam_binder_reason ~instantiation_reason =
     if Context.typing_mode cx <> Context.CheckingMode then
-      { tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
+      { Inferred_targ.tparam; inferred = Context.mk_placeholder cx tparam_binder_reason }
     else (
       Debug_js.Verbose.print_if_verbose_lazy
         cx
@@ -1469,7 +1483,7 @@ module Observer : OBSERVER = struct
              use_op;
            }
         );
-      { tparam; inferred = any_error tparam_binder_reason }
+      { Inferred_targ.tparam; inferred = any_error tparam_binder_reason }
     )
 end
 
@@ -1531,9 +1545,9 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
   open Instantiation_helper
 
   let instantiate_poly_with_subst_map cx trace poly_t subst_map ~use_op ~reason_op ~reason_tapp =
-    let inferred_targ_map =
+    let generalized_targ_map =
       Subst_name.Map.map
-        (fun { tparam; inferred } ->
+        (fun { Generalized_targ.tparam; inferred; generalized } ->
           (* Create an OpenT indirection of inferred result.
            * We specifically want the inferred type argument to have RTypeParam reason desc,
            * so that we can detect loops in type expansion.
@@ -1541,22 +1555,26 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
            *
            * This OpenT indirection is also needed for performance purposes, since it prevents
            * unnecessary deep substitution traversals. *)
-          let inferred' =
+          let generalized' =
             Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
           in
-          FlowJs.rec_unify cx trace ~use_op ~unify_any:true inferred inferred';
-          { inferred = inferred'; tparam })
+          FlowJs.rec_unify cx trace ~use_op ~unify_any:true generalized generalized';
+          { Generalized_targ.tparam; inferred; generalized = generalized' })
         subst_map
     in
-    let subst_map = Subst_name.Map.map (fun { inferred; _ } -> inferred) inferred_targ_map in
-    inferred_targ_map
-    |> Subst_name.Map.iter (fun _ { inferred; tparam } ->
+    let subst_map =
+      Subst_name.Map.map
+        (fun { Generalized_targ.generalized; _ } -> generalized)
+        generalized_targ_map
+    in
+    generalized_targ_map
+    |> Subst_name.Map.iter (fun _ { Generalized_targ.generalized; tparam; _ } ->
            let frame = Frame (TypeParamBound { name = tparam.name }, use_op) in
            is_subtype
              cx
              trace
              ~use_op:frame
-             (inferred, Type_subst.subst cx ~use_op subst_map tparam.bound)
+             (generalized, Type_subst.subst cx ~use_op subst_map tparam.bound)
        );
     reposition cx ~trace (loc_of_reason reason_tapp) (Type_subst.subst cx ~use_op subst_map poly_t)
 
@@ -1617,8 +1635,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           let (map, _) =
             Instantiation_solver.solve_targs cx ~use_op ~allow_underconstrained:false check
           in
-          let { inferred; _ } = Subst_name.Map.find name map in
-          inferred
+          let { Generalized_targ.generalized; _ } = Subst_name.Map.find name map in
+          generalized
       )
     | _ ->
       (* If the internal definition for React$RefSetter isn't polymorphic, either we're running with
@@ -1721,7 +1739,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
     let subst_map =
       Nel.fold_left
         (fun subst_map tparam ->
-          let inferred =
+          let { Inferred_targ.tparam; inferred } =
             Instantiation_solver.pin_type
               cx
               ~use_op
@@ -1731,7 +1749,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               reason_op
               (Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp)
           in
-          Subst_name.Map.add tparam.name inferred subst_map)
+          let targ = { Generalized_targ.tparam; inferred; generalized = inferred } in
+          Subst_name.Map.add tparam.name targ subst_map)
         Subst_name.Map.empty
         tparams
     in
