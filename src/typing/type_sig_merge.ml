@@ -1203,7 +1203,7 @@ and merge_declare_module_implicitly_exported_object env file (loc, module_name, 
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
 
 and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) =
-  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:(lazy true) loc in
+  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:(lazy false) loc in
   let proto =
     match proto with
     | None -> Type.ObjProtoT reason
@@ -1219,7 +1219,7 @@ and merge_object_lit ~for_export ~as_const env file (loc, frozen, proto, props) 
   Obj_type.mk_with_proto file.cx reason proto ~obj_kind:Type.Exact ~props
 
 and merge_obj_spread_lit ~for_export ~as_const env file (loc, frozen, proto, elems_rev) =
-  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:(lazy true) loc in
+  let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:(lazy false) loc in
   (* TODO: fix spread to use provided __proto__ prop *)
   ignore proto;
   let merge_slice props =

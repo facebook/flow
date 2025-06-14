@@ -4,8 +4,8 @@ import type {SUIActionMenuUniform} from './SUIActionMenuUniform';
 const SUIExpressWiFiThemeComponents = require('./SUIExpressWiFiThemeComponents');
 
 export type ComponentUniforms = {
-  SUIActionMenu?: SUIActionMenuUniform,
-  SUIButton?: SUIButtonUniform,
+  +SUIActionMenu?: SUIActionMenuUniform,
+  +SUIButton?: SUIButtonUniform,
   ...
 };
 

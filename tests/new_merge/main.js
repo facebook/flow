@@ -87,7 +87,7 @@ baz02 as empty; // error number ~> empty
 
 import {x as x19, y as y19, z as z19} from './spread';
 x19 as {f: number};
-y19 as {a?: number}; // okay
+y19 as {+a?: number}; // okay
 y19 as {a: number}; // error undefined ~> number
 z19 as empty; // okay any ~> empty (error on def site)
 
