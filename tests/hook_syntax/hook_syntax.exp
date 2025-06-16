@@ -276,6 +276,21 @@ References:
            ^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- declare_hook_tests.js:84:32
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   declare_hook_tests.js:84:32
+   84|   type NonTransitive<+T> = {o: T}; // expected variance error
+                                      ^
+
+References:
+   declare_hook_tests.js:84:23
+   84|   type NonTransitive<+T> = {o: T}; // expected variance error
+                             ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
 Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -2603,4 +2618,4 @@ References:
 
 
 
-Found 169 errors
+Found 170 errors

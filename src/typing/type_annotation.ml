@@ -1375,22 +1375,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let reason = update_desc_reason (fun d -> RStatics d) reason in
         Obj_type.mk_with_proto cx reason (FunProtoT reason) ~obj_kind:Inexact ?call:None
       in
-      let (effect_flag, return_t) =
+      let effect_flag =
         match effect_ with
-        | Ast.Function.Hook ->
-          ( HookAnnot,
-            if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
-              Flow_js.mk_possibly_evaluated_destructor
-                cx
-                unknown_use
-                (TypeUtil.reason_of_t return_t)
-                return_t
-                (ReactDRO (loc_of_reason reason, HookReturn))
-                (Eval.generate_id ())
-            else
-              return_t
-          )
-        | Ast.Function.Arbitrary -> (ArbitraryEffect, return_t)
+        | Ast.Function.Hook -> HookAnnot
+        | Ast.Function.Arbitrary -> ArbitraryEffect
       in
       let ft =
         DefT

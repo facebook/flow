@@ -2574,6 +2574,28 @@ struct
                 return_hint = _;
               }
           ) ->
+          let funtype =
+            let { effect_; return_t; _ } = funtype in
+            let return_t =
+              match effect_ with
+              | HookDecl _
+              | HookAnnot ->
+                if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
+                  mk_possibly_evaluated_destructor
+                    cx
+                    unknown_use
+                    (TypeUtil.reason_of_t return_t)
+                    return_t
+                    (ReactDRO (def_loc_of_reason reason_fundef, HookReturn))
+                    (Eval.generate_id ())
+                else
+                  return_t
+              | ArbitraryEffect
+              | AnyEffect ->
+                return_t
+            in
+            { funtype with return_t }
+          in
           let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
             call_this_t = o2;

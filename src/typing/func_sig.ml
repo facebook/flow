@@ -217,24 +217,6 @@ struct
         Context.mk_placeholder cx (TypeUtil.reason_of_t t)
       | _ -> TypeUtil.type_t_of_annotated_or_inferred return_t
     in
-    let return_t =
-      match effect_ with
-      | HookDecl _
-      | HookAnnot ->
-        if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
-          Flow_js.mk_possibly_evaluated_destructor
-            cx
-            unknown_use
-            (TypeUtil.reason_of_t return_t)
-            return_t
-            (ReactDRO (loc_of_reason reason, HookReturn))
-            (Eval.generate_id ())
-        else
-          return_t
-      | ArbitraryEffect
-      | AnyEffect ->
-        return_t
-    in
     let type_guard =
       match kind with
       | Func.TypeGuard p -> Some p

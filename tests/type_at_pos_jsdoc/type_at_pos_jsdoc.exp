@@ -1719,9 +1719,7 @@ Flags: --strip-root --pretty
     "unevaluated":{
       "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
     },
-    "evaluated":{
-      "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{
@@ -1745,9 +1743,7 @@ Flags: --strip-root --pretty
     "unevaluated":{
       "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
     },
-    "evaluated":{
-      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
-    }
+    "evaluated":null
   },
   "reasons":[],
   "loc":{

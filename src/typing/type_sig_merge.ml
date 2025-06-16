@@ -1703,23 +1703,12 @@ and merge_fun
       else
         Type.This_Function
     in
-    let (effect_, return_t) =
-      let dro_return_t () =
-        EvalT
-          ( return_t,
-            TypeDestructorT
-              ( unknown_use,
-                TypeUtil.reason_of_t return_t,
-                ReactDRO (Reason.loc_of_reason reason, HookReturn)
-              ),
-            Eval.generate_id ()
-          )
-      in
+    let effect_ =
       match effect_ with
-      | HookDecl l -> (Type.HookDecl (Context.make_aloc_id file.cx l), dro_return_t ())
-      | HookAnnot -> (Type.HookAnnot, dro_return_t ())
-      | ArbitraryEffect -> (Type.ArbitraryEffect, return_t)
-      | AnyEffect -> (Type.AnyEffect, return_t)
+      | HookDecl l -> Type.HookDecl (Context.make_aloc_id file.cx l)
+      | HookAnnot -> Type.HookAnnot
+      | ArbitraryEffect -> Type.ArbitraryEffect
+      | AnyEffect -> Type.AnyEffect
     in
     let funtype =
       {
