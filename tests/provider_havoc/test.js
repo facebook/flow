@@ -39,11 +39,11 @@ function test_unsealed() {
   let x = {};
 
   function f(g: {|b: string|}) {
-    return {...g, ...x}; // no error here, unsoundly.
+    return {...g, ...x}; // no error here
   }
 
   function g() {
-    x = {a: 42} as {a: number, ...}; // no error here
+    x = {a: 42} as {a: number, ...}; // error here
   }
 }
 

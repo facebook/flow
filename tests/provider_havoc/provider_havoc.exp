@@ -372,6 +372,44 @@ References:
                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:46:20
+
+Cannot assign `{...}` to `x` because inexact object type [1] is incompatible with exact object literal [2]. All writes
+to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is
+desired. [incompatible-exact]
+
+   test.js:46:20
+   46|     x = {a: 42} as {a: number, ...}; // error here
+                          ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:39:11
+   39|   let x = {};
+                 ^^ [2]
+   test.js:39:7
+   39|   let x = {};
+             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:46:20
+
+Cannot assign `{...}` to `x` because property `a` is extra in object type [1] but missing in object literal [2]. Exact
+objects do not accept extra props. All writes to `x` must be compatible with the type of its initializer [3]. Add an
+annotation to `x` [3] if a different type is desired. [prop-missing]
+
+   test.js:46:20
+   46|     x = {a: 42} as {a: number, ...}; // error here
+                          ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:39:11
+   39|   let x = {};
+                 ^^ [2]
+   test.js:39:7
+   39|   let x = {};
+             ^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:63:12
 
 Cannot assign `f` to `fn` because: [incompatible-type]
@@ -628,7 +666,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 24 errors
+Found 26 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

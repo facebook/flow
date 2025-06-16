@@ -47,6 +47,7 @@ let metadata =
     max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
+    natural_inference_object_literal_partial_fix = false;
     no_unchecked_indexed_access = false;
     pattern_matching_includes = [];
     projects_options = Flow_projects.default_options;
