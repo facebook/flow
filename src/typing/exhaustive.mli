@@ -8,6 +8,6 @@
 val analyze :
   Context.t ->
   match_loc:ALoc.t ->
-  (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t list ->
+  ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list ->
   Type.t ->
   unit

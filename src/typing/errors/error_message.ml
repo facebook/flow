@@ -664,6 +664,7 @@ and 'loc t' =
       rest: 'loc virtual_reason option;
       missing_props: string list;
     }
+  | EMatchInvalidGuardedWildcard of 'loc
   | EMatchInvalidIdentOrMemberPattern of {
       loc: 'loc;
       type_reason: 'loc virtual_reason;
@@ -1557,6 +1558,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props } ->
     EMatchNonExhaustiveObjectPattern
       { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props }
+  | EMatchInvalidGuardedWildcard loc -> EMatchInvalidGuardedWildcard (f loc)
   | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
     EMatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
   | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
@@ -1802,6 +1804,7 @@ let util_use_op_of_msg nope util = function
   | EMatchNotExhaustive _
   | EMatchUnnecessaryPattern _
   | EMatchNonExhaustiveObjectPattern _
+  | EMatchInvalidGuardedWildcard _
   | EMatchInvalidIdentOrMemberPattern _
   | EMatchInvalidBindingKind _
   | EMatchInvalidObjectPropertyLiteral _
@@ -2043,6 +2046,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
   | EMatchStatementInvalidBody { loc } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
+  | EMatchInvalidGuardedWildcard loc -> Some loc
   | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
@@ -3078,6 +3082,7 @@ let friendly_message_of_msg = function
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
     Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props })
+  | EMatchInvalidGuardedWildcard _ -> Normal MessageMatchInvalidGuardedWildcard
   | EMatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
     Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
   | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
@@ -3471,6 +3476,7 @@ let error_code_of_message err : error_code option =
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
   | EMatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
   | EMatchUnnecessaryPattern _ -> Some MatchUnnecessaryPattern
+  | EMatchInvalidGuardedWildcard _ -> Some MatchNotExhaustive
   | EMatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern
   | EMatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern

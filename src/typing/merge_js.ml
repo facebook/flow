@@ -1041,11 +1041,8 @@ let check_match_exhaustiveness cx tast =
       method! match_ ~on_case_body x =
         let { Ast.Match.match_keyword_loc = (match_loc, _); arg = ((_, arg_t), _); cases; _ } = x in
         let patterns =
-          Base.List.filter_map cases ~f:(function (_, { Ast.Match.Case.pattern; guard; _ }) ->
-              if Base.Option.is_some guard then
-                None
-              else
-                Some pattern
+          Base.List.map cases ~f:(function (_, { Ast.Match.Case.pattern; guard; _ }) ->
+              (pattern, Base.Option.is_some guard)
               )
         in
         Exhaustive.analyze cx ~match_loc patterns arg_t;

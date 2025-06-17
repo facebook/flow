@@ -4261,6 +4261,19 @@ let to_printable_error :
         msg @ [code "..."; text " to the end of the object pattern."]
       in
       prefix @ suffix
+    | MessageMatchInvalidGuardedWildcard ->
+      [
+        text "Cannot have a wildcard which is guarded using an ";
+        code "if";
+        text " in the last case of a ";
+        code "match";
+        text ". ";
+        text "Either reorder this case, add a final unguarded (no ";
+        code "if";
+        text ") wildcard ";
+        code "_";
+        text " in a case after this one, or remove the pattern.";
+      ]
     | MessageMatchInvalidIdentOrMemberPattern { type_reason } ->
       [
         text "Cannot have ";

@@ -1945,6 +1945,8 @@ let dump_error_message =
         "EMatchNonExhaustiveObjectPattern (%s) (%s)"
         (string_of_aloc loc)
         (Base.Option.value_map ~default:"" ~f:(dump_reason cx) rest)
+    | EMatchInvalidGuardedWildcard loc ->
+      spf "EMatchInvalidGuardedWildcard (%s)" (string_of_aloc loc)
     | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
       spf
         "EMatchInvalidIdentOrMemberPattern (%s) (%s)"

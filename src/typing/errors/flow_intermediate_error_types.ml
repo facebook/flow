@@ -941,6 +941,7 @@ type 'loc message =
       rest: 'loc virtual_reason option;
       missing_props: string list;
     }
+  | MessageMatchInvalidGuardedWildcard
   | MessageMatchInvalidIdentOrMemberPattern of { type_reason: 'loc virtual_reason }
   | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }
   | MessageMatchInvalidObjectPropertyLiteral

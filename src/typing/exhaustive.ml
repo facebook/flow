@@ -36,7 +36,8 @@ let attempt_union_rep_optimization cx (rep : Type.UnionRep.t) : unit =
 (* Datatype defintions *)
 (***********************)
 
-type pattern_ast_list = (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t list
+type pattern_ast_list =
+  ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list
 
 (* Either a primitive literal or a Flow Enum member.
    Used in both `PatternUnion`s and `ValueUnion`s. *)
@@ -132,6 +133,7 @@ module rec PatternObject : sig
     props: Properties.t;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
+    guarded: bool;
   }
 
   type t = (* index for ordering *) int * Reason.t * t'
@@ -144,6 +146,7 @@ and PatternUnion : sig
 
   type t = {
     leafs: LeafSet.t;
+    guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
     objects: PatternObject.t list;
@@ -162,6 +165,7 @@ end = struct
 
   type t = {
     leafs: LeafSet.t;
+    guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
     objects: PatternObject.t list;
@@ -172,6 +176,7 @@ end = struct
   let empty : t =
     {
       leafs = LeafSet.empty;
+      guarded_leafs = [];
       tuples_exact = IMap.empty;
       tuples_inexact = IMap.empty;
       objects = [];
@@ -180,10 +185,20 @@ end = struct
     }
 
   let only_wildcard
-      ({ leafs; tuples_exact; tuples_inexact; objects; wildcard; contains_invalid_pattern = _ } : t)
-      : Reason.t option =
+      ({
+         leafs;
+         guarded_leafs;
+         tuples_exact;
+         tuples_inexact;
+         objects;
+         wildcard;
+         contains_invalid_pattern = _;
+       } :
+        t
+        ) : Reason.t option =
     if
       LeafSet.is_empty leafs
+      && Base.List.is_empty guarded_leafs
       && IMap.is_empty tuples_exact
       && IMap.is_empty tuples_inexact
       && Base.List.is_empty objects
@@ -211,23 +226,38 @@ end = struct
       false
     | None -> true
 
-  let add_leaf (cx : Context.t) (pattern_union : t) (leaf : Leaf.t) : t =
+  let add_leaf (cx : Context.t) ~(guarded : bool) (pattern_union : t) (leaf : Leaf.t) : t =
     let (reason, _) = leaf in
     if not_seen_wildcard cx pattern_union reason then
-      let { PatternUnion.leafs; _ } = pattern_union in
+      let { PatternUnion.leafs; guarded_leafs; _ } = pattern_union in
       match LeafSet.find_opt leaf leafs with
       | Some (already_seen, _) ->
         Flow_js.add_output
           cx
           (Error_message.EMatchUnnecessaryPattern { reason; already_seen = Some already_seen });
         pattern_union
-      | None -> { pattern_union with PatternUnion.leafs = LeafSet.add leaf leafs }
+      | None ->
+        if guarded then
+          { pattern_union with PatternUnion.guarded_leafs = leaf :: guarded_leafs }
+        else
+          { pattern_union with PatternUnion.leafs = LeafSet.add leaf leafs }
     else
       pattern_union
 
-  let add_wildcard (cx : Context.t) (pattern_union : t) (reason : Reason.t) : t =
+  let add_wildcard
+      (cx : Context.t) ~(guarded : bool) ~(last : bool) (pattern_union : t) (reason : Reason.t) : t
+      =
     if not_seen_wildcard cx pattern_union reason then
-      { pattern_union with PatternUnion.wildcard = Some reason }
+      if guarded then (
+        ( if last then
+          let loc = Reason.loc_of_reason reason in
+          (* We avoid more complex analysis by simply erroring when there is a
+             guarded wilcard which is in the last case. *)
+          Flow_js.add_output cx (Error_message.EMatchInvalidGuardedWildcard loc)
+        );
+        pattern_union
+      ) else
+        { pattern_union with PatternUnion.wildcard = Some reason }
     else
       pattern_union
 
@@ -316,12 +346,14 @@ end = struct
 
   let rec of_pattern_ast
       (cx : Context.t) (pattern_ast : (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t) : t =
-    let (pattern_union, _) = of_pattern_ast' cx (empty, 0) pattern_ast in
+    let (pattern_union, _) = of_pattern_ast' cx (empty, 0) ~guarded:false ~last:false pattern_ast in
     pattern_union
 
   and of_pattern_ast'
       (cx : Context.t)
       ((pattern_union, i) : t * int)
+      ~(guarded : bool)
+      ~(last : bool)
       (pattern_ast : (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t) : t * int =
     let open Flow_ast.MatchPattern in
     let (loc, pat) = pattern_ast in
@@ -330,31 +362,31 @@ end = struct
     match pat with
     | BindingPattern _ ->
       let reason = Reason.mk_reason Reason.RMatchWildcard loc in
-      let pattern_union = add_wildcard cx pattern_union reason in
+      let pattern_union = add_wildcard cx ~guarded ~last pattern_union reason in
       (pattern_union, next_i)
     | WildcardPattern _ ->
       let reason = Reason.mk_reason Reason.RMatchWildcard loc in
-      let pattern_union = add_wildcard cx pattern_union reason in
+      let pattern_union = add_wildcard cx ~guarded ~last pattern_union reason in
       (pattern_union, next_i)
     | BooleanPattern { Flow_ast.BooleanLiteral.value; _ } ->
       let leaf = (reason, Leaf.BoolC value) in
-      let pattern_union = add_leaf cx pattern_union leaf in
+      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | NumberPattern { Flow_ast.NumberLiteral.value; raw; _ } ->
       let leaf = (reason, Leaf.NumC (value, raw)) in
-      let pattern_union = add_leaf cx pattern_union leaf in
+      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | BigIntPattern { Flow_ast.BigIntLiteral.value; raw; _ } ->
       let leaf = (reason, Leaf.BigIntC (value, raw)) in
-      let pattern_union = add_leaf cx pattern_union leaf in
+      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | StringPattern { Flow_ast.StringLiteral.value; _ } ->
       let leaf = (reason, Leaf.StrC (Reason.OrdinaryName value)) in
-      let pattern_union = add_leaf cx pattern_union leaf in
+      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | NullPattern _ ->
       let leaf = (reason, Leaf.NullC) in
-      let pattern_union = add_leaf cx pattern_union leaf in
+      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | UnaryPattern
         {
@@ -373,7 +405,7 @@ end = struct
           | Minus -> Flow_ast_utils.negate_number_literal (value, raw)
         in
         let leaf = (reason, Leaf.NumC literal) in
-        let pattern_union = add_leaf cx pattern_union leaf in
+        let pattern_union = add_leaf cx ~guarded pattern_union leaf in
         (pattern_union, next_i)
     | UnaryPattern
         {
@@ -389,18 +421,19 @@ end = struct
       | Minus ->
         let literal = (value, raw) in
         let leaf = (reason, Leaf.BigIntC literal) in
-        let pattern_union = add_leaf cx pattern_union leaf in
+        let pattern_union = add_leaf cx ~guarded pattern_union leaf in
         (pattern_union, next_i))
     | IdentifierPattern ((_, t), _)
     | MemberPattern ((_, t), _) ->
       let t = singleton_concrete_type cx t in
       (match leaf_of_type cx t pattern_ast with
-      | Some leaf -> (add_leaf cx pattern_union leaf, next_i)
+      | Some leaf -> (add_leaf cx ~guarded pattern_union leaf, next_i)
       | None -> ({ pattern_union with contains_invalid_pattern = true }, i))
-    | AsPattern { AsPattern.pattern; _ } -> of_pattern_ast' cx (pattern_union, i) pattern
+    | AsPattern { AsPattern.pattern; _ } ->
+      of_pattern_ast' cx (pattern_union, i) ~guarded ~last pattern
     | OrPattern { OrPattern.patterns; _ } ->
       Base.List.fold patterns ~init:(pattern_union, i) ~f:(fun acc pattern_ast ->
-          of_pattern_ast' cx acc pattern_ast
+          of_pattern_ast' ~guarded ~last cx acc pattern_ast
       )
     | ArrayPattern { ArrayPattern.elements; rest; _ } ->
       let length = Base.List.length elements in
@@ -423,7 +456,13 @@ end = struct
       let tuple =
         ( next_i,
           reason,
-          { PatternObject.props; rest; kind = ObjKind.Tuple { length }; contains_invalid_pattern }
+          {
+            PatternObject.props;
+            rest;
+            kind = ObjKind.Tuple { length };
+            contains_invalid_pattern;
+            guarded;
+          }
         )
       in
       let pattern_union = add_tuple cx pattern_union ~length tuple in
@@ -473,7 +512,7 @@ end = struct
         let obj =
           ( next_i,
             reason,
-            { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern }
+            { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern; guarded }
           )
         in
         let pattern_union = add_object cx pattern_union obj in
@@ -484,9 +523,10 @@ end = struct
       (pattern_union, next_i)
 
   let of_patterns_ast cx patterns_ast =
+    let last_i = Base.List.length patterns_ast - 1 in
     let (pattern_union, _) =
-      Base.List.fold patterns_ast ~init:(empty, 0) ~f:(fun acc pattern_ast ->
-          of_pattern_ast' cx acc pattern_ast
+      Base.List.foldi patterns_ast ~init:(empty, 0) ~f:(fun i acc (pattern_ast, guarded) ->
+          of_pattern_ast' cx acc ~guarded ~last:(i = last_i) pattern_ast
       )
     in
     let { objects; _ } = pattern_union in
@@ -1021,6 +1061,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
   in
   let {
     PatternUnion.leafs = pattern_leafs;
+    guarded_leafs;
     tuples_exact = pattern_tuples_exact;
     tuples_inexact = pattern_tuples_inexact;
     objects = pattern_objects;
@@ -1035,6 +1076,11 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
   in
   let used_pattern_locs =
     LeafSet.fold (mark_leaf_pattern_used cx leafs_matched inexhaustible) pattern_leafs ALocSet.empty
+  in
+  let used_pattern_locs =
+    Base.List.fold guarded_leafs ~init:used_pattern_locs ~f:(fun acc leaf ->
+        mark_leaf_pattern_used cx value_leafs inexhaustible leaf acc
+    )
   in
   (* The `undefined` pattern is always marked as used, so that we do not tell users
      to remove it in unsafe situations that could arise due to Flow's unsoundness. *)
@@ -1207,6 +1253,7 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
           PatternObject.props = pattern_props;
           rest = pattern_rest;
           kind = pattern_kind;
+          guarded;
           contains_invalid_pattern = _;
         }
       ) =
@@ -1239,13 +1286,15 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
   match value_props with
   | None -> NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
   | Some value_props ->
+    (* If this pattern is gaurded, then it can't filter out values. *)
+    let no_match = guarded in
     (* We fold over the `pattern_keys` of the pattern and match the value at that key to the pattern
        at that key. We build up `head` which is the properties matched so far. The `remainder_value`
        is the properties of the value left to check. If we don't have a match, but need to continue
        checking for the purposes of marking patterns as used, we set `no_match` to true. *)
     Base.List.fold_until
       pattern_keys
-      ~init:(ALocSet.empty, false, [], SMap.empty, value_props)
+      ~init:(ALocSet.empty, no_match, [], SMap.empty, value_props)
       ~f:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) key ->
         let { PatternObject.Property.value = pattern; _ } = SMap.find key pattern_props in
         (* Checked above in `has_all_props` *)
@@ -1462,7 +1511,7 @@ and mark_leaf_pattern_used
    other errors, do not also emit an unused pattern error. *)
 let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_pattern_locs : ALocSet.t)
     : unit =
-  let { PatternUnion.leafs; wildcard; _ } = pattern_union in
+  let { PatternUnion.leafs; guarded_leafs; wildcard; _ } = pattern_union in
   let check reason =
     let loc = Reason.loc_of_reason reason in
     ALocSet.mem loc used_pattern_locs
@@ -1471,9 +1520,12 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
     Flow_js.add_output cx (Error_message.EMatchUnnecessaryPattern { reason; already_seen = None })
   in
   LeafSet.iter (fun (reason, _) -> if not @@ check reason then error reason) leafs;
+  Base.List.iter guarded_leafs ~f:(fun (reason, _) -> if not @@ check reason then error reason);
   Base.List.iter
     (PatternUnion.all_tuples_and_objects pattern_union)
-    ~f:(fun (_, reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _ }) ->
+    ~f:(fun
+         (_, reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _; guarded = _ })
+       ->
       if contains_invalid_pattern then
         ()
       else if not @@ check reason then

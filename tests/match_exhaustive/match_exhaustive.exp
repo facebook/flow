@@ -669,6 +669,267 @@ References:
                           ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- guards.js:7:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `1` to match number literal `1` [1].
+[match-not-exhaustive]
+
+   guards.js:7:3
+   7|   match (x) { // ERROR: missing `1`
+        ^^^^^
+
+References:
+   guards.js:5:20
+   5|   declare const x: 1 | 2;
+                         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:20:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match pattern [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   guards.js:20:5
+   20|     1 if (cond) => {} // ERROR
+           ^ [1]
+
+References:
+   guards.js:19:5
+   19|     1 => {}
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:32:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   guards.js:32:5
+   32|     1 if (cond) => {} // ERROR
+           ^ [1]
+
+References:
+   guards.js:31:5
+   31|     _ => {}
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:38:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   38|     3 if (cond) => {} // ERROR
+           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:43:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   43|     3 | 2 if (cond) => {} // ERROR
+           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:52:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: 1}` to match object type [1].
+[match-not-exhaustive]
+
+   guards.js:52:3
+   52|   match (x) { // ERROR: missing `{foo: 1}`
+         ^^^^^
+
+References:
+   guards.js:50:20
+   50|   declare const x: {foo: 1} | {bar: 2};
+                          ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:65:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   65|     {foo: 1} if (cond) => {} // ERROR
+           ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:77:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   guards.js:77:5
+   77|     {foo: 1} if (cond) => {} // ERROR
+           ^^^^^^^^ [1]
+
+References:
+   guards.js:76:5
+   76|     _ => {}
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:83:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   83|     {baz: 3} if (cond) => {} // ERROR
+           ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:88:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   88|     {baz: 3} | {bar: 2} if (cond) => {} // ERROR
+           ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- guards.js:97:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[1]` to match tuple type [1].
+[match-not-exhaustive]
+
+   guards.js:97:3
+   97|   match (x) { // ERROR: missing `[1]`
+         ^^^^^
+
+References:
+   guards.js:95:20
+   95|   declare const x: [1] | [2];
+                          ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:110:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   110|     [1] if (cond) => {} // ERROR
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:122:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   guards.js:122:5
+   122|     [1] if (cond) => {} // ERROR
+            ^^^ [1]
+
+References:
+   guards.js:121:5
+   121|     _ => {}
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:128:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   128|     [3] if (cond) => {} // ERROR
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:133:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   133|     [3] | [2] if (cond) => {} // ERROR
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:142:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+
+   guards.js:142:3
+   142|   match (x) { // ERROR: missing `_`
+          ^^^^^
+
+References:
+   guards.js:140:20
+   140|   declare const x: string;
+                           ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:143:5
+
+Cannot have a wildcard which is guarded using an `if` in the last case of a `match`. Either reorder this case, add a
+final unguarded (no `if`) wildcard `_` in a case after this one, or remove the pattern. [match-not-exhaustive]
+
+   143|     _ if (cond) => {} // ERROR
+            ^
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:153:5
+
+Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   guards.js:153:5
+   153|     _ if (cond) => {} // ERROR
+            ^ [1]
+
+References:
+   guards.js:152:5
+   152|     _ => {}
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:156:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+
+   guards.js:156:3
+   156|   match (x) { // ERROR: missing `_`
+          ^^^^^
+
+References:
+   guards.js:140:20
+   140|   declare const x: string;
+                           ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- guards.js:157:13
+
+Cannot have a wildcard which is guarded using an `if` in the last case of a `match`. Either reorder this case, add a
+final unguarded (no `if`) wildcard `_` in a case after this one, or remove the pattern. [match-not-exhaustive]
+
+   157|     "foo" | _ if (cond) => {} // ERROR
+                    ^
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:160:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+
+   guards.js:160:3
+   160|   match (x) { // ERROR: missing `_`
+          ^^^^^
+
+References:
+   guards.js:140:20
+   140|   declare const x: string;
+                           ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- guards.js:161:5
+
+Cannot have a wildcard which is guarded using an `if` in the last case of a `match`. Either reorder this case, add a
+final unguarded (no `if`) wildcard `_` in a case after this one, or remove the pattern. [match-not-exhaustive]
+
+   161|     _ | "foo" if (cond) => {} // ERROR
+            ^
+
+
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:11:3
 
 `match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
@@ -1870,4 +2131,4 @@ References:
 
 
 
-Found 138 errors
+Found 160 errors
