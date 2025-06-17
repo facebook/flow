@@ -736,9 +736,6 @@ export class Visitor {
         {type: 'JSXElement', ...} as jsxElement => {
           this.jsxElement(jsxElement);
         }
-        {type: 'JSXExpression', ...} as jsxExpression => {
-          this.jsxExpression(jsxExpression);
-        }
         {type: 'JSXFragment', ...} as jsxFragment => {
           this.jsxFragment(jsxFragment);
         }
@@ -1197,8 +1194,6 @@ export class Visitor {
         {type: 'SymbolTypeAnnotation', ...} as type => {
         }
         {type: 'ThisTypeAnnotation', ...} as type => {
-        }
-        {type: 'EmptyTypeAnnotation', ...} as type => {
         }
         {type: 'MixedTypeAnnotation', ...} as type => {
         }

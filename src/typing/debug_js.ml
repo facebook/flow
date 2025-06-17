@@ -1790,12 +1790,13 @@ let dump_error_message =
         (Base.Option.value_map ~default:"<None>" ~f:string_of_aloc default_case_loc)
     | EEnumUnknownNotChecked { reason; enum_reason } ->
       spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidCheck { loc; enum_reason; example_member } ->
+    | EEnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
       spf
-        "EEnumInvalidCheck (%s) (%s) (%s)"
+        "EEnumInvalidCheck (%s) (%s) (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx enum_reason)
         (Base.Option.value ~default:"<None>" example_member)
+        (string_of_bool from_match)
     | EEnumMemberUsedAsType { reason; enum_reason } ->
       spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumIncompatible
@@ -1932,8 +1933,23 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
-    | EMatchNotExhaustive { loc; reason } ->
-      spf "EMatchNotExhaustive (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
+    | EMatchNotExhaustive { loc; examples = _ } ->
+      spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
+    | EMatchUnnecessaryPattern { reason; already_seen } ->
+      spf
+        "EMatchUnnecessaryPattern (%s) (%s)"
+        (dump_reason cx reason)
+        (Base.Option.value_map ~default:"" ~f:(dump_reason cx) already_seen)
+    | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props = _ } ->
+      spf
+        "EMatchNonExhaustiveObjectPattern (%s) (%s)"
+        (string_of_aloc loc)
+        (Base.Option.value_map ~default:"" ~f:(dump_reason cx) rest)
+    | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
+      spf
+        "EMatchInvalidIdentOrMemberPattern (%s) (%s)"
+        (string_of_aloc loc)
+        (dump_reason cx type_reason)
     | EMatchInvalidBindingKind { loc; kind } ->
       spf
         "EMatchInvalidBindingKind (%s) (%s)"

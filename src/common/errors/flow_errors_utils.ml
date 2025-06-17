@@ -235,7 +235,19 @@ module Friendly = struct
 
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)
-  let conjunction_concat ?(conjunction = "and") = function
+  let conjunction_concat ?(conjunction = "and") ?limit parts =
+    let parts =
+      match limit with
+      | Some limit ->
+        let length = Base.List.length parts in
+        if length <= limit then
+          parts
+        else
+          let parts = Base.List.take parts (limit - 1) in
+          parts @ [[Inline [Text (Utils_js.spf "%d others" (length - limit + 1))]]]
+      | None -> parts
+    in
+    match parts with
     | [] -> []
     | [x] -> x
     | [x1; x2] -> x1 @ [Inline [Text (" " ^ conjunction ^ " ")]] @ x2

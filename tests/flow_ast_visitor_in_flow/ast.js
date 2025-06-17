@@ -1851,6 +1851,7 @@ export interface DeclareExportDeclarationNamedWithDeclaration
     | DeclareHook
     | DeclareInterface
     | DeclareOpaqueType
+    | DeclareTypeAlias
     | DeclareVariable
     | DeclareEnum;
   +default: false;

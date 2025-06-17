@@ -1,0 +1,1873 @@
+Error ---------------------------------------------------------------------------------------------------- arrays.js:9:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:9:3
+   9|   match (x) { // ERROR
+        ^^^^^
+
+References:
+   arrays.js:3:20
+   3|   declare const x: Array<number>;
+                         ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:13:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:13:3
+   13|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:3:20
+    3|   declare const x: Array<number>;
+                          ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:17:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:17:3
+   17|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:3:20
+    3|   declare const x: Array<number>;
+                          ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:30:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
+[match-not-exhaustive]
+
+   arrays.js:30:3
+   30|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:24:20
+   24|   declare const x: $ReadOnlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:34:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
+[match-not-exhaustive]
+
+   arrays.js:34:3
+   34|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:24:20
+   24|   declare const x: $ReadOnlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:38:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
+[match-not-exhaustive]
+
+   arrays.js:38:3
+   38|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:24:20
+   24|   declare const x: $ReadOnlyArray<number>;
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:51:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:51:3
+   51|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:45:20
+   45|   declare const x: Array<1 | 2>;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:55:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:55:3
+   55|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:45:20
+   45|   declare const x: Array<1 | 2>;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:59:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:59:3
+   59|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:45:20
+   45|   declare const x: Array<1 | 2>;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:63:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:63:3
+   63|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:45:20
+   45|   declare const x: Array<1 | 2>;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:75:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   75|     [1, ...] => {} // ERROR
+           ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:83:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{a: [...]}` to match object type [1].
+[match-not-exhaustive]
+
+   arrays.js:83:3
+   83|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   arrays.js:81:20
+   81|   declare const x: {a: Array<boolean>};
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- arrays.js:102:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   102|     {1: 'xxx', ...} => {} // ERROR
+            ^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- arrays.js:110:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
+[match-not-exhaustive]
+
+   arrays.js:110:3
+   110|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   arrays.js:109:20
+   109|   declare const x: Array<[1, 2]>;
+                           ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:12:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `'foo'` to match string literal `foo` [1].
+[match-not-exhaustive]
+
+   basic.js:12:3
+   12|   match (x) { // ERROR: missing `'foo'`
+         ^^^^^
+
+References:
+   basic.js:3:20
+    3|   declare const x: 'foo' | 1 | -2 | 3n;
+                          ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:18:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `-2` to match number literal `-2` [1]
+- `1` to match number literal `1` [2]
+- `3n` to match bigint literal `3n` [3] [match-not-exhaustive]
+
+   basic.js:18:3
+   18|   match (x) { // ERROR: missing `1`, `-2`, `3n`
+         ^^^^^
+
+References:
+   basic.js:3:32
+    3|   declare const x: 'foo' | 1 | -2 | 3n;
+                                      ^^ [1]
+   basic.js:3:28
+    3|   declare const x: 'foo' | 1 | -2 | 3n;
+                                  ^ [2]
+   basic.js:3:37
+    3|   declare const x: 'foo' | 1 | -2 | 3n;
+                                           ^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:32:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `false` to match boolean [1].
+[match-not-exhaustive]
+
+   basic.js:32:3
+   32|   match (x) { // ERROR: missing `false`
+         ^^^^^
+
+References:
+   basic.js:25:20
+   25|   declare const x: boolean;
+                          ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:46:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match undefined [1].
+[match-not-exhaustive]
+
+   basic.js:46:3
+   46|   match (x) { // ERROR: missing `undefined`
+         ^^^^^
+
+References:
+   basic.js:39:27
+   39|   declare const x: null | void;
+                                 ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:60:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match undefined [1].
+[match-not-exhaustive]
+
+   basic.js:60:3
+   60|   match (obj.prop) { // ERROR: missing `undefined`
+         ^^^^^
+
+References:
+   basic.js:53:30
+   53|   declare const obj: {prop?: 1};
+                                    ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:75:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `null` to match null or undefined [1].
+[match-not-exhaustive]
+
+   basic.js:75:3
+   75|   match (x) { // ERROR: missing `null`
+         ^^^^^
+
+References:
+   basic.js:67:20
+   67|   declare const x: ?1;
+                          ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:80:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match null or undefined [1].
+[match-not-exhaustive]
+
+   basic.js:80:3
+   80|   match (x) { // ERROR: missing `undefined`
+         ^^^^^
+
+References:
+   basic.js:67:20
+   67|   declare const x: ?1;
+                          ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:110:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `true` to match boolean [1].
+[match-not-exhaustive]
+
+   basic.js:110:3
+   110|   match (x) { // ERROR: missing `true`
+          ^^^^^
+
+References:
+   basic.js:97:42
+    97|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
+                                                 ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:147:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `true` to match boolean [1].
+[match-not-exhaustive]
+
+   basic.js:147:3
+   147|   match (x) { // ERROR: missing `true`
+          ^^^^^
+
+References:
+   basic.js:134:42
+   134|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
+                                                 ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:174:5
+
+Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   174|     _ => {}
+            ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:189:5
+
+Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   189|     const a => {}
+            ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:202:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
+[match-not-exhaustive]
+
+   basic.js:202:3
+   202|   match (x) { // ERROR: missing `2`
+          ^^^^^
+
+References:
+   basic.js:195:24
+   195|   declare const x: 1 | 2;
+                               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:235:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `'foo'` to match string literal `foo` [1].
+[match-not-exhaustive]
+
+   basic.js:235:3
+   235|   match (x) { // ERROR: missing `'foo'`
+          ^^^^^
+
+References:
+   basic.js:235:10
+   235|   match (x) { // ERROR: missing `'foo'`
+                 ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:250:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+
+   basic.js:250:3
+   250|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   basic.js:245:6
+   245|     [string]: boolean,
+             ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:276:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
+[match-not-exhaustive]
+
+   basic.js:276:3
+   276|   match (x) { // ERROR: missing `2`
+          ^^^^^
+
+References:
+   basic.js:265:8
+   265|   bar: 2;
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:287:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
+[match-not-exhaustive]
+
+   basic.js:287:3
+   287|   match (x) { // ERROR: missing `2`
+          ^^^^^
+
+References:
+   basic.js:265:8
+   265|   bar: 2;
+               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:296:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `1` to match number literal `1` [1]
+- `2` to match number literal `2` [2]
+- `3` to match number literal `3` [3]
+- `4` to match number literal `4` [4]
+- `5` to match number literal `5` [5]
+and 2 others. [match-not-exhaustive]
+
+   basic.js:296:3
+   296|   match (x) { // ERROR: missing 1..5 and 2 others
+          ^^^^^
+
+References:
+   basic.js:294:20
+   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                           ^ [1]
+   basic.js:294:24
+   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                               ^ [2]
+   basic.js:294:28
+   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                                   ^ [3]
+   basic.js:294:32
+   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                                       ^ [4]
+   basic.js:294:36
+   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+                                           ^ [5]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:306:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   306|     'foo' => {} // ERROR
+            ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:308:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   308|     true => {} // ERROR
+            ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:333:5
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+
+   basic.js:333:5
+   333|     match (x) {} // ERROR: missing wildcard `_`
+            ^^^^^
+
+References:
+   basic.js:327:20
+   327|   function f<T>(x: T) {
+                           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:337:5
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `'bar'` to match string literal `bar` [1]
+- `'foo'` to match string literal `foo` [1] [match-not-exhaustive]
+
+   basic.js:337:5
+   337|     match (x) {} // ERROR
+            ^^^^^
+
+References:
+   basic.js:336:35
+   336|   function g<T: 'foo' | 'bar'>(x: T) {
+                                          ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:350:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _, ...}` to match object type [1].
+[match-not-exhaustive]
+
+   basic.js:350:3
+   350|   match (x) {} // ERROR
+          ^^^^^
+
+References:
+   basic.js:348:20
+   348|   declare const x: {foo: 0, ...} & {bar: 1, ...};
+                           ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:378:5
+
+Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
+
+   378|     +1n => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
+            ^^^
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:379:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   379|     999 => {} // ERROR: unnecessary pattern
+            ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- empty.js:6:3
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   6|   1 => {} // ERROR
+        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- empty.js:7:3
+
+Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   7|   _ => {} // ERROR
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:19:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `E.B` to match member B of enum `E` [1].
+[match-not-exhaustive]
+
+   enums.js:19:3
+   19|   match (x) { // ERROR: missing `E.B`
+         ^^^^^
+
+References:
+   enums.js:5:5
+    5|     B,
+           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:40:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match unknown members of enum `E` [1].
+[match-not-exhaustive]
+
+   enums.js:40:3
+   40|   match (x) { // ERROR: missing wildcard for unknown members
+         ^^^^^
+
+References:
+   enums.js:32:20
+   32|   declare const x: E;
+                          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:61:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `E.B` to match member B of enum `E` [1].
+[match-not-exhaustive]
+
+   enums.js:61:3
+   61|   match (x) { // ERROR: missing `E.B`
+         ^^^^^
+
+References:
+   enums.js:50:5
+   50|     B,
+           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:66:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match null or undefined [1].
+[match-not-exhaustive]
+
+   enums.js:66:3
+   66|   match (x) { // ERROR: missing `undefined`
+         ^^^^^
+
+References:
+   enums.js:53:20
+   53|   declare const x: ?E;
+                          ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:85:7
+
+Cannot access `XXX` because `XXX` is not a member of enum `E` [1]. [invalid-enum-access]
+
+   enums.js:85:7
+   85|     E.XXX => {} // ERROR: invalid enum access
+             ^^^
+
+References:
+   enums.js:75:8
+   75|   enum E {
+              ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:98:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `E.A` to match member A of enum `E` [1]
+- `E.B` to match member B of enum `E` [2] [match-not-exhaustive]
+
+   enums.js:98:3
+   98|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   enums.js:92:5
+   92|     A,
+           ^ [1]
+   enums.js:93:5
+   93|     B,
+           ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:99:5
+
+Invalid enum member check at match pattern. The format must be dot-access of a member of `E` [1]. For example `E.A`.
+[match-invalid-pattern]
+
+   enums.js:99:5
+   99|     x => {} // ERROR
+           ^
+
+References:
+   enums.js:96:20
+   96|   declare const x: E;
+                          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:11:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+
+   inexhaustible.js:11:3
+   11|   match (x) { // ERROR: wildcard needed
+         ^^^^^
+
+References:
+   inexhaustible.js:3:20
+    3|   declare const x: number;
+                          ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:27:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1] and string [2].
+[match-not-exhaustive]
+
+   inexhaustible.js:27:3
+   27|   match (x) { // ERROR: wildcard needed
+         ^^^^^
+
+References:
+   inexhaustible.js:19:20
+   19|   declare const x: number | string;
+                          ^^^^^^ [1]
+   inexhaustible.js:19:29
+   19|   declare const x: number | string;
+                                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:41:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1], bigint [2], and
+string [3]. [match-not-exhaustive]
+
+   inexhaustible.js:41:3
+   41|   match (x) { // ERROR: wildcard needed
+         ^^^^^
+
+References:
+   inexhaustible.js:35:20
+   35|   declare const x: number | string | bigint;
+                          ^^^^^^ [1]
+   inexhaustible.js:35:38
+   35|   declare const x: number | string | bigint;
+                                            ^^^^^^ [2]
+   inexhaustible.js:35:29
+   35|   declare const x: number | string | bigint;
+                                   ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:53:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1], bigint [2], and 2 others.
+[match-not-exhaustive]
+
+   inexhaustible.js:53:3
+   53|   match (x) { // ERROR: wildcard needed
+         ^^^^^
+
+References:
+   inexhaustible.js:47:20
+   47|   declare const x: number | string | bigint | symbol;
+                          ^^^^^^ [1]
+   inexhaustible.js:47:38
+   47|   declare const x: number | string | bigint | symbol;
+                                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:75:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   75|     'xxx' => {} // ERROR
+           ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- inexhaustible.js:87:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   87|     'xxx' => {} // ERROR
+           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:105:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   105|     S.A => {} // ERROR
+            ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:114:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+
+   inexhaustible.js:114:3
+   114|   match (x) {} // ERROR
+          ^^^^^
+
+References:
+   inexhaustible.js:112:20
+   112|   declare const x: mixed;
+                           ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:127:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   127|       0 => {} // ERROR
+              ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:129:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   129|       false => {} // ERROR
+              ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:131:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   131|       '' => {} // ERROR
+              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:133:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   133|       null => {} // ERROR
+              ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:143:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   143|       null => {} // ERROR
+              ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:154:7
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   154|       null => {} // ERROR
+              ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- inexhaustible.js:178:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+
+   inexhaustible.js:178:3
+   178|   match (x) { // ERROR: missing `_`
+          ^^^^^
+
+References:
+   inexhaustible.js:176:20
+   176|   declare const x: mixed;
+                           ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:12:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false}` to match object
+type [1]. [match-not-exhaustive]
+
+   objects.js:12:3
+   12|   match (x) { // ERROR: missing `{foo: false, bar: true}`
+         ^^^^^
+
+References:
+   objects.js:3:20
+    3|   declare const x: {foo: boolean, bar: boolean};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:47:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:47:3
+   47|   match (x) { // ERROR: missing `{foo: E.C, bar: E.A}`
+         ^^^^^
+
+References:
+   objects.js:27:20
+   27|   declare const x: {foo: E, bar: E};
+                          ^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:58:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:58:3
+   58|   match (x) { // ERROR: missing `{foo: E.C, bar: E.A}`
+         ^^^^^
+
+References:
+   objects.js:27:20
+   27|   declare const x: {foo: E, bar: E};
+                          ^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:86:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: false, foo: false}` to match object
+type [1]. [match-not-exhaustive]
+
+   objects.js:86:3
+   86|   match (x) { // ERROR: missing `{foo: false, bar: false}`
+         ^^^^^
+
+References:
+   objects.js:66:20
+   66|   declare const x: {foo: boolean, bar: boolean};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:96:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{a: _, b: _}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:96:3
+   96|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   objects.js:94:20
+   94|   declare const x: {a: boolean, b: boolean};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- objects.js:97:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   97|     {a: _, b: _, c: _} => {} // ERROR
+           ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:143:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{a: {x: false, y: E.B}, b: {v: 1, w: 'bar'}}` to
+match object type [1]. [match-not-exhaustive]
+
+   objects.js:143:3
+   143|   match (x) { // ERROR: missing `{a: {x: false, y: E.B}, b: {v: 1, w: 'bar'}}`
+          ^^^^^
+
+References:
+   objects.js:108:20
+   108|   declare const x: {a: {x: boolean, y: E}, b: {v: 1 | 2, w: 'foo' | 'bar'}};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:167:5
+
+Non-exhaustive match object pattern. The following properties have not been matched: `a`, `b`, and `c`. Either add those
+properties to the object pattern, or add `...` to the end of the object pattern. [match-not-exhaustive]
+
+   167|     {} => {} // ERROR
+            ^^
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:171:5
+
+Non-exhaustive match object pattern. The following properties have not been matched: `c`. Either add those properties to
+the object pattern, or add `...` to the end of the object pattern. [match-not-exhaustive]
+
+   171|     {a: _, b: _} => {} // ERROR
+            ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:188:5
+
+Non-exhaustive match object pattern. The following properties have not been matched: `a`, `b`, and `c`, and there could
+be additional properties due to object type [1]. Add `...` to the end of the object pattern. [match-not-exhaustive]
+
+   objects.js:188:5
+   188|     {} => {} // ERROR
+            ^^
+
+References:
+   objects.js:185:20
+   185|   declare const x: {a: boolean, b: string, c: number, ...};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:192:5
+
+Non-exhaustive match object pattern. There could be additional properties due to object type [1]. Add `...` to the end
+of the object pattern. [match-not-exhaustive]
+
+   objects.js:192:5
+   192|     {a: _, b: _, c: _} => {} // ERROR
+            ^^^^^^^^^^^^^^^^^^
+
+References:
+   objects.js:185:20
+   185|   declare const x: {a: boolean, b: string, c: number, ...};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:208:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{a: 1, ...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:208:3
+   208|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:206:20
+   206|   declare const x: {a: 1, b?: 1};
+                           ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:212:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{a: 1, ...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:212:3
+   212|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:206:20
+   206|   declare const x: {a: 1, b?: 1};
+                           ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:238:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:238:3
+   238|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:232:20
+   232|   declare const x: {-foo: boolean};
+                           ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ objects.js:238:10
+
+Property `foo` is not readable. [cannot-read]
+
+   238|   match (x) { // ERROR
+                 ^
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:247:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:247:3
+   247|   match (x) { // ERROR: missing `{...}`
+          ^^^^^
+
+References:
+   objects.js:245:20
+   245|   declare const x: {-foo?: boolean};
+                           ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:263:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match interface
+type [1]. [match-not-exhaustive]
+
+   objects.js:263:3
+   263|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
+          ^^^^^
+
+References:
+   objects.js:254:20
+   254|   declare const x: interface {foo: boolean, bar: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:285:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match `C` [1].
+[match-not-exhaustive]
+
+   objects.js:285:3
+   285|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
+          ^^^^^
+
+References:
+   objects.js:276:20
+   276|   declare const x: C;
+                           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:332:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match `C` [1].
+[match-not-exhaustive]
+
+   objects.js:332:3
+   332|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
+          ^^^^^
+
+References:
+   objects.js:323:20
+   323|   declare const x: C;
+                           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ objects.js:344:15
+
+Unnecessary rest of object pattern [1]. Either this pattern is already covered by previous patterns, or it is not part
+of the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   344|     {a: true, ...} => {} // ERROR
+                      ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:357:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:357:3
+   357|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:351:20
+   351|   declare const x: {[string]: boolean};
+                           ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:362:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:362:3
+   362|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:351:20
+   351|   declare const x: {[string]: boolean};
+                           ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:364:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   364|     {foo: true, ...} => {} // ERROR
+            ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:368:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   368|     {foo: 1, ...} => {} // ERROR
+            ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:379:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:379:3
+   379|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   objects.js:373:20
+   373|   declare const x: {[number]: boolean};
+                           ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:384:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   384|     {1: 1, ...} => {} // ERROR
+            ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:393:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:393:3
+   393|   match (x) {} // ERROR
+          ^^^^^
+
+References:
+   objects.js:391:20
+   391|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:395:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{c: false | true, ...}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:395:3
+   395|   match (x) {
+          ^^^^^
+
+References:
+   objects.js:391:20
+   391|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:406:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `{type: 'ok', value: _}` to match object type [1]
+- `{type: 'error', value: _}` to match object type [2] [match-not-exhaustive]
+
+   objects.js:406:3
+   406|   match (x) {} // ERROR: `type` prop values are printed
+          ^^^^^
+
+References:
+   objects.js:403:7
+   403|     | {type: 'ok', value: number}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   objects.js:404:7
+   404|     | {type: 'error', value: Error};
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:413:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _}` to match object type [1].
+[match-not-exhaustive]
+
+   objects.js:413:3
+   413|   match (x) {} // ERROR: only brings `foo: _`
+          ^^^^^
+
+References:
+   objects.js:411:20
+   411|   declare const x: {foo: {bar: {baz: {zap: {bort: boolean}}}}};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:422:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `{xxx: 'bar', a: _, b: _}` to match object
+type [1]. [match-not-exhaustive]
+
+   objects.js:422:3
+   422|   match (x) { // ERROR: missing `{xxx: 'bar', a: _, b: _}`
+          ^^^^^
+
+References:
+   objects.js:420:7
+   420|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:426:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `{xxx: 'foo', a: 2, b: 1 | 2}` to match object type [1]
+- `{xxx: 'foo', a: 1, b: 2}` to match object type [1]
+- `{xxx: 'bar', a: _, b: _}` to match object type [2] [match-not-exhaustive]
+
+   objects.js:426:3
+   426|   match (x) { // ERROR: `xxx` prop is printed first in pattern
+          ^^^^^
+
+References:
+   objects.js:419:7
+   419|     | {a: 1 | 2, b: 1 | 2, xxx: 'foo'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   objects.js:420:7
+   420|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ objects.js:437:11
+
+Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
+
+   437|     {foo: +1n} => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
+                  ^^^
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:438:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   438|     {foo: 999} => {} // ERROR: unnecessary pattern
+            ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:448:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   objects.js:448:5
+   448|     {foo: 0} => {} // ERROR
+            ^^^^^^^^ [1]
+
+References:
+   objects.js:447:5
+   447|     _ => {}
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- pattern-errors.js:8:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match pattern [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:8:5
+   8|     1 => {} // ERROR: seen before
+          ^ [1]
+
+References:
+   pattern-errors.js:6:5
+   6|     1 => {}
+          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:19:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:19:5
+   19|     2 => {} // ERROR: seen wildcard
+           ^ [1]
+
+References:
+   pattern-errors.js:18:5
+   18|     _ => {}
+           ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:30:5
+
+Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:30:5
+   30|     _ => {} // ERROR: already seen wildcard
+           ^ [1]
+
+References:
+   pattern-errors.js:29:5
+   29|     _ => {}
+           ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:36:5
+
+Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:36:5
+   36|     const a => {} // ERROR: already seen wildcard
+           ^^^^^^^ [1]
+
+References:
+   pattern-errors.js:35:5
+   35|     const a => {}
+           ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:42:5
+
+Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:42:5
+   42|     const a => {} // ERROR: already seen wildcard
+           ^^^^^^^ [1]
+
+References:
+   pattern-errors.js:41:5
+   41|     _ => {}
+           ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:48:5
+
+Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   pattern-errors.js:48:5
+   48|     _ => {} // ERROR: already seen wildcard
+           ^ [1]
+
+References:
+   pattern-errors.js:47:5
+   47|     const a => {}
+           ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:58:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+
+   pattern-errors.js:58:3
+   58|   match (x) {
+         ^^^^^
+
+References:
+   pattern-errors.js:56:20
+   56|   declare const x: number;
+                          ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:59:5
+
+Cannot have number [1] in a match pattern position. Valid types for match patterns include string literals, number
+literals, bigint literals, boolean literals, enum members, null, or undefined. [match-invalid-pattern]
+
+   pattern-errors.js:59:5
+   59|     num => {}
+           ^^^
+
+References:
+   pattern-errors.js:54:22
+   54|   declare const num: number;
+                            ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:71:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+
+   pattern-errors.js:71:3
+   71|   match (x) {
+         ^^^^^
+
+References:
+   pattern-errors.js:69:20
+   69|   declare const x: number;
+                          ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- pattern-errors.js:72:5
+
+Cannot have number [1] in a match pattern position. Valid types for match patterns include string literals, number
+literals, bigint literals, boolean literals, enum members, null, or undefined. [match-invalid-pattern]
+
+   pattern-errors.js:72:5
+   72|     obj.num => {}
+           ^^^^^^^
+
+References:
+   pattern-errors.js:66:10
+   66|     num: number,
+                ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- recursive.js:4:1
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `['rec', _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   recursive.js:4:1
+   4| match (x) { // ERROR: missing `['rec', _]`
+      ^^^^^
+
+References:
+   recursive.js:2:18
+   2| declare const x: Rec;
+                       ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- recursive.js:8:1
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `['rec', ['rec', _]]` to match tuple type [1].
+[match-not-exhaustive]
+
+   recursive.js:8:1
+   8| match (x) { // ERROR: missing `['rec', ['rec', _]]`
+      ^^^^^
+
+References:
+   recursive.js:2:18
+   2| declare const x: Rec;
+                       ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- tuples.js:12:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[false, true]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:12:3
+   12|   match (x) { // ERROR: missing `[false, true]`
+         ^^^^^
+
+References:
+   tuples.js:3:20
+    3|   declare const x: [boolean, boolean];
+                          ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- tuples.js:47:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[E.C, E.A]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:47:3
+   47|   match (x) { // ERROR: missing `[E.C, E.A]`
+         ^^^^^
+
+References:
+   tuples.js:27:20
+   27|   declare const x: [E, E];
+                          ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- tuples.js:58:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[E.C, E.A]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:58:3
+   58|   match (x) { // ERROR: missing `[E.C, E.A]`
+         ^^^^^
+
+References:
+   tuples.js:27:20
+   27|   declare const x: [E, E];
+                          ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- tuples.js:86:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[false, false]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:86:3
+   86|   match (x) { // ERROR: missing `[false, false]`
+         ^^^^^
+
+References:
+   tuples.js:66:20
+   66|   declare const x: [boolean, boolean];
+                          ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:134:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[[false, E.B], [1, 'bar']]` to match tuple
+type [1]. [match-not-exhaustive]
+
+   tuples.js:134:3
+   134|   match (x) { // ERROR: missing `[[false, E.B], [1, 'bar']]`
+          ^^^^^
+
+References:
+   tuples.js:99:20
+    99|   declare const x: [[boolean, E], [1 | 2, 'foo' | 'bar']];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:183:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:183:3
+   183|   match (x) { // ERROR: missing `[_, _]`
+          ^^^^^
+
+References:
+   tuples.js:160:32
+   160|   declare const x: [boolean] | [1 | 2, E] | [E, 1 | 2, boolean];
+                                       ^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:212:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `['bar', _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:212:3
+   212|   match (x) { // ERROR: missing `['bar', _]`
+          ^^^^^
+
+References:
+   tuples.js:203:39
+   203|   declare const x: ['foo', boolean] | ['bar', 1 | 2];
+                                              ^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:228:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:228:3
+   228|   match (x) { // ERROR: missing `[_, _]`
+          ^^^^^
+
+References:
+   tuples.js:220:20
+   220|   declare const x: [a: 1, b?: 1, c?: 1];
+                           ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:250:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:250:3
+   250|   match (x) { // ERROR: missing `[_, _]`
+          ^^^^^
+
+References:
+   tuples.js:236:20
+   236|   declare const x: [1, 1] | [1, 1, 1];
+                           ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tuples.js:251:15
+
+Unnecessary rest of array pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of
+the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   251|     [1, 1, 1, ...] => {} // ERROR: unnecessary `...`
+                      ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:267:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[1, ...]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:267:3
+   267|   match (x) { // ERROR: missing `[_, ...]`
+          ^^^^^
+
+References:
+   tuples.js:257:20
+   257|   declare const x: [1, ...];
+                           ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:287:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   287|     null => {} // ERROR
+            ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:289:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   289|     [1] => {} // ERROR
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:291:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   291|     [_] => {} // ERROR
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:292:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   292|     [true, false] => {} // ERROR
+            ^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:293:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   293|     [true, ...] => {} // ERROR
+            ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tuples.js:297:20
+
+Unnecessary rest of array pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of
+the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   297|     [true | false, ...] => {} // ERROR: unnecessary `...`
+                           ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:307:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   307|     [] => {} // ERROR
+            ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:321:9
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   321|       | 1 // ERROR
+                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:334:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[false]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:334:3
+   334|   match (x) { // ERROR: missing `[false]`
+          ^^^^^
+
+References:
+   tuples.js:328:20
+   328|   declare const x: [boolean];
+                           ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:354:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[false, _]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:354:3
+   354|   match (x) { // ERROR: missing `[false, _]`
+          ^^^^^
+
+References:
+   tuples.js:344:20
+   344|   declare const x: [boolean, boolean];
+                           ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:358:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[_, false]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:358:3
+   358|   match (x) { // ERROR: missing `[_, false]`
+          ^^^^^
+
+References:
+   tuples.js:344:20
+   344|   declare const x: [boolean, boolean];
+                           ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:382:3
+
+`match` is not exhaustively checked. To fix, add the missing patterns:
+- `[true, true, true, false]` to match tuple type [1]
+- `[true, false, true, false]` to match tuple type [1]
+- `[false, true, true, false]` to match tuple type [1]
+- `[false, false, true, false]` to match tuple type [1] [match-not-exhaustive]
+
+   tuples.js:382:3
+   382|   match (x) { // ERROR: missing 4 cases
+          ^^^^^
+
+References:
+   tuples.js:369:20
+   369|   declare const x: [boolean, boolean, boolean, boolean]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:399:6
+
+Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
+
+   399|     [+1n] => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
+             ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:400:5
+
+Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
+input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   400|     [999] => {} // ERROR: unnecessary pattern
+            ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:412:3
+
+`match` is not exhaustively checked. To fix, add the missing pattern: `[_]` to match tuple type [1].
+[match-not-exhaustive]
+
+   tuples.js:412:3
+   412|   match (x) { // ERROR
+          ^^^^^
+
+References:
+   tuples.js:406:20
+   406|   declare const x: [-foo: boolean];
+                           ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- tuples.js:412:10
+
+Tuple element at index `0` [1] labeled `foo` is not readable. [cannot-read]
+
+   tuples.js:412:10
+   412|   match (x) { // ERROR
+                 ^
+
+References:
+   tuples.js:406:20
+   406|   declare const x: [-foo: boolean];
+                           ^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:423:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   tuples.js:423:5
+   423|     [0] => {} // ERROR
+            ^^^ [1]
+
+References:
+   tuples.js:422:5
+   422|     _ => {}
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- tuples.js:428:5
+
+Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
+pattern or restructure previous patterns. [match-unnecessary-pattern]
+
+   tuples.js:428:5
+   428|     [...] => {} // ERROR
+            ^^^^^ [1]
+
+References:
+   tuples.js:427:5
+   427|     _ => {}
+            ^ [2]
+
+
+
+Found 138 errors

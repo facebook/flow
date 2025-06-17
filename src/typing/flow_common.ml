@@ -343,4 +343,10 @@ module type S = sig
 
   val possible_concrete_types_for_computed_props :
     Context.t -> Reason.reason -> Type.t -> Type.t list
+
+  val singleton_concrete_type_for_match_arg :
+    Context.t -> keep_unions:bool -> Reason.reason -> Type.t -> Type.t
+
+  val possible_concrete_types_for_match_arg :
+    Context.t -> keep_unions:bool -> Reason.reason -> Type.t -> Type.t list
 end

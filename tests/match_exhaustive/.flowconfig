@@ -1,0 +1,5 @@
+[options]
+all=true
+experimental.pattern_matching=true
+enums=true
+no_flowlib=false

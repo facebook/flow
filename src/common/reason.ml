@@ -74,6 +74,8 @@ type 'loc virtual_reason_desc =
   | RIndexedAccess of { optional: bool }
   | RConditionalType
   | RMatch
+  | RMatchPattern
+  | RMatchWildcard
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -119,6 +121,11 @@ type 'loc virtual_reason_desc =
   | RUnknownString
   | RUnionEnum
   | REnum of { name: string option }
+  | REnumMember of {
+      enum: 'loc virtual_reason_desc;
+      member_name: string;
+    }
+  | REnumUnknownMembers of 'loc virtual_reason_desc
   | RThis
   | RThisType
   | RImplicitInstantiation
@@ -243,7 +250,7 @@ type 'loc virtual_reason_desc =
   | RRenderStarType of 'loc virtual_reason_desc
   | RRendersNothing
   | RAutocompleteToken
-[@@deriving eq, show]
+[@@deriving eq, ord, show]
 
 and reason_desc_function =
   | RAsync
@@ -284,7 +291,7 @@ let rec map_desc_locs f = function
     | RSomeProperty | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
     | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
     | ROpaqueType _ | RObjectKeyMirror | RIndexedAccess _ | RConditionalType | RRendersNothing
-    | RAutocompleteToken | RMatch ) as r ->
+    | RAutocompleteToken | RMatch | RMatchPattern | RMatchWildcard ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -335,6 +342,8 @@ let rec map_desc_locs f = function
   | RRenderType desc -> RRenderType (map_desc_locs f desc)
   | RRenderMaybeType desc -> RRenderMaybeType (map_desc_locs f desc)
   | RRenderStarType desc -> RRenderStarType (map_desc_locs f desc)
+  | REnumMember { enum; member_name } -> REnumMember { enum = map_desc_locs f enum; member_name }
+  | REnumUnknownMembers desc -> REnumUnknownMembers (map_desc_locs f desc)
 
 type 'loc virtual_reason = {
   desc: 'loc virtual_reason_desc;
@@ -342,9 +351,9 @@ type 'loc virtual_reason = {
   def_loc_opt: 'loc option;
   annot_loc_opt: 'loc option;
 }
-[@@deriving eq]
+[@@deriving eq, ord]
 
-type reason = ALoc.t virtual_reason
+type reason = ALoc.t virtual_reason [@@deriving eq, ord]
 
 type concrete_reason = Loc.t virtual_reason
 
@@ -557,6 +566,8 @@ let rec string_of_desc = function
       "indexed access"
   | RConditionalType -> "conditional type"
   | RMatch -> "match"
+  | RMatchPattern -> "match pattern"
+  | RMatchWildcard -> "match wildcard"
   | RMatchingProp (k, v) -> spf "object with property `%s` that matches %s" k (string_of_desc v)
   | RObject -> "object"
   | RObjectLit
@@ -613,6 +624,8 @@ let rec string_of_desc = function
     (match name with
     | Some name -> spf "enum `%s`" name
     | None -> "enum")
+  | REnumMember { enum; member_name } -> spf "member %s of enum %s" member_name (string_of_desc enum)
+  | REnumUnknownMembers enum -> spf "unknown members of enum %s" (string_of_desc enum)
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"
@@ -1357,6 +1370,8 @@ let classification_of_reason_desc desc =
   | RIndexedAccess _
   | RConditionalType
   | RMatch
+  | RMatchPattern
+  | RMatchWildcard
   | RMatchingProp _
   | RObject
   | RObjectLit
@@ -1481,6 +1496,8 @@ let classification_of_reason_desc desc =
   | RPossiblyMissingPropFromObj _
   | RUnionBranching _
   | REnum _
+  | REnumMember _
+  | REnumUnknownMembers _
   | RUnannotatedNext
   | RTypeGuard
   | RTypeGuardParam _
@@ -1517,3 +1534,9 @@ let range_string_of_loc ~strip_root loc =
     let (l1, c1) = (loc._end.line, loc._end.column) in
     spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
   )
+
+module ReasonSet = Flow_set.Make (struct
+  type t = reason
+
+  let compare = compare_reason
+end)

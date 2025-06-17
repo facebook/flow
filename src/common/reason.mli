@@ -40,6 +40,8 @@ type 'loc virtual_reason_desc =
   | RIndexedAccess of { optional: bool }
   | RConditionalType
   | RMatch
+  | RMatchPattern
+  | RMatchWildcard
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -85,6 +87,11 @@ type 'loc virtual_reason_desc =
   | RUnknownString
   | RUnionEnum
   | REnum of { name: string option }
+  | REnumMember of {
+      enum: 'loc virtual_reason_desc;
+      member_name: string;
+    }
+  | REnumUnknownMembers of 'loc virtual_reason_desc
   | RThis
   | RThisType
   | RImplicitInstantiation
@@ -381,3 +388,5 @@ val show_reason_desc_function : reason_desc_function -> string
 val range_string_of_loc : strip_root:File_path.t option -> Loc.t -> string
 
 val react_element_desc_of_component_reason : reason -> reason_desc
+
+module ReasonSet : Flow_set.S with type elt = reason

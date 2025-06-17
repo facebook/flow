@@ -28,6 +28,8 @@ val id_none : id
  * *)
 val id_of_aloc : table Lazy.t -> t -> id
 
+val compare_id : id -> id -> int
+
 val equal_id : id -> id -> bool
 
 (* Converts an ALoc.t back to a Loc.t, looking up the underlying location in the given table if

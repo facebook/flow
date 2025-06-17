@@ -73,7 +73,7 @@ module Friendly : sig
 
   val desc_of_reason_desc : 'a Reason.virtual_reason_desc -> 'b message_feature
 
-  val conjunction_concat : ?conjunction:string -> 'a message list -> 'a message
+  val conjunction_concat : ?conjunction:string -> ?limit:int -> 'a message list -> 'a message
 
   val capitalize : 'a message -> 'a message
 end

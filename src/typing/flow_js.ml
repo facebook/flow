@@ -480,6 +480,16 @@ struct
           )
           when UnionRep.is_optimized_finally rep ->
           TypeCollector.add collector l
+        | ( UnionT _,
+            ConcretizeT
+              {
+                reason = _;
+                kind = ConcretizeForMatchArg { keep_unions = true };
+                seen = _;
+                collector;
+              }
+          ) ->
+          TypeCollector.add collector l
         | (UnionT (_, urep), ConcretizeT _) -> flow_all_in_union cx trace urep u
         | (MaybeT (lreason, t), ConcretizeT _) ->
           let lreason = replace_desc_reason RNullOrVoid lreason in
@@ -4603,7 +4613,11 @@ struct
           in
           List.iter
             (fun loc ->
-              add_output cx (Error_message.EEnumInvalidCheck { loc; enum_reason; example_member }))
+              add_output
+                cx
+                (Error_message.EEnumInvalidCheck
+                   { loc; enum_reason; example_member; from_match = false }
+                ))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* If the discriminant is empty, the check is successful. *)
@@ -4950,6 +4964,11 @@ struct
             (Error_message.EIncompatibleWithUseOp
                { reason_lower = reason_l; reason_upper = reason_u; use_op; explanation = None }
             )
+        (*********)
+        (* Match *)
+        (*********)
+        | (t, ConcretizeT { reason = _; kind = ConcretizeForMatchArg _; seen = _; collector }) ->
+          TypeCollector.add collector t
         (******************************)
         (* String utils (e.g. prefix) *)
         (******************************)
@@ -9286,6 +9305,12 @@ module rec FlowJs : Flow_common.S = struct
     possible_concrete_types ConcretizeForOperatorsChecking
 
   let possible_concrete_types_for_object_assign = possible_concrete_types ConcretizeForObjectAssign
+
+  let singleton_concrete_type_for_match_arg cx ~keep_unions reason t =
+    singleton_concrete_type (ConcretizeForMatchArg { keep_unions }) cx reason t
+
+  let possible_concrete_types_for_match_arg cx ~keep_unions reason t =
+    possible_concrete_types (ConcretizeForMatchArg { keep_unions }) cx reason t
 end
 
 include FlowJs

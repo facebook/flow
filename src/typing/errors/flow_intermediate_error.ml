@@ -3005,22 +3005,34 @@ let to_printable_error :
         code "typeof";
         text " return value.";
       ]
-    | MessageInvalidEnumMemberCheck { enum_reason; example_member } ->
+    | MessageInvalidEnumMemberCheck { enum_reason; example_member; from_match } ->
       let suggestion =
         match enum_name_of_reason enum_reason with
         | Some enum_name ->
           let example_member = Base.Option.value ~default:"A" example_member in
+          let (prefix, suffix) =
+            if from_match then
+              ("", "")
+            else
+              ("case ", ":")
+          in
           [
             text " ";
             text "For example ";
-            code (spf "case %s.%s:" enum_name example_member);
+            code (spf "%s%s.%s%s" prefix enum_name example_member suffix);
             text ".";
           ]
         | None -> []
       in
+      let at =
+        if from_match then
+          "match pattern"
+        else
+          "case"
+      in
       [
-        text "Invalid enum member check at case. ";
-        text "Check must be dot-access of a member of ";
+        text (spf "Invalid enum member check at %s. " at);
+        text "The format must be dot-access of a member of ";
         ref enum_reason;
         text ".";
       ]
@@ -4174,12 +4186,88 @@ let to_printable_error :
         code ": null";
         text " to disambiguate.";
       ]
-    | MessageMatchNotExhaustive reason ->
+    | MessageMatchNotExhaustive { examples } ->
+      let examples =
+        Base.List.map examples ~f:(fun (pattern, reasons) ->
+            let reasons =
+              Base.List.map reasons ~f:(fun reason -> [ref reason])
+              |> Flow_errors_utils.Friendly.conjunction_concat ~limit:3
+            in
+            [code pattern; text " to match "] @ reasons
+        )
+      in
+      let examples =
+        match examples with
+        | [] -> []
+        | [single_example] -> (text "missing pattern: " :: single_example) @ [text "."]
+        | examples ->
+          let size = Base.List.length examples in
+          let (examples, suffix) =
+            let limit = 6 in
+            if size > limit then
+              ( Base.List.take examples (limit - 1),
+                [text (Utils_js.spf "\nand %d others." (size - (limit - 1)))]
+              )
+            else
+              (examples, [])
+          in
+          let examples =
+            examples
+            |> Base.List.map ~f:(fun example -> text "- " :: example)
+            |> Base.List.intersperse ~sep:[text "\n"]
+            |> Base.List.concat
+          in
+          (text "missing patterns:\n" :: examples) @ suffix
+      in
+      [code "match"; text " is not exhaustively checked. To fix, add the "] @ examples
+    | MessageMatchUnnecessaryPattern { reason; already_seen } ->
+      let msg =
+        match already_seen with
+        | Some already_seen ->
+          [text "This pattern was already covered by a previous "; ref already_seen; text ". "]
+        | None ->
+          [
+            text
+              "Either this pattern is already covered by previous patterns, or it is not part of the input type. ";
+          ]
+      in
+      [text "Unnecessary "; ref reason; text ". "]
+      @ msg
+      @ [text "Either remove this pattern or restructure previous patterns."]
+    | MessageMatchNonExhaustiveObjectPattern { rest; missing_props } ->
+      let prefix = [text "Non-exhaustive match object pattern. "] in
+      let has_missing_props = not @@ Base.List.is_empty missing_props in
+      let missing_props =
+        if has_missing_props then
+          text "The following properties have not been matched: "
+          :: (Base.List.map missing_props ~f:(fun prop -> [code prop])
+             |> Flow_errors_utils.Friendly.conjunction_concat ~limit:5
+             )
+        else
+          []
+      in
+      let suffix =
+        let msg =
+          match rest with
+          | Some reason ->
+            let msg = [text "could be additional properties due to "; ref reason; text ". Add "] in
+            if has_missing_props then
+              missing_props @ (text ", and there " :: msg)
+            else
+              text "There " :: msg
+          | None ->
+            missing_props @ [text ". Either add those properties to the object pattern, or add "]
+        in
+        msg @ [code "..."; text " to the end of the object pattern."]
+      in
+      prefix @ suffix
+    | MessageMatchInvalidIdentOrMemberPattern { type_reason } ->
       [
-        code "match";
-        text " is not exhaustively checked: ";
-        ref reason;
-        text " has not been fully checked against by the match patterns below.";
+        text "Cannot have ";
+        ref type_reason;
+        text " in a match pattern position. ";
+        text "Valid types for match patterns include string literals, number literals, ";
+        text "bigint literals, boolean literals, enum members, null, or undefined.";
       ]
     | MessageMatchInvalidBindingKind { kind } ->
       [

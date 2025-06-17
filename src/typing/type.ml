@@ -1643,6 +1643,7 @@ module rec TypeTerm : sig
     | ConcretizeComputedPropsT
     | ConcretizeForOperatorsChecking
     | ConcretizeForObjectAssign
+    | ConcretizeForMatchArg of { keep_unions: bool }
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
@@ -2340,6 +2341,8 @@ and UnionRep : sig
 
   val union_kind : t -> union_kind
 
+  val disjoint_object_union_props : t -> NameUtils.Set.t option
+
   (** map rep r to rep r' along type mapping f. if nothing would be changed,
       returns the physically-identical rep. *)
   val ident_map : ?always_keep_source:bool -> (TypeTerm.t -> TypeTerm.t) -> t -> t
@@ -2520,6 +2523,13 @@ end = struct
     | _ -> true
 
   let union_kind { kind; _ } = kind
+
+  let disjoint_object_union_props { specialization; _ } =
+    match !specialization with
+    | Some (AlmostDisjointUnionWithPossiblyNonUniqueKeys map)
+    | Some (PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys map) ->
+      Some (NameUtils.Map.keys map |> NameUtils.Set.of_list)
+    | _ -> None
 
   (** given a list of members, build a rep.
       specialized reps are used on compatible type lists *)
@@ -4148,7 +4158,9 @@ let string_of_use_ctor = function
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
       | ConcretizeComputedPropsT -> "ConcretizeComputedPropsT"
       | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking"
-      | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign")
+      | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign"
+      | ConcretizeForMatchArg { keep_unions } ->
+        spf "ConcretizeForMatchArg {keep_unions=%b}" keep_unions)
   | LookupT _ -> "LookupT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"

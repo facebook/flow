@@ -59,7 +59,6 @@
 
   const e2 = match (x) {
     {foo: true, const foo} => 0, // ERROR
-    _ => 0,
   };
 
   const e3 = match (x) {
@@ -75,13 +74,11 @@
   const e1 = match (x) {
     [const a, true as a] => 0, // ERROR
     [const a, const a] => 0, // ERROR
-    _ => 0,
   };
 
   const e2 = match (x) {
     [const a, true as const a] => 0, // ERROR
     [const a, ...const a] => 0, // ERROR
-    _ => 0,
   };
 }
 {
@@ -89,7 +86,6 @@
   const e1 = match (x) {
     {const a, b: true as a} => 0, // ERROR
     {const a, ...const a} => 0, // ERROR
-    _ => 0,
   };
 }
 
@@ -106,7 +102,6 @@
   const e2 = match (x) {
     [true as const a] | ['s'] => 0, // ERROR
     ['t'] | [...const a] => 0, // ERROR
-    _ => 0,
   };
 }
 {
@@ -125,7 +120,6 @@
 
   const e1 = match (x) {
     [const a as b] => 0, // ERROR
-    _ => 0,
   };
 
   const e2 = match (x) {
@@ -174,9 +168,8 @@
   declare const x: {foo: 1, bar: boolean};
 
   const out = match (x) {
-    {foo} => 0, // ERROR
+    {foo, ...} => 0, // ERROR
     {foo, bar: true} => 0, // ERROR
-    _ => 0,
   };
 }
 

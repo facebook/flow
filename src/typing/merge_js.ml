@@ -1039,17 +1039,16 @@ let check_match_exhaustiveness cx tast =
       method on_loc_annot x = x
 
       method! match_ ~on_case_body x =
-        let { Ast.Match.match_keyword_loc = (loc, t); _ } = x in
-        (match Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t with
-        | [] -> ()
-        | remaining_ts ->
-          Base.List.iter remaining_ts ~f:(fun remaining_t ->
-              let reason = TypeUtil.reason_of_t remaining_t in
-              let reason =
-                Reason.mk_reason (Reason.desc_of_reason reason) (Reason.def_loc_of_reason reason)
-              in
-              Flow_js.add_output cx (Error_message.EMatchNotExhaustive { loc; reason })
-          ));
+        let { Ast.Match.match_keyword_loc = (match_loc, _); arg = ((_, arg_t), _); cases; _ } = x in
+        let patterns =
+          Base.List.filter_map cases ~f:(function (_, { Ast.Match.Case.pattern; guard; _ }) ->
+              if Base.Option.is_some guard then
+                None
+              else
+                Some pattern
+              )
+        in
+        Exhaustive.analyze cx ~match_loc patterns arg_t;
         super#match_ ~on_case_body x
     end
   in

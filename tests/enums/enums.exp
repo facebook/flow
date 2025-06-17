@@ -1859,7 +1859,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:69:8
 
-Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
+Invalid enum member check at case. The format must be dot-access of a member of `E` [1]. For example `case E.A:`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:69:8
@@ -1874,7 +1874,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:75:10
 
-Invalid enum member check at case. Check must be dot-access of a member of `G` [1]. For example `case G.A:`.
+Invalid enum member check at case. The format must be dot-access of a member of `G` [1]. For example `case G.A:`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:75:10
@@ -1910,7 +1910,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
 
-Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
+Invalid enum member check at case. The format must be dot-access of a member of `E` [1]. For example `case E.A:`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:80:8
@@ -2519,7 +2519,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:224:10
 
-Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
+Invalid enum member check at case. The format must be dot-access of a member of `E` [1]. For example `case E.A:`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:224:10

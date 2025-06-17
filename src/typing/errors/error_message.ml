@@ -487,6 +487,7 @@ and 'loc t' =
       loc: 'loc;
       enum_reason: 'loc virtual_reason;
       example_member: string option;
+      from_match: bool;
     }
   | EEnumMemberUsedAsType of {
       reason: 'loc virtual_reason;
@@ -652,7 +653,20 @@ and 'loc t' =
   (* Match *)
   | EMatchNotExhaustive of {
       loc: 'loc;
+      examples: (string * 'loc virtual_reason list) list;
+    }
+  | EMatchUnnecessaryPattern of {
       reason: 'loc virtual_reason;
+      already_seen: 'loc virtual_reason option;
+    }
+  | EMatchNonExhaustiveObjectPattern of {
+      loc: 'loc;
+      rest: 'loc virtual_reason option;
+      missing_props: string list;
+    }
+  | EMatchInvalidIdentOrMemberPattern of {
+      loc: 'loc;
+      type_reason: 'loc virtual_reason;
     }
   | EMatchInvalidBindingKind of {
       loc: 'loc;
@@ -1339,8 +1353,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EEnumUnknownNotChecked { reason; enum_reason } ->
     EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidCheck { loc; enum_reason; example_member } ->
-    EEnumInvalidCheck { loc = f loc; enum_reason = map_reason enum_reason; example_member }
+  | EEnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
+    EEnumInvalidCheck
+      { loc = f loc; enum_reason = map_reason enum_reason; example_member; from_match }
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumIncompatible
@@ -1527,8 +1542,23 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
-  | EMatchNotExhaustive { loc; reason } ->
-    EMatchNotExhaustive { loc = f loc; reason = map_reason reason }
+  | EMatchNotExhaustive { loc; examples } ->
+    EMatchNotExhaustive
+      {
+        loc = f loc;
+        examples =
+          Base.List.map examples ~f:(fun (pattern, reasons) ->
+              (pattern, Base.List.map ~f:map_reason reasons)
+          );
+      }
+  | EMatchUnnecessaryPattern { reason; already_seen } ->
+    EMatchUnnecessaryPattern
+      { reason = map_reason reason; already_seen = Base.Option.map ~f:map_reason already_seen }
+  | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props } ->
+    EMatchNonExhaustiveObjectPattern
+      { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props }
+  | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
+    EMatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
   | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
   | EMatchInvalidObjectPropertyLiteral { loc } -> EMatchInvalidObjectPropertyLiteral { loc = f loc }
   | EMatchInvalidUnaryZero { loc } -> EMatchInvalidUnaryZero { loc = f loc }
@@ -1770,6 +1800,9 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
   | EMatchNotExhaustive _
+  | EMatchUnnecessaryPattern _
+  | EMatchNonExhaustiveObjectPattern _
+  | EMatchInvalidIdentOrMemberPattern _
   | EMatchInvalidBindingKind _
   | EMatchInvalidObjectPropertyLiteral _
   | EMatchInvalidUnaryZero _
@@ -1855,7 +1888,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeGuardFunctionInvalidWrites { reason; _ }
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
-  | EIllegalAssertOperator { op = reason; _ } ->
+  | EIllegalAssertOperator { op = reason; _ }
+  | EMatchUnnecessaryPattern { reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -1997,6 +2031,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
   | EMatchNotExhaustive { loc; _ } -> Some loc
+  | EMatchNonExhaustiveObjectPattern { loc; _ } -> Some loc
   | EMatchInvalidBindingKind { loc; _ } -> Some loc
   | EMatchInvalidObjectPropertyLiteral { loc } -> Some loc
   | EMatchInvalidUnaryZero { loc } -> Some loc
@@ -2008,6 +2043,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
   | EMatchStatementInvalidBody { loc } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
+  | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -2832,8 +2868,8 @@ let friendly_message_of_msg = function
       (MessageCannotExhaustivelyCheckEnumWithUnknowns
          { description = desc_of_reason reason; enum_reason }
       )
-  | EEnumInvalidCheck { loc = _; enum_reason; example_member } ->
-    Normal (MessageInvalidEnumMemberCheck { enum_reason; example_member })
+  | EEnumInvalidCheck { loc = _; enum_reason; example_member; from_match } ->
+    Normal (MessageInvalidEnumMemberCheck { enum_reason; example_member; from_match })
   | EEnumMemberUsedAsType { reason; enum_reason } ->
     Normal
       (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
@@ -3037,7 +3073,13 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
-  | EMatchNotExhaustive { loc = _; reason } -> Normal (MessageMatchNotExhaustive reason)
+  | EMatchNotExhaustive { loc = _; examples } -> Normal (MessageMatchNotExhaustive { examples })
+  | EMatchUnnecessaryPattern { reason; already_seen } ->
+    Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
+  | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
+    Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props })
+  | EMatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
+    Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
   | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
   | EMatchInvalidObjectPropertyLiteral { loc = _ } ->
     Normal MessageMatchInvalidObjectPropertyLiteral
@@ -3201,7 +3243,11 @@ let error_code_of_message err : error_code option =
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
-  | EEnumInvalidCheck _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidCheck { from_match; _ } ->
+    if from_match then
+      Some MatchInvalidPattern
+    else
+      Some InvalidExhaustiveCheck
   | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
   | EEnumInvalidObjectUtilType _ -> Some NotAnObject
   | EEnumInvalidObjectFunction _ -> Some NotAnObject
@@ -3423,6 +3469,9 @@ let error_code_of_message err : error_code option =
   | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
+  | EMatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
+  | EMatchUnnecessaryPattern _ -> Some MatchUnnecessaryPattern
+  | EMatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern
   | EMatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern
   | EMatchInvalidUnaryZero _ -> Some MatchInvalidPattern

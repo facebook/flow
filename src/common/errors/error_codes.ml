@@ -115,6 +115,7 @@ type error_code =
   | MatchInvalidPattern
   | MatchNotExhaustive
   | MatchStatementInvalidBody
+  | MatchUnnecessaryPattern
   | MethodUnbinding
   | MissingLocalAnnot
   | MissingThisAnnot
@@ -352,6 +353,7 @@ let string_of_code : error_code -> string = function
   | MatchInvalidPattern -> "match-invalid-pattern"
   | MatchNotExhaustive -> "match-not-exhaustive"
   | MatchStatementInvalidBody -> "match-statement-invalid-body"
+  | MatchUnnecessaryPattern -> "match-unnecessary-pattern"
   | MethodUnbinding -> "method-unbinding"
   | MissingLocalAnnot -> "missing-local-annot"
   | MissingThisAnnot -> "missing-this-annot"

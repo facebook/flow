@@ -61,7 +61,6 @@
 
   const out1 = match (x) {
     {foo: [{bar: const a}]} => a,
-    _ => 0,
   };
   out1 as number; // OK
   out1 as empty; // ERROR
@@ -113,7 +112,6 @@
     {foo: {bar: 2} as const a} => 0, // OK
     {foo: {bar: 3 as const a}} => 0, // OK
     {foo: {bar: const a}} => 0, // OK
-    _ => 0,
   };
 }
 
@@ -123,15 +121,12 @@
 
   const out1 = match (x) {
     [1, 2, ...const xs] => xs as [3], // OK
-    _ => 0,
   };
   const out2 = match (x) {
     [1, ...const xs] => xs as [2, 3], // OK
-    _ => 0,
   };
   const out3 = match (x) {
     [...const xs] => xs as [1, 2, 3], // OK
-    _ => 0,
   };
 }
 

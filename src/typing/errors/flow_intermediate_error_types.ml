@@ -683,6 +683,7 @@ type 'loc message =
   | MessageInvalidEnumMemberCheck of {
       enum_reason: 'loc virtual_reason;
       example_member: string option;
+      from_match: bool;
     }
   | MessageInvalidGenericRef of string
   | MessageInvalidGraphQL of Graphql.error
@@ -931,7 +932,16 @@ type 'loc message =
       reason: 'loc virtual_reason;
       null_loc: 'loc option;
     }
-  | MessageMatchNotExhaustive of 'loc virtual_reason
+  | MessageMatchNotExhaustive of { examples: (string * 'loc virtual_reason list) list }
+  | MessageMatchUnnecessaryPattern of {
+      reason: 'loc virtual_reason;
+      already_seen: 'loc virtual_reason option;
+    }
+  | MessageMatchNonExhaustiveObjectPattern of {
+      rest: 'loc virtual_reason option;
+      missing_props: string list;
+    }
+  | MessageMatchInvalidIdentOrMemberPattern of { type_reason: 'loc virtual_reason }
   | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }
   | MessageMatchInvalidObjectPropertyLiteral
   | MessageMatchInvalidUnaryZero

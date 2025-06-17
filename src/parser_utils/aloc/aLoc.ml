@@ -310,7 +310,9 @@ let id_of_aloc table aloc =
     end
     | None -> aloc)
 
-let equal_id a b = quick_compare a b = 0
+let compare_id a b = quick_compare a b
+
+let equal_id a b = compare_id a b = 0
 
 module ALocRepresentationDoNotUse = struct
   let is_keyed = Repr.is_keyed
