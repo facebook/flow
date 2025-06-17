@@ -116,49 +116,49 @@ Cannot resolve name `a`. [cannot-resolve-name]
          ^
 
 
-Error ---------------------------------------------------------------------------------------------- expression.js:107:3
+Error ---------------------------------------------------------------------------------------------- expression.js:108:3
 
 Cannot resolve name `a`. [cannot-resolve-name]
 
-   107|   a; // ERROR
+   108|   a; // ERROR
           ^
 
 
 Error --------------------------------------------------------------------------------------------- expression.js:144:10
 
-Cannot assign `match` to `x` because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot assign `match` to `out` because string [1] is incompatible with union type [2]. [incompatible-type]
 
    expression.js:144:10
-   144|     1 => 2, // ERROR: 2 is not a subtype of 0|1
-                 ^ [1]
+   144|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
+                 ^^^^^ [1]
 
 References:
-   expression.js:142:12
-   142|   const x: 0|1 = match (n) {
-                   ^^^ [2]
+   expression.js:142:14
+   142|   const out: 'a' | 'b' = match (x) {
+                     ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- expression.js:153:10
+Error --------------------------------------------------------------------------------------------- expression.js:151:10
 
-Cannot get `dict[match]` because property `2` is missing in object type [1]. [prop-missing]
+Cannot get `dict[match]` because property `xxx` is missing in object type [1]. [prop-missing]
 
-   expression.js:153:10
-   153|     1 => 2, // ERROR: 2 is not a subtype of 0|1
-                 ^
+   expression.js:151:10
+   151|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
+                 ^^^^^
 
 References:
-   expression.js:150:21
-   150|   declare var dict: {[0|1]: number};
-                            ^^^^^^^^^^^^^^^ [1]
+   expression.js:148:23
+   148|   declare const dict: {['a' | 'b']: number};
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:15:14
+Error ------------------------------------------------------------------------------------------------ matching.js:14:14
 
 `match` is not exhaustively checked: number literal `-2` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:15:14
-   15|   const e2 = match (x) { // ERROR: not all members checked
+   matching.js:14:14
+   14|   const e2 = match (x) { // ERROR: not all members checked
                     ^^^^^
 
 References:
@@ -167,13 +167,13 @@ References:
                               ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:15:14
+Error ------------------------------------------------------------------------------------------------ matching.js:14:14
 
 `match` is not exhaustively checked: string literal `s` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:15:14
-   15|   const e2 = match (x) { // ERROR: not all members checked
+   matching.js:14:14
+   14|   const e2 = match (x) { // ERROR: not all members checked
                     ^^^^^
 
 References:
@@ -182,277 +182,277 @@ References:
                                         ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:36:14
+Error ------------------------------------------------------------------------------------------------ matching.js:34:14
 
 `match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:36:14
-   36|   const e2 = match (x) { // ERROR: `2` not checked
+   matching.js:34:14
+   34|   const e2 = match (x) { // ERROR: `2` not checked
                     ^^^^^
 
 References:
-   matching.js:25:24
-   25|   declare const x: 1 | 2;
+   matching.js:24:24
+   24|   declare const x: 1 | 2;
                               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:51:14
+Error ------------------------------------------------------------------------------------------------ matching.js:48:14
 
 `match` is not exhaustively checked: undefined [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:51:14
-   51|   const e2 = match (x) { // ERROR: `undefined` not checked
+   matching.js:48:14
+   48|   const e2 = match (x) { // ERROR: `undefined` not checked
                     ^^^^^
 
 References:
-   matching.js:43:24
-   43|   declare const x: 1 | void;
+   matching.js:41:24
+   41|   declare const x: 1 | void;
                               ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:67:14
+Error ------------------------------------------------------------------------------------------------ matching.js:63:14
 
 `match` is not exhaustively checked: null or undefined [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:67:14
-   67|   const e2 = match (x) { // ERROR: `null` and `undefined` not checked
+   matching.js:63:14
+   63|   const e2 = match (x) { // ERROR: `null` and `undefined` not checked
                     ^^^^^
 
 References:
-   matching.js:58:20
-   58|   declare const x: ?1;
+   matching.js:55:20
+   55|   declare const x: ?1;
                           ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ matching.js:87:14
+Error ------------------------------------------------------------------------------------------------ matching.js:82:14
 
 `match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:87:14
-   87|   const e2 = match (x) { // ERROR: `2` not checked
+   matching.js:82:14
+   82|   const e2 = match (x) { // ERROR: `2` not checked
                     ^^^^^
 
 References:
-   matching.js:74:24
-   74|   declare const x: 1 | 2;
+   matching.js:70:24
+   70|   declare const x: 1 | 2;
                               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:140:14
+Error ----------------------------------------------------------------------------------------------- matching.js:131:14
 
 `match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:140:14
-   140|   const e2 = match (f()) { // ERROR: `2` not checked
+   matching.js:131:14
+   131|   const e2 = match (f()) { // ERROR: `2` not checked
                      ^^^^^
 
 References:
-   matching.js:132:30
-   132|   declare const f: () => 1 | 2;
+   matching.js:124:30
+   124|   declare const f: () => 1 | 2;
                                      ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:154:14
+Error ----------------------------------------------------------------------------------------------- matching.js:144:14
 
 `match` is not exhaustively checked: number literal `3` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:154:14
-   154|   const e2 = match (x) { // ERROR: `3` not checked
+   matching.js:144:14
+   144|   const e2 = match (x) { // ERROR: `3` not checked
                      ^^^^^
 
 References:
-   matching.js:147:28
-   147|   declare const x: 1 | 2 | 3;
+   matching.js:138:28
+   138|   declare const x: 1 | 2 | 3;
                                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:165:14
+Error ----------------------------------------------------------------------------------------------- matching.js:155:14
 
 `match` is not exhaustively checked: number literal `2` [1] has not been fully checked against by the match patterns
 below. [match-not-exhaustive]
 
-   matching.js:165:14
-   165|   const e1 = match (x) { // ERROR: `2` not checked
+   matching.js:155:14
+   155|   const e1 = match (x) { // ERROR: `2` not checked
                      ^^^^^
 
 References:
-   matching.js:161:24
-   161|   declare const x: 1 | 2;
+   matching.js:151:24
+   151|   declare const x: 1 | 2;
                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:220:14
+Error ----------------------------------------------------------------------------------------------- matching.js:206:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:220:14
-   220|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
+   matching.js:206:14
+   206|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
                      ^^^^^
 
 References:
-   matching.js:211:20
-   211|                  | {type: 'baz', val: boolean};
+   matching.js:198:20
+   198|                  | {type: 'baz', val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:269:14
+Error ----------------------------------------------------------------------------------------------- matching.js:251:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:269:14
-   269|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
+   matching.js:251:14
+   251|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
                      ^^^^^
 
 References:
-   matching.js:254:20
-   254|                  | {type: 'bar', n: 2, val: boolean};
+   matching.js:238:20
+   238|                  | {type: 'bar', n: 2, val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:297:14
+Error ----------------------------------------------------------------------------------------------- matching.js:277:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:297:14
-   297|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
+   matching.js:277:14
+   277|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
                      ^^^^^
 
 References:
-   matching.js:289:20
-   289|                  | {type: 'bar', val: string}
+   matching.js:270:20
+   270|                  | {type: 'bar', val: string}
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:315:14
+Error ----------------------------------------------------------------------------------------------- matching.js:294:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:315:14
-   315|   const e2 = match (x) { // ERROR: `'baz'` element not checked
+   matching.js:294:14
+   294|   const e2 = match (x) { // ERROR: `'baz'` element not checked
                      ^^^^^
 
 References:
-   matching.js:306:20
-   306|                  | ['baz', boolean];
+   matching.js:286:20
+   286|                  | ['baz', boolean];
                            ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:353:24
+Error ----------------------------------------------------------------------------------------------- matching.js:330:24
 
 Cannot cast `a` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   matching.js:353:24
-   353|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:330:24
+   330|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
                                ^
 
 References:
-   matching.js:348:21
-   348|                  | [boolean, boolean, boolean];
+   matching.js:325:21
+   325|                  | [boolean, boolean, boolean];
                             ^^^^^^^ [1]
-   matching.js:353:29
-   353|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:330:29
+   330|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
                                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:373:18
+Error ----------------------------------------------------------------------------------------------- matching.js:347:18
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   matching.js:373:18
-   373|     [const a] => a as string, // ERROR: `number` is not `string`
+   matching.js:347:18
+   347|     [const a] => a as string, // ERROR: `number` is not `string`
                          ^
 
 References:
-   matching.js:369:21
-   369|   declare const x: [number] | Array<string>;
+   matching.js:343:21
+   343|   declare const x: [number] | Array<string>;
                             ^^^^^^ [1]
-   matching.js:373:23
-   373|     [const a] => a as string, // ERROR: `number` is not `string`
+   matching.js:347:23
+   347|     [const a] => a as string, // ERROR: `number` is not `string`
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:393:14
+Error ----------------------------------------------------------------------------------------------- matching.js:365:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:393:14
-   393|   const e2 = match (x) { // ERROR: does not match all possibilities
+   matching.js:365:14
+   365|   const e2 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:386:20
-   386|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:397:14
+Error ----------------------------------------------------------------------------------------------- matching.js:369:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:397:14
-   397|   const e3 = match (x) { // ERROR: does not match all possibilities
+   matching.js:369:14
+   369|   const e3 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:386:20
-   386|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:401:14
+Error ----------------------------------------------------------------------------------------------- matching.js:373:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:401:14
-   401|   const e4 = match (x) { // ERROR: does not match all possibilities
+   matching.js:373:14
+   373|   const e4 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:386:20
-   386|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:359:20
+   359|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:415:14
+Error ----------------------------------------------------------------------------------------------- matching.js:386:14
 
 `match` is not exhaustively checked: tuple type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:415:14
-   415|   const e2 = match (x) { // ERROR: does not match all elements
+   matching.js:386:14
+   386|   const e2 = match (x) { // ERROR: does not match all elements
                      ^^^^^
 
 References:
-   matching.js:408:20
-   408|   declare const x: [a: 0, ...];
+   matching.js:380:20
+   380|   declare const x: [a: 0, ...];
                            ^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:425:14
+Error ----------------------------------------------------------------------------------------------- matching.js:396:14
 
 `match` is not exhaustively checked: object type [1] has not been fully checked against by the match patterns below.
 [match-not-exhaustive]
 
-   matching.js:425:14
-   425|   const e1 = match (x) {
+   matching.js:396:14
+   396|   const e1 = match (x) {
                      ^^^^^
 
 References:
-   matching.js:422:23
-   422|   type T = {foo: 1} | {foo: 2};
+   matching.js:393:23
+   393|   type T = {foo: 1} | {foo: 2};
                               ^^^^^^^^ [1]
 
 
@@ -607,236 +607,250 @@ References:
                   ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:77:29
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:77:21
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   pattern-errors.js:77:29
-   77|     [const a, true as const a] => 0, // ERROR
-                                   ^
-
-References:
-   pattern-errors.js:77:12
-   77|     [const a, true as const a] => 0, // ERROR
-                  ^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:78:21
-
-Cannot declare `a` [1] because the name is already bound. [name-already-bound]
-
-   pattern-errors.js:78:21
-   78|     [const a, const a] => 0, // ERROR
+   pattern-errors.js:77:21
+   77|     [const a, const a] => 0, // ERROR
                            ^
 
 References:
-   pattern-errors.js:78:12
-   78|     [const a, const a] => 0, // ERROR
+   pattern-errors.js:77:12
+   77|     [const a, const a] => 0, // ERROR
                   ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:79:24
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:82:29
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   pattern-errors.js:79:24
-   79|     [const a, ...const a] => 0, // ERROR
-                              ^
+   pattern-errors.js:82:29
+   82|     [const a, true as const a] => 0, // ERROR
+                                   ^
 
 References:
-   pattern-errors.js:79:12
-   79|     [const a, ...const a] => 0, // ERROR
+   pattern-errors.js:82:12
+   82|     [const a, true as const a] => 0, // ERROR
                   ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:80:24
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:83:24
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   pattern-errors.js:80:24
-   80|     {const a, ...const a} => 0, // ERROR
+   pattern-errors.js:83:24
+   83|     [const a, ...const a] => 0, // ERROR
                               ^
 
 References:
-   pattern-errors.js:80:12
-   80|     {const a, ...const a} => 0, // ERROR
+   pattern-errors.js:83:12
+   83|     [const a, ...const a] => 0, // ERROR
                   ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:90:18
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:90:26
 
-New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   90|     _ | [true as a] => 0, // ERROR
-                        ^
+   pattern-errors.js:90:26
+   90|     {const a, b: true as a} => 0, // ERROR
+                                ^
+
+References:
+   pattern-errors.js:90:12
+   90|     {const a, b: true as a} => 0, // ERROR
+                  ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:91:24
 
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
+
+   pattern-errors.js:91:24
+   91|     {const a, ...const a} => 0, // ERROR
+                              ^
+
+References:
+   pattern-errors.js:91:12
+   91|     {const a, ...const a} => 0, // ERROR
+                  ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:101:14
+
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   91|     _ | [true as const a] => 0, // ERROR
+   101|     [true as a] | ['s'] => 0, // ERROR
+                     ^
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:102:21
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   102|     [false as const a] | ['s'] => 0, // ERROR
+                            ^
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:107:20
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   107|     [true as const a] | ['s'] => 0, // ERROR
+                           ^
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:108:23
+
+New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
+
+   108|     ['t'] | [...const a] => 0, // ERROR
                               ^
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:92:16
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:116:17
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   92|     _ | [const a] => 0, // ERROR
-                      ^
+   116|     {a: true as a} | {a: 's'} => 0, // ERROR
+                        ^
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:93:19
-
-New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
-
-   93|     _ | [...const a] => 0, // ERROR
-                         ^
-
-
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:99:16
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:117:24
 
 New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
 
-   99|     _ | {const a} => 0, // ERROR
-                      ^
-
-
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:100:19
-
-New bindings in 'or' patterns are not yet supported. [match-invalid-pattern]
-
-   100|     _ | {...const a} => 0, // ERROR
-                          ^
-
-
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:109:5
-
-Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
-
-   109|     const a as b => 0, // ERROR
-            ^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:110:5
-
-Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
-
-   110|     const a as const b => 0, // ERROR
-            ^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:119:6
-
-Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
-
-   pattern-errors.js:119:6
-   119|     [a, const a] => a, // ERROR: reference before declaration
-             ^
-
-References:
-   pattern-errors.js:119:15
-   119|     [a, const a] => a, // ERROR: reference before declaration
-                      ^ [1]
+   117|     {a: false as const a} | {a: 's'} => 0, // ERROR
+                               ^
 
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:127:6
 
+Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
+
+   127|     [const a as b] => 0, // ERROR
+             ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:132:5
+
+Invalid `as` pattern. Direct use on a binding pattern is not allowed. [match-invalid-pattern]
+
+   132|     const a as const b => 0, // ERROR
+            ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:141:6
+
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   pattern-errors.js:127:6
-   127|     [a.foo, const a] => a, // ERROR: reference before declaration
+   pattern-errors.js:141:6
+   141|     [a, const a] => a, // ERROR: reference before declaration
              ^
 
 References:
-   pattern-errors.js:127:19
-   127|     [a.foo, const a] => a, // ERROR: reference before declaration
+   pattern-errors.js:141:15
+   141|     [a, const a] => a, // ERROR: reference before declaration
+                      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:149:6
+
+Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   pattern-errors.js:149:6
+   149|     [a.foo, const a] => a, // ERROR: reference before declaration
+             ^
+
+References:
+   pattern-errors.js:149:19
+   149|     [a.foo, const a] => a, // ERROR: reference before declaration
                           ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:137:15
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:159:15
 
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   pattern-errors.js:137:15
-   137|     [const a, a] => a, // ERROR
+   pattern-errors.js:159:15
+   159|     [const a, a] => a, // ERROR
                       ^
 
 References:
-   pattern-errors.js:137:12
-   137|     [const a, a] => a, // ERROR
+   pattern-errors.js:159:12
+   159|     [const a, a] => a, // ERROR
                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:137:15
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:159:15
 
 Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
 
-   pattern-errors.js:137:15
-   137|     [const a, a] => a, // ERROR
+   pattern-errors.js:159:15
+   159|     [const a, a] => a, // ERROR
                       ^
 
 References:
-   pattern-errors.js:137:12
-   137|     [const a, a] => a, // ERROR
+   pattern-errors.js:159:12
+   159|     [const a, a] => a, // ERROR
                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:145:15
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:167:15
 
 Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
-   pattern-errors.js:145:15
-   145|     [const a, a.foo] => a, // ERROR
+   pattern-errors.js:167:15
+   167|     [const a, a.foo] => a, // ERROR
                       ^
 
 References:
-   pattern-errors.js:145:12
-   145|     [const a, a.foo] => a, // ERROR
+   pattern-errors.js:167:12
+   167|     [const a, a.foo] => a, // ERROR
                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:145:15
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:167:15
 
 Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
 
-   pattern-errors.js:145:15
-   145|     [const a, a.foo] => a, // ERROR
+   pattern-errors.js:167:15
+   167|     [const a, a.foo] => a, // ERROR
                       ^
 
 References:
-   pattern-errors.js:145:12
-   145|     [const a, a.foo] => a, // ERROR
+   pattern-errors.js:167:12
+   167|     [const a, a.foo] => a, // ERROR
                    ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:155:6
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:177:6
 
 Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   155|     {foo} => 0, // ERROR
+   177|     {foo} => 0, // ERROR
              ^^^
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:156:6
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:178:6
 
 Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
 `foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
 [match-invalid-pattern]
 
-   156|     {foo, bar: true} => 0, // ERROR
+   178|     {foo, bar: true} => 0, // ERROR
              ^^^
 
 
-Error ------------------------------------------------------------------------------------------ pattern-errors.js:166:6
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:188:6
 
 Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
 [match-invalid-pattern]
 
-   166|     {1n: 1} => 0, // ERROR
+   188|     {1n: 1, ...} => 0, // ERROR
              ^^
 
 
@@ -916,37 +930,71 @@ References:
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- patterns.js:68:3
+Error ------------------------------------------------------------------------------------------------- patterns.js:67:3
 
-Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `out1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:68:3
-   68|   out as empty; // ERROR
-         ^^^
+   patterns.js:67:3
+   67|   out1 as empty; // ERROR
+         ^^^^
 
 References:
    patterns.js:60:33
    60|   declare const x: {foo: [{bar: number}]};
                                        ^^^^^^ [1]
-   patterns.js:68:10
-   68|   out as empty; // ERROR
-                ^^^^^ [2]
+   patterns.js:67:11
+   67|   out1 as empty; // ERROR
+                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ patterns.js:79:24
+Error ------------------------------------------------------------------------------------------------- patterns.js:67:3
+
+Cannot cast `out1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:67:3
+   67|   out1 as empty; // ERROR
+         ^^^^
+
+References:
+   patterns.js:64:10
+   64|     _ => 0,
+                ^ [1]
+   patterns.js:67:11
+   67|   out1 as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- patterns.js:73:3
+
+Cannot cast `out2` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   patterns.js:73:3
+   73|   out2 as empty; // ERROR
+         ^^^^
+
+References:
+   patterns.js:60:33
+   60|   declare const x: {foo: [{bar: number}]};
+                                       ^^^^^^ [1]
+   patterns.js:73:11
+   73|   out2 as empty; // ERROR
+                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ patterns.js:84:24
 
 Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
-   patterns.js:79:24
-   79|     {foo: const n} if (n as empty) => n, // ERROR
+   patterns.js:84:24
+   84|     {foo: const n} if (n as empty) => n, // ERROR
                               ^
 
 References:
-   patterns.js:73:26
-   73|   declare const x: {foo: number};
+   patterns.js:78:26
+   78|   declare const x: {foo: number};
                                 ^^^^^^ [1]
-   patterns.js:79:29
-   79|     {foo: const n} if (n as empty) => n, // ERROR
+   patterns.js:84:29
+   84|     {foo: const n} if (n as empty) => n, // ERROR
                                    ^^^^^ [2]
 
 
@@ -996,21 +1044,12 @@ Cannot resolve name `a`. [cannot-resolve-name]
          ^
 
 
-Error ------------------------------------------------------------------------------------------------ statement.js:84:3
+Error ------------------------------------------------------------------------------------------------ statement.js:85:3
 
 Cannot resolve name `a`. [cannot-resolve-name]
 
-   84|   a; // ERROR
+   85|   a; // ERROR
          ^
-
-
-Error ---------------------------------------------------------------------------------------------- statement.js:176:10
-
-Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
-[match-statement-invalid-body]
-
-   176|     1 => return 1; // ERROR
-                 ^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- statement.js:177:10
@@ -1018,9 +1057,18 @@ Error --------------------------------------------------------------------------
 Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
-   177|     2 => throw false; // ERROR
+   177|     1 => return 1; // ERROR
+                 ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- statement.js:178:10
+
+Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
+[match-statement-invalid-body]
+
+   178|     2 => throw false; // ERROR
                  ^^^^^^^^^^^^
 
 
 
-Found 84 errors
+Found 87 errors

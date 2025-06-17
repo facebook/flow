@@ -70,13 +70,24 @@
 
 // Duplicate binding names
 {
-  declare const x: [boolean, boolean] | {a: boolean, b: boolean};
+  declare const x: [boolean, boolean];
 
   const e1 = match (x) {
     [const a, true as a] => 0, // ERROR
-    [const a, true as const a] => 0, // ERROR
     [const a, const a] => 0, // ERROR
+    _ => 0,
+  };
+
+  const e2 = match (x) {
+    [const a, true as const a] => 0, // ERROR
     [const a, ...const a] => 0, // ERROR
+    _ => 0,
+  };
+}
+{
+  declare const x: {a: boolean, b: boolean};
+  const e1 = match (x) {
+    {const a, b: true as a} => 0, // ERROR
     {const a, ...const a} => 0, // ERROR
     _ => 0,
   };
@@ -84,20 +95,27 @@
 
 // Bindings in 'or' patterns are not yet supported
 {
-  declare const x: [boolean];
+  declare const x: [boolean] | [string];
 
   const e1 = match (x) {
-    _ | [true as a] => 0, // ERROR
-    _ | [true as const a] => 0, // ERROR
-    _ | [const a] => 0, // ERROR
-    _ | [...const a] => 0, // ERROR
+    [true as a] | ['s'] => 0, // ERROR
+    [false as const a] | ['s'] => 0, // ERROR
+    _ => 0,
   };
 
-  declare const y: {a: boolean};
+  const e2 = match (x) {
+    [true as const a] | ['s'] => 0, // ERROR
+    ['t'] | [...const a] => 0, // ERROR
+    _ => 0,
+  };
+}
+{
+  declare const x: {a: boolean} | {a: string};
 
-  const e2 = match (y) {
-    _ | {const a} => 0, // ERROR
-    _ | {...const a} => 0, // ERROR
+  const e1 = match (x) {
+    {a: true as a} | {a: 's'} => 0, // ERROR
+    {a: false as const a} | {a: 's'} => 0, // ERROR
+    _ => 0,
   };
 }
 
@@ -106,9 +124,13 @@
   declare const x: [boolean];
 
   const e1 = match (x) {
-    const a as b => 0, // ERROR
+    [const a as b] => 0, // ERROR
+    _ => 0,
+  };
+
+  const e2 = match (x) {
     const a as const b => 0, // ERROR
-  }
+  };
 }
 
 // Reference before declaration
@@ -163,7 +185,7 @@
   declare const x: mixed;
 
   const out = match (x) {
-    {1n: 1} => 0, // ERROR
+    {1n: 1, ...} => 0, // ERROR
     _ => 0,
   };
 }

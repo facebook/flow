@@ -59,13 +59,18 @@
 {
   declare const x: {foo: [{bar: number}]};
 
-  const out = match (x) {
+  const out1 = match (x) {
     {foo: [{bar: const a}]} => a,
+    _ => 0,
+  };
+  out1 as number; // OK
+  out1 as empty; // ERROR
+
+  const out2 = match (x) {
     {foo: const a} => a[0].bar,
   };
-
-  out as number; // OK
-  out as empty; // ERROR
+  out2 as number; // OK
+  out2 as empty; // ERROR
 }
 
 // Guards
@@ -104,10 +109,10 @@
   declare const x: {foo: {bar: number}};
 
   const out = match (x) {
-    {foo: {bar: _} as const a} => 0, // OK
     {foo: {bar: 1}} => 0, // OK
+    {foo: {bar: 2} as const a} => 0, // OK
+    {foo: {bar: 3 as const a}} => 0, // OK
     {foo: {bar: const a}} => 0, // OK
-    {foo: {bar: 1 as const a}} => 0, // OK
     _ => 0,
   };
 }
@@ -116,10 +121,16 @@
 {
   declare const x: [1, 2, 3];
 
-  const out = match (x) {
-    [...const xs] => xs as [1, 2, 3], // OK
+  const out1 = match (x) {
+    [1, 2, ...const xs] => xs as [3], // OK
+    _ => 0,
+  };
+  const out2 = match (x) {
     [1, ...const xs] => xs as [2, 3], // OK
-    [1, 2, 3, ...const xs] => xs as [], // OK
+    _ => 0,
+  };
+  const out3 = match (x) {
+    [...const xs] => xs as [1, 2, 3], // OK
     _ => 0,
   };
 }
@@ -128,17 +139,20 @@
 {
   declare const x: {foo: 1, bar: 2, baz: 3};
 
-  const out = match (x) {
-    {...const xs} => xs as {foo: 1, bar: 2, baz: 3}, // OK
+  const out1 = match (x) {
+    {foo: _, bar: _, ...const xs} => xs as {baz: 3}, // OK
+  };
+  const out2 = match (x) {
     {bar: _, ...const xs} => xs as {foo: 1, baz: 3}, // OK
-    {foo: _, bar: _, baz: _, ...const xs} => xs as {}, // OK
-    _ => 0,
+  };
+  const out3 = match (x) {
+    {...const xs} => xs as {foo: 1, bar: 2, baz: 3}, // OK
   };
 }
 
 // Identifier, member, literal
 {
-  declare const A: 1;
+  declare const A: 3;
   declare const O: {B: 2};
   declare const x: number;
 
@@ -164,7 +178,7 @@
 
 // Array pattern applied to array literal
 {
-  const x = [1, 'foo'];
+  const x = [1, 'foo'] as const;
 
   const out = match (x) {
     [_, const b] => b as string, // OK

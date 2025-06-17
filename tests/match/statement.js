@@ -72,9 +72,10 @@ function f2() {
   target as "foo"; // OK
 }
 {
+  declare const x: [number] | number;
   let target = null;
   match (x) {
-    const a => {
+    [const a] => {
       target = "foo";
     }
     const a => {

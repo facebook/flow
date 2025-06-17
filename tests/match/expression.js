@@ -99,9 +99,10 @@ function f2() {
   target as "foo"; // OK
 }
 {
+  declare const x: [number] | number;
   let target = null;
   const out = match (x) {
-    const a => target = "foo",
+    [const a] => target = "foo",
     const a => target = true,
   };
   a; // ERROR
@@ -136,21 +137,17 @@ function f2() {
   a as Array<number>; // OK
 }
 
+// Natural inference hint
 {
-  declare var n: number;
-
-  const x: 0|1 = match (n) {
-    0 => 1, // OK
-    1 => 2, // ERROR: 2 is not a subtype of 0|1
-    _ => 1, // OK
+  const out: 'a' | 'b' = match (x) {
+    1 => 'b', // OK
+    2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
   };
 }
-
 {
-  declare var dict: {[0|1]: number};
-  dict[match (n) {
-    0 => 1, // OK
-    1 => 2, // ERROR: 2 is not a subtype of 0|1
-    _ => 1,
+  declare const dict: {['a' | 'b']: number};
+  dict[match (x) {
+    1 => 'b', // OK
+    2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
   }];
 }
