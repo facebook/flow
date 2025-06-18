@@ -8,12 +8,6 @@
 type subscribe_mode =
   | All_changes
   | Defer_changes
-  | Drop_changes
-      (** See also Watchman docs on drop. This means the subscriber will not
-          get a list of files changed during a repo update. Practically, this
-          is not useful for the typechecker process which needs to actually
-          know which files were changed. This is useful for the monitor to
-          aggressively kill the server. *)
 
 type timeout = float option
 
