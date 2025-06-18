@@ -373,7 +373,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! match_case ~on_case_body case =
         let open Flow_ast.Match.Case in
-        let (loc, { pattern; body = _; guard = _; comments = _ }) = case in
+        let (loc, { pattern; body = _; guard = _; comments = _; invalid_syntax = _ }) = case in
         let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
         this#with_bindings ~lexical:true loc bindings (fun () -> super#match_case ~on_case_body case)

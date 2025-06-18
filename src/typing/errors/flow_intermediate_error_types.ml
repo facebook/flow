@@ -96,6 +96,16 @@ type unsupported_syntax =
   | DeclareGlobal
   | NonnullAssertion
 
+type 'loc match_invalid_case_syntax =
+  | InvalidMatchCaseMultiple of {
+      invalid_prefix_case_locs: 'loc list;
+      invalid_infix_colon_locs: 'loc list;
+      invalid_suffix_semicolon_locs: 'loc list;
+    }
+  | InvalidMatchCasePrefixCase
+  | InvalidMatchCaseInfixColon
+  | InvalidMatchCaseSuffixSemicolon
+
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
@@ -953,6 +963,7 @@ type 'loc message =
   | MessageMatchInvalidPatternReference of { binding_reason: 'loc virtual_reason }
   | MessageMatchInvalidObjectShorthand of { name: string }
   | MessageMatchStatementInvalidBody
+  | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
   | MessageConstantCondition of { is_truthy: bool }
 
 type 'loc intermediate_error = {

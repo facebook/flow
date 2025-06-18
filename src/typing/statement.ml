@@ -1245,9 +1245,12 @@ module Make
         let arg = expression cx ~as_const:true arg in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
-        let cases_rev =
-          Base.List.rev_map cases ~f:(fun case ->
-              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) = case in
+        let (cases_rev, invalid_syntax_list) =
+          Base.List.fold cases ~init:([], []) ~f:(fun (cases_acc, invalid_syntax_acc) case ->
+              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+                  =
+                case
+              in
               let pattern =
                 Match_pattern.pattern
                   cx
@@ -1271,9 +1274,13 @@ module Make
               | (_, Block _) -> ()
               | (loc, _) -> Flow.add_output cx (Error_message.EMatchStatementInvalidBody { loc }));
               let body = statement cx body in
-              (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments })
+              let case =
+                (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+              in
+              (case :: cases_acc, invalid_syntax :: invalid_syntax_acc)
           )
         in
+        error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
         let match_keyword_loc =
           ( match_keyword_loc,
             Type_env.var_ref
@@ -2988,9 +2995,15 @@ module Make
         let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
-        let (cases_rev, ts_rev, all_throws) =
-          Base.List.fold cases ~init:([], [], true) ~f:(fun (cases, ts, all_throws) case ->
-              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) = case in
+        let (cases_rev, ts_rev, all_throws, invalid_syntax_list) =
+          Base.List.fold
+            cases
+            ~init:([], [], true, [])
+            ~f:(fun (cases, ts, all_throws, invalid_syntax_acc) case ->
+              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+                  =
+                case
+              in
               let pattern =
                 Match_pattern.pattern
                   cx
@@ -3021,7 +3034,9 @@ module Make
                     expression cx ~has_hint ~encl_ctx ?decl body
                 )
               in
-              let case_ast = (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments }) in
+              let case_ast =
+                (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+              in
               let throws = guard_throws || body_throws in
               let all_throws = all_throws && throws in
               let ts =
@@ -3030,9 +3045,10 @@ module Make
                 else
                   t :: ts
               in
-              (case_ast :: cases, ts, all_throws)
+              (case_ast :: cases, ts, all_throws, invalid_syntax :: invalid_syntax_acc)
           )
         in
+        error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
         let match_keyword_loc =
           ( match_keyword_loc,
             Type_env.var_ref
@@ -8860,6 +8876,74 @@ module Make
         (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
+
+  and error_on_match_case_invalid_syntax
+      cx ~match_keyword_loc (invalid_syntax_list : ALoc.t Flow_ast.Match.Case.InvalidSyntax.t list)
+      : unit =
+    let error_locs =
+      Base.List.fold
+        invalid_syntax_list
+        ~init:([], [], [])
+        ~f:(fun (prefix_acc, infix_acc, suffix_acc) invalid_syntax ->
+          let {
+            Flow_ast.Match.Case.InvalidSyntax.invalid_prefix_case;
+            invalid_infix_colon;
+            invalid_suffix_semicolon;
+          } =
+            invalid_syntax
+          in
+          let prefix_acc =
+            Base.Option.value_map invalid_prefix_case ~default:prefix_acc ~f:(fun x ->
+                x :: prefix_acc
+            )
+          in
+          let infix_acc =
+            Base.Option.value_map invalid_infix_colon ~default:infix_acc ~f:(fun x -> x :: infix_acc)
+          in
+          let suffix_acc =
+            Base.Option.value_map invalid_suffix_semicolon ~default:suffix_acc ~f:(fun x ->
+                x :: suffix_acc
+            )
+          in
+          (prefix_acc, infix_acc, suffix_acc)
+      )
+    in
+    (* If we only have one error in this `match`, error there, otherwise coalesce into a single error. *)
+    match error_locs with
+    | ([], [], []) -> ()
+    | ([loc], [], []) ->
+      Flow.add_output
+        cx
+        (Error_message.EMatchInvalidCaseSyntax
+           { loc; kind = Flow_intermediate_error_types.InvalidMatchCasePrefixCase }
+        )
+    | ([], [loc], []) ->
+      Flow.add_output
+        cx
+        (Error_message.EMatchInvalidCaseSyntax
+           { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseInfixColon }
+        )
+    | ([], [], [loc]) ->
+      Flow.add_output
+        cx
+        (Error_message.EMatchInvalidCaseSyntax
+           { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseSuffixSemicolon }
+        )
+    | (invalid_prefix_case_locs, invalid_infix_colon_locs, invalid_suffix_semicolon_locs) ->
+      Flow.add_output
+        cx
+        (Error_message.EMatchInvalidCaseSyntax
+           {
+             loc = match_keyword_loc;
+             kind =
+               Flow_intermediate_error_types.InvalidMatchCaseMultiple
+                 {
+                   invalid_prefix_case_locs;
+                   invalid_infix_colon_locs;
+                   invalid_suffix_semicolon_locs;
+                 };
+           }
+        )
 
   let expression ?encl_ctx ?decl ?as_const cx (loc, e) =
     expression ?encl_ctx ?decl ?as_const ~frozen:NotFrozen cx (loc, e)

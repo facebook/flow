@@ -555,6 +555,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T, 'BMT) Ast.Match.Case.t' ->
       ('N, 'U, 'BNU) Ast.Match.Case.t'
 
+    method match_case_invalid_syntax :
+      'M Ast.Match.Case.InvalidSyntax.t -> 'N Ast.Match.Case.InvalidSyntax.t
+
     method match_pattern : ('M, 'T) Ast.MatchPattern.t -> ('N, 'U) Ast.MatchPattern.t
 
     method match_unary_pattern :

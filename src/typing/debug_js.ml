@@ -1976,6 +1976,7 @@ let dump_error_message =
       spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
     | EMatchStatementInvalidBody { loc } ->
       spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
+    | EMatchInvalidCaseSyntax { loc; _ } -> spf "EMatchInvalidCaseSyntax (%s)" (string_of_aloc loc)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EIllegalAssertOperator { obj; op; specialized } ->
       spf

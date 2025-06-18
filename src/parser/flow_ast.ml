@@ -1938,6 +1938,15 @@ end =
 
 and Match : sig
   module Case : sig
+    module InvalidSyntax : sig
+      type 'M t = {
+        invalid_prefix_case: 'M option;
+        invalid_infix_colon: 'M option;
+        invalid_suffix_semicolon: 'M option;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T, 'B) t = 'M * ('M, 'T, 'B) t'
 
     and ('M, 'T, 'B) t' = {
@@ -1945,6 +1954,7 @@ and Match : sig
       body: 'B;
       guard: ('M, 'T) Expression.t option;
       comments: ('M, unit) Syntax.t option;
+      invalid_syntax: 'M InvalidSyntax.t;
     }
     [@@deriving show]
   end

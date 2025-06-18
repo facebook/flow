@@ -2584,7 +2584,7 @@ class ['loc] mapper =
           ('loc, 'loc, 'B) Ast.Match.Case.t =
       fun ~on_case_body case ->
         let open Ast.Match.Case in
-        let (loc, { pattern; body; guard; comments }) = case in
+        let (loc, { pattern; body; guard; comments; invalid_syntax }) = case in
         let pattern' = this#match_pattern pattern in
         let body' = on_case_body body in
         let guard' = map_opt this#expression guard in
@@ -2592,7 +2592,15 @@ class ['loc] mapper =
         if pattern == pattern' && body == body' && guard == guard' && comments == comments' then
           case
         else
-          (loc, { pattern = pattern'; body = body'; guard = guard'; comments = comments' })
+          ( loc,
+            {
+              pattern = pattern';
+              body = body';
+              guard = guard';
+              comments = comments';
+              invalid_syntax;
+            }
+          )
 
     method match_expression loc (x : ('loc, 'loc) Ast.Expression.match_expression) =
       this#match_ loc ~on_case_body:this#expression x
