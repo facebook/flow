@@ -753,6 +753,7 @@ and internal_error =
   | CheckTimeout of float
   | CheckJobException of Exception.t
   | UnexpectedAnnotationInference of string
+  | MissingSwitchExhaustiveCheck
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
   | ReadOfUnreachedTvar of Env_api.def_loc_type
@@ -2206,6 +2207,7 @@ let string_of_internal_error = function
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
+  | MissingSwitchExhaustiveCheck -> "missing exhaustive check entry"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
   | EnvInvariant (Env_api.NameDefOrderingFailure { all; roots; missing_roots }) ->

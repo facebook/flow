@@ -468,7 +468,14 @@ struct
             Flow.flow cx (void_t, UseT (use_op, return_t));
             None
           | Some _ ->
-            let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
+            let (exhaustive, undeclared) =
+              try Context.exhaustive_check cx body_loc with
+              | Not_found ->
+                Flow_js_utils.add_output
+                  cx
+                  Error_message.(EInternal (loc, MissingSwitchExhaustiveCheck));
+                ([], false)
+            in
             Some
               ( ref
                   ( if undeclared then
