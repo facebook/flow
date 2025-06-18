@@ -4219,30 +4219,44 @@ let to_printable_error :
           in
           (text "missing patterns:\n" :: examples) @ suffix
       in
-      [code "match"; text " is not exhaustively checked. To fix, add the "] @ examples
+      [code "match"; text " hasn't checked all possible cases of the input type. To fix, add the "]
+      @ examples
     | MessageMatchUnnecessaryPattern { reason; already_seen } ->
       let msg =
         match already_seen with
         | Some already_seen ->
-          [text "This pattern was already covered by a previous "; ref already_seen; text ". "]
+          [
+            text "The values it matches were already covered by a previous ";
+            ref already_seen;
+            text ". ";
+          ]
         | None ->
           [
             text
-              "Either this pattern is already covered by previous patterns, or it is not part of the input type. ";
+              "The values it matches are either already covered by previous patterns, or are not part of the input type. ";
           ]
       in
-      [text "Unnecessary "; ref reason; text ". "]
+      [text "This "; ref reason; text " is unused. "]
       @ msg
-      @ [text "Either remove this pattern or restructure previous patterns."]
+      @ [text "To fix, either remove this pattern or restructure previous patterns."]
     | MessageMatchNonExhaustiveObjectPattern { rest; missing_props } ->
-      let prefix = [text "Non-exhaustive match object pattern. "] in
+      let prefix =
+        [text "This object pattern hasn't considered all possible properties of the input. "]
+      in
       let has_missing_props = not @@ Base.List.is_empty missing_props in
+      let (properties_text, those_properties_text) =
+        if Base.List.length missing_props > 1 then
+          ("properties", "those properties")
+        else
+          ("property", "that property")
+      in
       let missing_props =
         if has_missing_props then
-          text "The following properties have not been matched: "
+          text (spf "The %s " properties_text)
           :: (Base.List.map missing_props ~f:(fun prop -> [code prop])
              |> Flow_errors_utils.Friendly.conjunction_concat ~limit:5
              )
+          @ [text " are missing from the pattern"]
         else
           []
       in
@@ -4250,15 +4264,24 @@ let to_printable_error :
         let msg =
           match rest with
           | Some reason ->
-            let msg = [text "could be additional properties due to "; ref reason; text ". Add "] in
+            let msg =
+              [text "could be additional properties due to "; ref reason; text ". To fix, add "]
+            in
             if has_missing_props then
               missing_props @ (text ", and there " :: msg)
             else
               text "There " :: msg
           | None ->
-            missing_props @ [text ". Either add those properties to the object pattern, or add "]
+            missing_props
+            @ [
+                text
+                  (spf
+                     ". To fix, either add %s to the object pattern, or add "
+                     those_properties_text
+                  );
+              ]
         in
-        msg @ [code "..."; text " to the end of the object pattern."]
+        msg @ [code "..."; text " to the end of the pattern to match all other properties."]
       in
       prefix @ suffix
     | MessageMatchInvalidGuardedWildcard ->
@@ -4307,13 +4330,15 @@ let to_printable_error :
       [text "Invalid "; code "as"; text " pattern. Direct use on a binding pattern is not allowed."]
     | MessageMatchInvalidPatternReference { binding_reason } ->
       [
-        text "Cannot use variable ";
+        text "Can't use variable ";
         ref binding_reason;
         text " within the same match pattern it is defined.";
       ]
     | MessageMatchInvalidObjectShorthand { name } ->
       [
-        text "Invalid object pattern property. Use ";
+        code "match";
+        text " object patterns don't allow this property shorthand syntax. ";
+        text "To fix, be explicit and either use ";
         code (spf "{const %s}" name);
         text " if you want to create a new variable with the value of property ";
         code name;
@@ -4321,14 +4346,15 @@ let to_printable_error :
         code (spf "{%s: %s}" name name);
         text " if you want to match property ";
         code name;
-        text " against the value of the variable of the same name.";
+        text " against the value of the variable named ";
+        code name;
+        text ".";
       ]
     | MessageMatchStatementInvalidBody ->
       [
-        text "Invalid ";
         code "match";
-        text " statement case body. A block is required for each case body. ";
-        text "Wrap this statement with ";
+        text " statements use blocks for each case body. ";
+        text "To fix, wrap this statement with ";
         code "{";
         text " and ";
         code "}";

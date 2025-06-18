@@ -222,7 +222,7 @@ end = struct
     | Some already_seen ->
       Flow_js.add_output
         cx
-        (Error_message.EMatchUnnecessaryPattern { reason; already_seen = Some already_seen });
+        (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
       false
     | None -> true
 
@@ -234,7 +234,7 @@ end = struct
       | Some (already_seen, _) ->
         Flow_js.add_output
           cx
-          (Error_message.EMatchUnnecessaryPattern { reason; already_seen = Some already_seen });
+          (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
         pattern_union
       | None ->
         if guarded then
@@ -1517,7 +1517,7 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
     ALocSet.mem loc used_pattern_locs
   in
   let error reason =
-    Flow_js.add_output cx (Error_message.EMatchUnnecessaryPattern { reason; already_seen = None })
+    Flow_js.add_output cx (Error_message.EMatchUnusedPattern { reason; already_seen = None })
   in
   LeafSet.iter (fun (reason, _) -> if not @@ check reason then error reason) leafs;
   Base.List.iter guarded_leafs ~f:(fun (reason, _) -> if not @@ check reason then error reason);

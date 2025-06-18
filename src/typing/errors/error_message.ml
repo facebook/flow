@@ -655,7 +655,7 @@ and 'loc t' =
       loc: 'loc;
       examples: (string * 'loc virtual_reason list) list;
     }
-  | EMatchUnnecessaryPattern of {
+  | EMatchUnusedPattern of {
       reason: 'loc virtual_reason;
       already_seen: 'loc virtual_reason option;
     }
@@ -1558,8 +1558,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
               (pattern, Base.List.map ~f:map_reason reasons)
           );
       }
-  | EMatchUnnecessaryPattern { reason; already_seen } ->
-    EMatchUnnecessaryPattern
+  | EMatchUnusedPattern { reason; already_seen } ->
+    EMatchUnusedPattern
       { reason = map_reason reason; already_seen = Base.Option.map ~f:map_reason already_seen }
   | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props } ->
     EMatchNonExhaustiveObjectPattern
@@ -1825,7 +1825,7 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
   | EMatchNotExhaustive _
-  | EMatchUnnecessaryPattern _
+  | EMatchUnusedPattern _
   | EMatchNonExhaustiveObjectPattern _
   | EMatchInvalidGuardedWildcard _
   | EMatchInvalidIdentOrMemberPattern _
@@ -1917,7 +1917,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
   | EIllegalAssertOperator { op = reason; _ }
-  | EMatchUnnecessaryPattern { reason; _ } ->
+  | EMatchUnusedPattern { reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3106,7 +3106,7 @@ let friendly_message_of_msg = function
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
   | EMatchNotExhaustive { loc = _; examples } -> Normal (MessageMatchNotExhaustive { examples })
-  | EMatchUnnecessaryPattern { reason; already_seen } ->
+  | EMatchUnusedPattern { reason; already_seen } ->
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
     Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props })
@@ -3505,7 +3505,7 @@ let error_code_of_message err : error_code option =
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
   | EMatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
-  | EMatchUnnecessaryPattern _ -> Some MatchUnnecessaryPattern
+  | EMatchUnusedPattern _ -> Some MatchUnusedPattern
   | EMatchInvalidGuardedWildcard _ -> Some MatchNotExhaustive
   | EMatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern
   | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern
