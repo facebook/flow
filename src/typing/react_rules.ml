@@ -439,7 +439,15 @@ let effect_visitor cx ~is_hook rrid tast =
       match ALocMap.find_opt loc env_values with
       | Some { Env_api.write_locs; _ } ->
         Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type:false providers) write_locs
-        |> Base.List.map ~f:(fun x -> Env_api.EnvMap.find x name_defs)
+        |> Base.List.filter_map ~f:(fun x ->
+               match Env_api.EnvMap.find_opt x name_defs with
+               | Some d -> Some d
+               | None ->
+                 Flow_js_utils.add_output
+                   cx
+                   Error_message.(EInternal (snd x, EnvInvariant Env_api.NameDefGraphMismatch));
+                 None
+           )
         |> Base.List.fold ~init:[] ~f:(fun acc (def, _, _, _) ->
                let open Name_def in
                match def with

@@ -74,7 +74,14 @@ struct
     let statements_ast = Statement.statement_list cx statements in
 
     let exhaust =
-      let (exhaustive, undeclared) = Context.exhaustive_check cx body_loc in
+      let (exhaustive, undeclared) =
+        try Context.exhaustive_check cx body_loc with
+        | Not_found ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(EInternal (body_loc, MissingSwitchExhaustiveCheck));
+          ([], false)
+      in
       if undeclared then begin
         Flow_js_utils.add_output cx Error_message.(EComponentMissingReturn reason_cmp);
         None

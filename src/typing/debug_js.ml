@@ -1089,6 +1089,7 @@ let dump_error_message =
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
+    | MissingSwitchExhaustiveCheck -> "MissingSwitchExhaustiveCheck"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
     | EnvInvariant _ -> "EnvInvariant"
