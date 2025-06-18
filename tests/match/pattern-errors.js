@@ -182,3 +182,12 @@
     _ => 0,
   };
 }
+
+// `default` as wildcard
+{
+  declare const x: mixed;
+
+  match (x) {
+    default => {} // ERROR
+  }
+}

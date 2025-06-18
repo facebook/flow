@@ -714,7 +714,8 @@ with type t = Impl.t = struct
       let open MatchPattern in
       let literal x = node "MatchLiteralPattern" loc [("literal", x)] in
       match pattern with
-      | WildcardPattern comments -> node ?comments "MatchWildcardPattern" loc []
+      | WildcardPattern { WildcardPattern.comments; _ } ->
+        node ?comments "MatchWildcardPattern" loc []
       | StringPattern lit -> literal (string_literal (loc, lit))
       | BooleanPattern lit -> literal (boolean_literal (loc, lit))
       | NullPattern comments -> literal (null_literal (loc, comments))

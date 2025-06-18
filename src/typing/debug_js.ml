@@ -1977,6 +1977,7 @@ let dump_error_message =
     | EMatchStatementInvalidBody { loc } ->
       spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
     | EMatchInvalidCaseSyntax { loc; _ } -> spf "EMatchInvalidCaseSyntax (%s)" (string_of_aloc loc)
+    | EMatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EIllegalAssertOperator { obj; op; specialized } ->
       spf

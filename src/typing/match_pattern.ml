@@ -189,7 +189,10 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       let t = on_identifier ~encl_ctx:OtherTestContext cx x loc in
       IdentifierPattern ((loc, t), x)
     | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~in_or_pattern ~loc acc x)
-    | WildcardPattern x -> WildcardPattern x
+    | WildcardPattern ({ WildcardPattern.invalid_syntax_default_keyword; _ } as x) ->
+      if invalid_syntax_default_keyword then
+        Flow_js.add_output cx (Error_message.EMatchInvalidWildcardSyntax loc);
+      WildcardPattern x
     | ArrayPattern { ArrayPattern.elements; rest; comments } ->
       let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
       let elements =
