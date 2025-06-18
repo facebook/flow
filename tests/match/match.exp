@@ -990,6 +990,14 @@ Unsupported object property literal in match pattern. String literals and int-li
              ^^
 
 
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:191:5
+
+`match` uses `_` for wildcard patterns which match everything. To fix, replace `default` with `_`. [unsupported-syntax]
+
+   191|     default => {} // ERROR
+            ^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- patterns.js:9:3
 
 Cannot cast `out` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -1190,4 +1198,4 @@ Invalid `match` statement case body. A block is required for each case body. Wra
 
 
 
-Found 94 errors
+Found 95 errors

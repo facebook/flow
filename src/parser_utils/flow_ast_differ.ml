@@ -3658,8 +3658,19 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.MatchPattern in
     let result =
       match (p1, p2) with
-      | ((loc, WildcardPattern p1), (_, WildcardPattern p2)) ->
-        diff_if_changed_ret_opt (syntax_opt loc) p1 p2
+      | ( ( loc,
+            WildcardPattern
+              { WildcardPattern.invalid_syntax_default_keyword = invalid1; comments = comments1 }
+          ),
+          ( _,
+            WildcardPattern
+              { WildcardPattern.invalid_syntax_default_keyword = invalid2; comments = comments2 }
+          )
+        ) ->
+        if invalid1 <> invalid2 then
+          None
+        else
+          diff_if_changed_ret_opt (syntax_opt loc) comments1 comments2
       | ((loc1, NumberPattern p1), (loc2, NumberPattern p2)) ->
         diff_if_changed_ret_opt (number_literal loc1 loc2) p1 p2
       | ((loc1, BigIntPattern p1), (loc2, BigIntPattern p2)) ->

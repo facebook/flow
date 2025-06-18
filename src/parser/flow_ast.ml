@@ -2099,10 +2099,18 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module WildcardPattern : sig
+    type 'M t = {
+      comments: ('M, unit) Syntax.t option;
+      invalid_syntax_default_keyword: bool;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'M * ('M, 'T) t'
 
   and ('M, 'T) t' =
-    | WildcardPattern of ('M, unit) Syntax.t option
+    | WildcardPattern of 'M WildcardPattern.t
     | NumberPattern of 'M NumberLiteral.t
     | BigIntPattern of 'M BigIntLiteral.t
     | StringPattern of 'M StringLiteral.t

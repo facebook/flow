@@ -2147,7 +2147,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, patt) = pattern in
       ( this#on_loc_annot annot,
         match patt with
-        | WildcardPattern x -> WildcardPattern (this#syntax_opt x)
+        | WildcardPattern x -> WildcardPattern (this#match_wildcard_pattern x)
         | StringPattern x -> StringPattern (this#string_literal x)
         | BooleanPattern x -> BooleanPattern (this#boolean_literal x)
         | NullPattern x -> NullPattern (this#syntax_opt x)
@@ -2296,6 +2296,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match target with
       | Binding (loc, binding) -> Binding (this#on_loc_annot loc, this#match_binding_pattern binding)
       | Identifier id -> Identifier (this#pattern_identifier ~kind:Ast.Variable.Const id)
+
+    method match_wildcard_pattern (wildcard_pattern : 'M Ast.MatchPattern.WildcardPattern.t)
+        : 'N Ast.MatchPattern.WildcardPattern.t =
+      let open Ast.MatchPattern.WildcardPattern in
+      let { comments; invalid_syntax_default_keyword } = wildcard_pattern in
+      let comments' = this#syntax_opt comments in
+      { comments = comments'; invalid_syntax_default_keyword }
 
     method member (_annot : 'T) (expr : ('M, 'T) Ast.Expression.Member.t)
         : ('N, 'U) Ast.Expression.Member.t =

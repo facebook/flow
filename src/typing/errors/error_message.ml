@@ -695,6 +695,7 @@ and 'loc t' =
       loc: 'loc;
       kind: 'loc match_invalid_case_syntax;
     }
+  | EMatchInvalidWildcardSyntax of 'loc
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1594,6 +1595,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | InvalidMatchCaseSuffixSemicolon -> InvalidMatchCaseSuffixSemicolon
     in
     EMatchInvalidCaseSyntax { loc = f loc; kind }
+  | EMatchInvalidWildcardSyntax loc -> EMatchInvalidWildcardSyntax (f loc)
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -1838,6 +1840,7 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidObjectShorthand _
   | EMatchStatementInvalidBody _
   | EMatchInvalidCaseSyntax _
+  | EMatchInvalidWildcardSyntax _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2068,6 +2071,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
   | EMatchStatementInvalidBody { loc } -> Some loc
   | EMatchInvalidCaseSyntax { loc; _ } -> Some loc
+  | EMatchInvalidWildcardSyntax loc -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
   | EMatchInvalidGuardedWildcard loc -> Some loc
   | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
@@ -3124,6 +3128,7 @@ let friendly_message_of_msg = function
     Normal (MessageMatchInvalidObjectShorthand { name })
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
+  | EMatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -3514,5 +3519,6 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
   | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
   | EMatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
+  | EMatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator

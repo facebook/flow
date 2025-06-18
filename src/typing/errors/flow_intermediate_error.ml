@@ -4388,6 +4388,18 @@ let to_printable_error :
       | InvalidMatchCasePrefixCase -> msg_invalid_prefix_case
       | InvalidMatchCaseInfixColon -> msg_invalid_infix_colon
       | InvalidMatchCaseSuffixSemicolon -> msg_invalid_suffix_semicolon)
+    | MessageMatchInvalidWildcardSyntax ->
+      [
+        code "match";
+        text " uses ";
+        code "_";
+        text " for wildcard patterns which match everything. ";
+        text "To fix, replace ";
+        code "default";
+        text " with ";
+        code "_";
+        text ".";
+      ]
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

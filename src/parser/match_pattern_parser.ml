@@ -76,7 +76,14 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
       Eat.token env;
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      (loc, WildcardPattern comments)
+      (loc, WildcardPattern { WildcardPattern.comments; invalid_syntax_default_keyword = false })
+    | T_DEFAULT ->
+      let leading = Peek.comments env in
+      let loc = Peek.loc env in
+      Eat.token env;
+      let trailing = Eat.trailing_comments env in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+      (loc, WildcardPattern { WildcardPattern.comments; invalid_syntax_default_keyword = true })
     | T_LPAREN ->
       let leading = Peek.comments env in
       Expect.token env T_LPAREN;
@@ -206,7 +213,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
       | T_ERROR _ -> Eat.token env
       | _ -> ());
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing:[] () in
-      (loc, WildcardPattern comments)
+      (loc, WildcardPattern { WildcardPattern.comments; invalid_syntax_default_keyword = false })
 
   and unary_pattern env ~operator =
     with_loc
@@ -409,7 +416,8 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
     in
     ( loc,
       match pattern with
-      | WildcardPattern comments -> WildcardPattern (merge_comments comments)
+      | WildcardPattern ({ WildcardPattern.comments; _ } as p) ->
+        WildcardPattern { p with WildcardPattern.comments = merge_comments comments }
       | NumberPattern ({ Ast.NumberLiteral.comments; _ } as p) ->
         NumberPattern { p with Ast.NumberLiteral.comments = merge_comments comments }
       | BigIntPattern ({ Ast.BigIntLiteral.comments; _ } as p) ->

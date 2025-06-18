@@ -2611,7 +2611,8 @@ class ['loc] mapper =
     method match_pattern (pattern : ('loc, 'loc) Ast.MatchPattern.t) =
       let open Ast.MatchPattern in
       match pattern with
-      | (loc, WildcardPattern x) -> id this#syntax_opt x pattern (fun x -> (loc, WildcardPattern x))
+      | (loc, WildcardPattern x) ->
+        id this#match_wildcard_pattern x pattern (fun x -> (loc, WildcardPattern x))
       | (loc, StringPattern x) ->
         id_loc this#string_literal loc x pattern (fun x -> (loc, StringPattern x))
       | (loc, BooleanPattern x) ->
@@ -2800,6 +2801,15 @@ class ['loc] mapper =
         id_loc this#match_binding_pattern loc binding target (fun x -> Binding (loc, x))
       | Identifier ident ->
         id (this#pattern_identifier ~kind:Ast.Variable.Const) ident target (fun x -> Identifier x)
+
+    method match_wildcard_pattern (wildcard_pattern : 'loc Ast.MatchPattern.WildcardPattern.t) =
+      let open Ast.MatchPattern.WildcardPattern in
+      let { comments; invalid_syntax_default_keyword } = wildcard_pattern in
+      let comments' = this#syntax_opt comments in
+      if comments == comments' then
+        wildcard_pattern
+      else
+        { comments = comments'; invalid_syntax_default_keyword }
 
     method member _loc (expr : ('loc, 'loc) Ast.Expression.Member.t) =
       let open Ast.Expression.Member in

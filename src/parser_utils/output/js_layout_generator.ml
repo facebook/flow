@@ -3395,7 +3395,8 @@ and match_case :
 and match_pattern ~opts (loc, pattern) =
   let open Ast.MatchPattern in
   match pattern with
-  | WildcardPattern comments -> layout_node_with_comments_opt loc comments (Atom "_")
+  | WildcardPattern { WildcardPattern.comments; _ } ->
+    layout_node_with_comments_opt loc comments (Atom "_")
   | NumberPattern lit -> number_literal ~opts loc lit
   | BigIntPattern lit -> bigint_literal loc lit
   | StringPattern lit -> string_literal ~opts loc lit

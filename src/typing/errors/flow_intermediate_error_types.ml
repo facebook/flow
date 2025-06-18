@@ -964,6 +964,7 @@ type 'loc message =
   | MessageMatchInvalidObjectShorthand of { name: string }
   | MessageMatchStatementInvalidBody
   | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
+  | MessageMatchInvalidWildcardSyntax
   | MessageConstantCondition of { is_truthy: bool }
 
 type 'loc intermediate_error = {
