@@ -99,6 +99,13 @@ module Types = struct
     Ast.Type.AvailableRenders
       (loc, { Ast.Type.Renders.operator_loc = Loc.none; comments = None; variant; argument })
 
+  let component_type ?(loc = Loc.none) ?tparams ?(renders = Ast.Type.MissingRenders Loc.none) params
+      =
+    ( loc,
+      Ast.Type.Component
+        { Ast.Type.Component.tparams; params = (loc, params); renders; comments = None }
+    )
+
   let return_type_guard_annotation ?(loc = Loc.none) ?comments x t =
     Ast.Type.Function.TypeGuard
       (loc, { Ast.Type.TypeGuard.kind = Ast.Type.TypeGuard.Default; guard = (x, Some t); comments })

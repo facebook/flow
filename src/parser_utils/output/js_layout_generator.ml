@@ -4623,22 +4623,20 @@ and type_component
       comments;
     } =
   layout_node_with_comments_opt loc comments
-  @@ with_semicolon
-       (fuse
-          [
-            Atom "component";
-            space;
-            option (type_parameter ~opts ~kind:Flow_ast_mapper.ComponentTypeTP) tparams;
-            group
-              [
-                layout_node_with_comments_opt
-                  params_loc
-                  params_comments
-                  (component_type_params ~opts params);
-                component_renders ~opts renders;
-              ];
-          ]
-       )
+  @@ fuse
+       [
+         Atom "component";
+         space;
+         option (type_parameter ~opts ~kind:Flow_ast_mapper.ComponentTypeTP) tparams;
+         group
+           [
+             layout_node_with_comments_opt
+               params_loc
+               params_comments
+               (component_type_params ~opts params);
+             component_renders ~opts renders;
+           ];
+       ]
 
 and component_type_params ~opts (_, { Ast.Type.Component.Params.params; rest; comments }) =
   let params =

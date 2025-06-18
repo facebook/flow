@@ -38,6 +38,15 @@ let tests =
       assert_output ~ctxt "component Comp(){}" layout;
       assert_output ~ctxt ~pretty:true "component Comp() {}" layout
     );
+    ( "simple_component_type" >:: fun ctxt ->
+      let ast =
+        T.component_type
+          { Flow_ast.Type.Component.Params.params = []; rest = None; comments = None }
+      in
+      let layout = Js_layout_generator.type_ ~opts ast in
+      assert_output ~ctxt "component ()" layout;
+      assert_output ~ctxt ~pretty:true "component ()" layout
+    );
     ( "component_with_body" >:: fun ctxt ->
       let body =
         (Loc.none, { Flow_ast.Statement.Block.body = [variable_declaration]; comments = None })
