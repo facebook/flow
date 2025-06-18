@@ -1,0 +1,58 @@
+>>> test.js (#changes: 3)
+// @flow
+
+import type { Expected } from "./exports";import {assertExpected} from './exports';
+
+export type ExpectedLocal1 = {
+    foo?: number,
+    bar: 'foo' | 'bar',
+}
+
+export type ExpectedLocal2 = {
+    foo?: boolean,
+    bar: 'bar' | 'baz',
+}
+
+declare export function assertExpected1(expected: ExpectedLocal1): void;
+declare export function assertExpected2(expected: ExpectedLocal2): void;
+declare export function assertExpected3(expected: {
+    foo?: number,
+    bar: 'foo' | 'bar',
+}): void;
+
+const obj1: Expected = {bar: 'foo' as const}; // annot and import
+const obj2 = {bar: 'bar' as const}; // no annot, since expected type is ExpectedLocal1 & ExpectedLocal2
+const obj3: ExpectedLocal1 = {bar: 'foo' as const}; // annot
+const obj4 = {bar: 'foo' as const}; // no annot. Too big
+
+assertExpected(obj1);
+assertExpected1(obj2);
+assertExpected2(obj2);
+assertExpected1(obj3);
+assertExpected3(obj4);
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              2
+  Total size of annotations:                2
+  Number of type errors:                    5
+  Number of annotations added:              2
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         2
+  Import Error:
+    Loc source none:                        0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

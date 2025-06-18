@@ -158,7 +158,13 @@ val checked_find_loc_env_write_opt : Context.t -> Env_api.def_loc_type -> ALoc.t
 
 val make_env_entries_under_resolution : Context.t -> Env_api.EnvSet.t -> unit
 
-val resolve_env_entry : Context.t -> Type.t -> Env_api.def_loc_type -> ALoc.t -> unit
+val resolve_env_entry :
+  Context.t ->
+  Type.t ->
+  kind:Env_api.def_loc_type ->
+  add_object_literal_declaration_tracking:bool ->
+  ALoc.t ->
+  unit
 
 val provider_type_for_def_loc :
   ?intersect:bool -> Context.t -> Loc_env.t -> Env_api.Provider_api.L.t -> Type.t

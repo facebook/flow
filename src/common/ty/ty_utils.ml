@@ -252,6 +252,22 @@ let simplify_decl ~merge_kinds ?(sort = false) = Simplify.run_decl ~merge_kinds 
 
 let simplify_elt ~merge_kinds ?(sort = false) = Simplify.run_elt ~merge_kinds ~sort
 
+let rec unmaybe_ty = function
+  | Ty.Union (a, t1, t2, ts) ->
+    (match
+       t1 :: t2 :: ts
+       |> Base.List.concat_map ~f:(function
+              | Ty.Null
+              | Ty.Void ->
+                []
+              | ty -> [unmaybe_ty ty]
+              )
+     with
+    | [] -> Ty.Bot Ty.EmptyType
+    | [t] -> t
+    | t1 :: t2 :: ts -> Ty.Union (a, t1, t2, ts))
+  | ty -> ty
+
 let elt_equal elt1 elt2 = (new Ty.comparator_ty)#compare_elt () elt1 elt2 = 0
 
 let typify_elt = function

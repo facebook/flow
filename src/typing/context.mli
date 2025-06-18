@@ -320,6 +320,8 @@ val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations 
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
+val object_literal_declaration_upper_bounds : t -> (ALoc.t * Type.t list) list
+
 val inferred_component_return : t -> Type.t Nel.t ALocFuzzyMap.t
 
 val verbose : t -> Verbose.t option
@@ -406,6 +408,12 @@ val add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validati
   t -> ALoc.t -> string -> Flow_projects.t list -> unit
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
+
+val add_object_literal_declaration_tracking : t -> int -> ALoc.t -> unit
+
+val report_object_literal_declaration_reposition : t -> int -> int -> unit
+
+val add_object_literal_declaration_upper_bound : t -> int -> Type.t -> unit
 
 val add_inferred_component_return : t -> ALoc.t -> Type.t -> unit
 

@@ -157,6 +157,43 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_object_literal_declaration_command = struct
+  let doc = "Annotates object literal declaration to fix natural inference errors."
+
+  let spec =
+    {
+      CommandSpec.name = "annotate-object-literal-declaration";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-object-literal-declaration [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
+    }
+
+  let main codemod_flags () =
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Annotate_object_declarations.Acc
+
+      type accumulator = Acc.t
+
+      let reporter = string_reporter (module Acc)
+
+      let check_options o =
+        { o with Options.opt_natural_inference_object_literal_partial_fix = true }
+
+      let expand_roots ~env:_ files = files
+
+      let visit =
+        let mapper = Annotate_object_declarations.mapper in
+        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module RemoveReactImportCommand = struct
   let doc = "Remove unnecessary imports of React under react.runtime=automatic."
 
@@ -230,6 +267,9 @@ let command =
       ~doc:"Runs large-scale codebase refactors"
       [
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
+        ( Annotate_object_literal_declaration_command.spec.CommandSpec.name,
+          Annotate_object_literal_declaration_command.command
+        );
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
           Annotate_optional_properties_command.command
         );

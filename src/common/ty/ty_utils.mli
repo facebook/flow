@@ -17,6 +17,8 @@ val simplify_decl : merge_kinds:bool -> ?sort:bool -> Ty.decl -> Ty.decl
 
 val simplify_elt : merge_kinds:bool -> ?sort:bool -> Ty.elt -> Ty.elt
 
+val unmaybe_ty : Ty.t -> Ty.t
+
 val elt_equal : Ty.elt -> Ty.elt -> bool
 
 (** Utility useful for codemods/type insertion. When the element we infered is a

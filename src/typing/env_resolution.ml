@@ -1182,6 +1182,11 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | DeclaredNamespace (loc, ns) -> resolve_declare_namespace cx loc ns
     | MissingThisAnnot -> AnyT.at (AnyError None) id_loc
   in
+  let add_object_literal_declaration_tracking =
+    match def with
+    | Binding (Root (ObjectValue _)) -> true
+    | _ -> false
+  in
   Debug_js.Verbose.print_if_verbose_lazy
     cx
     ( lazy
@@ -1192,7 +1197,7 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           (Debug_js.dump_t cx t);
       ]
       );
-  Type_env.resolve_env_entry cx t def_kind id_loc
+  Type_env.resolve_env_entry cx t ~kind:def_kind ~add_object_literal_declaration_tracking id_loc
 
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
@@ -1399,7 +1404,13 @@ let resolve_component cx graph component =
   Context.eval_repos_cache cx := EvalReposCacheMap.empty;
   let resolve_illegal entries =
     EnvSet.iter
-      (fun (kind, loc) -> Type_env.resolve_env_entry cx (AnyT.at (AnyError None) loc) kind loc)
+      (fun (kind, loc) ->
+        Type_env.resolve_env_entry
+          cx
+          (AnyT.at (AnyError None) loc)
+          ~kind
+          ~add_object_literal_declaration_tracking:false
+          loc)
       entries
   in
   let resolve_element = function

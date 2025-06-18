@@ -356,7 +356,8 @@ struct
         (******************)
         (* process X ~> Y *)
         (******************)
-        | (OpenT (_, tvar1), UseT (use_op, OpenT (_, tvar2))) ->
+        | (OpenT (_, tvar1), UseT (use_op, OpenT (r_upper, tvar2))) ->
+          Context.add_object_literal_declaration_upper_bound cx tvar1 (OpenT (r_upper, tvar2));
           let (id1, constraints1) = Context.find_constraints cx tvar1 in
           let (id2, constraints2) = Context.find_constraints cx tvar2 in
           (match (constraints1, constraints2) with
@@ -419,6 +420,11 @@ struct
           then
             ()
           else
+            let () =
+              match t2 with
+              | UseT (_, t2) -> Context.add_object_literal_declaration_upper_bound cx tvar t2
+              | _ -> ()
+            in
             let t2 =
               match desc_of_reason r with
               | RTypeParam _ -> mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam, op)) t2
@@ -8995,7 +9001,12 @@ struct
                   )
               in
               ignore (Lazy.force lazy_thunk);
-              Lazy.force lazy_t)
+              let t = Lazy.force lazy_t in
+              (match t with
+              | OpenT (_, repositioned_tvar_id) ->
+                Context.report_object_literal_declaration_reposition cx repositioned_tvar_id id
+              | _ -> ());
+              t)
           | Unresolved _ ->
             if is_instantiable_reason r && Context.in_implicit_instantiation cx then
               t_open
