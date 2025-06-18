@@ -1936,9 +1936,9 @@ let dump_error_message =
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
     | EMatchNotExhaustive { loc; examples = _ } ->
       spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
-    | EMatchUnnecessaryPattern { reason; already_seen } ->
+    | EMatchUnusedPattern { reason; already_seen } ->
       spf
-        "EMatchUnnecessaryPattern (%s) (%s)"
+        "EMatchUnusedPattern (%s) (%s)"
         (dump_reason cx reason)
         (Base.Option.value_map ~default:"" ~f:(dump_reason cx) already_seen)
     | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props = _ } ->

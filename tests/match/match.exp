@@ -289,7 +289,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:14:14
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `'s'` to match string literal `s` [1]
 - `-2` to match number literal `-2` [2] [match-not-exhaustive]
 
@@ -308,8 +308,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:34:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    matching.js:34:14
    34|   const e2 = match (x) { // ERROR: `2` not checked
@@ -323,8 +323,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:48:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
+undefined [1]. [match-not-exhaustive]
 
    matching.js:48:14
    48|   const e2 = match (x) { // ERROR: `undefined` not checked
@@ -338,7 +338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:63:14
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `null` to match null or undefined [1]
 - `undefined` to match null or undefined [1] [match-not-exhaustive]
 
@@ -354,8 +354,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:82:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    matching.js:82:14
    82|   const e2 = match (x) { // ERROR: `2` not checked
@@ -369,8 +369,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:131:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    matching.js:131:14
    131|   const e2 = match (f()) { // ERROR: `2` not checked
@@ -384,8 +384,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:144:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `3` to match number literal `3` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `3` to match number
+literal `3` [1]. [match-not-exhaustive]
 
    matching.js:144:14
    144|   const e2 = match (x) { // ERROR: `3` not checked
@@ -399,8 +399,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:155:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    matching.js:155:14
    155|   const e1 = match (x) { // ERROR: `2` not checked
@@ -414,8 +414,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:206:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{type: 'baz', val: _}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'baz', val: _}` to
+match object type [1]. [match-not-exhaustive]
 
    matching.js:206:14
    206|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
@@ -429,8 +429,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:251:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{type: 'bar', n: 2, val: _}` to match object
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{type: 'bar', n: 2, val: _}` to match object type [1]. [match-not-exhaustive]
 
    matching.js:251:14
    251|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
@@ -444,8 +444,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:277:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{type: 'bar', val: _}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'bar', val: _}` to
+match object type [1]. [match-not-exhaustive]
 
    matching.js:277:14
    277|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
@@ -459,8 +459,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:294:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `['baz', _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['baz', _]` to match
+tuple type [1]. [match-not-exhaustive]
 
    matching.js:294:14
    294|   const e2 = match (x) { // ERROR: `'baz'` element not checked
@@ -508,8 +508,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:365:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_]` to match tuple
+type [1]. [match-not-exhaustive]
 
    matching.js:365:14
    365|   const e2 = match (x) { // ERROR: does not match all possibilities
@@ -523,7 +523,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:369:14
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `[_, _]` to match tuple type [1]
 - `[_, _, _]` to match tuple type [1] [match-not-exhaustive]
 
@@ -539,7 +539,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:373:14
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `[_]` to match tuple type [1]
 - `[_, _]` to match tuple type [1] [match-not-exhaustive]
 
@@ -555,8 +555,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:386:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_, ...]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match tuple
+type [1]. [match-not-exhaustive]
 
    matching.js:386:14
    386|   const e2 = match (x) { // ERROR: does not match all elements
@@ -570,8 +570,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:396:14
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: 2}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: 2}` to match object
+type [1]. [match-not-exhaustive]
 
    matching.js:396:14
    396|   const e1 = match (x) {
@@ -665,8 +665,8 @@ Cannot use `var` for match pattern binding. Only `const` is allowed. [match-inva
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:25:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    25|     {1.1: _} => 0, // ERROR
            ^^^^^^^^ [1]
@@ -907,7 +907,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- pattern-errors.js:153:15
 
-Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+Can't use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
 
    pattern-errors.js:153:15
    153|     [const a, a] => a, // ERROR
@@ -921,7 +921,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- pattern-errors.js:153:15
 
-Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
+Cannot use variable `a` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
    pattern-errors.js:153:15
    153|     [const a, a] => a, // ERROR
@@ -930,6 +930,20 @@ Cannot use variable `a` [1] within the same match pattern it is defined. [match-
 References:
    pattern-errors.js:153:12
    153|     [const a, a] => a, // ERROR
+                   ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- pattern-errors.js:161:15
+
+Can't use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
+
+   pattern-errors.js:161:15
+   161|     [const a, a.foo] => a, // ERROR
+                      ^
+
+References:
+   pattern-errors.js:161:12
+   161|     [const a, a.foo] => a, // ERROR
                    ^ [1]
 
 
@@ -947,25 +961,11 @@ References:
                    ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- pattern-errors.js:161:15
-
-Cannot use variable `a` [1] within the same match pattern it is defined. [match-invalid-pattern]
-
-   pattern-errors.js:161:15
-   161|     [const a, a.foo] => a, // ERROR
-                      ^
-
-References:
-   pattern-errors.js:161:12
-   161|     [const a, a.foo] => a, // ERROR
-                   ^ [1]
-
-
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:171:6
 
-Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
-`foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
-[match-invalid-pattern]
+`match` object patterns don't allow this property shorthand syntax. To fix, be explicit and either use `{const foo}` if
+you want to create a new variable with the value of property `foo`, or use `{foo: foo}` if you want to match property
+`foo` against the value of the variable named `foo`. [match-invalid-pattern]
 
    171|     {foo, ...} => 0, // ERROR
              ^^^
@@ -973,9 +973,9 @@ Invalid object pattern property. Use `{const foo}` if you want to create a new v
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:172:6
 
-Invalid object pattern property. Use `{const foo}` if you want to create a new variable with the value of property
-`foo`, or use `{foo: foo}` if you want to match property `foo` against the value of the variable of the same name.
-[match-invalid-pattern]
+`match` object patterns don't allow this property shorthand syntax. To fix, be explicit and either use `{const foo}` if
+you want to create a new variable with the value of property `foo`, or use `{foo: foo}` if you want to match property
+`foo` against the value of the variable named `foo`. [match-invalid-pattern]
 
    172|     {foo, bar: true} => 0, // ERROR
              ^^^
@@ -1181,7 +1181,7 @@ Cannot resolve name `a`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------- statement.js:177:10
 
-Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
+`match` statements use blocks for each case body. To fix, wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
    177|     1 => return 1; // ERROR
@@ -1190,7 +1190,7 @@ Invalid `match` statement case body. A block is required for each case body. Wra
 
 Error ---------------------------------------------------------------------------------------------- statement.js:178:10
 
-Invalid `match` statement case body. A block is required for each case body. Wrap this statement with `{` and `}`.
+`match` statements use blocks for each case body. To fix, wrap this statement with `{` and `}`.
 [match-statement-invalid-body]
 
    178|     2 => throw false; // ERROR

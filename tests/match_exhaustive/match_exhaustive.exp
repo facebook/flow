@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- arrays.js:9:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:9:3
    9|   match (x) { // ERROR
@@ -15,8 +15,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:13:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:13:3
    13|   match (x) { // ERROR
@@ -30,8 +30,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:17:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:17:3
    17|   match (x) { // ERROR
@@ -45,8 +45,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:30:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match read-only
+array type [1]. [match-not-exhaustive]
 
    arrays.js:30:3
    30|   match (x) { // ERROR
@@ -60,8 +60,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:34:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match read-only
+array type [1]. [match-not-exhaustive]
 
    arrays.js:34:3
    34|   match (x) { // ERROR
@@ -75,8 +75,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:38:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match read-only array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match read-only
+array type [1]. [match-not-exhaustive]
 
    arrays.js:38:3
    38|   match (x) { // ERROR
@@ -90,8 +90,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:51:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:51:3
    51|   match (x) { // ERROR
@@ -105,8 +105,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:55:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:55:3
    55|   match (x) { // ERROR
@@ -120,8 +120,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:59:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:59:3
    59|   match (x) { // ERROR
@@ -135,8 +135,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:63:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:63:3
    63|   match (x) { // ERROR
@@ -150,8 +150,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:75:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    75|     [1, ...] => {} // ERROR
            ^^^^^^^^ [1]
@@ -159,8 +159,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:83:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{a: [...]}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: [...]}` to match
+object type [1]. [match-not-exhaustive]
 
    arrays.js:83:3
    83|   match (x) { // ERROR
@@ -174,8 +174,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- arrays.js:102:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    102|     {1: 'xxx', ...} => {} // ERROR
             ^^^^^^^^^^^^^^^ [1]
@@ -183,8 +183,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- arrays.js:110:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[...]` to match array type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
 
    arrays.js:110:3
    110|   match (x) { // ERROR
@@ -198,8 +198,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:12:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `'foo'` to match string literal `foo` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'foo'` to match string
+literal `foo` [1]. [match-not-exhaustive]
 
    basic.js:12:3
    12|   match (x) { // ERROR: missing `'foo'`
@@ -213,7 +213,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:18:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `-2` to match number literal `-2` [1]
 - `1` to match number literal `1` [2]
 - `3n` to match bigint literal `3n` [3] [match-not-exhaustive]
@@ -236,8 +236,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:32:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `false` to match boolean [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `false` to match
+boolean [1]. [match-not-exhaustive]
 
    basic.js:32:3
    32|   match (x) { // ERROR: missing `false`
@@ -251,8 +251,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:46:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
+undefined [1]. [match-not-exhaustive]
 
    basic.js:46:3
    46|   match (x) { // ERROR: missing `undefined`
@@ -266,8 +266,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:60:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
+undefined [1]. [match-not-exhaustive]
 
    basic.js:60:3
    60|   match (obj.prop) { // ERROR: missing `undefined`
@@ -281,8 +281,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:75:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `null` to match null or undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `null` to match null or
+undefined [1]. [match-not-exhaustive]
 
    basic.js:75:3
    75|   match (x) { // ERROR: missing `null`
@@ -296,8 +296,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:80:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match null or undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match null
+or undefined [1]. [match-not-exhaustive]
 
    basic.js:80:3
    80|   match (x) { // ERROR: missing `undefined`
@@ -311,8 +311,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:110:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `true` to match boolean [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `true` to match
+boolean [1]. [match-not-exhaustive]
 
    basic.js:110:3
    110|   match (x) { // ERROR: missing `true`
@@ -326,8 +326,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:147:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `true` to match boolean [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `true` to match
+boolean [1]. [match-not-exhaustive]
 
    basic.js:147:3
    147|   match (x) { // ERROR: missing `true`
@@ -341,8 +341,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:174:5
 
-Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches are either already covered by previous patterns, or are not
+part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    174|     _ => {}
             ^ [1]
@@ -350,8 +350,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- basic.js:189:5
 
-Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches are either already covered by previous patterns, or are not
+part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    189|     const a => {}
             ^^^^^^^ [1]
@@ -359,8 +359,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- basic.js:202:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    basic.js:202:3
    202|   match (x) { // ERROR: missing `2`
@@ -374,8 +374,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:235:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `'foo'` to match string literal `foo` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'foo'` to match string
+literal `foo` [1]. [match-not-exhaustive]
 
    basic.js:235:3
    235|   match (x) { // ERROR: missing `'foo'`
@@ -389,7 +389,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:250:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match string [1].
+[match-not-exhaustive]
 
    basic.js:250:3
    250|   match (x) { // ERROR
@@ -403,8 +404,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:276:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    basic.js:276:3
    276|   match (x) { // ERROR: missing `2`
@@ -418,8 +419,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:287:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `2` to match number literal `2` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
+literal `2` [1]. [match-not-exhaustive]
 
    basic.js:287:3
    287|   match (x) { // ERROR: missing `2`
@@ -433,7 +434,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:296:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `1` to match number literal `1` [1]
 - `2` to match number literal `2` [2]
 - `3` to match number literal `3` [3]
@@ -465,8 +466,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:306:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    306|     'foo' => {} // ERROR
             ^^^^^ [1]
@@ -474,8 +475,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- basic.js:308:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    308|     true => {} // ERROR
             ^^^^ [1]
@@ -483,7 +484,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- basic.js:333:5
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
+[match-not-exhaustive]
 
    basic.js:333:5
    333|     match (x) {} // ERROR: missing wildcard `_`
@@ -497,7 +499,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:337:5
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `'bar'` to match string literal `bar` [1]
 - `'foo'` to match string literal `foo` [1] [match-not-exhaustive]
 
@@ -513,8 +515,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:350:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _, ...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _, ...}` to match
+object type [1]. [match-not-exhaustive]
 
    basic.js:350:3
    350|   match (x) {} // ERROR
@@ -536,8 +538,8 @@ Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
 Error --------------------------------------------------------------------------------------------------- basic.js:379:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    379|     999 => {} // ERROR: unnecessary pattern
             ^^^ [1]
@@ -545,8 +547,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ----------------------------------------------------------------------------------------------------- empty.js:6:3
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    6|   1 => {} // ERROR
         ^ [1]
@@ -554,8 +556,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ----------------------------------------------------------------------------------------------------- empty.js:7:3
 
-Unnecessary match wildcard [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches are either already covered by previous patterns, or are not
+part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    7|   _ => {} // ERROR
         ^ [1]
@@ -563,8 +565,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:19:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `E.B` to match member B of enum `E` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `E.B` to match member B of
+enum `E` [1]. [match-not-exhaustive]
 
    enums.js:19:3
    19|   match (x) { // ERROR: missing `E.B`
@@ -578,8 +580,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:40:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match unknown members of enum `E` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match unknown
+members of enum `E` [1]. [match-not-exhaustive]
 
    enums.js:40:3
    40|   match (x) { // ERROR: missing wildcard for unknown members
@@ -593,8 +595,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:61:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `E.B` to match member B of enum `E` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `E.B` to match member B of
+enum `E` [1]. [match-not-exhaustive]
 
    enums.js:61:3
    61|   match (x) { // ERROR: missing `E.B`
@@ -608,8 +610,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:66:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `undefined` to match null or undefined [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match null
+or undefined [1]. [match-not-exhaustive]
 
    enums.js:66:3
    66|   match (x) { // ERROR: missing `undefined`
@@ -637,7 +639,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:98:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `E.A` to match member A of enum `E` [1]
 - `E.B` to match member B of enum `E` [2] [match-not-exhaustive]
 
@@ -671,8 +673,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- guards.js:7:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `1` to match number literal `1` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `1` to match number
+literal `1` [1]. [match-not-exhaustive]
 
    guards.js:7:3
    7|   match (x) { // ERROR: missing `1`
@@ -686,8 +688,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- guards.js:20:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match pattern [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    guards.js:20:5
    20|     1 if (cond) => {} // ERROR
@@ -701,8 +703,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- guards.js:32:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    guards.js:32:5
    32|     1 if (cond) => {} // ERROR
@@ -716,8 +718,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- guards.js:38:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    38|     3 if (cond) => {} // ERROR
            ^ [1]
@@ -725,8 +727,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- guards.js:43:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    43|     3 | 2 if (cond) => {} // ERROR
            ^ [1]
@@ -734,8 +736,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- guards.js:52:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: 1}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: 1}` to match object
+type [1]. [match-not-exhaustive]
 
    guards.js:52:3
    52|   match (x) { // ERROR: missing `{foo: 1}`
@@ -749,8 +751,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- guards.js:65:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    65|     {foo: 1} if (cond) => {} // ERROR
            ^^^^^^^^ [1]
@@ -758,8 +760,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- guards.js:77:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    guards.js:77:5
    77|     {foo: 1} if (cond) => {} // ERROR
@@ -773,8 +775,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- guards.js:83:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    83|     {baz: 3} if (cond) => {} // ERROR
            ^^^^^^^^ [1]
@@ -782,8 +784,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- guards.js:88:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    88|     {baz: 3} | {bar: 2} if (cond) => {} // ERROR
            ^^^^^^^^ [1]
@@ -791,8 +793,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error --------------------------------------------------------------------------------------------------- guards.js:97:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[1]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[1]` to match tuple
+type [1]. [match-not-exhaustive]
 
    guards.js:97:3
    97|   match (x) { // ERROR: missing `[1]`
@@ -806,8 +808,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- guards.js:110:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    110|     [1] if (cond) => {} // ERROR
             ^^^ [1]
@@ -815,8 +817,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- guards.js:122:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    guards.js:122:5
    122|     [1] if (cond) => {} // ERROR
@@ -830,8 +832,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- guards.js:128:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    128|     [3] if (cond) => {} // ERROR
             ^^^ [1]
@@ -839,8 +841,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- guards.js:133:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    133|     [3] | [2] if (cond) => {} // ERROR
             ^^^ [1]
@@ -848,7 +850,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- guards.js:142:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match string [1].
+[match-not-exhaustive]
 
    guards.js:142:3
    142|   match (x) { // ERROR: missing `_`
@@ -871,8 +874,8 @@ final unguarded (no `if`) wildcard `_` in a case after this one, or remove the p
 
 Error -------------------------------------------------------------------------------------------------- guards.js:153:5
 
-Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    guards.js:153:5
    153|     _ if (cond) => {} // ERROR
@@ -886,7 +889,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- guards.js:156:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match string [1].
+[match-not-exhaustive]
 
    guards.js:156:3
    156|   match (x) { // ERROR: missing `_`
@@ -909,7 +913,8 @@ final unguarded (no `if`) wildcard `_` in a case after this one, or remove the p
 
 Error -------------------------------------------------------------------------------------------------- guards.js:160:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match string [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match string [1].
+[match-not-exhaustive]
 
    guards.js:160:3
    160|   match (x) { // ERROR: missing `_`
@@ -932,7 +937,8 @@ final unguarded (no `if`) wildcard `_` in a case after this one, or remove the p
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:11:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1].
+[match-not-exhaustive]
 
    inexhaustible.js:11:3
    11|   match (x) { // ERROR: wildcard needed
@@ -946,8 +952,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:27:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1] and string [2].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1]
+and string [2]. [match-not-exhaustive]
 
    inexhaustible.js:27:3
    27|   match (x) { // ERROR: wildcard needed
@@ -964,8 +970,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:41:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1], bigint [2], and
-string [3]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1],
+bigint [2], and string [3]. [match-not-exhaustive]
 
    inexhaustible.js:41:3
    41|   match (x) { // ERROR: wildcard needed
@@ -985,8 +991,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:53:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1], bigint [2], and 2 others.
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1],
+bigint [2], and 2 others. [match-not-exhaustive]
 
    inexhaustible.js:53:3
    53|   match (x) { // ERROR: wildcard needed
@@ -1003,8 +1009,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:75:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    75|     'xxx' => {} // ERROR
            ^^^^^ [1]
@@ -1012,8 +1018,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------- inexhaustible.js:87:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    87|     'xxx' => {} // ERROR
            ^^^^^ [1]
@@ -1021,8 +1027,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:105:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    105|     S.A => {} // ERROR
             ^^^ [1]
@@ -1030,7 +1036,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:114:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
+[match-not-exhaustive]
 
    inexhaustible.js:114:3
    114|   match (x) {} // ERROR
@@ -1044,8 +1051,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:127:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    127|       0 => {} // ERROR
               ^ [1]
@@ -1053,8 +1060,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:129:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    129|       false => {} // ERROR
               ^^^^^ [1]
@@ -1062,8 +1069,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:131:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    131|       '' => {} // ERROR
               ^^ [1]
@@ -1071,8 +1078,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:133:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    133|       null => {} // ERROR
               ^^^^ [1]
@@ -1080,8 +1087,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:143:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    143|       null => {} // ERROR
               ^^^^ [1]
@@ -1089,8 +1096,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:154:7
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    154|       null => {} // ERROR
               ^^^^ [1]
@@ -1098,7 +1105,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:178:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match mixed [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
+[match-not-exhaustive]
 
    inexhaustible.js:178:3
    178|   match (x) { // ERROR: missing `_`
@@ -1112,8 +1120,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false}` to match object
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: true, foo: false}`
+to match object type [1]. [match-not-exhaustive]
 
    objects.js:12:3
    12|   match (x) { // ERROR: missing `{foo: false, bar: true}`
@@ -1127,8 +1135,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:47:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to
+match object type [1]. [match-not-exhaustive]
 
    objects.js:47:3
    47|   match (x) { // ERROR: missing `{foo: E.C, bar: E.A}`
@@ -1142,8 +1150,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:58:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: E.A, foo: E.C}` to
+match object type [1]. [match-not-exhaustive]
 
    objects.js:58:3
    58|   match (x) { // ERROR: missing `{foo: E.C, bar: E.A}`
@@ -1157,8 +1165,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:86:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: false, foo: false}` to match object
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: false, foo: false}`
+to match object type [1]. [match-not-exhaustive]
 
    objects.js:86:3
    86|   match (x) { // ERROR: missing `{foo: false, bar: false}`
@@ -1172,8 +1180,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:96:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{a: _, b: _}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: _, b: _}` to match
+object type [1]. [match-not-exhaustive]
 
    objects.js:96:3
    96|   match (x) { // ERROR
@@ -1187,8 +1195,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:97:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    97|     {a: _, b: _, c: _} => {} // ERROR
            ^^^^^^^^^^^^^^^^^^ [1]
@@ -1196,8 +1204,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- objects.js:143:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{a: {x: false, y: E.B}, b: {v: 1, w: 'bar'}}` to
-match object type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{a: {x: false, y: E.B}, b: {v: 1, w: 'bar'}}` to match object type [1]. [match-not-exhaustive]
 
    objects.js:143:3
    143|   match (x) { // ERROR: missing `{a: {x: false, y: E.B}, b: {v: 1, w: 'bar'}}`
@@ -1211,8 +1219,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:167:5
 
-Non-exhaustive match object pattern. The following properties have not been matched: `a`, `b`, and `c`. Either add those
-properties to the object pattern, or add `...` to the end of the object pattern. [match-not-exhaustive]
+This object pattern hasn't considered all possible properties of the input. The properties `a`, `b`, and `c` are missing
+from the pattern. To fix, either add those properties to the object pattern, or add `...` to the end of the pattern to
+match all other properties. [match-not-exhaustive]
 
    167|     {} => {} // ERROR
             ^^
@@ -1220,8 +1229,9 @@ properties to the object pattern, or add `...` to the end of the object pattern.
 
 Error ------------------------------------------------------------------------------------------------- objects.js:171:5
 
-Non-exhaustive match object pattern. The following properties have not been matched: `c`. Either add those properties to
-the object pattern, or add `...` to the end of the object pattern. [match-not-exhaustive]
+This object pattern hasn't considered all possible properties of the input. The property `c` are missing from the
+pattern. To fix, either add that property to the object pattern, or add `...` to the end of the pattern to match all
+other properties. [match-not-exhaustive]
 
    171|     {a: _, b: _} => {} // ERROR
             ^^^^^^^^^^^^
@@ -1229,8 +1239,9 @@ the object pattern, or add `...` to the end of the object pattern. [match-not-ex
 
 Error ------------------------------------------------------------------------------------------------- objects.js:188:5
 
-Non-exhaustive match object pattern. The following properties have not been matched: `a`, `b`, and `c`, and there could
-be additional properties due to object type [1]. Add `...` to the end of the object pattern. [match-not-exhaustive]
+This object pattern hasn't considered all possible properties of the input. The properties `a`, `b`, and `c` are missing
+from the pattern, and there could be additional properties due to object type [1]. To fix, add `...` to the end of the
+pattern to match all other properties. [match-not-exhaustive]
 
    objects.js:188:5
    188|     {} => {} // ERROR
@@ -1244,8 +1255,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:192:5
 
-Non-exhaustive match object pattern. There could be additional properties due to object type [1]. Add `...` to the end
-of the object pattern. [match-not-exhaustive]
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+object type [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
 
    objects.js:192:5
    192|     {a: _, b: _, c: _} => {} // ERROR
@@ -1259,8 +1270,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:208:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{a: 1, ...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: 1, ...}` to match
+object type [1]. [match-not-exhaustive]
 
    objects.js:208:3
    208|   match (x) { // ERROR
@@ -1274,8 +1285,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:212:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{a: 1, ...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: 1, ...}` to match
+object type [1]. [match-not-exhaustive]
 
    objects.js:212:3
    212|   match (x) { // ERROR
@@ -1289,8 +1300,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:238:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:238:3
    238|   match (x) { // ERROR
@@ -1312,8 +1323,8 @@ Property `foo` is not readable. [cannot-read]
 
 Error ------------------------------------------------------------------------------------------------- objects.js:247:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:247:3
    247|   match (x) { // ERROR: missing `{...}`
@@ -1327,8 +1338,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:263:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match interface
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{bar: true, foo: false, ...}` to match interface type [1]. [match-not-exhaustive]
 
    objects.js:263:3
    263|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
@@ -1342,8 +1353,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:285:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match `C` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
 
    objects.js:285:3
    285|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
@@ -1357,8 +1368,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:332:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{bar: true, foo: false, ...}` to match `C` [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
 
    objects.js:332:3
    332|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
@@ -1372,8 +1383,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ objects.js:344:15
 
-Unnecessary rest of object pattern [1]. Either this pattern is already covered by previous patterns, or it is not part
-of the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This rest of object pattern [1] is unused. The values it matches are either already covered by previous patterns, or are
+not part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    344|     {a: true, ...} => {} // ERROR
                       ^^^ [1]
@@ -1381,8 +1392,8 @@ of the input type. Either remove this pattern or restructure previous patterns. 
 
 Error ------------------------------------------------------------------------------------------------- objects.js:357:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:357:3
    357|   match (x) { // ERROR
@@ -1396,8 +1407,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:362:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:362:3
    362|   match (x) { // ERROR
@@ -1411,8 +1422,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:364:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    364|     {foo: true, ...} => {} // ERROR
             ^^^^^^^^^^^^^^^^ [1]
@@ -1420,8 +1431,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- objects.js:368:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    368|     {foo: 1, ...} => {} // ERROR
             ^^^^^^^^^^^^^ [1]
@@ -1429,8 +1440,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- objects.js:379:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:379:3
    379|   match (x) { // ERROR
@@ -1444,8 +1455,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:384:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    384|     {1: 1, ...} => {} // ERROR
             ^^^^^^^^^^^ [1]
@@ -1453,8 +1464,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- objects.js:393:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:393:3
    393|   match (x) {} // ERROR
@@ -1468,8 +1479,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:395:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{c: false | true, ...}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{c: false | true, ...}`
+to match object type [1]. [match-not-exhaustive]
 
    objects.js:395:3
    395|   match (x) {
@@ -1483,7 +1494,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:406:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `{type: 'ok', value: _}` to match object type [1]
 - `{type: 'error', value: _}` to match object type [2] [match-not-exhaustive]
 
@@ -1502,8 +1513,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:413:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{foo: _}` to match object type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _}` to match object
+type [1]. [match-not-exhaustive]
 
    objects.js:413:3
    413|   match (x) {} // ERROR: only brings `foo: _`
@@ -1517,8 +1528,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:422:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `{xxx: 'bar', a: _, b: _}` to match object
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{xxx: 'bar', a: _, b: _}`
+to match object type [1]. [match-not-exhaustive]
 
    objects.js:422:3
    422|   match (x) { // ERROR: missing `{xxx: 'bar', a: _, b: _}`
@@ -1532,7 +1543,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:426:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `{xxx: 'foo', a: 2, b: 1 | 2}` to match object type [1]
 - `{xxx: 'foo', a: 1, b: 2}` to match object type [1]
 - `{xxx: 'bar', a: _, b: _}` to match object type [2] [match-not-exhaustive]
@@ -1560,8 +1571,8 @@ Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
 Error ------------------------------------------------------------------------------------------------- objects.js:438:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    438|     {foo: 999} => {} // ERROR: unnecessary pattern
             ^^^^^^^^^^ [1]
@@ -1569,8 +1580,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- objects.js:448:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    objects.js:448:5
    448|     {foo: 0} => {} // ERROR
@@ -1584,8 +1595,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- pattern-errors.js:8:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match pattern [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:8:5
    8|     1 => {} // ERROR: seen before
@@ -1599,8 +1610,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:19:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:19:5
    19|     2 => {} // ERROR: seen wildcard
@@ -1614,8 +1625,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:30:5
 
-Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:30:5
    30|     _ => {} // ERROR: already seen wildcard
@@ -1629,8 +1640,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:36:5
 
-Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:36:5
    36|     const a => {} // ERROR: already seen wildcard
@@ -1644,8 +1655,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:42:5
 
-Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:42:5
    42|     const a => {} // ERROR: already seen wildcard
@@ -1659,8 +1670,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:48:5
 
-Unnecessary match wildcard [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match wildcard [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    pattern-errors.js:48:5
    48|     _ => {} // ERROR: already seen wildcard
@@ -1674,7 +1685,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:58:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1].
+[match-not-exhaustive]
 
    pattern-errors.js:58:3
    58|   match (x) {
@@ -1703,7 +1715,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:71:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `_` to match number [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1].
+[match-not-exhaustive]
 
    pattern-errors.js:71:3
    71|   match (x) {
@@ -1732,8 +1745,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- recursive.js:4:1
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `['rec', _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['rec', _]` to match
+tuple type [1]. [match-not-exhaustive]
 
    recursive.js:4:1
    4| match (x) { // ERROR: missing `['rec', _]`
@@ -1747,8 +1760,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- recursive.js:8:1
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `['rec', ['rec', _]]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['rec', ['rec', _]]` to
+match tuple type [1]. [match-not-exhaustive]
 
    recursive.js:8:1
    8| match (x) { // ERROR: missing `['rec', ['rec', _]]`
@@ -1762,8 +1775,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:12:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[false, true]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false, true]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:12:3
    12|   match (x) { // ERROR: missing `[false, true]`
@@ -1777,8 +1790,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:47:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[E.C, E.A]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[E.C, E.A]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:47:3
    47|   match (x) { // ERROR: missing `[E.C, E.A]`
@@ -1792,8 +1805,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:58:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[E.C, E.A]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[E.C, E.A]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:58:3
    58|   match (x) { // ERROR: missing `[E.C, E.A]`
@@ -1807,8 +1820,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:86:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[false, false]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false, false]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:86:3
    86|   match (x) { // ERROR: missing `[false, false]`
@@ -1822,8 +1835,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:134:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[[false, E.B], [1, 'bar']]` to match tuple
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`[[false, E.B], [1, 'bar']]` to match tuple type [1]. [match-not-exhaustive]
 
    tuples.js:134:3
    134|   match (x) { // ERROR: missing `[[false, E.B], [1, 'bar']]`
@@ -1837,8 +1850,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:183:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, _]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:183:3
    183|   match (x) { // ERROR: missing `[_, _]`
@@ -1852,8 +1865,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:212:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `['bar', _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['bar', _]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:212:3
    212|   match (x) { // ERROR: missing `['bar', _]`
@@ -1867,8 +1880,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:228:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, _]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:228:3
    228|   match (x) { // ERROR: missing `[_, _]`
@@ -1882,8 +1895,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:250:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_, _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, _]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:250:3
    250|   match (x) { // ERROR: missing `[_, _]`
@@ -1897,8 +1910,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tuples.js:251:15
 
-Unnecessary rest of array pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of
-the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This rest of array pattern [1] is unused. The values it matches are either already covered by previous patterns, or are
+not part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    251|     [1, 1, 1, ...] => {} // ERROR: unnecessary `...`
                       ^^^ [1]
@@ -1906,8 +1919,8 @@ the input type. Either remove this pattern or restructure previous patterns. [ma
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:267:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[1, ...]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[1, ...]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:267:3
    267|   match (x) { // ERROR: missing `[_, ...]`
@@ -1921,8 +1934,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:287:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    287|     null => {} // ERROR
             ^^^^ [1]
@@ -1930,8 +1943,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:289:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    289|     [1] => {} // ERROR
             ^^^ [1]
@@ -1939,8 +1952,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:291:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    291|     [_] => {} // ERROR
             ^^^ [1]
@@ -1948,8 +1961,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:292:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    292|     [true, false] => {} // ERROR
             ^^^^^^^^^^^^^ [1]
@@ -1957,8 +1970,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:293:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    293|     [true, ...] => {} // ERROR
             ^^^^^^^^^^^ [1]
@@ -1966,8 +1979,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error ------------------------------------------------------------------------------------------------- tuples.js:297:20
 
-Unnecessary rest of array pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of
-the input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This rest of array pattern [1] is unused. The values it matches are either already covered by previous patterns, or are
+not part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    297|     [true | false, ...] => {} // ERROR: unnecessary `...`
                            ^^^ [1]
@@ -1975,8 +1988,8 @@ the input type. Either remove this pattern or restructure previous patterns. [ma
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:307:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    307|     [] => {} // ERROR
             ^^ [1]
@@ -1984,8 +1997,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:321:9
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    321|       | 1 // ERROR
                 ^ [1]
@@ -1993,8 +2006,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:334:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[false]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:334:3
    334|   match (x) { // ERROR: missing `[false]`
@@ -2008,8 +2021,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:354:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[false, _]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[false, _]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:354:3
    354|   match (x) { // ERROR: missing `[false, _]`
@@ -2023,8 +2036,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:358:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_, false]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, false]` to match
+tuple type [1]. [match-not-exhaustive]
 
    tuples.js:358:3
    358|   match (x) { // ERROR: missing `[_, false]`
@@ -2038,7 +2051,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:382:3
 
-`match` is not exhaustively checked. To fix, add the missing patterns:
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `[true, true, true, false]` to match tuple type [1]
 - `[true, false, true, false]` to match tuple type [1]
 - `[false, true, true, false]` to match tuple type [1]
@@ -2064,8 +2077,8 @@ Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:400:5
 
-Unnecessary match pattern [1]. Either this pattern is already covered by previous patterns, or it is not part of the
-input type. Either remove this pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    400|     [999] => {} // ERROR: unnecessary pattern
             ^^^^^ [1]
@@ -2073,8 +2086,8 @@ input type. Either remove this pattern or restructure previous patterns. [match-
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:412:3
 
-`match` is not exhaustively checked. To fix, add the missing pattern: `[_]` to match tuple type [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_]` to match tuple
+type [1]. [match-not-exhaustive]
 
    tuples.js:412:3
    412|   match (x) { // ERROR
@@ -2102,8 +2115,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:423:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    tuples.js:423:5
    423|     [0] => {} // ERROR
@@ -2117,8 +2130,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:428:5
 
-Unnecessary match pattern [1]. This pattern was already covered by a previous match wildcard [2]. Either remove this
-pattern or restructure previous patterns. [match-unnecessary-pattern]
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
    tuples.js:428:5
    428|     [...] => {} // ERROR
