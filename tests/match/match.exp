@@ -152,6 +152,141 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- invalid-case-syntax.js:6:5
+
+Drop the `case`. Just <pattern>. It's cleaner. [unsupported-syntax]
+
+   6|     case 0 => {} // ERROR
+          ^^^^
+
+
+Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:10:6
+
+`match` cases use `=>` to separate the pattern and the case body. To fix, replace the `;` with `=>`.
+[unsupported-syntax]
+
+   10|     0: {} // ERROR
+            ^
+
+
+Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:17:5
+
+Drop the `case`. Just <pattern>. It's cleaner. [unsupported-syntax]
+
+   17|     case 0 => 1, // ERROR
+           ^^^^
+
+
+Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:22:6
+
+`match` cases use `=>` to separate the pattern and the case body. To fix, replace the `;` with `=>`.
+[unsupported-syntax]
+
+   22|     0: 1, // ERROR
+            ^
+
+
+Error ------------------------------------------------------------------------------------- invalid-case-syntax.js:27:11
+
+`match` uses commas `,` to separate cases. To fix, replace the `;` with `,`. [unsupported-syntax]
+
+   27|     0 => 1; // ERROR
+                 ^
+
+
+Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:35:3
+
+Drop the `case`. Just <pattern>. It's cleaner. At [1] [2] [3]. [unsupported-syntax]
+
+   invalid-case-syntax.js:35:3
+   35|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   invalid-case-syntax.js:36:5
+   36|     case 1 => {}
+           ^^^^ [1]
+   invalid-case-syntax.js:37:5
+   37|     case 2 => {}
+           ^^^^ [2]
+   invalid-case-syntax.js:38:5
+   38|     case 3 => {}
+           ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- invalid-case-syntax.js:52:3
+
+Invalid match case syntax:
+- Drop the `case`. Just <pattern>. It's cleaner. At [1] [2] [3].
+- `match` cases use `=>` to separate the pattern and the case body. To fix, replace the `;` with `=>`. At [4] [5] [6].
+[unsupported-syntax]
+
+   invalid-case-syntax.js:52:3
+   52|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   invalid-case-syntax.js:53:5
+   53|     case 1: {}
+           ^^^^ [1]
+   invalid-case-syntax.js:54:5
+   54|     case 2: {}
+           ^^^^ [2]
+   invalid-case-syntax.js:55:5
+   55|     case 3: {}
+           ^^^^ [3]
+   invalid-case-syntax.js:53:11
+   53|     case 1: {}
+                 ^ [4]
+   invalid-case-syntax.js:54:11
+   54|     case 2: {}
+                 ^ [5]
+   invalid-case-syntax.js:55:11
+   55|     case 3: {}
+                 ^ [6]
+
+
+Error ------------------------------------------------------------------------------------- invalid-case-syntax.js:58:13
+
+Invalid match case syntax:
+- Drop the `case`. Just <pattern>. It's cleaner. At [1] [2] [3].
+- `match` cases use `=>` to separate the pattern and the case body. To fix, replace the `;` with `=>`. At [4] [5] [6].
+- `match` uses commas `,` to separate cases. To fix, replace the `;` with `,`. At [7] [8] [9]. [unsupported-syntax]
+
+   invalid-case-syntax.js:58:13
+   58|   const e = match (x) { // ERROR
+                   ^^^^^
+
+References:
+   invalid-case-syntax.js:59:5
+   59|     case 1: null;
+           ^^^^ [1]
+   invalid-case-syntax.js:60:5
+   60|     case 2: null;
+           ^^^^ [2]
+   invalid-case-syntax.js:61:5
+   61|     case 3: null;
+           ^^^^ [3]
+   invalid-case-syntax.js:59:11
+   59|     case 1: null;
+                 ^ [4]
+   invalid-case-syntax.js:60:11
+   60|     case 2: null;
+                 ^ [5]
+   invalid-case-syntax.js:61:11
+   61|     case 3: null;
+                 ^ [6]
+   invalid-case-syntax.js:59:17
+   59|     case 1: null;
+                       ^ [7]
+   invalid-case-syntax.js:60:17
+   60|     case 2: null;
+                       ^ [8]
+   invalid-case-syntax.js:61:17
+   61|     case 3: null;
+                       ^ [9]
+
+
 Error ------------------------------------------------------------------------------------------------ matching.js:14:14
 
 `match` is not exhaustively checked. To fix, add the missing patterns:
@@ -1055,4 +1190,4 @@ Invalid `match` statement case body. A block is required for each case body. Wra
 
 
 
-Found 86 errors
+Found 94 errors

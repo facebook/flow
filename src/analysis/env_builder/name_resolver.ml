@@ -3008,7 +3008,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             PartialEnvSnapshot.t * PartialEnvSnapshot.t * AbruptCompletion.t option =
         fun ~on_case_body case ->
           let open Flow_ast.Match.Case in
-          let (case_loc, { pattern; body; guard; comments = _ }) = case in
+          let (case_loc, { pattern; body; guard; comments = _; invalid_syntax = _ }) = case in
           let env0 = this#env_snapshot in
           let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
           let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in

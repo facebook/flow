@@ -2115,12 +2115,32 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           ('N, 'U, 'BNU) Ast.Match.Case.t' =
       fun ~on_case_body case ->
         let open Ast.Match.Case in
-        let { pattern; body; guard; comments } = case in
+        let { pattern; body; guard; comments; invalid_syntax } = case in
         let pattern' = this#match_pattern pattern in
         let guard' = Option.map ~f:this#expression guard in
         let body' = on_case_body body in
         let comments' = this#syntax_opt comments in
-        { pattern = pattern'; body = body'; guard = guard'; comments = comments' }
+        let invalid_syntax' = this#match_case_invalid_syntax invalid_syntax in
+        {
+          pattern = pattern';
+          body = body';
+          guard = guard';
+          comments = comments';
+          invalid_syntax = invalid_syntax';
+        }
+
+    method match_case_invalid_syntax (x : 'M Ast.Match.Case.InvalidSyntax.t)
+        : 'N Ast.Match.Case.InvalidSyntax.t =
+      let open Ast.Match.Case.InvalidSyntax in
+      let { invalid_prefix_case; invalid_infix_colon; invalid_suffix_semicolon } = x in
+      let invalid_prefix_case' = Option.map invalid_prefix_case ~f:this#on_loc_annot in
+      let invalid_infix_colon' = Option.map invalid_infix_colon ~f:this#on_loc_annot in
+      let invalid_suffix_semicolon' = Option.map invalid_suffix_semicolon ~f:this#on_loc_annot in
+      {
+        invalid_prefix_case = invalid_prefix_case';
+        invalid_infix_colon = invalid_infix_colon';
+        invalid_suffix_semicolon = invalid_suffix_semicolon';
+      }
 
     method match_pattern (pattern : ('M, 'T) Ast.MatchPattern.t) : ('N, 'U) Ast.MatchPattern.t =
       let open Ast.MatchPattern in

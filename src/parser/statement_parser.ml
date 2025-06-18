@@ -583,6 +583,14 @@ module Statement
     let open Match in
     let case env =
       let leading = Peek.comments env in
+      let invalid_prefix_case =
+        if Peek.token env = T_CASE then (
+          let loc = Peek.loc env in
+          Eat.token env;
+          Some loc
+        ) else
+          None
+      in
       let pattern = Parse.match_pattern env in
       let guard =
         if Eat.maybe env T_IF then (
@@ -593,17 +601,28 @@ module Statement
         ) else
           None
       in
-      (* Continue parsing colon until hermes-parser is also updated. *)
-      if not @@ Eat.maybe env T_COLON then Expect.token env T_ARROW;
+      let invalid_infix_colon =
+        if Peek.token env = T_COLON then (
+          let loc = Peek.loc env in
+          Eat.token env;
+          Some loc
+        ) else (
+          Expect.token env T_ARROW;
+          None
+        )
+      in
       let body = Parse.statement ~allow_sequence:false env in
-      (match Peek.token env with
-      | T_EOF
-      | T_RCURLY ->
-        ()
-      | _ -> ignore @@ Eat.maybe env T_COMMA);
+      ignore @@ Eat.maybe env T_COMMA;
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      { Case.pattern; body; guard; comments }
+      let invalid_syntax =
+        {
+          Case.InvalidSyntax.invalid_prefix_case;
+          invalid_infix_colon;
+          invalid_suffix_semicolon = None;
+        }
+      in
+      { Case.pattern; body; guard; comments; invalid_syntax }
     in
     let rec case_list env acc =
       match Peek.token env with

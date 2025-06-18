@@ -699,7 +699,7 @@ with type t = Impl.t = struct
     and match_expression_case case = match_case "MatchExpressionCase" ~on_case_body:expression case
     and match_case
           : 'B. string -> on_case_body:('B -> Impl.t) -> (Loc.t, Loc.t, 'B) Match.Case.t -> Impl.t =
-     fun kind ~on_case_body (loc, { Match.Case.pattern; body; guard; comments }) ->
+     fun kind ~on_case_body (loc, { Match.Case.pattern; body; guard; comments; invalid_syntax = _ }) ->
       node
         ?comments
         kind

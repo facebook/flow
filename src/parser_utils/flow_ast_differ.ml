@@ -3569,8 +3569,24 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     join_diff_list [arg; cases; comments]
   and match_expression_case (loc, c1) (_, c2) : node change list option =
     let open Ast.Match.Case in
-    let { pattern = pattern1; body = body1; guard = guard1; comments = comments1 } = c1 in
-    let { pattern = pattern2; body = body2; guard = guard2; comments = comments2 } = c2 in
+    let {
+      pattern = pattern1;
+      body = body1;
+      guard = guard1;
+      comments = comments1;
+      invalid_syntax = invalid_syntax1;
+    } =
+      c1
+    in
+    let {
+      pattern = pattern2;
+      body = body2;
+      guard = guard2;
+      comments = comments2;
+      invalid_syntax = invalid_syntax2;
+    } =
+      c2
+    in
     let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
     let body =
       Some
@@ -3580,7 +3596,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) guard1 guard2
     in
     let comments = syntax_opt loc comments1 comments2 in
-    join_diff_list [pattern; body; guard; comments]
+    let invalid_syntax =
+      diff_if_changed_ret_opt match_case_invalid_syntax invalid_syntax1 invalid_syntax2
+    in
+    join_diff_list [pattern; body; guard; comments; invalid_syntax]
   and match_statement
       (loc : Loc.t)
       (m1 : (Loc.t, Loc.t) Ast.Statement.match_statement)
@@ -3594,8 +3613,24 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     join_diff_list [arg; cases; comments]
   and match_statement_case (loc, c1) (_, c2) : node change list option =
     let open Ast.Match.Case in
-    let { pattern = pattern1; body = body1; guard = guard1; comments = comments1 } = c1 in
-    let { pattern = pattern2; body = body2; guard = guard2; comments = comments2 } = c2 in
+    let {
+      pattern = pattern1;
+      body = body1;
+      guard = guard1;
+      comments = comments1;
+      invalid_syntax = invalid_syntax1;
+    } =
+      c1
+    in
+    let {
+      pattern = pattern2;
+      body = body2;
+      guard = guard2;
+      comments = comments2;
+      invalid_syntax = invalid_syntax2;
+    } =
+      c2
+    in
     let pattern = Some (diff_if_changed match_pattern pattern1 pattern2) in
     let body =
       Some (diff_if_changed (statement ~parent:(MatchCaseParentOfStatement loc)) body1 body2)
@@ -3604,7 +3639,20 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) guard1 guard2
     in
     let comments = syntax_opt loc comments1 comments2 in
-    join_diff_list [pattern; body; guard; comments]
+    let invalid_syntax =
+      diff_if_changed_ret_opt match_case_invalid_syntax invalid_syntax1 invalid_syntax2
+    in
+    join_diff_list [pattern; body; guard; comments; invalid_syntax]
+  and match_case_invalid_syntax
+      (x1 : Loc.t Ast.Match.Case.InvalidSyntax.t) (x2 : Loc.t Ast.Match.Case.InvalidSyntax.t) :
+      node change list option =
+    let open Ast.Match.Case.InvalidSyntax in
+    match (x1, x2) with
+    | ( { invalid_prefix_case = None; invalid_infix_colon = None; invalid_suffix_semicolon = None },
+        { invalid_prefix_case = None; invalid_infix_colon = None; invalid_suffix_semicolon = None }
+      ) ->
+      Some []
+    | _ -> None
   and match_pattern (p1 : (Loc.t, Loc.t) Ast.MatchPattern.t) (p2 : (Loc.t, Loc.t) Ast.MatchPattern.t)
       : node change list =
     let open Ast.MatchPattern in

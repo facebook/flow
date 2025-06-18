@@ -4334,6 +4334,60 @@ let to_printable_error :
         code "}";
         text ".";
       ]
+    | MessageMatchInvalidCaseSyntax kind ->
+      let msg_invalid_prefix_case =
+        [text "Drop the "; code "case"; text ". Just <pattern>. It's cleaner."]
+      in
+      let msg_invalid_infix_colon =
+        [
+          code "match";
+          text " cases use ";
+          code "=>";
+          text " to separate the pattern and the case body. To fix, replace the ";
+          code ";";
+          text " with ";
+          code "=>";
+          text ".";
+        ]
+      in
+      let msg_invalid_suffix_semicolon =
+        [
+          code "match";
+          text " uses commas ";
+          code ",";
+          text " to separate cases. To fix, replace the ";
+          code ";";
+          text " with ";
+          code ",";
+          text ".";
+        ]
+      in
+      (match kind with
+      | InvalidMatchCaseMultiple
+          { invalid_prefix_case_locs; invalid_infix_colon_locs; invalid_suffix_semicolon_locs } ->
+        let msg_with_locs msg locs =
+          if Base.List.is_empty locs then
+            None
+          else
+            let refs = Base.List.map locs ~f:(fun loc -> no_desc_ref loc) in
+            Some (msg @ [text " At"] @ refs @ [text "."])
+        in
+        let errors =
+          Base.List.filter_opt
+            [
+              msg_with_locs msg_invalid_prefix_case invalid_prefix_case_locs;
+              msg_with_locs msg_invalid_infix_colon invalid_infix_colon_locs;
+              msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs;
+            ]
+        in
+        (match errors with
+        | [single] -> single
+        | multiple ->
+          text "Invalid match case syntax:"
+          :: Base.List.concat_map multiple ~f:(fun x -> text "\n- " :: x))
+      | InvalidMatchCasePrefixCase -> msg_invalid_prefix_case
+      | InvalidMatchCaseInfixColon -> msg_invalid_infix_colon
+      | InvalidMatchCaseSuffixSemicolon -> msg_invalid_suffix_semicolon)
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

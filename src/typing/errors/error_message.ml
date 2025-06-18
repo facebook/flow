@@ -691,6 +691,10 @@ and 'loc t' =
       name: string;
     }
   | EMatchStatementInvalidBody of { loc: 'loc }
+  | EMatchInvalidCaseSyntax of {
+      loc: 'loc;
+      kind: 'loc match_invalid_case_syntax;
+    }
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1574,6 +1578,22 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EMatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
   | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
   | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
+  | EMatchInvalidCaseSyntax { loc; kind } ->
+    let kind =
+      match kind with
+      | InvalidMatchCaseMultiple
+          { invalid_prefix_case_locs; invalid_infix_colon_locs; invalid_suffix_semicolon_locs } ->
+        InvalidMatchCaseMultiple
+          {
+            invalid_prefix_case_locs = Base.List.map ~f invalid_prefix_case_locs;
+            invalid_infix_colon_locs = Base.List.map ~f invalid_infix_colon_locs;
+            invalid_suffix_semicolon_locs = Base.List.map ~f invalid_suffix_semicolon_locs;
+          }
+      | InvalidMatchCasePrefixCase -> InvalidMatchCasePrefixCase
+      | InvalidMatchCaseInfixColon -> InvalidMatchCaseInfixColon
+      | InvalidMatchCaseSuffixSemicolon -> InvalidMatchCaseSuffixSemicolon
+    in
+    EMatchInvalidCaseSyntax { loc = f loc; kind }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -1817,6 +1837,7 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidPatternReference _
   | EMatchInvalidObjectShorthand _
   | EMatchStatementInvalidBody _
+  | EMatchInvalidCaseSyntax _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2046,6 +2067,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidPatternReference { loc; _ } -> Some loc
   | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
   | EMatchStatementInvalidBody { loc } -> Some loc
+  | EMatchInvalidCaseSyntax { loc; _ } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
   | EMatchInvalidGuardedWildcard loc -> Some loc
   | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
@@ -3101,6 +3123,7 @@ let friendly_message_of_msg = function
   | EMatchInvalidObjectShorthand { loc = _; name } ->
     Normal (MessageMatchInvalidObjectShorthand { name })
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
+  | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -3490,5 +3513,6 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidPatternReference _ -> Some MatchInvalidPattern
   | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
   | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
+  | EMatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator
