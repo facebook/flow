@@ -4626,7 +4626,6 @@ and type_component
   @@ fuse
        [
          Atom "component";
-         space;
          option (type_parameter ~opts ~kind:Flow_ast_mapper.ComponentTypeTP) tparams;
          group
            [

@@ -44,8 +44,8 @@ let tests =
           { Flow_ast.Type.Component.Params.params = []; rest = None; comments = None }
       in
       let layout = Js_layout_generator.type_ ~opts ast in
-      assert_output ~ctxt "component ()" layout;
-      assert_output ~ctxt ~pretty:true "component ()" layout
+      assert_output ~ctxt "component()" layout;
+      assert_output ~ctxt ~pretty:true "component()" layout
     );
     ( "component_with_body" >:: fun ctxt ->
       let body =
