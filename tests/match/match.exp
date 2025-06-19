@@ -152,6 +152,15 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------- invalid-break-statement.js:17:5
+
+Illegal break statement. `break` statements are not required in `match` statements, as unlike `switch` statements,
+`match` statement cases do not fall-through by default.
+
+   17|     break; // ERROR: parse error
+           ^^^^^^
+
+
 Error --------------------------------------------------------------------------------------- invalid-case-syntax.js:6:5
 
 Drop the `case`. Just <pattern>. It's cleaner. [unsupported-syntax]
@@ -1198,4 +1207,4 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 95 errors
+Found 96 errors

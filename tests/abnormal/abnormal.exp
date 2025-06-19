@@ -81,7 +81,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- toplevel_break.js:1:1
 
-Illegal break statement
+Illegal break statement.
 
    1| break; // error, illegal
       ^^^^^^
