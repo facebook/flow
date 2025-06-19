@@ -68,7 +68,7 @@ type t =
   | GeneratorFunctionAsStatement
   | GetterArity
   | GetterMayNotHaveThisParam
-  | IllegalBreak
+  | IllegalBreak of { in_match_statement: bool }
   | IllegalContinue
   | IllegalReturn
   | IllegalUnicodeEscape
@@ -322,7 +322,14 @@ module PP = struct
       "Generators can only be declared at top level or immediately within another function."
     | GetterArity -> "Getter should have zero parameters"
     | GetterMayNotHaveThisParam -> "A getter cannot have a `this` parameter."
-    | IllegalBreak -> "Illegal break statement"
+    | IllegalBreak { in_match_statement } ->
+      let extra =
+        if in_match_statement then
+          " `break` statements are not required in `match` statements, as unlike `switch` statements, `match` statement cases do not fall-through by default."
+        else
+          ""
+      in
+      Printf.sprintf "Illegal break statement.%s" extra
     | IllegalContinue -> "Illegal continue statement"
     | IllegalReturn -> "Illegal return statement"
     | IllegalUnicodeEscape -> "Illegal Unicode escape"

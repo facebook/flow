@@ -175,6 +175,7 @@ type env = {
   in_switch: bool;
   in_formal_parameters: bool;
   in_function: bool;
+  in_match_statement: bool;
   no_in: bool;
   no_call: bool;
   no_let: bool;
@@ -231,6 +232,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     in_switch = false;
     in_formal_parameters = false;
     in_function = false;
+    in_match_statement = false;
     no_in = false;
     no_call = false;
     no_let = false;
@@ -272,6 +274,8 @@ let in_switch env = env.in_switch
 let in_formal_parameters env = env.in_formal_parameters
 
 let in_function env = env.in_function
+
+let in_match_statement env = env.in_match_statement
 
 let allow_yield env = env.allow_yield
 
@@ -382,6 +386,12 @@ let with_in_function in_function env =
     env
   else
     { env with in_function }
+
+let with_in_match_statement in_match_statement env =
+  if in_match_statement = env.in_match_statement then
+    env
+  else
+    { env with in_match_statement }
 
 let with_allow_yield allow_yield env =
   if allow_yield = env.allow_yield then

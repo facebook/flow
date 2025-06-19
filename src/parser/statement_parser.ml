@@ -150,7 +150,7 @@ module Statement
         env
     in
     if label = None && not (in_loop env || in_switch env) then
-      error_at env (loc, Parse_error.IllegalBreak);
+      error_at env (loc, Parse_error.IllegalBreak { in_match_statement = in_match_statement env });
     let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
     (loc, Statement.Break { Statement.Break.label; comments })
 
@@ -611,7 +611,7 @@ module Statement
           None
         )
       in
-      let body = Parse.statement ~allow_sequence:false env in
+      let body = Parse.statement ~allow_sequence:false (env |> with_in_match_statement true) in
       ignore @@ Eat.maybe env T_COMMA;
       let trailing = Eat.trailing_comments env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
