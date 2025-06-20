@@ -1593,6 +1593,25 @@ References:
             ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- objects.js:462:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{b: 0 | 1, a: _}` to
+match object type [1]. [match-not-exhaustive]
+
+   objects.js:462:3
+   462|   match (x) { // ERROR: missing {b: 0 | 1, a: _}
+          ^^^^^
+
+References:
+   objects.js:454:20
+                           v
+   454|   declare const x: {
+   455|     a: {foo: 0},
+   456|     b: 0 | 1,
+   457|   } | {
+          ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- pattern-errors.js:8:5
 
 This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
@@ -2143,5 +2162,24 @@ References:
             ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- tuples.js:442:3
 
-Found 160 errors
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, 0]` to match tuple
+type [1]. [match-not-exhaustive]
+
+   tuples.js:442:3
+   442|   match (x) { // ERROR: missing [_, 0]
+          ^^^^^
+
+References:
+   tuples.js:434:20
+                           v
+   434|   declare const x: [
+   435|     [0],
+   436|     0,
+   437|   ] | [
+          ^ [1]
+
+
+
+Found 162 errors

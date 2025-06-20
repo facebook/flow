@@ -122,6 +122,8 @@ module rec PatternObject : sig
       loc: ALoc.t;
       value: PatternUnion.t;
     }
+
+    val compare : t -> t -> int
   end
 
   module Properties : sig
@@ -131,6 +133,7 @@ module rec PatternObject : sig
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
+    keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
     guarded: bool;
@@ -140,8 +143,44 @@ module rec PatternObject : sig
 
   (* index for ordering *)
   type with_index = int * t
-end =
-  PatternObject
+end = struct
+  module Property = struct
+    type t = {
+      loc: ALoc.t;
+      value: PatternUnion.t;
+    }
+
+    let compare a b =
+      let { value = value_a; loc = _ } = a in
+      let { value = value_b; loc = _ } = b in
+      (* Sort leafs only props first. Sort wildcard props last. *)
+      match (PatternUnion.only_leafs value_a, PatternUnion.only_leafs value_b) with
+      | (true, false) -> -1
+      | (false, true) -> 1
+      | _ ->
+        (match (PatternUnion.only_wildcard value_a, PatternUnion.only_wildcard value_b) with
+        | (None, Some _) -> -1
+        | (Some _, None) -> 1
+        | _ -> 0)
+  end
+
+  module Properties = struct
+    type t = Property.t SMap.t
+  end
+
+  type t' = {
+    kind: ObjKind.t;
+    props: Properties.t;
+    keys_order: string list;
+    rest: Reason.t option;
+    contains_invalid_pattern: bool;
+    guarded: bool;
+  }
+
+  type t = Reason.t * t'
+
+  type with_index = int * t
+end
 
 (* A representation of a set of patterns. *)
 and PatternUnion : sig
@@ -161,6 +200,9 @@ and PatternUnion : sig
 
   (* If the only pattern in this pattern union is a wildcard, return that wildcard. *)
   val only_wildcard : t -> Reason.t option
+
+  (* Whether this pattern union only contains leafs. *)
+  val only_leafs : t -> bool
 
   val of_patterns_ast : Context.t -> pattern_ast_list -> t
 end = struct
@@ -209,6 +251,23 @@ end = struct
       wildcard
     else
       None
+
+  let only_leafs
+      {
+        leafs;
+        guarded_leafs;
+        tuples_exact;
+        tuples_inexact;
+        objects;
+        wildcard;
+        contains_invalid_pattern = _;
+      } =
+    (not @@ LeafSet.is_empty leafs)
+    && Base.List.is_empty guarded_leafs
+    && IMap.is_empty tuples_exact
+    && IMap.is_empty tuples_inexact
+    && Base.List.is_empty objects
+    && Base.Option.is_none wildcard
 
   let all_tuples_and_objects { tuples_exact; tuples_inexact; objects; _ } =
     let all_tuples =
@@ -441,27 +500,41 @@ end = struct
       )
     | ArrayPattern { ArrayPattern.elements; rest; _ } ->
       let length = Base.List.length elements in
-      let (props, contains_invalid_pattern) =
+      let (props, keys_order_rev, contains_invalid_pattern) =
         Base.List.foldi
           elements
-          ~init:(SMap.empty, false)
-          ~f:(fun i (props, contains_invalid_pattern) { ArrayPattern.Element.pattern; _ } ->
+          ~init:(SMap.empty, [], false)
+          ~f:(fun
+               i
+               (props, keys_order_rev, contains_invalid_pattern)
+               { ArrayPattern.Element.pattern; _ }
+             ->
             let key = string_of_int i in
             let value = of_pattern_ast cx pattern in
             let contains_invalid_pattern =
               contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
             in
-            (SMap.add key { PatternObject.Property.loc; value } props, contains_invalid_pattern)
+            ( SMap.add key { PatternObject.Property.loc; value } props,
+              key :: keys_order_rev,
+              contains_invalid_pattern
+            )
         )
       in
       let rest =
         Base.Option.map rest ~f:(fun (loc, _) -> Reason.mk_reason Reason.RArrayPatternRestProp loc)
+      in
+      let keys_order =
+        Base.List.rev keys_order_rev
+        |> Base.List.stable_sort ~compare:(fun key_a key_b ->
+               PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
+           )
       in
       let tuple =
         ( next_i,
           ( reason,
             {
               PatternObject.props;
+              keys_order;
               rest;
               kind = ObjKind.Tuple { length };
               contains_invalid_pattern;
@@ -473,9 +546,9 @@ end = struct
       let pattern_union = add_tuple cx pattern_union ~length tuple in
       (pattern_union, next_i)
     | ObjectPattern { ObjectPattern.properties; rest; _ } ->
-      let (props, tuple_like, contains_invalid_pattern) =
-        Base.List.fold properties ~init:(SMap.empty, Some 0., false) ~f:(fun acc prop ->
-            let (props, tuple_like, contains_invalid_pattern) = acc in
+      let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
+        Base.List.fold properties ~init:(SMap.empty, [], Some 0., false) ~f:(fun acc prop ->
+            let (props, keys_order_rev, tuple_like, contains_invalid_pattern) = acc in
             match prop with
             | (_, ObjectPattern.Property.Valid { ObjectPattern.Property.key; pattern; _ }) ->
               let (loc, propname) =
@@ -504,9 +577,15 @@ end = struct
               let contains_invalid_pattern =
                 contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
               in
-              (props, tuple_like, contains_invalid_pattern)
-            | _ -> (props, tuple_like, true)
+              (props, propname :: keys_order_rev, tuple_like, contains_invalid_pattern)
+            | _ -> (props, keys_order_rev, tuple_like, true)
         )
+      in
+      let keys_order =
+        Base.List.rev keys_order_rev
+        |> Base.List.stable_sort ~compare:(fun key_a key_b ->
+               PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
+           )
       in
       let pattern_union =
         let rest =
@@ -517,7 +596,14 @@ end = struct
         let obj =
           ( next_i,
             ( reason,
-              { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern; guarded }
+              {
+                PatternObject.props;
+                keys_order;
+                rest;
+                kind = ObjKind.Obj;
+                contains_invalid_pattern;
+                guarded;
+              }
             )
           )
         in
@@ -1256,6 +1342,7 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
   let ( reason_pattern,
         {
           PatternObject.props = pattern_props;
+          keys_order;
           rest = pattern_rest;
           kind = pattern_kind;
           guarded;
@@ -1266,7 +1353,7 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
   in
   (* Sort the keys that are sentinel props for the value first. *)
   let pattern_keys =
-    SMap.keys pattern_props |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
+    keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
     |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
   in
   (* If every key in the pattern also exists in the value, then return the props of the
@@ -1528,11 +1615,7 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
   Base.List.iter guarded_leafs ~f:(fun (reason, _) -> if not @@ check reason then error reason);
   Base.List.iter
     (PatternUnion.all_tuples_and_objects pattern_union)
-    ~f:(fun
-         ( _,
-           (reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _; guarded = _ })
-         )
-       ->
+    ~f:(fun (_, (reason, { PatternObject.props; rest; contains_invalid_pattern; _ })) ->
       if contains_invalid_pattern then
         ()
       else if not @@ check reason then

@@ -428,3 +428,18 @@
     [...] => {} // ERROR
   }
 }
+
+// Structure element checked after leaf-only element
+{
+  declare const x: [
+    [0],
+    0,
+  ] | [
+    [999],
+    999,
+  ];
+
+  match (x) { // ERROR: missing [_, 0]
+    [[999], 999] => {}
+  }
+}

@@ -448,3 +448,18 @@
     {foo: 0} => {} // ERROR
   }
 }
+
+// Structure prop checked after leaf-only prop
+{
+  declare const x: {
+    a: {foo: 0},
+    b: 0 | 1,
+  } | {
+    a: {foo: 999},
+    b: 999,
+  };
+
+  match (x) { // ERROR: missing {b: 0 | 1, a: _}
+    {a: {foo: 999}, b: 999} => {}
+  }
+}
