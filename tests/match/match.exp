@@ -533,8 +533,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:369:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `[_, _]` to match tuple type [1]
-- `[_, _, _]` to match tuple type [1] [match-not-exhaustive]
+- `[_, _, _]` to match tuple type [1]
+- `[_, _]` to match tuple type [1] [match-not-exhaustive]
 
    matching.js:369:14
    369|   const e3 = match (x) { // ERROR: does not match all possibilities
@@ -549,8 +549,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:373:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `[_]` to match tuple type [1]
-- `[_, _]` to match tuple type [1] [match-not-exhaustive]
+- `[_, _]` to match tuple type [1]
+- `[_]` to match tuple type [1] [match-not-exhaustive]
 
    matching.js:373:14
    373|   const e4 = match (x) { // ERROR: does not match all possibilities
