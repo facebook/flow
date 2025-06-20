@@ -107,7 +107,7 @@ end)
 
 let wildcard_str = "_"
 
-let sort_object_patterns = Base.List.sort ~compare:(fun (a, _, _) (b, _, _) -> a - b)
+let sort_object_patterns_by_index = Base.List.sort ~compare:(fun (a, _) (b, _) -> a - b)
 
 module ObjKind = struct
   type t =
@@ -136,39 +136,42 @@ module rec PatternObject : sig
     guarded: bool;
   }
 
-  type t = (* index for ordering *) int * Reason.t * t'
+  type t = Reason.t * t'
+
+  (* index for ordering *)
+  type with_index = int * t
 end =
   PatternObject
 
 (* A representation of a set of patterns. *)
 and PatternUnion : sig
-  type tuple_map = PatternObject.t list IMap.t
+  type tuple_map = PatternObject.with_index list IMap.t
 
   type t = {
     leafs: LeafSet.t;
     guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
-    objects: PatternObject.t list;
+    objects: PatternObject.with_index list;
     wildcard: Reason.t option;
     contains_invalid_pattern: bool;
   }
 
-  val all_tuples_and_objects : t -> PatternObject.t list
+  val all_tuples_and_objects : t -> PatternObject.with_index list
 
   (* If the only pattern in this pattern union is a wildcard, return that wildcard. *)
   val only_wildcard : t -> Reason.t option
 
   val of_patterns_ast : Context.t -> pattern_ast_list -> t
 end = struct
-  type tuple_map = PatternObject.t list IMap.t
+  type tuple_map = PatternObject.with_index list IMap.t
 
   type t = {
     leafs: LeafSet.t;
     guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
-    objects: PatternObject.t list;
+    objects: PatternObject.with_index list;
     wildcard: Reason.t option;
     contains_invalid_pattern: bool;
   }
@@ -212,7 +215,7 @@ end = struct
       Base.List.rev_append (IMap.values tuples_exact) (IMap.values tuples_inexact)
       |> Base.List.concat
     in
-    Base.List.rev_append all_tuples objects |> sort_object_patterns
+    Base.List.rev_append all_tuples objects |> sort_object_patterns_by_index
 
   (* Builder helpers *)
 
@@ -261,8 +264,9 @@ end = struct
     else
       pattern_union
 
-  let add_tuple (cx : Context.t) (pattern_union : t) ~(length : int) (tuple : PatternObject.t) : t =
-    let (_, reason, { PatternObject.kind; rest; _ }) = tuple in
+  let add_tuple
+      (cx : Context.t) (pattern_union : t) ~(length : int) (tuple : PatternObject.with_index) : t =
+    let (_, (reason, { PatternObject.kind; rest; _ })) = tuple in
     if not_seen_wildcard cx pattern_union reason then
       let { tuples_exact; tuples_inexact; _ } = pattern_union in
       let (tuples_exact, tuples_inexact) =
@@ -289,8 +293,8 @@ end = struct
     else
       pattern_union
 
-  let add_object (cx : Context.t) (pattern_union : t) (obj : PatternObject.t) : t =
-    let (_, reason, _) = obj in
+  let add_object (cx : Context.t) (pattern_union : t) (obj : PatternObject.with_index) : t =
+    let (_, (reason, _)) = obj in
     if not_seen_wildcard cx pattern_union reason then
       let { objects; _ } = pattern_union in
       (* Accumulate backwards, reverse at end of pattern_union creation. *)
@@ -455,14 +459,15 @@ end = struct
       in
       let tuple =
         ( next_i,
-          reason,
-          {
-            PatternObject.props;
-            rest;
-            kind = ObjKind.Tuple { length };
-            contains_invalid_pattern;
-            guarded;
-          }
+          ( reason,
+            {
+              PatternObject.props;
+              rest;
+              kind = ObjKind.Tuple { length };
+              contains_invalid_pattern;
+              guarded;
+            }
+          )
         )
       in
       let pattern_union = add_tuple cx pattern_union ~length tuple in
@@ -511,8 +516,9 @@ end = struct
         in
         let obj =
           ( next_i,
-            reason,
-            { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern; guarded }
+            ( reason,
+              { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern; guarded }
+            )
           )
         in
         let pattern_union = add_object cx pattern_union obj in
@@ -1113,14 +1119,14 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
             if value_is_inexact then
               let pattern_tuples = pattern_tuples_inexact |> IMap.values |> Base.List.concat in
               Base.List.rev_append pattern_tuples (tuples_gte_length pattern_tuples_exact length)
-              |> sort_object_patterns
+              |> sort_object_patterns_by_index
             else
               let exact_length_pattern_tuples =
                 IMap.find_opt length pattern_tuples_exact |> Base.Option.value ~default:[]
               in
               let inexact_pattern_tuples = tuples_lte_length pattern_tuples_inexact length in
               Base.List.rev_append exact_length_pattern_tuples inexact_pattern_tuples
-              |> sort_object_patterns
+              |> sort_object_patterns_by_index
           | ObjKind.Obj ->
             (* Only `ObjKind.Tuple` are added to `value_tuples` *)
             []
@@ -1194,7 +1200,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
    values against the patterns, and compute which objects were matched, and
    which were not matched. *)
 and filter_objects_by_patterns
-    cx (value_objects : ValueObject.t list) (pattern_objects : PatternObject.t list) :
+    cx (value_objects : ValueObject.t list) (pattern_objects : PatternObject.with_index list) :
     ValueObject.t list * ValueObject.t list * ALocSet.t =
   let rec f acc = function
     | [] -> acc
@@ -1205,7 +1211,7 @@ and filter_objects_by_patterns
         Base.List.fold
           pattern_objects
           ~init:(NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, ALocSet.empty)
-          ~f:(fun acc pattern_object ->
+          ~f:(fun acc (_, pattern_object) ->
             let (result, additional_used_pattern_locs) = acc in
             match result with
             | Match _ -> acc
@@ -1247,8 +1253,7 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
       ) =
     value_object
   in
-  let ( _,
-        reason_pattern,
+  let ( reason_pattern,
         {
           PatternObject.props = pattern_props;
           rest = pattern_rest;
@@ -1524,7 +1529,9 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
   Base.List.iter
     (PatternUnion.all_tuples_and_objects pattern_union)
     ~f:(fun
-         (_, reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _; guarded = _ })
+         ( _,
+           (reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _; guarded = _ })
+         )
        ->
       if contains_invalid_pattern then
         ()
