@@ -10,6 +10,7 @@ type kind =
   | ObjShorthandToReference
   | InvalidMatchStatementBody
   | InvalidBindingKind
+  | InvalidWildcardSyntax
 
 class mapper target_loc ~kind =
   object (this)
@@ -68,6 +69,9 @@ class mapper target_loc ~kind =
         | (loc, BindingPattern binding) when kind = InvalidBindingKind && this#is_target loc ->
           let { BindingPattern.kind = _; id; comments } = binding in
           (loc, BindingPattern { BindingPattern.kind = Flow_ast.Variable.Const; id; comments })
+        | (loc, WildcardPattern wildcard) when kind = InvalidWildcardSyntax && this#is_target loc ->
+          let { WildcardPattern.comments; invalid_syntax_default_keyword = _ } = wildcard in
+          (loc, WildcardPattern { WildcardPattern.comments; invalid_syntax_default_keyword = false })
         | _ -> pattern
       in
       super#match_pattern pattern
@@ -87,4 +91,8 @@ let fix_invalid_match_statement_body ast loc =
 
 let fix_invalid_binding_kind ast loc =
   let mapper = new mapper loc ~kind:InvalidBindingKind in
+  mapper#program ast
+
+let fix_invalid_wildcard_syntax ast loc =
+  let mapper = new mapper loc ~kind:InvalidWildcardSyntax in
   mapper#program ast

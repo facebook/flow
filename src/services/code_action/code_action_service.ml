@@ -1127,6 +1127,18 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchInvalidWildcardSyntax error_loc ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Replace `default` with `_`";
+          diagnostic_title = "fix_match_invalid_wildcard_syntax";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_wildcard_syntax;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing

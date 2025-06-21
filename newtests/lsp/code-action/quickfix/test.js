@@ -2060,5 +2060,32 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match invalid wildcard syntax', [
+      addFile(
+        'fix-match-invalid-wildcard-syntax.js.ignored',
+        'fix-match-invalid-wildcard-syntax.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-wildcard-syntax.js',
+        },
+        range: {
+          start: {line: 3, character: 3},
+          end: {line: 3, character: 9},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-invalid-wildcard-syntax.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);
