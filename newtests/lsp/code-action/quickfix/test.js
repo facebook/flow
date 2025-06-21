@@ -2033,5 +2033,32 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match invalid binding kind', [
+      addFile(
+        'fix-match-invalid-binding-kind.js.ignored',
+        'fix-match-invalid-binding-kind.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-binding-kind.js',
+        },
+        range: {
+          start: {line: 3, character: 2},
+          end: {line: 3, character: 7},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-invalid-binding-kind.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);

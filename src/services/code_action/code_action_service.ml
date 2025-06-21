@@ -1112,6 +1112,21 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchInvalidBindingKind { loc = error_loc; kind = current_kind } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title =
+            Utils_js.spf
+              "Replace `%s` with `const`"
+              (Flow_ast_utils.string_of_variable_kind current_kind);
+          diagnostic_title = "fix_match_invalid_binding_kind";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_binding_kind;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
