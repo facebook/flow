@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Fix invalid match syntax",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-expression-invalid-case-syntax-multiple.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 10
+                },
+                "end": {
+                  "line": 7,
+                  "character": 1
+                }
+              },
+              "newText": "match (x) {\n  true => 0,\n  false => 0,\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_invalid_case_syntax",
+          "Fix invalid match syntax"
+        ]
+      }
+    }
+  ]
+}

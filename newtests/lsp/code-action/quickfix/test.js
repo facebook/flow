@@ -2087,5 +2087,113 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match statement invalid case syntax - multiple', [
+      addFile(
+        'fix-match-statement-invalid-case-syntax-multiple.js.ignored',
+        'fix-match-statement-invalid-case-syntax-multiple.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-case-syntax-multiple.js',
+        },
+        range: {
+          start: {line: 4, character: 1},
+          end: {line: 4, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-statement-invalid-case-syntax-multiple.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match expression invalid case syntax - multiple', [
+      addFile(
+        'fix-match-expression-invalid-case-syntax-multiple.js.ignored',
+        'fix-match-expression-invalid-case-syntax-multiple.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-expression-invalid-case-syntax-multiple.js',
+        },
+        range: {
+          start: {line: 4, character: 11},
+          end: {line: 4, character: 15},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-expression-invalid-case-syntax-multiple.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match statement invalid case syntax - single', [
+      addFile(
+        'fix-match-statement-invalid-case-syntax-single.js.ignored',
+        'fix-match-statement-invalid-case-syntax-single.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-statement-invalid-case-syntax-single.js',
+        },
+        range: {
+          start: {line: 3, character: 3},
+          end: {line: 3, character: 3},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-statement-invalid-case-syntax-single.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match expression invalid case syntax - single', [
+      addFile(
+        'fix-match-expression-invalid-case-syntax-single.js.ignored',
+        'fix-match-expression-invalid-case-syntax-single.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-expression-invalid-case-syntax-single.js',
+        },
+        range: {
+          start: {line: 3, character: 3},
+          end: {line: 3, character: 3},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-expression-invalid-case-syntax-single.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);
