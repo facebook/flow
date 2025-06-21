@@ -1,0 +1,8 @@
+// @flow
+
+declare const x: boolean;
+
+const e = match (x) {
+  case true: 0;
+  case false: 0;
+}
