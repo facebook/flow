@@ -23,6 +23,9 @@ var vlq = require('vlq');
  *     If true, removes types completely rather than replacing with spaces.
  *     This may require using source maps.
  *
+ *   - commentOut: (default: false)
+ *     If true, comments out types instead of removing them.
+ *
  *   - ignoreUninitializedFields: (default: false)
  *     If true, removes uninitialized class fields (`foo;`, `foo: string;`)
  *     completely rather than only removing the type. THIS IS NOT SPEC
@@ -43,6 +46,7 @@ var vlq = require('vlq');
 module.exports = function flowRemoveTypes(source, options) {
   // Options
   var all = Boolean(options && options.all);
+  var commentOut = Boolean(options && options.commentOut);
   if (options && options.checkPragma) {
     throw new Error(
       'flow-remove-types: the "checkPragma" option has been replaced by "all".',
@@ -70,6 +74,7 @@ module.exports = function flowRemoveTypes(source, options) {
     source: source,
     removedNodes: removedNodes,
     pretty: Boolean(options && options.pretty),
+    commentOut: Boolean(options && options.commentOut),
     ignoreUninitializedFields: Boolean(
       options && options.ignoreUninitializedFields,
     ),
@@ -83,7 +88,18 @@ module.exports = function flowRemoveTypes(source, options) {
     if (pragmaIdx >= 0 && pragmaIdx < comments.length) {
       var pragmaType = comments[pragmaIdx].type;
       if (pragmaType === 'Line' || pragmaType === 'Block') {
-        removedNodes.push(getPragmaNode(context, pragmaStart, pragmaSize));
+        // When using --comment-out, we want to completely remove the pragma rather than commenting it out
+        if (context.commentOut) {
+          // Create a node that includes the entire comment
+          var comment = comments[pragmaIdx];
+          removedNodes.push(createNode({
+            start: startOf(comment),
+            end: endOf(comment),
+            loc: comment.loc
+          }));
+        } else {
+          removedNodes.push(getPragmaNode(context, pragmaStart, pragmaSize));
+        }
       }
     }
   }
@@ -97,6 +113,7 @@ module.exports = function flowRemoveTypes(source, options) {
 function resultPrinter(options, source, removedNodes) {
   // Options
   var pretty = Boolean(options && options.pretty);
+  var commentOut = Boolean(options && options.commentOut);
 
   return {
     toString: function () {
@@ -114,8 +131,19 @@ function resultPrinter(options, source, removedNodes) {
         lastPos = endOf(node);
         if (typeof node.__spliceValue === 'string') {
           result += node.__spliceValue;
-        }
-        if (!pretty) {
+        } else if (commentOut) {
+          // Special handling for @flow pragma - remove it completely
+          if (source.slice(startOf(node), endOf(node)).includes('@flow')) {
+            continue;
+          }
+          var toComment = source.slice(startOf(node), endOf(node));
+          if (!node.loc || node.loc.start.line === node.loc.end.line) {
+            result += '/* ' + toComment + ' */';
+          } else {
+            var toCommentLines = toComment.split(LINE_RX);
+            result += '/*\n' + toCommentLines.join('\n') + '\n*/';
+          }
+        } else if (!pretty) {
           var toReplace = source.slice(startOf(node), endOf(node));
           if (!node.loc || node.loc.start.line === node.loc.end.line) {
             result += space(toReplace.length);
@@ -315,8 +343,25 @@ var removeFlowVisitor = {
         removeNode(context, maybeImportKind);
       }
 
-      removeNode(context, node);
-      removeTrailingCommaNode(context, node);
+      // Check if there's a trailing comma after this specifier
+      var idxEnd = findTokenIndexAtEndOfNode(ast.tokens, node);
+      var nextToken = ast.tokens[idxEnd + 1];
+      var hasComma = nextToken && getLabel(nextToken) === ',';
+
+      if (hasComma) {
+        // Create a node that includes both the specifier and the comma
+        var combinedNode = createNode({
+          start: startOf(node),
+          end: endOf(nextToken),
+          loc: {
+            start: node.loc.start,
+            end: nextToken.loc.end
+          }
+        });
+        removeNode(context, combinedNode);
+      } else {
+        removeNode(context, node);
+      }
       return false;
     }
   },

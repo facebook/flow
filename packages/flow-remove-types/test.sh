@@ -19,6 +19,11 @@ echo "Test: flow-remove-types --remove-empty-imports test/source.js"
 DIFF=$(./flow-remove-types --remove-empty-imports test/source.js | diff test/expected-empty-imports.js -);
 if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
 
+# Test expected output with --comment-out flag
+echo "Test: flow-remove-types --comment-out test/source-comment-out.js"
+DIFF=$(./flow-remove-types --comment-out test/source-comment-out.js | diff test/expected-comment-out.js -);
+if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
+
 # Test expected output with --pretty flag
 echo "Test: flow-remove-types --pretty test/source.js"
 DIFF=$(./flow-remove-types --pretty test/source.js | diff test/expected-pretty.js -);
