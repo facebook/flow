@@ -23,6 +23,7 @@ var usage = 'Usage: flow-remove-types [options] [sources] \n' +
 '  -a, --all         Transform all files, not just those with a @flow comment\n' +
 '  -p, --pretty      Remove flow types without replacing with spaces, \n' +
 '                    producing prettier output but may require using source maps\n' +
+'      --comment-out Comment out flow types instead of removing them\n' +
 '      --ignore-uninitialized-fields\n' +
 '                    Removes uninitialized class fields (`foo;`, `foo: string;`)\n' +
 '                    completely rather than only removing the type. THIS IS NOT\n' +
@@ -87,6 +88,7 @@ var outDir;
 var outFile;
 var all;
 var pretty;
+var commentOut;
 var ignoreUninitializedFields;
 var removeEmptyImports;
 var sourceMaps;
@@ -114,6 +116,8 @@ while (i < process.argv.length) {
     all = true;
   } else if (arg === '-p' || arg === '--pretty') {
     pretty = true;
+  } else if (arg === '--comment-out') {
+    commentOut = true;
   } else if (arg === '--ignore-uninitialized-fields') {
     ignoreUninitializedFields = true;
   } else if (arg === '--remove-empty-imports') {
@@ -259,6 +263,7 @@ function transformSource(content, filepath) {
     return flowRemoveTypes(content, {
       all: all,
       pretty: pretty,
+      commentOut: commentOut,
       ignoreUninitializedFields: ignoreUninitializedFields,
       removeEmptyImports: removeEmptyImports,
     });

@@ -181,6 +181,28 @@ Rather not have the whitespace? Pass the `--pretty` flag to remove the whitespac
 flow-remove-types --pretty --sourcemaps source.js
 ```
 
+### Comment Out Transform
+
+Want to preserve the types as comments? Pass the `--comment-out` flag to comment out the types instead of removing them.
+
+```bash
+flow-remove-types --comment-out source.js
+```
+
+**Before:**
+```js
+function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+**After:**
+```js
+function add(a/*: number*/, b/*: number*/)/*: number*/ {
+  return a + b;
+}
+```
+
 Or using the JS API:
 
 ```js
