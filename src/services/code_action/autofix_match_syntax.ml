@@ -9,6 +9,7 @@ type kind =
   | ObjShorthandToConst
   | ObjShorthandToReference
   | InvalidMatchStatementBody
+  | InvalidBindingKind
 
 class mapper target_loc ~kind =
   object (this)
@@ -59,6 +60,17 @@ class mapper target_loc ~kind =
         in
         this#match_ loc ~on_case_body x
       | _ -> super#match_statement loc x
+
+    method! match_pattern pattern =
+      let open Flow_ast.MatchPattern in
+      let pattern =
+        match pattern with
+        | (loc, BindingPattern binding) when kind = InvalidBindingKind && this#is_target loc ->
+          let { BindingPattern.kind = _; id; comments } = binding in
+          (loc, BindingPattern { BindingPattern.kind = Flow_ast.Variable.Const; id; comments })
+        | _ -> pattern
+      in
+      super#match_pattern pattern
   end
 
 let convert_object_shorthand_to_const ast loc =
@@ -71,4 +83,8 @@ let convert_object_shorthand_to_reference ast loc =
 
 let fix_invalid_match_statement_body ast loc =
   let mapper = new mapper loc ~kind:InvalidMatchStatementBody in
+  mapper#program ast
+
+let fix_invalid_binding_kind ast loc =
+  let mapper = new mapper loc ~kind:InvalidBindingKind in
   mapper#program ast
