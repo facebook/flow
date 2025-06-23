@@ -2096,7 +2096,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let { arg; cases; match_keyword_loc; comments } = x in
         let arg' = this#expression arg in
         let cases' = List.map ~f:(this#on_loc_annot * this#match_case ~on_case_body) cases in
-        let match_keyword_loc' = this#on_type_annot match_keyword_loc in
+        let match_keyword_loc' = this#on_loc_annot match_keyword_loc in
         let comments' = this#syntax_opt comments in
         { arg = arg'; cases = cases'; match_keyword_loc = match_keyword_loc'; comments = comments' }
 

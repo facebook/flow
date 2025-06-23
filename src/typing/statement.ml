@@ -1281,15 +1281,13 @@ module Make
           )
         in
         error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
-        let match_keyword_loc =
-          ( match_keyword_loc,
-            Type_env.var_ref
-              ~lookup_mode:ForValue
-              cx
-              (OrdinaryName Flow_ast_utils.match_root_name)
-              match_keyword_loc
-          )
-        in
+        ignore
+          (Type_env.var_ref
+             ~lookup_mode:ForValue
+             cx
+             (OrdinaryName Flow_ast_utils.match_root_name)
+             match_keyword_loc
+          );
         (loc, Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments })
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       let discriminant_ast = expression cx discriminant in
@@ -3049,15 +3047,13 @@ module Make
           )
         in
         error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
-        let match_keyword_loc =
-          ( match_keyword_loc,
-            Type_env.var_ref
-              ~lookup_mode:ForValue
-              cx
-              (OrdinaryName Flow_ast_utils.match_root_name)
-              match_keyword_loc
-          )
-        in
+        ignore
+          (Type_env.var_ref
+             ~lookup_mode:ForValue
+             cx
+             (OrdinaryName Flow_ast_utils.match_root_name)
+             match_keyword_loc
+          );
         let match_t = union_of_ts reason (List.rev ts_rev) in
         let ast =
           ( (loc, match_t),
