@@ -4253,7 +4253,15 @@ let to_printable_error :
       let missing_props =
         if has_missing_props then
           text (spf "The %s " properties_text)
-          :: (Base.List.map missing_props ~f:(fun prop -> [code prop])
+          :: (Base.List.map missing_props ~f:(fun prop ->
+                  let prop =
+                    if Parser_flow.string_is_valid_identifier_name prop then
+                      prop
+                    else
+                      Js_layout_generator.quote_string ~prefer_single_quotes:true prop
+                  in
+                  [code prop]
+              )
              |> Flow_errors_utils.Friendly.conjunction_concat ~limit:5
              )
           @ [text " are missing from the pattern"]
