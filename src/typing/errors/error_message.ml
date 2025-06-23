@@ -653,7 +653,7 @@ and 'loc t' =
   (* Match *)
   | EMatchNotExhaustive of {
       loc: 'loc;
-      examples: (string * 'loc virtual_reason list) list;
+      examples: (string * (Loc.t, Loc.t) Flow_ast.MatchPattern.t * 'loc virtual_reason list) list;
     }
   | EMatchUnusedPattern of {
       reason: 'loc virtual_reason;
@@ -1554,8 +1554,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       {
         loc = f loc;
         examples =
-          Base.List.map examples ~f:(fun (pattern, reasons) ->
-              (pattern, Base.List.map ~f:map_reason reasons)
+          Base.List.map examples ~f:(fun (pattern, ast, reasons) ->
+              (pattern, ast, Base.List.map ~f:map_reason reasons)
           );
       }
   | EMatchUnusedPattern { reason; already_seen } ->
@@ -3105,7 +3105,16 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
-  | EMatchNotExhaustive { loc = _; examples } -> Normal (MessageMatchNotExhaustive { examples })
+  | EMatchNotExhaustive { loc = _; examples } ->
+    Normal
+      (MessageMatchNotExhaustive
+         {
+           examples =
+             Base.List.map examples ~f:(fun (pattern_string, _, reasons) ->
+                 (pattern_string, reasons)
+             );
+         }
+      )
   | EMatchUnusedPattern { reason; already_seen } ->
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->

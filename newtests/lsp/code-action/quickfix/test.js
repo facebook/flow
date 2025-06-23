@@ -2276,5 +2276,140 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - expression - basic', [
+      addFile(
+        'fix-match-not-exhaustive-expression-basic.js.ignored',
+        'fix-match-not-exhaustive-expression-basic.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-expression-basic.js',
+        },
+        range: {
+          start: {line: 6, character: 11},
+          end: {line: 6, character: 15},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-expression-basic.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - statement - basic', [
+      addFile(
+        'fix-match-not-exhaustive-statement-basic.js.ignored',
+        'fix-match-not-exhaustive-statement-basic.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-basic.js',
+        },
+        range: {
+          start: {line: 6, character: 1},
+          end: {line: 6, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-statement-basic.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - statement - single', [
+      addFile(
+        'fix-match-not-exhaustive-statement-single.js.ignored',
+        'fix-match-not-exhaustive-statement-single.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-single.js',
+        },
+        range: {
+          start: {line: 4, character: 1},
+          end: {line: 4, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-statement-single.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - statement - complex', [
+      addFile(
+        'fix-match-not-exhaustive-statement-complex.js.ignored',
+        'fix-match-not-exhaustive-statement-complex.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-complex.js',
+        },
+        range: {
+          start: {line: 4, character: 1},
+          end: {line: 4, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-statement-complex.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - statement - disjoint', [
+      addFile(
+        'fix-match-not-exhaustive-statement-disjoint.js.ignored',
+        'fix-match-not-exhaustive-statement-disjoint.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-disjoint.js',
+        },
+        range: {
+          start: {line: 4, character: 1},
+          end: {line: 4, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-statement-disjoint.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);

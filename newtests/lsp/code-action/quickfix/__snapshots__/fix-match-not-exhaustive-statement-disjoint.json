@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add 2 missing cases to make `match` exhaustively checked",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-disjoint.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 0
+                },
+                "end": {
+                  "line": 4,
+                  "character": 12
+                }
+              },
+              "newText": "match (x) {\n  {type: \"ok\", value: _} => {}\n  {type: \"error\", code: _} => {}\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_not_exhaustive",
+          "Add 2 missing cases to make `match` exhaustively checked"
+        ]
+      }
+    }
+  ]
+}

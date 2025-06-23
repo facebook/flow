@@ -16,6 +16,7 @@ type kind =
       add_rest: bool;
       missing_props: string list;
     }
+  | NotExhaustive of (Loc.t, Loc.t) Flow_ast.MatchPattern.t list
 
 let is_valid_ident_name = Parser_flow.string_is_valid_identifier_name
 
@@ -71,6 +72,7 @@ class mapper target_loc ~kind =
           | _ -> super#match_object_pattern_property prop)
 
     method! match_statement loc x =
+      let { Flow_ast.Match.match_keyword_loc; _ } = x in
       match kind with
       | InvalidMatchStatementBody when this#target_contained_by loc ->
         let on_case_body stmt =
@@ -86,7 +88,57 @@ class mapper target_loc ~kind =
           this#statement body
         in
         this#match_ loc ~on_case_body x
+      | NotExhaustive patterns_to_add when this#is_target match_keyword_loc ->
+        let { Flow_ast.Match.arg; cases; match_keyword_loc; comments } = x in
+        let new_cases =
+          Base.List.map patterns_to_add ~f:(fun pattern ->
+              let body =
+                ( Loc.none,
+                  Flow_ast.Statement.Block { Flow_ast.Statement.Block.body = []; comments = None }
+                )
+              in
+              ( Loc.none,
+                {
+                  Flow_ast.Match.Case.pattern;
+                  body;
+                  guard = None;
+                  comments = None;
+                  invalid_syntax = empty_invalid_case_syntax;
+                }
+              )
+          )
+        in
+        let x = { Flow_ast.Match.arg; cases = cases @ new_cases; match_keyword_loc; comments } in
+        super#match_statement loc x
       | _ -> super#match_statement loc x
+
+    method! match_expression loc x =
+      let { Flow_ast.Match.match_keyword_loc; _ } = x in
+      match kind with
+      | NotExhaustive patterns_to_add when this#is_target match_keyword_loc ->
+        let { Flow_ast.Match.arg; cases; match_keyword_loc; comments } = x in
+        let new_cases =
+          Base.List.map patterns_to_add ~f:(fun pattern ->
+              let body =
+                ( Loc.none,
+                  Flow_ast.Expression.Identifier
+                    (Loc.none, { Flow_ast.Identifier.name = "undefined"; comments = None })
+                )
+              in
+              ( Loc.none,
+                {
+                  Flow_ast.Match.Case.pattern;
+                  body;
+                  guard = None;
+                  comments = None;
+                  invalid_syntax = empty_invalid_case_syntax;
+                }
+              )
+          )
+        in
+        let x = { Flow_ast.Match.arg; cases = cases @ new_cases; match_keyword_loc; comments } in
+        super#match_expression loc x
+      | _ -> super#match_expression loc x
 
     method! match_pattern pattern =
       let open Flow_ast.MatchPattern in
@@ -215,4 +267,8 @@ let fix_invalid_case_syntax ast loc =
 
 let fix_non_exhaustive_object_pattern ~add_rest missing_props ast loc =
   let mapper = new mapper loc ~kind:(NonExhaustiveObjectPattern { add_rest; missing_props }) in
+  mapper#program ast
+
+let fix_not_exhaustive patterns_to_add ast loc =
+  let mapper = new mapper loc ~kind:(NotExhaustive patterns_to_add) in
   mapper#program ast

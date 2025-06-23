@@ -1,0 +1,5 @@
+// @flow
+
+declare const x: null | {foo: number, bar: number} | {baz: string, ...} | Array<number> | string | [string, string] | [number, ...];
+
+match (x) {}
