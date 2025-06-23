@@ -1,0 +1,13 @@
+// @flow
+
+function test(x: number) {
+  switch (x) {
+    case 0:
+      return 'a';
+    case 1:
+    case 2:
+      return 'b';
+    default:
+      return 'c';
+  }
+}

@@ -426,6 +426,28 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
   else
     []
 
+let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
+  if Context.enable_pattern_matching cx && include_rewrite_refactors only then
+    match Refactor_switch_to_match_statement.refactor ast loc with
+    | Some ast' ->
+      Flow_ast_differ.program ast ast'
+      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+      |> flow_loc_patch_to_lsp_edits
+      |> fun edits ->
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title = "Refactor `switch` to `match`";
+            kind = CodeActionKind.refactor_rewrite;
+            diagnostics = [];
+            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          };
+      ]
+    | None -> []
+  else
+    []
+
 let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options uri loc =
   match Refactor_add_jsx_props.fill_props cx ~snippets_enabled ~ast ~tast:typed_ast loc with
   | None -> []
@@ -1576,6 +1598,7 @@ let code_actions_at_loc
       loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
+    @ refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc
     @ add_jsx_props_code_actions
         ~snippets_enabled:(Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
         ~cx
