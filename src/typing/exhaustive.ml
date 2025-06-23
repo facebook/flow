@@ -100,6 +100,46 @@ module Leaf = struct
     | VoidC -> "undefined"
     | EnumMemberC { enum_info = { Type.enum_name; _ }; member_name } ->
       Utils_js.spf "%s.%s" enum_name member_name
+
+  let to_ast leaf =
+    match leaf with
+    | BoolC value ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.BooleanPattern { Flow_ast.BooleanLiteral.value; comments = None }
+      )
+    | StrC name ->
+      let value = Reason.display_string_of_name name in
+      ( Loc.none,
+        Flow_ast.MatchPattern.StringPattern
+          {
+            Flow_ast.StringLiteral.value;
+            raw = Js_layout_generator.quote_string ~prefer_single_quotes:true value;
+            comments = None;
+          }
+      )
+    | NumC (value, raw) ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.NumberPattern { Flow_ast.NumberLiteral.value; raw; comments = None }
+      )
+    | BigIntC (value, raw) ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.BigIntPattern { Flow_ast.BigIntLiteral.value; raw; comments = None }
+      )
+    | NullC -> (Loc.none, Flow_ast.MatchPattern.NullPattern None)
+    | VoidC ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.IdentifierPattern
+          (Loc.none, { Flow_ast.Identifier.name = "undefined"; comments = None })
+      )
+    | EnumMemberC { enum_info = { Type.enum_name; _ }; member_name } ->
+      let open Flow_ast.MatchPattern.MemberPattern in
+      let base =
+        BaseIdentifier (Loc.none, { Flow_ast.Identifier.name = enum_name; comments = None })
+      in
+      let property =
+        PropertyIdentifier (Loc.none, { Flow_ast.Identifier.name = member_name; comments = None })
+      in
+      (Loc.none, Flow_ast.MatchPattern.MemberPattern (Loc.none, { base; property; comments = None }))
 end
 
 module LeafSet = Set.Make (struct
@@ -148,6 +188,8 @@ module rec PatternObject : sig
   val compare : t -> t -> int
 
   val to_string : t -> string
+
+  val to_ast : t -> (Loc.t, Loc.t) Flow_ast.MatchPattern.t
 end = struct
   module Property = struct
     type t = {
@@ -246,6 +288,60 @@ end = struct
           elements
       in
       Utils_js.spf "[%s]" (String.concat ", " elements)
+
+  let to_ast (_, { kind; props; keys_order; rest; _ }) =
+    let open Flow_ast in
+    let rest =
+      if Base.Option.is_some rest then
+        Some (Loc.none, { MatchPattern.RestPattern.argument = None; comments = None })
+      else
+        None
+    in
+    match kind with
+    | ObjKind.Obj ->
+      let properties =
+        Base.List.map keys_order ~f:(fun key ->
+            let { Property.value; _ } = SMap.find key props in
+            let key =
+              if Parser_flow.string_is_valid_identifier_name key then
+                MatchPattern.ObjectPattern.Property.Identifier
+                  (Loc.none, { Identifier.name = key; comments = None })
+              else
+                let str_lit =
+                  {
+                    StringLiteral.value = key;
+                    raw = Js_layout_generator.quote_string ~prefer_single_quotes:true key;
+                    comments = None;
+                  }
+                in
+                MatchPattern.ObjectPattern.Property.StringLiteral (Loc.none, str_lit)
+            in
+            let pattern = PatternUnion.to_ast value in
+            ( Loc.none,
+              MatchPattern.ObjectPattern.Property.Valid
+                {
+                  MatchPattern.ObjectPattern.Property.key;
+                  pattern;
+                  shorthand = false;
+                  comments = None;
+                }
+            )
+        )
+      in
+      ( Loc.none,
+        MatchPattern.ObjectPattern { MatchPattern.ObjectPattern.properties; rest; comments = None }
+      )
+    | ObjKind.Tuple { length } ->
+      let elements =
+        Base.List.init length ~f:(fun i ->
+            let { Property.value; _ } = SMap.find (string_of_int i) props in
+            let pattern = PatternUnion.to_ast value in
+            { MatchPattern.ArrayPattern.Element.index = Loc.none; pattern }
+        )
+      in
+      ( Loc.none,
+        MatchPattern.ArrayPattern { MatchPattern.ArrayPattern.elements; rest; comments = None }
+      )
 end
 
 (* A representation of a set of patterns. *)
@@ -275,6 +371,8 @@ and PatternUnion : sig
   val of_patterns_ast : Context.t -> pattern_ast_list -> t
 
   val to_string : t -> string
+
+  val to_ast : t -> (Loc.t, Loc.t) Flow_ast.MatchPattern.t
 end = struct
   type tuple_map = PatternObject.with_index list IMap.t
 
@@ -708,6 +806,36 @@ end = struct
         []
     in
     Base.List.concat [leafs; tuples_and_objects; wildcard] |> String.concat " | "
+
+  let to_ast pattern_union =
+    let { leafs; wildcard; _ } = pattern_union in
+    let leafs = LeafSet.elements leafs |> Base.List.map ~f:(fun (_, leaf) -> Leaf.to_ast leaf) in
+    let tuples_and_objects =
+      all_tuples_and_objects pattern_union
+      |> Base.List.map ~f:(fun (_, pattern_object) -> PatternObject.to_ast pattern_object)
+    in
+    let wildcard =
+      if Base.Option.is_some wildcard then
+        [
+          ( Loc.none,
+            Flow_ast.MatchPattern.WildcardPattern
+              {
+                Flow_ast.MatchPattern.WildcardPattern.comments = None;
+                invalid_syntax_default_keyword = false;
+              }
+          );
+        ]
+      else
+        []
+    in
+    let patterns = Base.List.concat [leafs; tuples_and_objects; wildcard] in
+    match patterns with
+    | [single] -> single
+    | _ ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.OrPattern
+          { Flow_ast.MatchPattern.OrPattern.patterns; comments = None }
+      )
 end
 
 (* `_` *)
@@ -1822,11 +1950,11 @@ let analyze cx ~match_loc patterns arg_t =
       LeafSet.elements leafs
       |> Base.List.map ~f:(fun (reason, leaf) ->
              let example = Leaf.to_string leaf in
-             (example, [reason])
+             (example, Leaf.to_ast leaf, [reason])
          )
     in
     (* Sort examples based on their original order *)
-    let compare_examples (_, (a, _)) (_, (b, _)) = Int.compare a b in
+    let compare_examples (_, (a, _, _)) (_, (b, _, _)) = Int.compare a b in
     (* Build up map of example to reason set *)
     let tuple_examples_map =
       tuples
@@ -1838,8 +1966,8 @@ let analyze cx ~match_loc patterns arg_t =
              SMap.adjust
                example
                (function
-                 | None -> (i, ReasonSet.singleton reason)
-                 | Some (i, reasons) -> (i, ReasonSet.add reason reasons))
+                 | None -> (i, PatternObject.to_ast tuple_pattern, ReasonSet.singleton reason)
+                 | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
     in
@@ -1858,8 +1986,8 @@ let analyze cx ~match_loc patterns arg_t =
         SMap.adjust
           (PatternObject.to_string pattern)
           (function
-            | None -> (i, reasons)
-            | Some (i, existing_reasons) -> (i, ReasonSet.union existing_reasons reasons))
+            | None -> (i, PatternObject.to_ast pattern, reasons)
+            | Some (i, ast, existing_reasons) -> (i, ast, ReasonSet.union existing_reasons reasons))
           tuple_examples_map
     in
     (* Turn the map into a list of examples *)
@@ -1867,7 +1995,9 @@ let analyze cx ~match_loc patterns arg_t =
       tuple_examples_map
       |> SMap.elements
       |> Base.List.sort ~compare:compare_examples
-      |> Base.List.map ~f:(fun (example, (_, reasons)) -> (example, ReasonSet.elements reasons))
+      |> Base.List.map ~f:(fun (example, (_, ast, reasons)) ->
+             (example, ast, ReasonSet.elements reasons)
+         )
     in
     (* Compute the list of object examples *)
     let object_examples_list =
@@ -1880,13 +2010,15 @@ let analyze cx ~match_loc patterns arg_t =
              SMap.adjust
                example
                (function
-                 | None -> (i, ReasonSet.singleton reason)
-                 | Some (i, reasons) -> (i, ReasonSet.add reason reasons))
+                 | None -> (i, PatternObject.to_ast object_pattern, ReasonSet.singleton reason)
+                 | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
       |> SMap.elements
       |> Base.List.sort ~compare:compare_examples
-      |> Base.List.map ~f:(fun (example, (_, reasons)) -> (example, ReasonSet.elements reasons))
+      |> Base.List.map ~f:(fun (example, (_, ast, reasons)) ->
+             (example, ast, ReasonSet.elements reasons)
+         )
     in
     let wildcard =
       match inexhaustible with
@@ -1895,6 +2027,7 @@ let analyze cx ~match_loc patterns arg_t =
         let pattern = wildcard_pattern (TypeUtil.reason_of_t first_t) in
         [
           ( PatternUnion.to_string pattern,
+            PatternUnion.to_ast pattern,
             Base.List.fold inexhaustible ~init:ReasonSet.empty ~f:(fun acc t ->
                 ReasonSet.add (TypeUtil.reason_of_t t) acc
             )

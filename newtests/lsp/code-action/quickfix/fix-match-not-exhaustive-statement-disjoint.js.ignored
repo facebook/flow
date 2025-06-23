@@ -1,0 +1,5 @@
+// @flow
+
+declare const x: {type: 'ok', value: string} | {type: 'error', code: number};
+
+match (x) {}

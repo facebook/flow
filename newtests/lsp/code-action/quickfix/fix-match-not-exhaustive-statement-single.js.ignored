@@ -1,0 +1,7 @@
+// @flow
+
+declare const x: boolean
+
+match (x) {
+  true => {}
+}
