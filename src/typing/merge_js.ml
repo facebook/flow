@@ -244,9 +244,15 @@ let rec check_conditional
       | Super _ -> condition_banned_and_TRUTHY
       | Unary { Unary.operator; argument; _ } ->
         (match operator with
+        | Ast.Expression.Unary.Not ->
+          let arg_eval_result =
+            check_conditional cx argument cached_results ~should_report_error:false
+          in
+          (match arg_eval_result with
+          | ConditionBanned { is_truthy } -> ConditionBanned { is_truthy = not is_truthy }
+          | ConditionAllowed -> ConditionAllowed)
         | Ast.Expression.Unary.Minus
         | Ast.Expression.Unary.Plus
-        | Ast.Expression.Unary.Not
         | Ast.Expression.Unary.BitNot
         | Ast.Expression.Unary.Typeof ->
           check_conditional cx argument cached_results ~should_report_error:false

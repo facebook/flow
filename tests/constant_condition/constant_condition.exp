@@ -850,5 +850,149 @@ Constant condition. The condition will always be truthy. [constant-condition]
                  ^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
 
-Found 106 errors
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   2|     if(!'afa') {} // ERROR -> falsy
+             ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- unary_not.js:9:8
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   9|     if(a ? 'afa' : 5) {} // ERROR -> truthy
+             ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:10:8
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   10|     if(a ? !'afa' : !5) {} // ERROR -> falsy
+              ^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:12:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   12|     'afa' && a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:13:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   13|     (!'afa') && a; // ERROR -> falsy
+            ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:15:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   15|     'afa' || a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:16:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   16|     (!'afa') || a; // ERROR -> falsy
+            ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:18:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   18|     'afa' ?? a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:19:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   19|     (!'afa') ?? a; // ERROR -> falsy
+            ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:24:8
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   24|     if(!!!'afa') {} // ERROR -> falsy
+              ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:31:8
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   31|     if(!(a ? !!'afa' : !!5)) {} // ERROR -> falsy
+              ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:32:8
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   32|     if(a ? !!!!!!!'afa' : !!!5) {} // ERROR -> falsy
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:34:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   34|     'afa' && a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:35:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   35|     (!!!'afa') && a; // ERROR -> falsy
+            ^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:37:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   37|     'afa' || a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:38:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   38|     (!!!!!!!'afa') || a; // ERROR -> falsy
+            ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:40:5
+
+Constant condition. The condition will always be truthy. [constant-condition]
+
+   40|     'afa' ?? a; // ERROR -> truthy
+           ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ unary_not.js:41:6
+
+Constant condition. The condition will always be falsy. [constant-condition]
+
+   41|     (!!!!!!!!!!!'afa') ?? a; // ERROR -> falsy
+            ^^^^^^^^^^^^^^^^
+
+
+
+Found 124 errors
