@@ -2411,5 +2411,113 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match unused pattern - remove case', [
+      addFile(
+        'fix-match-unused-pattern-remove-case.js.ignored',
+        'fix-match-unused-pattern-remove-case.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-remove-case.js',
+        },
+        range: {
+          start: {line: 7, character: 3},
+          end: {line: 7, character: 7},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-unused-pattern-remove-case.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match unused pattern - remove from "or" pattern', [
+      addFile(
+        'fix-match-unused-pattern-or.js.ignored',
+        'fix-match-unused-pattern-or.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-or.js',
+        },
+        range: {
+          start: {line: 6, character: 7},
+          end: {line: 6, character: 11},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-unused-pattern-or.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match unused pattern - remove object rest', [
+      addFile(
+        'fix-match-unused-pattern-object-rest.js.ignored',
+        'fix-match-unused-pattern-object-rest.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-object-rest.js',
+        },
+        range: {
+          start: {line: 5, character: 12},
+          end: {line: 5, character: 14},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-unused-pattern-object-rest.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match unused pattern - remove array rest', [
+      addFile(
+        'fix-match-unused-pattern-array-rest.js.ignored',
+        'fix-match-unused-pattern-array-rest.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-array-rest.js',
+        },
+        range: {
+          start: {line: 5, character: 7},
+          end: {line: 5, character: 9},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-unused-pattern-array-rest.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);

@@ -17,6 +17,7 @@ type kind =
       missing_props: string list;
     }
   | NotExhaustive of (Loc.t, Loc.t) Flow_ast.MatchPattern.t list
+  | UnusedPattern
 
 let is_valid_ident_name = Parser_flow.string_is_valid_identifier_name
 
@@ -198,6 +199,37 @@ class mapper target_loc ~kind =
               properties @ added_props
           in
           (loc, ObjectPattern { ObjectPattern.properties; rest; comments })
+        | ( (loc, ObjectPattern { ObjectPattern.properties; rest = Some (rest_loc, _); comments }),
+            UnusedPattern
+          )
+          when this#is_target rest_loc ->
+          (loc, ObjectPattern { ObjectPattern.properties; rest = None; comments })
+        | ( (loc, ArrayPattern { ArrayPattern.elements; rest = Some (rest_loc, _); comments }),
+            UnusedPattern
+          )
+          when this#is_target rest_loc ->
+          (loc, ArrayPattern { ArrayPattern.elements; rest = None; comments })
+        | ((loc, OrPattern { OrPattern.patterns; comments }), UnusedPattern)
+          when this#target_contained_by loc ->
+          let (patterns_rev, changed) =
+            Base.List.fold patterns ~init:([], false) ~f:(fun (patterns_rev, changed) pattern ->
+                let (pattern_loc, _) = pattern in
+                if this#is_target pattern_loc then
+                  (patterns_rev, true)
+                else if changed then
+                  (* Update loc for subsequent patterns so that no newline appears. *)
+                  let pattern = (Loc.none, snd pattern) in
+                  (pattern :: patterns_rev, changed)
+                else
+                  (pattern :: patterns_rev, changed)
+            )
+          in
+          if changed then
+            match patterns_rev with
+            | [single_pattern] -> single_pattern
+            | _ -> (loc, OrPattern { OrPattern.patterns = Base.List.rev patterns_rev; comments })
+          else
+            pattern
         | _ -> pattern
       in
       super#match_pattern pattern
@@ -206,7 +238,8 @@ class mapper target_loc ~kind =
       let open Flow_ast.Match in
       let { match_keyword_loc; _ } = x in
       let x =
-        if kind = InvalidCaseSyntax && this#is_target match_keyword_loc then
+        match kind with
+        | InvalidCaseSyntax when this#is_target match_keyword_loc ->
           let { arg; cases; match_keyword_loc; comments } = x in
           let cases =
             Base.List.map cases ~f:(fun case ->
@@ -219,8 +252,26 @@ class mapper target_loc ~kind =
             )
           in
           { arg; cases; match_keyword_loc; comments }
-        else
-          x
+        | UnusedPattern when this#target_contained_by loc ->
+          let { arg; cases; match_keyword_loc; comments } = x in
+          let (cases_rev, changed) =
+            Base.List.fold cases ~init:([], false) ~f:(fun (cases_rev, changed) case ->
+                let (_, { Case.pattern = (pattern_loc, _); _ }) = case in
+                if this#is_target pattern_loc then
+                  (cases_rev, true)
+                else if changed then
+                  (* Update loc for subsequent cases so that no newline appears. *)
+                  let case = (Loc.none, snd case) in
+                  (case :: cases_rev, changed)
+                else
+                  (case :: cases_rev, changed)
+            )
+          in
+          if changed then
+            { arg; cases = Base.List.rev cases_rev; match_keyword_loc; comments }
+          else
+            x
+        | _ -> x
       in
       super#match_ loc ~on_case_body x
 
@@ -271,4 +322,8 @@ let fix_non_exhaustive_object_pattern ~add_rest missing_props ast loc =
 
 let fix_not_exhaustive patterns_to_add ast loc =
   let mapper = new mapper loc ~kind:(NotExhaustive patterns_to_add) in
+  mapper#program ast
+
+let remove_unused_pattern ast loc =
+  let mapper = new mapper loc ~kind:UnusedPattern in
   mapper#program ast

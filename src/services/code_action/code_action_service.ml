@@ -1249,6 +1249,19 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchUnusedPattern { reason; already_seen = _ } ->
+    let error_loc = Reason.loc_of_reason reason in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Remove";
+          diagnostic_title = "fix_match_unused_pattern";
+          transform = untyped_ast_transform Autofix_match_syntax.remove_unused_pattern;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
