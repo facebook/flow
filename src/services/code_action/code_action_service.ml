@@ -1151,6 +1151,59 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchNonExhaustiveObjectPattern { loc = error_loc; rest; missing_props } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let add_only_rest =
+        {
+          title = "Add rest `...` to object pattern";
+          diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_rest";
+          transform =
+            untyped_ast_transform
+              (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true []);
+          target_loc = error_loc;
+        }
+      in
+      let missing_props_prefix_text missing_props =
+        let num_missing_props = Base.List.length missing_props in
+        if num_missing_props = 1 then
+          Utils_js.spf "Add the missing property"
+        else
+          Utils_js.spf "Add %d missing properties" num_missing_props
+      in
+      match (missing_props, rest) with
+      | ([], _) -> [add_only_rest]
+      | (_ :: _, None) ->
+        [
+          {
+            title = Utils_js.spf "%s to object pattern" (missing_props_prefix_text missing_props);
+            diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_props";
+            transform =
+              untyped_ast_transform
+                (Autofix_match_syntax.fix_non_exhaustive_object_pattern
+                   ~add_rest:false
+                   missing_props
+                );
+            target_loc = error_loc;
+          };
+          add_only_rest;
+        ]
+      | (_ :: _, Some _) ->
+        [
+          {
+            title =
+              Utils_js.spf
+                "%s and rest `...` to object pattern"
+                (missing_props_prefix_text missing_props);
+            diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_props_and_rest";
+            transform =
+              untyped_ast_transform
+                (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true missing_props);
+            target_loc = error_loc;
+          };
+          add_only_rest;
+        ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
