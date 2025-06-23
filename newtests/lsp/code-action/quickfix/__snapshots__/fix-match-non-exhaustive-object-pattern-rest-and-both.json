@@ -2,24 +2,24 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `const foo`",
+      "title": "Add 2 missing properties and rest `...` to object pattern",
       "kind": "quickfix",
       "diagnostics": [],
       "edit": {
         "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-object-shorthand.js": [
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-rest-and-both.js": [
             {
               "range": {
                 "start": {
-                  "line": 6,
-                  "character": 3
+                  "line": 5,
+                  "character": 2
                 },
                 "end": {
-                  "line": 6,
-                  "character": 6
+                  "line": 5,
+                  "character": 4
                 }
               },
-              "newText": "const foo"
+              "newText": "{bar: _, foo: _, ...}"
             }
           ]
         }
@@ -29,30 +29,30 @@
         "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
-          "convert_match_object_shorthand_to_const",
-          "Convert to `const foo`"
+          "fix_match_non_exhaustive_object_pattern_add_props_and_rest",
+          "Add 2 missing properties and rest `...` to object pattern"
         ]
       }
     },
     {
-      "title": "Convert to `foo: foo`",
+      "title": "Add rest `...` to object pattern",
       "kind": "quickfix",
       "diagnostics": [],
       "edit": {
         "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-object-shorthand.js": [
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-rest-and-both.js": [
             {
               "range": {
                 "start": {
-                  "line": 6,
-                  "character": 3
+                  "line": 5,
+                  "character": 2
                 },
                 "end": {
-                  "line": 6,
-                  "character": 6
+                  "line": 5,
+                  "character": 4
                 }
               },
-              "newText": "foo: foo"
+              "newText": "{...}"
             }
           ]
         }
@@ -62,8 +62,8 @@
         "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
-          "convert_match_object_shorthand_to_reference",
-          "Convert to `foo: foo`"
+          "fix_match_non_exhaustive_object_pattern_add_rest",
+          "Add rest `...` to object pattern"
         ]
       }
     }

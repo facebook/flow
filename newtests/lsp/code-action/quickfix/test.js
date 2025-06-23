@@ -1990,8 +1990,8 @@ module.exports = (suite(
           uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-object-shorthand.js',
         },
         range: {
-          start: {line: 5, character: 5},
-          end: {line: 5, character: 5},
+          start: {line: 6, character: 5},
+          end: {line: 6, character: 5},
         },
         context: {
           only: ['quickfix'],
@@ -2168,19 +2168,19 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
-    test('match expression invalid case syntax - single', [
+    test('match non exhaustive object pattern - only rest', [
       addFile(
-        'fix-match-expression-invalid-case-syntax-single.js.ignored',
-        'fix-match-expression-invalid-case-syntax-single.js',
+        'fix-match-non-exhaustive-object-pattern-only-rest.js.ignored',
+        'fix-match-non-exhaustive-object-pattern-only-rest.js',
       ),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-expression-invalid-case-syntax-single.js',
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-only-rest.js',
         },
         range: {
-          start: {line: 3, character: 3},
-          end: {line: 3, character: 3},
+          start: {line: 5, character: 3},
+          end: {line: 5, character: 4},
         },
         context: {
           only: ['quickfix'],
@@ -2190,7 +2190,88 @@ module.exports = (suite(
         path.join(
           __dirname,
           '__snapshots__',
-          'fix-match-expression-invalid-case-syntax-single.json',
+          'fix-match-non-exhaustive-object-pattern-only-rest.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match non exhaustive object pattern - rest and only props', [
+      addFile(
+        'fix-match-non-exhaustive-object-pattern-rest-and-only-props.js.ignored',
+        'fix-match-non-exhaustive-object-pattern-rest-and-only-props.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-rest-and-only-props.js',
+        },
+        range: {
+          start: {line: 5, character: 3},
+          end: {line: 5, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-non-exhaustive-object-pattern-rest-and-only-props.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match non exhaustive object pattern - rest and both', [
+      addFile(
+        'fix-match-non-exhaustive-object-pattern-rest-and-both.js.ignored',
+        'fix-match-non-exhaustive-object-pattern-rest-and-both.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-rest-and-both.js',
+        },
+        range: {
+          start: {line: 5, character: 3},
+          end: {line: 5, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-non-exhaustive-object-pattern-rest-and-both.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test('match non exhaustive object pattern - non-ident key', [
+      addFile(
+        'fix-match-non-exhaustive-object-pattern-non-ident-key.js.ignored',
+        'fix-match-non-exhaustive-object-pattern-non-ident-key.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-non-ident-key.js',
+        },
+        range: {
+          start: {line: 5, character: 3},
+          end: {line: 5, character: 4},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-non-exhaustive-object-pattern-non-ident-key.json',
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

@@ -12,6 +12,12 @@ type kind =
   | InvalidBindingKind
   | InvalidWildcardSyntax
   | InvalidCaseSyntax
+  | NonExhaustiveObjectPattern of {
+      add_rest: bool;
+      missing_props: string list;
+    }
+
+let is_valid_ident_name = Parser_flow.string_is_valid_identifier_name
 
 let is_invalid_case_syntax invalid_syntax =
   let {
@@ -85,13 +91,61 @@ class mapper target_loc ~kind =
     method! match_pattern pattern =
       let open Flow_ast.MatchPattern in
       let pattern =
-        match pattern with
-        | (loc, BindingPattern binding) when kind = InvalidBindingKind && this#is_target loc ->
+        match (pattern, kind) with
+        | ((loc, BindingPattern binding), InvalidBindingKind) when this#is_target loc ->
           let { BindingPattern.kind = _; id; comments } = binding in
           (loc, BindingPattern { BindingPattern.kind = Flow_ast.Variable.Const; id; comments })
-        | (loc, WildcardPattern wildcard) when kind = InvalidWildcardSyntax && this#is_target loc ->
+        | ((loc, WildcardPattern wildcard), InvalidWildcardSyntax) when this#is_target loc ->
           let { WildcardPattern.comments; invalid_syntax_default_keyword = _ } = wildcard in
           (loc, WildcardPattern { WildcardPattern.comments; invalid_syntax_default_keyword = false })
+        | ( (loc, ObjectPattern { ObjectPattern.properties; rest; comments }),
+            NonExhaustiveObjectPattern { add_rest; missing_props }
+          )
+          when this#is_target loc ->
+          let rest =
+            if add_rest then
+              Some (Loc.none, { RestPattern.argument = None; comments = None })
+            else
+              rest
+          in
+          let properties =
+            if Base.List.is_empty missing_props then
+              properties
+            else
+              let added_props =
+                Base.List.map missing_props ~f:(fun name ->
+                    let key =
+                      if is_valid_ident_name name then
+                        ObjectPattern.Property.Identifier
+                          (Loc.none, { Flow_ast.Identifier.name; comments = None })
+                      else
+                        ObjectPattern.Property.StringLiteral
+                          ( Loc.none,
+                            {
+                              Flow_ast.StringLiteral.value = name;
+                              raw = "" (* Raw unused *);
+                              comments = None;
+                            }
+                          )
+                    in
+                    let pattern =
+                      ( Loc.none,
+                        WildcardPattern
+                          {
+                            WildcardPattern.comments = None;
+                            invalid_syntax_default_keyword = false;
+                          }
+                      )
+                    in
+                    ( Loc.none,
+                      ObjectPattern.Property.Valid
+                        { ObjectPattern.Property.key; pattern; shorthand = false; comments = None }
+                    )
+                )
+              in
+              properties @ added_props
+          in
+          (loc, ObjectPattern { ObjectPattern.properties; rest; comments })
         | _ -> pattern
       in
       super#match_pattern pattern
@@ -157,4 +211,8 @@ let fix_invalid_wildcard_syntax ast loc =
 
 let fix_invalid_case_syntax ast loc =
   let mapper = new mapper loc ~kind:InvalidCaseSyntax in
+  mapper#program ast
+
+let fix_non_exhaustive_object_pattern ~add_rest missing_props ast loc =
+  let mapper = new mapper loc ~kind:(NonExhaustiveObjectPattern { add_rest; missing_props }) in
   mapper#program ast

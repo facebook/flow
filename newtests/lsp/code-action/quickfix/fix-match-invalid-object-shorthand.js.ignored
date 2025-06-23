@@ -3,6 +3,7 @@
 declare const x: {foo: 1};
 
 const out = match (x) {
+  {foo: _} => 0,
   {foo} => 0,
   _ => 0,
 };
