@@ -1,0 +1,29 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Refactor `switch` to `match`",
+      "kind": "refactor.rewrite",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/refactor-switch-to-match-expression-returned.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 2
+                },
+                "end": {
+                  "line": 11,
+                  "character": 3
+                }
+              },
+              "newText": "return match (x) {\n    0 => \"a\",\n    1 | 2 => \"b\",\n    _ => \"c\",\n  };"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

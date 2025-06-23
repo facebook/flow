@@ -1,0 +1,3 @@
+[options]
+experimental.pattern_matching=true
+enums=true
