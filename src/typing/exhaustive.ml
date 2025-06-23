@@ -90,7 +90,10 @@ module Leaf = struct
     match leaf with
     | BoolC true -> "true"
     | BoolC false -> "false"
-    | StrC name -> Utils_js.spf "'%s'" (Reason.display_string_of_name name)
+    | StrC name ->
+      Js_layout_generator.quote_string
+        ~prefer_single_quotes:true
+        (Reason.display_string_of_name name)
     | NumC (_, s) -> s
     | BigIntC (_, s) -> s
     | NullC -> "null"

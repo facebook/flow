@@ -379,3 +379,10 @@ type Mapped = {[K in keyof O]: [O[K]]};
     999 => {} // ERROR: unnecessary pattern
   }
 }
+
+// String leaf that needs proper quoting
+{
+  declare const x: "baz'bort" | 'foo"bar'
+
+  match (x) {} // ERROR: properly quoted
+}

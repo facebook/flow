@@ -414,6 +414,10 @@ let utf8_escape =
   fun ~quote str ->
     str |> lookahead_fold_wtf_8 (f ~quote) (Buffer.create (String.length str)) |> Buffer.contents
 
+let quote_string ~prefer_single_quotes value =
+  let quote = better_quote ~prefer_single_quotes value in
+  Utils_js.spf "%s%s%s" quote (utf8_escape ~quote value) quote
+
 let is_single_linebreak prev next = Loc.(next.start.line = prev._end.line + 1)
 
 let is_multi_linebreak prev next = Loc.(next.start.line > prev._end.line + 1)

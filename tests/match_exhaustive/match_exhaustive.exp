@@ -515,6 +515,25 @@ of the input type. To fix, either remove this pattern or restructure previous pa
             ^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- basic.js:387:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `"baz'bort"` to match string literal `baz'bort` [1]
+- `'foo"bar'` to match string literal `foo"bar` [2] [match-not-exhaustive]
+
+   basic.js:387:3
+   387|   match (x) {} // ERROR: properly quoted
+          ^^^^^
+
+References:
+   basic.js:385:20
+   385|   declare const x: "baz'bort" | 'foo"bar'
+                           ^^^^^^^^^^ [1]
+   basic.js:385:33
+   385|   declare const x: "baz'bort" | 'foo"bar'
+                                        ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- empty.js:6:3
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
@@ -1747,6 +1766,16 @@ References:
           ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- objects.js:430:5
+
+This object pattern hasn't considered all possible properties of the input. The properties `"baz'bort"` and `'foo-bar'`
+are missing from the pattern. To fix, either add those properties to the object pattern, or add `...` to the end of the
+pattern to match all other properties. [match-not-exhaustive]
+
+   430|     {} => {}
+            ^^
+
+
 Error -------------------------------------------------------------------------------------------- pattern-errors.js:8:5
 
 This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
@@ -2317,4 +2346,4 @@ References:
 
 
 
-Found 169 errors
+Found 171 errors

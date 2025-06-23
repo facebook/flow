@@ -421,3 +421,12 @@
     {a: {foo: 999}, b: 999} => {}
   }
 }
+
+// Missing properties with non-ident names
+{
+  declare const x: {"baz'bort": 0, 'foo-bar': 0, };
+
+  match (x) {
+    {} => {}
+  }
+}
