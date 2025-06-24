@@ -363,7 +363,9 @@ let detect_constant_conditions cx =
   in
   Base.List.iter
     ~f:(fun (loc, is_truthy) ->
-      Flow_js_utils.add_output cx (Error_message.EConstantCondition { loc; is_truthy }))
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EConstantCondition { loc; is_truthy; show_warning = false }))
     banned_conditions
 
 let detect_unnecessary_optional_chains cx =

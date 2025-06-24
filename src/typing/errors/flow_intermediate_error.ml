@@ -4449,7 +4449,7 @@ let to_printable_error :
         text " cannot be declared as 'const'. ";
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
-    | MessageConstantCondition { is_truthy } ->
+    | MessageConstantCondition { is_truthy; show_warning } ->
       [
         text "Constant condition. ";
         text
@@ -4462,6 +4462,18 @@ let to_printable_error :
              )
           );
       ]
+      @
+      if show_warning then
+        [
+          text " Note that this condition is constant to the best of flow's knowledge. ";
+          text
+            "In some cases, there might be a mismatch between runtime types and the types that flow infers ";
+          text "(e.g. `$FlowFixMe` suppressions, inaccurate type annotations, etc.). ";
+          text
+            "Before deleting the check, it's best to double check that this condition is indeed constant.";
+        ]
+      else
+        []
   in
   let rec convert_error_message
       { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =
