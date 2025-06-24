@@ -255,9 +255,7 @@ jobs:
   build_win:
     runs-on: windows-2022
     env:
-      FLOW_TMP_DIR: D:\tmp\flow
       OPAMDOWNLOADJOBS: 1
-      OPAMROOT: D:\a\flow\flow\_opam
     steps:
     - uses: actions/checkout@v3.6.0
     - name: Set up workspace
