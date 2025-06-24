@@ -255,13 +255,9 @@ jobs:
   build_win:
     runs-on: windows-2022
     env:
-      FLOW_TMP_DIR: D:\tmp\flow
       OPAMDOWNLOADJOBS: 1
-      OPAMROOT: D:\a\flow\flow\_opam
     steps:
     - uses: actions/checkout@v3.6.0
-    - name: Set up workspace
-      run: mkdir $Env:FLOW_TMP_DIR
     - name: Install dependencies
       run: |
         choco install --no-progress -y --source https://chocolatey.org/api/v2/ 7zip
