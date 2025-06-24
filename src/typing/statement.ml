@@ -2513,7 +2513,7 @@ module Make
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
       let (key_loc, _e) = k in
-      let concretized_keys = Flow.possible_concrete_types_for_computed_props cx reason key in
+      let concretized_keys = Flow.all_possible_concrete_types cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in

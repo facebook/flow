@@ -5139,7 +5139,7 @@ struct
               rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
         (* computed properties *)
-        | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
+        | (t, ConcretizeT { reason = _; kind = ConcretizeAll; seen = _; collector }) ->
           TypeCollector.add collector t
         | (DefT (lreason, SingletonStrT _), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
@@ -9253,7 +9253,7 @@ module rec FlowJs : Flow_common.S = struct
   let possible_concrete_types_for_sentinel_prop_test =
     possible_concrete_types ConcretizeForSentinelPropTest
 
-  let possible_concrete_types_for_computed_props = possible_concrete_types ConcretizeComputedPropsT
+  let all_possible_concrete_types = possible_concrete_types ConcretizeAll
 
   let possible_concrete_types_for_operators_checking =
     possible_concrete_types ConcretizeForOperatorsChecking
