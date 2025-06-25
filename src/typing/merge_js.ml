@@ -200,7 +200,7 @@ let detect_test_prop_misses cx =
 type truthyness_result =
   | ConstCond_Truthy
   | ConstCond_Falsy
-  | ConstCond_Unkown
+  | ConstCond_Unknown
   | ConstCond_Unconcretized
 
 let try_eval_concrete_type_truthyness t =
@@ -215,53 +215,53 @@ let try_eval_concrete_type_truthyness t =
   | OptionalT _
   | UnionT _ ->
     ConstCond_Unconcretized
-  | DefT (_, NumGeneralT _) -> ConstCond_Unkown
-  | DefT (_, StrGeneralT _) -> ConstCond_Unkown
-  | DefT (_, BoolGeneralT) -> ConstCond_Unkown
-  | DefT (_, BigIntGeneralT _) -> ConstCond_Unkown
-  | DefT (_, EmptyT) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_everything) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_truthy) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_non_maybe) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_non_null) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_non_void) -> ConstCond_Unkown
-  | DefT (_, MixedT Mixed_function) -> ConstCond_Unkown
-  | DefT (_, NullT) -> ConstCond_Unkown
-  | DefT (_, VoidT) -> ConstCond_Unkown
-  | DefT (_, SymbolT) -> ConstCond_Unkown
-  | DefT (_, FunT _) -> ConstCond_Unkown
-  | DefT (_, ObjT _) -> ConstCond_Unkown
-  | DefT (_, ArrT _) -> ConstCond_Unkown
-  | DefT (_, ClassT _) -> ConstCond_Unkown
-  | DefT (_, InstanceT _) -> ConstCond_Unkown
-  | DefT (_, SingletonStrT _) -> ConstCond_Unkown
-  | DefT (_, NumericStrKeyT _) -> ConstCond_Unkown
-  | DefT (_, SingletonNumT _) -> ConstCond_Unkown
-  | DefT (_, SingletonBoolT _) -> ConstCond_Unkown
-  | DefT (_, SingletonBigIntT _) -> ConstCond_Unkown
-  | DefT (_, TypeT _) -> ConstCond_Unkown
-  | DefT (_, PolyT _) -> ConstCond_Unkown
-  | DefT (_, ReactAbstractComponentT _) -> ConstCond_Unkown
-  | DefT (_, RendersT _) -> ConstCond_Unkown
-  | DefT (_, EnumValueT _) -> ConstCond_Unkown
-  | DefT (_, EnumObjectT _) -> ConstCond_Unkown
-  | ThisInstanceT _ -> ConstCond_Unkown
-  | ThisTypeAppT _ -> ConstCond_Unkown
-  | ObjProtoT _ -> ConstCond_Unkown
-  | FunProtoT _ -> ConstCond_Unkown
-  | NullProtoT _ -> ConstCond_Unkown
-  | FunProtoBindT _ -> ConstCond_Unkown
-  | IntersectionT _ -> ConstCond_Unkown
-  | KeysT _ -> ConstCond_Unkown
-  | StrUtilT _ -> ConstCond_Unkown
-  | OpaqueT _ -> ConstCond_Unkown
-  | NamespaceT _ -> ConstCond_Unkown
-  | AnyT _ -> ConstCond_Unkown
+  | DefT (_, NumGeneralT _) -> ConstCond_Unknown
+  | DefT (_, StrGeneralT _) -> ConstCond_Unknown
+  | DefT (_, BoolGeneralT) -> ConstCond_Unknown
+  | DefT (_, BigIntGeneralT _) -> ConstCond_Unknown
+  | DefT (_, EmptyT) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_everything) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_truthy) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_non_maybe) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_non_null) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_non_void) -> ConstCond_Unknown
+  | DefT (_, MixedT Mixed_function) -> ConstCond_Unknown
+  | DefT (_, NullT) -> ConstCond_Unknown
+  | DefT (_, VoidT) -> ConstCond_Unknown
+  | DefT (_, SymbolT) -> ConstCond_Unknown
+  | DefT (_, FunT _) -> ConstCond_Unknown
+  | DefT (_, ObjT _) -> ConstCond_Unknown
+  | DefT (_, ArrT _) -> ConstCond_Unknown
+  | DefT (_, ClassT _) -> ConstCond_Unknown
+  | DefT (_, InstanceT _) -> ConstCond_Unknown
+  | DefT (_, SingletonStrT _) -> ConstCond_Unknown
+  | DefT (_, NumericStrKeyT _) -> ConstCond_Unknown
+  | DefT (_, SingletonNumT _) -> ConstCond_Unknown
+  | DefT (_, SingletonBoolT _) -> ConstCond_Unknown
+  | DefT (_, SingletonBigIntT _) -> ConstCond_Unknown
+  | DefT (_, TypeT _) -> ConstCond_Unknown
+  | DefT (_, PolyT _) -> ConstCond_Unknown
+  | DefT (_, ReactAbstractComponentT _) -> ConstCond_Unknown
+  | DefT (_, RendersT _) -> ConstCond_Unknown
+  | DefT (_, EnumValueT _) -> ConstCond_Unknown
+  | DefT (_, EnumObjectT _) -> ConstCond_Unknown
+  | ThisInstanceT _ -> ConstCond_Unknown
+  | ThisTypeAppT _ -> ConstCond_Unknown
+  | ObjProtoT _ -> ConstCond_Unknown
+  | FunProtoT _ -> ConstCond_Unknown
+  | NullProtoT _ -> ConstCond_Unknown
+  | FunProtoBindT _ -> ConstCond_Unknown
+  | IntersectionT _ -> ConstCond_Unknown
+  | KeysT _ -> ConstCond_Unknown
+  | StrUtilT _ -> ConstCond_Unknown
+  | OpaqueT _ -> ConstCond_Unknown
+  | NamespaceT _ -> ConstCond_Unknown
+  | AnyT _ -> ConstCond_Unknown
 
 let try_eval_type_truthyness cx t =
   let concrete_types = Flow_js.all_possible_concrete_types cx (TypeUtil.reason_of_t t) t in
   match Base.List.map concrete_types ~f:try_eval_concrete_type_truthyness with
-  | [] -> ConstCond_Unkown
+  | [] -> ConstCond_Unknown
   | [result] -> result
   | results ->
     if Base.List.for_all results ~f:(fun r -> r = ConstCond_Truthy) then
@@ -269,7 +269,7 @@ let try_eval_type_truthyness cx t =
     else if Base.List.for_all results ~f:(fun r -> r = ConstCond_Falsy) then
       ConstCond_Falsy
     else
-      ConstCond_Unkown
+      ConstCond_Unknown
 
 type check_condition_result =
   | ConditionAllowed
@@ -289,7 +289,7 @@ let use_type_to_check_conditional cx ttype =
   match try_eval_type_truthyness cx ttype with
   | ConstCond_Truthy -> ConditionBanned { is_truthy = true; show_warning = true }
   | ConstCond_Falsy -> ConditionBanned { is_truthy = false; show_warning = true }
-  | ConstCond_Unkown -> ConditionAllowed
+  | ConstCond_Unknown -> ConditionAllowed
   | ConstCond_Unconcretized -> ConditionBanned { is_truthy = true; show_warning = true }
 (* this case shouldn't happen because we call `all_possible_concrete_types` to concretize all possible types*)
 
