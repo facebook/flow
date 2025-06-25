@@ -290,8 +290,8 @@ let use_type_to_check_conditional cx ttype =
   | ConstCond_Truthy -> ConditionBanned { is_truthy = true; show_warning = true }
   | ConstCond_Falsy -> ConditionBanned { is_truthy = false; show_warning = true }
   | ConstCond_Unknown -> ConditionAllowed
-  | ConstCond_Unconcretized -> ConditionBanned { is_truthy = true; show_warning = true }
-(* this case shouldn't happen because we call `all_possible_concrete_types` to concretize all possible types*)
+  (* ConstCond_Unconcretized shouldn't happen because we call `all_possible_concrete_types` to concretize all possible types*)
+  | ConstCond_Unconcretized -> ConditionAllowed
 
 let rec check_conditional
     ?(should_report_error = true) cx e (cached_results : check_condition_result ALocMap.t ref) :
