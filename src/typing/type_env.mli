@@ -162,7 +162,7 @@ val resolve_env_entry :
   Context.t ->
   Type.t ->
   kind:Env_api.def_loc_type ->
-  add_object_literal_declaration_tracking:bool ->
+  add_array_or_object_literal_declaration_tracking:bool ->
   ALoc.t ->
   unit
 

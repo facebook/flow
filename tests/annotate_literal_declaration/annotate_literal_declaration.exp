@@ -1,4 +1,4 @@
->>> test.js (#changes: 3)
+>>> test.js (#changes: 5)
 // @flow
 
 import type { Expected } from "./exports";import {assertExpected} from './exports';
@@ -31,14 +31,23 @@ assertExpected2(obj2);
 assertExpected1(obj3);
 assertExpected3(obj4);
 
+
+declare export function assertExpectedArray(expected: Array<ExpectedLocal1>): void;
+const arr1: Array<ExpectedLocal1> = [{bar: 'foo' as const}];
+const arr2: Array<ExpectedLocal1> = [];
+arr2.push({bar: 'foo' as const});
+
+assertExpectedArray(arr1);
+assertExpectedArray(arr2);
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              2
-  Total size of annotations:                2
-  Number of type errors:                    5
-  Number of annotations added:              2
+  Number of annotations added:              4
+  Total size of annotations:                6
+  Number of type errors:                    7
+  Number of annotations added:              4
 
 Errors:
   Missing annot./normalizer error:          0

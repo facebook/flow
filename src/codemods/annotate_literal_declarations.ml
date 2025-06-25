@@ -34,7 +34,7 @@ let compute_annotation_sites_for_potential_fixes ~reader cx ast =
       ~unused:suppressions
   in
   let all_possible_annotation_sites =
-    Context.object_literal_declaration_upper_bounds cx
+    Context.array_or_object_literal_declaration_upper_bounds cx
     |> Base.List.filter_map ~f:(fun (loc, list) ->
            match Nel.of_list list with
            | None -> None
@@ -105,10 +105,7 @@ end
 module Codemod_exports_annotator = Codemod_annotator.Make (Stats)
 module Acc = Acc (Stats)
 
-(* Use 1 to ensure that we only add type aliased object type without intersections. *)
-let max_type_size = 1
-
-let mapper (cctx : Codemod_context.Typed.t) =
+let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
 
   object (this)

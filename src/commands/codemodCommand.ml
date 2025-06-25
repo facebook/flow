@@ -169,10 +169,20 @@ module Annotate_literal_declaration_command = struct
           "Usage: %s codemod annotate-literal-declaration [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
-      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--max-type-size"
+               (* Use 1 to ensure that we only add type aliased object type without intersections. *)
+               (required ~default:1 int)
+               ~doc:
+                 "The maximum number of nodes allowed in a single type annotation (default: 1, should be increased to at least 2 to insert array annotations.)"
+        );
     }
 
-  let main codemod_flags () =
+  let main codemod_flags max_type_size () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       module Acc = Annotate_literal_declarations.Acc
 
@@ -186,7 +196,7 @@ module Annotate_literal_declaration_command = struct
       let expand_roots ~env:_ files = files
 
       let visit =
-        let mapper = Annotate_literal_declarations.mapper in
+        let mapper = Annotate_literal_declarations.mapper ~max_type_size in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()

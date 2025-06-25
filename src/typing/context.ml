@@ -203,10 +203,10 @@ type component_t = {
    * eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
    * because we may compare keyed and concrete locations *)
   mutable missing_local_annot_lower_bounds: Type.t Nel.t ALocFuzzyMap.t;
-  (* Used to power an autofix that takes the upper bounds of object literal declarations, and turn
-   * them into annotations. *)
-  mutable object_literal_declaration_upper_bounds: (ALoc.t * Type.t list) IMap.t;
-  mutable object_literal_declaration_reposition_tracking: int IMap.t;
+  (* Used to power an autofix that takes the upper bounds of array & object literal declarations,
+   * and turn them into annotations. *)
+  mutable array_or_object_literal_declaration_upper_bounds: (ALoc.t * Type.t list) IMap.t;
+  mutable array_or_object_literal_declaration_reposition_tracking: int IMap.t;
   (* Used to power a code action to automatically insert appropriate render type.
    * It is key-ed by the body_loc of components. *)
   mutable inferred_component_return: Type.t Nel.t ALocFuzzyMap.t;
@@ -407,8 +407,8 @@ let make_ccx () =
     env_value_cache = IMap.empty;
     env_type_cache = IMap.empty;
     missing_local_annot_lower_bounds = ALocFuzzyMap.empty;
-    object_literal_declaration_upper_bounds = IMap.empty;
-    object_literal_declaration_reposition_tracking = IMap.empty;
+    array_or_object_literal_declaration_upper_bounds = IMap.empty;
+    array_or_object_literal_declaration_reposition_tracking = IMap.empty;
     inferred_component_return = ALocFuzzyMap.empty;
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
@@ -683,8 +683,8 @@ let env_cache_find_opt cx ~for_value id =
 
 let missing_local_annot_lower_bounds cx = cx.ccx.missing_local_annot_lower_bounds
 
-let object_literal_declaration_upper_bounds cx =
-  IMap.values cx.ccx.object_literal_declaration_upper_bounds
+let array_or_object_literal_declaration_upper_bounds cx =
+  IMap.values cx.ccx.array_or_object_literal_declaration_upper_bounds
 
 let inferred_component_return cx = cx.ccx.inferred_component_return
 
@@ -853,26 +853,31 @@ let add_missing_local_annot_lower_bound cx loc t =
   cx.ccx.missing_local_annot_lower_bounds <-
     ALocFuzzyMap.add loc bounds missing_local_annot_lower_bounds
 
-let add_object_literal_declaration_tracking cx tvar_id loc =
-  cx.ccx.object_literal_declaration_upper_bounds <-
-    IMap.add tvar_id (loc, []) cx.ccx.object_literal_declaration_upper_bounds
+let add_array_or_object_literal_declaration_tracking cx tvar_id loc =
+  cx.ccx.array_or_object_literal_declaration_upper_bounds <-
+    IMap.add tvar_id (loc, []) cx.ccx.array_or_object_literal_declaration_upper_bounds
 
-let report_object_literal_declaration_reposition cx respositioned_tvar_id tvar_id =
-  if IMap.mem tvar_id cx.ccx.object_literal_declaration_upper_bounds then
-    cx.ccx.object_literal_declaration_reposition_tracking <-
-      IMap.add respositioned_tvar_id tvar_id cx.ccx.object_literal_declaration_reposition_tracking
+let report_array_or_object_literal_declaration_reposition cx respositioned_tvar_id tvar_id =
+  if IMap.mem tvar_id cx.ccx.array_or_object_literal_declaration_upper_bounds then
+    cx.ccx.array_or_object_literal_declaration_reposition_tracking <-
+      IMap.add
+        respositioned_tvar_id
+        tvar_id
+        cx.ccx.array_or_object_literal_declaration_reposition_tracking
 
-let add_object_literal_declaration_upper_bound cx tvar_id t =
-  let object_literal_declaration_upper_bounds = cx.ccx.object_literal_declaration_upper_bounds in
+let add_array_or_object_literal_declaration_upper_bound cx tvar_id t =
+  let array_or_object_literal_declaration_upper_bounds =
+    cx.ccx.array_or_object_literal_declaration_upper_bounds
+  in
   let tvar_id =
-    IMap.find_opt tvar_id cx.ccx.object_literal_declaration_reposition_tracking
+    IMap.find_opt tvar_id cx.ccx.array_or_object_literal_declaration_reposition_tracking
     |> Base.Option.value ~default:tvar_id
   in
-  match IMap.find_opt tvar_id object_literal_declaration_upper_bounds with
+  match IMap.find_opt tvar_id array_or_object_literal_declaration_upper_bounds with
   | None -> ()
   | Some (loc, bounds) ->
-    cx.ccx.object_literal_declaration_upper_bounds <-
-      IMap.add tvar_id (loc, t :: bounds) object_literal_declaration_upper_bounds
+    cx.ccx.array_or_object_literal_declaration_upper_bounds <-
+      IMap.add tvar_id (loc, t :: bounds) array_or_object_literal_declaration_upper_bounds
 
 let add_inferred_component_return cx loc t =
   let inferred_component_return = cx.ccx.inferred_component_return in

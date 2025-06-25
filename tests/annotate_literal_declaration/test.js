@@ -29,3 +29,12 @@ assertExpected1(obj2);
 assertExpected2(obj2);
 assertExpected1(obj3);
 assertExpected3(obj4);
+
+
+declare export function assertExpectedArray(expected: Array<ExpectedLocal1>): void;
+const arr1 = [{bar: 'foo' as const}];
+const arr2 = [];
+arr2.push({bar: 'foo' as const});
+
+assertExpectedArray(arr1);
+assertExpectedArray(arr2);

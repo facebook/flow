@@ -357,7 +357,10 @@ struct
         (* process X ~> Y *)
         (******************)
         | (OpenT (_, tvar1), UseT (use_op, OpenT (r_upper, tvar2))) ->
-          Context.add_object_literal_declaration_upper_bound cx tvar1 (OpenT (r_upper, tvar2));
+          Context.add_array_or_object_literal_declaration_upper_bound
+            cx
+            tvar1
+            (OpenT (r_upper, tvar2));
           let (id1, constraints1) = Context.find_constraints cx tvar1 in
           let (id2, constraints2) = Context.find_constraints cx tvar2 in
           (match (constraints1, constraints2) with
@@ -422,7 +425,8 @@ struct
           else
             let () =
               match t2 with
-              | UseT (_, t2) -> Context.add_object_literal_declaration_upper_bound cx tvar t2
+              | UseT (_, t2) ->
+                Context.add_array_or_object_literal_declaration_upper_bound cx tvar t2
               | _ -> ()
             in
             let t2 =
@@ -8947,7 +8951,10 @@ struct
               let t = Lazy.force lazy_t in
               (match t with
               | OpenT (_, repositioned_tvar_id) ->
-                Context.report_object_literal_declaration_reposition cx repositioned_tvar_id id
+                Context.report_array_or_object_literal_declaration_reposition
+                  cx
+                  repositioned_tvar_id
+                  id
               | _ -> ());
               t)
           | Unresolved _ ->

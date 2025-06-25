@@ -881,7 +881,7 @@ let make_env_entries_under_resolution cx entries =
 
 (* Resolve `t` with the entry in the loc_env's map. This allows it to be looked up for Write
  * entries reported by the name_resolver as well as providers for the provider analysis *)
-let resolve_env_entry cx t ~kind ~add_object_literal_declaration_tracking loc =
+let resolve_env_entry cx t ~kind ~add_array_or_object_literal_declaration_tracking loc =
   Debug_js.Verbose.print_if_verbose
     cx
     [spf "writing to %s %s" (Env_api.show_def_loc_type kind) (Reason.string_of_aloc loc)];
@@ -892,9 +892,9 @@ let resolve_env_entry cx t ~kind ~add_object_literal_declaration_tracking loc =
   | (Some Env_api.NonAssigningWrite, _) -> ()
   | (_, None) -> Flow_js_utils.add_output cx Error_message.(EInternal (loc, MissingEnvWrite loc))
   | (_, Some (Loc_env.TypeEntry { t = existing_t; state })) ->
-    ( if add_object_literal_declaration_tracking then
+    ( if add_array_or_object_literal_declaration_tracking then
       match existing_t with
-      | OpenT (_, id) -> Context.add_object_literal_declaration_tracking cx id loc
+      | OpenT (_, id) -> Context.add_array_or_object_literal_declaration_tracking cx id loc
       | _ -> ()
     );
     Tvar_resolver.resolve cx t;
@@ -935,7 +935,7 @@ let bind_function_param cx t loc =
     cx
     t
     ~kind:Env_api.FunctionParamLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let bind_function_this cx t loc =
@@ -944,7 +944,7 @@ let bind_function_this cx t loc =
       cx
       t
       ~kind:Env_api.FunctionThisLoc
-      ~add_object_literal_declaration_tracking:false
+      ~add_array_or_object_literal_declaration_tracking:false
       loc
 
 let bind_class_instance_this cx t loc =
@@ -952,7 +952,7 @@ let bind_class_instance_this cx t loc =
     cx
     t
     ~kind:Env_api.ClassInstanceThisLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let bind_class_static_this cx t loc =
@@ -960,7 +960,7 @@ let bind_class_static_this cx t loc =
     cx
     t
     ~kind:Env_api.ClassStaticThisLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let bind_class_instance_super cx t loc =
@@ -968,7 +968,7 @@ let bind_class_instance_super cx t loc =
     cx
     t
     ~kind:Env_api.ClassInstanceSuperLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let bind_class_static_super cx t loc =
@@ -976,7 +976,7 @@ let bind_class_static_super cx t loc =
     cx
     t
     ~kind:Env_api.ClassStaticSuperLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let bind_class_self_type cx t loc =
@@ -984,7 +984,7 @@ let bind_class_self_type cx t loc =
     cx
     t
     ~kind:Env_api.ClassSelfLoc
-    ~add_object_literal_declaration_tracking:false
+    ~add_array_or_object_literal_declaration_tracking:false
     loc
 
 let init_var cx ~use_op t loc = init_entry cx ~use_op t loc

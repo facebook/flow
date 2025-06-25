@@ -1182,9 +1182,22 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | DeclaredNamespace (loc, ns) -> resolve_declare_namespace cx loc ns
     | MissingThisAnnot -> AnyT.at (AnyError None) id_loc
   in
-  let add_object_literal_declaration_tracking =
+  let add_array_or_object_literal_declaration_tracking =
     match def with
     | Binding (Root (ObjectValue _)) -> true
+    | Binding (Root (EmptyArray _)) -> true
+    | Binding
+        (Root
+          (Value
+            {
+              hints = _;
+              expr = (_, (Ast.Expression.Array _ | Ast.Expression.Object _));
+              decl_kind = Some Ast.Variable.Const;
+              as_const = _;
+            }
+            )
+          ) ->
+      true
     | _ -> false
   in
   Debug_js.Verbose.print_if_verbose_lazy
@@ -1197,7 +1210,12 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
           (Debug_js.dump_t cx t);
       ]
       );
-  Type_env.resolve_env_entry cx t ~kind:def_kind ~add_object_literal_declaration_tracking id_loc
+  Type_env.resolve_env_entry
+    cx
+    t
+    ~kind:def_kind
+    ~add_array_or_object_literal_declaration_tracking
+    id_loc
 
 let entries_of_def graph (kind, loc) =
   let open Name_def_ordering in
@@ -1409,7 +1427,7 @@ let resolve_component cx graph component =
           cx
           (AnyT.at (AnyError None) loc)
           ~kind
-          ~add_object_literal_declaration_tracking:false
+          ~add_array_or_object_literal_declaration_tracking:false
           loc)
       entries
   in
