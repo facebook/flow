@@ -157,16 +157,16 @@ module Annotate_exports_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Annotate_object_literal_declaration_command = struct
-  let doc = "Annotates object literal declaration to fix natural inference errors."
+module Annotate_literal_declaration_command = struct
+  let doc = "Annotates literal declaration to fix natural inference errors."
 
   let spec =
     {
-      CommandSpec.name = "annotate-object-literal-declaration";
+      CommandSpec.name = "annotate-literal-declaration";
       doc;
       usage =
         Printf.sprintf
-          "Usage: %s codemod annotate-object-literal-declaration [OPTION]... [FILE]\n\n%s\n"
+          "Usage: %s codemod annotate-literal-declaration [OPTION]... [FILE]\n\n%s\n"
           Utils_js.exe_name
           doc;
       args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
@@ -174,7 +174,7 @@ module Annotate_object_literal_declaration_command = struct
 
   let main codemod_flags () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Annotate_object_declarations.Acc
+      module Acc = Annotate_literal_declarations.Acc
 
       type accumulator = Acc.t
 
@@ -186,7 +186,7 @@ module Annotate_object_literal_declaration_command = struct
       let expand_roots ~env:_ files = files
 
       let visit =
-        let mapper = Annotate_object_declarations.mapper in
+        let mapper = Annotate_literal_declarations.mapper in
         Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
@@ -267,8 +267,8 @@ let command =
       ~doc:"Runs large-scale codebase refactors"
       [
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
-        ( Annotate_object_literal_declaration_command.spec.CommandSpec.name,
-          Annotate_object_literal_declaration_command.command
+        ( Annotate_literal_declaration_command.spec.CommandSpec.name,
+          Annotate_literal_declaration_command.command
         );
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
           Annotate_optional_properties_command.command
