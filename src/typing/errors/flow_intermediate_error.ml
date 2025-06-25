@@ -4450,31 +4450,36 @@ let to_printable_error :
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
     | MessageConstantCondition { is_truthy; show_warning } ->
-      [
-        text "Constant condition. ";
-        text
-          (spf
-             "The condition will always be %s."
-             ( if is_truthy then
-               "truthy"
-             else
-               "falsy"
-             )
-          );
-      ]
-      @
-      if show_warning then
+      if not show_warning then
         [
-          text " Note that this condition is constant to the best of flow's knowledge. ";
+          text "Constant condition. ";
           text
-            "In some cases, there might be a mismatch between runtime types and the types that flow infers ";
-          text "(e.g. `$FlowFixMe` suppressions, inaccurate type annotations, etc.). ";
-          text
-            "Before deleting the check, it's best to double check that this condition is indeed constant.";
+            (spf
+               "The condition will always be %s."
+               ( if is_truthy then
+                 "truthy"
+               else
+                 "falsy"
+               )
+            );
         ]
       else
-        []
+        [
+          text
+            (spf
+               "This condition is likely %s. "
+               ( if is_truthy then
+                 "truthy"
+               else
+                 "falsy"
+               )
+            );
+          text "WARNING: Flow's type inference may be incorrect (due to `any` annotations, ";
+          text "out-of-bounds array accesses, etc.). ";
+          text "Before deleting the check, confirm this condition is indeed constant.";
+        ]
   in
+
   let rec convert_error_message
       { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =
     let root = Base.Option.map root ~f:(fun (loc, msg) -> (loc, root_msg_to_friendly_msgs msg)) in
