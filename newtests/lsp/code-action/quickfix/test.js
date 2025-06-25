@@ -2411,6 +2411,33 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_match'),
+    test('match not exhaustive - statement - many', [
+      addFile(
+        'fix-match-not-exhaustive-statement-many.js.ignored',
+        'fix-match-not-exhaustive-statement-many.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-many.js',
+        },
+        range: {
+          start: {line: 4, character: 1},
+          end: {line: 4, character: 5},
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'fix-match-not-exhaustive-statement-many.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
     test('match unused pattern - remove case', [
       addFile(
         'fix-match-unused-pattern-remove-case.js.ignored',
