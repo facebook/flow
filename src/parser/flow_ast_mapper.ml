@@ -684,8 +684,9 @@ class ['loc] mapper =
         (param_name : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.param_name) =
       let open Ast.Statement.ComponentDeclaration.Param in
       match param_name with
-      | Identifier ident -> Identifier (this#identifier ident)
-      | StringLiteral (str_loc, str) -> StringLiteral (str_loc, this#string_literal str_loc str)
+      | Identifier ident -> id this#identifier ident param_name (fun x -> Identifier x)
+      | StringLiteral (loc, str) ->
+        id_loc this#string_literal loc str param_name (fun x -> StringLiteral (loc, x))
 
     method component_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#binding_pattern ~kind:Ast.Variable.Let expr
