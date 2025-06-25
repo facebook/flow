@@ -494,9 +494,9 @@ val test_prop_miss :
 val test_prop_get_never_hit :
   t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option) list
 
-val add_condition : t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> unit
+val add_condition : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t -> unit
 
-val get_all_conditions : t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t list
+val get_all_conditions : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list
 
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 

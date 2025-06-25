@@ -197,21 +197,107 @@ let detect_test_prop_misses cx =
         (Error_message.EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion }))
     misses
 
+type truthyness_result =
+  | ConstCond_Truthy
+  | ConstCond_Falsy
+  | ConstCond_Unkown
+  | ConstCond_Unconcretized
+
+let try_eval_concrete_type_truthyness t =
+  let open Type in
+  match t with
+  | OpenT _
+  | EvalT _
+  | TypeAppT _
+  | GenericT _
+  | AnnotT _
+  | MaybeT _
+  | OptionalT _
+  | UnionT _ ->
+    ConstCond_Unconcretized
+  | DefT (_, NumGeneralT _) -> ConstCond_Unkown
+  | DefT (_, StrGeneralT _) -> ConstCond_Unkown
+  | DefT (_, BoolGeneralT) -> ConstCond_Unkown
+  | DefT (_, BigIntGeneralT _) -> ConstCond_Unkown
+  | DefT (_, EmptyT) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_everything) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_truthy) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_non_maybe) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_non_null) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_non_void) -> ConstCond_Unkown
+  | DefT (_, MixedT Mixed_function) -> ConstCond_Unkown
+  | DefT (_, NullT) -> ConstCond_Unkown
+  | DefT (_, VoidT) -> ConstCond_Unkown
+  | DefT (_, SymbolT) -> ConstCond_Unkown
+  | DefT (_, FunT _) -> ConstCond_Unkown
+  | DefT (_, ObjT _) -> ConstCond_Unkown
+  | DefT (_, ArrT _) -> ConstCond_Unkown
+  | DefT (_, ClassT _) -> ConstCond_Unkown
+  | DefT (_, InstanceT _) -> ConstCond_Unkown
+  | DefT (_, SingletonStrT _) -> ConstCond_Unkown
+  | DefT (_, NumericStrKeyT _) -> ConstCond_Unkown
+  | DefT (_, SingletonNumT _) -> ConstCond_Unkown
+  | DefT (_, SingletonBoolT _) -> ConstCond_Unkown
+  | DefT (_, SingletonBigIntT _) -> ConstCond_Unkown
+  | DefT (_, TypeT _) -> ConstCond_Unkown
+  | DefT (_, PolyT _) -> ConstCond_Unkown
+  | DefT (_, ReactAbstractComponentT _) -> ConstCond_Unkown
+  | DefT (_, RendersT _) -> ConstCond_Unkown
+  | DefT (_, EnumValueT _) -> ConstCond_Unkown
+  | DefT (_, EnumObjectT _) -> ConstCond_Unkown
+  | ThisInstanceT _ -> ConstCond_Unkown
+  | ThisTypeAppT _ -> ConstCond_Unkown
+  | ObjProtoT _ -> ConstCond_Unkown
+  | FunProtoT _ -> ConstCond_Unkown
+  | NullProtoT _ -> ConstCond_Unkown
+  | FunProtoBindT _ -> ConstCond_Unkown
+  | IntersectionT _ -> ConstCond_Unkown
+  | KeysT _ -> ConstCond_Unkown
+  | StrUtilT _ -> ConstCond_Unkown
+  | OpaqueT _ -> ConstCond_Unkown
+  | NamespaceT _ -> ConstCond_Unkown
+  | AnyT _ -> ConstCond_Unkown
+
+let try_eval_type_truthyness cx t =
+  let concrete_types = Flow_js.all_possible_concrete_types cx (TypeUtil.reason_of_t t) t in
+  match Base.List.map concrete_types ~f:try_eval_concrete_type_truthyness with
+  | [] -> ConstCond_Unkown
+  | [result] -> result
+  | results ->
+    if Base.List.for_all results ~f:(fun r -> r = ConstCond_Truthy) then
+      ConstCond_Truthy
+    else if Base.List.for_all results ~f:(fun r -> r = ConstCond_Falsy) then
+      ConstCond_Falsy
+    else
+      ConstCond_Unkown
+
 type check_condition_result =
   | ConditionAllowed
-  | ConditionBanned of { is_truthy: bool }
+  | ConditionBanned of {
+      is_truthy: bool;
+      show_warning: bool;
+    }
 
-let condition_banned_and_TRUTHY = ConditionBanned { is_truthy = true }
+let condition_banned_and_TRUTHY = ConditionBanned { is_truthy = true; show_warning = false }
 
-let condition_banned_and_FALSY = ConditionBanned { is_truthy = false }
+let condition_banned_and_FALSY = ConditionBanned { is_truthy = false; show_warning = false }
 
 let condition_allowed = ConditionAllowed
+
+let use_type_to_check_conditional cx ttype =
+  (* We always show warning for errors generated from type inferrence *)
+  match try_eval_type_truthyness cx ttype with
+  | ConstCond_Truthy -> ConditionBanned { is_truthy = true; show_warning = true }
+  | ConstCond_Falsy -> ConditionBanned { is_truthy = false; show_warning = true }
+  | ConstCond_Unkown -> ConditionAllowed
+  | ConstCond_Unconcretized -> ConditionBanned { is_truthy = true; show_warning = true }
+(* this case shouldn't happen because we call `all_possible_concrete_types` to concretize all possible types*)
 
 let rec check_conditional
     ?(should_report_error = true) cx e (cached_results : check_condition_result ALocMap.t ref) :
     check_condition_result =
   let should_report_error_ref = ref should_report_error in
-  let (loc, exp) = e in
+  let ((loc, ttype), exp) = e in
   match ALocMap.find_opt loc !cached_results with
   | Some result -> result
   | None ->
@@ -219,10 +305,10 @@ let rec check_conditional
     let check_condition_result =
       match exp with
       | StringLiteral lit ->
-        if lit.Ast.StringLiteral.value <> "" then
-          condition_banned_and_TRUTHY
-        else
+        if lit.Ast.StringLiteral.value = "" then
           condition_banned_and_FALSY
+        else
+          condition_banned_and_TRUTHY
       | BooleanLiteral _ ->
         (* true/false is allowed because it's likely intentional
            and could be useful for debugging / iterating *)
@@ -239,31 +325,9 @@ let rec check_conditional
         | _ -> condition_banned_and_TRUTHY)
       | RegExpLiteral _ -> condition_banned_and_TRUTHY
       | ModuleRefLiteral _ -> condition_banned_and_TRUTHY
-      | Identifier _ -> condition_allowed
-      | This _ -> condition_allowed
       | Super _ -> condition_banned_and_TRUTHY
-      | Unary { Unary.operator; argument; _ } ->
-        (match operator with
-        | Ast.Expression.Unary.Not ->
-          let arg_eval_result =
-            check_conditional cx argument cached_results ~should_report_error:false
-          in
-          (match arg_eval_result with
-          | ConditionBanned { is_truthy } -> ConditionBanned { is_truthy = not is_truthy }
-          | ConditionAllowed -> ConditionAllowed)
-        | Ast.Expression.Unary.Minus
-        | Ast.Expression.Unary.Plus
-        | Ast.Expression.Unary.BitNot
-        | Ast.Expression.Unary.Typeof ->
-          check_conditional cx argument cached_results ~should_report_error:false
-        | Ast.Expression.Unary.Void -> condition_banned_and_FALSY
-        | Ast.Expression.Unary.Delete
-        | Ast.Expression.Unary.Await
-        | Ast.Expression.Unary.Nonnull ->
-          condition_allowed)
       | Update { Update.argument; _ } ->
         check_conditional cx argument cached_results ~should_report_error:false
-      | Binary _ -> condition_allowed
       | Logical { Logical.operator; Logical.left; Logical.right; _ } ->
         (match operator with
         | Ast.Expression.Logical.Or
@@ -271,15 +335,16 @@ let rec check_conditional
           let left_result = check_conditional cx left cached_results ~should_report_error:false in
           let right_result = check_conditional cx right cached_results ~should_report_error:false in
           (match (left_result, right_result) with
-          | ( ConditionBanned { is_truthy = left_truthy },
-              ConditionBanned { is_truthy = right_truthy }
+          | ( ConditionBanned { is_truthy = left_truthy; show_warning = left_show_warning },
+              ConditionBanned { is_truthy = right_truthy; show_warning = right_show_warning }
             )
             when left_truthy = right_truthy ->
-            if left_truthy then
-              condition_banned_and_TRUTHY
-            else
-              condition_banned_and_FALSY
+            ConditionBanned
+              { is_truthy = left_truthy; show_warning = left_show_warning || right_show_warning }
           | _ -> condition_allowed)
+        (* NullishCoalesce is allowed here because the `lhs` is stored in `conditions`
+           and we will check `lhs` in a separate call of check_conditional, so we don't need to
+           recur to the lhs here. *)
         | Ast.Expression.Logical.NullishCoalesce -> condition_allowed)
       | TypeCast { TypeCast.expression; _ } ->
         should_report_error_ref := false;
@@ -293,14 +358,11 @@ let rec check_conditional
       | TSSatisfies { TSSatisfies.expression; _ } ->
         should_report_error_ref := false;
         check_conditional cx expression cached_results ~should_report_error
-      | Match _ -> condition_allowed
       | Member _ -> condition_allowed
       | OptionalMember _ -> condition_allowed
       | Object _ -> condition_banned_and_TRUTHY
       | Array _ -> condition_banned_and_TRUTHY
       | New _ -> condition_banned_and_TRUTHY
-      | Call _ -> condition_allowed
-      | OptionalCall _ -> condition_allowed
       | Conditional { Conditional.consequent; alternate; _ } ->
         (* we don't need to check or unnest `test` here because they are unnested and checked
            in `expression` function *)
@@ -311,20 +373,13 @@ let rec check_conditional
           check_conditional cx alternate cached_results ~should_report_error:false
         in
         (match (left_result, right_result) with
-        | (ConditionBanned { is_truthy = left_truthy }, ConditionBanned { is_truthy = right_truthy })
+        | ( ConditionBanned { is_truthy = left_truthy; show_warning = left_show_warning },
+            ConditionBanned { is_truthy = right_truthy; show_warning = right_show_warning }
+          )
           when left_truthy = right_truthy ->
-          if left_truthy then
-            condition_banned_and_TRUTHY
-          else
-            condition_banned_and_FALSY
+          ConditionBanned
+            { is_truthy = left_truthy; show_warning = left_show_warning || right_show_warning }
         | _ -> condition_allowed)
-      | Assignment { Assignment.operator; left = _; right; comments = _ } ->
-        (match operator with
-        (* vanilla assignment (e.g. `a='test_str'`) is represented by `None` *)
-        | None ->
-          should_report_error_ref := false;
-          check_conditional cx right cached_results ~should_report_error
-        | Some _ -> condition_allowed)
       | Sequence { Sequence.expressions; _ } ->
         let last = Base.List.last_exn expressions in
         should_report_error_ref := false;
@@ -337,8 +392,42 @@ let rec check_conditional
       | JSXFragment _ -> condition_banned_and_TRUTHY
       | Class _ -> condition_banned_and_TRUTHY
       | Yield _ -> condition_banned_and_TRUTHY
-      | MetaProperty _ -> condition_allowed
       | Import _ -> condition_banned_and_TRUTHY
+      | Unary { Unary.operator; argument; _ } ->
+        (match operator with
+        | Ast.Expression.Unary.Not ->
+          let arg_eval_result =
+            check_conditional cx argument cached_results ~should_report_error:false
+          in
+          (match arg_eval_result with
+          | ConditionBanned { is_truthy; show_warning } ->
+            ConditionBanned { is_truthy = not is_truthy; show_warning }
+          | ConditionAllowed -> ConditionAllowed)
+        | Ast.Expression.Unary.Minus
+        | Ast.Expression.Unary.Plus
+        | Ast.Expression.Unary.BitNot
+        | Ast.Expression.Unary.Typeof ->
+          check_conditional cx argument cached_results ~should_report_error:false
+        | Ast.Expression.Unary.Void -> condition_banned_and_FALSY
+        | Ast.Expression.Unary.Delete
+        | Ast.Expression.Unary.Await
+        | Ast.Expression.Unary.Nonnull ->
+          use_type_to_check_conditional cx ttype)
+      | Assignment { Assignment.operator; left = _; right; comments = _ } ->
+        (match operator with
+        (* vanilla assignment (e.g. `a='test_str'`) is represented by `None` *)
+        | None ->
+          should_report_error_ref := false;
+          check_conditional cx right cached_results ~should_report_error
+        | Some _ -> use_type_to_check_conditional cx ttype)
+      | MetaProperty _
+      | Call _
+      | OptionalCall _
+      | Match _
+      | Binary _
+      | Identifier _
+      | This _ ->
+        use_type_to_check_conditional cx ttype
     in
     if !should_report_error_ref then (
       cached_results := ALocMap.add loc check_condition_result !cached_results;
@@ -357,15 +446,13 @@ let detect_constant_conditions cx =
       (fun loc check_condition_result acc ->
         match check_condition_result with
         | ConditionAllowed -> acc
-        | ConditionBanned { is_truthy } -> (loc, is_truthy) :: acc)
+        | ConditionBanned { is_truthy; show_warning } -> (loc, is_truthy, show_warning) :: acc)
       !all_condition_results
       []
   in
   Base.List.iter
-    ~f:(fun (loc, is_truthy) ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EConstantCondition { loc; is_truthy; show_warning = false }))
+    ~f:(fun (loc, is_truthy, show_warning) ->
+      Flow_js_utils.add_output cx (Error_message.EConstantCondition { loc; is_truthy; show_warning }))
     banned_conditions
 
 let detect_unnecessary_optional_chains cx =

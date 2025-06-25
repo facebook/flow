@@ -6716,8 +6716,9 @@ module Make
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
   and condition cx ~encl_ctx ?decl ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let _ = Context.add_condition cx e in
-    expression ~encl_ctx ?decl ?has_hint cx e
+    let result = expression ~encl_ctx ?decl ?has_hint cx e in
+    Context.add_condition cx result;
+    result
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Type_env.get_class_entries cx in

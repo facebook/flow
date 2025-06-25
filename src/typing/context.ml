@@ -172,7 +172,7 @@ type component_t = {
   mutable voidable_checks: voidable_check list;
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
-  mutable conditions: (ALoc.t, ALoc.t) Flow_ast.Expression.t list;
+  mutable conditions: (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
   constraint_cache: Type.FlowSet.t ref;
