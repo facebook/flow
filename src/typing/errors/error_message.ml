@@ -653,7 +653,8 @@ and 'loc t' =
   (* Match *)
   | EMatchNotExhaustive of {
       loc: 'loc;
-      examples: (string * (Loc.t, Loc.t) Flow_ast.MatchPattern.t * 'loc virtual_reason list) list;
+      examples: (string * 'loc virtual_reason list) list;
+      missing_pattern_asts: (Loc.t, Loc.t) Flow_ast.MatchPattern.t list;
     }
   | EMatchUnusedPattern of {
       reason: 'loc virtual_reason;
@@ -1549,14 +1550,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
-  | EMatchNotExhaustive { loc; examples } ->
+  | EMatchNotExhaustive { loc; examples; missing_pattern_asts } ->
     EMatchNotExhaustive
       {
         loc = f loc;
         examples =
-          Base.List.map examples ~f:(fun (pattern, ast, reasons) ->
-              (pattern, ast, Base.List.map ~f:map_reason reasons)
+          Base.List.map examples ~f:(fun (pattern, reasons) ->
+              (pattern, Base.List.map ~f:map_reason reasons)
           );
+        missing_pattern_asts;
       }
   | EMatchUnusedPattern { reason; already_seen } ->
     EMatchUnusedPattern
@@ -3105,16 +3107,8 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
-  | EMatchNotExhaustive { loc = _; examples } ->
-    Normal
-      (MessageMatchNotExhaustive
-         {
-           examples =
-             Base.List.map examples ~f:(fun (pattern_string, _, reasons) ->
-                 (pattern_string, reasons)
-             );
-         }
-      )
+  | EMatchNotExhaustive { examples; loc = _; missing_pattern_asts = _ } ->
+    Normal (MessageMatchNotExhaustive { examples })
   | EMatchUnusedPattern { reason; already_seen } ->
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->

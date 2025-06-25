@@ -1946,11 +1946,11 @@ let analyze cx ~match_loc patterns arg_t =
   in
   ( if not @@ ValueUnion.is_empty value_left then
     let { ValueUnion.leafs; tuples; arrays; objects; inexhaustible } = value_left in
-    let leafs =
+    let (examples_rev, asts_rev) =
       LeafSet.elements leafs
-      |> Base.List.map ~f:(fun (reason, leaf) ->
+      |> Base.List.fold ~init:([], []) ~f:(fun (examples_rev, asts_rev) (reason, leaf) ->
              let example = Leaf.to_string leaf in
-             (example, Leaf.to_ast leaf, [reason])
+             ((example, [reason]) :: examples_rev, lazy (Leaf.to_ast leaf) :: asts_rev)
          )
     in
     (* Sort examples based on their original order *)
@@ -1966,7 +1966,7 @@ let analyze cx ~match_loc patterns arg_t =
              SMap.adjust
                example
                (function
-                 | None -> (i, PatternObject.to_ast tuple_pattern, ReasonSet.singleton reason)
+                 | None -> (i, lazy (PatternObject.to_ast tuple_pattern), ReasonSet.singleton reason)
                  | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
@@ -1986,21 +1986,23 @@ let analyze cx ~match_loc patterns arg_t =
         SMap.adjust
           (PatternObject.to_string pattern)
           (function
-            | None -> (i, PatternObject.to_ast pattern, reasons)
+            | None -> (i, lazy (PatternObject.to_ast pattern), reasons)
             | Some (i, ast, existing_reasons) -> (i, ast, ReasonSet.union existing_reasons reasons))
           tuple_examples_map
     in
     (* Turn the map into a list of examples *)
-    let tuple_examples_list =
+    let (examples_rev, asts_rev) =
       tuple_examples_map
       |> SMap.elements
       |> Base.List.sort ~compare:compare_examples
-      |> Base.List.map ~f:(fun (example, (_, ast, reasons)) ->
-             (example, ast, ReasonSet.elements reasons)
+      |> Base.List.fold
+           ~init:(examples_rev, asts_rev)
+           ~f:(fun (examples_rev, asts_rev) (example, (_, ast, reasons)) ->
+             ((example, ReasonSet.elements reasons) :: examples_rev, ast :: asts_rev)
          )
     in
     (* Compute the list of object examples *)
-    let object_examples_list =
+    let (examples_rev, asts_rev) =
       objects
       |> Base.List.map ~f:ValueObject.to_pattern
       |> Base.List.stable_sort ~compare:PatternObject.compare
@@ -2010,32 +2012,40 @@ let analyze cx ~match_loc patterns arg_t =
              SMap.adjust
                example
                (function
-                 | None -> (i, PatternObject.to_ast object_pattern, ReasonSet.singleton reason)
+                 | None ->
+                   (i, lazy (PatternObject.to_ast object_pattern), ReasonSet.singleton reason)
                  | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
       |> SMap.elements
       |> Base.List.sort ~compare:compare_examples
-      |> Base.List.map ~f:(fun (example, (_, ast, reasons)) ->
-             (example, ast, ReasonSet.elements reasons)
+      |> Base.List.fold
+           ~init:(examples_rev, asts_rev)
+           ~f:(fun (examples_rev, asts_rev) (example, (_, ast, reasons)) ->
+             ((example, ReasonSet.elements reasons) :: examples_rev, ast :: asts_rev)
          )
     in
-    let wildcard =
+    let (examples_rev, asts_rev) =
       match inexhaustible with
-      | [] -> []
+      | [] -> (examples_rev, asts_rev)
       | first_t :: _ ->
         let pattern = wildcard_pattern (TypeUtil.reason_of_t first_t) in
-        [
-          ( PatternUnion.to_string pattern,
-            PatternUnion.to_ast pattern,
+        ( ( PatternUnion.to_string pattern,
             Base.List.fold inexhaustible ~init:ReasonSet.empty ~f:(fun acc t ->
                 ReasonSet.add (TypeUtil.reason_of_t t) acc
             )
             |> ReasonSet.elements
-          );
-        ]
+          )
+          :: examples_rev,
+          lazy (PatternUnion.to_ast pattern) :: asts_rev
+        )
     in
-    let examples = List.concat [leafs; tuple_examples_list; object_examples_list; wildcard] in
-    Flow_js.add_output cx (Error_message.EMatchNotExhaustive { loc = match_loc; examples })
+    let examples = Base.List.rev examples_rev in
+    let asts =
+      Base.List.rev asts_rev |> (fun asts -> Base.List.take asts 25) |> Base.List.map ~f:Lazy.force
+    in
+    Flow_js.add_output
+      cx
+      (Error_message.EMatchNotExhaustive { loc = match_loc; examples; missing_pattern_asts = asts })
   );
   check_for_unused_patterns cx pattern_union used_pattern_locs

@@ -1934,7 +1934,7 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
-    | EMatchNotExhaustive { loc; examples = _ } ->
+    | EMatchNotExhaustive { loc; examples = _; missing_pattern_asts = _ } ->
       spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
     | EMatchUnusedPattern { reason; already_seen } ->
       spf

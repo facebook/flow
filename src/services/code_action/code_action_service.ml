@@ -1226,24 +1226,28 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
         ]
     else
       []
-  | Error_message.EMatchNotExhaustive { loc = error_loc; examples } ->
+  | Error_message.EMatchNotExhaustive { loc = error_loc; examples; missing_pattern_asts } ->
     if loc_opt_intersects ~error_loc ~loc then
       let num_examples = Base.List.length examples in
+      let num_asts = Base.List.length missing_pattern_asts in
       let prefix =
-        if num_examples <= 1 then
+        if num_asts = 1 then
           "Add the missing case"
         else
-          Utils_js.spf "Add %d missing cases" num_examples
+          Utils_js.spf "Add %d missing cases" num_asts
+      in
+      let suffix =
+        if num_asts = num_examples then
+          " to make `match` exhaustively checked"
+        else
+          Utils_js.spf " (out of a total of %d)" num_examples
       in
       [
         {
-          title = Utils_js.spf "%s to make `match` exhaustively checked" prefix;
+          title = Utils_js.spf "%s%s" prefix suffix;
           diagnostic_title = "fix_match_not_exhaustive";
           transform =
-            untyped_ast_transform
-              (Autofix_match_syntax.fix_not_exhaustive
-                 (Base.List.map examples ~f:(fun (_, ast, _) -> ast))
-              );
+            untyped_ast_transform (Autofix_match_syntax.fix_not_exhaustive missing_pattern_asts);
           target_loc = error_loc;
         };
       ]
