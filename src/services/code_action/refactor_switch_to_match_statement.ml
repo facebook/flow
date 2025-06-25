@@ -379,18 +379,31 @@ class mapper target_loc =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
+    val mutable found : bool = false
+
+    method is_found = found
+
     method! statement stmt =
-      match stmt with
-      | (loc, Flow_ast.Statement.Switch switch) when this#target_contained_by loc ->
-        convert_switch loc switch
-      | _ -> super#statement stmt
+      if found then
+        stmt
+      else
+        match stmt with
+        | (loc, Flow_ast.Statement.Switch switch) when this#target_contained_by loc ->
+          let stmt' = convert_switch loc switch in
+          if stmt' == stmt then
+            stmt
+          else (
+            found <- true;
+            stmt'
+          )
+        | _ -> super#statement stmt
   end
 
 let refactor ast loc =
   let mapper = new mapper loc in
   try
     let ast' = mapper#program ast in
-    if ast' == ast then
+    if (not mapper#is_found) || ast' == ast then
       (* No change *)
       None
     else
