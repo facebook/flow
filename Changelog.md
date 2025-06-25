@@ -1,3 +1,8 @@
+### 0.274.1
+
+New Features:
+* Support for experimental `match` feature using option `experimental.pattern_matching=true`
+
 ### 0.274.0
 
 Likely to cause new Flow errors:
