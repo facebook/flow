@@ -203,7 +203,7 @@ type truthyness_result =
   | ConstCond_Unknown
   | ConstCond_Unconcretized
 
-let try_eval_concrete_type_truthyness t =
+let try_eval_concrete_type_truthyness cx t =
   let open Type in
   match t with
   | OpenT _
@@ -244,7 +244,11 @@ let try_eval_concrete_type_truthyness t =
   | DefT (_, SingletonStrT _) -> ConstCond_Unknown
   | DefT (_, NumericStrKeyT _) -> ConstCond_Unknown
   | DefT (_, SingletonNumT _) -> ConstCond_Unknown
-  | DefT (_, SingletonBoolT _) -> ConstCond_Unknown
+  | DefT (_, SingletonBoolT { value; _ }) ->
+    if Context.enable_constant_condition_true_literal cx && value then
+      ConstCond_Truthy
+    else
+      ConstCond_Unknown
   | DefT (_, SingletonBigIntT _) -> ConstCond_Unknown
   | DefT (_, TypeT _) -> ConstCond_Unknown
   | DefT (_, PolyT _) -> ConstCond_Unknown
@@ -267,7 +271,7 @@ let try_eval_concrete_type_truthyness t =
 
 let try_eval_type_truthyness cx t =
   let concrete_types = Flow_js.all_possible_concrete_types cx (TypeUtil.reason_of_t t) t in
-  match Base.List.map concrete_types ~f:try_eval_concrete_type_truthyness with
+  match Base.List.map concrete_types ~f:(try_eval_concrete_type_truthyness cx) with
   | [] -> ConstCond_Unknown
   | [result] -> result
   | results ->

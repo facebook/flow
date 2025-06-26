@@ -1,3 +1,23 @@
+Error ---------------------------------------------------------------------------------------- err1/true_literal.js:4:13
+
+This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
+out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
+[constant-condition]
+
+   4|         if (x) {} // error, x is refined to `true`
+                  ^
+
+
+Error ---------------------------------------------------------------------------------------- err2/true_literal.js:4:13
+
+This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
+out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
+[constant-condition]
+
+   4|         if (x) {} // error, x is refined to `true`
+                  ^
+
+
 Error ---------------------------------------------------------------------------------------------- null_literal.js:2:9
 
 Constant condition. The condition will always be falsy. [constant-condition]
@@ -1005,4 +1025,4 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 
 
-Found 125 errors
+Found 127 errors
