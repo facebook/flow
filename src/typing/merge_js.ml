@@ -216,7 +216,14 @@ let try_eval_concrete_type_truthyness t =
   | UnionT _ ->
     ConstCond_Unconcretized
   | DefT (_, NumGeneralT _) -> ConstCond_Unknown
-  | DefT (_, StrGeneralT _) -> ConstCond_Unknown
+  | DefT (_, StrGeneralT literal) ->
+    (* we don't know the exact string literal but we might know the truthyness from refinement *)
+    (match literal with
+    | Truthy ->
+      ConstCond_Truthy
+      (* might be null if it's from member access due to flow soundness hole
+         or internal flow bugs *)
+    | AnyLiteral -> ConstCond_Unknown (* it could be any string *))
   | DefT (_, BoolGeneralT) -> ConstCond_Unknown
   | DefT (_, BigIntGeneralT _) -> ConstCond_Unknown
   | DefT (_, EmptyT) -> ConstCond_Unknown

@@ -12,7 +12,7 @@
   }
 
   if (x3) {
-    if (x3) {} // TODO ERROR we don't know what this is
+    if (x3) {} // ERROR we don't know what this is
               // but we know it's truthy because it's in the `then` statement.
   }
 

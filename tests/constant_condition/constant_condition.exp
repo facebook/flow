@@ -850,6 +850,16 @@ Constant condition. The condition will always be truthy. [constant-condition]
                  ^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- typed_check.js:15:9
+
+This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
+out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
+[constant-condition]
+
+   15|     if (x3) {} // ERROR we don't know what this is
+               ^^
+
+
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
 
 Constant condition. The condition will always be falsy. [constant-condition]
@@ -995,4 +1005,4 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 
 
-Found 124 errors
+Found 125 errors
