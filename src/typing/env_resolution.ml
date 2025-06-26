@@ -1183,20 +1183,17 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
     | MissingThisAnnot -> AnyT.at (AnyError None) id_loc
   in
   let add_array_or_object_literal_declaration_tracking =
+    let rec has_array_or_object_without_hint = function
+      | (_, (Ast.Expression.Array _ | Ast.Expression.Object _)) -> true
+      | (_, Ast.Expression.Conditional { Ast.Expression.Conditional.consequent; alternate; _ }) ->
+        has_array_or_object_without_hint consequent || has_array_or_object_without_hint alternate
+      | _ -> false
+    in
     match def with
     | Binding (Root (ObjectValue _)) -> true
     | Binding (Root (EmptyArray _)) -> true
-    | Binding
-        (Root
-          (Value
-            {
-              hints = _;
-              expr = (_, (Ast.Expression.Array _ | Ast.Expression.Object _));
-              decl_kind = Some Ast.Variable.Const;
-              as_const = _;
-            }
-            )
-          ) ->
+    | Binding (Root (Value { hints = _; expr; decl_kind = Some _; as_const = _ }))
+      when has_array_or_object_without_hint expr ->
       true
     | _ -> false
   in

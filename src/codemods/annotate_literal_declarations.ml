@@ -129,22 +129,20 @@ let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
 
     method! variable_declarator ~kind decl =
       let open Ast.Statement.VariableDeclaration.Declarator in
-      match (kind, decl) with
-      | ( Ast.Variable.Const,
-          ( dloc,
-            {
-              id =
-                ( id_loc,
-                  Ast.Pattern.Identifier
-                    {
-                      Ast.Pattern.Identifier.name;
-                      annot = Ast.Type.Missing _ as annot;
-                      optional = false as optional;
-                    }
-                );
-              init = Some (eloc, _) as init;
-            }
-          )
+      match decl with
+      | ( dloc,
+          {
+            id =
+              ( id_loc,
+                Ast.Pattern.Identifier
+                  {
+                    Ast.Pattern.Identifier.name;
+                    annot = Ast.Type.Missing _ as annot;
+                    optional = false as optional;
+                  }
+              );
+            init = Some (eloc, _) as init;
+          }
         )
         when LMap.mem id_loc annotation_sites ->
         let ty =
