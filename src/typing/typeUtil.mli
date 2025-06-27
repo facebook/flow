@@ -47,6 +47,8 @@ val nominal_id_have_same_logical_module :
   ALoc.id * string option ->
   bool
 
+val ground_subtype_use_t : on_singleton_eq:(Type.t -> unit) -> Type.t * Type.use_t -> bool
+
 val quick_subtype : ?on_singleton_eq:(Type.t -> unit) -> Type.t -> Type.t -> bool
 
 val is_falsy : Type.t -> bool

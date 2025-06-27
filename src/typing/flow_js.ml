@@ -301,7 +301,11 @@ struct
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
       this module, and the function `flow` outside this module. **)
   let rec __flow cx ((l : Type.t), (u : Type.use_t)) trace =
-    if ground_subtype cx (l, u) then
+    if
+      TypeUtil.ground_subtype_use_t
+        ~on_singleton_eq:(Flow_js_utils.update_lit_type_from_annot cx)
+        (l, u)
+    then
       print_types_if_verbose cx trace (l, u)
     else if Cache.FlowConstraint.get cx (l, u) then
       print_types_if_verbose cx trace ~note:"(cached)" (l, u)

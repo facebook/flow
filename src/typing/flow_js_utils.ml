@@ -281,66 +281,6 @@ let update_lit_type_from_annot cx = function
       Context.record_primitive_literal_check cx (Reason.loc_of_reason r)
   | _ -> ()
 
-(* NOTE: The following function looks similar to TypeUtil.quick_subtype, but is in fact more
-   complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
-   simplify this function later. *)
-let ground_subtype cx (l, u) =
-  match (l, u) with
-  (* tvars are not considered ground, so they're not part of this relation *)
-  | (OpenT _, _)
-  | (_, UseT (_, OpenT _)) ->
-    false
-  | (UnionT _, _) -> false
-  | (DefT (_, (NumGeneralT _ | SingletonNumT _)), UseT (_, DefT (_, NumGeneralT _)))
-  | (DefT (_, (StrGeneralT _ | SingletonStrT _)), UseT (_, DefT (_, StrGeneralT _)))
-  | (DefT (_, (BoolGeneralT | SingletonBoolT _)), UseT (_, DefT (_, BoolGeneralT)))
-  | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), UseT (_, DefT (_, BigIntGeneralT _)))
-  | (DefT (_, SymbolT), UseT (_, DefT (_, SymbolT)))
-  | (DefT (_, NullT), UseT (_, DefT (_, NullT)))
-  | (DefT (_, VoidT), UseT (_, DefT (_, VoidT))) ->
-    true
-  | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
-      UseT (_, StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None })
-    )
-    when String.starts_with ~prefix:prefix2 prefix1 ->
-    true
-  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
-      UseT (_, StrUtilT { reason = _; op = StrPrefix prefix; remainder = None })
-    )
-    when String.starts_with ~prefix s ->
-    update_lit_type_from_annot cx l;
-    true
-  | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
-      UseT (_, StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None })
-    )
-    when String.ends_with ~suffix:suffix2 suffix1 ->
-    true
-  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
-      UseT (_, StrUtilT { reason = _; op = StrSuffix suffix; remainder = None })
-    )
-    when String.ends_with ~suffix s ->
-    update_lit_type_from_annot cx l;
-    true
-  | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
-      UseT (_, DefT (_, StrGeneralT Truthy))
-    )
-    when arg <> "" ->
-    true
-  | (StrUtilT _, UseT (_, DefT (_, StrGeneralT AnyLiteral))) -> true
-  | (l, UseT (_, DefT (_, MixedT mixed_flavor))) -> TypeUtil.is_mixed_subtype l mixed_flavor
-  (* we handle the any propagation check later *)
-  | (AnyT _, _) -> false
-  | (_, UseT (_, AnyT _)) -> false
-  (* opt: avoid builtin lookups *)
-  | (ObjProtoT _, UseT (_, ObjProtoT _))
-  | (FunProtoT _, UseT (_, FunProtoT _))
-  | (FunProtoT _, UseT (_, ObjProtoT _))
-  | (DefT (_, ObjT { proto_t = ObjProtoT _; _ }), UseT (_, ObjProtoT _))
-  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), UseT (_, FunProtoT _))
-  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), UseT (_, ObjProtoT _)) ->
-    true
-  | _ -> false
-
 let is_date = function
   | DefT (reason, InstanceT _) -> DescFormat.name_of_instance_reason reason = "Date"
   | _ -> false

@@ -523,6 +523,67 @@ let is_mixed_subtype l mixed_flavor =
   | (l, Mixed_truthy) -> is_concrete l && not (is_falsy l)
   | (_, Mixed_everything) -> true
 
+let ground_subtype ~on_singleton_eq (l, u) =
+  match (l, u) with
+  | (OpenT _, _)
+  | (_, OpenT _)
+  | (UnionT _, _) ->
+    false
+  | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
+  | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
+  | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, BoolGeneralT))
+  | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), DefT (_, BigIntGeneralT _))
+  | (DefT (_, SymbolT), DefT (_, SymbolT))
+  | (DefT (_, NullT), DefT (_, NullT))
+  | (DefT (_, VoidT), DefT (_, VoidT)) ->
+    true
+  | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
+      StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
+    )
+    when String.starts_with ~prefix:prefix2 prefix1 ->
+    true
+  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
+      StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
+    )
+    when String.starts_with ~prefix s ->
+    on_singleton_eq l;
+    true
+  | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
+      StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
+    )
+    when String.ends_with ~suffix:suffix2 suffix1 ->
+    true
+  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
+      StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
+    )
+    when String.ends_with ~suffix s ->
+    on_singleton_eq l;
+    true
+  | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
+      DefT (_, StrGeneralT Truthy)
+    )
+    when arg <> "" ->
+    true
+  | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral)) -> true
+  | (l, DefT (_, MixedT mixed_flavor)) -> is_mixed_subtype l mixed_flavor
+  (* we handle the any propagation check later *)
+  | (AnyT _, _) -> false
+  | (_, AnyT _) -> false
+  (* opt: avoid builtin lookups *)
+  | (ObjProtoT _, ObjProtoT _)
+  | (FunProtoT _, FunProtoT _)
+  | (FunProtoT _, ObjProtoT _)
+  | (DefT (_, ObjT { proto_t = ObjProtoT _; _ }), ObjProtoT _)
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), FunProtoT _)
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), ObjProtoT _) ->
+    true
+  | _ -> false
+
+let ground_subtype_use_t ~on_singleton_eq (l, u) =
+  match u with
+  | UseT (_, u) -> ground_subtype ~on_singleton_eq (l, u)
+  | _ -> false
+
 let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
   match (t1, t2) with
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
