@@ -382,13 +382,13 @@ Error --------------------------------------------------------------------------
 literal `2` [1]. [match-not-exhaustive]
 
    matching.js:131:14
-   131|   const e2 = match (f()) { // ERROR: `2` not checked
+   131|   const e2 = match (f(0)) { // ERROR: `2` not checked
                      ^^^^^
 
 References:
-   matching.js:124:30
-   124|   declare const f: () => 1 | 2;
-                                     ^ [1]
+   matching.js:124:36
+   124|   declare const f: (number) => 1 | 2;
+                                           ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- matching.js:144:14

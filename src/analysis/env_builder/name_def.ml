@@ -3241,6 +3241,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method private visit_match_expression ~hints x =
       let open Ast.Match in
       let { arg; cases; match_keyword_loc; comments = _ } = x in
+      ignore @@ this#expression arg;
       this#add_ordinary_binding
         match_keyword_loc
         (mk_reason RMatch match_keyword_loc)
@@ -3273,6 +3274,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method! match_statement _ x =
       let open Ast.Match in
       let { arg; cases; match_keyword_loc; comments = _ } = x in
+      ignore @@ this#expression arg;
       this#add_ordinary_binding
         match_keyword_loc
         (mk_reason RMatch match_keyword_loc)

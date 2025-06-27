@@ -121,14 +121,14 @@
 
 // Non-ident/member argument still works
 {
-  declare const f: () => 1 | 2;
+  declare const f: (number) => 1 | 2;
 
-  const e1 = match (f()) {
+  const e1 = match (f(0)) {
     1 => 0,
     2 => 0,
   };
 
-  const e2 = match (f()) { // ERROR: `2` not checked
+  const e2 = match (f(0)) { // ERROR: `2` not checked
     1 => 0,
   };
 }
