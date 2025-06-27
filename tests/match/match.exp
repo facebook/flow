@@ -1512,5 +1512,81 @@ Error --------------------------------------------------------------------------
                  ^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- statement.js:195:3
 
-Found 114 errors
+Cannot cast `target` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+
+   statement.js:195:3
+   195|   target as empty; // ERROR: `boolean`
+          ^^^^^^
+
+References:
+   statement.js:191:16
+   191|       target = true;
+                       ^^^^ [1]
+   statement.js:195:13
+   195|   target as empty; // ERROR: `boolean`
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- statement.js:209:3
+
+Cannot cast `target` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   statement.js:209:3
+   209|   target as boolean; // ERROR: `string`
+          ^^^^^^
+
+References:
+   statement.js:201:16
+   201|       target = "foo";
+                       ^^^^^ [1]
+   statement.js:209:13
+   209|   target as boolean; // ERROR: `string`
+                    ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- statement.js:224:3
+
+Unreachable code. [unreachable-code]
+
+   224|   target as boolean; // ERROR: unreachable
+          ^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- statement.js:238:3
+
+Cannot cast `o.prop` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   statement.js:238:3
+   238|   o.prop as empty; // ERROR: `2`
+          ^^^^^^
+
+References:
+   statement.js:234:16
+   234|       o.prop = 2 as const;
+                       ^ [1]
+   statement.js:238:13
+   238|   o.prop as empty; // ERROR: `2`
+                    ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- statement.js:252:3
+
+Cannot cast `o.prop` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+
+   statement.js:252:3
+   252|   o.prop as empty; // ERROR: `1`
+          ^^^^^^
+
+References:
+   statement.js:244:16
+   244|       o.prop = 1 as const;
+                       ^ [1]
+   statement.js:252:13
+   252|   o.prop as empty; // ERROR: `1`
+                    ^^^^^ [2]
+
+
+
+Found 119 errors

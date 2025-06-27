@@ -2978,27 +2978,19 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | (_, env_next, completion_state) :: [] ->
           if Option.is_none completion_state then this#reset_env env_next;
           this#from_completion completion_state
-        | ((_, _, first_completion_state) as first_case_info) :: rest_cases_info ->
-          let (_, rest_completion_states) =
+        | (_, first_env, first_completion_state) :: rest_cases_info ->
+          let (next_env, rest_completion_states) =
             Base.List.fold
               rest_cases_info
-              ~init:(first_case_info, [])
-              ~f:(fun
-                   (((_, _, completion_state_acc) as case_info_acc), completion_states_acc)
-                   ((_, _, completion_state) as case_info)
-                 ->
-                this#reset_env env0;
-                this#merge_conditional_branches_with_refinements case_info_acc case_info;
-                let env_after = this#env_snapshot in
-                ( ( env0,
-                    env_after,
-                    this#merge_completion_state_values completion_state_acc completion_state
-                  ),
-                  completion_state :: completion_states_acc
-                )
+              ~init:(first_env, [])
+              ~f:(fun (env_acc, completion_states_acc) (_, case_env, completion_state) ->
+                this#merge_env env_acc case_env;
+                (this#env_snapshot, completion_state :: completion_states_acc)
             )
           in
-          this#merge_completion_states (first_completion_state, rest_completion_states));
+          this#reset_env env0;
+          this#merge_completion_states (first_completion_state, rest_completion_states);
+          this#reset_env next_env);
         x
 
       method private visit_match_case
