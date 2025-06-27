@@ -53,6 +53,7 @@ let metadata =
     pattern_matching_includes = [];
     constant_condition = false;
     constant_condition_boolean_literal_includes = [];
+    constant_condition_null_void_includes = [];
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;

@@ -233,8 +233,12 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, MixedT Mixed_non_null) -> ConstCond_Unknown
   | DefT (_, MixedT Mixed_non_void) -> ConstCond_Unknown
   | DefT (_, MixedT Mixed_function) -> ConstCond_Unknown
-  | DefT (_, NullT) -> ConstCond_Unknown
-  | DefT (_, VoidT) -> ConstCond_Unknown
+  | DefT (_, NullT)
+  | DefT (_, VoidT) ->
+    if Context.enable_constant_condition_null_void cx then
+      ConstCond_Falsy
+    else
+      ConstCond_Unknown
   | DefT (_, SymbolT) -> ConstCond_Unknown
   | DefT (_, FunT _) -> ConstCond_Unknown
   | DefT (_, ObjT _) -> ConstCond_Unknown

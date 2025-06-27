@@ -17,6 +17,24 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
                   ^
 
 
+Error ------------------------------------------------------------------------------------------- err1/null_void.js:4:13
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   4|         if (x) {} // error, x is refined to `null | void`
+                  ^
+
+
+Error -------------------------------------------------------------------------------------------- err1/null_void.js:8:9
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   8|     if (y) {} // error, y is undefined
+              ^
+
+
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:4:13
 
 This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
@@ -34,6 +52,24 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
    8|         if (x) {} // error, x is refined to `false`
                   ^
+
+
+Error ------------------------------------------------------------------------------------------- err2/null_void.js:4:13
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   4|         if (x) {} // error, x is refined to `null | void`
+                  ^
+
+
+Error -------------------------------------------------------------------------------------------- err2/null_void.js:8:9
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   8|     if (y) {} // error, y is undefined
+              ^
 
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:2:9
@@ -1043,4 +1079,4 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 
 
-Found 129 errors
+Found 133 errors

@@ -56,6 +56,7 @@ module Opts = struct
     component_syntax: bool;
     constant_condition: bool option;
     constant_condition_boolean_literal_includes: string list;
+    constant_condition_null_void_includes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -200,6 +201,7 @@ module Opts = struct
       component_syntax = false;
       constant_condition = Some false;
       constant_condition_boolean_literal_includes = [];
+      constant_condition_null_void_includes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1088,6 +1090,18 @@ module Opts = struct
                 opts with
                 constant_condition_boolean_literal_includes =
                   v :: opts.constant_condition_boolean_literal_includes;
+              })
+      );
+      ( "experimental.constant_condition.null_void.includes",
+        string
+          ~init:(fun opts -> { opts with constant_condition_null_void_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                constant_condition_null_void_includes =
+                  v :: opts.constant_condition_null_void_includes;
               })
       );
       ("experimental.projects", projects_parser);
@@ -1996,6 +2010,8 @@ let constant_condition c = c.options.Opts.constant_condition
 
 let constant_condition_boolean_literal_includes c =
   c.options.Opts.constant_condition_boolean_literal_includes
+
+let constant_condition_null_void_includes c = c.options.Opts.constant_condition_null_void_includes
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 

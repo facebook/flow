@@ -1436,6 +1436,10 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.constant_condition_boolean_literal_includes flowconfig);
+    opt_constant_condition_null_void_includes =
+      Base.List.map
+        ~f:(Files.expand_project_root_token ~root)
+        (FlowConfig.constant_condition_null_void_includes flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
