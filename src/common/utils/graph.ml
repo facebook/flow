@@ -13,6 +13,8 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
     mutable backward: Set.t;
   }
 
+  exception NodeNotFound of Set.elt
+
   type t = node Map.t
 
   type elt = Map.key
@@ -142,14 +144,26 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
 
   let to_backward_map graph = Map.map (fun { backward; _ } -> backward) graph
 
-  let find elt graph = (Map.find elt graph).forward
+  let find elt graph =
+    let node =
+      match Map.find_opt elt graph with
+      | None -> raise (NodeNotFound elt)
+      | Some node -> node
+    in
+    node.forward
 
   let find_opt elt graph =
     match Map.find_opt elt graph with
     | None -> None
     | Some { forward; _ } -> Some forward
 
-  let find_backward elt graph = (Map.find elt graph).backward
+  let find_backward elt graph =
+    let node =
+      match Map.find_opt elt graph with
+      | None -> raise (NodeNotFound elt)
+      | Some node -> node
+    in
+    node.backward
 
   let find_backward_opt elt graph =
     match Map.find_opt elt graph with
