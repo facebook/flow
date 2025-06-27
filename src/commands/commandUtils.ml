@@ -1394,6 +1394,10 @@ let make_options
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_natural_inference_object_literal_partial_fix =
       FlowConfig.natural_inference_object_literal_partial_fix flowconfig;
+    opt_natural_inference_object_literal_partial_fix_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.natural_inference_object_literal_partial_fix_excludes flowconfig);
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
     opt_temp_dir;

@@ -206,6 +206,8 @@ val munge_underscores : config -> bool
 
 val natural_inference_object_literal_partial_fix : config -> bool
 
+val natural_inference_object_literal_partial_fix_excludes : config -> string list
+
 val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool

@@ -60,6 +60,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_object_literal_partial_fix: bool;
+  natural_inference_object_literal_partial_fix_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
@@ -308,6 +309,8 @@ let metadata_of_options options =
     missing_module_generators = Options.missing_module_generators options;
     natural_inference_object_literal_partial_fix =
       Options.natural_inference_object_literal_partial_fix options;
+    natural_inference_object_literal_partial_fix_excludes =
+      Options.natural_inference_object_literal_partial_fix_excludes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     projects_options = Options.projects_options options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
@@ -719,6 +722,7 @@ let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let natural_inference_object_literal_partial_fix cx =
   cx.metadata.natural_inference_object_literal_partial_fix
+  && not (in_dirlist cx cx.metadata.natural_inference_object_literal_partial_fix_excludes)
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

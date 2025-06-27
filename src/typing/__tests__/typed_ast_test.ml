@@ -46,6 +46,7 @@ let metadata =
     max_workers = 0;
     missing_module_generators = [];
     natural_inference_object_literal_partial_fix = false;
+    natural_inference_object_literal_partial_fix_excludes = [];
     no_unchecked_indexed_access = false;
     pattern_matching_includes = [];
     constant_condition = false;

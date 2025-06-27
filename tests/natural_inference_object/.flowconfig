@@ -1,0 +1,5 @@
+[options]
+all=true
+no_flowlib=false
+experimental.natural_inference.local_object_literals=partial
+experimental.natural_inference.local_object_literals.partial_fix_excludes=<PROJECT_ROOT>/excluded.js
