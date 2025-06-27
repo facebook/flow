@@ -1164,16 +1164,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.local_primitive_literals",
-        enum
-          [("off", false); ("false", false); ("true", true); ("full", true)]
-          (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error
-                "Support for experimental.natural_inference.local_primitive_literals=false is removed.")
-      );
       ( "experimental.natural_inference.local_object_literals",
         enum
           [("off", false); ("partial", true)]

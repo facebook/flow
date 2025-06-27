@@ -3,4 +3,3 @@ all=true
 exact_by_default=false
 enums=true
 no_flowlib=false
-experimental.natural_inference.local_primitive_literals=full

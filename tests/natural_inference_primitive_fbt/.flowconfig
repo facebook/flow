@@ -10,7 +10,6 @@ fbt.js.flow
 [options]
 all=true
 facebook.fbt=FbtElement
-experimental.natural_inference.local_primitive_literals=full
 component_syntax=true
 no_flowlib=false
 
