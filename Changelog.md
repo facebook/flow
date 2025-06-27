@@ -1,3 +1,6 @@
+### 0.274.2
+* Bug fixes for `match`
+
 ### 0.274.1
 
 New Features:
