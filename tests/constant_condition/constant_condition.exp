@@ -1,4 +1,4 @@
-Error ---------------------------------------------------------------------------------------- err1/true_literal.js:4:13
+Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:4:13
 
 This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
 out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
@@ -8,13 +8,31 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
                   ^
 
 
-Error ---------------------------------------------------------------------------------------- err2/true_literal.js:4:13
+Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:8:13
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   8|         if (x) {} // error, x is refined to `false`
+                  ^
+
+
+Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:4:13
 
 This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
 out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
 [constant-condition]
 
    4|         if (x) {} // error, x is refined to `true`
+                  ^
+
+
+Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:8:13
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   8|         if (x) {} // error, x is refined to `false`
                   ^
 
 
@@ -1025,4 +1043,4 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 
 
-Found 127 errors
+Found 129 errors

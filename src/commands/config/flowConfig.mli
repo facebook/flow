@@ -88,7 +88,7 @@ val component_syntax : config -> bool
 
 val constant_condition : config -> bool option
 
-val constant_condition_true_literal_includes : config -> string list
+val constant_condition_boolean_literal_includes : config -> string list
 
 val dev_only_refinement_info_as_errors : config -> bool
 

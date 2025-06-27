@@ -245,10 +245,12 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, NumericStrKeyT _) -> ConstCond_Unknown
   | DefT (_, SingletonNumT _) -> ConstCond_Unknown
   | DefT (_, SingletonBoolT { value; _ }) ->
-    if Context.enable_constant_condition_true_literal cx && value then
+    if not (Context.enable_constant_condition_boolean_literal cx) then
+      ConstCond_Unknown
+    else if value then
       ConstCond_Truthy
     else
-      ConstCond_Unknown
+      ConstCond_Falsy
   | DefT (_, SingletonBigIntT _) -> ConstCond_Unknown
   | DefT (_, TypeT _) -> ConstCond_Unknown
   | DefT (_, PolyT _) -> ConstCond_Unknown

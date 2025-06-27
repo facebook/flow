@@ -1432,10 +1432,10 @@ let make_options
         (FlowConfig.pattern_matching_includes flowconfig);
     opt_constant_condition =
       Base.Option.value ~default:false (FlowConfig.constant_condition flowconfig);
-    opt_constant_condition_true_literal_includes =
+    opt_constant_condition_boolean_literal_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.constant_condition_true_literal_includes flowconfig);
+        (FlowConfig.constant_condition_boolean_literal_includes flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);

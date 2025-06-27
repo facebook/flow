@@ -98,7 +98,7 @@ type metadata = {
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
   constant_condition: bool;
-  constant_condition_true_literal_includes: string list;
+  constant_condition_boolean_literal_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -208,7 +208,7 @@ val enable_jest_integration : t -> bool
 
 val enable_pattern_matching : t -> bool
 
-val enable_constant_condition_true_literal : t -> bool
+val enable_constant_condition_boolean_literal : t -> bool
 
 val enable_relay_integration : t -> bool
 

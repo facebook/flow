@@ -55,7 +55,7 @@ module Opts = struct
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
     constant_condition: bool option;
-    constant_condition_true_literal_includes: string list;
+    constant_condition_boolean_literal_includes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -199,7 +199,7 @@ module Opts = struct
       casting_syntax = None;
       component_syntax = false;
       constant_condition = Some false;
-      constant_condition_true_literal_includes = [];
+      constant_condition_boolean_literal_includes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1078,16 +1078,16 @@ module Opts = struct
       ( "experimental.constant_condition",
         boolean (fun opts v -> Ok { opts with constant_condition = Some v })
       );
-      ( "experimental.constant_condition.true_literal.includes",
+      ( "experimental.constant_condition.boolean_literal.includes",
         string
-          ~init:(fun opts -> { opts with constant_condition_true_literal_includes = [] })
+          ~init:(fun opts -> { opts with constant_condition_boolean_literal_includes = [] })
           ~multiple:true
           (fun opts v ->
             Ok
               {
                 opts with
-                constant_condition_true_literal_includes =
-                  v :: opts.constant_condition_true_literal_includes;
+                constant_condition_boolean_literal_includes =
+                  v :: opts.constant_condition_boolean_literal_includes;
               })
       );
       ("experimental.projects", projects_parser);
@@ -1994,8 +1994,8 @@ let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
 
 let constant_condition c = c.options.Opts.constant_condition
 
-let constant_condition_true_literal_includes c =
-  c.options.Opts.constant_condition_true_literal_includes
+let constant_condition_boolean_literal_includes c =
+  c.options.Opts.constant_condition_boolean_literal_includes
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 
