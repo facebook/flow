@@ -160,7 +160,6 @@ var removeFlowVisitor = {
   TypeAlias: removeNode,
   TypeAnnotation: removeNodeIfNotCommentType,
   TypePredicate: removeNodeIfNotCommentType,
-  TypeParameterDeclaration: removeNode,
   InferredPredicate: removeInferredPredicateNode,
   OpaqueType: removeNode,
   DeclareOpaqueType: removeNode,
@@ -363,6 +362,12 @@ var removeFlowVisitor = {
         // Delete the original arrow token.
         removeNode(context, ast.tokens[arrowIdx]);
       }
+    }
+  },
+
+  TypeParameterDeclaration: function (context, node, ast, parent) {
+    if (parent.type !== 'ComponentTypeAnnotation') {
+      return removeNode(context, node);
     }
   },
 
