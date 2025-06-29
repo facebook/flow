@@ -308,6 +308,7 @@ const asBigInt = 1n          ;
 const asBooleanLiteral = true        ;
 const asBoolean = true           ;
 const asComponent = (() => {})                                    ;
+const asComponentGeneric = (() => {})                      ;
 const asEmpty = {}         ;
 const asExists = 'exists'     ;
 const asFunction = (() => {})              ;
