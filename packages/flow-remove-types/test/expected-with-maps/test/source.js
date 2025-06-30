@@ -48,7 +48,7 @@ propCo;
 }
 
 // Class expression implements interface
-var SomeClass = class Baz {
+var SomeClass = class BazClass {
   prop;
 
   method() {
@@ -103,9 +103,9 @@ var someObj = {
 }
 
 // Example from README
-import SomeClass from 'some-module'
+import SomeClassImport from 'some-module'
 
-export class MyClass extends SomeClass {
+export class MyClass extends SomeClassImport {
 
   value
 
@@ -148,7 +148,7 @@ var union;
 var intersection;
 
 // Test generic async arrow funcion
-const f = async() => {};
+const asyncArrow = async() => {};
 
 // Comment type annotations are preserved
 var X /*: {
@@ -160,11 +160,11 @@ function method(param /*: string */) /*: number */ {
 }
 
 // declared class fields
-class MyClass {
+class MyClassWithDeclare {
 }
 
 // Comment type includes are not emptied out
-class MyClass {
+class MyClassWithComment {
   /*:: prop: string; */
 }
 
@@ -197,7 +197,7 @@ function typeAssertsFunction2(x) {
 }
 
 // Test function with default type parameter
-function f() {}
+function functionWithDefault() {}
 
 // Opaque types
 
@@ -205,32 +205,32 @@ function f() {}
 
 // `this` params
 
-function z () {}
-function u ( ...a) {}
-function v (
+function thisParam1 () {}
+function thisParam2 ( ...a) {}
+function thisParam3 (
  ...a) {}
-function w (
+function thisParam4 (
 ) {}
-function x (
+function thisParam5 (
    ...a) {}
-function i(
+function thisParam6(
 ) {}
-function j(
+function thisParam7(
   a
 ) {}
 
-function jj(
+function thisParam8(
   a
 ) {
-  function jjj( a) {}
+  function thisParam9( a) {}
 }
 
-const f = function() {}
-const g = function( ...a) {}
-const h = function(...a) {}
-const k = function(
+const thisConst1 = function() {}
+const thisConst2 = function( ...a) {}
+const thisConst3 = function(...a) {}
+const thisConst4 = function(
 ) {}
-const kk = function(a,) {}
+const thisConst5 = function(a,) {}
 
 // `as` cast
 const asAny = 'any';

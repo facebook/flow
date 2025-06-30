@@ -10,18 +10,18 @@ import {
 
 // Regular import with types only
 import {
-                
-                       
+                     
+                         
 } from 'some-module';
 
 // Mixed default and named type only imports
 import DefaultImport, {
-                
-                        
+                         
+                             
 } from 'some-module';
 
 // Import types
-                                            
+                                                  
 
 // Typed function
 async function test(x      , y /*.*/   /*.*/ , z /*.*/   /*.*/                = 123)         {
@@ -66,7 +66,7 @@ class Bar extends Other            /*.*/                 {
 }
 
 // Class expression implements interface
-var SomeClass = class Baz                {
+var SomeClass = class BazClass                {
   prop     ;
 
   method()        {
@@ -75,12 +75,12 @@ var SomeClass = class Baz                {
 };
 
 // Parametric class
-class Wrapper    {
-  get()    {
+class Wrapper           {
+  get()           {
     return this.value;
   }
 
-  map   ()             {
+  map         ()                   {
     // do something
   }
 }
@@ -118,10 +118,10 @@ class StringWrapper extends Wrapper         {
                                
 
 // Type alias
-                
+                         
 
 // Export type
-                  
+                           
 
 // Export type *
                                  
@@ -140,25 +140,25 @@ var someObj = {
 }
 
 // Example from README
-import SomeClass from 'some-module'
+import SomeClassImport from 'some-module'
                                                 
 
-export class MyClass    extends SomeClass                          {
+export class MyClass              extends SomeClassImport                          {
 
-  value   
+  value             
 
-  constructor(value   ) {
+  constructor(value             ) {
     this.value = value
   }
 
-  get()    {
+  get()              {
     return this.value
   }
 
 }
 
 // Test async/await functions
-async function asyncFunction   (input   )             {
+async function asyncFunction           (input           )                     {
   return await t;
 }
 
@@ -168,7 +168,7 @@ async function asyncFunction   (input   )             {
    
 
 // Test covariant type variant class with constaint and default.
-export class TestClassWithDefault                                  {
+export class TestClassWithDefault                                              {
 
   constructor() {}
 }
@@ -181,17 +181,17 @@ var newline_arrow_2 = () =>
 
 // Test calling a function with explicit type arguments
 doSomething        (3);
-doSomething       (3);
+doSomething                           (3);
 
 // Test invoking a constructor with explicit type arguments
 new Event        ();
 
 // Test type union and intersection syntax with leading "operator"
-var union         ;
-var intersection         ;
+var union                                ;
+var intersection                                  ;
 
 // Test generic async arrow funcion
-const f = async    ()    => {};
+const asyncArrow = async            ()            => {};
 
 // Comment type annotations are preserved
 var X /*: {
@@ -203,12 +203,12 @@ function method(param /*: string */) /*: number */ {
 }
 
 // declared class fields
-class MyClass {
+class MyClassWithDeclare {
                        
 }
 
 // Comment type includes are not emptied out
-class MyClass {
+class MyClassWithComment {
   /*:: prop: string; */
 }
 
@@ -241,62 +241,62 @@ function typeAssertsFunction2(x       )            {
 }
 
 // Test function with default type parameter
-function f          () {}
+function functionWithDefault                                       () {}
 
 // Opaque types
-                       
-                               
-                      
-                              
-                              
+                             
+                                     
+                            
+                                    
+                                    
 
 // Declare export
-                             
+                                   
+                                               
                                   
-                         
 
 // `this` params
 
-                                         
-                                
-function z (             ) {}
-function u (               ...a) {}
-function v (             
+                                                    
+                                       
+function thisParam1 (             ) {}
+function thisParam2 (               ...a) {}
+function thisParam3 (             
      ...a) {}
-function w (    
+function thisParam4 (    
           
 
     ) {}
-function x (    
+function thisParam5 (    
           
 
     
    ...a) {}
-function i(
+function thisParam6(
           
 ) {}
-function j(
+function thisParam7(
           
   a        
 ) {}
 
-function jj(
+function thisParam8(
           
   a        
 ) {
-  function jjj(         a        ) {}
+  function thisParam9(         a        ) {}
 }
 
-const f = function(            ) {}
-const g = function(              ...a) {}
-const h = function(    
+const thisConst1 = function(            ) {}
+const thisConst2 = function(              ...a) {}
+const thisConst3 = function(    
          
 ...a) {}
-const k = function(    
+const thisConst4 = function(    
         
 
  ) {}
-const kk = function(    
+const thisConst5 = function(    
          
 a        ,) {}
 
@@ -327,13 +327,13 @@ const asTypeof = 'typeof'                   ;
 const asUnion = 'union'                   ;
 const asVoid = undefined        ;
 
-                                                             
+                                                                                           
 const asConditional = 'conditional'                           ;
 
                                                  
 const asInterface = { a: 'a', b: 1 }                 ;
 
-                                                  
+                                                                              
 const asInfer = 'infer'                     ;
 
                                                       

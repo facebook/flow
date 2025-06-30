@@ -10,18 +10,18 @@ import {
 
 // Regular import with types only
 import {
-  type SomeType,
-  typeof SomeOtherThing
+  type SomeOtherType,
+  typeof SomeAnotherThing
 } from 'some-module';
 
 // Mixed default and named type only imports
 import DefaultImport, {
-  type SomeType,
-  typeof SomeOtherThing,
+  type SomeDifferentType,
+  typeof SomeYetAnotherThing,
 } from 'some-module';
 
 // Import types
-import type { SomeType } from 'some-module';
+import type { SomeRandomType } from 'some-module';
 
 // Typed function
 async function test(x: Type, y /*.*/ ? /*.*/ , z /*.*/ ? /*.*/ : /*.*/ number = 123): string {
@@ -66,7 +66,7 @@ class Bar extends Other implements /*.*/ Foo, ISomething {
 }
 
 // Class expression implements interface
-var SomeClass = class Baz implements Foo {
+var SomeClass = class BazClass implements Foo {
   prop: any;
 
   method(): mixed {
@@ -75,12 +75,12 @@ var SomeClass = class Baz implements Foo {
 };
 
 // Parametric class
-class Wrapper<T> {
-  get(): T {
+class Wrapper<ItemType> {
+  get(): ItemType {
     return this.value;
   }
 
-  map<M>(): Wrapper<M> {
+  map<MapType>(): Wrapper<MapType> {
     // do something
   }
 }
@@ -118,10 +118,10 @@ declare type Location = {
 declare var SOME_CONST: string;
 
 // Type alias
-type T = string;
+type StringType = string;
 
 // Export type
-export type { T };
+export type { StringType };
 
 // Export type *
 export type * from 'some-module';
@@ -140,25 +140,25 @@ var someObj = {
 }
 
 // Example from README
-import SomeClass from 'some-module'
+import SomeClassImport from 'some-module'
 import type { SomeInterface } from 'some-module'
 
-export class MyClass<T> extends SomeClass implements SomeInterface {
+export class MyClass<GenericType> extends SomeClassImport implements SomeInterface {
 
-  value: T
+  value: GenericType
 
-  constructor(value: T) {
+  constructor(value: GenericType) {
     this.value = value
   }
 
-  get(): T {
+  get(): GenericType {
     return this.value
   }
 
 }
 
 // Test async/await functions
-async function asyncFunction<T>(input: T): Promise<T> {
+async function asyncFunction<AsyncType>(input: AsyncType): Promise<AsyncType> {
   return await t;
 }
 
@@ -168,7 +168,7 @@ export type TestReadOnly = {|
 |};
 
 // Test covariant type variant class with constaint and default.
-export class TestClassWithDefault<+T: TestReadOnly = TestReadOnly> {
+export class TestClassWithDefault<+CovariantType: TestReadOnly = TestReadOnly> {
 
   constructor() {}
 }
@@ -181,17 +181,17 @@ number=>42;
 
 // Test calling a function with explicit type arguments
 doSomething<number>(3);
-doSomething <T, U>(3);
+doSomething <GenericParam, UnionParam>(3);
 
 // Test invoking a constructor with explicit type arguments
 new Event<number>();
 
 // Test type union and intersection syntax with leading "operator"
-var union: | T | U;
-var intersection: & T & U;
+var union: | UnionType | IntersectionType;
+var intersection: & UnionType2 & IntersectionType2;
 
 // Test generic async arrow funcion
-const f = async <T>(): T => {};
+const asyncArrow = async <ArrowType>(): ArrowType => {};
 
 // Comment type annotations are preserved
 var X /*: {
@@ -203,12 +203,12 @@ function method(param /*: string */) /*: number */ {
 }
 
 // declared class fields
-class MyClass {
+class MyClassWithDeclare {
   declare prop: string;
 }
 
 // Comment type includes are not emptied out
-class MyClass {
+class MyClassWithComment {
   /*:: prop: string; */
 }
 
@@ -241,62 +241,62 @@ function typeAssertsFunction2(x: mixed): asserts x {
 }
 
 // Test function with default type parameter
-function f<T, S = T>() {}
+function functionWithDefault<DefaultType, SecondType = DefaultType>() {}
 
 // Opaque types
-opaque type A = number;
-opaque type B: string = string;
-declare opaque type A;
-declare opaque type B: string;
-export opaque type A = number;
+opaque type OpaqueA = number;
+opaque type OpaqueB: string = string;
+declare opaque type OpaqueC;
+declare opaque type OpaqueD: string;
+export opaque type OpaqueE = number;
 
 // Declare export
-declare export opaque type B;
-declare export function x(): void;
-declare export default T;
+declare export opaque type OpaqueF;
+declare export function exportFunction(): void;
+declare export default ExportType;
 
 // `this` params
 
-declare function y (this : string) : void
-type T = (this : string) => void
-function z (this : string) {}
-function u (this : string, ...a) {}
-function v (this : string
+declare function thisFunction (this : string) : void
+type ThisType = (this : string) => void
+function thisParam1 (this : string) {}
+function thisParam2 (this : string, ...a) {}
+function thisParam3 (this : string
    , ...a) {}
-function w (this
+function thisParam4 (this
   : string
 
    ,) {}
-function x (this
+function thisParam5 (this
   : string
 
    ,
    ...a) {}
-function i(
+function thisParam6(
   this: X,
 ) {}
-function j(
+function thisParam7(
   this: X,
   a: string
 ) {}
 
-function jj(
+function thisParam8(
   this: X,
   a: string
 ) {
-  function jjj(this: X, a: string) {}
+  function thisParam9(this: X, a: string) {}
 }
 
-const f = function(this: string) {}
-const g = function(this: string, ...a) {}
-const h = function(this
+const thisConst1 = function(this: string) {}
+const thisConst2 = function(this: string, ...a) {}
+const thisConst3 = function(this
 : string,
 ...a) {}
-const k = function(this
+const thisConst4 = function(this
 : string
 
 ,) {}
-const kk = function(this
+const thisConst5 = function(this
 : string,
 a: string,) {}
 
@@ -327,13 +327,13 @@ const asTypeof = 'typeof' as typeof asString;
 const asUnion = 'union' as string | number;
 const asVoid = undefined as void;
 
-type ConditionalType<T> = T extends string ? string : number;
+type ConditionalType<ConditionalParam> = ConditionalParam extends string ? string : number;
 const asConditional = 'conditional' as ConditionalType<string>;
 
 interface InterfaceType { a: string; b: number; }
 const asInterface = { a: 'a', b: 1 } as InterfaceType;
 
-type InferType<T> = T extends infer U ? U : never;
+type InferType<InferParam> = InferParam extends infer InferU ? InferU : never;
 const asInfer = 'infer' as InferType<string>;
 
 type IntersectionType = { a: string } & { b: number };
