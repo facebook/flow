@@ -215,6 +215,7 @@ module Expression
     with_loc
       (fun env ->
         if in_formal_parameters env then error env Parse_error.YieldInFormalParameters;
+        if in_match_expression env then error env Parse_error.MatchExpressionYield;
         let leading = Peek.comments env in
         let start_loc = Peek.loc env in
         Expect.token env T_YIELD;
@@ -604,6 +605,7 @@ module Expression
      * Babel does it. *)
     | T_AWAIT when allow_await env ->
       if in_formal_parameters env then error env Parse_error.AwaitInAsyncFormalParameters;
+      if in_match_expression env then error env Parse_error.MatchExpressionAwait;
       Some Await
     | _ -> None
 
@@ -1412,6 +1414,7 @@ module Expression
       (* `match (<expr>) {` *)
       if (not (Peek.is_line_terminator env)) && Peek.token env = T_LCURLY then
         let arg = Parser_common.reparse_arguments_as_match_argument env args in
+        let env = with_in_match_expression true env in
         Cover_expr (match_expression ~match_keyword_loc ~leading ~arg env)
       else
         (* It's actually a call expression of the form `match(...)` *)

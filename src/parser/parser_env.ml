@@ -175,6 +175,7 @@ type env = {
   in_switch: bool;
   in_formal_parameters: bool;
   in_function: bool;
+  in_match_expression: bool;
   in_match_statement: bool;
   no_in: bool;
   no_call: bool;
@@ -232,6 +233,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     in_switch = false;
     in_formal_parameters = false;
     in_function = false;
+    in_match_expression = false;
     in_match_statement = false;
     no_in = false;
     no_call = false;
@@ -274,6 +276,8 @@ let in_switch env = env.in_switch
 let in_formal_parameters env = env.in_formal_parameters
 
 let in_function env = env.in_function
+
+let in_match_expression env = env.in_match_expression
 
 let in_match_statement env = env.in_match_statement
 
@@ -386,6 +390,12 @@ let with_in_function in_function env =
     env
   else
     { env with in_function }
+
+let with_in_match_expression in_match_expression env =
+  if in_match_expression = env.in_match_expression then
+    env
+  else
+    { env with in_match_expression }
 
 let with_in_match_statement in_match_statement env =
   if in_match_statement = env.in_match_statement then
@@ -504,6 +514,8 @@ let enter_function env ~async ~generator ~simple_params =
     in_function = true;
     in_loop = false;
     in_switch = false;
+    in_match_expression = false;
+    in_match_statement = false;
     in_export = false;
     in_export_default = false;
     labels = SSet.empty;

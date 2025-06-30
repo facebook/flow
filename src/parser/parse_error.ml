@@ -108,6 +108,8 @@ type t =
   | MatchNonLastRest of [ `Object | `Array ]
   | MatchEmptyArgument
   | MatchSpreadArgument
+  | MatchExpressionAwait
+  | MatchExpressionYield
   | MethodInDestructuring
   | MissingJSXClosingTag of string
   | MissingTypeParam
@@ -412,6 +414,8 @@ module PP = struct
       Printf.sprintf "In match %s pattern, the rest must be the last element in the pattern" kind
     | MatchEmptyArgument -> "`match` argument must not be empty"
     | MatchSpreadArgument -> "`match` argument cannot contain spread elements"
+    | MatchExpressionAwait -> "`await` is not yet supported in `match` expressions"
+    | MatchExpressionYield -> "`yield` is not yet supported in `match` expressions"
     | MethodInDestructuring -> "Object pattern can't contain methods"
     | MissingJSXClosingTag name ->
       Printf.sprintf "JSX element %s has no corresponding closing tag." name
