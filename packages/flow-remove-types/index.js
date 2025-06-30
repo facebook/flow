@@ -172,6 +172,7 @@ var removeFlowVisitor = {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
     removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
     removeNode(context, node.typeAnnotation);
+    return false;
   },
 
   AsConstExpression: function (context, node, ast) {
@@ -364,19 +365,8 @@ var removeFlowVisitor = {
       }
     }
   },
-
-  TypeParameterDeclaration: function (context, node, ast, parent) {
-    if (parent.type !== 'ComponentTypeAnnotation') {
-      return removeNode(context, node);
-    }
-  },
-
-  TypeParameterInstantiation: function (context, node, ast, parent) {
-    // prevent interference with asExpression removal
-    if (parent.type !== 'GenericTypeAnnotation') {
-      removeNode(context, node);
-    }
-  },
+  TypeParameterDeclaration: removeNode,
+  TypeParameterInstantiation: removeNode,
 };
 
 // If this class declaration or expression implements interfaces, remove
