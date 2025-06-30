@@ -309,10 +309,12 @@ const asBooleanLiteral = true as true;
 const asBoolean = true as boolean;
 const asComponent = (() => {}) as component(p: number, o?: string);
 const asComponentGeneric = (() => {}) as component<T>(p: T);
+const asComponentGenericWithDefault = (() => {}) as component<T: any = any>(p: T);
 const asEmpty = {} as empty;
 const asExists = 'exists' as *;
 const asFunction = (() => {}) as () => void;
 const asGeneric = 'generic' as $NonMaybeType<string>;
+const asGenericWithDefault = 'generic' as <T: any = any>(obj: T) => {};
 const asKeyof = 'a' as keyof { a: string; b: number };
 const asMixed = 'mixed' as mixed;
 const asNullable = null as ?string;
@@ -345,3 +347,30 @@ const asIndexed = 'indexed' as [string, number][0];
 // `as const`
 's' as const;
 ['s'] as const;
+
+type SectionBase<T, P> = T<P>;
+// type ItemT = any;
+type DefaultSectionT = any;
+type SectionT = any;
+
+// component generic advanced
+type VirtualizedList = () => {};
+type DefaultSectionT = any;
+type SectionBase<T1,T2> = any;
+type ScrollToLocationParamsType = any;
+type VirtualizedSectionListProps<T1,T2> = any;
+
+const VirtualizedSectionListComponent = ((() => {}) as any) as component<
+  ItemT,
+  SectionT: SectionBase<ItemT, DefaultSectionT> = DefaultSectionT,
+>(
+  ref: React.RefSetter<
+    interface {
+      getListRef(): ?VirtualizedList,
+      scrollToLocation(params: ScrollToLocationParamsType): void,
+    },
+  >,
+  ...VirtualizedSectionListProps<ItemT, SectionT>
+);
+
+const xd = '1' as any as any as any;

@@ -309,10 +309,12 @@ const asBooleanLiteral = true        ;
 const asBoolean = true           ;
 const asComponent = (() => {})                                    ;
 const asComponentGeneric = (() => {})                      ;
+const asComponentGenericWithDefault = (() => {})                                 ;
 const asEmpty = {}         ;
 const asExists = 'exists'     ;
 const asFunction = (() => {})              ;
 const asGeneric = 'generic'                         ;
+const asGenericWithDefault = 'generic'                                ;
 const asKeyof = 'a'                                  ;
 const asMixed = 'mixed'         ;
 const asNullable = null           ;
@@ -345,3 +347,30 @@ const asIndexed = 'indexed'                       ;
 // `as const`
 's'         ;
 ['s']         ;
+
+                              
+// type ItemT = any;
+                           
+                    
+
+// component generic advanced
+                                
+                           
+                              
+                                      
+                                              
+
+const VirtualizedSectionListComponent = ((() => {})       )              
+        
+                                                                  
+  
+                       
+               
+                                     
+                                                                 
+      
+    
+                                                 
+ ;
+
+const xd = '1'                     ;
