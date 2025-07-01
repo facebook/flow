@@ -924,6 +924,24 @@ Constant condition. The condition will always be truthy. [constant-condition]
                  ^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- typed_check.js:6:7
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   6|   if (x2) {} // ERROR, falls to SingletonStrT
+            ^^
+
+
+Error ---------------------------------------------------------------------------------------------- typed_check.js:11:9
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   11|     if (x3) {} // ERROR, refined, falsy, falls to SingletonStrT
+               ^^
+
+
 Error ---------------------------------------------------------------------------------------------- typed_check.js:15:9
 
 This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
@@ -932,6 +950,25 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
 
    15|     if (x3) {} // ERROR we don't know what this is
                ^^
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:120:8
+
+This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
+out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
+[constant-condition]
+
+   120|     if(x1) {} // error, truthy
+               ^^
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:124:9
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   124|     if (x1) {} // error, falsy
+                ^^
 
 
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
@@ -1079,4 +1116,4 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 
 
-Found 133 errors
+Found 137 errors

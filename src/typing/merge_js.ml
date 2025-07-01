@@ -215,7 +215,12 @@ let try_eval_concrete_type_truthyness cx t =
   | OptionalT _
   | UnionT _ ->
     ConstCond_Unconcretized
-  | DefT (_, NumGeneralT _) -> ConstCond_Unknown
+  | DefT (_, NumGeneralT literal) ->
+    (match literal with
+    | Truthy -> ConstCond_Truthy
+    (* might be null if it's from member access due to flow soundness hole
+         or internal flow bugs *)
+    | AnyLiteral -> ConstCond_Unknown)
   | DefT (_, StrGeneralT literal) ->
     (* we don't know the exact string literal but we might know the truthyness from refinement *)
     (match literal with
@@ -225,7 +230,12 @@ let try_eval_concrete_type_truthyness cx t =
          or internal flow bugs *)
     | AnyLiteral -> ConstCond_Unknown (* it could be any string *))
   | DefT (_, BoolGeneralT) -> ConstCond_Unknown
-  | DefT (_, BigIntGeneralT _) -> ConstCond_Unknown
+  | DefT (_, BigIntGeneralT literal) ->
+    (match literal with
+    | Truthy -> ConstCond_Truthy
+    (* might be null if it's from member access due to flow soundness hole
+         or internal flow bugs *)
+    | AnyLiteral -> ConstCond_Unknown)
   | DefT (_, EmptyT) -> ConstCond_Unknown
   | DefT (_, MixedT Mixed_everything) -> ConstCond_Unknown
   | DefT (_, MixedT Mixed_truthy) -> ConstCond_Unknown
@@ -245,9 +255,18 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, ArrT _) -> ConstCond_Unknown
   | DefT (_, ClassT _) -> ConstCond_Unknown
   | DefT (_, InstanceT _) -> ConstCond_Unknown
-  | DefT (_, SingletonStrT _) -> ConstCond_Unknown
+  | DefT (_, SingletonStrT { value; _ }) ->
+    if Reason.display_string_of_name value = "" then
+      ConstCond_Falsy
+    else
+      ConstCond_Unknown
   | DefT (_, NumericStrKeyT _) -> ConstCond_Unknown
-  | DefT (_, SingletonNumT _) -> ConstCond_Unknown
+  | DefT (_, SingletonNumT { value; _ }) ->
+    let (number_value, _) = value in
+    if number_value = 0. then
+      ConstCond_Falsy
+    else
+      ConstCond_Unknown
   | DefT (_, SingletonBoolT { value; _ }) ->
     if not (Context.enable_constant_condition_boolean_literal cx) then
       ConstCond_Unknown
@@ -255,7 +274,11 @@ let try_eval_concrete_type_truthyness cx t =
       ConstCond_Truthy
     else
       ConstCond_Falsy
-  | DefT (_, SingletonBigIntT _) -> ConstCond_Unknown
+  | DefT (_, SingletonBigIntT { value; _ }) ->
+    let (bigint_value, _) = value in
+    (match bigint_value with
+    | Some 0L -> ConstCond_Falsy
+    | _ -> ConstCond_Unknown)
   | DefT (_, TypeT _) -> ConstCond_Unknown
   | DefT (_, PolyT _) -> ConstCond_Unknown
   | DefT (_, ReactAbstractComponentT _) -> ConstCond_Unknown
@@ -343,8 +366,9 @@ let rec check_conditional
       | RegExpLiteral _ -> condition_banned_and_TRUTHY
       | ModuleRefLiteral _ -> condition_banned_and_TRUTHY
       | Super _ -> condition_banned_and_TRUTHY
-      | Update { Update.argument; _ } ->
-        check_conditional cx argument cached_results ~should_report_error:false
+      | Update _ ->
+        (* we don't check `++` and `--` because their value could change *)
+        condition_allowed
       | Logical { Logical.operator; Logical.left; Logical.right; _ } ->
         (match operator with
         | Ast.Expression.Logical.Or
@@ -436,7 +460,8 @@ let rec check_conditional
         | None ->
           should_report_error_ref := false;
           check_conditional cx right cached_results ~should_report_error
-        | Some _ -> use_type_to_check_conditional cx ttype)
+          (* we don't check compound assignment (e.g. `++`, `--`, `+=`, ...) because their value could change *)
+        | Some _ -> condition_allowed)
       | MetaProperty _
       | Call _
       | OptionalCall _

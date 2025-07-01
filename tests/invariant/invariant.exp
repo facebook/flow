@@ -26,6 +26,15 @@ References:
                       ^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- index.js:14:11
+
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   14| invariant(d);
+                 ^
+
+
 Error ---------------------------------------------------------------------------------------------------- index.js:17:1
 
 This use of `invariant` is unnecessary because number literal `1` [1] is always truthy. [unnecessary-invariant]
@@ -55,4 +64,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors

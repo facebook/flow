@@ -606,6 +606,15 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
+This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
+array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+
+   596|   (b && false) as empty; // should only error on `b`
+           ^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:596:4
+
 Cannot cast `b && false` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
 
    logical.js:596:4
@@ -731,7 +740,7 @@ References:
 
 
 
-Found 51 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

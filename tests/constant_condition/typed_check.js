@@ -3,12 +3,12 @@
   if (x1) {} // TODO ERROR
 
   let x2 = '' as const
-  if (x2) {} // TODO ERROR, falls to SingletonStrT
+  if (x2) {} // ERROR, falls to SingletonStrT
 
   let x3: string = 'avuyv'
   if (x3) {} // can't error on this because we are just a type system
   if (x3 === '') {
-    if (x3) {} // TODO ERROR, refined, falsy, falls to SingletonStrT
+    if (x3) {} // ERROR, refined, falsy, falls to SingletonStrT
   }
 
   if (x3) {
@@ -112,4 +112,46 @@
   function f2() { return n2; }
   let who2 = f2()
   if(who2) {} // OK because `0` is falsy and `1` is truthy.
+}
+
+{
+  let x1: number = 6;
+  if (x1) {
+    if(x1) {} // error, truthy
+  }
+
+  if (!x1) {
+    if (x1) {} // error, falsy
+  }
+
+  let x2: bigint = 6n;
+  if (x2) {
+    if(x2) {} // TODO error, truthy. bigint is not fully turned on for flow
+  }
+
+  if (!x2){
+    if (x2) {} // TODO error, falsy. bigint is not fully turned on for flow
+  }
+}
+
+{
+  let x1: number = 6;
+  if (x1) { if (x1++) {} } // ok, we don't check increment/decrement
+  if (x1) { if (++x1) {} } // ok, we don't check increment/decrement
+  if (x1) { if (x1--) {} } // ok, we don't check increment/decrement
+  if (x1) { if (--x1) {} } // ok, we don't check increment/decrement
+  if (x1) { if (x1+=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1-=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1*=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1/=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1%=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1**=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1&=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1|=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1^=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1<<=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1>>=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1>>>=5) {} } // ok, we don't check arithmetic assignment
+  if (x1) { if (x1??=5) {} } // ok, we don't check arithmetic assignment
+
 }
