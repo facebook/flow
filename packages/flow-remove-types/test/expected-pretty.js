@@ -245,8 +245,8 @@ const asComponentGenericWithDefault = (() => {});
 const asEmpty = {};
 const asExists = 'exists';
 const asFunction = (() => {});
-const asGeneric = 'generic';
-const asGenericWithDefault = 'generic';
+const asFunctionGeneric = (() => {});
+const asFunctionGenericWithDefault = (() => {});
 const asKeyof = 'a';
 const asMixed = 'mixed';
 const asNullable = null;
@@ -254,6 +254,7 @@ const asNullLiteral = null;
 const asNumberLiteral = 1;
 const asNumber = 1;
 const asObject = { a: 'a' };
+const asParametrizedGeneric = 'generic';
 const asStringLiteral = 'literal';
 const asString = 'string';
 const asSymbol = Symbol('symbol');
@@ -276,10 +277,12 @@ const asIndexed = 'indexed';
 's';
 ['s'];
 
+// chained `as`
+const chain1 = '1';
+const chain2 = '1';
+
 // type ItemT = any;
 
 // component generic advanced
 
 const VirtualizedSectionListComponent = ((() => {}));
-
-const xd = '1';
