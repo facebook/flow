@@ -523,66 +523,106 @@ let is_mixed_subtype l mixed_flavor =
   | (l, Mixed_truthy) -> is_concrete l && not (is_falsy l)
   | (_, Mixed_everything) -> true
 
-let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
-  match (t1, t2) with
+let ground_subtype ~on_singleton_eq (l, u) =
+  match (l, u) with
+  | (OpenT _, _)
+  | (_, OpenT _)
+  | (UnionT _, _) ->
+    false
   | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, NumGeneralT _))
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
   | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, BoolGeneralT))
   | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), DefT (_, BigIntGeneralT _))
-  | (DefT (_, NullT), DefT (_, NullT))
-  | (DefT (_, VoidT), DefT (_, VoidT))
   | (DefT (_, SymbolT), DefT (_, SymbolT))
-  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _)))
-  | (DefT (_, EmptyT), _) ->
+  | (DefT (_, NullT), DefT (_, NullT))
+  | (DefT (_, VoidT), DefT (_, VoidT)) ->
     true
+  | (DefT (_, SingletonStrT { value = actual; _ }), DefT (_, SingletonStrT { value = expected; _ }))
+    ->
+    let result = expected = actual in
+    if result then on_singleton_eq l;
+    result
+  | ( DefT (_, SingletonNumT { value = (actual, _); _ }),
+      DefT (_, SingletonNumT { value = (expected, _); _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq l;
+    result
+  | ( DefT (_, SingletonBoolT { value = actual; _ }),
+      DefT (_, SingletonBoolT { value = expected; _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq l;
+    result
+  | ( DefT (_, SingletonBigIntT { value = (actual, _); _ }),
+      DefT (_, SingletonBigIntT { value = (expected, _); _ })
+    ) ->
+    let result = expected = actual in
+    if result then on_singleton_eq l;
+    result
   | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
       StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
     )
     when String.starts_with ~prefix:prefix2 prefix1 ->
+    true
+  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
+      StrUtilT { reason = _; op = StrPrefix prefix; remainder = None }
+    )
+    when String.starts_with ~prefix s ->
+    on_singleton_eq l;
     true
   | ( StrUtilT { reason = _; op = StrSuffix suffix1; remainder = _ },
       StrUtilT { reason = _; op = StrSuffix suffix2; remainder = None }
     )
     when String.ends_with ~suffix:suffix2 suffix1 ->
     true
+  | ( DefT (_, SingletonStrT { value = OrdinaryName s; _ }),
+      StrUtilT { reason = _; op = StrSuffix suffix; remainder = None }
+    )
+    when String.ends_with ~suffix s ->
+    on_singleton_eq l;
+    true
   | ( StrUtilT { reason = _; op = StrPrefix arg | StrSuffix arg; remainder = _ },
       DefT (_, StrGeneralT Truthy)
     )
     when arg <> "" ->
     true
-  | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral)) -> true
-  | (l, DefT (_, MixedT mixed_flavor)) when is_mixed_subtype l mixed_flavor -> true
-  | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _)) -> false
-  | (DefT (_, SingletonStrT { value = actual; _ }), DefT (_, SingletonStrT { value = expected; _ }))
-    ->
-    let result = expected = actual in
-    if result then on_singleton_eq t1;
-    result
-  | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _)) -> false
-  | ( DefT (_, SingletonNumT { value = (actual, _); _ }),
-      DefT (_, SingletonNumT { value = (expected, _); _ })
-    ) ->
-    let result = expected = actual in
-    if result then on_singleton_eq t1;
-    result
-  | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _)) -> false
-  | ( DefT (_, SingletonBigIntT { value = (actual, _); _ }),
-      DefT (_, SingletonBigIntT { value = (expected, _); _ })
-    ) ->
-    let result = expected = actual in
-    if result then on_singleton_eq t1;
-    result
-  | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) -> false
-  | ( DefT (_, SingletonBoolT { value = actual; _ }),
-      DefT (_, SingletonBoolT { value = expected; _ })
-    ) ->
-    let result = expected = actual in
-    if result then on_singleton_eq t1;
-    result
+  | (StrUtilT _, DefT (_, StrGeneralT AnyLiteral))
+  | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _))) ->
+    true
   | (DefT (_, NumericStrKeyT (actual, _)), DefT (_, SingletonNumT { value = (expected, _); _ })) ->
     actual = expected
   | (DefT (_, NumericStrKeyT (_, actual)), DefT (_, SingletonStrT { value = expected; _ })) ->
     OrdinaryName actual = expected
+  | (l, DefT (_, MixedT mixed_flavor)) -> is_mixed_subtype l mixed_flavor
+  (* we handle the any propagation check later *)
+  | (AnyT _, _) -> false
+  | (_, AnyT _) -> false
+  (* opt: avoid builtin lookups *)
+  | (ObjProtoT _, ObjProtoT _)
+  | (FunProtoT _, FunProtoT _)
+  | (FunProtoT _, ObjProtoT _)
+  | (DefT (_, ObjT { proto_t = ObjProtoT _; _ }), ObjProtoT _)
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), FunProtoT _)
+  | (DefT (_, ObjT { proto_t = FunProtoT _; _ }), ObjProtoT _) ->
+    true
+  | _ -> false
+
+let ground_subtype_use_t ~on_singleton_eq (l, u) =
+  match u with
+  | UseT (_, u) -> ground_subtype ~on_singleton_eq (l, u)
+  | _ -> false
+
+let quick_subtype ?(on_singleton_eq = (fun _ -> ())) t1 t2 =
+  ground_subtype ~on_singleton_eq (t1, t2)
+  ||
+  match (t1, t2) with
+  | (DefT (_, EmptyT), _) -> true
+  | (DefT (_, StrGeneralT _), DefT (_, SingletonStrT _))
+  | (DefT (_, NumGeneralT _), DefT (_, SingletonNumT _))
+  | (DefT (_, BigIntGeneralT _), DefT (_, SingletonBigIntT _))
+  | (DefT (_, BoolGeneralT), DefT (_, SingletonBoolT _)) ->
+    false
   | _ -> reasonless_eq t1 t2
 
 let reason_of_propref = function

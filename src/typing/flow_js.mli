@@ -123,7 +123,7 @@ val possible_concrete_types_for_predicate :
 val possible_concrete_types_for_sentinel_prop_test :
   Context.t -> Reason.reason -> Type.t -> Type.t list
 
-val possible_concrete_types_for_computed_props : Context.t -> Reason.reason -> Type.t -> Type.t list
+val all_possible_concrete_types : Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val possible_concrete_types_for_operators_checking :
   Context.t -> Reason.reason -> Type.t -> Type.t list

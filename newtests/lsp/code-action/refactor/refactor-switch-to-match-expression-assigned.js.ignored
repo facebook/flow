@@ -1,0 +1,16 @@
+// @flow
+
+declare const x: number;
+
+let output;
+switch (x) {
+  case 0:
+    output = 'a';
+    break;
+  case 1:
+  case 2:
+    output = 'b';
+    break;
+  default:
+    output = 'c';
+}

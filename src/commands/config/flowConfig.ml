@@ -54,6 +54,9 @@ module Opts = struct
     casting_syntax: Options.CastingSyntax.t option;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
+    constant_condition: bool option;
+    constant_condition_boolean_literal_includes: string list;
+    constant_condition_null_void_includes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -110,6 +113,7 @@ module Opts = struct
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
     natural_inference_object_literal_partial_fix: bool;
+    natural_inference_object_literal_partial_fix_excludes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -195,6 +199,9 @@ module Opts = struct
       channel_mode = None;
       casting_syntax = None;
       component_syntax = false;
+      constant_condition = Some false;
+      constant_condition_boolean_literal_includes = [];
+      constant_condition_null_void_includes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -250,7 +257,8 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
-      natural_inference_object_literal_partial_fix = false;
+      natural_inference_object_literal_partial_fix = true;
+      natural_inference_object_literal_partial_fix_excludes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -1069,6 +1077,33 @@ module Opts = struct
           (fun opts v ->
             Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
       );
+      ( "experimental.constant_condition",
+        boolean (fun opts v -> Ok { opts with constant_condition = Some v })
+      );
+      ( "experimental.constant_condition.boolean_literal.includes",
+        string
+          ~init:(fun opts -> { opts with constant_condition_boolean_literal_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                constant_condition_boolean_literal_includes =
+                  v :: opts.constant_condition_boolean_literal_includes;
+              })
+      );
+      ( "experimental.constant_condition.null_void.includes",
+        string
+          ~init:(fun opts -> { opts with constant_condition_null_void_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                constant_condition_null_void_includes =
+                  v :: opts.constant_condition_null_void_includes;
+              })
+      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -1143,20 +1178,23 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.local_primitive_literals",
-        enum
-          [("off", false); ("false", false); ("true", true); ("full", true)]
-          (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error
-                "Support for experimental.natural_inference.local_primitive_literals=false is removed.")
-      );
       ( "experimental.natural_inference.local_object_literals",
         enum
           [("off", false); ("partial", true)]
           (fun opts v -> Ok { opts with natural_inference_object_literal_partial_fix = v })
+      );
+      ( "experimental.natural_inference.local_object_literals.partial_fix_excludes",
+        string
+          ~init:(fun opts ->
+            { opts with natural_inference_object_literal_partial_fix_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                natural_inference_object_literal_partial_fix_excludes =
+                  v :: opts.natural_inference_object_literal_partial_fix_excludes;
+              })
       );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
@@ -1947,6 +1985,9 @@ let munge_underscores c = c.options.Opts.munge_underscores
 let natural_inference_object_literal_partial_fix c =
   c.options.Opts.natural_inference_object_literal_partial_fix
 
+let natural_inference_object_literal_partial_fix_excludes c =
+  c.options.Opts.natural_inference_object_literal_partial_fix_excludes
+
 let no_flowlib c = c.options.Opts.no_flowlib
 
 let no_unchecked_indexed_access c = c.options.Opts.no_unchecked_indexed_access
@@ -1964,6 +2005,13 @@ let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_r
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
+
+let constant_condition c = c.options.Opts.constant_condition
+
+let constant_condition_boolean_literal_includes c =
+  c.options.Opts.constant_condition_boolean_literal_includes
+
+let constant_condition_null_void_includes c = c.options.Opts.constant_condition_null_void_includes
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 

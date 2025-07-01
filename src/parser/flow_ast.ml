@@ -1962,9 +1962,7 @@ and Match : sig
   type ('M, 'T, 'B) t = {
     arg: ('M, 'T) Expression.t;
     cases: ('M, 'T, 'B) Case.t list;
-    (* The type here is used to store the resulting type after the patterns
-       refine the arg type. *)
-    match_keyword_loc: 'T;
+    match_keyword_loc: 'M;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]

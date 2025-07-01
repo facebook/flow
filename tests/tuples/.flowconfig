@@ -2,4 +2,3 @@
 no_flowlib=false
 lazy_mode=fs
 all=true
-experimental.natural_inference.local_primitive_literals=full

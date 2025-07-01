@@ -107,6 +107,11 @@ module.exports = {
       ],
     },
     {
+      type: 'category',
+      label: 'Match',
+      items: ['match/index', 'match/patterns', 'match/migration'],
+    },
+    {
       type: 'doc',
       id: 'declarations/index',
       label: 'Declarations',

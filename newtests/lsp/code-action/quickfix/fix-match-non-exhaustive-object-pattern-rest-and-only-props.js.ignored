@@ -1,0 +1,7 @@
+// @flow
+
+declare const x: {foo: 1, bar: 1};
+
+match (x) {
+  {} => {}
+}

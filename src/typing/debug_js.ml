@@ -1934,7 +1934,7 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
-    | EMatchNotExhaustive { loc; examples = _ } ->
+    | EMatchNotExhaustive { loc; examples = _; missing_pattern_asts = _ } ->
       spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
     | EMatchUnusedPattern { reason; already_seen } ->
       spf
@@ -1995,8 +1995,12 @@ let dump_error_message =
       spf "ETypeParamConstIncompatibility (%s)" (dump_reason cx reason)
     | ETypeParamConstInvalidPosition reason ->
       spf "ETypeParamConstInvalidPosition (%s)" (dump_reason cx reason)
-    | EConstantCondition { loc; is_truthy } ->
-      spf "EInvalidComparison (%s). is_truthy=%s" (string_of_aloc loc) (string_of_bool is_truthy)
+    | EConstantCondition { loc; is_truthy; show_warning } ->
+      spf
+        "EInvalidComparison (%s). is_truthy=%s show_warning=%s"
+        (string_of_aloc loc)
+        (string_of_bool is_truthy)
+        (string_of_bool show_warning)
 
 module Verbose = struct
   let print_if_verbose_lazy

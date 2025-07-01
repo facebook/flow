@@ -145,6 +145,8 @@ val better_quote : prefer_single_quotes:bool -> string -> string
 
 val utf8_escape : quote:string -> string -> string
 
+val quote_string : prefer_single_quotes:bool -> string -> string
+
 val wrap_in_parens : ?with_break:bool -> Layout.layout_node -> Layout.layout_node
 
 val with_semicolon : Layout.layout_node -> Layout.layout_node

@@ -7,7 +7,6 @@
 
 #define XXH_STATIC_LINKING_ONLY
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #include <xxhash.h>
 #define CAML_NAME_SPACE

@@ -1,0 +1,5 @@
+// @flow
+
+const e = match (1) {
+  1: 0,
+}

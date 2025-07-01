@@ -81,6 +81,8 @@ val in_formal_parameters : env -> bool
 
 val in_function : env -> bool
 
+val in_match_expression : env -> bool
+
 val in_match_statement : env -> bool
 
 val allow_yield : env -> bool
@@ -149,6 +151,8 @@ val with_strict : bool -> env -> env
 val with_in_formal_parameters : bool -> env -> env
 
 val with_in_function : bool -> env -> env
+
+val with_in_match_expression : bool -> env -> env
 
 val with_in_match_statement : bool -> env -> env
 

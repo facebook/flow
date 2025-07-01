@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add 25 missing cases (out of a total of 30)",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-statement-many.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 0
+                },
+                "end": {
+                  "line": 4,
+                  "character": 12
+                }
+              },
+              "newText": "match (x) {\n  1 => {}\n  2 => {}\n  3 => {}\n  4 => {}\n  5 => {}\n  6 => {}\n  7 => {}\n  8 => {}\n  9 => {}\n  10 => {}\n  11 => {}\n  12 => {}\n  13 => {}\n  14 => {}\n  15 => {}\n  16 => {}\n  17 => {}\n  18 => {}\n  19 => {}\n  20 => {}\n  21 => {}\n  22 => {}\n  23 => {}\n  24 => {}\n  25 => {}\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_not_exhaustive",
+          "Add 25 missing cases (out of a total of 30)"
+        ]
+      }
+    }
+  ]
+}

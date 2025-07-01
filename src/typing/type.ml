@@ -1631,19 +1631,19 @@ module rec TypeTerm : sig
 
   and t_out = t
 
+  (* Concretizers of resolved types: simplify types like EvalT, OpenT, TypeAppT,
+   * etc. The order of the constructors below denotes the order in which the
+   * respective catch-all cases appears in flow_js.ml. *)
   and concretization_kind =
-    | ConcretizeForImportsExports
     | ConcretizeForCJSExtractNamedExportsAndTypeExports
-    (* The purpose of this utility is to concretize a resolved type for the purpose
-     * of type inspection. The goal here is to simplify types like EvalT, OpenT,
-     * TypeAppT, etc. and propagate them as lower bounds to the ident (payload). *)
+    | ConcretizeForImportsExports
     | ConcretizeForInspection
     | ConcretizeForPredicate of predicate_concretizer_variant
-    | ConcretizeForSentinelPropTest
-    | ConcretizeComputedPropsT
     | ConcretizeForOperatorsChecking
     | ConcretizeForObjectAssign
+    | ConcretizeForSentinelPropTest
     | ConcretizeForMatchArg of { keep_unions: bool }
+    | ConcretizeAll
 
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
@@ -4156,7 +4156,7 @@ let string_of_use_ctor = function
       | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
-      | ConcretizeComputedPropsT -> "ConcretizeComputedPropsT"
+      | ConcretizeAll -> "ConcretizeAll"
       | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking"
       | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign"
       | ConcretizeForMatchArg { keep_unions } ->

@@ -1,3 +1,22 @@
+### 0.274.2
+* Bug fixes for `match`
+
+### 0.274.1
+
+New Features:
+* Support for experimental `match` feature using option `experimental.pattern_matching=true`
+
+### 0.274.0
+
+Likely to cause new Flow errors:
+* Unannotated object literals reachable from exports will now be inferred to have all mutable fields when being imported. Previously, it has unsound types, so new errors might appear.
+* When comparing two object types whose properties have variance incompatibilities, Flow will raise a single error that will summarize the properties with incompatible variances, instead of a single error for each property. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSK2MAAIACoARglAF4JcAANpbCUVCUAchgMs1AB9tQAmfXagDMJpgABYLQBWTUAXWQEuEIhuAoA3AAdKDejRPKjYCWAiXyGVOgAkACVWGwAPJQQYAHllAD4vVBQxLWdKZe6JQB6fMSgCqZDYErSEpotMDNolJkovJIvGdEAA7hK23BjlWUWQJXKG7zciAGiYSHBoEkGgAGKyGgDspqsMpAAqAA))
+* When an object with extra properties is passed to a place that expect an exact object, we will now generate a single error with all extra properties. The error message will list the extra properties, and state that "Exact objects do not accept extra props". In rare cases, the error locations might be moved.
+* Flow will error more consistently with sketchy-bool on nullable boolean types (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxwzZ292oPhERxKU7yoMDaqZdXJ9yEoKDn2kioDipNUwYHzvAyfb5gX7-RYQRhZaDcRZ1DAVMEPP4wbCLBC7BaUEiLMgSfEdLofYRkNiLZjpOBkdEeEwJEJ+DAkMiUFRwkyZCB3dbdAC+-EgGiSAB0JBLYJ9lHBoAACEgVBBtNJQABCxGeUAAYhsABTyZCKo64RUAH0V5OwVsVAEFqHQADxFEpsAB8AEpFcAZYrFXAYIrjb7gELFQB6KOKgByAFEAOqmgDucGOZogqcVCYASnmAPJ5xXpiS1ZXnfaKtA61hQGVCmUymByhFQZWq9XQOOiAAMxtN5vtfftTpotDdxVKPr9AaDIbDfsjMdzBeLld21eujebsse7c7UDVu2g2oguoAKvpB2btBbrVIZGPnZP3TPw-Pg6H5OGV7G40LS9NwuWhdwbfd5SVFVj27KBexEABGW9h2tRCXwnKcPVnf0OwXH8-2jACgJA-ZG1yEAGhMFVoCSBo+ysAAmAB2RimJAIUgA))
+
+Library Definitions:
+* All properties in the builtin `PropertyDescriptor` type are marked as readonly. If you need a mutable version, you can introduce something like `type MutablePropertyDescriptor<T> = {...$Exact<PropertyDescriptor<T>>, ...}`
+
 ### 0.273.1
 
 Notable bug fixes:

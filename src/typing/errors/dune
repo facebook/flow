@@ -4,5 +4,6 @@
  (libraries
   flow_common_errors
   flow_parser_utils
+  flow_parser_utils_output
   flow_parser_utils_signature_builder
   flow_typing_type))

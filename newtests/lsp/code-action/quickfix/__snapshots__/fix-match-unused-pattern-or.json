@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Remove",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-unused-pattern-or.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 6,
+                  "character": 2
+                },
+                "end": {
+                  "line": 6,
+                  "character": 11
+                }
+              },
+              "newText": "2"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_unused_pattern",
+          "Remove"
+        ]
+      }
+    }
+  ]
+}

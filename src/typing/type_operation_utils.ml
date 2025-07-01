@@ -568,7 +568,10 @@ module SpecialCasedFunctions = struct
     let open TypeUtil in
     let rec assign_from l use_op reason_op to_obj t kind =
       match to_obj with
-      | AnyT _ -> Flow.flow_t cx (to_obj, t)
+      | AnyT _ ->
+        (* Special case any. Otherwise this will lead to confusing errors when
+         * any tranforms to an object type. *)
+        Flow.flow_t cx (to_obj, t)
       | to_obj ->
         Base.List.iter
           (Flow.possible_concrete_types_for_object_assign cx (TypeUtil.reason_of_t l) l)

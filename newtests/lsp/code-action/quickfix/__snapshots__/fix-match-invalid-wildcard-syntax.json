@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Replace `default` with `_`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-invalid-wildcard-syntax.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 2
+                },
+                "end": {
+                  "line": 3,
+                  "character": 9
+                }
+              },
+              "newText": "_"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_invalid_wildcard_syntax",
+          "Replace `default` with `_`"
+        ]
+      }
+    }
+  ]
+}

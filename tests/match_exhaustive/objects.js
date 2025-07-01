@@ -386,48 +386,6 @@
   }
 }
 
-// Many wildcard props
-{
-  declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
-
-  match (x) {} // ERROR
-
-  match (x) {
-    {a: 0, b: "", c: true, ...} => {}
-  }
-}
-
-// Error for disjoint object union
-{
-  declare const x:
-    | {type: 'ok', value: number}
-    | {type: 'error', value: Error};
-
-  match (x) {} // ERROR: `type` prop values are printed
-}
-
-// Deep object left over
-{
-  declare const x: {foo: {bar: {baz: {zap: {bort: boolean}}}}};
-
-  match (x) {} // ERROR: only brings `foo: _`
-}
-
-// Sentinel prop is last
-{
-  declare const x:
-    | {a: 1 | 2, b: 1 | 2, xxx: 'foo'}
-    | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
-
-  match (x) { // ERROR: missing `{xxx: 'bar', a: _, b: _}`
-    {a: 1 | 2, b: 1 | 2, xxx: 'foo'} => {}
-  }
-
-  match (x) { // ERROR: `xxx` prop is printed first in pattern
-    {a: 1, b: 1, xxx: 'foo'} => {}
-  }
-}
-
 // With invalid patterns
 {
   declare const x: {foo: 0}
@@ -446,5 +404,29 @@
   match (x) {
     _ => {}
     {foo: 0} => {} // ERROR
+  }
+}
+
+// Structure prop checked after leaf-only prop
+{
+  declare const x: {
+    a: {foo: 0},
+    b: 0 | 1,
+  } | {
+    a: {foo: 999},
+    b: 999,
+  };
+
+  match (x) { // ERROR: missing {b: 0 | 1, a: _}
+    {a: {foo: 999}, b: 999} => {}
+  }
+}
+
+// Missing properties with non-ident names
+{
+  declare const x: {"baz'bort": 0, 'foo-bar': 0, };
+
+  match (x) {
+    {} => {}
   }
 }

@@ -1,0 +1,71 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Add the missing property to object pattern",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-non-ident-key.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 2
+                },
+                "end": {
+                  "line": 5,
+                  "character": 4
+                }
+              },
+              "newText": "{'foo\"bar': _}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_non_exhaustive_object_pattern_add_props",
+          "Add the missing property to object pattern"
+        ]
+      }
+    },
+    {
+      "title": "Add rest `...` to object pattern",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-non-exhaustive-object-pattern-non-ident-key.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 2
+                },
+                "end": {
+                  "line": 5,
+                  "character": 4
+                }
+              },
+              "newText": "{...}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_match_non_exhaustive_object_pattern_add_rest",
+          "Add rest `...` to object pattern"
+        ]
+      }
+    }
+  ]
+}

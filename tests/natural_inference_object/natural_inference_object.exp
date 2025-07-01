@@ -1,0 +1,20 @@
+Error -------------------------------------------------------------------------------------------------- enforced.js:2:1
+
+Cannot cast `foo` to object type because property `bar` is missing in object literal [1] but exists in object type [2].
+[prop-missing]
+
+   enforced.js:2:1
+   2| foo as {bar?: string}; // error
+      ^^^
+
+References:
+   enforced.js:1:13
+   1| const foo = {};
+                  ^^ [1]
+   enforced.js:2:8
+   2| foo as {bar?: string}; // error
+             ^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error

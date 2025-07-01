@@ -86,6 +86,12 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
 
+val constant_condition : config -> bool option
+
+val constant_condition_boolean_literal_includes : config -> string list
+
+val constant_condition_null_void_includes : config -> string list
+
 val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option
@@ -201,6 +207,8 @@ val multi_platform_ambient_supports_platform_project_overrides :
 val munge_underscores : config -> bool
 
 val natural_inference_object_literal_partial_fix : config -> bool
+
+val natural_inference_object_literal_partial_fix_excludes : config -> string list
 
 val no_flowlib : config -> bool
 

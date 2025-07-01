@@ -1281,15 +1281,13 @@ module Make
           )
         in
         error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
-        let match_keyword_loc =
-          ( match_keyword_loc,
-            Type_env.var_ref
-              ~lookup_mode:ForValue
-              cx
-              (OrdinaryName Flow_ast_utils.match_root_name)
-              match_keyword_loc
-          )
-        in
+        ignore
+          (Type_env.var_ref
+             ~lookup_mode:ForValue
+             cx
+             (OrdinaryName Flow_ast_utils.match_root_name)
+             match_keyword_loc
+          );
         (loc, Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments })
     | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
       let discriminant_ast = expression cx discriminant in
@@ -2515,7 +2513,7 @@ module Make
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
       let (key_loc, _e) = k in
-      let concretized_keys = Flow.possible_concrete_types_for_computed_props cx reason key in
+      let concretized_keys = Flow.all_possible_concrete_types cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
@@ -3049,15 +3047,13 @@ module Make
           )
         in
         error_on_match_case_invalid_syntax cx ~match_keyword_loc invalid_syntax_list;
-        let match_keyword_loc =
-          ( match_keyword_loc,
-            Type_env.var_ref
-              ~lookup_mode:ForValue
-              cx
-              (OrdinaryName Flow_ast_utils.match_root_name)
-              match_keyword_loc
-          )
-        in
+        ignore
+          (Type_env.var_ref
+             ~lookup_mode:ForValue
+             cx
+             (OrdinaryName Flow_ast_utils.match_root_name)
+             match_keyword_loc
+          );
         let match_t = union_of_ts reason (List.rev ts_rev) in
         let ast =
           ( (loc, match_t),
@@ -6720,8 +6716,9 @@ module Make
      This accommodates the common JavaScript idiom of testing for the existence
      of a property before using that property. *)
   and condition cx ~encl_ctx ?decl ?has_hint e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let _ = Context.add_condition cx e in
-    expression ~encl_ctx ?decl ?has_hint cx e
+    let result = expression ~encl_ctx ?decl ?has_hint cx e in
+    Context.add_condition cx result;
+    result
 
   and get_private_field_opt_use cx reason ~use_op name =
     let class_entries = Type_env.get_class_entries cx in

@@ -965,7 +965,10 @@ type 'loc message =
   | MessageMatchStatementInvalidBody
   | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
   | MessageMatchInvalidWildcardSyntax
-  | MessageConstantCondition of { is_truthy: bool }
+  | MessageConstantCondition of {
+      is_truthy: bool;
+      show_warning: bool;
+    }
 
 type 'loc intermediate_error = {
   kind: Flow_errors_utils.error_kind;

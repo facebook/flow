@@ -1,0 +1,7 @@
+// @flow
+
+declare const x: [0];
+
+match (x) {
+  [0, ...] => {}
+}

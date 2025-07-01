@@ -157,43 +157,13 @@ of the input type. To fix, either remove this pattern or restructure previous pa
            ^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- arrays.js:83:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: [...]}` to match
-object type [1]. [match-not-exhaustive]
-
-   arrays.js:83:3
-   83|   match (x) { // ERROR
-         ^^^^^
-
-References:
-   arrays.js:81:20
-   81|   declare const x: {a: Array<boolean>};
-                          ^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- arrays.js:102:5
+Error --------------------------------------------------------------------------------------------------- arrays.js:93:5
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
 of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   102|     {1: 'xxx', ...} => {} // ERROR
-            ^^^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------------------- arrays.js:110:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
-type [1]. [match-not-exhaustive]
-
-   arrays.js:110:3
-   110|   match (x) { // ERROR
-          ^^^^^
-
-References:
-   arrays.js:109:20
-   109|   declare const x: Array<[1, 2]>;
-                           ^^^^^^^^^^^^^ [1]
+   93|     {1: 'xxx', ...} => {} // ERROR
+           ^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:12:3
@@ -545,6 +515,25 @@ of the input type. To fix, either remove this pattern or restructure previous pa
             ^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- basic.js:387:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `"baz'bort"` to match string literal `baz'bort` [1]
+- `'foo"bar'` to match string literal `foo"bar` [2] [match-not-exhaustive]
+
+   basic.js:387:3
+   387|   match (x) {} // ERROR: properly quoted
+          ^^^^^
+
+References:
+   basic.js:385:20
+   385|   declare const x: "baz'bort" | 'foo"bar'
+                           ^^^^^^^^^^ [1]
+   basic.js:385:33
+   385|   declare const x: "baz'bort" | 'foo"bar'
+                                        ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- empty.js:6:3
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
@@ -669,6 +658,270 @@ References:
    enums.js:96:20
    96|   declare const x: E;
                           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------- exhaustive-error-message.js:7:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `[...]` to match tuple type [1]
+- `{...}` to match object type [2] [match-not-exhaustive]
+
+   exhaustive-error-message.js:7:3
+   7|   match (x) {} // ERROR
+        ^^^^^
+
+References:
+   exhaustive-error-message.js:5:28
+   5|   declare const x: {...} | [...];
+                                 ^^^^^ [1]
+   exhaustive-error-message.js:5:20
+   5|   declare const x: {...} | [...];
+                         ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:12:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `{bar: _, foo: _}` to match object type [1]
+- `{foo: _}` to match object type [2]
+- `{...}` to match object type [3] [match-not-exhaustive]
+
+   exhaustive-error-message.js:12:3
+   12|   match (x) {} // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:10:39
+   10|   declare const x: {...} | {foo: 0} | {foo: 0, bar: 0};
+                                             ^^^^^^^^^^^^^^^^ [1]
+   exhaustive-error-message.js:10:28
+   10|   declare const x: {...} | {foo: 0} | {foo: 0, bar: 0};
+                                  ^^^^^^^^ [2]
+   exhaustive-error-message.js:10:20
+   10|   declare const x: {...} | {foo: 0} | {foo: 0, bar: 0};
+                          ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:17:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `[_, _]` to match tuple type [1]
+- `[_, _, ...]` to match tuple type [2]
+- `[_, ...]` to match tuple type [3]
+- `[...]` to match tuple type [4] [match-not-exhaustive]
+
+   exhaustive-error-message.js:17:3
+   17|   match (x) {} // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:15:42
+   15|   declare const x: [...] | [0, 0, ...] | [0, 0] | [0, ...];
+                                                ^^^^^^ [1]
+   exhaustive-error-message.js:15:28
+   15|   declare const x: [...] | [0, 0, ...] | [0, 0] | [0, ...];
+                                  ^^^^^^^^^^^ [2]
+   exhaustive-error-message.js:15:51
+   15|   declare const x: [...] | [0, 0, ...] | [0, 0] | [0, ...];
+                                                         ^^^^^^^^ [3]
+   exhaustive-error-message.js:15:20
+   15|   declare const x: [...] | [0, 0, ...] | [0, 0] | [0, ...];
+                          ^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:24:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`[{bar: _, foo: _} | {foo: _} | {...}]` to match tuple type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:24:3
+   24|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:22:20
+   22|   declare const x: [{...} | {foo: 0} | {foo: 0, bar: 0}] | [0];
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:31:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`[[_, _] | [_, _, ...] | [_, ...] | [...]]` to match tuple type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:31:3
+   31|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:29:20
+   29|   declare const x: [[...] | [0, 0, ...] | [0, 0] | [0, ...]] | [0];
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:38:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[[...] | {...}]` to match
+tuple type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:38:3
+   38|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:36:20
+   36|   declare const x: [{...} | [...]] | [0]
+                          ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:47:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{a: [...]}` to match
+object type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:47:3
+   47|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:45:20
+   45|   declare const x: {a: Array<boolean>};
+                          ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:55:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:55:3
+   55|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:54:20
+   54|   declare const x: Array<[1, 2]>;
+                          ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:65:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[...]` to match array
+type [1], array type [2], and tuple type [3]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:65:3
+   65|   match (x) {} // ERROR: single suggested pattern
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:63:20
+   63|   declare const x: Array<boolean> | Array<number> | [...];
+                          ^^^^^^^^^^^^^^ [1]
+   exhaustive-error-message.js:63:37
+   63|   declare const x: Array<boolean> | Array<number> | [...];
+                                           ^^^^^^^^^^^^^ [2]
+   exhaustive-error-message.js:63:53
+   63|   declare const x: Array<boolean> | Array<number> | [...];
+                                                           ^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:72:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
+type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:72:3
+   72|   match (x) {} // ERROR
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:70:20
+   70|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:74:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{c: false | true, ...}`
+to match object type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:74:3
+   74|   match (x) {
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:70:20
+   70|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:85:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `{type: 'ok', value: _}` to match object type [1]
+- `{type: 'error', value: _}` to match object type [2] [match-not-exhaustive]
+
+   exhaustive-error-message.js:85:3
+   85|   match (x) {} // ERROR: `type` prop values are printed
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:82:7
+   82|     | {type: 'ok', value: number}
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   exhaustive-error-message.js:83:7
+   83|     | {type: 'error', value: Error};
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- exhaustive-error-message.js:93:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _}` to match object
+type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:93:3
+   93|   match (x) {} // ERROR: only prints `foo: _`
+         ^^^^^
+
+References:
+   exhaustive-error-message.js:91:20
+   91|   declare const x: {foo: {bar: {baz: {zap: {bort: boolean}}}}};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- exhaustive-error-message.js:102:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{xxx: 'bar', a: _, b: _}`
+to match object type [1]. [match-not-exhaustive]
+
+   exhaustive-error-message.js:102:3
+   102|   match (x) { // ERROR: missing `{xxx: 'bar', a: _, b: _}`
+          ^^^^^
+
+References:
+   exhaustive-error-message.js:100:7
+   100|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- exhaustive-error-message.js:106:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
+- `{xxx: 'foo', a: 1, b: 2}` to match object type [1]
+- `{xxx: 'foo', a: 2, b: 1 | 2}` to match object type [1]
+- `{xxx: 'bar', a: _, b: _}` to match object type [2] [match-not-exhaustive]
+
+   exhaustive-error-message.js:106:3
+   106|   match (x) { // ERROR: `xxx` prop is printed first in pattern
+          ^^^^^
+
+References:
+   exhaustive-error-message.js:99:7
+    99|     | {a: 1 | 2, b: 1 | 2, xxx: 'foo'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   exhaustive-error-message.js:100:7
+   100|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- guards.js:7:3
@@ -1462,135 +1715,65 @@ of the input type. To fix, either remove this pattern or restructure previous pa
             ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- objects.js:393:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match object
-type [1]. [match-not-exhaustive]
-
-   objects.js:393:3
-   393|   match (x) {} // ERROR
-          ^^^^^
-
-References:
-   objects.js:391:20
-   391|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- objects.js:395:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{c: false | true, ...}`
-to match object type [1]. [match-not-exhaustive]
-
-   objects.js:395:3
-   395|   match (x) {
-          ^^^^^
-
-References:
-   objects.js:391:20
-   391|   declare const x: {a: number, b: string, c: boolean, d: symbol, e: bigint, f: 5};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- objects.js:406:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `{type: 'ok', value: _}` to match object type [1]
-- `{type: 'error', value: _}` to match object type [2] [match-not-exhaustive]
-
-   objects.js:406:3
-   406|   match (x) {} // ERROR: `type` prop values are printed
-          ^^^^^
-
-References:
-   objects.js:403:7
-   403|     | {type: 'ok', value: number}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   objects.js:404:7
-   404|     | {type: 'error', value: Error};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- objects.js:413:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _}` to match object
-type [1]. [match-not-exhaustive]
-
-   objects.js:413:3
-   413|   match (x) {} // ERROR: only brings `foo: _`
-          ^^^^^
-
-References:
-   objects.js:411:20
-   411|   declare const x: {foo: {bar: {baz: {zap: {bort: boolean}}}}};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- objects.js:422:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{xxx: 'bar', a: _, b: _}`
-to match object type [1]. [match-not-exhaustive]
-
-   objects.js:422:3
-   422|   match (x) { // ERROR: missing `{xxx: 'bar', a: _, b: _}`
-          ^^^^^
-
-References:
-   objects.js:420:7
-   420|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- objects.js:426:3
-
-`match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `{xxx: 'foo', a: 2, b: 1 | 2}` to match object type [1]
-- `{xxx: 'foo', a: 1, b: 2}` to match object type [1]
-- `{xxx: 'bar', a: _, b: _}` to match object type [2] [match-not-exhaustive]
-
-   objects.js:426:3
-   426|   match (x) { // ERROR: `xxx` prop is printed first in pattern
-          ^^^^^
-
-References:
-   objects.js:419:7
-   419|     | {a: 1 | 2, b: 1 | 2, xxx: 'foo'}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   objects.js:420:7
-   420|     | {a: 2 | 3, b: 2 | 3, xxx: 'bar'}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ objects.js:437:11
+Error ------------------------------------------------------------------------------------------------ objects.js:395:11
 
 Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
-   437|     {foo: +1n} => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
+   395|     {foo: +1n} => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
                   ^^^
 
 
-Error ------------------------------------------------------------------------------------------------- objects.js:438:5
+Error ------------------------------------------------------------------------------------------------- objects.js:396:5
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
 of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   438|     {foo: 999} => {} // ERROR: unnecessary pattern
+   396|     {foo: 999} => {} // ERROR: unnecessary pattern
             ^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- objects.js:448:5
+Error ------------------------------------------------------------------------------------------------- objects.js:406:5
 
 This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
 either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   objects.js:448:5
-   448|     {foo: 0} => {} // ERROR
+   objects.js:406:5
+   406|     {foo: 0} => {} // ERROR
             ^^^^^^^^ [1]
 
 References:
-   objects.js:447:5
-   447|     _ => {}
+   objects.js:405:5
+   405|     _ => {}
             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:420:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{b: 0 | 1, a: _}` to
+match object type [1]. [match-not-exhaustive]
+
+   objects.js:420:3
+   420|   match (x) { // ERROR: missing {b: 0 | 1, a: _}
+          ^^^^^
+
+References:
+   objects.js:412:20
+                           v
+   412|   declare const x: {
+   413|     a: {foo: 0},
+   414|     b: 0 | 1,
+   415|   } | {
+          ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:430:5
+
+This object pattern hasn't considered all possible properties of the input. The properties `"baz'bort"` and `'foo-bar'`
+are missing from the pattern. To fix, either add those properties to the object pattern, or add `...` to the end of the
+pattern to match all other properties. [match-not-exhaustive]
+
+   430|     {} => {}
+            ^^
 
 
 Error -------------------------------------------------------------------------------------------- pattern-errors.js:8:5
@@ -2052,10 +2235,10 @@ References:
 Error -------------------------------------------------------------------------------------------------- tuples.js:382:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `[true, true, true, false]` to match tuple type [1]
-- `[true, false, true, false]` to match tuple type [1]
 - `[false, true, true, false]` to match tuple type [1]
-- `[false, false, true, false]` to match tuple type [1] [match-not-exhaustive]
+- `[false, false, true, false]` to match tuple type [1]
+- `[true, false, true, false]` to match tuple type [1]
+- `[true, true, true, false]` to match tuple type [1] [match-not-exhaustive]
 
    tuples.js:382:3
    382|   match (x) { // ERROR: missing 4 cases
@@ -2143,5 +2326,24 @@ References:
             ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- tuples.js:442:3
 
-Found 160 errors
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, 0]` to match tuple
+type [1]. [match-not-exhaustive]
+
+   tuples.js:442:3
+   442|   match (x) { // ERROR: missing [_, 0]
+          ^^^^^
+
+References:
+   tuples.js:434:20
+                           v
+   434|   declare const x: [
+   435|     [0],
+   436|     0,
+   437|   ] | [
+          ^ [1]
+
+
+
+Found 171 errors

@@ -76,15 +76,6 @@
   }
 }
 
-// Error message pattern
-{
-  declare const x: {a: Array<boolean>};
-
-  match (x) { // ERROR
-    {a: [true]} => {}
-  }
-}
-
 // Arrays are objects
 {
   declare const x: Array<boolean>;
@@ -101,14 +92,5 @@
     {0: true, ...} => {} // OK
     {1: 'xxx', ...} => {} // ERROR
     [...] => {}
-  }
-}
-
-// Error message - no duplicate reasons
-{
-  declare const x: Array<[1, 2]>;
-  match (x) { // ERROR
-    [[1, _], [_ ,2]] => {} // OK
-    [[_, ...]] => {} // OK
   }
 }

@@ -1,0 +1,24 @@
+// @flow
+
+function test(x: number) {
+  switch (x) {
+    case 0:
+      'a';
+      break;
+    case 1:
+    case 2:
+      'b';
+      break;
+    case 3: {
+      'c';
+      const x = 1;
+      break;
+    }
+    case 4:
+      return 'd';
+    case 5: {
+      throw 'e';
+    }
+    default:
+  }
+}

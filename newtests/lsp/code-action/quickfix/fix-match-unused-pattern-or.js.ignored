@@ -1,0 +1,9 @@
+// @flow
+
+declare const x: 1 | 2 | 3;
+
+match (x) {
+  1 => {}
+  2 | 'xxx' => {}
+  3 => {}
+}

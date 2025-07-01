@@ -232,6 +232,7 @@ and 'loc t' =
   | EConstantCondition of {
       loc: 'loc;
       is_truthy: bool;
+      show_warning: bool;
     }
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
@@ -654,6 +655,7 @@ and 'loc t' =
   | EMatchNotExhaustive of {
       loc: 'loc;
       examples: (string * 'loc virtual_reason list) list;
+      missing_pattern_asts: (Loc.t, Loc.t) Flow_ast.MatchPattern.t list;
     }
   | EMatchUnusedPattern of {
       reason: 'loc virtual_reason;
@@ -1151,7 +1153,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ETooFewTypeArgs { reason_tapp = map_reason reason_tapp; arity_loc = f arity_loc; minimum_arity }
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
   | EInvalidInfer l -> EInvalidInfer (f l)
-  | EConstantCondition { loc; is_truthy } -> EConstantCondition { loc = f loc; is_truthy }
+  | EConstantCondition { loc; is_truthy; show_warning } ->
+    EConstantCondition { loc = f loc; is_truthy; show_warning }
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EStrUtilTypeNonLiteralArg loc -> EStrUtilTypeNonLiteralArg (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
@@ -1549,7 +1552,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
-  | EMatchNotExhaustive { loc; examples } ->
+  | EMatchNotExhaustive { loc; examples; missing_pattern_asts } ->
     EMatchNotExhaustive
       {
         loc = f loc;
@@ -1557,6 +1560,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
           Base.List.map examples ~f:(fun (pattern, reasons) ->
               (pattern, Base.List.map ~f:map_reason reasons)
           );
+        missing_pattern_asts;
       }
   | EMatchUnusedPattern { reason; already_seen } ->
     EMatchUnusedPattern
@@ -2393,7 +2397,8 @@ let friendly_message_of_msg = function
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })
   | EInvalidInfer _ -> Normal MessageInvalidInferType
-  | EConstantCondition { loc = _; is_truthy } -> Normal (MessageConstantCondition { is_truthy })
+  | EConstantCondition { loc = _; is_truthy; show_warning } ->
+    Normal (MessageConstantCondition { is_truthy; show_warning })
   | EInvalidExtends reason -> Normal (MessageCannotUseAsSuperClass reason)
   | EInvalidReactCreateElement { create_element_loc = _; invalid_react } ->
     Normal (MessageInvalidReactCreateElement invalid_react)
@@ -3105,7 +3110,8 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
-  | EMatchNotExhaustive { loc = _; examples } -> Normal (MessageMatchNotExhaustive { examples })
+  | EMatchNotExhaustive { examples; loc = _; missing_pattern_asts = _ } ->
+    Normal (MessageMatchNotExhaustive { examples })
   | EMatchUnusedPattern { reason; already_seen } ->
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
@@ -3348,7 +3354,7 @@ let error_code_of_message err : error_code option =
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
   | EInvalidInfer _ -> Some InvalidInfer
-  | EConstantCondition { loc = _; is_truthy = _ } -> Some ConstantCondition
+  | EConstantCondition { loc = _; is_truthy = _; show_warning = _ } -> Some ConstantCondition
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } -> begin

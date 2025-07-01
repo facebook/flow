@@ -8,7 +8,7 @@
     "diff": "^3.5.0",
     "flow-remove-types": "*",
     "glob": "^7.0.3",
-    "hermes-parser": "0.28.0",
+    "hermes-parser": "0.29.1",
     "minimist": "~1.2.6",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2",

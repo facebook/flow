@@ -474,5 +474,116 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for refactoring switch to match statement', [
+      addFile(
+        'refactor-switch-to-match-statement.js.ignored',
+        'refactor-switch-to-match-statement.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-switch-to-match-statement.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 3,
+          },
+          end: {
+            line: 3,
+            character: 8,
+          },
+        },
+        context: {
+          only: ['refactor'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'refactor-switch-to-match-statement.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_match'),
+    test(
+      'provide codeAction for refactoring switch to match expression returned',
+      [
+        addFile(
+          'refactor-switch-to-match-expression-returned.js.ignored',
+          'refactor-switch-to-match-expression-returned.js',
+        ),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/refactor-switch-to-match-expression-returned.js',
+          },
+          range: {
+            start: {
+              line: 3,
+              character: 3,
+            },
+            end: {
+              line: 3,
+              character: 8,
+            },
+          },
+          context: {
+            only: ['refactor'],
+            diagnostics: [],
+          },
+        }).verifyLSPMessageSnapshot(
+          path.join(
+            __dirname,
+            '__snapshots__',
+            'refactor-switch-to-match-expression-returned.json',
+          ),
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ).flowConfig('_flowconfig_match'),
+    test(
+      'provide codeAction for refactoring switch to match expression assigned',
+      [
+        addFile(
+          'refactor-switch-to-match-expression-assigned.js.ignored',
+          'refactor-switch-to-match-expression-assigned.js',
+        ),
+        lspStartAndConnect(),
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/refactor-switch-to-match-expression-assigned.js',
+          },
+          range: {
+            start: {
+              line: 5,
+              character: 2,
+            },
+            end: {
+              line: 5,
+              character: 6,
+            },
+          },
+          context: {
+            only: ['refactor'],
+            diagnostics: [],
+          },
+        }).verifyLSPMessageSnapshot(
+          path.join(
+            __dirname,
+            '__snapshots__',
+            'refactor-switch-to-match-expression-assigned.json',
+          ),
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ).flowConfig('_flowconfig_match'),
   ],
 ): SuiteType);

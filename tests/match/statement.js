@@ -178,3 +178,76 @@ function t3() {
     2 => throw false; // ERROR
   }
 }
+
+// Refinements in body with abnormal exists
+function t4() {
+  let target;
+  match (x) {
+    1 => {
+      target = "foo";
+      return;
+    }
+    2 => {
+      target = true;
+    }
+  }
+
+  target as empty; // ERROR: `boolean`
+}
+function t5() {
+  let target;
+  match (x) {
+    1 => {
+      target = "foo";
+    }
+    2 => {
+      target = true;
+      return;
+    }
+  }
+
+  target as boolean; // ERROR: `string`
+}
+function t6() {
+  let target;
+  match (x) {
+    1 => {
+      target = "foo";
+      return;
+    }
+    2 => {
+      target = true;
+      return;
+    }
+  }
+
+  target as boolean; // ERROR: unreachable
+}
+function t7() {
+  declare const o: {prop: number};
+  match (x) {
+    1 => {
+      o.prop = 1 as const;
+      return;
+    }
+    2 => {
+      o.prop = 2 as const;
+    }
+  }
+
+  o.prop as empty; // ERROR: `2`
+}
+function t8() {
+  declare const o: {prop: number};
+  match (x) {
+    1 => {
+      o.prop = 1 as const;
+    }
+    2 => {
+      o.prop = 2 as const;
+      return;
+    }
+  }
+
+  o.prop as empty; // ERROR: `1`
+}

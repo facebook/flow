@@ -426,6 +426,28 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
   else
     []
 
+let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
+  if Context.enable_pattern_matching cx && include_rewrite_refactors only then
+    match Refactor_switch_to_match_statement.refactor ast loc with
+    | Some ast' ->
+      Flow_ast_differ.program ast ast'
+      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+      |> flow_loc_patch_to_lsp_edits
+      |> fun edits ->
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title = "Refactor `switch` to `match`";
+            kind = CodeActionKind.refactor_rewrite;
+            diagnostics = [];
+            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          };
+      ]
+    | None -> []
+  else
+    []
+
 let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options uri loc =
   match Refactor_add_jsx_props.fill_props cx ~snippets_enabled ~ast ~tast:typed_ast loc with
   | None -> []
@@ -1112,6 +1134,138 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EMatchInvalidBindingKind { loc = error_loc; kind = current_kind } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title =
+            Utils_js.spf
+              "Replace `%s` with `const`"
+              (Flow_ast_utils.string_of_variable_kind current_kind);
+          diagnostic_title = "fix_match_invalid_binding_kind";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_binding_kind;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EMatchInvalidWildcardSyntax error_loc ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Replace `default` with `_`";
+          diagnostic_title = "fix_match_invalid_wildcard_syntax";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_wildcard_syntax;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EMatchInvalidCaseSyntax { loc = error_loc; kind = _ } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Fix invalid match syntax";
+          diagnostic_title = "fix_match_invalid_case_syntax";
+          transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_case_syntax;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EMatchNonExhaustiveObjectPattern { loc = error_loc; rest; missing_props } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let add_only_rest =
+        {
+          title = "Add rest `...` to object pattern";
+          diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_rest";
+          transform =
+            untyped_ast_transform
+              (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true []);
+          target_loc = error_loc;
+        }
+      in
+      let missing_props_prefix_text missing_props =
+        let num_missing_props = Base.List.length missing_props in
+        if num_missing_props = 1 then
+          Utils_js.spf "Add the missing property"
+        else
+          Utils_js.spf "Add %d missing properties" num_missing_props
+      in
+      match (missing_props, rest) with
+      | ([], _) -> [add_only_rest]
+      | (_ :: _, None) ->
+        [
+          {
+            title = Utils_js.spf "%s to object pattern" (missing_props_prefix_text missing_props);
+            diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_props";
+            transform =
+              untyped_ast_transform
+                (Autofix_match_syntax.fix_non_exhaustive_object_pattern
+                   ~add_rest:false
+                   missing_props
+                );
+            target_loc = error_loc;
+          };
+          add_only_rest;
+        ]
+      | (_ :: _, Some _) ->
+        [
+          {
+            title =
+              Utils_js.spf
+                "%s and rest `...` to object pattern"
+                (missing_props_prefix_text missing_props);
+            diagnostic_title = "fix_match_non_exhaustive_object_pattern_add_props_and_rest";
+            transform =
+              untyped_ast_transform
+                (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true missing_props);
+            target_loc = error_loc;
+          };
+          add_only_rest;
+        ]
+    else
+      []
+  | Error_message.EMatchNotExhaustive { loc = error_loc; examples; missing_pattern_asts } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let num_examples = Base.List.length examples in
+      let num_asts = Base.List.length missing_pattern_asts in
+      let prefix =
+        if num_asts = 1 then
+          "Add the missing case"
+        else
+          Utils_js.spf "Add %d missing cases" num_asts
+      in
+      let suffix =
+        if num_asts = num_examples then
+          " to make `match` exhaustively checked"
+        else
+          Utils_js.spf " (out of a total of %d)" num_examples
+      in
+      [
+        {
+          title = Utils_js.spf "%s%s" prefix suffix;
+          diagnostic_title = "fix_match_not_exhaustive";
+          transform =
+            untyped_ast_transform (Autofix_match_syntax.fix_not_exhaustive missing_pattern_asts);
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
+  | Error_message.EMatchUnusedPattern { reason; already_seen = _ } ->
+    let error_loc = Reason.loc_of_reason reason in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Remove";
+          diagnostic_title = "fix_match_unused_pattern";
+          transform = untyped_ast_transform Autofix_match_syntax.remove_unused_pattern;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
@@ -1461,6 +1615,7 @@ let code_actions_at_loc
       loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
+    @ refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc
     @ add_jsx_props_code_actions
         ~snippets_enabled:(Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
         ~cx

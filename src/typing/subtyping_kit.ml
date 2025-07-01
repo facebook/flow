@@ -955,7 +955,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
        o as {[string]: boolean}: // OK
        ```
     *)
-    | (DefT (_, NumericStrKeyT _), DefT (_, (NumGeneralT _ | StrGeneralT _))) -> ()
     | (DefT (rl, NumericStrKeyT (actual, _)), DefT (ru, SingletonNumT { value = (expected, _); _ }))
       ->
       if actual = expected then

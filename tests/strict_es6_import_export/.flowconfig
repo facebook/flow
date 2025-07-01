@@ -2,7 +2,6 @@
 all=true
 experimental.strict_es6_import_export=true
 no_flowlib=false
-experimental.natural_inference.local_primitive_literals=full
 
 [lints]
 default-import-access=error

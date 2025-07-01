@@ -154,12 +154,16 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_natural_inference_object_literal_partial_fix: bool;
+  opt_natural_inference_object_literal_partial_fix_excludes: Str.regexp list;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
   opt_pattern_matching_includes: string list;
+  opt_constant_condition: bool;
+  opt_constant_condition_boolean_literal_includes: string list;
+  opt_constant_condition_null_void_includes: string list;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -257,6 +261,13 @@ let enable_pattern_matching opts = opts.opt_enable_pattern_matching
 
 let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
+let constant_condition opts = opts.opt_constant_condition
+
+let constant_condition_boolean_literal_includes opts =
+  opts.opt_constant_condition_boolean_literal_includes
+
+let constant_condition_null_void_includes opts = opts.opt_constant_condition_null_void_includes
+
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
@@ -325,6 +336,9 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
 let natural_inference_object_literal_partial_fix opts =
   opts.opt_natural_inference_object_literal_partial_fix
+
+let natural_inference_object_literal_partial_fix_excludes opts =
+  opts.opt_natural_inference_object_literal_partial_fix_excludes
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 

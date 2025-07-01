@@ -8,6 +8,5 @@
 
 [options]
 all=true
-experimental.natural_inference.local_primitive_literals=full
 
 [strict]

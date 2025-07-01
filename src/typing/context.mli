@@ -97,6 +97,9 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
+  constant_condition: bool;
+  constant_condition_boolean_literal_includes: string list;
+  constant_condition_null_void_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -108,6 +111,7 @@ type metadata = {
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_object_literal_partial_fix: bool;
+  natural_inference_object_literal_partial_fix_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
@@ -204,6 +208,10 @@ val enable_enums : t -> bool
 val enable_jest_integration : t -> bool
 
 val enable_pattern_matching : t -> bool
+
+val enable_constant_condition_boolean_literal : t -> bool
+
+val enable_constant_condition_null_void : t -> bool
 
 val enable_relay_integration : t -> bool
 
@@ -320,7 +328,7 @@ val post_inference_projects_strict_boundary_import_pattern_opt_outs_validations 
 
 val missing_local_annot_lower_bounds : t -> Type.t Nel.t ALocFuzzyMap.t
 
-val object_literal_declaration_upper_bounds : t -> (ALoc.t * Type.t list) list
+val array_or_object_literal_declaration_upper_bounds : t -> (ALoc.t * Type.t list) list
 
 val inferred_component_return : t -> Type.t Nel.t ALocFuzzyMap.t
 
@@ -409,11 +417,11 @@ val add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validati
 
 val add_missing_local_annot_lower_bound : t -> ALoc.t -> Type.t -> unit
 
-val add_object_literal_declaration_tracking : t -> int -> ALoc.t -> unit
+val add_array_or_object_literal_declaration_tracking : t -> int -> ALoc.t -> unit
 
-val report_object_literal_declaration_reposition : t -> int -> int -> unit
+val report_array_or_object_literal_declaration_reposition : t -> int -> int -> unit
 
-val add_object_literal_declaration_upper_bound : t -> int -> Type.t -> unit
+val add_array_or_object_literal_declaration_upper_bound : t -> int -> Type.t -> unit
 
 val add_inferred_component_return : t -> ALoc.t -> Type.t -> unit
 
@@ -494,9 +502,9 @@ val test_prop_miss :
 val test_prop_get_never_hit :
   t -> (Reason.name option * (Reason.t * Reason.t) * Type.use_op * string option) list
 
-val add_condition : t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> unit
+val add_condition : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t -> unit
 
-val get_all_conditions : t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t list
+val get_all_conditions : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list
 
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 

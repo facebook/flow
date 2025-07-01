@@ -4253,7 +4253,15 @@ let to_printable_error :
       let missing_props =
         if has_missing_props then
           text (spf "The %s " properties_text)
-          :: (Base.List.map missing_props ~f:(fun prop -> [code prop])
+          :: (Base.List.map missing_props ~f:(fun prop ->
+                  let prop =
+                    if Parser_flow.string_is_valid_identifier_name prop then
+                      prop
+                    else
+                      Js_layout_generator.quote_string ~prefer_single_quotes:true prop
+                  in
+                  [code prop]
+              )
              |> Flow_errors_utils.Friendly.conjunction_concat ~limit:5
              )
           @ [text " are missing from the pattern"]
@@ -4441,20 +4449,37 @@ let to_printable_error :
         text " cannot be declared as 'const'. ";
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
-    | MessageConstantCondition { is_truthy } ->
-      [
-        text "Constant condition. ";
-        text
-          (spf
-             "The condition will always be %s."
-             ( if is_truthy then
-               "truthy"
-             else
-               "falsy"
-             )
-          );
-      ]
+    | MessageConstantCondition { is_truthy; show_warning } ->
+      if not show_warning then
+        [
+          text "Constant condition. ";
+          text
+            (spf
+               "The condition will always be %s."
+               ( if is_truthy then
+                 "truthy"
+               else
+                 "falsy"
+               )
+            );
+        ]
+      else
+        [
+          text
+            (spf
+               "This condition is likely %s. "
+               ( if is_truthy then
+                 "truthy"
+               else
+                 "falsy"
+               )
+            );
+          text "WARNING: Flow's type inference may be incorrect (due to `any` annotations, ";
+          text "out-of-bounds array accesses, etc.). ";
+          text "Before deleting the check, confirm this condition is indeed constant.";
+        ]
   in
+
   let rec convert_error_message
       { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =
     let root = Base.Option.map root ~f:(fun (loc, msg) -> (loc, root_msg_to_friendly_msgs msg)) in

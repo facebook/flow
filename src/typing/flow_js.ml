@@ -301,7 +301,11 @@ struct
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
       this module, and the function `flow` outside this module. **)
   let rec __flow cx ((l : Type.t), (u : Type.use_t)) trace =
-    if ground_subtype cx (l, u) then
+    if
+      TypeUtil.ground_subtype_use_t
+        ~on_singleton_eq:(Flow_js_utils.update_lit_type_from_annot cx)
+        (l, u)
+    then
       print_types_if_verbose cx trace (l, u)
     else if Cache.FlowConstraint.get cx (l, u) then
       print_types_if_verbose cx trace ~note:"(cached)" (l, u)
@@ -357,7 +361,10 @@ struct
         (* process X ~> Y *)
         (******************)
         | (OpenT (_, tvar1), UseT (use_op, OpenT (r_upper, tvar2))) ->
-          Context.add_object_literal_declaration_upper_bound cx tvar1 (OpenT (r_upper, tvar2));
+          Context.add_array_or_object_literal_declaration_upper_bound
+            cx
+            tvar1
+            (OpenT (r_upper, tvar2));
           let (id1, constraints1) = Context.find_constraints cx tvar1 in
           let (id2, constraints2) = Context.find_constraints cx tvar2 in
           (match (constraints1, constraints2) with
@@ -422,7 +429,8 @@ struct
           else
             let () =
               match t2 with
-              | UseT (_, t2) -> Context.add_object_literal_declaration_upper_bound cx tvar t2
+              | UseT (_, t2) ->
+                Context.add_array_or_object_literal_declaration_upper_bound cx tvar t2
               | _ -> ()
             in
             let t2 =
@@ -3279,66 +3287,9 @@ struct
             ~static
             ~tout:(reason_lookup, tvar);
           apply_method_action cx trace funt use_op reason_op l method_action
-        (*
-           In traditional type systems, object types are not extensible.  E.g., an
-           object {x: 0, y: ""} has type {x: number; y: string}. While it is
-           possible to narrow the object's type to hide some of its properties (aka
-           width subtyping), extending its type to model new properties is
-           impossible. This is not without reason: all object types would then be
-           equatable via subtyping, thereby making them unsound.
-
-           In JavaScript, on the other hand, objects can grow dynamically, and
-           doing so is a common idiom during initialization (i.e., before they
-           become available for general use). Objects that typically grow
-           dynamically include not only object literals, but also prototypes,
-           export objects, and so on. Thus, it is important to model this idiom.
-
-           To balance utility and soundness, Flow's object types are extensible by
-           default, but become sealed as soon as they are subject to width
-           subtyping. However, implementing this simple idea needs a lot of care.
-
-           To ensure that aliases have the same underlying type, object types are
-           represented indirectly as pointers to records (rather than directly as
-           records). And to ensure that typing is independent of the order in which
-           fragments of code are analyzed, new property types can be added on gets
-           as well as sets (and due to indirection, the new property types become
-           immediately available to aliases).
-
-           Looking up properties of an object, e.g. for the purposes of copying,
-           when it is not fully initialized is prone to races, and requires careful
-           manual reasoning about escape to avoid surprising results.
-
-           Prototypes cause further complications. In JavaScript, objects inherit
-           properties of their prototypes, and may override those properties. (This
-           is similar to subclasses inheriting and overriding methods of
-           superclasses.) At the same time, prototypes are extensible just as much
-           as the objects they derive are. In other words, we want to maintain the
-           invariant that an object's type is a subtype of its prototype's type,
-           while letting them be extensible by default. This invariant is achieved
-           by constraints that unify a property's type if and when that property
-           exists both on the object and its prototype.
-
-           Here's some example code with type calculations in comments. (We use the
-           symbol >=> to denote a flow between a pair of types. The direction of
-           flow roughly matches the pattern 'rvalue' >=> 'lvalue'.)
-
-              var o = {}; // o:T, UseT |-> {}
-              o.x = 4; // UseT |-> {x:X}, number >=> X
-              var s:string = o.x; // ERROR: number >=> string
-
-              function F() { } // F.prototype:P, P |-> {}
-              var f = new F(); // f:O, O |-> {}&P
-
-              F.prototype.m = function() { this.y = 4; } // P |-> {m:M}, ... >=> M
-              f.m(); // O |-> {y:Y}&P, number >=> Y
-
-        *)
-        (**********************************************************************)
-        (* objects can be assigned, i.e., their properties can be set in bulk *)
-        (**********************************************************************)
-
-        (* Special case any. Otherwise this will lead to confusing errors when any tranforms to an
-           object type. *)
+        (*****************************************************************)
+        (* Object.assign logic has been moved to type_operation_utils.ml *)
+        (*****************************************************************)
         | (l, ConcretizeT { reason = _; kind = ConcretizeForObjectAssign; seen = _; collector }) ->
           TypeCollector.add collector l
         (*************************)
@@ -5196,7 +5147,7 @@ struct
               rec_flow cx trace (super, CheckUnusedPromiseT { reason; async }))
         | (_, CheckUnusedPromiseT _) -> ()
         (* computed properties *)
-        | (t, ConcretizeT { reason = _; kind = ConcretizeComputedPropsT; seen = _; collector }) ->
+        | (t, ConcretizeT { reason = _; kind = ConcretizeAll; seen = _; collector }) ->
           TypeCollector.add collector t
         | (DefT (lreason, SingletonStrT _), WriteComputedObjPropCheckT _) ->
           let loc = loc_of_reason lreason in
@@ -9004,7 +8955,10 @@ struct
               let t = Lazy.force lazy_t in
               (match t with
               | OpenT (_, repositioned_tvar_id) ->
-                Context.report_object_literal_declaration_reposition cx repositioned_tvar_id id
+                Context.report_array_or_object_literal_declaration_reposition
+                  cx
+                  repositioned_tvar_id
+                  id
               | _ -> ());
               t)
           | Unresolved _ ->
@@ -9310,7 +9264,7 @@ module rec FlowJs : Flow_common.S = struct
   let possible_concrete_types_for_sentinel_prop_test =
     possible_concrete_types ConcretizeForSentinelPropTest
 
-  let possible_concrete_types_for_computed_props = possible_concrete_types ConcretizeComputedPropsT
+  let all_possible_concrete_types = possible_concrete_types ConcretizeAll
 
   let possible_concrete_types_for_operators_checking =
     possible_concrete_types ConcretizeForOperatorsChecking

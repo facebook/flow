@@ -1,0 +1,7 @@
+// @flow
+
+enum E {A, B}
+
+declare const x: true | "foo" | 1 | 99n | null | undefined | E;
+
+match (x) {}

@@ -90,13 +90,56 @@ module Leaf = struct
     match leaf with
     | BoolC true -> "true"
     | BoolC false -> "false"
-    | StrC name -> Utils_js.spf "'%s'" (Reason.display_string_of_name name)
+    | StrC name ->
+      Js_layout_generator.quote_string
+        ~prefer_single_quotes:true
+        (Reason.display_string_of_name name)
     | NumC (_, s) -> s
     | BigIntC (_, s) -> s
     | NullC -> "null"
     | VoidC -> "undefined"
     | EnumMemberC { enum_info = { Type.enum_name; _ }; member_name } ->
       Utils_js.spf "%s.%s" enum_name member_name
+
+  let to_ast leaf =
+    match leaf with
+    | BoolC value ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.BooleanPattern { Flow_ast.BooleanLiteral.value; comments = None }
+      )
+    | StrC name ->
+      let value = Reason.display_string_of_name name in
+      ( Loc.none,
+        Flow_ast.MatchPattern.StringPattern
+          {
+            Flow_ast.StringLiteral.value;
+            raw = Js_layout_generator.quote_string ~prefer_single_quotes:true value;
+            comments = None;
+          }
+      )
+    | NumC (value, raw) ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.NumberPattern { Flow_ast.NumberLiteral.value; raw; comments = None }
+      )
+    | BigIntC (value, raw) ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.BigIntPattern { Flow_ast.BigIntLiteral.value; raw; comments = None }
+      )
+    | NullC -> (Loc.none, Flow_ast.MatchPattern.NullPattern None)
+    | VoidC ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.IdentifierPattern
+          (Loc.none, { Flow_ast.Identifier.name = "undefined"; comments = None })
+      )
+    | EnumMemberC { enum_info = { Type.enum_name; _ }; member_name } ->
+      let open Flow_ast.MatchPattern.MemberPattern in
+      let base =
+        BaseIdentifier (Loc.none, { Flow_ast.Identifier.name = enum_name; comments = None })
+      in
+      let property =
+        PropertyIdentifier (Loc.none, { Flow_ast.Identifier.name = member_name; comments = None })
+      in
+      (Loc.none, Flow_ast.MatchPattern.MemberPattern (Loc.none, { base; property; comments = None }))
 end
 
 module LeafSet = Set.Make (struct
@@ -105,9 +148,7 @@ module LeafSet = Set.Make (struct
   let compare a b = Leaf.compare a b
 end)
 
-let wildcard_str = "_"
-
-let sort_object_patterns = Base.List.sort ~compare:(fun (a, _, _) (b, _, _) -> a - b)
+let sort_object_patterns_by_index = Base.List.sort ~compare:(fun (a, _) (b, _) -> a - b)
 
 module ObjKind = struct
   type t =
@@ -122,6 +163,8 @@ module rec PatternObject : sig
       loc: ALoc.t;
       value: PatternUnion.t;
     }
+
+    val compare : t -> t -> int
   end
 
   module Properties : sig
@@ -131,44 +174,214 @@ module rec PatternObject : sig
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
+    keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
     guarded: bool;
   }
 
-  type t = (* index for ordering *) int * Reason.t * t'
-end =
-  PatternObject
+  type t = Reason.t * t'
+
+  (* index for ordering *)
+  type with_index = int * t
+
+  val compare : t -> t -> int
+
+  val to_string : t -> string
+
+  val to_ast : t -> (Loc.t, Loc.t) Flow_ast.MatchPattern.t
+end = struct
+  module Property = struct
+    type t = {
+      loc: ALoc.t;
+      value: PatternUnion.t;
+    }
+
+    let compare a b =
+      let { value = value_a; loc = _ } = a in
+      let { value = value_b; loc = _ } = b in
+      (* Sort leafs only props first. Sort wildcard props last. *)
+      match (PatternUnion.only_leafs value_a, PatternUnion.only_leafs value_b) with
+      | (true, false) -> -1
+      | (false, true) -> 1
+      | _ ->
+        (match (PatternUnion.only_wildcard value_a, PatternUnion.only_wildcard value_b) with
+        | (None, Some _) -> -1
+        | (Some _, None) -> 1
+        | _ -> 0)
+  end
+
+  module Properties = struct
+    type t = Property.t SMap.t
+  end
+
+  type t' = {
+    kind: ObjKind.t;
+    props: Properties.t;
+    keys_order: string list;
+    rest: Reason.t option;
+    contains_invalid_pattern: bool;
+    guarded: bool;
+  }
+
+  type t = Reason.t * t'
+
+  type with_index = int * t
+
+  (* We aim to sort more specific patterns before less specific ones. *)
+  let compare a b =
+    let compare_rest rest1 rest2 =
+      (* without rest before with rest *)
+      match (rest1, rest2) with
+      | (None, Some _) -> -1
+      | (Some _, None) -> 1
+      | _ -> 0
+    in
+    let (_, { kind = kind1; props = props1; rest = rest1; _ }) = a in
+    let (_, { kind = kind2; props = props2; rest = rest2; _ }) = b in
+    match (kind1, kind2) with
+    (* tuples before objects *)
+    | (ObjKind.Tuple _, ObjKind.Obj) -> -1
+    | (ObjKind.Obj, ObjKind.Tuple _) -> 1
+    | (ObjKind.Tuple { length = length1 }, ObjKind.Tuple { length = length2 }) ->
+      (* longer first *)
+      let length_compare = -Int.compare length1 length2 in
+      if length_compare <> 0 then
+        length_compare
+      else
+        compare_rest rest1 rest2
+    | (ObjKind.Obj, ObjKind.Obj) ->
+      (* more props first *)
+      let props_size_compare = -Int.compare (SMap.cardinal props1) (SMap.cardinal props2) in
+      if props_size_compare <> 0 then
+        props_size_compare
+      else
+        compare_rest rest1 rest2
+
+  let to_string (_, { kind; props; keys_order; rest; _ }) =
+    match kind with
+    | ObjKind.Obj ->
+      let props =
+        Base.List.map keys_order ~f:(fun key ->
+            let { Property.value; _ } = SMap.find key props in
+            Utils_js.spf "%s: %s" key (PatternUnion.to_string value)
+        )
+      in
+      let props =
+        if Base.Option.is_some rest then
+          props @ ["..."]
+        else
+          props
+      in
+      Utils_js.spf "{%s}" (String.concat ", " props)
+    | ObjKind.Tuple { length } ->
+      let elements =
+        Base.List.init length ~f:(fun i ->
+            let { Property.value; _ } = SMap.find (string_of_int i) props in
+            PatternUnion.to_string value
+        )
+      in
+      let elements =
+        if Base.Option.is_some rest then
+          elements @ ["..."]
+        else
+          elements
+      in
+      Utils_js.spf "[%s]" (String.concat ", " elements)
+
+  let to_ast (_, { kind; props; keys_order; rest; _ }) =
+    let open Flow_ast in
+    let rest =
+      if Base.Option.is_some rest then
+        Some (Loc.none, { MatchPattern.RestPattern.argument = None; comments = None })
+      else
+        None
+    in
+    match kind with
+    | ObjKind.Obj ->
+      let properties =
+        Base.List.map keys_order ~f:(fun key ->
+            let { Property.value; _ } = SMap.find key props in
+            let key =
+              if Parser_flow.string_is_valid_identifier_name key then
+                MatchPattern.ObjectPattern.Property.Identifier
+                  (Loc.none, { Identifier.name = key; comments = None })
+              else
+                let str_lit =
+                  {
+                    StringLiteral.value = key;
+                    raw = Js_layout_generator.quote_string ~prefer_single_quotes:true key;
+                    comments = None;
+                  }
+                in
+                MatchPattern.ObjectPattern.Property.StringLiteral (Loc.none, str_lit)
+            in
+            let pattern = PatternUnion.to_ast value in
+            ( Loc.none,
+              MatchPattern.ObjectPattern.Property.Valid
+                {
+                  MatchPattern.ObjectPattern.Property.key;
+                  pattern;
+                  shorthand = false;
+                  comments = None;
+                }
+            )
+        )
+      in
+      ( Loc.none,
+        MatchPattern.ObjectPattern { MatchPattern.ObjectPattern.properties; rest; comments = None }
+      )
+    | ObjKind.Tuple { length } ->
+      let elements =
+        Base.List.init length ~f:(fun i ->
+            let { Property.value; _ } = SMap.find (string_of_int i) props in
+            let pattern = PatternUnion.to_ast value in
+            { MatchPattern.ArrayPattern.Element.index = Loc.none; pattern }
+        )
+      in
+      ( Loc.none,
+        MatchPattern.ArrayPattern { MatchPattern.ArrayPattern.elements; rest; comments = None }
+      )
+end
 
 (* A representation of a set of patterns. *)
 and PatternUnion : sig
-  type tuple_map = PatternObject.t list IMap.t
+  type tuple_map = PatternObject.with_index list IMap.t
 
   type t = {
     leafs: LeafSet.t;
     guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
-    objects: PatternObject.t list;
+    objects: PatternObject.with_index list;
     wildcard: Reason.t option;
     contains_invalid_pattern: bool;
   }
 
-  val all_tuples_and_objects : t -> PatternObject.t list
+  val empty : t
+
+  val all_tuples_and_objects : t -> PatternObject.with_index list
 
   (* If the only pattern in this pattern union is a wildcard, return that wildcard. *)
   val only_wildcard : t -> Reason.t option
 
+  (* Whether this pattern union only contains leafs. *)
+  val only_leafs : t -> bool
+
   val of_patterns_ast : Context.t -> pattern_ast_list -> t
+
+  val to_string : t -> string
+
+  val to_ast : t -> (Loc.t, Loc.t) Flow_ast.MatchPattern.t
 end = struct
-  type tuple_map = PatternObject.t list IMap.t
+  type tuple_map = PatternObject.with_index list IMap.t
 
   type t = {
     leafs: LeafSet.t;
     guarded_leafs: Leaf.t list;
     tuples_exact: tuple_map;
     tuples_inexact: tuple_map;
-    objects: PatternObject.t list;
+    objects: PatternObject.with_index list;
     wildcard: Reason.t option;
     contains_invalid_pattern: bool;
   }
@@ -207,12 +420,29 @@ end = struct
     else
       None
 
+  let only_leafs
+      {
+        leafs;
+        guarded_leafs;
+        tuples_exact;
+        tuples_inexact;
+        objects;
+        wildcard;
+        contains_invalid_pattern = _;
+      } =
+    (not @@ LeafSet.is_empty leafs)
+    && Base.List.is_empty guarded_leafs
+    && IMap.is_empty tuples_exact
+    && IMap.is_empty tuples_inexact
+    && Base.List.is_empty objects
+    && Base.Option.is_none wildcard
+
   let all_tuples_and_objects { tuples_exact; tuples_inexact; objects; _ } =
     let all_tuples =
       Base.List.rev_append (IMap.values tuples_exact) (IMap.values tuples_inexact)
       |> Base.List.concat
     in
-    Base.List.rev_append all_tuples objects |> sort_object_patterns
+    Base.List.rev_append all_tuples objects |> sort_object_patterns_by_index
 
   (* Builder helpers *)
 
@@ -261,8 +491,9 @@ end = struct
     else
       pattern_union
 
-  let add_tuple (cx : Context.t) (pattern_union : t) ~(length : int) (tuple : PatternObject.t) : t =
-    let (_, reason, { PatternObject.kind; rest; _ }) = tuple in
+  let add_tuple
+      (cx : Context.t) (pattern_union : t) ~(length : int) (tuple : PatternObject.with_index) : t =
+    let (_, (reason, { PatternObject.kind; rest; _ })) = tuple in
     if not_seen_wildcard cx pattern_union reason then
       let { tuples_exact; tuples_inexact; _ } = pattern_union in
       let (tuples_exact, tuples_inexact) =
@@ -289,8 +520,8 @@ end = struct
     else
       pattern_union
 
-  let add_object (cx : Context.t) (pattern_union : t) (obj : PatternObject.t) : t =
-    let (_, reason, _) = obj in
+  let add_object (cx : Context.t) (pattern_union : t) (obj : PatternObject.with_index) : t =
+    let (_, (reason, _)) = obj in
     if not_seen_wildcard cx pattern_union reason then
       let { objects; _ } = pattern_union in
       (* Accumulate backwards, reverse at end of pattern_union creation. *)
@@ -437,40 +668,55 @@ end = struct
       )
     | ArrayPattern { ArrayPattern.elements; rest; _ } ->
       let length = Base.List.length elements in
-      let (props, contains_invalid_pattern) =
+      let (props, keys_order_rev, contains_invalid_pattern) =
         Base.List.foldi
           elements
-          ~init:(SMap.empty, false)
-          ~f:(fun i (props, contains_invalid_pattern) { ArrayPattern.Element.pattern; _ } ->
+          ~init:(SMap.empty, [], false)
+          ~f:(fun
+               i
+               (props, keys_order_rev, contains_invalid_pattern)
+               { ArrayPattern.Element.pattern; _ }
+             ->
             let key = string_of_int i in
             let value = of_pattern_ast cx pattern in
             let contains_invalid_pattern =
               contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
             in
-            (SMap.add key { PatternObject.Property.loc; value } props, contains_invalid_pattern)
+            ( SMap.add key { PatternObject.Property.loc; value } props,
+              key :: keys_order_rev,
+              contains_invalid_pattern
+            )
         )
       in
       let rest =
         Base.Option.map rest ~f:(fun (loc, _) -> Reason.mk_reason Reason.RArrayPatternRestProp loc)
       in
+      let keys_order =
+        Base.List.rev keys_order_rev
+        |> Base.List.stable_sort ~compare:(fun key_a key_b ->
+               PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
+           )
+      in
       let tuple =
         ( next_i,
-          reason,
-          {
-            PatternObject.props;
-            rest;
-            kind = ObjKind.Tuple { length };
-            contains_invalid_pattern;
-            guarded;
-          }
+          ( reason,
+            {
+              PatternObject.props;
+              keys_order;
+              rest;
+              kind = ObjKind.Tuple { length };
+              contains_invalid_pattern;
+              guarded;
+            }
+          )
         )
       in
       let pattern_union = add_tuple cx pattern_union ~length tuple in
       (pattern_union, next_i)
     | ObjectPattern { ObjectPattern.properties; rest; _ } ->
-      let (props, tuple_like, contains_invalid_pattern) =
-        Base.List.fold properties ~init:(SMap.empty, Some 0., false) ~f:(fun acc prop ->
-            let (props, tuple_like, contains_invalid_pattern) = acc in
+      let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
+        Base.List.fold properties ~init:(SMap.empty, [], Some 0., false) ~f:(fun acc prop ->
+            let (props, keys_order_rev, tuple_like, contains_invalid_pattern) = acc in
             match prop with
             | (_, ObjectPattern.Property.Valid { ObjectPattern.Property.key; pattern; _ }) ->
               let (loc, propname) =
@@ -499,9 +745,15 @@ end = struct
               let contains_invalid_pattern =
                 contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
               in
-              (props, tuple_like, contains_invalid_pattern)
-            | _ -> (props, tuple_like, true)
+              (props, propname :: keys_order_rev, tuple_like, contains_invalid_pattern)
+            | _ -> (props, keys_order_rev, tuple_like, true)
         )
+      in
+      let keys_order =
+        Base.List.rev keys_order_rev
+        |> Base.List.stable_sort ~compare:(fun key_a key_b ->
+               PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
+           )
       in
       let pattern_union =
         let rest =
@@ -511,8 +763,16 @@ end = struct
         in
         let obj =
           ( next_i,
-            reason,
-            { PatternObject.props; rest; kind = ObjKind.Obj; contains_invalid_pattern; guarded }
+            ( reason,
+              {
+                PatternObject.props;
+                keys_order;
+                rest;
+                kind = ObjKind.Obj;
+                contains_invalid_pattern;
+                guarded;
+              }
+            )
           )
         in
         let pattern_union = add_object cx pattern_union obj in
@@ -531,7 +791,68 @@ end = struct
     in
     let { objects; _ } = pattern_union in
     { pattern_union with objects = Base.List.rev objects }
+
+  let to_string pattern_union =
+    let { leafs; wildcard; _ } = pattern_union in
+    let leafs = LeafSet.elements leafs |> Base.List.map ~f:(fun (_, leaf) -> Leaf.to_string leaf) in
+    let tuples_and_objects =
+      all_tuples_and_objects pattern_union
+      |> Base.List.map ~f:(fun (_, pattern_object) -> PatternObject.to_string pattern_object)
+    in
+    let wildcard =
+      if Base.Option.is_some wildcard then
+        ["_"]
+      else
+        []
+    in
+    Base.List.concat [leafs; tuples_and_objects; wildcard] |> String.concat " | "
+
+  let to_ast pattern_union =
+    let { leafs; wildcard; _ } = pattern_union in
+    let leafs = LeafSet.elements leafs |> Base.List.map ~f:(fun (_, leaf) -> Leaf.to_ast leaf) in
+    let tuples_and_objects =
+      all_tuples_and_objects pattern_union
+      |> Base.List.map ~f:(fun (_, pattern_object) -> PatternObject.to_ast pattern_object)
+    in
+    let wildcard =
+      if Base.Option.is_some wildcard then
+        [
+          ( Loc.none,
+            Flow_ast.MatchPattern.WildcardPattern
+              {
+                Flow_ast.MatchPattern.WildcardPattern.comments = None;
+                invalid_syntax_default_keyword = false;
+              }
+          );
+        ]
+      else
+        []
+    in
+    let patterns = Base.List.concat [leafs; tuples_and_objects; wildcard] in
+    match patterns with
+    | [single] -> single
+    | _ ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.OrPattern
+          { Flow_ast.MatchPattern.OrPattern.patterns; comments = None }
+      )
 end
+
+(* `_` *)
+let wildcard_pattern reason = { PatternUnion.empty with PatternUnion.wildcard = Some reason }
+
+(* `[...]` *)
+let empty_inexact_tuple_pattern (reason : Reason.t) : PatternObject.t =
+  ( reason,
+    {
+      PatternObject.kind = ObjKind.Tuple { length = 0 };
+      props = SMap.empty;
+      keys_order = [];
+      rest = Some reason;
+      contains_invalid_pattern = false;
+      guarded = false;
+    }
+  )
 
 (* A value with properties: could be an object, tuple, or array.
    Properties are converted to this representation lazily, so are only
@@ -573,7 +894,7 @@ module rec ValueObject : sig
 
   type t = Reason.t * t'
 
-  val to_pattern_string : t -> string
+  val to_pattern : t -> PatternObject.t
 end = struct
   module Property = struct
     type t = {
@@ -627,72 +948,94 @@ end = struct
 
   type t = Reason.t * t'
 
-  let to_pattern_string (_, { props; rest; kind; sentinel_props; _ }) =
-    let str_of_prop key value = Utils_js.spf "%s: %s" key value in
-    match kind with
-    | ObjKind.Obj ->
-      let (props_of_sentinel, props_with_value, wildcard_props, has_rest) =
-        SMap.elements props
-        |> Base.List.fold
-             ~init:([], [], [], Base.Option.is_some rest)
-             ~f:
-               (fun acc -> function
-                 | (key, Some { Property.value; optional; _ }) ->
-                   let is_sentinel_prop = SSet.mem key sentinel_props in
-                   let (props_of_sentinel, props_with_value, wildcard_props, has_rest) = acc in
-                   if optional then
-                     (props_of_sentinel, props_with_value, wildcard_props, true)
-                   else if Lazy.is_val value || is_sentinel_prop then
-                     let value = ValueUnion.to_pattern_string (Lazy.force value) in
-                     if value = wildcard_str then
-                       (props_of_sentinel, props_with_value, key :: wildcard_props, has_rest)
-                     else
-                       let prop = str_of_prop key value in
-                       if is_sentinel_prop then
-                         (prop :: props_of_sentinel, props_with_value, wildcard_props, has_rest)
-                       else
-                         (props_of_sentinel, prop :: props_with_value, wildcard_props, has_rest)
-                   else
-                     (props_of_sentinel, props_with_value, key :: wildcard_props, has_rest)
-                 | _ -> acc)
-      in
-      let props = props_of_sentinel @ props_with_value in
-      (* If we have over a certain amount of wildcard props, suggest an inexact
-         object pattern rather than printing each property. *)
-      let (props, has_rest) =
-        if Base.List.length wildcard_props >= 5 then
-          (props, true)
-        else
-          ( props @ Base.List.map wildcard_props ~f:(fun key -> str_of_prop key wildcard_str),
-            has_rest
-          )
-      in
-      let props =
-        if has_rest then
-          props @ ["..."]
-        else
-          props
-      in
-      let props = String.concat ", " props in
-      Utils_js.spf "{%s}" props
-    | ObjKind.Tuple { length } ->
-      let elements =
-        Base.List.init length ~f:(fun i -> SMap.find (string_of_int i) props)
-        |> Base.List.map ~f:(fun element ->
-               match element with
-               | Some { Property.value; _ } when Lazy.is_val value ->
-                 ValueUnion.to_pattern_string (Lazy.force value)
-               | _ -> wildcard_str
-           )
-      in
-      let elements =
-        if Base.Option.is_some rest then
-          elements @ ["..."]
-        else
-          elements
-      in
-      let elements = String.concat ", " elements in
-      Utils_js.spf "[%s]" elements
+  let to_pattern (reason, { props; rest; kind; sentinel_props; _ }) =
+    let loc = Reason.loc_of_reason reason in
+    let (props, keys_order, rest) =
+      match kind with
+      | ObjKind.Obj ->
+        let (props, wildcard_props, rest) =
+          SMap.fold
+            (fun key prop acc ->
+              match prop with
+              | Some { Property.value; optional; loc; _ } ->
+                let (props, wildcard_props, rest) = acc in
+                let is_sentinel_prop = SSet.mem key sentinel_props in
+                if optional then
+                  ( props,
+                    wildcard_props,
+                    match rest with
+                    | Some _ -> rest
+                    | None -> Some reason
+                  )
+                else if Lazy.is_val value || is_sentinel_prop then
+                  let value = ValueUnion.to_pattern (Lazy.force value) in
+                  let prop = { PatternObject.Property.loc; value } in
+                  if Base.Option.is_some (PatternUnion.only_wildcard value) then
+                    let wildcard_props = SMap.add key prop wildcard_props in
+                    (props, wildcard_props, rest)
+                  else
+                    let props = SMap.add key prop props in
+                    (props, wildcard_props, rest)
+                else
+                  let prop = { PatternObject.Property.loc; value = wildcard_pattern reason } in
+                  let wildcard_props = SMap.add key prop wildcard_props in
+                  (props, wildcard_props, rest)
+              | _ -> acc)
+            props
+            (SMap.empty, SMap.empty, rest)
+        in
+        (* If we have over a certain amount of wildcard props, suggest an inexact
+           object pattern rather than many wildcard properties. *)
+        let (props, rest) =
+          if SMap.cardinal wildcard_props >= 5 then
+            ( props,
+              match rest with
+              | Some _ -> rest
+              | None -> Some reason
+            )
+          else
+            (SMap.union props wildcard_props, rest)
+        in
+        let keys_order =
+          SMap.keys props
+          |> Base.List.sort ~compare:(fun key1 key2 ->
+                 (* Sentinel props come first, then normal pattern prop order. *)
+                 match (SSet.mem key1 sentinel_props, SSet.mem key2 sentinel_props) with
+                 | (true, false) -> -1
+                 | (false, true) -> 1
+                 | _ ->
+                   let prop1 = SMap.find key1 props in
+                   let prop2 = SMap.find key2 props in
+                   PatternObject.Property.compare prop1 prop2
+             )
+        in
+        (props, keys_order, rest)
+      | ObjKind.Tuple { length } ->
+        let props =
+          SMap.map
+            (fun prop ->
+              let (loc, value) =
+                match prop with
+                | Some { Property.value; loc; _ } when Lazy.is_val value ->
+                  (loc, ValueUnion.to_pattern (Lazy.force value))
+                | _ -> (loc, wildcard_pattern reason)
+              in
+              { PatternObject.Property.loc; value })
+            props
+        in
+        let keys_order = Base.List.init length ~f:(fun i -> string_of_int i) in
+        (props, keys_order, rest)
+    in
+    ( reason,
+      {
+        PatternObject.kind;
+        props;
+        keys_order;
+        rest;
+        contains_invalid_pattern = false;
+        guarded = false;
+      }
+    )
 end
 
 (* A representation of a union of values. *)
@@ -713,7 +1056,7 @@ and ValueUnion : sig
 
   val get_prop : Context.t -> ALoc.t * string -> Type.t -> ValueObject.Property.t option
 
-  val to_pattern_string : t -> string
+  val to_pattern : t -> PatternUnion.t
 end = struct
   type t = {
     leafs: LeafSet.t;
@@ -986,25 +1329,77 @@ end = struct
       Type.InterRep.members rep |> Base.List.find_map ~f:(fun t -> get_prop cx key t)
     | _ -> None
 
-  and of_type cx t = of_type' cx empty t
+  and of_type cx t =
+    let { leafs; tuples; arrays; objects; inexhaustible } = of_type' cx empty t in
+    (* The list members of the `ValueUnion` are accumulated in reverse order,
+       put them back in their original order. *)
+    {
+      leafs;
+      tuples = Base.List.rev tuples;
+      arrays = Base.List.rev arrays;
+      objects = Base.List.rev objects;
+      inexhaustible = Base.List.rev inexhaustible;
+    }
 
-  let to_pattern_string { leafs; tuples; arrays; objects; inexhaustible } =
-    let leafs = LeafSet.elements leafs |> Base.List.map ~f:(fun (_, c) -> Leaf.to_string c) in
-    let tuples = tuples |> Base.List.map ~f:(fun tuple -> ValueObject.to_pattern_string tuple) in
-    let arrays =
-      if Base.List.is_empty arrays then
-        []
-      else
-        ["[...]"]
+  let to_pattern { leafs; tuples; arrays; objects; inexhaustible } =
+    let (tuples_exact, tuples_inexact) =
+      tuples
+      |> Base.List.map ~f:ValueObject.to_pattern
+      |> Base.List.stable_sort ~compare:PatternObject.compare
+      |> Base.List.foldi ~init:(IMap.empty, IMap.empty) ~f:(fun i acc tuple_pattern ->
+             let (_, { PatternObject.kind; rest; _ }) = tuple_pattern in
+             let tuple_pattern_with_index = (i, tuple_pattern) in
+             match kind with
+             | ObjKind.Tuple { length } ->
+               let (tuples_exact, tuples_inexact) = acc in
+               if Base.Option.is_some rest then
+                 ( tuples_exact,
+                   IMap.adjust
+                     length
+                     (function
+                       | Some xs -> tuple_pattern_with_index :: xs
+                       | None -> [tuple_pattern_with_index])
+                     tuples_inexact
+                 )
+               else
+                 ( IMap.adjust
+                     length
+                     (function
+                       | Some xs -> tuple_pattern_with_index :: xs
+                       | None -> [tuple_pattern_with_index])
+                     tuples_exact,
+                   tuples_inexact
+                 )
+             | ObjKind.Obj ->
+               (* Tuples are always `ObjKind.Tuple` *)
+               acc
+         )
     in
-    let objects = Base.List.map objects ~f:(fun obj -> ValueObject.to_pattern_string obj) in
+    (* If we have arrays, add the empty inexact tuple pattern. *)
+    let tuples_inexact =
+      match arrays with
+      | [] -> tuples_inexact
+      | (reason, _) :: _ ->
+        let i = Base.List.length tuples in
+        IMap.adjust
+          0
+          (function
+            | Some xs -> (i, empty_inexact_tuple_pattern reason) :: xs
+            | None -> [(i, empty_inexact_tuple_pattern reason)])
+          tuples_inexact
+    in
+    let objects =
+      objects
+      |> Base.List.map ~f:ValueObject.to_pattern
+      |> Base.List.stable_sort ~compare:PatternObject.compare
+      |> Base.List.mapi ~f:(fun i x -> (i, x))
+    in
     let wildcard =
-      if not (Base.List.is_empty inexhaustible) then
-        [wildcard_str]
-      else
-        []
+      match inexhaustible with
+      | [] -> None
+      | first_t :: _ -> Some (TypeUtil.reason_of_t first_t)
     in
-    String.concat " | " (leafs @ tuples @ arrays @ objects @ wildcard)
+    { PatternUnion.empty with PatternUnion.leafs; tuples_exact; tuples_inexact; objects; wildcard }
 end
 
 (*******************)
@@ -1113,14 +1508,14 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
             if value_is_inexact then
               let pattern_tuples = pattern_tuples_inexact |> IMap.values |> Base.List.concat in
               Base.List.rev_append pattern_tuples (tuples_gte_length pattern_tuples_exact length)
-              |> sort_object_patterns
+              |> sort_object_patterns_by_index
             else
               let exact_length_pattern_tuples =
                 IMap.find_opt length pattern_tuples_exact |> Base.Option.value ~default:[]
               in
               let inexact_pattern_tuples = tuples_lte_length pattern_tuples_inexact length in
               Base.List.rev_append exact_length_pattern_tuples inexact_pattern_tuples
-              |> sort_object_patterns
+              |> sort_object_patterns_by_index
           | ObjKind.Obj ->
             (* Only `ObjKind.Tuple` are added to `value_tuples` *)
             []
@@ -1194,7 +1589,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
    values against the patterns, and compute which objects were matched, and
    which were not matched. *)
 and filter_objects_by_patterns
-    cx (value_objects : ValueObject.t list) (pattern_objects : PatternObject.t list) :
+    cx (value_objects : ValueObject.t list) (pattern_objects : PatternObject.with_index list) :
     ValueObject.t list * ValueObject.t list * ALocSet.t =
   let rec f acc = function
     | [] -> acc
@@ -1205,7 +1600,7 @@ and filter_objects_by_patterns
         Base.List.fold
           pattern_objects
           ~init:(NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, ALocSet.empty)
-          ~f:(fun acc pattern_object ->
+          ~f:(fun acc (_, pattern_object) ->
             let (result, additional_used_pattern_locs) = acc in
             match result with
             | Match _ -> acc
@@ -1247,10 +1642,10 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
       ) =
     value_object
   in
-  let ( _,
-        reason_pattern,
+  let ( reason_pattern,
         {
           PatternObject.props = pattern_props;
+          keys_order;
           rest = pattern_rest;
           kind = pattern_kind;
           guarded;
@@ -1261,7 +1656,7 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
   in
   (* Sort the keys that are sentinel props for the value first. *)
   let pattern_keys =
-    SMap.keys pattern_props |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
+    keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
     |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
   in
   (* If every key in the pattern also exists in the value, then return the props of the
@@ -1523,9 +1918,7 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
   Base.List.iter guarded_leafs ~f:(fun (reason, _) -> if not @@ check reason then error reason);
   Base.List.iter
     (PatternUnion.all_tuples_and_objects pattern_union)
-    ~f:(fun
-         (_, reason, { PatternObject.props; rest; contains_invalid_pattern; kind = _; guarded = _ })
-       ->
+    ~f:(fun (_, (reason, { PatternObject.props; rest; contains_invalid_pattern; _ })) ->
       if contains_invalid_pattern then
         ()
       else if not @@ check reason then
@@ -1553,70 +1946,106 @@ let analyze cx ~match_loc patterns arg_t =
   in
   ( if not @@ ValueUnion.is_empty value_left then
     let { ValueUnion.leafs; tuples; arrays; objects; inexhaustible } = value_left in
-    let leafs =
+    let (examples_rev, asts_rev) =
       LeafSet.elements leafs
-      |> Base.List.map ~f:(fun (reason, leaf) ->
+      |> Base.List.fold ~init:([], []) ~f:(fun (examples_rev, asts_rev) (reason, leaf) ->
              let example = Leaf.to_string leaf in
-             (example, [reason])
+             ((example, [reason]) :: examples_rev, lazy (Leaf.to_ast leaf) :: asts_rev)
          )
     in
-    let tuples =
+    (* Sort examples based on their original order *)
+    let compare_examples (_, (a, _, _)) (_, (b, _, _)) = Int.compare a b in
+    (* Build up map of example to reason set *)
+    let tuple_examples_map =
       tuples
-      |> Base.List.fold ~init:SMap.empty ~f:(fun acc tuple ->
-             let (reason, _) = tuple in
-             let example = ValueObject.to_pattern_string tuple in
+      |> Base.List.map ~f:ValueObject.to_pattern
+      |> Base.List.stable_sort ~compare:PatternObject.compare
+      |> Base.List.foldi ~init:SMap.empty ~f:(fun i acc tuple_pattern ->
+             let (reason, _) = tuple_pattern in
+             let example = PatternObject.to_string tuple_pattern in
              SMap.adjust
                example
                (function
-                 | None -> ReasonSet.singleton reason
-                 | Some reasons -> ReasonSet.add reason reasons)
+                 | None -> (i, lazy (PatternObject.to_ast tuple_pattern), ReasonSet.singleton reason)
+                 | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
+    in
+    (* Add the the pattern that matches all arrays to the tuple examples map *)
+    let tuple_examples_map =
+      match arrays with
+      | [] -> tuple_examples_map
+      | (reason, _) :: _ ->
+        let reasons =
+          Base.List.fold arrays ~init:ReasonSet.empty ~f:(fun acc (reason, _) ->
+              ReasonSet.add reason acc
+          )
+        in
+        let i = Base.List.length tuples in
+        let pattern = empty_inexact_tuple_pattern reason in
+        SMap.adjust
+          (PatternObject.to_string pattern)
+          (function
+            | None -> (i, lazy (PatternObject.to_ast pattern), reasons)
+            | Some (i, ast, existing_reasons) -> (i, ast, ReasonSet.union existing_reasons reasons))
+          tuple_examples_map
+    in
+    (* Turn the map into a list of examples *)
+    let (examples_rev, asts_rev) =
+      tuple_examples_map
       |> SMap.elements
-      |> Base.List.map ~f:(fun (example, reasons) -> (example, ReasonSet.elements reasons))
+      |> Base.List.sort ~compare:compare_examples
+      |> Base.List.fold
+           ~init:(examples_rev, asts_rev)
+           ~f:(fun (examples_rev, asts_rev) (example, (_, ast, reasons)) ->
+             ((example, ReasonSet.elements reasons) :: examples_rev, ast :: asts_rev)
+         )
     in
-    let arrays =
-      if Base.List.is_empty arrays then
-        []
-      else
-        [
-          ( "[...]",
-            Base.List.fold arrays ~init:ReasonSet.empty ~f:(fun acc (reason, _) ->
-                ReasonSet.add reason acc
-            )
-            |> ReasonSet.elements
-          );
-        ]
-    in
-    let objects =
+    (* Compute the list of object examples *)
+    let (examples_rev, asts_rev) =
       objects
-      |> Base.List.fold ~init:SMap.empty ~f:(fun acc obj ->
-             let (reason, _) = obj in
-             let example = ValueObject.to_pattern_string obj in
+      |> Base.List.map ~f:ValueObject.to_pattern
+      |> Base.List.stable_sort ~compare:PatternObject.compare
+      |> Base.List.foldi ~init:SMap.empty ~f:(fun i acc object_pattern ->
+             let (reason, _) = object_pattern in
+             let example = PatternObject.to_string object_pattern in
              SMap.adjust
                example
                (function
-                 | None -> ReasonSet.singleton reason
-                 | Some reasons -> ReasonSet.add reason reasons)
+                 | None ->
+                   (i, lazy (PatternObject.to_ast object_pattern), ReasonSet.singleton reason)
+                 | Some (i, ast, reasons) -> (i, ast, ReasonSet.add reason reasons))
                acc
          )
       |> SMap.elements
-      |> Base.List.map ~f:(fun (example, reasons) -> (example, ReasonSet.elements reasons))
+      |> Base.List.sort ~compare:compare_examples
+      |> Base.List.fold
+           ~init:(examples_rev, asts_rev)
+           ~f:(fun (examples_rev, asts_rev) (example, (_, ast, reasons)) ->
+             ((example, ReasonSet.elements reasons) :: examples_rev, ast :: asts_rev)
+         )
     in
-    let inexhaustible =
-      if Base.List.is_empty inexhaustible then
-        []
-      else
-        [
-          ( wildcard_str,
+    let (examples_rev, asts_rev) =
+      match inexhaustible with
+      | [] -> (examples_rev, asts_rev)
+      | first_t :: _ ->
+        let pattern = wildcard_pattern (TypeUtil.reason_of_t first_t) in
+        ( ( PatternUnion.to_string pattern,
             Base.List.fold inexhaustible ~init:ReasonSet.empty ~f:(fun acc t ->
                 ReasonSet.add (TypeUtil.reason_of_t t) acc
             )
             |> ReasonSet.elements
-          );
-        ]
+          )
+          :: examples_rev,
+          lazy (PatternUnion.to_ast pattern) :: asts_rev
+        )
     in
-    let examples = leafs @ tuples @ arrays @ objects @ inexhaustible in
-    Flow_js.add_output cx (Error_message.EMatchNotExhaustive { loc = match_loc; examples })
+    let examples = Base.List.rev examples_rev in
+    let asts =
+      Base.List.rev asts_rev |> (fun asts -> Base.List.take asts 25) |> Base.List.map ~f:Lazy.force
+    in
+    Flow_js.add_output
+      cx
+      (Error_message.EMatchNotExhaustive { loc = match_loc; examples; missing_pattern_asts = asts })
   );
   check_for_unused_patterns cx pattern_union used_pattern_locs
