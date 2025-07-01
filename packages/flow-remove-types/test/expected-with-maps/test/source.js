@@ -245,8 +245,6 @@ const asComponentGenericWithDefault = (() => {});
 const asEmpty = {};
 const asExists = 'exists';
 const asFunction = (() => {});
-const asFunctionGeneric = (() => {});
-const asFunctionGenericWithDefault = (() => {});
 const asKeyof = 'a';
 const asMixed = 'mixed';
 const asNullable = null;
@@ -280,11 +278,5 @@ const asIndexed = 'indexed';
 // chained `as`
 const chain1 = '1';
 const chain2 = '1';
-
-// type ItemT = any;
-
-// component generic advanced
-
-const VirtualizedSectionListComponent = ((() => {}));
 
 //# sourceMappingURL=source.js.map
