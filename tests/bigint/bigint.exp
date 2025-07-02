@@ -311,16 +311,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:11:2
 
-Cannot cast `z` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `z` to empty because bigint literal `-1n` [1] is incompatible with empty [2]. [incompatible-cast]
 
    imported.js:11:2
    11| (z : empty); // error
         ^
 
 References:
-   exported.js:3:19
+   exported.js:3:18
     3| export const z = -1n;
-                         ^^ [1]
+                        ^^^ [1]
    imported.js:11:6
    11| (z : empty); // error
             ^^^^^ [2]

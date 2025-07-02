@@ -4,7 +4,9 @@ import {
   abc,
   def,
   one,
+  minusOne,
   tru,
+  notTru,
   bigOne,
   abcRef,
   oneRef,
@@ -45,15 +47,23 @@ function test_string() {
 function test_number() {
   one as 1; // okay
   one as 2 // error 1 ~> 2
+  minusOne as -1; // okay
+  minusOne as 0; // error -1 ~> 0
   _ as 1 as typeof one; // okay
   _ as 2 as typeof one; // error 2 ~> 1
+  _ as -1 as typeof minusOne; // okay
+  _ as 0 as typeof minusOne; // error 0 ~> -1
 }
 
 function test_boolean() {
   tru as true; // okay
   tru as false // error true ~> false
+  notTru as false; // okay
+  notTru as true // error false ~> true
   _ as true as typeof tru; // okay
   _ as false as typeof tru; // error false ~> true
+  _ as true as typeof notTru; // error true ~> false
+  _ as false as typeof notTru; // okay
 }
 
 function test_bigint() {

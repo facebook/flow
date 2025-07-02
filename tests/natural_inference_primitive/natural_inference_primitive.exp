@@ -42,832 +42,898 @@ References:
                                                                                 ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:40:3
+Error ------------------------------------------------------------------------------------------------- imported.js:42:3
 
 Cannot cast `abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
 `def` [2]. [incompatible-cast]
 
-   imported.js:40:3
-   40|   abc as "def" // error "abc" ~> "def"
+   imported.js:42:3
+   42|   abc as "def" // error "abc" ~> "def"
          ^^^
 
 References:
    local.js:3:20
     3| export const abc = "abc";
                           ^^^^^ [1]
-   imported.js:40:10
-   40|   abc as "def" // error "abc" ~> "def"
+   imported.js:42:10
+   42|   abc as "def" // error "abc" ~> "def"
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:42:8
+Error ------------------------------------------------------------------------------------------------- imported.js:44:8
 
 Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:42:8
-   42|   _ as "def" as typeof abc; // error "def" ~> "abc"
+   imported.js:44:8
+   44|   _ as "def" as typeof abc; // error "def" ~> "abc"
               ^^^^^ [1]
 
 References:
-   imported.js:42:17
-   42|   _ as "def" as typeof abc; // error "def" ~> "abc"
+   imported.js:44:17
+   44|   _ as "def" as typeof abc; // error "def" ~> "abc"
                        ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:47:3
+Error ------------------------------------------------------------------------------------------------- imported.js:49:3
 
 Cannot cast `one` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
-   imported.js:47:3
-   47|   one as 2 // error 1 ~> 2
+   imported.js:49:3
+   49|   one as 2 // error 1 ~> 2
          ^^^
 
 References:
    local.js:5:20
     5| export const one = 1;
                           ^ [1]
-   imported.js:47:10
-   47|   one as 2 // error 1 ~> 2
+   imported.js:49:10
+   49|   one as 2 // error 1 ~> 2
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:49:8
+Error ------------------------------------------------------------------------------------------------- imported.js:51:3
+
+Cannot cast `minusOne` to number literal `0` because number literal `-1` [1] is incompatible with number literal
+`0` [2]. [incompatible-cast]
+
+   imported.js:51:3
+   51|   minusOne as 0; // error -1 ~> 0
+         ^^^^^^^^
+
+References:
+   local.js:6:25
+    6| export const minusOne = -1;
+                               ^^ [1]
+   imported.js:51:15
+   51|   minusOne as 0; // error -1 ~> 0
+                     ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imported.js:53:8
 
 Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   imported.js:49:8
-   49|   _ as 2 as typeof one; // error 2 ~> 1
+   imported.js:53:8
+   53|   _ as 2 as typeof one; // error 2 ~> 1
               ^ [1]
 
 References:
-   imported.js:49:13
-   49|   _ as 2 as typeof one; // error 2 ~> 1
+   imported.js:53:13
+   53|   _ as 2 as typeof one; // error 2 ~> 1
                    ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:54:3
+Error ------------------------------------------------------------------------------------------------- imported.js:55:8
+
+Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
+
+   imported.js:55:8
+   55|   _ as 0 as typeof minusOne; // error 0 ~> -1
+              ^ [1]
+
+References:
+   imported.js:55:13
+   55|   _ as 0 as typeof minusOne; // error 0 ~> -1
+                   ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imported.js:60:3
 
 Cannot cast `tru` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
 `false` [2]. [incompatible-cast]
 
-   imported.js:54:3
-   54|   tru as false // error true ~> false
+   imported.js:60:3
+   60|   tru as false // error true ~> false
          ^^^
 
 References:
-   local.js:6:20
-    6| export const tru = true;
+   local.js:7:20
+    7| export const tru = true;
                           ^^^^ [1]
-   imported.js:54:10
-   54|   tru as false // error true ~> false
+   imported.js:60:10
+   60|   tru as false // error true ~> false
                 ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:56:8
+Error ------------------------------------------------------------------------------------------------- imported.js:62:3
+
+Cannot cast `notTru` to boolean literal `true` because boolean literal `false` [1] is incompatible with boolean literal
+`true` [2]. [incompatible-cast]
+
+   imported.js:62:3
+   62|   notTru as true // error false ~> true
+         ^^^^^^
+
+References:
+   local.js:8:23
+    8| export const notTru = !tru;
+                             ^^^^ [1]
+   imported.js:62:13
+   62|   notTru as true // error false ~> true
+                   ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imported.js:64:8
 
 Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   imported.js:56:8
-   56|   _ as false as typeof tru; // error false ~> true
+   imported.js:64:8
+   64|   _ as false as typeof tru; // error false ~> true
               ^^^^^ [1]
 
 References:
-   imported.js:56:17
-   56|   _ as false as typeof tru; // error false ~> true
+   imported.js:64:17
+   64|   _ as false as typeof tru; // error false ~> true
                        ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:61:3
+Error ------------------------------------------------------------------------------------------------- imported.js:65:8
+
+Cannot cast `_` to `typeof notTru` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   imported.js:65:8
+   65|   _ as true as typeof notTru; // error true ~> false
+              ^^^^ [1]
+
+References:
+   imported.js:65:16
+   65|   _ as true as typeof notTru; // error true ~> false
+                      ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imported.js:71:3
 
 Cannot cast `bigOne` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
 `2n` [2]. [incompatible-cast]
 
-   imported.js:61:3
-   61|   bigOne as 2n // error 1n ~> 2n
+   imported.js:71:3
+   71|   bigOne as 2n // error 1n ~> 2n
          ^^^^^^
 
 References:
-   local.js:7:23
-    7| export const bigOne = 1n;
+   local.js:9:23
+    9| export const bigOne = 1n;
                              ^^ [1]
-   imported.js:61:13
-   61|   bigOne as 2n // error 1n ~> 2n
+   imported.js:71:13
+   71|   bigOne as 2n // error 1n ~> 2n
                    ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:63:8
+Error ------------------------------------------------------------------------------------------------- imported.js:73:8
 
 Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
 [incompatible-cast]
 
-   imported.js:63:8
-   63|   _ as 2n as typeof bigOne; // error 2n ~> 1n
+   imported.js:73:8
+   73|   _ as 2n as typeof bigOne; // error 2n ~> 1n
               ^^ [1]
 
 References:
-   imported.js:63:14
-   63|   _ as 2n as typeof bigOne; // error 2n ~> 1n
+   imported.js:73:14
+   73|   _ as 2n as typeof bigOne; // error 2n ~> 1n
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:68:3
+Error ------------------------------------------------------------------------------------------------- imported.js:78:3
 
 Cannot cast `abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string literal
 `def` [2]. [incompatible-cast]
 
-   imported.js:68:3
-   68|   abcRef as "def" // error "abc" ~> "def"
+   imported.js:78:3
+   78|   abcRef as "def" // error "abc" ~> "def"
          ^^^^^^
 
 References:
    local.js:3:20
     3| export const abc = "abc";
                           ^^^^^ [1]
-   imported.js:68:13
-   68|   abcRef as "def" // error "abc" ~> "def"
+   imported.js:78:13
+   78|   abcRef as "def" // error "abc" ~> "def"
                    ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:70:8
+Error ------------------------------------------------------------------------------------------------- imported.js:80:8
 
 Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:70:8
-   70|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
+   imported.js:80:8
+   80|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
               ^^^^^ [1]
 
 References:
-   imported.js:70:17
-   70|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
+   imported.js:80:17
+   80|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
                        ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:75:3
+Error ------------------------------------------------------------------------------------------------- imported.js:85:3
 
 Cannot cast `oneRef` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
-   imported.js:75:3
-   75|   oneRef as 2 // error 1 ~> 2
+   imported.js:85:3
+   85|   oneRef as 2 // error 1 ~> 2
          ^^^^^^
 
 References:
    local.js:5:20
     5| export const one = 1;
                           ^ [1]
-   imported.js:75:13
-   75|   oneRef as 2 // error 1 ~> 2
+   imported.js:85:13
+   85|   oneRef as 2 // error 1 ~> 2
                    ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:77:8
+Error ------------------------------------------------------------------------------------------------- imported.js:87:8
 
 Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   imported.js:77:8
-   77|   _ as 2 as typeof oneRef; // error 2 ~> 1
+   imported.js:87:8
+   87|   _ as 2 as typeof oneRef; // error 2 ~> 1
               ^ [1]
 
 References:
-   imported.js:77:13
-   77|   _ as 2 as typeof oneRef; // error 2 ~> 1
+   imported.js:87:13
+   87|   _ as 2 as typeof oneRef; // error 2 ~> 1
                    ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:82:3
+Error ------------------------------------------------------------------------------------------------- imported.js:92:3
 
 Cannot cast `truRef` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
 `false` [2]. [incompatible-cast]
 
-   imported.js:82:3
-   82|   truRef as false // error true ~> false
+   imported.js:92:3
+   92|   truRef as false // error true ~> false
          ^^^^^^
 
 References:
-   local.js:6:20
-    6| export const tru = true;
+   local.js:7:20
+    7| export const tru = true;
                           ^^^^ [1]
-   imported.js:82:13
-   82|   truRef as false // error true ~> false
+   imported.js:92:13
+   92|   truRef as false // error true ~> false
                    ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:84:8
+Error ------------------------------------------------------------------------------------------------- imported.js:94:8
 
 Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
-   imported.js:84:8
-   84|   _ as false as typeof truRef; // error false ~> true
+   imported.js:94:8
+   94|   _ as false as typeof truRef; // error false ~> true
               ^^^^^ [1]
 
 References:
-   imported.js:84:17
-   84|   _ as false as typeof truRef; // error false ~> true
+   imported.js:94:17
+   94|   _ as false as typeof truRef; // error false ~> true
                        ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:89:3
+Error ------------------------------------------------------------------------------------------------- imported.js:99:3
 
 Cannot cast `bigOneRef` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
 `2n` [2]. [incompatible-cast]
 
-   imported.js:89:3
-   89|   bigOneRef as 2n // error 1n ~> 2n
+   imported.js:99:3
+   99|   bigOneRef as 2n // error 1n ~> 2n
          ^^^^^^^^^
 
 References:
-   local.js:7:23
-    7| export const bigOne = 1n;
+   local.js:9:23
+    9| export const bigOne = 1n;
                              ^^ [1]
-   imported.js:89:16
-   89|   bigOneRef as 2n // error 1n ~> 2n
+   imported.js:99:16
+   99|   bigOneRef as 2n // error 1n ~> 2n
                       ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- imported.js:91:8
+Error ------------------------------------------------------------------------------------------------ imported.js:101:8
 
 Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
 [incompatible-cast]
 
-   imported.js:91:8
-   91|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
-              ^^ [1]
+   imported.js:101:8
+   101|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
+               ^^ [1]
 
 References:
-   imported.js:91:14
-   91|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
-                    ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- imported.js:95:3
-
-Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:95:3
-   95|   obj.abc as "abc"; // error string ~> "abc"
-         ^^^^^^^
-
-References:
-   local.js:16:27
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                 ^^^^^ [1]
-   imported.js:95:14
-   95|   obj.abc as "abc"; // error string ~> "abc"
-                    ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- imported.js:96:3
-
-Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   imported.js:96:3
-   96|   obj.one as 1; // error number ~> 1
-         ^^^^^^^
-
-References:
-   local.js:16:39
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                             ^ [1]
-   imported.js:96:14
-   96|   obj.one as 1; // error number ~> 1
-                    ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- imported.js:97:3
-
-Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   imported.js:97:3
-   97|   obj.tru as true; // error boolean ~> true
-         ^^^^^^^
-
-References:
-   local.js:16:47
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                     ^^^^ [1]
-   imported.js:97:14
-   97|   obj.tru as true; // error boolean ~> true
-                    ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- imported.js:98:3
-
-Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   imported.js:98:3
-   98|   obj.bigOne as 1n; // error bigint ~> 1n
-         ^^^^^^^^^^
-
-References:
-   local.js:16:61
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                                   ^^ [1]
-   imported.js:98:17
-   98|   obj.bigOne as 1n; // error bigint ~> 1n
-                       ^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:102:3
-
-Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:102:3
-   102|   spread.abc as "abc"; // error string ~> "abc"
-          ^^^^^^^^^^
-
-References:
-   local.js:16:27
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                  ^^^^^ [1]
-   imported.js:102:17
-   102|   spread.abc as "abc"; // error string ~> "abc"
-                        ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:103:3
-
-Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   imported.js:103:3
-   103|   spread.one as 1; // error number ~> 1
-          ^^^^^^^^^^
-
-References:
-   local.js:16:39
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                              ^ [1]
-   imported.js:103:17
-   103|   spread.one as 1; // error number ~> 1
-                        ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:104:3
-
-Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   imported.js:104:3
-   104|   spread.tru as true; // error boolean ~> true
-          ^^^^^^^^^^
-
-References:
-   local.js:16:47
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                      ^^^^ [1]
-   imported.js:104:17
-   104|   spread.tru as true; // error boolean ~> true
-                        ^^^^ [2]
+   imported.js:101:14
+   101|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
+                     ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:105:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    imported.js:105:3
-   105|   spread.bigOne as 1n; // error bigint ~> 1n
+   105|   obj.abc as "abc"; // error string ~> "abc"
+          ^^^^^^^
+
+References:
+   local.js:18:27
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                  ^^^^^ [1]
+   imported.js:105:14
+   105|   obj.abc as "abc"; // error string ~> "abc"
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:106:3
+
+Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   imported.js:106:3
+   106|   obj.one as 1; // error number ~> 1
+          ^^^^^^^
+
+References:
+   local.js:18:39
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                              ^ [1]
+   imported.js:106:14
+   106|   obj.one as 1; // error number ~> 1
+                     ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:107:3
+
+Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   imported.js:107:3
+   107|   obj.tru as true; // error boolean ~> true
+          ^^^^^^^
+
+References:
+   local.js:18:47
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                      ^^^^ [1]
+   imported.js:107:14
+   107|   obj.tru as true; // error boolean ~> true
+                     ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:108:3
+
+Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
+
+   imported.js:108:3
+   108|   obj.bigOne as 1n; // error bigint ~> 1n
+          ^^^^^^^^^^
+
+References:
+   local.js:18:61
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                                    ^^ [1]
+   imported.js:108:17
+   108|   obj.bigOne as 1n; // error bigint ~> 1n
+                        ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:112:3
+
+Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
+
+   imported.js:112:3
+   112|   spread.abc as "abc"; // error string ~> "abc"
+          ^^^^^^^^^^
+
+References:
+   local.js:18:27
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                  ^^^^^ [1]
+   imported.js:112:17
+   112|   spread.abc as "abc"; // error string ~> "abc"
+                        ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:113:3
+
+Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   imported.js:113:3
+   113|   spread.one as 1; // error number ~> 1
+          ^^^^^^^^^^
+
+References:
+   local.js:18:39
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                              ^ [1]
+   imported.js:113:17
+   113|   spread.one as 1; // error number ~> 1
+                        ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:114:3
+
+Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   imported.js:114:3
+   114|   spread.tru as true; // error boolean ~> true
+          ^^^^^^^^^^
+
+References:
+   local.js:18:47
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                      ^^^^ [1]
+   imported.js:114:17
+   114|   spread.tru as true; // error boolean ~> true
+                        ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:115:3
+
+Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
+
+   imported.js:115:3
+   115|   spread.bigOne as 1n; // error bigint ~> 1n
           ^^^^^^^^^^^^^
 
 References:
-   local.js:16:61
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+   local.js:18:61
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
                                                                     ^^ [1]
-   imported.js:105:20
-   105|   spread.bigOne as 1n; // error bigint ~> 1n
+   imported.js:115:20
+   115|   spread.bigOne as 1n; // error bigint ~> 1n
                            ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:109:3
+Error ------------------------------------------------------------------------------------------------ imported.js:119:3
 
 Cannot cast `objRefs.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:109:3
-   109|   objRefs.abc as "abc"; // error string ~> "abc"
+   imported.js:119:3
+   119|   objRefs.abc as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:109:18
-   109|   objRefs.abc as "abc"; // error string ~> "abc"
+   imported.js:119:18
+   119|   objRefs.abc as "abc"; // error string ~> "abc"
                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:110:3
+Error ------------------------------------------------------------------------------------------------ imported.js:120:3
 
 Cannot cast `objRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:110:3
-   110|   objRefs.abcRef as "abc"; // error string ~> "abc"
+   imported.js:120:3
+   120|   objRefs.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:110:21
-   110|   objRefs.abcRef as "abc"; // error string ~> "abc"
+   imported.js:120:21
+   120|   objRefs.abcRef as "abc"; // error string ~> "abc"
                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:111:3
+Error ------------------------------------------------------------------------------------------------ imported.js:121:3
 
 Cannot cast `spreadObjRefs.abc` to string literal `abc` because string [1] is incompatible with string literal
 `abc` [2]. [incompatible-cast]
 
-   imported.js:111:3
-   111|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
+   imported.js:121:3
+   121|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:111:24
-   111|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
+   imported.js:121:24
+   121|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
                                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:112:3
+Error ------------------------------------------------------------------------------------------------ imported.js:122:3
 
 Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal
 `abc` [2]. [incompatible-cast]
 
-   imported.js:112:3
-   112|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
+   imported.js:122:3
+   122|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:112:27
-   112|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
+   imported.js:122:27
+   122|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
                                   ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:118:3
+Error ------------------------------------------------------------------------------------------------ imported.js:128:3
 
 Cannot cast `asConst.abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
 `def` [2]. [incompatible-cast]
 
-   imported.js:118:3
-   118|   asConst.abc as "def"; // error "abc" ~> "def"
+   imported.js:128:3
+   128|   asConst.abc as "def"; // error "abc" ~> "def"
           ^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:118:18
-   118|   asConst.abc as "def"; // error "abc" ~> "def"
+   imported.js:128:18
+   128|   asConst.abc as "def"; // error "abc" ~> "def"
                          ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:119:3
+Error ------------------------------------------------------------------------------------------------ imported.js:129:3
 
 Cannot cast `asConst.abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string
 literal `def` [2]. [incompatible-cast]
 
-   imported.js:119:3
-   119|   asConst.abcRef as "def"; // error "abc" ~> "def"
+   imported.js:129:3
+   129|   asConst.abcRef as "def"; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:119:21
-   119|   asConst.abcRef as "def"; // error "abc" ~> "def"
+   imported.js:129:21
+   129|   asConst.abcRef as "def"; // error "abc" ~> "def"
                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:120:8
+Error ------------------------------------------------------------------------------------------------ imported.js:130:8
 
 Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:120:8
-   120|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+   imported.js:130:8
+   130|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
                ^^^^^ [1]
 
 References:
-   imported.js:120:17
-   120|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+   imported.js:130:17
+   130|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
                         ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:121:8
+Error ------------------------------------------------------------------------------------------------ imported.js:131:8
 
 Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string literal
 `abc` [2]. [incompatible-cast]
 
-   imported.js:121:8
-   121|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+   imported.js:131:8
+   131|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
                ^^^^^ [1]
 
 References:
-   imported.js:121:17
-   121|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+   imported.js:131:17
+   131|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:122:8
+Error ------------------------------------------------------------------------------------------------ imported.js:132:8
 
 Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:122:8
-   122|   _ as string as typeof asConst.abc; // error string ~> "abc"
+   imported.js:132:8
+   132|   _ as string as typeof asConst.abc; // error string ~> "abc"
                ^^^^^^ [1]
 
 References:
-   imported.js:122:18
-   122|   _ as string as typeof asConst.abc; // error string ~> "abc"
+   imported.js:132:18
+   132|   _ as string as typeof asConst.abc; // error string ~> "abc"
                          ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:123:8
+Error ------------------------------------------------------------------------------------------------ imported.js:133:8
 
 Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:123:8
-   123|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
+   imported.js:133:8
+   133|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
                ^^^^^^ [1]
 
 References:
-   imported.js:123:18
-   123|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
+   imported.js:133:18
+   133|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:134:3
+Error ------------------------------------------------------------------------------------------------ imported.js:144:3
 
 Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:134:3
-   134|   x.abc as "abc"; // error string ~> "abc"
+   imported.js:144:3
+   144|   x.abc as "abc"; // error string ~> "abc"
           ^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:134:12
-   134|   x.abc as "abc"; // error string ~> "abc"
+   imported.js:144:12
+   144|   x.abc as "abc"; // error string ~> "abc"
                    ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:135:3
+Error ------------------------------------------------------------------------------------------------ imported.js:145:3
 
 Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:135:3
-   135|   x.abcRef as "abc"; // error string ~> "abc"
+   imported.js:145:3
+   145|   x.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:135:15
-   135|   x.abcRef as "abc"; // error string ~> "abc"
-                      ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:139:3
-
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:139:3
-   139|   x.abc as "abc"; // error string ~> "abc"
-          ^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:139:12
-   139|   x.abc as "abc"; // error string ~> "abc"
-                   ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:140:3
-
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   imported.js:140:3
-   140|   x.abcRef as "abc"; // error string ~> "abc"
-          ^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   imported.js:140:15
-   140|   x.abcRef as "abc"; // error string ~> "abc"
+   imported.js:145:15
+   145|   x.abcRef as "abc"; // error string ~> "abc"
                       ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:149:3
 
-Cannot cast `obj` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    imported.js:149:3
-   149|   obj as {f: 1}; // error number ~> 1
+   149|   x.abc as "abc"; // error string ~> "abc"
+          ^^^^^
+
+References:
+   local.js:3:20
+     3| export const abc = "abc";
+                           ^^^^^ [1]
+   imported.js:149:12
+   149|   x.abc as "abc"; // error string ~> "abc"
+                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:150:3
+
+Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
+
+   imported.js:150:3
+   150|   x.abcRef as "abc"; // error string ~> "abc"
+          ^^^^^^^^
+
+References:
+   local.js:3:20
+     3| export const abc = "abc";
+                           ^^^^^ [1]
+   imported.js:150:15
+   150|   x.abcRef as "abc"; // error string ~> "abc"
+                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:159:3
+
+Cannot cast `obj` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+[incompatible-cast]
+
+   imported.js:159:3
+   159|   obj as {f: 1}; // error number ~> 1
           ^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:149:14
-   149|   obj as {f: 1}; // error number ~> 1
+   imported.js:159:14
+   159|   obj as {f: 1}; // error number ~> 1
                      ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:162:3
+Error ------------------------------------------------------------------------------------------------ imported.js:172:3
 
 Cannot cast `obj1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   imported.js:162:3
-   162|   obj1 as {f: 1}; // error number ~> 1
+   imported.js:172:3
+   172|   obj1 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:162:15
-   162|   obj1 as {f: 1}; // error number ~> 1
+   imported.js:172:15
+   172|   obj1 as {f: 1}; // error number ~> 1
                       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:163:3
+Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
 Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
 `f`. [incompatible-cast]
 
-   imported.js:163:3
-   163|   obj1 as {f: 2}; // error number ~> 2
+   imported.js:173:3
+   173|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   imported.js:159:20
-   159|   declare var n0: ?1;
+   imported.js:169:20
+   169|   declare var n0: ?1;
                            ^ [1]
-   imported.js:163:15
-   163|   obj1 as {f: 2}; // error number ~> 2
+   imported.js:173:15
+   173|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:163:3
+Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
 Cannot cast `obj1` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
 [incompatible-cast]
 
-   imported.js:163:3
-   163|   obj1 as {f: 2}; // error number ~> 2
+   imported.js:173:3
+   173|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:163:15
-   163|   obj1 as {f: 2}; // error number ~> 2
+   imported.js:173:15
+   173|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:168:3
+Error ------------------------------------------------------------------------------------------------ imported.js:178:3
 
 Cannot cast `obj2` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   imported.js:168:3
-   168|   obj2 as {f: 1}; // error number ~> 1
+   imported.js:178:3
+   178|   obj2 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:168:15
-   168|   obj2 as {f: 1}; // error number ~> 1
+   imported.js:178:15
+   178|   obj2 as {f: 1}; // error number ~> 1
                       ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:169:3
+Error ------------------------------------------------------------------------------------------------ imported.js:179:3
 
 Cannot cast `obj2` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
 [incompatible-cast]
 
-   imported.js:169:3
-   169|   obj2 as {f: 2}; // error number ~> 2
+   imported.js:179:3
+   179|   obj2 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:169:15
-   169|   obj2 as {f: 2}; // error number ~> 2
+   imported.js:179:15
+   179|   obj2 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:195:11
+Error ----------------------------------------------------------------------------------------------- imported.js:205:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with union type [2] in property
 `f`. [incompatible-call]
 
-   imported.js:195:11
-   195|   set({f: 3}); // error 3 ~> 1|2
+   imported.js:205:11
+   205|   set({f: 3}); // error 3 ~> 1|2
                   ^ [1]
 
 References:
-   imported.js:192:32
-   192|   const [o, set] = useState<{f:1|2}>({f: one}); // okay
+   imported.js:202:32
+   202|   const [o, set] = useState<{f:1|2}>({f: one}); // okay
                                        ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:200:3
+Error ------------------------------------------------------------------------------------------------ imported.js:210:3
 
 Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   imported.js:200:3
-   200|   n_ as 1; // error number ~> 1
+   imported.js:210:3
+   210|   n_ as 1; // error number ~> 1
           ^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:200:9
-   200|   n_ as 1; // error number ~> 1
+   imported.js:210:9
+   210|   n_ as 1; // error number ~> 1
                 ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:208:7
+Error ------------------------------------------------------------------------------------------------ imported.js:218:7
 
 Cannot call `set` with `2` bound to `y` because number [1] is incompatible with number literal `1` [2].
 [incompatible-call]
 
-   imported.js:208:7
-   208|   set(2); // error 2 ~> 1
+   imported.js:218:7
+   218|   set(2); // error 2 ~> 1
               ^ [1]
 
 References:
-   imported.js:205:18
-   205|   declare var x: typeof one;
+   imported.js:215:18
+   215|   declare var x: typeof one;
                          ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:215:11
+Error ----------------------------------------------------------------------------------------------- imported.js:225:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
 property `f`. [incompatible-call]
 
-   imported.js:215:11
-   215|   set({f: 2}); // error
+   imported.js:225:11
+   225|   set({f: 2}); // error
                   ^ [1]
 
 References:
-   imported.js:212:18
-   212|   declare var x: typeof one;
+   imported.js:222:18
+   222|   declare var x: typeof one;
                          ^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:223:11
+Error ----------------------------------------------------------------------------------------------- imported.js:233:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   imported.js:223:11
-   223|   set({f: "blah"}); // error "blah" ~> number
+   imported.js:233:11
+   233|   set({f: "blah"}); // error "blah" ~> number
                   ^^^^^^ [1]
 
 References:
@@ -876,13 +942,13 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:231:11
+Error ----------------------------------------------------------------------------------------------- imported.js:241:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   imported.js:231:11
-   231|   set({f: "blah"}); // error "blah" ~> number
+   imported.js:241:11
+   241|   set({f: "blah"}); // error "blah" ~> number
                   ^^^^^^ [1]
 
 References:
@@ -891,13 +957,13 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:237:11
+Error ----------------------------------------------------------------------------------------------- imported.js:247:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
 property `f`. [incompatible-call]
 
-   imported.js:237:11
-   237|   set({f: "blah"}); // error "blah" ~> 1
+   imported.js:247:11
+   247|   set({f: "blah"}); // error "blah" ~> 1
                   ^^^^^^ [1]
 
 References:
@@ -906,13 +972,13 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:239:11
+Error ----------------------------------------------------------------------------------------------- imported.js:249:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
 property `f`. [incompatible-call]
 
-   imported.js:239:11
-   239|   set({f: 2}); // error 2 ~> 1
+   imported.js:249:11
+   249|   set({f: 2}); // error 2 ~> 1
                   ^ [1]
 
 References:
@@ -921,13 +987,13 @@ References:
                            ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:240:11
+Error ----------------------------------------------------------------------------------------------- imported.js:250:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
 property `f`. [incompatible-call]
 
-   imported.js:240:11
-   240|   set({f: 3}); // error 3 ~> 1
+   imported.js:250:11
+   250|   set({f: 3}); // error 3 ~> 1
                   ^ [1]
 
 References:
@@ -936,152 +1002,152 @@ References:
                            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:259:5
+Error ------------------------------------------------------------------------------------------------ imported.js:269:5
 
 Cannot cast `v` to number literal `1` because number [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   imported.js:259:5
-   259|     v as 1; // error number ~> 1
+   imported.js:269:5
+   269|     v as 1; // error number ~> 1
             ^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   imported.js:259:10
-   259|     v as 1; // error number ~> 1
+   imported.js:269:10
+   269|     v as 1; // error number ~> 1
                  ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:331:3
+Error ------------------------------------------------------------------------------------------------ imported.js:341:3
 
 Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
 `def` [2]. [incompatible-cast]
 
-   imported.js:331:3
-   331|   foo(() => abc) as 'def'; // error "abc" ~> "def"
+   imported.js:341:3
+   341|   foo(() => abc) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:331:21
-   331|   foo(() => abc) as 'def'; // error "abc" ~> "def"
+   imported.js:341:21
+   341|   foo(() => abc) as 'def'; // error "abc" ~> "def"
                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:337:3
+Error ------------------------------------------------------------------------------------------------ imported.js:347:3
 
 Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
 `def` [2]. [incompatible-cast]
 
-   imported.js:337:3
-   337|   foo([abc]) as 'def'; // error "abc" ~> "def"
+   imported.js:347:3
+   347|   foo([abc]) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:337:17
-   337|   foo([abc]) as 'def'; // error "abc" ~> "def"
+   imported.js:347:17
+   347|   foo([abc]) as 'def'; // error "abc" ~> "def"
                         ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:347:3
+Error ------------------------------------------------------------------------------------------------ imported.js:357:3
 
 Cannot cast `m` to string literal `abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   imported.js:347:3
-   347|   m as 'abc'; // error 'def' ~> 'abc'
+   imported.js:357:3
+   357|   m as 'abc'; // error 'def' ~> 'abc'
           ^
 
 References:
    local.js:4:20
      4| export const def = "def";
                            ^^^^^ [1]
-   imported.js:347:8
-   347|   m as 'abc'; // error 'def' ~> 'abc'
+   imported.js:357:8
+   357|   m as 'abc'; // error 'def' ~> 'abc'
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:348:3
+Error ------------------------------------------------------------------------------------------------ imported.js:358:3
 
 Cannot cast `m` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   imported.js:348:3
-   348|   m as 'def'; // error 'abc' ~> 'def'
+   imported.js:358:3
+   358|   m as 'def'; // error 'abc' ~> 'def'
           ^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:348:8
-   348|   m as 'def'; // error 'abc' ~> 'def'
+   imported.js:358:8
+   358|   m as 'def'; // error 'abc' ~> 'def'
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:354:3
+Error ------------------------------------------------------------------------------------------------ imported.js:364:3
 
 Cannot cast `x` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   imported.js:354:3
-   354|   x as 'def'; // error 'abc' ~> 'def'
+   imported.js:364:3
+   364|   x as 'def'; // error 'abc' ~> 'def'
           ^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:354:8
-   354|   x as 'def'; // error 'abc' ~> 'def'
+   imported.js:364:8
+   364|   x as 'def'; // error 'abc' ~> 'def'
                ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ imported.js:357:3
+Error ------------------------------------------------------------------------------------------------ imported.js:367:3
 
 Cannot cast `o1` to object type because string [1] is incompatible with string literal `abc` [2] in property `f`.
 [incompatible-cast]
 
-   imported.js:357:3
-   357|   o1 as {f: 'abc'}; // error string ~> 'abc'
+   imported.js:367:3
+   367|   o1 as {f: 'abc'}; // error string ~> 'abc'
           ^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   imported.js:357:13
-   357|   o1 as {f: 'abc'}; // error string ~> 'abc'
+   imported.js:367:13
+   367|   o1 as {f: 'abc'}; // error string ~> 'abc'
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:367:11
+Error ----------------------------------------------------------------------------------------------- imported.js:377:11
 
 Cannot assign `"a"` to `x1[0]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   imported.js:367:11
-   367|   x1[0] = "a"; // error string ~> number
+   imported.js:377:11
+   377|   x1[0] = "a"; // error string ~> number
                   ^^^ [1]
 
 References:
-   imported.js:365:43
-   365|   const x1 = arr.reduce((acc, _) => acc, [0]);
+   imported.js:375:43
+   375|   const x1 = arr.reduce((acc, _) => acc, [0]);
                                                   ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- imported.js:371:11
+Error ----------------------------------------------------------------------------------------------- imported.js:381:11
 
 Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   imported.js:371:11
-   371|   x2[0] = "a"; // error string ~> number
+   imported.js:381:11
+   381|   x2[0] = "a"; // error string ~> number
                   ^^^ [1]
 
 References:
@@ -1105,900 +1171,965 @@ References:
                                                           ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:35:3
+Error ---------------------------------------------------------------------------------------------------- local.js:37:3
 
 Cannot cast `abc` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:35:3
-   35|   abc as "def" // error "abc" ~> "def"
+   local.js:37:3
+   37|   abc as "def" // error "abc" ~> "def"
          ^^^
 
 References:
    local.js:3:20
     3| export const abc = "abc";
                           ^^^^^ [1]
-   local.js:35:10
-   35|   abc as "def" // error "abc" ~> "def"
+   local.js:37:10
+   37|   abc as "def" // error "abc" ~> "def"
                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:37:8
+Error ---------------------------------------------------------------------------------------------------- local.js:39:8
 
 Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string [2]. [incompatible-cast]
 
-   local.js:37:8
-   37|   _ as "def" as typeof abc; // error "def" ~> "abc"
+   local.js:39:8
+   39|   _ as "def" as typeof abc; // error "def" ~> "abc"
               ^^^^^ [1]
 
 References:
-   local.js:37:17
-   37|   _ as "def" as typeof abc; // error "def" ~> "abc"
+   local.js:39:17
+   39|   _ as "def" as typeof abc; // error "def" ~> "abc"
                        ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:42:3
+Error ---------------------------------------------------------------------------------------------------- local.js:44:3
 
 Cannot cast `one` to number literal `2` because number [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
-   local.js:42:3
-   42|   one as 2 // error 1 ~> 2
+   local.js:44:3
+   44|   one as 2 // error 1 ~> 2
          ^^^
 
 References:
    local.js:5:20
     5| export const one = 1;
                           ^ [1]
-   local.js:42:10
-   42|   one as 2 // error 1 ~> 2
+   local.js:44:10
+   44|   one as 2 // error 1 ~> 2
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:44:8
+Error ---------------------------------------------------------------------------------------------------- local.js:46:3
+
+Cannot cast `minusOne` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-cast]
+
+   local.js:46:3
+   46|   minusOne as 0; // error -1 ~> 0
+         ^^^^^^^^
+
+References:
+   local.js:6:25
+    6| export const minusOne = -1;
+                               ^^ [1]
+   local.js:46:15
+   46|   minusOne as 0; // error -1 ~> 0
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:48:8
 
 Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number [2]. [incompatible-cast]
 
-   local.js:44:8
-   44|   _ as 2 as typeof one; // error 2 ~> 1
+   local.js:48:8
+   48|   _ as 2 as typeof one; // error 2 ~> 1
               ^ [1]
 
 References:
-   local.js:44:13
-   44|   _ as 2 as typeof one; // error 2 ~> 1
+   local.js:48:13
+   48|   _ as 2 as typeof one; // error 2 ~> 1
                    ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:49:3
+Error ---------------------------------------------------------------------------------------------------- local.js:50:8
+
+Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number [2]. [incompatible-cast]
+
+   local.js:50:8
+   50|   _ as 0 as typeof minusOne; // error 0 ~> -1
+              ^ [1]
+
+References:
+   local.js:50:13
+   50|   _ as 0 as typeof minusOne; // error 0 ~> -1
+                   ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:55:3
 
 Cannot cast `tru` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   local.js:49:3
-   49|   tru as false // error true ~> false
+   local.js:55:3
+   55|   tru as false // error true ~> false
          ^^^
 
 References:
-   local.js:6:20
-    6| export const tru = true;
+   local.js:7:20
+    7| export const tru = true;
                           ^^^^ [1]
-   local.js:49:10
-   49|   tru as false // error true ~> false
+   local.js:55:10
+   55|   tru as false // error true ~> false
                 ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:51:8
+Error ---------------------------------------------------------------------------------------------------- local.js:57:3
+
+Cannot cast `notTru` to boolean literal `true` because boolean literal `false` [1] is incompatible with boolean literal
+`true` [2]. [incompatible-cast]
+
+   local.js:57:3
+   57|   notTru as true // error false ~> true
+         ^^^^^^
+
+References:
+   local.js:8:23
+    8| export const notTru = !tru;
+                             ^^^^ [1]
+   local.js:57:13
+   57|   notTru as true // error false ~> true
+                   ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:59:8
 
 Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean [2].
 [incompatible-cast]
 
-   local.js:51:8
-   51|   _ as false as typeof tru; // error false ~> true
+   local.js:59:8
+   59|   _ as false as typeof tru; // error false ~> true
               ^^^^^ [1]
 
 References:
-   local.js:51:17
-   51|   _ as false as typeof tru; // error false ~> true
+   local.js:59:17
+   59|   _ as false as typeof tru; // error false ~> true
                        ^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:56:3
+Error ---------------------------------------------------------------------------------------------------- local.js:60:8
+
+Cannot cast `_` to `typeof notTru` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-cast]
+
+   local.js:60:8
+   60|   _ as true as typeof notTru; // error true ~> false
+              ^^^^ [1]
+
+References:
+   local.js:60:16
+   60|   _ as true as typeof notTru; // error true ~> false
+                      ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:66:3
 
 Cannot cast `bigOne` to bigint literal `2n` because bigint [1] is incompatible with bigint literal `2n` [2].
 [incompatible-cast]
 
-   local.js:56:3
-   56|   bigOne as 2n // error 1n ~> 2n
+   local.js:66:3
+   66|   bigOne as 2n // error 1n ~> 2n
          ^^^^^^
 
 References:
-   local.js:7:23
-    7| export const bigOne = 1n;
+   local.js:9:23
+    9| export const bigOne = 1n;
                              ^^ [1]
-   local.js:56:13
-   56|   bigOne as 2n // error 1n ~> 2n
+   local.js:66:13
+   66|   bigOne as 2n // error 1n ~> 2n
                    ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:58:8
+Error ---------------------------------------------------------------------------------------------------- local.js:68:8
 
 Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint [2]. [incompatible-cast]
 
-   local.js:58:8
-   58|   _ as 2n as typeof bigOne; // error 2n ~> 1n
+   local.js:68:8
+   68|   _ as 2n as typeof bigOne; // error 2n ~> 1n
               ^^ [1]
 
 References:
-   local.js:58:14
-   58|   _ as 2n as typeof bigOne; // error 2n ~> 1n
+   local.js:68:14
+   68|   _ as 2n as typeof bigOne; // error 2n ~> 1n
                     ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:63:3
+Error ---------------------------------------------------------------------------------------------------- local.js:73:3
 
 Cannot cast `abcRef` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:63:3
-   63|   abcRef as "def" // error "abc" ~> "def"
+   local.js:73:3
+   73|   abcRef as "def" // error "abc" ~> "def"
          ^^^^^^
 
 References:
    local.js:3:20
     3| export const abc = "abc";
                           ^^^^^ [1]
-   local.js:63:13
-   63|   abcRef as "def" // error "abc" ~> "def"
+   local.js:73:13
+   73|   abcRef as "def" // error "abc" ~> "def"
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:65:8
+Error ---------------------------------------------------------------------------------------------------- local.js:75:8
 
 Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string [2]. [incompatible-cast]
 
-   local.js:65:8
-   65|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
+   local.js:75:8
+   75|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
               ^^^^^ [1]
 
 References:
-   local.js:65:17
-   65|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
+   local.js:75:17
+   75|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
                        ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:70:3
+Error ---------------------------------------------------------------------------------------------------- local.js:80:3
 
 Cannot cast `oneRef` to number literal `2` because number [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
-   local.js:70:3
-   70|   oneRef as 2 // error 1 ~> 2
+   local.js:80:3
+   80|   oneRef as 2 // error 1 ~> 2
          ^^^^^^
 
 References:
    local.js:5:20
     5| export const one = 1;
                           ^ [1]
-   local.js:70:13
-   70|   oneRef as 2 // error 1 ~> 2
+   local.js:80:13
+   80|   oneRef as 2 // error 1 ~> 2
                    ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:72:8
+Error ---------------------------------------------------------------------------------------------------- local.js:82:8
 
 Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number [2]. [incompatible-cast]
 
-   local.js:72:8
-   72|   _ as 2 as typeof oneRef; // error 2 ~> 1
+   local.js:82:8
+   82|   _ as 2 as typeof oneRef; // error 2 ~> 1
               ^ [1]
 
 References:
-   local.js:72:13
-   72|   _ as 2 as typeof oneRef; // error 2 ~> 1
+   local.js:82:13
+   82|   _ as 2 as typeof oneRef; // error 2 ~> 1
                    ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:77:3
+Error ---------------------------------------------------------------------------------------------------- local.js:87:3
 
 Cannot cast `truRef` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
 [incompatible-cast]
 
-   local.js:77:3
-   77|   truRef as false // error true ~> false
+   local.js:87:3
+   87|   truRef as false // error true ~> false
          ^^^^^^
 
 References:
-   local.js:6:20
-    6| export const tru = true;
+   local.js:7:20
+    7| export const tru = true;
                           ^^^^ [1]
-   local.js:77:13
-   77|   truRef as false // error true ~> false
+   local.js:87:13
+   87|   truRef as false // error true ~> false
                    ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:79:8
+Error ---------------------------------------------------------------------------------------------------- local.js:89:8
 
 Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean [2].
 [incompatible-cast]
 
-   local.js:79:8
-   79|   _ as false as typeof truRef; // error false ~> true
+   local.js:89:8
+   89|   _ as false as typeof truRef; // error false ~> true
               ^^^^^ [1]
 
 References:
-   local.js:79:17
-   79|   _ as false as typeof truRef; // error false ~> true
+   local.js:89:17
+   89|   _ as false as typeof truRef; // error false ~> true
                        ^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:84:3
+Error ---------------------------------------------------------------------------------------------------- local.js:94:3
 
 Cannot cast `bigOneRef` to bigint literal `2n` because bigint [1] is incompatible with bigint literal `2n` [2].
 [incompatible-cast]
 
-   local.js:84:3
-   84|   bigOneRef as 2n // error 1n ~> 2n
+   local.js:94:3
+   94|   bigOneRef as 2n // error 1n ~> 2n
          ^^^^^^^^^
 
 References:
-   local.js:7:23
-    7| export const bigOne = 1n;
+   local.js:9:23
+    9| export const bigOne = 1n;
                              ^^ [1]
-   local.js:84:16
-   84|   bigOneRef as 2n // error 1n ~> 2n
+   local.js:94:16
+   94|   bigOneRef as 2n // error 1n ~> 2n
                       ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:86:8
+Error ---------------------------------------------------------------------------------------------------- local.js:96:8
 
 Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint [2].
 [incompatible-cast]
 
-   local.js:86:8
-   86|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
+   local.js:96:8
+   96|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
               ^^ [1]
 
 References:
-   local.js:86:14
-   86|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
+   local.js:96:14
+   96|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
                     ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:90:3
-
-Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:90:3
-   90|   obj.abc as "abc"; // error string ~> "abc"
-         ^^^^^^^
-
-References:
-   local.js:16:27
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                 ^^^^^ [1]
-   local.js:90:14
-   90|   obj.abc as "abc"; // error string ~> "abc"
-                    ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:91:3
-
-Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:91:3
-   91|   obj.one as 1; // error number ~> 1
-         ^^^^^^^
-
-References:
-   local.js:16:39
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                             ^ [1]
-   local.js:91:14
-   91|   obj.one as 1; // error number ~> 1
-                    ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:92:3
-
-Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   local.js:92:3
-   92|   obj.tru as true; // error boolean ~> true
-         ^^^^^^^
-
-References:
-   local.js:16:47
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                     ^^^^ [1]
-   local.js:92:14
-   92|   obj.tru as true; // error boolean ~> true
-                    ^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:93:3
-
-Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
-
-   local.js:93:3
-   93|   obj.bigOne as 1n; // error bigint ~> 1n
-         ^^^^^^^^^^
-
-References:
-   local.js:16:61
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                                   ^^ [1]
-   local.js:93:17
-   93|   obj.bigOne as 1n; // error bigint ~> 1n
-                       ^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:97:3
-
-Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:97:3
-   97|   spread.abc as "abc"; // error string ~> "abc"
-         ^^^^^^^^^^
-
-References:
-   local.js:16:27
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                 ^^^^^ [1]
-   local.js:97:17
-   97|   spread.abc as "abc"; // error string ~> "abc"
-                       ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:98:3
-
-Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
-
-   local.js:98:3
-   98|   spread.one as 1; // error number ~> 1
-         ^^^^^^^^^^
-
-References:
-   local.js:16:39
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                             ^ [1]
-   local.js:98:17
-   98|   spread.one as 1; // error number ~> 1
-                       ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:99:3
-
-Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
-
-   local.js:99:3
-   99|   spread.tru as true; // error boolean ~> true
-         ^^^^^^^^^^
-
-References:
-   local.js:16:47
-   16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
-                                                     ^^^^ [1]
-   local.js:99:17
-   99|   spread.tru as true; // error boolean ~> true
-                       ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:100:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    local.js:100:3
-   100|   spread.bigOne as 1n; // error bigint ~> 1n
+   100|   obj.abc as "abc"; // error string ~> "abc"
+          ^^^^^^^
+
+References:
+   local.js:18:27
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                  ^^^^^ [1]
+   local.js:100:14
+   100|   obj.abc as "abc"; // error string ~> "abc"
+                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:101:3
+
+Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   local.js:101:3
+   101|   obj.one as 1; // error number ~> 1
+          ^^^^^^^
+
+References:
+   local.js:18:39
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                              ^ [1]
+   local.js:101:14
+   101|   obj.one as 1; // error number ~> 1
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:102:3
+
+Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   local.js:102:3
+   102|   obj.tru as true; // error boolean ~> true
+          ^^^^^^^
+
+References:
+   local.js:18:47
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                      ^^^^ [1]
+   local.js:102:14
+   102|   obj.tru as true; // error boolean ~> true
+                     ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:103:3
+
+Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
+
+   local.js:103:3
+   103|   obj.bigOne as 1n; // error bigint ~> 1n
+          ^^^^^^^^^^
+
+References:
+   local.js:18:61
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                                    ^^ [1]
+   local.js:103:17
+   103|   obj.bigOne as 1n; // error bigint ~> 1n
+                        ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:107:3
+
+Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
+
+   local.js:107:3
+   107|   spread.abc as "abc"; // error string ~> "abc"
+          ^^^^^^^^^^
+
+References:
+   local.js:18:27
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                  ^^^^^ [1]
+   local.js:107:17
+   107|   spread.abc as "abc"; // error string ~> "abc"
+                        ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:108:3
+
+Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   local.js:108:3
+   108|   spread.one as 1; // error number ~> 1
+          ^^^^^^^^^^
+
+References:
+   local.js:18:39
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                              ^ [1]
+   local.js:108:17
+   108|   spread.one as 1; // error number ~> 1
+                        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:109:3
+
+Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+[incompatible-cast]
+
+   local.js:109:3
+   109|   spread.tru as true; // error boolean ~> true
+          ^^^^^^^^^^
+
+References:
+   local.js:18:47
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+                                                      ^^^^ [1]
+   local.js:109:17
+   109|   spread.tru as true; // error boolean ~> true
+                        ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:110:3
+
+Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
+
+   local.js:110:3
+   110|   spread.bigOne as 1n; // error bigint ~> 1n
           ^^^^^^^^^^^^^
 
 References:
-   local.js:16:61
-    16| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
+   local.js:18:61
+    18| export const obj = { abc: "abc", one: 1, tru: true, bigOne: 1n };
                                                                     ^^ [1]
-   local.js:100:20
-   100|   spread.bigOne as 1n; // error bigint ~> 1n
+   local.js:110:20
+   110|   spread.bigOne as 1n; // error bigint ~> 1n
                            ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:104:3
+Error --------------------------------------------------------------------------------------------------- local.js:114:3
 
 Cannot cast `objRefs.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   local.js:104:3
-   104|   objRefs.abc as "abc"; // error string ~> "abc"
+   local.js:114:3
+   114|   objRefs.abc as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:104:18
-   104|   objRefs.abc as "abc"; // error string ~> "abc"
+   local.js:114:18
+   114|   objRefs.abc as "abc"; // error string ~> "abc"
                          ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:105:3
+Error --------------------------------------------------------------------------------------------------- local.js:115:3
 
 Cannot cast `objRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   local.js:105:3
-   105|   objRefs.abcRef as "abc"; // error string ~> "abc"
+   local.js:115:3
+   115|   objRefs.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:105:21
-   105|   objRefs.abcRef as "abc"; // error string ~> "abc"
+   local.js:115:21
+   115|   objRefs.abcRef as "abc"; // error string ~> "abc"
                             ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:106:3
+Error --------------------------------------------------------------------------------------------------- local.js:116:3
 
 Cannot cast `spreadObjRefs.abc` to string literal `abc` because string [1] is incompatible with string literal
 `abc` [2]. [incompatible-cast]
 
-   local.js:106:3
-   106|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
+   local.js:116:3
+   116|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:106:24
-   106|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
+   local.js:116:24
+   116|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
                                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:107:3
+Error --------------------------------------------------------------------------------------------------- local.js:117:3
 
 Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal
 `abc` [2]. [incompatible-cast]
 
-   local.js:107:3
-   107|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
+   local.js:117:3
+   117|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:107:27
-   107|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
+   local.js:117:27
+   117|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
                                   ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:113:3
+Error --------------------------------------------------------------------------------------------------- local.js:123:3
 
 Cannot cast `asConst.abc` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:113:3
-   113|   asConst.abc as "def"; // error "abc" ~> "def"
+   local.js:123:3
+   123|   asConst.abc as "def"; // error "abc" ~> "def"
           ^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:113:18
-   113|   asConst.abc as "def"; // error "abc" ~> "def"
+   local.js:123:18
+   123|   asConst.abc as "def"; // error "abc" ~> "def"
                          ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:114:3
+Error --------------------------------------------------------------------------------------------------- local.js:124:3
 
 Cannot cast `asConst.abcRef` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:114:3
-   114|   asConst.abcRef as "def"; // error "abc" ~> "def"
+   local.js:124:3
+   124|   asConst.abcRef as "def"; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:114:21
-   114|   asConst.abcRef as "def"; // error "abc" ~> "def"
+   local.js:124:21
+   124|   asConst.abcRef as "def"; // error "abc" ~> "def"
                             ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:115:8
+Error --------------------------------------------------------------------------------------------------- local.js:125:8
 
 Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string [2].
 [incompatible-cast]
 
-   local.js:115:8
-   115|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+   local.js:125:8
+   125|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
                ^^^^^ [1]
 
 References:
-   local.js:115:17
-   115|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
+   local.js:125:17
+   125|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
                         ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:116:8
+Error --------------------------------------------------------------------------------------------------- local.js:126:8
 
 Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string [2].
 [incompatible-cast]
 
-   local.js:116:8
-   116|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+   local.js:126:8
+   126|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
                ^^^^^ [1]
 
 References:
-   local.js:116:17
-   116|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
+   local.js:126:17
+   126|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:117:8
+Error --------------------------------------------------------------------------------------------------- local.js:127:8
 
 Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string [2]. [incompatible-cast]
 
-   local.js:117:8
-   117|   _ as string as typeof asConst.abc; // error string ~> "abc"
+   local.js:127:8
+   127|   _ as string as typeof asConst.abc; // error string ~> "abc"
                ^^^^^^ [1]
 
 References:
-   local.js:117:18
-   117|   _ as string as typeof asConst.abc; // error string ~> "abc"
+   local.js:127:18
+   127|   _ as string as typeof asConst.abc; // error string ~> "abc"
                          ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:118:8
+Error --------------------------------------------------------------------------------------------------- local.js:128:8
 
 Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string [2]. [incompatible-cast]
 
-   local.js:118:8
-   118|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
+   local.js:128:8
+   128|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
                ^^^^^^ [1]
 
 References:
-   local.js:118:18
-   118|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
+   local.js:128:18
+   128|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:129:3
+Error --------------------------------------------------------------------------------------------------- local.js:139:3
 
 Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   local.js:129:3
-   129|   x.abc as "abc"; // error string ~> "abc"
+   local.js:139:3
+   139|   x.abc as "abc"; // error string ~> "abc"
           ^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:129:12
-   129|   x.abc as "abc"; // error string ~> "abc"
+   local.js:139:12
+   139|   x.abc as "abc"; // error string ~> "abc"
                    ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:130:3
+Error --------------------------------------------------------------------------------------------------- local.js:140:3
 
 Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   local.js:130:3
-   130|   x.abcRef as "abc"; // error string ~> "abc"
+   local.js:140:3
+   140|   x.abcRef as "abc"; // error string ~> "abc"
           ^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:130:15
-   130|   x.abcRef as "abc"; // error string ~> "abc"
-                      ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:134:3
-
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:134:3
-   134|   x.abc as "abc"; // error string ~> "abc"
-          ^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:134:12
-   134|   x.abc as "abc"; // error string ~> "abc"
-                   ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:135:3
-
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
-
-   local.js:135:3
-   135|   x.abcRef as "abc"; // error string ~> "abc"
-          ^^^^^^^^
-
-References:
-   local.js:3:20
-     3| export const abc = "abc";
-                           ^^^^^ [1]
-   local.js:135:15
-   135|   x.abcRef as "abc"; // error string ~> "abc"
+   local.js:140:15
+   140|   x.abcRef as "abc"; // error string ~> "abc"
                       ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:144:3
 
-Cannot cast `obj` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    local.js:144:3
-   144|   obj as {f: 1}; // error number ~> 1
+   144|   x.abc as "abc"; // error string ~> "abc"
+          ^^^^^
+
+References:
+   local.js:3:20
+     3| export const abc = "abc";
+                           ^^^^^ [1]
+   local.js:144:12
+   144|   x.abc as "abc"; // error string ~> "abc"
+                   ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:145:3
+
+Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
+
+   local.js:145:3
+   145|   x.abcRef as "abc"; // error string ~> "abc"
+          ^^^^^^^^
+
+References:
+   local.js:3:20
+     3| export const abc = "abc";
+                           ^^^^^ [1]
+   local.js:145:15
+   145|   x.abcRef as "abc"; // error string ~> "abc"
+                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:154:3
+
+Cannot cast `obj` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+[incompatible-cast]
+
+   local.js:154:3
+   154|   obj as {f: 1}; // error number ~> 1
           ^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:144:14
-   144|   obj as {f: 1}; // error number ~> 1
+   local.js:154:14
+   154|   obj as {f: 1}; // error number ~> 1
                      ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:157:3
+Error --------------------------------------------------------------------------------------------------- local.js:167:3
 
 Cannot cast `obj1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   local.js:157:3
-   157|   obj1 as {f: 1}; // error number ~> 1
+   local.js:167:3
+   167|   obj1 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:157:15
-   157|   obj1 as {f: 1}; // error number ~> 1
+   local.js:167:15
+   167|   obj1 as {f: 1}; // error number ~> 1
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:158:3
+Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
 Cannot cast `obj1` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
 [incompatible-cast]
 
-   local.js:158:3
-   158|   obj1 as {f: 2}; // error number ~> 2
+   local.js:168:3
+   168|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:158:15
-   158|   obj1 as {f: 2}; // error number ~> 2
+   local.js:168:15
+   168|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:158:3
+Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
 Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
 `f`. [incompatible-cast]
 
-   local.js:158:3
-   158|   obj1 as {f: 2}; // error number ~> 2
+   local.js:168:3
+   168|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   local.js:154:20
-   154|   declare var n0: ?1;
+   local.js:164:20
+   164|   declare var n0: ?1;
                            ^ [1]
-   local.js:158:15
-   158|   obj1 as {f: 2}; // error number ~> 2
+   local.js:168:15
+   168|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:163:3
+Error --------------------------------------------------------------------------------------------------- local.js:173:3
 
 Cannot cast `obj2` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
 [incompatible-cast]
 
-   local.js:163:3
-   163|   obj2 as {f: 1}; // error number ~> 1
+   local.js:173:3
+   173|   obj2 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:163:15
-   163|   obj2 as {f: 1}; // error number ~> 1
+   local.js:173:15
+   173|   obj2 as {f: 1}; // error number ~> 1
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:164:3
+Error --------------------------------------------------------------------------------------------------- local.js:174:3
 
 Cannot cast `obj2` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
 [incompatible-cast]
 
-   local.js:164:3
-   164|   obj2 as {f: 2}; // error number ~> 2
+   local.js:174:3
+   174|   obj2 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:164:15
-   164|   obj2 as {f: 2}; // error number ~> 2
+   local.js:174:15
+   174|   obj2 as {f: 2}; // error number ~> 2
                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:182:3
+Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
 Cannot cast `o1.f` to union type because string [1] is incompatible with union type [2]. [incompatible-cast]
 
-   local.js:182:3
-   182|   o1.f as "a" | "b"; // error string ~> "a" | "b"
+   local.js:192:3
+   192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
           ^^^^
 
 References:
-   local.js:180:21
-   180|   const x1 = cond ? "a" : "b";
+   local.js:190:21
+   190|   const x1 = cond ? "a" : "b";
                             ^^^ [1]
-   local.js:182:11
-   182|   o1.f as "a" | "b"; // error string ~> "a" | "b"
+   local.js:192:11
+   192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
                   ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:182:3
+Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
 Cannot cast `o1.f` to union type because string [1] is incompatible with union type [2]. [incompatible-cast]
 
-   local.js:182:3
-   182|   o1.f as "a" | "b"; // error string ~> "a" | "b"
+   local.js:192:3
+   192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
           ^^^^
 
 References:
-   local.js:180:27
-   180|   const x1 = cond ? "a" : "b";
+   local.js:190:27
+   190|   const x1 = cond ? "a" : "b";
                                   ^^^ [1]
-   local.js:182:11
-   182|   o1.f as "a" | "b"; // error string ~> "a" | "b"
+   local.js:192:11
+   192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
                   ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:186:3
+Error --------------------------------------------------------------------------------------------------- local.js:196:3
 
 Cannot cast `o2.f` to union type because string [1] is incompatible with union type [2]. [incompatible-cast]
 
-   local.js:186:3
-   186|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
+   local.js:196:3
+   196|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
           ^^^^
 
 References:
-   local.js:184:29
-   184|   const x2 = cond ? foo() : "a";
+   local.js:194:29
+   194|   const x2 = cond ? foo() : "a";
                                     ^^^ [1]
-   local.js:186:11
-   186|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
+   local.js:196:11
+   196|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:190:3
+Error --------------------------------------------------------------------------------------------------- local.js:200:3
 
 Cannot cast `o3.f` to union type because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `a` [2] in property `a`.
  - Or object literal [3] is incompatible with string literal `foo` [4].
 
-   local.js:190:3
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
+   local.js:200:3
+   200|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
           ^^^^
 
 References:
-   local.js:188:25
-   188|   const x3 = cond ? {a: 'a'} : foo();
+   local.js:198:25
+   198|   const x3 = cond ? {a: 'a'} : foo();
                                 ^^^ [1]
-   local.js:190:15
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
+   local.js:200:15
+   200|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
                       ^^^ [2]
-   local.js:188:21
-   188|   const x3 = cond ? {a: 'a'} : foo();
+   local.js:198:21
+   198|   const x3 = cond ? {a: 'a'} : foo();
                             ^^^^^^^^ [3]
-   local.js:190:22
-   190|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
+   local.js:200:22
+   200|   o3.f as {a: 'a'} | "foo"; // error 'a's contribution is string
                              ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:207:11
+Error -------------------------------------------------------------------------------------------------- local.js:217:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with union type [2] in property
 `f`. [incompatible-call]
 
-   local.js:207:11
-   207|   set({f: 3}); // error 3 ~> 1|2
+   local.js:217:11
+   217|   set({f: 3}); // error 3 ~> 1|2
                   ^ [1]
 
 References:
-   local.js:204:32
-   204|   const [o, set] = useState<{f:1|2}>({f: one}); // okay
+   local.js:214:32
+   214|   const [o, set] = useState<{f:1|2}>({f: one}); // okay
                                        ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:212:3
+Error --------------------------------------------------------------------------------------------------- local.js:222:3
 
 Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   local.js:212:3
-   212|   n_ as 1; // error number ~> 1
+   local.js:222:3
+   222|   n_ as 1; // error number ~> 1
           ^^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:212:9
-   212|   n_ as 1; // error number ~> 1
+   local.js:222:9
+   222|   n_ as 1; // error number ~> 1
                 ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:220:7
+Error --------------------------------------------------------------------------------------------------- local.js:230:7
 
 Cannot call `set` with `2` bound to `y` because number [1] is incompatible with number [2]. [incompatible-call]
 
-   local.js:220:7
-   220|   set(2); // error 2 ~> 1
+   local.js:230:7
+   230|   set(2); // error 2 ~> 1
               ^ [1]
 
 References:
-   local.js:217:18
-   217|   declare var x: typeof one;
+   local.js:227:18
+   227|   declare var x: typeof one;
                          ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:227:11
+Error -------------------------------------------------------------------------------------------------- local.js:237:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:227:11
-   227|   set({f: 2}); // error
+   local.js:237:11
+   237|   set({f: 2}); // error
                   ^ [1]
 
 References:
-   local.js:224:18
-   224|   declare var x: typeof one;
+   local.js:234:18
+   234|   declare var x: typeof one;
                          ^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:235:11
+Error -------------------------------------------------------------------------------------------------- local.js:245:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:235:11
-   235|   set({f: "blah"}); // error
+   local.js:245:11
+   245|   set({f: "blah"}); // error
                   ^^^^^^ [1]
 
 References:
@@ -2007,13 +2138,13 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:243:11
+Error -------------------------------------------------------------------------------------------------- local.js:253:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:243:11
-   243|   set({f: "blah"}); // error "blah" ~> number
+   local.js:253:11
+   253|   set({f: "blah"}); // error "blah" ~> number
                   ^^^^^^ [1]
 
 References:
@@ -2022,13 +2153,13 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:249:11
+Error -------------------------------------------------------------------------------------------------- local.js:259:11
 
 Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:249:11
-   249|   set({f: "blah"}); // error "blah" ~> 1
+   local.js:259:11
+   259|   set({f: "blah"}); // error "blah" ~> 1
                   ^^^^^^ [1]
 
 References:
@@ -2037,13 +2168,13 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:251:11
+Error -------------------------------------------------------------------------------------------------- local.js:261:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:251:11
-   251|   set({f: 2}); // error 2 ~> 1
+   local.js:261:11
+   261|   set({f: 2}); // error 2 ~> 1
                   ^ [1]
 
 References:
@@ -2052,13 +2183,13 @@ References:
                            ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:252:11
+Error -------------------------------------------------------------------------------------------------- local.js:262:11
 
 Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
 [incompatible-call]
 
-   local.js:252:11
-   252|   set({f: 3}); // error 3 ~> 1
+   local.js:262:11
+   262|   set({f: 3}); // error 3 ~> 1
                   ^ [1]
 
 References:
@@ -2067,227 +2198,227 @@ References:
                            ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:271:5
+Error --------------------------------------------------------------------------------------------------- local.js:281:5
 
 Cannot cast `v` to number literal `1` because number [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   local.js:271:5
-   271|     v as 1; // error number ~> 1
+   local.js:281:5
+   281|     v as 1; // error number ~> 1
             ^
 
 References:
    local.js:5:20
      5| export const one = 1;
                            ^ [1]
-   local.js:271:10
-   271|     v as 1; // error number ~> 1
+   local.js:281:10
+   281|     v as 1; // error number ~> 1
                  ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:353:14
+Error -------------------------------------------------------------------------------------------------- local.js:363:14
 
 Constant condition. The condition will always be truthy. [constant-condition]
 
-   353|   const x1 = 42 || "hello";
+   363|   const x1 = 42 || "hello";
                      ^^
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:359:31
+Error -------------------------------------------------------------------------------------------------- local.js:369:31
 
 Constant condition. The condition will always be truthy. [constant-condition]
 
-   359|   function fn1(): 42 { return 42 || ""; } // okay
+   369|   function fn1(): 42 { return 42 || ""; } // okay
                                       ^^
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:362:27
+Error -------------------------------------------------------------------------------------------------- local.js:372:27
 
 Constant condition. The condition will always be truthy. [constant-condition]
 
-   362|   function fn2() { return 42 || ""; }
+   372|   function fn2() { return 42 || ""; }
                                   ^^
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:389:3
+Error --------------------------------------------------------------------------------------------------- local.js:399:3
 
 Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:389:3
-   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
+   local.js:399:3
+   399|   foo(() => abc) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:389:21
-   389|   foo(() => abc) as 'def'; // error "abc" ~> "def"
+   local.js:399:21
+   399|   foo(() => abc) as 'def'; // error "abc" ~> "def"
                             ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:395:3
+Error --------------------------------------------------------------------------------------------------- local.js:405:3
 
 Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:395:3
-   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
+   local.js:405:3
+   405|   foo([abc]) as 'def'; // error "abc" ~> "def"
           ^^^^^^^^^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:395:17
-   395|   foo([abc]) as 'def'; // error "abc" ~> "def"
+   local.js:405:17
+   405|   foo([abc]) as 'def'; // error "abc" ~> "def"
                         ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:405:3
+Error --------------------------------------------------------------------------------------------------- local.js:415:3
 
 Cannot cast `m1` to string literal `a` because string [1] is incompatible with string literal `a` [2].
 [incompatible-cast]
 
-   local.js:405:3
-   405|   m1 as 'a'; // error 'b' ~> 'a'
+   local.js:415:3
+   415|   m1 as 'a'; // error 'b' ~> 'a'
           ^^
 
 References:
-   local.js:402:10
-   402|     _ => 'b',
+   local.js:412:10
+   412|     _ => 'b',
                  ^^^ [1]
-   local.js:405:9
-   405|   m1 as 'a'; // error 'b' ~> 'a'
+   local.js:415:9
+   415|   m1 as 'a'; // error 'b' ~> 'a'
                 ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:406:3
+Error --------------------------------------------------------------------------------------------------- local.js:416:3
 
 Cannot cast `m1` to string literal `b` because string [1] is incompatible with string literal `b` [2].
 [incompatible-cast]
 
-   local.js:406:3
-   406|   m1 as 'b'; // error 'a' ~> 'b'
+   local.js:416:3
+   416|   m1 as 'b'; // error 'a' ~> 'b'
           ^^
 
 References:
-   local.js:401:10
-   401|     1 => 'a',
+   local.js:411:10
+   411|     1 => 'a',
                  ^^^ [1]
-   local.js:406:9
-   406|   m1 as 'b'; // error 'a' ~> 'b'
+   local.js:416:9
+   416|   m1 as 'b'; // error 'a' ~> 'b'
                 ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:413:3
+Error --------------------------------------------------------------------------------------------------- local.js:423:3
 
 Cannot cast `m2` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
-   local.js:413:3
-   413|   m2 as 'abc'; // error 'def' ~> 'abc'
+   local.js:423:3
+   423|   m2 as 'abc'; // error 'def' ~> 'abc'
           ^^
 
 References:
    local.js:4:20
      4| export const def = "def";
                            ^^^^^ [1]
-   local.js:413:9
-   413|   m2 as 'abc'; // error 'def' ~> 'abc'
+   local.js:423:9
+   423|   m2 as 'abc'; // error 'def' ~> 'abc'
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:414:3
+Error --------------------------------------------------------------------------------------------------- local.js:424:3
 
 Cannot cast `m2` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:414:3
-   414|   m2 as 'def'; // error 'abc' ~> 'def'
+   local.js:424:3
+   424|   m2 as 'def'; // error 'abc' ~> 'def'
           ^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:414:9
-   414|   m2 as 'def'; // error 'abc' ~> 'def'
+   local.js:424:9
+   424|   m2 as 'def'; // error 'abc' ~> 'def'
                 ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:420:3
+Error --------------------------------------------------------------------------------------------------- local.js:430:3
 
 Cannot cast `x` to string literal `def` because string [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
-   local.js:420:3
-   420|   x as 'def'; // error 'abc' ~> 'def'
+   local.js:430:3
+   430|   x as 'def'; // error 'abc' ~> 'def'
           ^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:420:8
-   420|   x as 'def'; // error 'abc' ~> 'def'
+   local.js:430:8
+   430|   x as 'def'; // error 'abc' ~> 'def'
                ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:423:3
+Error --------------------------------------------------------------------------------------------------- local.js:433:3
 
 Cannot cast `o1` to object type because string [1] is incompatible with string literal `abc` [2] in property `f`.
 [incompatible-cast]
 
-   local.js:423:3
-   423|   o1 as {f: 'abc'}; // error string ~> 'abc'
+   local.js:433:3
+   433|   o1 as {f: 'abc'}; // error string ~> 'abc'
           ^^
 
 References:
    local.js:3:20
      3| export const abc = "abc";
                            ^^^^^ [1]
-   local.js:423:13
-   423|   o1 as {f: 'abc'}; // error string ~> 'abc'
+   local.js:433:13
+   433|   o1 as {f: 'abc'}; // error string ~> 'abc'
                     ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:438:9
+Error --------------------------------------------------------------------------------------------------- local.js:448:9
 
 Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
 [incompatible-call]
 
-   local.js:438:9
-   438|   c.set('b'); // error "b" ~> "a"
+   local.js:448:9
+   448|   c.set('b'); // error "b" ~> "a"
                 ^^^ [1]
 
 References:
-   local.js:431:12
-   431|     set<K: 'a'>(k: K) {}
+   local.js:441:12
+   441|     set<K: 'a'>(k: K) {}
                    ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:445:11
+Error -------------------------------------------------------------------------------------------------- local.js:455:11
 
 Cannot assign `"a"` to `x1[0]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   local.js:445:11
-   445|   x1[0] = "a"; // error string ~> number
+   local.js:455:11
+   455|   x1[0] = "a"; // error string ~> number
                   ^^^ [1]
 
 References:
-   local.js:443:43
-   443|   const x1 = arr.reduce((acc, _) => acc, [0]);
+   local.js:453:43
+   453|   const x1 = arr.reduce((acc, _) => acc, [0]);
                                                   ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:449:11
+Error -------------------------------------------------------------------------------------------------- local.js:459:11
 
 Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   local.js:449:11
-   449|   x2[0] = "a"; // error string ~> number
+   local.js:459:11
+   459|   x2[0] = "a"; // error string ~> number
                   ^^^ [1]
 
 References:
@@ -2296,273 +2427,273 @@ References:
                            ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:460:3
+Error --------------------------------------------------------------------------------------------------- local.js:470:3
 
 Cannot cast `arr[0]` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
 
-   local.js:460:3
-   460|   arr[0] as 1|2; // error number ~> 1|2
+   local.js:470:3
+   470|   arr[0] as 1|2; // error number ~> 1|2
           ^^^^^^
 
 References:
-   local.js:457:25
-   457|   const x = zerOrOne || 2;
+   local.js:467:25
+   467|   const x = zerOrOne || 2;
                                 ^ [1]
-   local.js:460:13
-   460|   arr[0] as 1|2; // error number ~> 1|2
+   local.js:470:13
+   470|   arr[0] as 1|2; // error number ~> 1|2
                     ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:466:3
+Error --------------------------------------------------------------------------------------------------- local.js:476:3
 
 Cannot cast `one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   local.js:466:3
-   466|   one as 1; // error number ~> 1
+   local.js:476:3
+   476|   one as 1; // error number ~> 1
           ^^^
 
 References:
-   local.js:465:33
-   465|   const {[PROP]: one} =  {prop: 1};
+   local.js:475:33
+   475|   const {[PROP]: one} =  {prop: 1};
                                         ^ [1]
-   local.js:466:10
-   466|   one as 1; // error number ~> 1
+   local.js:476:10
+   476|   one as 1; // error number ~> 1
                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:467:3
+Error --------------------------------------------------------------------------------------------------- local.js:477:3
 
 Cannot cast `one` to number literal `2` because number [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
-   local.js:467:3
-   467|   one as 2; // error number ~> 2
+   local.js:477:3
+   477|   one as 2; // error number ~> 2
           ^^^
 
 References:
-   local.js:465:33
-   465|   const {[PROP]: one} =  {prop: 1};
+   local.js:475:33
+   475|   const {[PROP]: one} =  {prop: 1};
                                         ^ [1]
-   local.js:467:10
-   467|   one as 2; // error number ~> 2
+   local.js:477:10
+   477|   one as 2; // error number ~> 2
                  ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:474:16
+Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
 Cannot cast object literal to `$ReadOnly` because string [1] is incompatible with string literal `b` [2] in property
 `a`. [incompatible-cast]
 
-   local.js:474:16
-   474|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+   local.js:484:16
+   484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
                        ^^^^^^^
 
 References:
-   local.js:472:19
-   472|   const KeyName = 'a';
+   local.js:482:19
+   482|   const KeyName = 'a';
                           ^^^ [1]
-   local.js:474:47
-   474|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
+   local.js:484:47
+   484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
                                                       ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:483:5
+Error --------------------------------------------------------------------------------------------------- local.js:493:5
 
 Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
-   local.js:483:5
-   483|     x as number; // error string ~> number
+   local.js:493:5
+   493|     x as number; // error string ~> number
             ^
 
 References:
-   local.js:479:13
-   479|   const k = "a";
+   local.js:489:13
+   489|   const k = "a";
                     ^^^ [1]
-   local.js:483:10
-   483|     x as number; // error string ~> number
+   local.js:493:10
+   493|     x as number; // error string ~> number
                  ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:520:14
+Error -------------------------------------------------------------------------------------------------- local.js:530:14
 
 Cannot assign `"a"` to `obj.prop` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   local.js:520:14
-   520|   obj.prop = "a"; // error string ~> number
+   local.js:530:14
+   530|   obj.prop = "a"; // error string ~> number
                      ^^^ [1]
 
 References:
-   local.js:515:39
-   515|   const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
+   local.js:525:39
+   525|   const memoized = memo(() => ({prop: 0})); // should generalize to `() => {prop: number}`
                                               ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:562:3
+Error --------------------------------------------------------------------------------------------------- local.js:572:3
 
 Cannot cast `x2` to number literal `-3` because number [1] is incompatible with number literal `-3` [2].
 [incompatible-cast]
 
-   local.js:562:3
-   562|   x2 as -3; // error -2 ~> -3
+   local.js:572:3
+   572|   x2 as -3; // error -2 ~> -3
           ^^
 
 References:
-   local.js:560:14
-   560|   const x2 = -2;
+   local.js:570:14
+   570|   const x2 = -2;
                      ^^ [1]
-   local.js:562:9
-   562|   x2 as -3; // error -2 ~> -3
+   local.js:572:9
+   572|   x2 as -3; // error -2 ~> -3
                 ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:565:3
+Error --------------------------------------------------------------------------------------------------- local.js:575:3
 
 Cannot cast `x3` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
 [incompatible-cast]
 
-   local.js:565:3
-   565|   x3 as -2; // error 2 ~> -2
+   local.js:575:3
+   575|   x3 as -2; // error 2 ~> -2
           ^^
 
 References:
-   local.js:563:14
-   563|   const x3 = -x2;
+   local.js:573:14
+   573|   const x3 = -x2;
                      ^^^ [1]
-   local.js:565:9
-   565|   x3 as -2; // error 2 ~> -2
+   local.js:575:9
+   575|   x3 as -2; // error 2 ~> -2
                 ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:571:3
+Error --------------------------------------------------------------------------------------------------- local.js:581:3
 
 Cannot cast `objx2.x2` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
 [incompatible-cast]
 
-   local.js:571:3
-   571|   objx2.x2 as -2; // error number ~> -2
+   local.js:581:3
+   581|   objx2.x2 as -2; // error number ~> -2
           ^^^^^^^^
 
 References:
-   local.js:560:14
-   560|   const x2 = -2;
+   local.js:570:14
+   570|   const x2 = -2;
                      ^^ [1]
-   local.js:571:15
-   571|   objx2.x2 as -2; // error number ~> -2
+   local.js:581:15
+   581|   objx2.x2 as -2; // error number ~> -2
                       ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:577:3
+Error --------------------------------------------------------------------------------------------------- local.js:587:3
 
 Cannot cast `b2` to bigint literal `-3n` because bigint [1] is incompatible with bigint literal `-3n` [2].
 [incompatible-cast]
 
-   local.js:577:3
-   577|   b2 as -3n; // error -2n ~> -3n
+   local.js:587:3
+   587|   b2 as -3n; // error -2n ~> -3n
           ^^
 
 References:
-   local.js:575:14
-   575|   const b2 = -2n;
+   local.js:585:14
+   585|   const b2 = -2n;
                      ^^^ [1]
-   local.js:577:9
-   577|   b2 as -3n; // error -2n ~> -3n
+   local.js:587:9
+   587|   b2 as -3n; // error -2n ~> -3n
                 ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:580:3
+Error --------------------------------------------------------------------------------------------------- local.js:590:3
 
 Cannot cast `b3` to bigint literal `-2n` because bigint [1] is incompatible with bigint literal `-2n` [2].
 [incompatible-cast]
 
-   local.js:580:3
-   580|   b3 as -2n; // error 2n ~> -2n
+   local.js:590:3
+   590|   b3 as -2n; // error 2n ~> -2n
           ^^
 
 References:
-   local.js:578:14
-   578|   const b3 = -b2;
+   local.js:588:14
+   588|   const b3 = -b2;
                      ^^^ [1]
-   local.js:580:9
-   580|   b3 as -2n; // error 2n ~> -2n
+   local.js:590:9
+   590|   b3 as -2n; // error 2n ~> -2n
                 ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:602:3
+Error --------------------------------------------------------------------------------------------------- local.js:612:3
 
 Cannot cast template string to string literal `b` because string [1] is incompatible with string literal `b` [2].
 [incompatible-cast]
 
-   local.js:602:3
-   602|   `a` as 'b'; // error
+   local.js:612:3
+   612|   `a` as 'b'; // error
           ^^^ [1]
 
 References:
-   local.js:602:10
-   602|   `a` as 'b'; // error
+   local.js:612:10
+   612|   `a` as 'b'; // error
                  ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:620:7
+Error --------------------------------------------------------------------------------------------------- local.js:630:7
 
 Cannot call `foo` because property `prop3` (did you mean `prop1`?) is missing in `Obj` [1]. [prop-missing]
 
-   local.js:620:7
-   620|   foo('prop3', {}); // error: prop3 is not a key of Obj
+   local.js:630:7
+   630|   foo('prop3', {}); // error: prop3 is not a key of Obj
               ^^^^^^^
 
 References:
-   local.js:617:49
-   617|   declare function foo<K: string>(key: K, args: Obj[K]): void;
+   local.js:627:49
+   627|   declare function foo<K: string>(key: K, args: Obj[K]): void;
                                                         ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- local.js:648:20
+Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
 Cannot call `Set` with array literal bound to `iterable` because string [1] is incompatible with union type [2] in type
 argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
-   local.js:648:20
-    648|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+   local.js:658:20
+    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
                             ^^^^^
 
 References:
-   local.js:648:21
-    648|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+   local.js:658:21
+    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
                              ^^^ [1]
-   local.js:643:77
-    643|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
+   local.js:653:77
+    653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
                                                                                      ^^^^^^^^^ [2]
    <BUILTINS>/core.js:1795:30
    1795| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:661:7
+Error --------------------------------------------------------------------------------------------------- local.js:671:7
 
 Cannot get `obj[getKey(...)]` because property `c` is missing in object type [1]. [prop-missing]
 
-   local.js:661:7
-   661|   obj[getKey('c')]; // error 'c' is missing in obj
+   local.js:671:7
+   671|   obj[getKey('c')]; // error 'c' is missing in obj
               ^^^^^^^^^^^
 
 References:
-   local.js:658:20
-   658|   declare var obj: {a: number, b: string};
+   local.js:668:20
+   668|   declare var obj: {a: number, b: string};
                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:663:7
+Error --------------------------------------------------------------------------------------------------- local.js:673:7
 
 Cannot assign `1` to `obj[getKey(...)]` because property `c` is missing in object type [1]. [prop-missing]
 
-   local.js:663:7
-   663|   obj[getKey('c')] = 1; // error 'c' is missing in obj
+   local.js:673:7
+   673|   obj[getKey('c')] = 1; // error 'c' is missing in obj
               ^^^^^^^^^^^
 
 References:
-   local.js:658:20
-   658|   declare var obj: {a: number, b: string};
+   local.js:668:20
+   668|   declare var obj: {a: number, b: string};
                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -2688,7 +2819,7 @@ References:
 
 
 
-Found 161 errors
+Found 169 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

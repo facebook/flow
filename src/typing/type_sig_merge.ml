@@ -558,12 +558,12 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
   | Pack.Pattern i -> Lazy.force (Patterns.get file.patterns i)
   | Pack.Err loc -> Type.(AnyT.at (AnyError None) loc)
   | Pack.Eval (loc, t, op) ->
-    let as_const =
+    let (as_const, const_decl) =
       match op with
-      | Unary Flow_ast.Expression.Unary.(Minus | Not) -> Some as_const
-      | _ -> None
+      | Unary Flow_ast.Expression.Unary.(Minus | Not) -> (Some as_const, Some const_decl)
+      | _ -> (None, None)
     in
-    let t = merge ?as_const env file t in
+    let t = merge ?as_const ?const_decl env file t in
     let op = merge_op env file op in
     let t = eval file loc t op in
     make_hooklike file hooklike t
