@@ -27,7 +27,7 @@ test.js:22:7
 Flags:
 RefSetter<void>
 
-'RefSetter' defined at (lib) react.js:269:22
+'RefSetter' defined at (lib) react.js:267:22
 
 test.js:22:7,22:9
 
@@ -175,7 +175,7 @@ jsx_instantiation.js:105:6
 Flags:
 (props: Props<number | string>) => Node
 
-'Node' defined at (lib) react.js:270:22
+'Node' defined at (lib) react.js:268:22
 'Props' defined at jsx_instantiation.js:102:9
 
 jsx_instantiation.js:105:6,105:8
@@ -184,7 +184,7 @@ jsx_instantiation.js:109:6
 Flags:
 (props: Props<number | string>) => Node
 
-'Node' defined at (lib) react.js:270:22
+'Node' defined at (lib) react.js:268:22
 'Props' defined at jsx_instantiation.js:102:9
 
 jsx_instantiation.js:109:6,109:16

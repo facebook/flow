@@ -8,8 +8,8 @@ lead to surprising behaviors. [libdef-override]
                             ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:163:21
-   163| declare opaque type React$CreateElement;
+   <BUILTINS>/react.js:161:21
+   161| declare opaque type React$CreateElement;
                             ^^^^^^^^^^^^^^^^^^^ [1]
 
 
