@@ -9,8 +9,8 @@ Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompat
          ^
 
 References:
-   <BUILTINS>/react.js:269:34
-   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:267:34
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [1]
    contravariant_refsetter.js:9:39
      9| (x: React.RefSetter<number | string | boolean>); // ERROR
@@ -34,8 +34,8 @@ Cannot cast `y` to `React.RefSetter` because in type argument `T` [1]: [incompat
          ^
 
 References:
-   <BUILTINS>/react.js:269:34
-   269|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:267:34
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [1]
    contravariant_refsetter.js:10:39
     10| (y: React.RefSetter<number | string | boolean>); // ERROR
@@ -1151,11 +1151,11 @@ Cannot create `Foo` element because in property `key`: [incompatible-type]
                  ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:95:26
-   95| declare type React$Key = string | number;
+   <BUILTINS>/react.js:93:26
+   93| declare type React$Key = string | number;
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:95:35
-   95| declare type React$Key = string | number;
+   <BUILTINS>/react.js:93:35
+   93| declare type React$Key = string | number;
                                          ^^^^^^ [3]
 
 
@@ -1170,11 +1170,11 @@ Cannot create `FooExact` element because in property `key`: [incompatible-type]
                       ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:95:26
-   95| declare type React$Key = string | number;
+   <BUILTINS>/react.js:93:26
+   93| declare type React$Key = string | number;
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:95:35
-   95| declare type React$Key = string | number;
+   <BUILTINS>/react.js:93:35
+   93| declare type React$Key = string | number;
                                          ^^^^^^ [3]
 
 
@@ -1321,11 +1321,11 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
                  ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:105:6
-   105|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:103:6
+   103|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1346,8 +1346,8 @@ References:
    ref.js:3:7
      3| class Foo extends React.Component<{}, void> {}
               ^^^ [2]
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1360,8 +1360,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [inc
                           ^^^
 
 References:
-   <BUILTINS>/react.js:105:11
-   105|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:103:11
+   103|   | ((T | null) => mixed)
                   ^^^^ [1]
    ref.js:11:24
     11| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -1401,11 +1401,11 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:105:6
-   105|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:103:6
+   103|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1426,8 +1426,8 @@ References:
    ref.js:15:7
     15| class FooExact extends React.Component<{||}, void> {}
               ^^^^^^^^ [2]
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1445,11 +1445,11 @@ References:
    ref.js:22:22
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
-   <BUILTINS>/react.js:105:11
-   105|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:103:11
+   103|   | ((T | null) => mixed)
                   ^^^^ [2]
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1470,8 +1470,8 @@ References:
    ref.js:24:22
     24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                              ^^^ [2]
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1503,8 +1503,8 @@ References:
    useCallback_hook.js:4:3
      4|   React.useCallback(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:861:33
-   861|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   <BUILTINS>/react.js:859:33
+   859|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1583,8 +1583,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1648,8 +1648,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:786:28
-   786|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:784:28
+   784|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1662,8 +1662,8 @@ Cannot call `React.useContext` because no more than 1 argument is expected by fu
                                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:786:28
-   786|     declare hook useContext<T>(context: React$Context<T>): T;
+   <BUILTINS>/react.js:784:28
+   784|     declare hook useContext<T>(context: React$Context<T>): T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1693,8 +1693,8 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                       ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1707,12 +1707,12 @@ Cannot call `React.useEffect` because function [1] requires another argument. [i
                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:837:27
+   <BUILTINS>/react.js:835:27
                                   v
-   837|     declare hook useEffect(
-   838|       create: () => MaybeCleanUpFn,
-   839|       inputs?: ?$ReadOnlyArray<mixed>,
-   840|     ): void;
+   835|     declare hook useEffect(
+   836|       create: () => MaybeCleanUpFn,
+   837|       inputs?: ?$ReadOnlyArray<mixed>,
+   838|     ): void;
             ------^ [1]
 
 
@@ -1726,8 +1726,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:838:15
-   838|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:836:15
+   836|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1741,8 +1741,8 @@ type [2]. [incompatible-call]
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:839:17
-   839|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:837:17
+   837|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1757,11 +1757,11 @@ Cannot call `React.useEffect` with async function bound to `create` because in t
                                      ^ [1]
 
 References:
-   <BUILTINS>/react.js:338:41
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:41
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:338:33
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:33
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -1779,11 +1779,11 @@ References:
    useEffect_hook.js:23:31
     23|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value
                                       ^^^ [1]
-   <BUILTINS>/react.js:338:47
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:47
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:338:33
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:33
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -1796,13 +1796,13 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
                 ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:883:37
+   <BUILTINS>/react.js:881:37
                                             v---
-   883|     declare hook useImperativeHandle<T>(
-   884|       ref: React$RefSetter<T> | null | void,
-   885|       create: () => T,
-   886|       inputs: ?$ReadOnlyArray<mixed>,
-   887|     ): void;
+   881|     declare hook useImperativeHandle<T>(
+   882|       ref: React$RefSetter<T> | null | void,
+   883|       create: () => T,
+   884|       inputs: ?$ReadOnlyArray<mixed>,
+   885|     ): void;
             ------^ [1]
 
 
@@ -1826,8 +1826,8 @@ References:
    useImperativeHandle_hook.js:28:14
     28|   const ref: {current: null | Interface } = React.createRef();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:6
-   105|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:103:6
+   103|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1851,8 +1851,8 @@ References:
    useImperativeHandle_hook.js:31:21
     31|   const refSetter = (instance: null | Interface) => {};
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:5
-   104|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -1865,12 +1865,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
                 ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:850:33
+   <BUILTINS>/react.js:848:33
                                         v
-   850|     declare hook useLayoutEffect(
-   851|       create: () => MaybeCleanUpFn,
-   852|       inputs?: ?$ReadOnlyArray<mixed>,
-   853|     ): void;
+   848|     declare hook useLayoutEffect(
+   849|       create: () => MaybeCleanUpFn,
+   850|       inputs?: ?$ReadOnlyArray<mixed>,
+   851|     ): void;
             ------^ [1]
 
 
@@ -1884,8 +1884,8 @@ type [2]. [incompatible-call]
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:851:15
-   851|       create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:849:15
+   849|       create: () => MaybeCleanUpFn,
                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1899,8 +1899,8 @@ type [2]. [incompatible-call]
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:852:17
-   852|       inputs?: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:850:17
+   850|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1916,11 +1916,11 @@ Cannot call `React.useLayoutEffect` with async function bound to `create` becaus
                                            ^ [1]
 
 References:
-   <BUILTINS>/react.js:338:41
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:41
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                                 ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:338:33
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:33
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [3]
 
 
@@ -1938,11 +1938,11 @@ References:
    useLayoutEffect_hook.js:23:37
     23|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value
                                             ^^^ [1]
-   <BUILTINS>/react.js:338:47
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:47
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                                       ^^^^ [2]
-   <BUILTINS>/react.js:338:33
-   338|   declare type MaybeCleanUpFn = void | (() => void);
+   <BUILTINS>/react.js:336:33
+   336|   declare type MaybeCleanUpFn = void | (() => void);
                                         ^^^^ [4]
 
 
@@ -1955,12 +1955,12 @@ Cannot call `React.useMemo` because function [1] requires another argument. [inc
                 ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:872:25
+   <BUILTINS>/react.js:870:25
                                 v---
-   872|     declare hook useMemo<T>(
-   873|       create: () => T,
-   874|       inputs: ?$ReadOnlyArray<mixed>,
-   875|     ): T;
+   870|     declare hook useMemo<T>(
+   871|       create: () => T,
+   872|       inputs: ?$ReadOnlyArray<mixed>,
+   873|     ): T;
             ---^ [1]
 
 
@@ -1991,8 +1991,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2006,8 +2006,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2021,8 +2021,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2036,8 +2036,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2051,8 +2051,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2066,8 +2066,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2081,8 +2081,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2096,8 +2096,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2111,8 +2111,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1011:26
-   1011|   declare export default typeof React;
+   <BUILTINS>/react.js:1009:26
+   1009|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2128,31 +2128,31 @@ Cannot call `React.useReducer` because: [incompatible-call]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:806:28
+   <BUILTINS>/react.js:804:28
                                    v------
-   806|     declare hook useReducer<S, A>(
-   807|       reducer: (S, A) => S,
-   808|       initialState: S,
-   809|     ): [S, Dispatch<A>];
+   804|     declare hook useReducer<S, A>(
+   805|       reducer: (S, A) => S,
+   806|       initialState: S,
+   807|     ): [S, Dispatch<A>];
             ------------------^ [1]
    useReducer_hook.js:4:3
      4|   React.useReducer(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:811:28
+   <BUILTINS>/react.js:809:28
                                    v------
-   811|     declare hook useReducer<S, A>(
-   812|       reducer: (S, A) => S,
-   813|       initialState: S,
-   814|       init: void,
-   815|     ): [S, Dispatch<A>];
+   809|     declare hook useReducer<S, A>(
+   810|       reducer: (S, A) => S,
+   811|       initialState: S,
+   812|       init: void,
+   813|     ): [S, Dispatch<A>];
             ------------------^ [3]
-   <BUILTINS>/react.js:817:28
+   <BUILTINS>/react.js:815:28
                                    v---------
-   817|     declare hook useReducer<S, A, I>(
-   818|       reducer: (S, A) => S,
-   819|       initialArg: I,
-   820|       init: (I) => S,
-   821|     ): [S, Dispatch<A>];
+   815|     declare hook useReducer<S, A, I>(
+   816|       reducer: (S, A) => S,
+   817|       initialArg: I,
+   818|       init: (I) => S,
+   819|     ): [S, Dispatch<A>];
             ------------------^ [4]
 
 
@@ -2363,8 +2363,8 @@ References:
    useState_hook.js:5:42
       5| const [count, setCount] = React.useState<number>(1);
                                                   ^^^^^^ [2]
-   <BUILTINS>/react.js:1003:39
-   1003|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+   <BUILTINS>/react.js:1001:39
+   1001|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
                                                ^^^^^^ [3]
 
 
@@ -2433,11 +2433,11 @@ Cannot call `use` with `null` bound to `usable` because: [incompatible-call]
               ^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:300:28
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:28
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:300:42
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:42
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2452,11 +2452,11 @@ Cannot call `use` with `undefined` bound to `usable` because: [incompatible-call
               ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:300:28
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:28
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:300:42
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:42
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2472,11 +2472,11 @@ Cannot call `use` with `0` bound to `usable` because: [incompatible-call]
               ^ [1]
 
 References:
-   <BUILTINS>/react.js:300:28
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:28
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:300:42
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:42
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2491,11 +2491,11 @@ Cannot call `use` with object literal bound to `usable` because: [incompatible-c
               ^^ [1]
 
 References:
-   <BUILTINS>/react.js:300:28
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:28
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:300:42
-   300|   declare type Usable<T> = Thenable<T> | React$Context<T>;
+   <BUILTINS>/react.js:298:42
+   298|   declare type Usable<T> = Thenable<T> | React$Context<T>;
                                                  ^^^^^^^^^^^^^^^^ [3]
 
 

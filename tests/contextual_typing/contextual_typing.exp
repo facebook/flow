@@ -860,8 +860,8 @@ Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [
              ^^^^^
 
 References:
-   <BUILTINS>/react.js:253:59
-   253|   declare export type ComponentType<-P: {...}> = component(...P);
+   <BUILTINS>/react.js:251:59
+   251|   declare export type ComponentType<-P: {...}> = component(...P);
                                                                   ^^^^^^ [1]
    react_tests.js:19:13
     19|     (props: empty); // error
