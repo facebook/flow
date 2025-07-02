@@ -245,6 +245,8 @@ const asComponentGenericWithDefault = (() => {});
 const asEmpty = {};
 const asExists = 'exists';
 const asFunction = (() => {});
+const asFunctionGeneric = (() => {});
+const asFunctionGenericWithDefault = (() => {});
 const asKeyof = 'a';
 const asMixed = 'mixed';
 const asNullable = null;

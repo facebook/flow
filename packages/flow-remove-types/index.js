@@ -158,7 +158,6 @@ var removeFlowVisitor = {
   DeclareVariable: removeNode,
   InterfaceDeclaration: removeNode,
   TypeAlias: removeNode,
-  TypeAnnotation: removeNodeIfNotCommentType,
   TypePredicate: removeNodeIfNotCommentType,
   InferredPredicate: removeInferredPredicateNode,
   OpaqueType: removeNode,
@@ -365,8 +364,18 @@ var removeFlowVisitor = {
     }
   },
 
+  TypeAnnotation: function (context, node, ast, parent) {
+    if (parent.default) {
+      return;
+    }
+    return removeNodeIfNotCommentType(context, node, ast, parent);
+  },
+
   TypeParameterDeclaration: function (context, node, ast, parent) {
-    if (parent.type !== 'ComponentTypeAnnotation') {
+    if (
+      parent.type !== 'ComponentTypeAnnotation' &&
+      parent.type !== 'FunctionTypeAnnotation'
+    ) {
       return removeNode(context, node);
     }
   },

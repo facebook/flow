@@ -313,6 +313,8 @@ const asComponentGenericWithDefault = (() => {}) as component<T = any>(p: T);
 const asEmpty = {} as empty;
 const asExists = 'exists' as *;
 const asFunction = (() => {}) as () => void;
+const asFunctionGeneric = (() => {}) as <T>(p: T) => void;
+const asFunctionGenericWithDefault = (() => {}) as <T: any = any>(obj: T) => {};
 const asKeyof = 'a' as keyof { a: string; b: number };
 const asMixed = 'mixed' as mixed;
 const asNullable = null as ?string;
