@@ -240,10 +240,11 @@ const asBigInt = 1n;
 const asBooleanLiteral = true;
 const asBoolean = true;
 const asComponent = (() => {});
+const asComponentGeneric = (() => {});
+const asComponentGenericWithDefault = (() => {});
 const asEmpty = {};
 const asExists = 'exists';
 const asFunction = (() => {});
-const asGeneric = 'generic';
 const asKeyof = 'a';
 const asMixed = 'mixed';
 const asNullable = null;
@@ -251,6 +252,7 @@ const asNullLiteral = null;
 const asNumberLiteral = 1;
 const asNumber = 1;
 const asObject = { a: 'a' };
+const asParametrizedGeneric = 'generic';
 const asStringLiteral = 'literal';
 const asString = 'string';
 const asSymbol = Symbol('symbol');
@@ -272,5 +274,9 @@ const asIndexed = 'indexed';
 // `as const`
 's';
 ['s'];
+
+// chained `as`
+const chain1 = '1';
+const chain2 = '1';
 
 //# sourceMappingURL=source.js.map

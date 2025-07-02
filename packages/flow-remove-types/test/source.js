@@ -308,10 +308,11 @@ const asBigInt = 1n as bigint;
 const asBooleanLiteral = true as true;
 const asBoolean = true as boolean;
 const asComponent = (() => {}) as component(p: number, o?: string);
+const asComponentGeneric = (() => {}) as component<T>(p: T);
+const asComponentGenericWithDefault = (() => {}) as component<T = any>(p: T);
 const asEmpty = {} as empty;
 const asExists = 'exists' as *;
 const asFunction = (() => {}) as () => void;
-const asGeneric = 'generic' as $NonMaybeType<string>;
 const asKeyof = 'a' as keyof { a: string; b: number };
 const asMixed = 'mixed' as mixed;
 const asNullable = null as ?string;
@@ -319,6 +320,7 @@ const asNullLiteral = null as null;
 const asNumberLiteral = 1 as 1;
 const asNumber = 1 as number;
 const asObject = { a: 'a' } as { a: string };
+const asParametrizedGeneric = 'generic' as $NonMaybeType<string>;
 const asStringLiteral = 'literal' as 'literal';
 const asString = 'string' as string;
 const asSymbol = Symbol('symbol') as symbol;
@@ -344,3 +346,7 @@ const asIndexed = 'indexed' as [string, number][0];
 // `as const`
 's' as const;
 ['s'] as const;
+
+// chained `as`
+const chain1 = '1' as any as any as any;
+const chain2 = '1' as const as any;
