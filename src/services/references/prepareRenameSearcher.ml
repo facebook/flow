@@ -14,6 +14,10 @@ class searcher ~contains_loc =
     method! identifier ((loc, _) as id) =
       if contains_loc loc then raise (Found loc);
       id
+
+    method! private_name ((loc, _) as id) =
+      if contains_loc loc then raise (Found loc);
+      id
   end
 
 let search_rename_loc ast cursor_loc =
