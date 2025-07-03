@@ -2,30 +2,42 @@ Error --------------------------------------------------------------------------
 
 This condition is likely truthy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err1/boolean_literal.js:4:13
    4|         if (x) {} // error, x is refined to `true`
                   ^
+
+References:
+   err1/boolean_literal.js:2:20
+   2|     declare var x: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:8:13
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err1/boolean_literal.js:8:13
    8|         if (x) {} // error, x is refined to `false`
                   ^
+
+References:
+   err1/boolean_literal.js:2:20
+   2|     declare var x: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- err1/null_void.js:4:13
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `null | void`
                   ^
@@ -35,41 +47,59 @@ Error --------------------------------------------------------------------------
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err1/null_void.js:8:9
    8|     if (y) {} // error, y is undefined
               ^
+
+References:
+   err1/null_void.js:7:9
+   7|     let y: Array<number>;
+              ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:4:13
 
 This condition is likely truthy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err2/boolean_literal.js:4:13
    4|         if (x) {} // error, x is refined to `true`
                   ^
+
+References:
+   err2/boolean_literal.js:2:20
+   2|     declare var x: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:8:13
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err2/boolean_literal.js:8:13
    8|         if (x) {} // error, x is refined to `false`
                   ^
+
+References:
+   err2/boolean_literal.js:2:20
+   2|     declare var x: boolean;
+                         ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- err2/null_void.js:4:13
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `null | void`
                   ^
@@ -79,11 +109,17 @@ Error --------------------------------------------------------------------------
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   err2/null_void.js:8:9
    8|     if (y) {} // error, y is undefined
               ^
+
+References:
+   err2/null_void.js:7:9
+   7|     let y: Array<number>;
+              ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:2:9
@@ -942,55 +978,85 @@ Error --------------------------------------------------------------------------
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   typed_check.js:6:7
    6|   if (x2) {} // ERROR, falls to SingletonStrT
             ^^
+
+References:
+   typed_check.js:5:12
+   5|   let x2 = '' as const
+                 ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- typed_check.js:11:9
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   typed_check.js:11:9
    11|     if (x3) {} // ERROR, refined, falsy, falls to SingletonStrT
                ^^
+
+References:
+   typed_check.js:8:11
+    8|   let x3: string = 'avuyv'
+                 ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- typed_check.js:15:9
 
 This condition is likely truthy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   typed_check.js:15:9
    15|     if (x3) {} // ERROR we don't know what this is
                ^^
+
+References:
+   typed_check.js:8:11
+    8|   let x3: string = 'avuyv'
+                 ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:120:8
 
 This condition is likely truthy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   typed_check.js:120:8
    120|     if(x1) {} // error, truthy
                ^^
+
+References:
+   typed_check.js:118:11
+   118|   let x1: number = 6;
+                  ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:124:9
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
+   typed_check.js:124:9
    124|     if (x1) {} // error, falsy
                 ^^
+
+References:
+   typed_check.js:118:11
+   118|   let x1: number = 6;
+                  ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8

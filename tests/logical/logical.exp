@@ -608,8 +608,8 @@ Error --------------------------------------------------------------------------
 
 This condition is likely falsy.
 [WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
-out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
--> `?T`). [constant-condition]
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
 
    596|   (b && false) as empty; // should only error on `b`
            ^

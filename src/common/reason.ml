@@ -501,6 +501,8 @@ let def_loc_of_reason r =
   | Some loc -> loc
   | None -> loc_of_reason r
 
+let def_loc_opt_of_reason r = r.def_loc_opt
+
 let annot_loc_of_reason r = r.annot_loc_opt
 
 let mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback loc =

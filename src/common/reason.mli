@@ -311,6 +311,8 @@ val loc_of_reason : 'loc virtual_reason -> 'loc
 
 val def_loc_of_reason : 'loc virtual_reason -> 'loc
 
+val def_loc_opt_of_reason : 'loc virtual_reason -> 'loc option
+
 val annot_loc_of_reason : 'loc virtual_reason -> 'loc option
 
 val unwrap_reason_desc : 'loc virtual_reason_desc -> 'loc virtual_reason_desc

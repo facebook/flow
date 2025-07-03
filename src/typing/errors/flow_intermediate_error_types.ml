@@ -971,6 +971,7 @@ type 'loc message =
       is_truthy: bool;
       show_warning: bool;
       constant_condition_kind: constant_condition_kind;
+      reason: 'loc virtual_reason option;
     }
 
 type 'loc intermediate_error = {

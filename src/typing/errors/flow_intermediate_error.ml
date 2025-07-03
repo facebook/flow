@@ -4449,7 +4449,7 @@ let to_printable_error :
         text " cannot be declared as 'const'. ";
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
-    | MessageConstantCondition { is_truthy; show_warning; constant_condition_kind } ->
+    | MessageConstantCondition { is_truthy; show_warning; constant_condition_kind; reason } ->
       let base_message =
         [
           text
@@ -4473,12 +4473,23 @@ let to_printable_error :
         | ConstCond_General -> []
       in
       let warning_message =
+        let suggested_loc =
+          match reason with
+          | Some reason ->
+            (match annot_loc_of_reason reason with
+            | Some loc -> Some loc
+            | None -> def_loc_opt_of_reason reason)
+          | None -> None
+        in
         if show_warning then
           [
             text "\n[WARNING]: Flow's type inference may be incorrect that it could be null ";
             text "at runtime (due to `any` annotations, out-of-bounds array accesses, etc.). ";
-            text "If the check is valid, you might want to add an annotation to ";
-            text "make it nullable (`T` -> `?T`).";
+            text "If the check is valid, you might want to make";
+            (match suggested_loc with
+            | Some loc -> no_desc_ref loc
+            | None -> text " the type of this expression");
+            text " nullable (`T` -> `?T`).";
           ]
         else
           []
