@@ -114,7 +114,9 @@ type 'loc invalid_render_type_kind =
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
 
-type constant_condition_kind = ConstCond_General
+type constant_condition_kind =
+  | ConstCond_General
+  | UnawaitedPromise
 
 module IncorrectType = struct
   type t =

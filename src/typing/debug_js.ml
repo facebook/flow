@@ -2002,6 +2002,7 @@ let dump_error_message =
         (string_of_bool is_truthy)
         (string_of_bool show_warning)
         (match constant_condition_kind with
+        | Flow_intermediate_error_types.UnawaitedPromise -> "UnawaitedPromise"
         | Flow_intermediate_error_types.ConstCond_General -> "General")
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"None" reason)
 
