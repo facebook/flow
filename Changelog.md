@@ -1,3 +1,47 @@
+### 0.275.0
+
+Likely to cause new Flow errors:
+
+* For all object literals in positions that cannot be contextually typed, we will infer a stricter type for them. It will cause new errors in code like
+
+```
+const foo = {baz: new Dog()};
+type Foo = {bar?: string, baz: Animal};
+declare function acceptFoo(foo: Foo): void;
+acceptFoo(foo); // error
+```
+
+To fix the error, you can either annotate the object
+
+```
+const foo: Foo = {baz: new Dog()};
+
+type Foo = {bar?: string, baz: Animal};
+declare function acceptFoo(foo: Foo): void;
+
+acceptFoo(foo);
+```
+
+or make the call site accepts readonly objects:
+
+```
+const foo = {baz: new Dog()};
+
+type Foo = $ReadOnly<{bar?: string, baz: Animal}>;
+declare function acceptFoo(foo: Foo): void;
+
+acceptFoo(foo);
+```
+
+We provide a codemod to automate the annotation process. `flow codemod annotate-literal-declaration --write --max-type-size 5`. (You can adjust the max type size based on your needs).
+
+IDE:
+* Support rename on private properties and methods.
+
+Library Definitions:
+* `React$MixedElement` is removed from builtin libdef. It will cause `internal-type` error since `v0.258.0`. You should use `React.MixedElement` instead.
+
+
 ### 0.274.2
 * Bug fixes for `match`
 
