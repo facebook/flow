@@ -1,8 +1,9 @@
 Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:4:13
 
-This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
-out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
-[constant-condition]
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `true`
                   ^
@@ -10,8 +11,10 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
 
 Error ------------------------------------------------------------------------------------- err1/boolean_literal.js:8:13
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    8|         if (x) {} // error, x is refined to `false`
                   ^
@@ -19,8 +22,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ------------------------------------------------------------------------------------------- err1/null_void.js:4:13
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `null | void`
                   ^
@@ -28,8 +33,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error -------------------------------------------------------------------------------------------- err1/null_void.js:8:9
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    8|     if (y) {} // error, y is undefined
               ^
@@ -37,9 +44,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:4:13
 
-This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
-out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
-[constant-condition]
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `true`
                   ^
@@ -47,8 +55,10 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
 
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:8:13
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    8|         if (x) {} // error, x is refined to `false`
                   ^
@@ -56,8 +66,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ------------------------------------------------------------------------------------------- err2/null_void.js:4:13
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    4|         if (x) {} // error, x is refined to `null | void`
                   ^
@@ -65,8 +77,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error -------------------------------------------------------------------------------------------- err2/null_void.js:8:9
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    8|     if (y) {} // error, y is undefined
               ^
@@ -74,7 +88,7 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:2:9
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    2|     if (null) {} // ERROR
               ^^^^
@@ -82,7 +96,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:5:9
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    5|     x = null ? 5 : 6; // ERROR
               ^^^^
@@ -90,7 +104,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:7:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    7|     null && 5; // ERROR
           ^^^^
@@ -98,7 +112,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------- null_literal.js:9:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    9|     null || 5; // ERROR
           ^^^^
@@ -106,7 +120,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------- null_literal.js:11:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    11|     null ?? 5; // ERROR
            ^^^^
@@ -114,7 +128,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:2:9
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    2|     if ('') {} // ERROR
               ^^
@@ -122,7 +136,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:3:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    3|     if ('\'') {} // ERROR
               ^^^^
@@ -130,7 +144,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:4:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    4|     if ('a') {} // ERROR
               ^^^
@@ -138,7 +152,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:5:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    5|     if ('hfudiashfkdsnfsa') {} // ERROR
               ^^^^^^^^^^^^^^^^^^
@@ -146,7 +160,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:8:9
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    8|     x = '' ? 5 : 6; // ERROR
               ^^
@@ -154,7 +168,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- string_literal.js:9:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    9|     x = '\'' ? 5 : 6; // ERROR
               ^^^^
@@ -162,7 +176,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:10:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    10|     x = 'a' ? 5 : 6; // ERROR
                ^^^
@@ -170,7 +184,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:11:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    11|     x = 'fdsgfdgsfdga' ? 5 : 6; // ERROR
                ^^^^^^^^^^^^^^
@@ -178,7 +192,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:13:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    13|     '' && 5; // ERROR
            ^^
@@ -186,7 +200,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:14:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    14|     '\'' && 5; // ERROR
            ^^^^
@@ -194,7 +208,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:15:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    15|     'a' && 5; // ERROR
            ^^^
@@ -202,7 +216,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:16:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    16|     'fdsgfdgsfdga' && 5; // ERROR
            ^^^^^^^^^^^^^^
@@ -210,7 +224,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:18:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    18|     '' || 5; // ERROR
            ^^
@@ -218,7 +232,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:19:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    19|     '\'' || 5; // ERROR
            ^^^^
@@ -226,7 +240,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:20:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    20|     'a' || 5; // ERROR
            ^^^
@@ -234,7 +248,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:21:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    21|     'fdsgfdgsfdga' || 5; // ERROR
            ^^^^^^^^^^^^^^
@@ -242,7 +256,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:23:5
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    23|     '' ?? 5; // ERROR
            ^^
@@ -250,7 +264,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:24:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    24|     '\'' ?? 5; // ERROR
            ^^^^
@@ -258,7 +272,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:25:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    25|     'a' ?? 5; // ERROR
            ^^^
@@ -266,7 +280,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- string_literal.js:26:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    26|     'fdsgfdgsfdga' ?? 5; // ERROR
            ^^^^^^^^^^^^^^
@@ -274,7 +288,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:7
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    4|   if ('') {} // ERROR
             ^^
@@ -282,7 +296,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    5|   if ('\'') {} // ERROR
             ^^^^
@@ -290,7 +304,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    6|   if ('a') {} // ERROR
             ^^^
@@ -298,7 +312,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    8|   if('a' || 'b') {} // ERROR
            ^^^
@@ -306,7 +320,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    8|   if('a' || 'b') {} // ERROR
            ^^^^^^^^^^
@@ -314,7 +328,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:3
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    10|   '' ? 1 : 2; // ERROR
          ^^
@@ -322,7 +336,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:3
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    11|   'a' ? 1 : 2; // ERROR
          ^^^
@@ -330,7 +344,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:3
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    12|   '' || 1; // ERROR
          ^^
@@ -338,7 +352,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:3
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    13|   '' && 1; // ERROR
          ^^
@@ -346,7 +360,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    14|   'a' && 1; // ERROR
          ^^^
@@ -354,7 +368,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    15|   '' ?? 1; // ERROR
          ^^
@@ -362,7 +376,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:3
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    16|   'a' ?? 1; // ERROR
          ^^^
@@ -370,7 +384,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    18|   if (('a'?1:2)||3) {} // ERROR
               ^^^
@@ -378,7 +392,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    19|   if (('a'?1:2)&&3) {} // ERROR
               ^^^
@@ -386,7 +400,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    20|   if (('a'?1:2)??3) {} // ERROR
               ^^^
@@ -394,7 +408,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    25|   if ('a' && x) {} // ERROR
              ^^^
@@ -402,7 +416,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    36|   if(null) {} // ERROR
             ^^^^
@@ -410,7 +424,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:3
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    37|   null ? 1 : 2; // ERROR
          ^^^^
@@ -418,7 +432,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    43|   if (2) {} // ERROR
              ^
@@ -426,7 +440,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    47|   if (2n) {} // ERROR
              ^^
@@ -434,7 +448,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    53|   if (-2) {} // ERROR
              ^^
@@ -442,7 +456,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    57|   if (-2n) {} // ERROR
              ^^^
@@ -450,7 +464,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:7
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    59|   if (void 6) {} // ERROR
              ^^^^^^
@@ -458,7 +472,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    60|   if (typeof 'aaa') {} // ERROR
              ^^^^^^^^^^^^
@@ -466,7 +480,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    65|   if (/hello/) {} // ERROR
              ^^^^^^^
@@ -474,7 +488,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    71|   if(2 as number) {} // ERROR
             ^
@@ -482,7 +496,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:72:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    72|   if(3 as any) {} // ERROR
             ^
@@ -490,7 +504,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:76:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    76|   if([0]) {} // ERROR
             ^^^
@@ -498,7 +512,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:77:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    77|   if([0,1,2]) {} // ERROR
             ^^^^^^^
@@ -506,7 +520,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:81:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    81|   if(new Set<string>()) {} // ERROR
             ^^^^^^^^^^^^^^^^^
@@ -514,7 +528,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    82|   if(new Set([0])) {} // ERROR
             ^^^^^^^^^^^^
@@ -522,7 +536,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    83|   if(new Set([1])) {} // ERROR
             ^^^^^^^^^^^^
@@ -530,7 +544,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:84:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    84|   if(new Set([2])) {} // ERROR
             ^^^^^^^^^^^^
@@ -538,7 +552,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:91:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    91|   if(x=2) {} // ERROR
               ^
@@ -546,7 +560,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:94:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    94|   x=2 ? 1 : 2; // ERROR
            ^
@@ -554,7 +568,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:102:14
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    102|   if ((x,x,x,2)) {} // ERROR
                      ^
@@ -562,7 +576,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:103:12
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    103|   if ((0,0,()=>0)) {} // ERROR
                    ^^^^^
@@ -570,7 +584,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:106:13
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    106|   if((0,1,2,'a'?f():3)) {} // ERROR
                     ^^^
@@ -578,7 +592,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:108:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    108|     'a'?f():3, // ERROR
             ^^^
@@ -586,7 +600,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:109:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    109|     2) // ERROR
             ^
@@ -594,7 +608,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:112:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    112|     'a'?f():3, // ERROR
             ^^^
@@ -602,7 +616,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:118:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
              v
    118|   if({
@@ -614,7 +628,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:125:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    125|   if(function(num: number){return num%2===0}) {} // ERROR
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -622,7 +636,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:128:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    128|   if((a:number) => a%2===0) {} // ERROR
              ^^^^^^^^^^^^^^^^^^^^^
@@ -630,7 +644,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:133:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    133|   if (`I'm TemplateLiteral`) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^^
@@ -638,7 +652,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:137:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    137|   if (<div>true</div>) {} // ERROR
               ^^^^^^^^^^^^^^^
@@ -646,7 +660,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:138:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    138|   if (<div>false</div>) {} // ERROR
               ^^^^^^^^^^^^^^^^
@@ -654,7 +668,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:139:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    139|   if (<>true</>) {} // ERROR
               ^^^^^^^^^
@@ -662,7 +676,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    140|   if (<>false</>) {} // ERROR
               ^^^^^^^^^^
@@ -670,7 +684,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:144:6
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    144|   if(class A {}){} // ERROR
              ^^^^^^^^^^
@@ -678,7 +692,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:148:11
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    148|       if (yield i) {} // ERROR
                   ^^^^^^^
@@ -686,7 +700,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    154|   if ((('a'?2:3)?4:5)) {} // ERROR
                ^^^^^^^^^^^^^
@@ -694,7 +708,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    154|   if ((('a'?2:3)?4:5)) {} // ERROR
                 ^^^
@@ -702,7 +716,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    154|   if ((('a'?2:3)?4:5)) {} // ERROR
                 ^^^^^^^
@@ -710,7 +724,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:155:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    155|   if ((true?2:3)?4:5) {} // ERROR
               ^^^^^^^^^^^^^^
@@ -718,7 +732,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:155:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    155|   if ((true?2:3)?4:5) {} // ERROR
                ^^^^^^^^
@@ -726,7 +740,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:156:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    156|   if ((false?2:3)?4:5) {} // ERROR
               ^^^^^^^^^^^^^^^
@@ -734,7 +748,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:156:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    156|   if ((false?2:3)?4:5) {} // ERROR
                ^^^^^^^^^
@@ -742,7 +756,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    157|   if ((('a'?2:3)?4:5)?6:7) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^
@@ -750,7 +764,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    157|   if ((('a'?2:3)?4:5)?6:7) {} // ERROR
                ^^^^^^^^^^^^^
@@ -758,7 +772,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    157|   if ((('a'?2:3)?4:5)?6:7) {} // ERROR
                 ^^^
@@ -766,7 +780,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    157|   if ((('a'?2:3)?4:5)?6:7) {} // ERROR
                 ^^^^^^^
@@ -774,7 +788,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:158:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    158|   if (((true?2:3)?4:5)?6:7) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^
@@ -782,7 +796,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:158:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    158|   if (((true?2:3)?4:5)?6:7) {} // ERROR
                ^^^^^^^^^^^^^^
@@ -790,7 +804,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:158:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    158|   if (((true?2:3)?4:5)?6:7) {} // ERROR
                 ^^^^^^^^
@@ -798,7 +812,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:159:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    159|   if (((false?2:3)?4:5)?6:7) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^^
@@ -806,7 +820,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:159:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    159|   if (((false?2:3)?4:5)?6:7) {} // ERROR
                ^^^^^^^^^^^^^^^
@@ -814,7 +828,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:159:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    159|   if (((false?2:3)?4:5)?6:7) {} // ERROR
                 ^^^^^^^^^
@@ -822,7 +836,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    160|   if (((('a'?2:3)?4:5)?6:7)?8:9) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -830,7 +844,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    160|   if (((('a'?2:3)?4:5)?6:7)?8:9) {} // ERROR
                ^^^^^^^^^^^^^^^^^^^
@@ -838,7 +852,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    160|   if (((('a'?2:3)?4:5)?6:7)?8:9) {} // ERROR
                 ^^^^^^^^^^^^^
@@ -846,7 +860,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:160:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    160|   if (((('a'?2:3)?4:5)?6:7)?8:9) {} // ERROR
                  ^^^
@@ -854,7 +868,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:160:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    160|   if (((('a'?2:3)?4:5)?6:7)?8:9) {} // ERROR
                  ^^^^^^^
@@ -862,7 +876,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:161:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    161|   if ((((true?2:3)?4:5)?6:7)?8:9) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -870,7 +884,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:161:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    161|   if ((((true?2:3)?4:5)?6:7)?8:9) {} // ERROR
                ^^^^^^^^^^^^^^^^^^^^
@@ -878,7 +892,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:161:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    161|   if ((((true?2:3)?4:5)?6:7)?8:9) {} // ERROR
                 ^^^^^^^^^^^^^^
@@ -886,7 +900,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:161:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    161|   if ((((true?2:3)?4:5)?6:7)?8:9) {} // ERROR
                  ^^^^^^^^
@@ -894,7 +908,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:162:7
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    162|   if ((((false?2:3)?4:5)?6:7)?8:9) {} // ERROR
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -902,7 +916,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:162:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    162|   if ((((false?2:3)?4:5)?6:7)?8:9) {} // ERROR
                ^^^^^^^^^^^^^^^^^^^^^
@@ -910,7 +924,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:162:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    162|   if ((((false?2:3)?4:5)?6:7)?8:9) {} // ERROR
                 ^^^^^^^^^^^^^^^
@@ -918,7 +932,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- test.js:162:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    162|   if ((((false?2:3)?4:5)?6:7)?8:9) {} // ERROR
                  ^^^^^^^^^
@@ -926,8 +940,10 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------- typed_check.js:6:7
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    6|   if (x2) {} // ERROR, falls to SingletonStrT
             ^^
@@ -935,8 +951,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ---------------------------------------------------------------------------------------------- typed_check.js:11:9
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    11|     if (x3) {} // ERROR, refined, falsy, falls to SingletonStrT
                ^^
@@ -944,9 +962,10 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ---------------------------------------------------------------------------------------------- typed_check.js:15:9
 
-This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
-out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
-[constant-condition]
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    15|     if (x3) {} // ERROR we don't know what this is
                ^^
@@ -954,9 +973,10 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:120:8
 
-This condition is likely truthy. WARNING: Flow's type inference may be incorrect (due to `any` annotations,
-out-of-bounds array accesses, etc.). Before deleting the check, confirm this condition is indeed constant.
-[constant-condition]
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    120|     if(x1) {} // error, truthy
                ^^
@@ -964,8 +984,10 @@ out-of-bounds array accesses, etc.). Before deleting the check, confirm this con
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:124:9
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    124|     if (x1) {} // error, falsy
                 ^^
@@ -973,7 +995,7 @@ array accesses, etc.). Before deleting the check, confirm this condition is inde
 
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    2|     if(!'afa') {} // ERROR -> falsy
              ^^^^^^
@@ -981,7 +1003,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- unary_not.js:9:8
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    9|     if(a ? 'afa' : 5) {} // ERROR -> truthy
              ^^^^^^^^^^^^^
@@ -989,7 +1011,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:10:8
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    10|     if(a ? !'afa' : !5) {} // ERROR -> falsy
               ^^^^^^^^^^^^^^^
@@ -997,7 +1019,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:12:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    12|     'afa' && a; // ERROR -> truthy
            ^^^^^
@@ -1005,7 +1027,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:13:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    13|     (!'afa') && a; // ERROR -> falsy
             ^^^^^^
@@ -1013,7 +1035,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:15:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    15|     'afa' || a; // ERROR -> truthy
            ^^^^^
@@ -1021,7 +1043,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:16:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    16|     (!'afa') || a; // ERROR -> falsy
             ^^^^^^
@@ -1029,7 +1051,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:18:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    18|     'afa' ?? a; // ERROR -> truthy
            ^^^^^
@@ -1037,7 +1059,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:19:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    19|     (!'afa') ?? a; // ERROR -> falsy
             ^^^^^^
@@ -1045,7 +1067,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:24:8
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    24|     if(!!!'afa') {} // ERROR -> falsy
               ^^^^^^^^
@@ -1053,7 +1075,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:31:8
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    31|     if(!(a ? !!'afa' : !!5)) {} // ERROR -> falsy
               ^^^^^^^^^^^^^^^^^^^^
@@ -1061,7 +1083,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:32:8
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    32|     if(a ? !!!!!!!'afa' : !!!5) {} // ERROR -> falsy
               ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1069,7 +1091,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:34:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    34|     'afa' && a; // ERROR -> truthy
            ^^^^^
@@ -1077,7 +1099,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:35:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    35|     (!!!'afa') && a; // ERROR -> falsy
             ^^^^^^^^
@@ -1085,7 +1107,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:37:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    37|     'afa' || a; // ERROR -> truthy
            ^^^^^
@@ -1093,7 +1115,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:38:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    38|     (!!!!!!!'afa') || a; // ERROR -> falsy
             ^^^^^^^^^^^^
@@ -1101,7 +1123,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:40:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    40|     'afa' ?? a; // ERROR -> truthy
            ^^^^^
@@ -1109,7 +1131,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ unary_not.js:41:6
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    41|     (!!!!!!!!!!!'afa') ?? a; // ERROR -> falsy
             ^^^^^^^^^^^^^^^^

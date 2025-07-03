@@ -31,7 +31,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:39:10
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    39|   return '' && 123;
                 ^^
@@ -39,7 +39,7 @@ Constant condition. The condition will always be falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:53:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    53|   return 'foo' && 123;
                 ^^^^^
@@ -47,7 +47,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:60:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    60|   return 123 && 'foo';
                 ^^^
@@ -55,7 +55,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:67:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    67|   return [1, 2, 3] && 'foo';
                 ^^^^^^^^^
@@ -153,7 +153,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:206:10
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    206|   return '' || 123;
                  ^^
@@ -175,7 +175,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:221:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    221|   return 'foo' || 123;
                  ^^^^^
@@ -183,7 +183,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ logical.js:228:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    228|   return 123 || 'foo';
                  ^^^
@@ -227,7 +227,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:364:10
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    364|   return 'a' || x || y;
                  ^^^
@@ -411,7 +411,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:445:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    445|     {x: 'foo' && 'bar'},
                 ^^^^^
@@ -419,7 +419,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:446:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    446|     {x: 'foo' && 'bar'},
                 ^^^^^
@@ -427,7 +427,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:447:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    447|     {x: 'foo' && 'bar'},
                 ^^^^^
@@ -483,7 +483,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:461:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    461|     {x: 'foo' || 'bar'},
                 ^^^^^
@@ -491,7 +491,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:462:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    462|     {x: 'foo' || 'bar'},
                 ^^^^^
@@ -499,7 +499,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:463:9
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    463|     {x: 'foo' || 'bar'},
                 ^^^^^
@@ -606,8 +606,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    596|   (b && false) as empty; // should only error on `b`
            ^

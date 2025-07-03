@@ -1995,12 +1995,14 @@ let dump_error_message =
       spf "ETypeParamConstIncompatibility (%s)" (dump_reason cx reason)
     | ETypeParamConstInvalidPosition reason ->
       spf "ETypeParamConstInvalidPosition (%s)" (dump_reason cx reason)
-    | EConstantCondition { loc; is_truthy; show_warning } ->
+    | EConstantCondition { loc; is_truthy; show_warning; constant_condition_kind } ->
       spf
-        "EInvalidComparison (%s). is_truthy=%s show_warning=%s"
+        "EInvalidComparison (%s). is_truthy=%s show_warning=%s constant_condition_kind=%s"
         (string_of_aloc loc)
         (string_of_bool is_truthy)
         (string_of_bool show_warning)
+        (match constant_condition_kind with
+        | Flow_intermediate_error_types.ConstCond_General -> "General")
 
 module Verbose = struct
   let print_if_verbose_lazy

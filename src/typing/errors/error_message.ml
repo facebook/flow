@@ -233,6 +233,7 @@ and 'loc t' =
       loc: 'loc;
       is_truthy: bool;
       show_warning: bool;
+      constant_condition_kind: constant_condition_kind;
     }
   | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
   | EInvalidExtends of 'loc virtual_reason
@@ -1153,8 +1154,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     ETooFewTypeArgs { reason_tapp = map_reason reason_tapp; arity_loc = f arity_loc; minimum_arity }
   | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
   | EInvalidInfer l -> EInvalidInfer (f l)
-  | EConstantCondition { loc; is_truthy; show_warning } ->
-    EConstantCondition { loc = f loc; is_truthy; show_warning }
+  | EConstantCondition { loc; is_truthy; show_warning; constant_condition_kind } ->
+    EConstantCondition { loc = f loc; is_truthy; show_warning; constant_condition_kind }
   | EInvalidExtends r -> EInvalidExtends (map_reason r)
   | EStrUtilTypeNonLiteralArg loc -> EStrUtilTypeNonLiteralArg (f loc)
   | EExportsAnnot loc -> EExportsAnnot (f loc)
@@ -2397,8 +2398,8 @@ let friendly_message_of_msg = function
   | EInvalidTypeArgs (reason_main, reason_tapp) ->
     Normal (MessageCannotUseTypeWithInvalidTypeArgs { reason_main; reason_tapp })
   | EInvalidInfer _ -> Normal MessageInvalidInferType
-  | EConstantCondition { loc = _; is_truthy; show_warning } ->
-    Normal (MessageConstantCondition { is_truthy; show_warning })
+  | EConstantCondition { loc = _; is_truthy; show_warning; constant_condition_kind } ->
+    Normal (MessageConstantCondition { is_truthy; show_warning; constant_condition_kind })
   | EInvalidExtends reason -> Normal (MessageCannotUseAsSuperClass reason)
   | EInvalidReactCreateElement { create_element_loc = _; invalid_react } ->
     Normal (MessageInvalidReactCreateElement invalid_react)
@@ -3354,7 +3355,8 @@ let error_code_of_message err : error_code option =
   | EInvalidTypeArgs (_, _) -> Some InvalidTypeArg
   | EInvalidTypeof _ -> Some IllegalTypeof
   | EInvalidInfer _ -> Some InvalidInfer
-  | EConstantCondition { loc = _; is_truthy = _; show_warning = _ } -> Some ConstantCondition
+  | EConstantCondition { loc = _; is_truthy = _; show_warning = _; constant_condition_kind = _ } ->
+    Some ConstantCondition
   | EInvalidExtends _ -> Some InvalidExtends
   | ELintSetting _ -> Some LintSetting
   | EMissingLocalAnnotation { reason; hint_available = _; from_generic_function = _ } -> begin

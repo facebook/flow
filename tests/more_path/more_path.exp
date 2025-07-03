@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ Condition.js:2:24
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    2| function g() { return (42 || "hello"); }
                              ^^
@@ -8,7 +8,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error ----------------------------------------------------------------------------------------------- Condition.js:11:24
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    11| function h() { return (42 || new A()); }
                               ^^

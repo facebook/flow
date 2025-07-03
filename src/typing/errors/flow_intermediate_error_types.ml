@@ -114,6 +114,8 @@ type 'loc invalid_render_type_kind =
   | InvalidRendersGenericT
   | UncategorizedInvalidRenders
 
+type constant_condition_kind = ConstCond_General
+
 module IncorrectType = struct
   type t =
     | Partial
@@ -968,6 +970,7 @@ type 'loc message =
   | MessageConstantCondition of {
       is_truthy: bool;
       show_warning: bool;
+      constant_condition_kind: constant_condition_kind;
     }
 
 type 'loc intermediate_error = {

@@ -2218,7 +2218,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:363:14
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    363|   const x1 = 42 || "hello";
                      ^^
@@ -2226,7 +2226,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------------- local.js:369:31
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    369|   function fn1(): 42 { return 42 || ""; } // okay
                                       ^^
@@ -2234,7 +2234,7 @@ Constant condition. The condition will always be truthy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------------- local.js:372:27
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    372|   function fn2() { return 42 || ""; }
                                   ^^

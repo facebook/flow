@@ -689,7 +689,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:35:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    35| ((((1 ? 2 : 3) ? 4 : 5): empty): T).p as empty;
            ^^^^^^^^^

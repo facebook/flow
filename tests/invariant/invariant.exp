@@ -28,8 +28,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- index.js:14:11
 
-This condition is likely falsy. WARNING: Flow's type inference may be incorrect (due to `any` annotations, out-of-bounds
-array accesses, etc.). Before deleting the check, confirm this condition is indeed constant. [constant-condition]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to add an annotation to make it nullable (`T`
+-> `?T`). [constant-condition]
 
    14| invariant(d);
                  ^

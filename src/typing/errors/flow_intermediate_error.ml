@@ -4449,13 +4449,17 @@ let to_printable_error :
         text " cannot be declared as 'const'. ";
         text "'const' modifier can only appear on a function or method type parameter.";
       ]
-    | MessageConstantCondition { is_truthy; show_warning } ->
-      if not show_warning then
+    | MessageConstantCondition { is_truthy; show_warning; constant_condition_kind } ->
+      let base_message =
         [
-          text "Constant condition. ";
           text
             (spf
-               "The condition will always be %s."
+               "This condition is%s %s."
+               ( if show_warning then
+                 " likely"
+               else
+                 ""
+               )
                ( if is_truthy then
                  "truthy"
                else
@@ -4463,21 +4467,23 @@ let to_printable_error :
                )
             );
         ]
-      else
-        [
-          text
-            (spf
-               "This condition is likely %s. "
-               ( if is_truthy then
-                 "truthy"
-               else
-                 "falsy"
-               )
-            );
-          text "WARNING: Flow's type inference may be incorrect (due to `any` annotations, ";
-          text "out-of-bounds array accesses, etc.). ";
-          text "Before deleting the check, confirm this condition is indeed constant.";
-        ]
+      in
+      let help_message =
+        match constant_condition_kind with
+        | ConstCond_General -> []
+      in
+      let warning_message =
+        if show_warning then
+          [
+            text "\n[WARNING]: Flow's type inference may be incorrect that it could be null ";
+            text "at runtime (due to `any` annotations, out-of-bounds array accesses, etc.). ";
+            text "If the check is valid, you might want to add an annotation to ";
+            text "make it nullable (`T` -> `?T`).";
+          ]
+        else
+          []
+      in
+      base_message @ help_message @ warning_message
   in
 
   let rec convert_error_message

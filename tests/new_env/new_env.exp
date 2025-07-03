@@ -302,7 +302,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:12:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    12| if (42 as any) {
            ^^
@@ -328,7 +328,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:22:5
 
-Constant condition. The condition will always be truthy. [constant-condition]
+This condition is truthy. [constant-condition]
 
    22| if (42 as any) {
            ^^

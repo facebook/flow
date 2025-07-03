@@ -198,13 +198,18 @@ let detect_test_prop_misses cx =
     misses
 
 type truthyness_result =
-  | ConstCond_Truthy
-  | ConstCond_Falsy
+  | ConstCond_Truthy of {
+      constant_condition_kind: Flow_intermediate_error_types.constant_condition_kind;
+    }
+  | ConstCond_Falsy of {
+      constant_condition_kind: Flow_intermediate_error_types.constant_condition_kind;
+    }
   | ConstCond_Unknown
   | ConstCond_Unconcretized
 
 let try_eval_concrete_type_truthyness cx t =
   let open Type in
+  let open Flow_intermediate_error_types in
   match t with
   | OpenT _
   | EvalT _
@@ -217,7 +222,7 @@ let try_eval_concrete_type_truthyness cx t =
     ConstCond_Unconcretized
   | DefT (_, NumGeneralT literal) ->
     (match literal with
-    | Truthy -> ConstCond_Truthy
+    | Truthy -> ConstCond_Truthy { constant_condition_kind = ConstCond_General }
     (* might be null if it's from member access due to flow soundness hole
          or internal flow bugs *)
     | AnyLiteral -> ConstCond_Unknown)
@@ -225,14 +230,14 @@ let try_eval_concrete_type_truthyness cx t =
     (* we don't know the exact string literal but we might know the truthyness from refinement *)
     (match literal with
     | Truthy ->
-      ConstCond_Truthy
+      ConstCond_Truthy { constant_condition_kind = ConstCond_General }
       (* might be null if it's from member access due to flow soundness hole
          or internal flow bugs *)
     | AnyLiteral -> ConstCond_Unknown (* it could be any string *))
   | DefT (_, BoolGeneralT) -> ConstCond_Unknown
   | DefT (_, BigIntGeneralT literal) ->
     (match literal with
-    | Truthy -> ConstCond_Truthy
+    | Truthy -> ConstCond_Truthy { constant_condition_kind = ConstCond_General }
     (* might be null if it's from member access due to flow soundness hole
          or internal flow bugs *)
     | AnyLiteral -> ConstCond_Unknown)
@@ -246,7 +251,7 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, NullT)
   | DefT (_, VoidT) ->
     if Context.enable_constant_condition_null_void cx then
-      ConstCond_Falsy
+      ConstCond_Falsy { constant_condition_kind = ConstCond_General }
     else
       ConstCond_Unknown
   | DefT (_, SymbolT) -> ConstCond_Unknown
@@ -257,27 +262,27 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, InstanceT _) -> ConstCond_Unknown
   | DefT (_, SingletonStrT { value; _ }) ->
     if Reason.display_string_of_name value = "" then
-      ConstCond_Falsy
+      ConstCond_Falsy { constant_condition_kind = ConstCond_General }
     else
       ConstCond_Unknown
   | DefT (_, NumericStrKeyT _) -> ConstCond_Unknown
   | DefT (_, SingletonNumT { value; _ }) ->
     let (number_value, _) = value in
     if number_value = 0. then
-      ConstCond_Falsy
+      ConstCond_Falsy { constant_condition_kind = ConstCond_General }
     else
       ConstCond_Unknown
   | DefT (_, SingletonBoolT { value; _ }) ->
     if not (Context.enable_constant_condition_boolean_literal cx) then
       ConstCond_Unknown
     else if value then
-      ConstCond_Truthy
+      ConstCond_Truthy { constant_condition_kind = ConstCond_General }
     else
-      ConstCond_Falsy
+      ConstCond_Falsy { constant_condition_kind = ConstCond_General }
   | DefT (_, SingletonBigIntT { value; _ }) ->
     let (bigint_value, _) = value in
     (match bigint_value with
-    | Some 0L -> ConstCond_Falsy
+    | Some 0L -> ConstCond_Falsy { constant_condition_kind = ConstCond_General }
     | _ -> ConstCond_Unknown)
   | DefT (_, TypeT _) -> ConstCond_Unknown
   | DefT (_, PolyT _) -> ConstCond_Unknown
@@ -304,10 +309,22 @@ let try_eval_type_truthyness cx t =
   | [] -> ConstCond_Unknown
   | [result] -> result
   | results ->
-    if Base.List.for_all results ~f:(fun r -> r = ConstCond_Truthy) then
-      ConstCond_Truthy
-    else if Base.List.for_all results ~f:(fun r -> r = ConstCond_Falsy) then
-      ConstCond_Falsy
+    if
+      Base.List.for_all results ~f:(function
+          | ConstCond_Truthy _ -> true
+          | _ -> false
+          )
+    then
+      (* we don't pass on the error kind when there's multiple types *)
+      ConstCond_Truthy { constant_condition_kind = Flow_intermediate_error_types.ConstCond_General }
+    else if
+      Base.List.for_all results ~f:(function
+          | ConstCond_Falsy _ -> true
+          | _ -> false
+          )
+    then
+      (* we don't pass on the error kind when there's multiple types *)
+      ConstCond_Falsy { constant_condition_kind = Flow_intermediate_error_types.ConstCond_General }
     else
       ConstCond_Unknown
 
@@ -316,19 +333,34 @@ type check_condition_result =
   | ConditionBanned of {
       is_truthy: bool;
       show_warning: bool;
+      constant_condition_kind: Flow_intermediate_error_types.constant_condition_kind;
     }
 
-let condition_banned_and_TRUTHY = ConditionBanned { is_truthy = true; show_warning = false }
+let condition_banned_and_TRUTHY =
+  ConditionBanned
+    {
+      is_truthy = true;
+      show_warning = false;
+      constant_condition_kind = Flow_intermediate_error_types.ConstCond_General;
+    }
 
-let condition_banned_and_FALSY = ConditionBanned { is_truthy = false; show_warning = false }
+let condition_banned_and_FALSY =
+  ConditionBanned
+    {
+      is_truthy = false;
+      show_warning = false;
+      constant_condition_kind = Flow_intermediate_error_types.ConstCond_General;
+    }
 
 let condition_allowed = ConditionAllowed
 
 let use_type_to_check_conditional cx ttype =
   (* We always show warning for errors generated from type inferrence *)
   match try_eval_type_truthyness cx ttype with
-  | ConstCond_Truthy -> ConditionBanned { is_truthy = true; show_warning = true }
-  | ConstCond_Falsy -> ConditionBanned { is_truthy = false; show_warning = true }
+  | ConstCond_Truthy { constant_condition_kind } ->
+    ConditionBanned { is_truthy = true; show_warning = true; constant_condition_kind }
+  | ConstCond_Falsy { constant_condition_kind } ->
+    ConditionBanned { is_truthy = false; show_warning = true; constant_condition_kind }
   | ConstCond_Unknown -> ConditionAllowed
   (* ConstCond_Unconcretized shouldn't happen because we call `all_possible_concrete_types` to concretize all possible types*)
   | ConstCond_Unconcretized -> ConditionAllowed
@@ -376,12 +408,31 @@ let rec check_conditional
           let left_result = check_conditional cx left cached_results ~should_report_error:false in
           let right_result = check_conditional cx right cached_results ~should_report_error:false in
           (match (left_result, right_result) with
-          | ( ConditionBanned { is_truthy = left_truthy; show_warning = left_show_warning },
-              ConditionBanned { is_truthy = right_truthy; show_warning = right_show_warning }
+          | ( ConditionBanned
+                {
+                  is_truthy = left_truthy;
+                  show_warning = left_show_warning;
+                  constant_condition_kind = left_kind;
+                },
+              ConditionBanned
+                {
+                  is_truthy = right_truthy;
+                  show_warning = right_show_warning;
+                  constant_condition_kind = right_kind;
+                }
             )
             when left_truthy = right_truthy ->
             ConditionBanned
-              { is_truthy = left_truthy; show_warning = left_show_warning || right_show_warning }
+              {
+                is_truthy = left_truthy;
+                show_warning = left_show_warning || right_show_warning;
+                constant_condition_kind =
+                  ( if left_kind = right_kind then
+                    left_kind
+                  else
+                    Flow_intermediate_error_types.ConstCond_General
+                  );
+              }
           | _ -> condition_allowed)
         (* NullishCoalesce is allowed here because the `lhs` is stored in `conditions`
            and we will check `lhs` in a separate call of check_conditional, so we don't need to
@@ -414,12 +465,31 @@ let rec check_conditional
           check_conditional cx alternate cached_results ~should_report_error:false
         in
         (match (left_result, right_result) with
-        | ( ConditionBanned { is_truthy = left_truthy; show_warning = left_show_warning },
-            ConditionBanned { is_truthy = right_truthy; show_warning = right_show_warning }
+        | ( ConditionBanned
+              {
+                is_truthy = left_truthy;
+                show_warning = left_show_warning;
+                constant_condition_kind = left_kind;
+              },
+            ConditionBanned
+              {
+                is_truthy = right_truthy;
+                show_warning = right_show_warning;
+                constant_condition_kind = right_kind;
+              }
           )
           when left_truthy = right_truthy ->
           ConditionBanned
-            { is_truthy = left_truthy; show_warning = left_show_warning || right_show_warning }
+            {
+              is_truthy = left_truthy;
+              show_warning = left_show_warning || right_show_warning;
+              constant_condition_kind =
+                ( if left_kind = right_kind then
+                  left_kind
+                else
+                  Flow_intermediate_error_types.ConstCond_General
+                );
+            }
         | _ -> condition_allowed)
       | Sequence { Sequence.expressions; _ } ->
         let last = Base.List.last_exn expressions in
@@ -441,8 +511,8 @@ let rec check_conditional
             check_conditional cx argument cached_results ~should_report_error:false
           in
           (match arg_eval_result with
-          | ConditionBanned { is_truthy; show_warning } ->
-            ConditionBanned { is_truthy = not is_truthy; show_warning }
+          | ConditionBanned { is_truthy; show_warning; constant_condition_kind } ->
+            ConditionBanned { is_truthy = not is_truthy; show_warning; constant_condition_kind }
           | ConditionAllowed -> ConditionAllowed)
         | Ast.Expression.Unary.Minus
         | Ast.Expression.Unary.Plus
@@ -488,13 +558,16 @@ let detect_constant_conditions cx =
       (fun loc check_condition_result acc ->
         match check_condition_result with
         | ConditionAllowed -> acc
-        | ConditionBanned { is_truthy; show_warning } -> (loc, is_truthy, show_warning) :: acc)
+        | ConditionBanned { is_truthy; show_warning; constant_condition_kind } ->
+          (loc, is_truthy, show_warning, constant_condition_kind) :: acc)
       !all_condition_results
       []
   in
   Base.List.iter
-    ~f:(fun (loc, is_truthy, show_warning) ->
-      Flow_js_utils.add_output cx (Error_message.EConstantCondition { loc; is_truthy; show_warning }))
+    ~f:(fun (loc, is_truthy, show_warning, constant_condition_kind) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EConstantCondition { loc; is_truthy; show_warning; constant_condition_kind }))
     banned_conditions
 
 let detect_unnecessary_optional_chains cx =

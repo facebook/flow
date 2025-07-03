@@ -2942,7 +2942,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:14
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    57|   if (a.b) { null ?? f();                     a.b.c; } // error
                     ^^^^
@@ -6706,7 +6706,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:254:14
 
-Constant condition. The condition will always be falsy. [constant-condition]
+This condition is falsy. [constant-condition]
 
    254|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
                      ^^^^
