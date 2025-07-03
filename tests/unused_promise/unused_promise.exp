@@ -70,11 +70,45 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:5
 
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:40:5
+   40|     foo() && foo(); // error
+           ^^^^^
+
+References:
+   test.js:1:25
+    1| declare function foo(): Promise<void>;
+                               ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
    40|     foo() && foo(); // error
            ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:41:5
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:41:5
+     41|     foo().catch(() => {}) && foo(); // error
+             ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2182:8
+   2182|     ): Promise<R | U>;
+                ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:5
@@ -88,11 +122,45 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:42:5
+   42|     foo() && foo().catch(() => {}); // error
+           ^^^^^
+
+References:
+   test.js:1:25
+    1| declare function foo(): Promise<void>;
+                               ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:5
+
 `Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
 .finally. [unused-promise]
 
    42|     foo() && foo().catch(() => {}); // error
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:5
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:47:5
+     47|     foo().catch(() => {}) && foo().catch(() => {}); // ok
+             ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2182:8
+   2182|     ): Promise<R | U>;
+                ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:51:5
@@ -150,4 +218,4 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 17 errors
+Found 21 errors

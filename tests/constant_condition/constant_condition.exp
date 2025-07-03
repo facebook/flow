@@ -60,6 +60,125 @@ References:
               ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- err1/promise.js:3:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:3:8
+   3|     if(p0) {} // Error, using unresolved promise
+             ^^
+
+References:
+   err1/promise.js:2:13
+   2|     let p0: Promise<0> = Promise.resolve(0);
+                  ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- err1/promise.js:7:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:7:8
+   7|     if(p1) {} // Error, using unresolved promise
+             ^^
+
+References:
+   err1/promise.js:6:13
+   6|     let p1: Promise<number> = Promise.resolve(1);
+                  ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err1/promise.js:12:8
+
+This condition is likely falsy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:12:8
+   12|     if(!!!p2) {} // Error, using unresolved promise
+              ^^^^^
+
+References:
+   err1/promise.js:11:13
+   11|     let p2: Promise<boolean> = Promise.resolve(true);
+                   ^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err1/promise.js:16:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:16:8
+   16|     if(p3) {} // Error, using unresolved promise
+              ^^
+
+References:
+   err1/promise.js:15:13
+   15|     let p3: Promise<null> = Promise.resolve(null);
+                   ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err1/promise.js:20:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:20:8
+   20|     if(p4) {} // Error, using unresolved promise
+              ^^
+
+References:
+   err1/promise.js:19:13
+   19|     let p4: Promise<void> = Promise.resolve();
+                   ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err1/promise.js:24:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:24:8
+   24|     if(p5) {} // Error, using unresolved promise
+              ^^
+
+References:
+   err1/promise.js:23:13
+   23|     let p5: Promise<true> = Promise.resolve(true);
+                   ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err1/promise.js:28:8
+
+This condition is likely truthy. Perhaps you meant to use `await` to resolve the promise?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   err1/promise.js:28:8
+   28|     if(p6) {} // Error, using unresolved promise
+              ^^
+
+References:
+   err1/promise.js:27:13
+   27|     let p6: Promise<false> = Promise.resolve(false);
+                   ^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------- err2/boolean_literal.js:4:13
 
 This condition is likely truthy.
@@ -1204,4 +1323,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 137 errors
+Found 144 errors

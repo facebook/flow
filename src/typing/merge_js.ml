@@ -263,7 +263,12 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, ObjT _) -> ConstCond_Unknown
   | DefT (_, ArrT _) -> ConstCond_Unknown
   | DefT (_, ClassT _) -> ConstCond_Unknown
-  | DefT (_, InstanceT _) -> ConstCond_Unknown
+  | DefT (reason, InstanceT { inst; _ }) ->
+    let { class_id; _ } = inst in
+    if Flow_js_utils.is_builtin_class_id "Promise" class_id cx then
+      ConstCond_Truthy { constant_condition_kind = UnawaitedPromise; reason = Some reason }
+    else
+      ConstCond_Unknown
   | DefT (reason, SingletonStrT { value; _ }) ->
     if Reason.display_string_of_name value = "" then
       ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
@@ -538,9 +543,9 @@ let rec check_conditional
           check_conditional cx argument cached_results ~should_report_error:false
         | Ast.Expression.Unary.Void -> condition_banned_and_FALSY
         | Ast.Expression.Unary.Delete
-        | Ast.Expression.Unary.Await
         | Ast.Expression.Unary.Nonnull ->
-          use_type_to_check_conditional cx ttype)
+          use_type_to_check_conditional cx ttype
+        | Ast.Expression.Unary.Await -> condition_allowed)
       | Assignment { Assignment.operator; left = _; right; comments = _ } ->
         (match operator with
         (* vanilla assignment (e.g. `a='test_str'`) is represented by `None` *)
