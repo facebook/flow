@@ -259,9 +259,9 @@ let try_eval_concrete_type_truthyness cx t =
     else
       ConstCond_Unknown
   | DefT (_, SymbolT) -> ConstCond_Unknown
-  | DefT (_, FunT _) ->
+  | DefT (reason, FunT _) ->
     if Context.enable_constant_condition_function cx then
-      ConstCond_Truthy { constant_condition_kind = ConstCond_General; reason = None }
+      ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
     else
       ConstCond_Unknown
   | DefT (_, ObjT _) -> ConstCond_Unknown

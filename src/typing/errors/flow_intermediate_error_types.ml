@@ -117,6 +117,7 @@ type 'loc invalid_render_type_kind =
 type constant_condition_kind =
   | ConstCond_General
   | UnawaitedPromise
+  | UncalledFunction
 
 module IncorrectType = struct
   type t =

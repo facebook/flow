@@ -4472,6 +4472,7 @@ let to_printable_error :
         match constant_condition_kind with
         | ConstCond_General -> []
         | UnawaitedPromise -> [text " Perhaps you meant to use `await` to resolve the promise?"]
+        | UncalledFunction -> [text " Perhaps you meant to call the function?"]
       in
       let warning_message =
         let suggested_loc =
