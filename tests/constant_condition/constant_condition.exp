@@ -32,6 +32,39 @@ References:
                          ^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- err1/function.js:3:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   3|     if (x) { } // error, x is truthy
+              ^
+
+
+Error --------------------------------------------------------------------------------------------- err1/function.js:7:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   7|     if (y) { } // error, y is truthy
+              ^
+
+
+Error -------------------------------------------------------------------------------------------- err1/function.js:11:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   11|     if (z) { } // error, z is truthy
+               ^
+
+
 Error ------------------------------------------------------------------------------------------- err1/null_void.js:4:13
 
 This condition is likely falsy.
@@ -211,6 +244,39 @@ References:
    err2/boolean_literal.js:2:20
    2|     declare var x: boolean;
                          ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- err2/function.js:3:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   3|     if (x) { } // error, x is truthy
+              ^
+
+
+Error --------------------------------------------------------------------------------------------- err2/function.js:7:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   7|     if (y) { } // error, y is truthy
+              ^
+
+
+Error -------------------------------------------------------------------------------------------- err2/function.js:11:9
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   11|     if (z) { } // error, z is truthy
+               ^
 
 
 Error ------------------------------------------------------------------------------------------- err2/null_void.js:4:13
@@ -1323,4 +1389,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 144 errors
+Found 150 errors

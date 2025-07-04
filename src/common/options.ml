@@ -164,6 +164,7 @@ type t = {
   opt_constant_condition: bool;
   opt_constant_condition_boolean_literal_includes: string list;
   opt_constant_condition_null_void_includes: string list;
+  opt_constant_condition_function_includes: string list;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -265,6 +266,8 @@ let constant_condition opts = opts.opt_constant_condition
 
 let constant_condition_boolean_literal_includes opts =
   opts.opt_constant_condition_boolean_literal_includes
+
+let constant_condition_function_includes opts = opts.opt_constant_condition_function_includes
 
 let constant_condition_null_void_includes opts = opts.opt_constant_condition_null_void_includes
 
