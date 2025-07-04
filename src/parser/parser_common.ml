@@ -82,6 +82,8 @@ end
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Type.t
 
+  val union : env -> (Loc.t, Loc.t) Type.t
+
   val type_identifier : env -> (Loc.t, Loc.t) Identifier.t
 
   val type_params : env -> (Loc.t, Loc.t) Type.TypeParams.t option

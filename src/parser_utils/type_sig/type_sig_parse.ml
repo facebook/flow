@@ -4085,8 +4085,10 @@ let opaque_type_decl opts scope tbls decl =
   let {
     Ast.Statement.OpaqueType.id = (id_loc, { Ast.Identifier.name; comments = _ });
     tparams = tps;
-    supertype;
-    impltype;
+    lower_bound;
+    upper_bound;
+    legacy_upper_bound;
+    impl_type;
     comments = _;
   } =
     decl
@@ -4096,9 +4098,14 @@ let opaque_type_decl opts scope tbls decl =
     lazy
       (splice tbls id_loc (fun tbls ->
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
-           let bound = Base.Option.map ~f:(annot opts scope tbls xs) supertype in
-           let body = Base.Option.map ~f:(annot opts scope tbls xs) impltype in
-           OpaqueType { id_loc; name; tparams; bound; body }
+           let lower_bound = Base.Option.map ~f:(annot opts scope tbls xs) lower_bound in
+           let upper_bound =
+             Base.Option.map
+               ~f:(annot opts scope tbls xs)
+               (Base.Option.first_some upper_bound legacy_upper_bound)
+           in
+           let body = Base.Option.map ~f:(annot opts scope tbls xs) impl_type in
+           OpaqueType { id_loc; name; tparams; lower_bound; upper_bound; body }
        )
       )
   in

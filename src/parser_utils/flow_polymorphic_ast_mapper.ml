@@ -2434,17 +2434,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method opaque_type _annot (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
         : ('N, 'U) Ast.Statement.OpaqueType.t =
       let open Ast.Statement.OpaqueType in
-      let { id; tparams; impltype; supertype; comments } = otype in
+      let { id; tparams; impl_type; lower_bound; upper_bound; legacy_upper_bound; comments } =
+        otype
+      in
       let id' = this#binding_type_identifier id in
       this#type_params_opt tparams (fun tparams' ->
-          let impltype' = Option.map ~f:this#type_ impltype in
-          let supertype' = Option.map ~f:this#type_ supertype in
+          let impl_type' = Option.map ~f:this#type_ impl_type in
+          let lower_bound' = Option.map ~f:this#type_ lower_bound in
+          let upper_bound' = Option.map ~f:this#type_ upper_bound in
+          let legacy_upper_bound' = Option.map ~f:this#type_ legacy_upper_bound in
           let comments' = this#syntax_opt comments in
           {
             id = id';
             tparams = tparams';
-            impltype = impltype';
-            supertype = supertype';
+            impl_type = impl_type';
+            lower_bound = lower_bound';
+            upper_bound = upper_bound';
+            legacy_upper_bound = legacy_upper_bound';
             comments = comments';
           }
       )

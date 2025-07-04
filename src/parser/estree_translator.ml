@@ -1161,7 +1161,18 @@ with type t = Impl.t = struct
           ("right", _type right);
         ]
     and opaque_type
-        ~declare (loc, { Statement.OpaqueType.id; tparams; impltype; supertype; comments }) =
+        ~declare
+        ( loc,
+          {
+            Statement.OpaqueType.id;
+            tparams;
+            impl_type;
+            lower_bound;
+            upper_bound;
+            legacy_upper_bound;
+            comments;
+          }
+        ) =
       let name =
         if declare then
           "DeclareOpaqueType"
@@ -1175,8 +1186,10 @@ with type t = Impl.t = struct
         [
           ("id", identifier id);
           ("typeParameters", option type_parameter_declaration tparams);
-          ("impltype", option _type impltype);
-          ("supertype", option _type supertype);
+          ("impltype", option _type impl_type);
+          ("lowerBound", option _type lower_bound);
+          ("upperBound", option _type upper_bound);
+          ("supertype", option _type legacy_upper_bound);
         ]
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast

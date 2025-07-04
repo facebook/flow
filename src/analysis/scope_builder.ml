@@ -257,11 +257,16 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           alias
         else
           let open Ast.Statement.OpaqueType in
-          let { id; tparams; impltype; supertype; comments = _ } = alias in
+          let { id; tparams; impl_type; lower_bound; upper_bound; legacy_upper_bound; comments = _ }
+              =
+            alias
+          in
           ignore @@ this#binding_type_identifier id;
           this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-              run_opt this#type_ impltype;
-              run_opt this#type_ supertype
+              run_opt this#type_ impl_type;
+              run_opt this#type_ lower_bound;
+              run_opt this#type_ upper_bound;
+              run_opt this#type_ legacy_upper_bound
           );
           alias
 

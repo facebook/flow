@@ -768,8 +768,11 @@ and Statement : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
-      impltype: ('M, 'T) Type.t option;
-      supertype: ('M, 'T) Type.t option;
+      impl_type: ('M, 'T) Type.t option;
+      lower_bound: ('M, 'T) Type.t option;
+      upper_bound: ('M, 'T) Type.t option;
+      legacy_upper_bound: ('M, 'T) Type.t option;
+          (** Invariant: only one of legacy_upper_bound and upper_bound can exist. *)
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

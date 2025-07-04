@@ -3775,7 +3775,32 @@ and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; 
        ]
 
 and opaque_type
-    ~opts ~declare loc { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments } =
+    ~opts
+    ~declare
+    loc
+    {
+      Ast.Statement.OpaqueType.id;
+      tparams;
+      impl_type;
+      lower_bound;
+      upper_bound;
+      legacy_upper_bound;
+      comments;
+    } =
+  let bounds =
+    let upper_bound =
+      match upper_bound with
+      | Some t -> [pretty_space; Atom "extends"; pretty_space; type_ ~opts t]
+      | None ->
+        (match legacy_upper_bound with
+        | Some t -> [Atom ":"; pretty_space; type_ ~opts t]
+        | None -> [])
+    in
+    match lower_bound with
+    | None -> upper_bound
+    | Some lower_bound_t ->
+      pretty_space :: Atom "super" :: pretty_space :: type_ ~opts lower_bound_t :: upper_bound
+  in
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
@@ -3790,12 +3815,10 @@ and opaque_type
              identifier id;
              option (type_parameter ~opts ~kind:Flow_ast_mapper.OpaqueTypeTP) tparams;
            ]
-          @ (match supertype with
-            | Some t -> [Atom ":"; pretty_space; type_ ~opts t]
-            | None -> [])
+          @ bounds
           @
-          match impltype with
-          | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ ~opts impltype]
+          match impl_type with
+          | Some impl_type -> [pretty_space; Atom "="; pretty_space; type_ ~opts impl_type]
           | None -> []
           )
        )

@@ -930,12 +930,22 @@ struct
             ())
           EnvMap.empty
       in
-      let depends_of_opaque { Ast.Statement.OpaqueType.tparams; impltype; supertype; _ } =
+      let depends_of_opaque
+          {
+            Ast.Statement.OpaqueType.tparams;
+            impl_type;
+            lower_bound;
+            upper_bound;
+            legacy_upper_bound;
+            _;
+          } =
         depends_of_node
           (fun visitor ->
             run_opt (visitor#type_params ~kind:Flow_ast_mapper.OpaqueTypeTP) tparams;
-            run_opt visitor#type_ impltype;
-            run_opt visitor#type_ supertype;
+            run_opt visitor#type_ impl_type;
+            run_opt visitor#type_ lower_bound;
+            run_opt visitor#type_ upper_bound;
+            run_opt visitor#type_ legacy_upper_bound;
             ())
           EnvMap.empty
       in

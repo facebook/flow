@@ -288,7 +288,8 @@ type ('loc, 'a) def =
       id_loc: 'loc;
       name: string;
       tparams: ('loc, 'a) tparams;
-      bound: 'a option;
+      lower_bound: 'a option;
+      upper_bound: 'a option;
       body: 'a option;
     }
   | Interface of {

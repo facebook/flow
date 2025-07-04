@@ -903,8 +903,10 @@ module Make
       {
         Ast.Statement.OpaqueType.id = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
         tparams;
-        impltype;
-        supertype;
+        impl_type;
+        lower_bound;
+        upper_bound;
+        legacy_upper_bound;
         comments;
       } =
     let cache = Context.node_cache cx in
@@ -919,8 +921,13 @@ module Make
       let (tparams, tparams_map, tparams_ast) =
         Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.OpaqueTypeTP tparams
       in
-      let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
-      let (super_t, supertype_ast) = Anno.convert_opt cx tparams_map supertype in
+      let (underlying_t, impl_type_ast) = Anno.convert_opt cx tparams_map impl_type in
+      let (lower_bound_t, lower_bound_ast) = Anno.convert_opt cx tparams_map lower_bound in
+      let (upper_bound_t, upper_bound_ast) = Anno.convert_opt cx tparams_map upper_bound in
+      let (legacy_upper_bound_t, legacy_upper_bound_ast) =
+        Anno.convert_opt cx tparams_map legacy_upper_bound
+      in
+      let upper_bound_t = Base.Option.first_some upper_bound_t legacy_upper_bound_t in
       begin
         match tparams with
         | None -> ()
@@ -933,7 +940,10 @@ module Make
             underlying_t
             ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive);
           Base.Option.iter
-            super_t
+            lower_bound_t
+            ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive);
+          Base.Option.iter
+            upper_bound_t
             ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive)
       end;
       let opaque_type_args =
@@ -944,13 +954,21 @@ module Make
           (TypeParams.to_list tparams)
       in
       let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc) in
-      let opaquetype = { underlying_t; super_t; opaque_id; opaque_type_args; opaque_name = name } in
+      (* TODO_OPAQUE_TYPE_LOWER_BOUND: Use lower_bound_t *)
+      let opaquetype =
+        { underlying_t; super_t = upper_bound_t; opaque_id; opaque_type_args; opaque_name = name }
+      in
       let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
       let type_ =
         poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (OpaqueKind, t)))
       in
       let () =
-        match (underlying_t, super_t) with
+        match (lower_bound_t, underlying_t) with
+        | (Some l, Some u) -> Context.add_post_inference_subtyping_check cx l unknown_use u
+        | _ -> ()
+      in
+      let () =
+        match (underlying_t, upper_bound_t) with
         | (Some l, Some u) -> Context.add_post_inference_subtyping_check cx l unknown_use u
         | _ -> ()
       in
@@ -959,8 +977,10 @@ module Make
         {
           Ast.Statement.OpaqueType.id = ((name_loc, type_), id);
           tparams = tparams_ast;
-          impltype = impltype_ast;
-          supertype = supertype_ast;
+          impl_type = impl_type_ast;
+          lower_bound = lower_bound_ast;
+          upper_bound = upper_bound_ast;
+          legacy_upper_bound = legacy_upper_bound_ast;
           comments;
         }
       in

@@ -968,14 +968,46 @@ module Statement
         id
     in
     let tparams = Type.type_params env in
-    let supertype =
-      match Peek.token env with
-      | T_COLON ->
-        Expect.token env T_COLON;
-        Some (Type._type env)
-      | _ -> None
+    let expect_opt_super_or_extends token =
+      (* super and extends are treated like identifiers in type parsing context.
+       * We need to switch back to normal mode in order to correctly identify them. *)
+      Eat.push_lex_mode env Lex_mode.NORMAL;
+      let consumed =
+        if Peek.token env = token then (
+          Expect.token env token;
+          true
+        ) else
+          false
+      in
+      Eat.pop_lex_mode env;
+      consumed
     in
-    let impltype =
+    let lower_bound =
+      if expect_opt_super_or_extends T_SUPER then
+        (* Do not accept conditional type in this position. Otherwise, the sequence
+         * `opaque type A super B extends C = D` will fail because `B extends C` are parsed
+         * together as conditional type. *)
+        Some (Type.union env)
+      else
+        None
+    in
+    let upper_bound =
+      if expect_opt_super_or_extends T_EXTENDS then
+        Some (Type._type env)
+      else
+        None
+    in
+    let legacy_upper_bound =
+      if Option.is_some upper_bound || Option.is_some lower_bound then
+        None
+      else
+        match Peek.token env with
+        | T_COLON ->
+          Expect.token env T_COLON;
+          Some (Type._type env)
+        | _ -> None
+    in
+    let impl_type =
       if declare then
         match Peek.token env with
         | T_ASSIGN ->
@@ -992,28 +1024,52 @@ module Statement
       )
     in
     Eat.pop_lex_mode env;
-    let (trailing, id, tparams, supertype, impltype) =
-      match (semicolon env, tparams, supertype, impltype) with
+    let (trailing, id, tparams, lower_bound, upper_bound, legacy_upper_bound, impl_type) =
+      match (semicolon env, tparams, lower_bound, upper_bound, legacy_upper_bound, impl_type) with
       (* opaque type Foo = Bar; *)
-      | (Explicit comments, _, _, _) -> (comments, id, tparams, supertype, impltype)
+      | (Explicit comments, _, _, _, _, _) ->
+        (comments, id, tparams, lower_bound, upper_bound, legacy_upper_bound, impl_type)
       (* opaque type Foo = Bar *)
-      | (Implicit { remove_trailing; _ }, _, _, Some impl) ->
+      | (Implicit { remove_trailing; _ }, _, _, _, _, Some impl) ->
         ( [],
           id,
           tparams,
-          supertype,
+          lower_bound,
+          upper_bound,
+          legacy_upper_bound,
           Some (remove_trailing impl (fun remover impl -> remover#type_ impl))
         )
-      (* opaque type Foo: Super *)
-      | (Implicit { remove_trailing; _ }, _, Some super, None) ->
+      (* opaque type Foo: U *)
+      | (Implicit { remove_trailing; _ }, _, _, Some upper_bound, _, None) ->
         ( [],
           id,
           tparams,
-          Some (remove_trailing super (fun remover super -> remover#type_ super)),
+          lower_bound,
+          Some (remove_trailing upper_bound (fun remover t -> remover#type_ t)),
+          legacy_upper_bound,
+          None
+        )
+      | (Implicit { remove_trailing; _ }, _, _, _, Some legacy_upper_bound, None) ->
+        ( [],
+          id,
+          tparams,
+          lower_bound,
+          upper_bound,
+          Some (remove_trailing legacy_upper_bound (fun remover t -> remover#type_ t)),
+          None
+        )
+      (* opaque type Foo super Super *)
+      | (Implicit { remove_trailing; _ }, _, Some lower_bound, None, None, None) ->
+        ( [],
+          id,
+          tparams,
+          Some (remove_trailing lower_bound (fun remover t -> remover#type_ t)),
+          upper_bound,
+          legacy_upper_bound,
           None
         )
       (* opaque type Foo<T> *)
-      | (Implicit { remove_trailing; _ }, Some tparams, None, None) ->
+      | (Implicit { remove_trailing; _ }, Some tparams, None, None, None, None) ->
         ( [],
           id,
           Some
@@ -1022,18 +1078,29 @@ module Statement
              )
             ),
           None,
+          None,
+          None,
           None
         )
       (* declare opaque type Foo *)
-      | (Implicit { remove_trailing; _ }, None, None, None) ->
-        ([], remove_trailing id (fun remover id -> remover#identifier id), None, None, None)
+      | (Implicit { remove_trailing; _ }, None, None, None, None, None) ->
+        ( [],
+          remove_trailing id (fun remover id -> remover#identifier id),
+          None,
+          None,
+          None,
+          None,
+          None
+        )
     in
 
     {
       Statement.OpaqueType.id;
       tparams;
-      impltype;
-      supertype;
+      impl_type;
+      lower_bound;
+      upper_bound;
+      legacy_upper_bound;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
     }
 

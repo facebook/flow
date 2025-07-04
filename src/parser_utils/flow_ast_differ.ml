@@ -3117,8 +3117,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let {
       id = id1;
       tparams = t_params1;
-      impltype = impltype1;
-      supertype = supertype1;
+      impl_type = impl_type1;
+      lower_bound = lower_bound1;
+      upper_bound = upper_bound1;
+      legacy_upper_bound = legacy_upper_bound1;
       comments = comments1;
     } =
       o_type1
@@ -3126,18 +3128,33 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let {
       id = id2;
       tparams = t_params2;
-      impltype = impltype2;
-      supertype = supertype2;
+      impl_type = impl_type2;
+      lower_bound = lower_bound2;
+      upper_bound = upper_bound2;
+      legacy_upper_bound = legacy_upper_bound2;
       comments = comments2;
     } =
       o_type2
     in
     let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
     let t_params_diff = diff_if_changed_opt type_params t_params1 t_params2 in
-    let supertype_diff = diff_if_changed_nonopt_fn type_ supertype1 supertype2 in
-    let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
+    let lower_bound_diff = diff_if_changed_nonopt_fn type_ lower_bound1 lower_bound2 in
+    let upper_bound_diff = diff_if_changed_nonopt_fn type_ upper_bound1 upper_bound2 in
+    let legacy_upper_bound_diff =
+      diff_if_changed_nonopt_fn type_ legacy_upper_bound1 legacy_upper_bound2
+    in
+    let impl_type_diff = diff_if_changed_nonopt_fn type_ impl_type1 impl_type2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff; comments_diff]
+    join_diff_list
+      [
+        id_diff;
+        t_params_diff;
+        lower_bound_diff;
+        upper_bound_diff;
+        legacy_upper_bound_diff;
+        impl_type_diff;
+        comments_diff;
+      ]
   and declare_class loc dclass1 dclass2 =
     let open Ast.Statement.DeclareClass in
     let {

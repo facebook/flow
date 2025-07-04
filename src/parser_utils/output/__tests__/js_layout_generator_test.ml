@@ -1945,7 +1945,8 @@ let tests =
            assert_statement_string ~ctxt "opaque type a<a>:b<a>=a;";
            assert_statement_string ~ctxt "opaque type a<a>:b<a>=c<a>;";
            assert_statement_string ~ctxt ~pretty:true "opaque type a = a;";
-           assert_statement_string ~ctxt ~pretty:true "opaque type a: b = a;"
+           assert_statement_string ~ctxt ~pretty:true "opaque type a: b = a;";
+           assert_statement_string ~ctxt ~pretty:true "opaque type a super b extends c = a;"
          );
          ( "declare_opaque_type_alias_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare opaque type a;";

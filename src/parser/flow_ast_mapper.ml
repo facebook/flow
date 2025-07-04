@@ -2974,18 +2974,23 @@ class ['loc] mapper =
 
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
-      let { id; tparams; impltype; supertype; comments } = otype in
+      let { id; tparams; impl_type; lower_bound; upper_bound; legacy_upper_bound; comments } =
+        otype
+      in
       let id' = this#binding_type_identifier id in
       let tparams' = map_opt (this#type_params ~kind:OpaqueTypeTP) tparams in
-      let impltype' = map_opt this#type_ impltype in
-      let supertype' = map_opt this#type_ supertype in
+      let impl_type' = map_opt this#type_ impl_type in
+      let legacy_upper_bound' = map_opt this#type_ legacy_upper_bound in
+      let lower_bound' = map_opt this#type_ lower_bound in
+      let upper_bound' = map_opt this#type_ upper_bound in
       let comments' = this#syntax_opt comments in
       if
         id == id'
-        && impltype == impltype'
+        && impl_type == impl_type'
         && tparams == tparams'
-        && impltype == impltype'
-        && supertype == supertype'
+        && lower_bound == lower_bound'
+        && upper_bound == upper_bound'
+        && legacy_upper_bound == legacy_upper_bound'
         && comments == comments'
       then
         otype
@@ -2993,8 +2998,10 @@ class ['loc] mapper =
         {
           id = id';
           tparams = tparams';
-          impltype = impltype';
-          supertype = supertype';
+          impl_type = impl_type';
+          lower_bound = lower_bound';
+          upper_bound = upper_bound';
+          legacy_upper_bound = legacy_upper_bound';
           comments = comments';
         }
 
