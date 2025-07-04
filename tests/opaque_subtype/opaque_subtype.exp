@@ -1,3 +1,19 @@
+Error ---------------------------------------------------------------------------------------------- both_bounds.js:1:32
+
+Specifying opaque type lower bound using `super` keyword is not yet supported [unsupported-syntax]
+
+   1| declare opaque type Kind super 'foo' | 'bar' extends string;
+                                     ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- both_bounds.js:1:54
+
+Specifying opaque type upper bound using `extends` keyword is not yet supported [unsupported-syntax]
+
+   1| declare opaque type Kind super 'foo' | 'bar' extends string;
+                                                           ^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- both_bounds.js:6:1
 
 Cannot cast `'baz'` to `Kind` because string [1] is incompatible with `Kind` [2]. [incompatible-cast]
@@ -27,6 +43,22 @@ References:
    both_bounds.js:8:9
    8| kind as number; // error
               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:10:31
+
+Specifying opaque type lower bound using `super` keyword is not yet supported [unsupported-syntax]
+
+   10| declare opaque type Obj super {foo: string} extends {...};
+                                     ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:10:53
+
+Specifying opaque type upper bound using `extends` keyword is not yet supported [unsupported-syntax]
+
+   10| declare opaque type Obj super {foo: string} extends {...};
+                                                           ^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:12:2
@@ -60,6 +92,14 @@ References:
 
 Error --------------------------------------------------------------------------------------------- both_bounds.js:17:41
 
+Specifying opaque type lower bound using `super` keyword is not yet supported [unsupported-syntax]
+
+   17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
+                                               ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:17:41
+
 string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
 
    both_bounds.js:17:41
@@ -70,6 +110,22 @@ References:
    both_bounds.js:17:56
    17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
                                                               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:17:56
+
+Specifying opaque type upper bound using `extends` keyword is not yet supported [unsupported-syntax]
+
+   17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
+                                                              ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
+
+Specifying opaque type lower bound using `super` keyword is not yet supported [unsupported-syntax]
+
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                     ^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
@@ -98,6 +154,14 @@ References:
    both_bounds.js:18:54
    18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
                                                             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:18:46
+
+Specifying opaque type upper bound using `extends` keyword is not yet supported [unsupported-syntax]
+
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                                    ^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:22:1
@@ -286,6 +350,22 @@ References:
                                       ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- opaque_exports.js:1:37
+
+Specifying opaque type lower bound using `super` keyword is not yet supported [unsupported-syntax]
+
+   1| export opaque type BothBounds super 'a' extends string = 'a' | 'b';
+                                          ^^^
+
+
+Error ------------------------------------------------------------------------------------------- opaque_exports.js:1:49
+
+Specifying opaque type upper bound using `extends` keyword is not yet supported [unsupported-syntax]
+
+   1| export opaque type BothBounds super 'a' extends string = 'a' | 'b';
+                                                      ^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:5:48
 
 number [1] is incompatible with `SuperType` [2]. [incompatible-type]
@@ -382,4 +462,4 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 25 errors
+Found 35 errors

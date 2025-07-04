@@ -74,6 +74,8 @@ type unsupported_syntax =
   | DestructuringObjectPropertyInvalidLiteral
   | DestructuringExpressionPattern
   | JSXTypeArgs
+  | OpaqueTypeExtendsBound
+  | OpaqueTypeSuperBound
   | PredicateFunction
   | PredicateDeclarationAnonymousParameters
   | MatchExpression

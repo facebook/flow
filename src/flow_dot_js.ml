@@ -134,6 +134,7 @@ let stub_metadata ~root ~checked =
     natural_inference_object_literal_partial_fix = true;
     natural_inference_object_literal_partial_fix_excludes = [];
     no_unchecked_indexed_access = false;
+    opaque_type_new_bound_syntax = true;
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;

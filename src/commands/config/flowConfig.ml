@@ -122,6 +122,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: (string option * string) list;
+    opaque_type_new_bound_syntax: bool;
     pattern_matching: bool option;
     pattern_matching_includes: string list;
     projects: string list;
@@ -270,6 +271,7 @@ module Opts = struct
       node_resolver_root_relative_dirnames = [(None, "")];
       pattern_matching = None;
       pattern_matching_includes = [];
+      opaque_type_new_bound_syntax = false;
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
@@ -1133,6 +1135,9 @@ module Opts = struct
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.assert_operator", assert_operator_parser);
+      ( "experimental.opaque_type_new_bound_syntax",
+        boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
+      );
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
@@ -2028,6 +2033,8 @@ let constant_condition_boolean_literal_includes c =
 let constant_condition_null_void_includes c = c.options.Opts.constant_condition_null_void_includes
 
 let constant_condition_function_includes c = c.options.Opts.constant_condition_function_includes
+
+let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 

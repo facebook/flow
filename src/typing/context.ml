@@ -64,6 +64,7 @@ type metadata = {
   natural_inference_object_literal_partial_fix: bool;
   natural_inference_object_literal_partial_fix_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
+  opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -316,6 +317,7 @@ let metadata_of_options options =
     natural_inference_object_literal_partial_fix_excludes =
       Options.natural_inference_object_literal_partial_fix_excludes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
+    opaque_type_new_bound_syntax = Options.opaque_type_new_bound_syntax options;
     projects_options = Options.projects_options options;
     react_custom_jsx_typing = Options.react_custom_jsx_typing options;
     react_ref_as_prop = Options.react_ref_as_prop options;
@@ -695,6 +697,8 @@ let ts_syntax cx = cx.metadata.ts_syntax
 let assert_operator_enabled cx = Options.AssertOperator.usable cx.metadata.assert_operator
 
 let assert_operator_specialized cx = Options.AssertOperator.specialized cx.metadata.assert_operator
+
+let opaque_type_new_bound_syntax cx = cx.metadata.opaque_type_new_bound_syntax
 
 let type_expansion_recursion_limit cx = cx.metadata.type_expansion_recursion_limit
 

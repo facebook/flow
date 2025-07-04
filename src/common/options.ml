@@ -160,6 +160,7 @@ type t = {
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
+  opt_opaque_type_new_bound_syntax: bool;
   opt_pattern_matching_includes: string list;
   opt_constant_condition: bool;
   opt_constant_condition_boolean_literal_includes: string list;
@@ -352,6 +353,8 @@ let node_package_export_conditions opts = opts.opt_node_package_export_condition
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
+
+let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
 
 let projects_options opts = opts.opt_projects_options
 

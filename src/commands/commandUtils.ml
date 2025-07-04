@@ -1482,6 +1482,7 @@ let make_options
         ~f:(fun (applicable_dir_opt, dirname) ->
           (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
       );
+    opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
     opt_projects_options =
       Flow_projects.mk_options
         ~projects:(FlowConfig.projects flowconfig)

@@ -4107,6 +4107,18 @@ let to_printable_error :
       [text "Get/set properties not yet supported."]
     | MessageUnsupportedSyntax ObjectPropertyComputedGetSet ->
       [text "Computed getters and setters are not yet supported."]
+    | MessageUnsupportedSyntax OpaqueTypeExtendsBound ->
+      [
+        text "Specifying opaque type upper bound using ";
+        code "extends";
+        text " keyword is not yet supported";
+      ]
+    | MessageUnsupportedSyntax OpaqueTypeSuperBound ->
+      [
+        text "Specifying opaque type lower bound using ";
+        code "super";
+        text " keyword is not yet supported";
+      ]
     | MessageUnsupportedSyntax PredicateFunction ->
       [text "Support for predicate functions is removed. `%checks` declaration is now ignored."]
     | MessageUnsupportedSyntax PredicateDeclarationAnonymousParameters ->

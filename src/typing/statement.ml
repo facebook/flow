@@ -922,6 +922,22 @@ module Make
         Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.OpaqueTypeTP tparams
       in
       let (underlying_t, impl_type_ast) = Anno.convert_opt cx tparams_map impl_type in
+      if not (Context.opaque_type_new_bound_syntax cx) then (
+        Base.Option.iter lower_bound ~f:(fun (loc, _) ->
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.OpaqueTypeSuperBound)
+              )
+        );
+        Base.Option.iter upper_bound ~f:(fun (loc, _) ->
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.OpaqueTypeExtendsBound)
+              )
+        )
+      );
       let (lower_bound_t, lower_bound_ast) = Anno.convert_opt cx tparams_map lower_bound in
       let (upper_bound_t, upper_bound_ast) = Anno.convert_opt cx tparams_map upper_bound in
       let (legacy_upper_bound_t, legacy_upper_bound_ast) =

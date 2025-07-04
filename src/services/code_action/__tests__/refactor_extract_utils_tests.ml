@@ -55,6 +55,7 @@ let stub_metadata ~root ~checked =
     natural_inference_object_literal_partial_fix = true;
     natural_inference_object_literal_partial_fix_excludes = [];
     no_unchecked_indexed_access = false;
+    opaque_type_new_bound_syntax = true;
     pattern_matching_includes = [];
     constant_condition = false;
     constant_condition_boolean_literal_includes = [];
