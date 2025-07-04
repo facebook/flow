@@ -694,8 +694,8 @@ module rec ConsGen : S = struct
     (****************)
     (* Opaque types *)
     (****************)
-    | (OpaqueT (_, { super_t = Some super_t; _ }), Annot_ToStringT { reason; _ }) ->
-      elab_t cx super_t (Annot_ToStringT { orig_t = Some t; reason })
+    | (OpaqueT (_, { upper_t = Some upper_t; _ }), Annot_ToStringT { reason; _ }) ->
+      elab_t cx upper_t (Annot_ToStringT { orig_t = Some t; reason })
     | (OpaqueT (r, { underlying_t = Some t; _ }), _)
       when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
       elab_t cx ~seen t op
@@ -1127,7 +1127,7 @@ module rec ConsGen : S = struct
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
-    | (OpaqueT (_, { super_t = Some t; _ }), _) -> elab_t cx t op
+    | (OpaqueT (_, { upper_t = Some t; _ }), _) -> elab_t cx t op
     (**************************)
     (* Binary arith operators *)
     (**************************)

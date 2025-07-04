@@ -602,14 +602,14 @@ and intersect =
       Some t2
     else
       match t1 with
-      | OpaqueT (r, ({ super_t; underlying_t; _ } as opaquetype)) ->
+      | OpaqueT (r, ({ upper_t; underlying_t; _ } as opaquetype)) ->
         (* Apply the refinement on super and underlying type of opaque type.
          * Preserve opaque_id to retain compatibility with original type. *)
-        let super_t =
-          Some (Base.Option.value_map super_t ~default:t2 ~f:(fun t -> intersect cx t t2))
+        let upper_t =
+          Some (Base.Option.value_map upper_t ~default:t2 ~f:(fun t -> intersect cx t t2))
         in
         let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
-        Some (OpaqueT (r, { opaquetype with underlying_t; super_t }))
+        Some (OpaqueT (r, { opaquetype with underlying_t; upper_t }))
       | _ -> None
   in
   fun cx t1 t2 ->

@@ -1386,12 +1386,12 @@ struct
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* Use the upper bound of OpaqueT if it's available, for operations that must be
          * performed on some concretized types. *)
-        | (OpaqueT (_, { super_t = Some t; _ }), ObjKitT _)
-        | (OpaqueT (_, { super_t = Some t; _ }), ReactKitT _) ->
+        | (OpaqueT (_, { upper_t = Some t; _ }), ObjKitT _)
+        | (OpaqueT (_, { upper_t = Some t; _ }), ReactKitT _) ->
           rec_flow cx trace (t, u)
         (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the supertype is `string`. *)
-        | (OpaqueT (_, { super_t = Some t; _ }), ToStringT { reason; t_out; _ }) ->
+        | (OpaqueT (_, { upper_t = Some t; _ }), ToStringT { reason; t_out; _ }) ->
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* If the type is still in the same file it was defined, we allow it to
          * expose its underlying type information *)
@@ -4047,7 +4047,7 @@ struct
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l; no_infer }) cont
         (* Preserve OpaqueT as consequent, but branch based on the bound *)
-        | (OpaqueT (_, { super_t = Some t; _ }), CondT (r, then_t_opt, else_t, tout)) ->
+        | (OpaqueT (_, { upper_t = Some t; _ }), CondT (r, then_t_opt, else_t, tout)) ->
           let then_t_opt =
             match then_t_opt with
             | Some _ -> then_t_opt
@@ -4055,13 +4055,13 @@ struct
           in
           rec_flow cx trace (t, CondT (r, then_t_opt, else_t, tout))
         (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
-        | (OpaqueT (opaque_t_reason, { super_t = Some t; _ }), _) ->
+        | (OpaqueT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
           rec_flow
             cx
             trace
             ( t,
               mod_use_op_of_use_t
-                (fun use_op -> Frame (OpaqueTypeBound { opaque_t_reason }, use_op))
+                (fun use_op -> Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op))
                 u
             )
         (* Concretize types for type operation purpose up to this point. The rest are
@@ -5573,12 +5573,13 @@ struct
                }
             )
         )
-    | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _ } as opaquetype)) ->
+    | OpaqueT (r, ({ underlying_t; lower_t; upper_t; opaque_type_args; _ } as opaquetype)) ->
       let opaquetype =
         {
           opaquetype with
           underlying_t = Base.Option.(underlying_t >>| only_any);
-          super_t = Base.Option.(super_t >>| only_any);
+          lower_t = Base.Option.(lower_t >>| only_any);
+          upper_t = Base.Option.(upper_t >>| only_any);
           opaque_type_args =
             Base.List.(opaque_type_args >>| fun (str, r', _, polarity) -> (str, r', any, polarity));
         }
@@ -6430,17 +6431,18 @@ struct
         let void = VoidT.make reason in
         destruct_union ?f reason [t; void] upper
       in
-      let destruct_and_preserve_opaque_t r ({ underlying_t; super_t; _ } as opaquetype) =
+      let destruct_and_preserve_opaque_t r ({ underlying_t; lower_t; upper_t; _ } as opaquetype) =
         let eval_t t =
           let tvar = Tvar.mk_no_wrap cx reason in
           (* We have to eagerly evaluate these destructors when possible because
-           * various other systems, like type_filter, expect OpaqueT underlying_t and
-           * super_t to be inspectable *)
+           * various other systems, like type_filter, expect OpaqueT underlying_t upper_t, and
+           * lower_t to be inspectable *)
           eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar
         in
         let underlying_t = Base.Option.map ~f:eval_t underlying_t in
-        let super_t = Base.Option.map ~f:eval_t super_t in
-        let opaque_t = OpaqueT (r, { opaquetype with underlying_t; super_t }) in
+        let lower_t = Base.Option.map ~f:eval_t lower_t in
+        let upper_t = Base.Option.map ~f:eval_t upper_t in
+        let opaque_t = OpaqueT (r, { opaquetype with underlying_t; lower_t; upper_t }) in
         rec_flow_t cx trace ~use_op (opaque_t, OpenT tout)
       in
       let should_destruct_union () =
@@ -9029,7 +9031,8 @@ struct
             {
               opaquetype with
               underlying_t = OptionUtils.ident_map (recurse seen) opaquetype.underlying_t;
-              super_t = OptionUtils.ident_map (recurse seen) opaquetype.super_t;
+              lower_t = OptionUtils.ident_map (recurse seen) opaquetype.lower_t;
+              upper_t = OptionUtils.ident_map (recurse seen) opaquetype.upper_t;
             }
           )
       | DefT (r, RendersT (StructuralRenders { renders_variant; renders_structural_type = t })) ->

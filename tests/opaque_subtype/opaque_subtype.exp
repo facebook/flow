@@ -1,3 +1,119 @@
+Error ----------------------------------------------------------------------------------------------- both_bounds.js:6:1
+
+Cannot cast `'baz'` to `Kind` because string [1] is incompatible with `Kind` [2]. [incompatible-cast]
+
+   both_bounds.js:6:1
+   6| 'baz' as Kind; // error
+      ^^^^^ [1]
+
+References:
+   both_bounds.js:6:10
+   6| 'baz' as Kind; // error
+               ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- both_bounds.js:8:1
+
+Cannot cast `kind` to number because `Kind` [1] is incompatible with number [2]. [incompatible-cast]
+
+   both_bounds.js:8:1
+   8| kind as number; // error
+      ^^^^
+
+References:
+   both_bounds.js:3:21
+   3| declare const kind: Kind;
+                          ^^^^ [1]
+   both_bounds.js:8:9
+   8| kind as number; // error
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- both_bounds.js:12:2
+
+Cannot cast object literal to `Obj` because property `foo` is missing in object literal [1] but exists in object
+type [2]. [prop-missing]
+
+   both_bounds.js:12:2
+   12| ({}) as Obj; // error
+        ^^ [1]
+
+References:
+   both_bounds.js:12:9
+   12| ({}) as Obj; // error
+               ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- both_bounds.js:13:1
+
+Cannot cast `1` to `Obj` because number [1] is incompatible with `Obj` [2]. [incompatible-cast]
+
+   both_bounds.js:13:1
+   13| 1 as Obj; // error
+       ^ [1]
+
+References:
+   both_bounds.js:13:6
+   13| 1 as Obj; // error
+            ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:17:41
+
+string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   both_bounds.js:17:41
+   17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
+                                               ^^^^^^ [1]
+
+References:
+   both_bounds.js:17:56
+   17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
+                                                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
+
+string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   both_bounds.js:18:31
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                     ^^^^^^ [1]
+
+References:
+   both_bounds.js:18:46
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
+
+string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+
+   both_bounds.js:18:31
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                     ^^^^^^ [1]
+
+References:
+   both_bounds.js:18:54
+   18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
+                                                            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- both_bounds.js:22:1
+
+Cannot cast `'b'` to `BothBounds` because string [1] is incompatible with `BothBounds` [2]. [incompatible-cast]
+
+   both_bounds.js:22:1
+   22| 'b' as BothBounds; // error
+       ^^^ [1]
+
+References:
+   both_bounds.js:22:8
+   22| 'b' as BothBounds; // error
+              ^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- decltest.js:2:33
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -266,4 +382,4 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 17 errors
+Found 25 errors

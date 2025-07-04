@@ -46,7 +46,9 @@ class ['a] t =
       | StrUtilT _ -> acc
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
       | OpaqueT (_, ot) ->
-        let { opaque_id = _; underlying_t; super_t; opaque_type_args; opaque_name = _ } = ot in
+        let { opaque_id = _; underlying_t; lower_t; upper_t; opaque_type_args; opaque_name = _ } =
+          ot
+        in
         let acc =
           self#list
             (fun acc (_, _, t, pole') -> self#type_ cx (P.mult (pole, pole')) acc t)
@@ -54,7 +56,8 @@ class ['a] t =
             opaque_type_args
         in
         let acc = self#opt (self#type_ cx pole) acc underlying_t in
-        let acc = self#opt (self#type_ cx pole) acc super_t in
+        let acc = self#opt (self#type_ cx pole) acc lower_t in
+        let acc = self#opt (self#type_ cx pole) acc upper_t in
         acc
       | NamespaceT namespace_t -> self#namespace_type cx pole acc namespace_t
       | ThisInstanceT (_, t, _, _) -> self#instance_type cx pole acc t

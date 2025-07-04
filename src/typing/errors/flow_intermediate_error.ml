@@ -190,8 +190,10 @@ let flip_frame = function
   | FunRestParam c -> FunRestParam { lower = c.upper; upper = c.lower }
   | FunReturn c -> FunReturn { lower = c.upper; upper = c.lower }
   | IndexerKeyCompatibility c -> IndexerKeyCompatibility { lower = c.upper; upper = c.lower }
-  | OpaqueTypeSuperCompatibility c ->
-    OpaqueTypeSuperCompatibility { lower = c.upper; upper = c.lower }
+  | OpaqueTypeLowerBoundCompatibility c ->
+    OpaqueTypeLowerBoundCompatibility { lower = c.upper; upper = c.lower }
+  | OpaqueTypeUpperBoundCompatibility c ->
+    OpaqueTypeUpperBoundCompatibility { lower = c.upper; upper = c.lower }
   | PropertyCompatibility c -> PropertyCompatibility { c with lower = c.upper; upper = c.lower }
   | ReactConfigCheck -> ReactConfigCheck
   | TupleElementCompatibility c ->
@@ -206,10 +208,10 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | EnumRepresentationTypeCompatibility c ->
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
-  | ( CallFunCompatibility _ | TupleAssignment _ | TypeParamBound _ | OpaqueTypeBound _
-    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
-    | MappedTypeKeyCompatibility _ | TypeGuardCompatibility | RendersCompatibility
-    | ReactDeepReadOnly _ ) as use_op ->
+  | ( CallFunCompatibility _ | TupleAssignment _ | TypeParamBound _ | OpaqueTypeLowerBound _
+    | OpaqueTypeUpperBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip
+    | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypeGuardCompatibility
+    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -426,10 +428,16 @@ let rec make_intermediate_error :
         ((lower, upper), use_op)
   in
   let rec mod_lower_reason_according_to_use_ops lower = function
-    | Frame (OpaqueTypeBound { opaque_t_reason }, use_op) ->
+    | Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op) ->
       mod_lower_reason_according_to_use_ops opaque_t_reason use_op
     | Frame (_, use_op) -> mod_lower_reason_according_to_use_ops lower use_op
     | Op _ -> lower
+  in
+  let rec mod_upper_reason_according_to_use_ops upper = function
+    | Frame (OpaqueTypeLowerBound { opaque_t_reason }, use_op) ->
+      mod_upper_reason_according_to_use_ops opaque_t_reason use_op
+    | Frame (_, use_op) -> mod_upper_reason_according_to_use_ops upper use_op
+    | Op _ -> upper
   in
   let desc = Reason.desc_of_reason ~unwrap:false in
   (* Unwrap a use_op for the friendly error format. Takes the smallest location
@@ -638,7 +646,8 @@ let rec make_intermediate_error :
       | Frame (FunReturn _, use_op) -> unwrap_frame_without_loc loc frames use_op FrameReturnValue
       | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op FrameIndexerPropertyKey
-      | Frame (OpaqueTypeSuperCompatibility { lower; _ }, use_op) ->
+      | Frame (OpaqueTypeLowerBoundCompatibility { lower; _ }, use_op)
+      | Frame (OpaqueTypeUpperBoundCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op FrameAnonymous
       | Frame (PropertyCompatibility { prop = None; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op FrameIndexerProperty
@@ -694,7 +703,8 @@ let rec make_intermediate_error :
       | Frame (TypeGuardCompatibility, use_op) ->
         unwrap_frame_without_loc loc frames use_op FrameTypePredicate
       | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
-      | Frame (OpaqueTypeBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
+      | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
+      | Frame (OpaqueTypeUpperBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -833,6 +843,7 @@ let rec make_intermediate_error :
       mk_use_op_error_reason reason use_op ?explanation:additional_explanation message
     in
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
+    let upper = mod_upper_reason_according_to_use_ops upper use_op in
     match use_op with
     (* Add a custom message for Coercion root_use_ops that does not include the
      * upper bound. *)

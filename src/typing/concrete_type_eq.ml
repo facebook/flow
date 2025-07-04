@@ -18,20 +18,25 @@ let rec swap_reason t2 t1 =
   | (OptionalT { reason = _; type_ = t2; use_desc = _ }, OptionalT { reason; type_ = t1; use_desc })
     ->
     OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
-  | ( OpaqueT (_, { underlying_t = u2; super_t = s2; _ }),
-      OpaqueT (r, ({ underlying_t = u1; super_t = s1; _ } as o))
+  | ( OpaqueT (_, { underlying_t = repr2; lower_t = l2; upper_t = u2; _ }),
+      OpaqueT (r, ({ underlying_t = repr1; lower_t = l1; upper_t = u1; _ } as o))
     ) ->
     let underlying_t =
+      match (repr1, repr2) with
+      | (Some t1, Some t2) -> Some (swap_reason t2 t1)
+      | _ -> repr2
+    in
+    let lower_t =
+      match (l1, l2) with
+      | (Some t1, Some t2) -> Some (swap_reason t2 t1)
+      | _ -> l2
+    in
+    let upper_t =
       match (u1, u2) with
-      | (Some u1, Some u2) -> Some (swap_reason u2 u1)
+      | (Some t1, Some t2) -> Some (swap_reason t2 t1)
       | _ -> u2
     in
-    let super_t =
-      match (s1, s2) with
-      | (Some s1, Some s2) -> Some (swap_reason s2 s1)
-      | _ -> s2
-    in
-    OpaqueT (r, { o with underlying_t; super_t })
+    OpaqueT (r, { o with underlying_t; lower_t; upper_t })
   | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
 
 (* This predicate attempts to flatten out OpenTs and AnnotTs before performing a

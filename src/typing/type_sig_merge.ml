@@ -1799,16 +1799,18 @@ let merge_type_alias file reason name tparams body =
   in
   merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
 
-let merge_opaque_type file reason id name tparams _TODO_OPAQUE_TYPE_LOWER_BOUND upper_bound body =
+let merge_opaque_type file reason id name tparams lower_bound upper_bound body =
   let t (env, targs) =
     let open Type in
     let opaque_reason = Reason.(replace_desc_reason (ROpaqueType name) reason) in
-    let bound = Option.map ~f:(merge env file) upper_bound in
+    let lower_t = Option.map ~f:(merge env file) lower_bound in
+    let upper_t = Option.map ~f:(merge env file) upper_bound in
     let body = Option.map ~f:(merge env file) body in
     let opaquetype =
       {
         underlying_t = body;
-        super_t = bound;
+        lower_t;
+        upper_t;
         opaque_id = id;
         opaque_type_args = targs;
         opaque_name = name;

@@ -77,7 +77,7 @@ let recurse_into_intersection cx =
     | (t0 :: t1 :: ts, changed) ->
       TypeFilterResult { type_ = IntersectionT (r, InterRep.make t0 t1 ts); changed }
 
-let filter_opaque filter_fn reason ({ underlying_t; super_t; _ } as opq) =
+let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
   match underlying_t with
   | Some underlying_t
     when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason) -> begin
@@ -88,12 +88,12 @@ let filter_opaque filter_fn reason ({ underlying_t; super_t; _ } as opq) =
       TypeFilterResult { type_ = OpaqueT (reason, { opq with underlying_t = Some t }); changed }
   end
   | _ -> begin
-    let super_t = Base.Option.value ~default:(DefT (reason, MixedT Mixed_everything)) super_t in
-    match filter_fn super_t with
+    let upper_t = Base.Option.value ~default:(DefT (reason, MixedT Mixed_everything)) upper_t in
+    match filter_fn upper_t with
     | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       DefT (reason, EmptyT) |> changed_result
     | TypeFilterResult { type_ = t; changed } ->
-      TypeFilterResult { type_ = OpaqueT (reason, { opq with super_t = Some t }); changed }
+      TypeFilterResult { type_ = OpaqueT (reason, { opq with upper_t = Some t }); changed }
   end
 
 let map_poly ~f t =
@@ -906,7 +906,7 @@ and tag_of_t cx t =
   | OpaqueT (r, { underlying_t = Some t; _ })
     when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
     tag_of_t cx t
-  | OpaqueT (_, { super_t = Some t; _ }) -> tag_of_t cx t
+  | OpaqueT (_, { upper_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
   | NamespaceT { values_type; _ } -> tag_of_t cx values_type
   | StrUtilT _ -> Some (TypeTagSet.singleton StringTag)

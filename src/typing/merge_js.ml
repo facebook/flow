@@ -69,7 +69,7 @@ let detect_sketchy_null_checks cx tast =
         | AnyT _ -> cur_checks
         | GenericT { bound = t; _ }
         | OpaqueT (_, { underlying_t = Some t; _ })
-        | OpaqueT (_, { underlying_t = None; super_t = Some t; _ }) ->
+        | OpaqueT (_, { underlying_t = None; upper_t = Some t; _ }) ->
           make_checks seen cur_checks loc t
         | MaybeT (r, t) ->
           let acc = make_checks seen cur_checks loc t in
@@ -626,7 +626,8 @@ let enforce_optimize cx loc t =
         {
           opaque_id = Opaque.InternalEnforceUnionOptimized;
           underlying_t = None;
-          super_t = None;
+          lower_t = None;
+          upper_t = None;
           opaque_type_args = [];
           opaque_name = "InternalEnforceUnionOptimized";
         }

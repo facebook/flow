@@ -34,9 +34,9 @@ let check_ref_use cx rrid in_hook var_reason kind t =
     | OpaqueT (_, { opaque_id; _ })
       when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
       [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
-    | OpaqueT (_, { underlying_t; super_t; _ }) ->
+    | OpaqueT (_, { underlying_t; upper_t; _ }) ->
       Base.Option.value_map ~default:[] ~f:recur underlying_t
-      @ Base.Option.value_map ~default:[] ~f:recur super_t
+      @ Base.Option.value_map ~default:[] ~f:recur upper_t
     | OpenT (_, id) when ISet.mem id seen -> []
     | OpenT (_, id) ->
       Flow_js_utils.possible_types cx id |> Base.List.concat_map ~f:(recur_id (ISet.add id seen))
@@ -104,8 +104,8 @@ let hook_callee cx t =
     | DefT (r, FunT (_, { effect_ = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
     | DefT (_, FunT (_, { effect_ = AnyEffect; _ })) -> AnyCallee
     | DefT (r, FunT (_, { effect_ = ArbitraryEffect; _ })) -> NotHookCallee (set_of_reason r)
-    | OpaqueT (_, { underlying_t; super_t; _ }) -> begin
-      match (underlying_t, super_t) with
+    | OpaqueT (_, { underlying_t; upper_t; _ }) -> begin
+      match (underlying_t, upper_t) with
       | (Some t, _)
       | (None, Some t) ->
         recur t

@@ -954,9 +954,15 @@ module Make
           (TypeParams.to_list tparams)
       in
       let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc) in
-      (* TODO_OPAQUE_TYPE_LOWER_BOUND: Use lower_bound_t *)
       let opaquetype =
-        { underlying_t; super_t = upper_bound_t; opaque_id; opaque_type_args; opaque_name = name }
+        {
+          underlying_t;
+          lower_t = lower_bound_t;
+          upper_t = upper_bound_t;
+          opaque_id;
+          opaque_type_args;
+          opaque_name = name;
+        }
       in
       let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
       let type_ =
@@ -969,6 +975,11 @@ module Make
       in
       let () =
         match (underlying_t, upper_bound_t) with
+        | (Some l, Some u) -> Context.add_post_inference_subtyping_check cx l unknown_use u
+        | _ -> ()
+      in
+      let () =
+        match (lower_bound_t, upper_bound_t) with
         | (Some l, Some u) -> Context.add_post_inference_subtyping_check cx l unknown_use u
         | _ -> ()
       in

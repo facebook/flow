@@ -387,8 +387,10 @@ let rec mod_loc_of_virtual_use_op f =
     | IndexerKeyCompatibility { lower; upper } ->
       IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | CallFunCompatibility { n } -> CallFunCompatibility { n }
-    | OpaqueTypeSuperCompatibility { lower; upper } ->
-      OpaqueTypeSuperCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | OpaqueTypeLowerBoundCompatibility { lower; upper } ->
+      OpaqueTypeLowerBoundCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | OpaqueTypeUpperBoundCompatibility { lower; upper } ->
+      OpaqueTypeUpperBoundCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | MappedTypeKeyCompatibility { source_type; mapped_type } ->
       MappedTypeKeyCompatibility
         { source_type = mod_reason source_type; mapped_type = mod_reason mapped_type }
@@ -410,8 +412,10 @@ let rec mod_loc_of_virtual_use_op f =
           upper = mod_reason upper;
         }
     | TypeParamBound o -> TypeParamBound o
-    | OpaqueTypeBound { opaque_t_reason } ->
-      OpaqueTypeBound { opaque_t_reason = mod_reason opaque_t_reason }
+    | OpaqueTypeLowerBound { opaque_t_reason } ->
+      OpaqueTypeLowerBound { opaque_t_reason = mod_reason opaque_t_reason }
+    | OpaqueTypeUpperBound { opaque_t_reason } ->
+      OpaqueTypeUpperBound { opaque_t_reason = mod_reason opaque_t_reason }
     | TypeGuardCompatibility -> TypeGuardCompatibility
     | RendersCompatibility -> RendersCompatibility
     | UnifyFlip -> UnifyFlip

@@ -1808,7 +1808,7 @@ module Make (I : INPUT) : S = struct
         let t_opt =
           match opaque_type with
           | { underlying_t = Some t; _ } (* opaque type A = number; *)
-          | { super_t = Some t; _ } ->
+          | { upper_t = Some t; _ } ->
             Some t (* declare opaque type B: number; *)
           | _ -> None
           (* declare opaque type C; *)
@@ -2377,7 +2377,7 @@ module Make (I : INPUT) : S = struct
       let same_file = Some current_source = opaque_source in
       match opaquetype with
       | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~inherited ~source ~imode t
-      | { Type.super_t = Some t; _ } -> type__ ~env ~inherited ~source ~imode t
+      | { Type.upper_t = Some t; _ } -> type__ ~env ~inherited ~source ~imode t
       | _ -> return no_members
 
     and this_class_t ~env ~inherited ~source ~imode t =

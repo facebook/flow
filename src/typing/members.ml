@@ -586,7 +586,7 @@ let rec extract_type cx this_t =
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
   | OpaqueT (_, { underlying_t = Some t; _ })
-  | OpaqueT (_, { super_t = Some t; _ }) ->
+  | OpaqueT (_, { upper_t = Some t; _ }) ->
     extract_type cx t
   | DefT (reason, ArrT arrtype) ->
     let (builtin, elem_t) =

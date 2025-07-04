@@ -613,13 +613,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let create_element
         component jsx_props record_monomorphized_result inferred_targs specialized_component tout =
       let use_op =
-        (* Why do we try to remove the OpaqueTypeBound frame here?
+        (* Why do we try to remove the OpaqueTypeUpperBound frame here?
          * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
          * The error printing logic will unconditionally use the reason of `React$CreateElement`
          * tracked here to replace the actual lower bound.
          * TODO: generate reasons in a more principled way everywhere, so we don't need this hack. *)
         let rec unwrap = function
-          | Frame (OpaqueTypeBound _, use_op) -> unwrap use_op
+          | Frame (OpaqueTypeUpperBound _, use_op) -> unwrap use_op
           | Frame (f, use_op) -> Frame (f, unwrap use_op)
           | Op _ as use_op -> use_op
         in
@@ -762,7 +762,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | OpaqueT
             ( _,
               ( {
-                  super_t =
+                  upper_t =
                     Some
                       (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }));
                   _;
@@ -776,7 +776,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ( elem_reason,
                   {
                     opaque_t with
-                    super_t =
+                    upper_t =
                       Some
                         (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs })
                         );

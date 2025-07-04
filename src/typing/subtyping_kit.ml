@@ -889,7 +889,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               opaque_id = Opaque.UserDefinedOpaqueTypeId id1;
               opaque_name = name1;
               opaque_type_args = ltargs;
-              super_t = super1;
+              lower_t = lower_1;
+              upper_t = upper_1;
               _;
             }
           ),
@@ -899,7 +900,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               opaque_id = Opaque.UserDefinedOpaqueTypeId id2;
               opaque_name = name2;
               opaque_type_args = utargs;
-              super_t = super2;
+              lower_t = lower_2;
+              upper_t = upper_2;
               _;
             }
           )
@@ -912,15 +914,34 @@ module Make (Flow : INPUT) : OUTPUT = struct
            && List.length ltargs = List.length utargs ->
       (* Check super *)
       if TypeUtil.is_in_common_interface_conformance_check use_op then begin
-        let super1 = Base.Option.value super1 ~default:(MixedT.make lreason) in
-        let super2 = Base.Option.value super2 ~default:(MixedT.make ureason) in
-        let use_op =
-          Frame
-            ( OpaqueTypeSuperCompatibility { lower = reason_of_t super1; upper = reason_of_t super2 },
-              use_op
+        let lower_1 = Base.Option.value lower_1 ~default:(EmptyT.make lreason) in
+        let lower_2 = Base.Option.value lower_2 ~default:(EmptyT.make ureason) in
+        rec_unify
+          cx
+          trace
+          ~use_op:
+            (Frame
+               ( OpaqueTypeLowerBoundCompatibility
+                   { lower = reason_of_t lower_1; upper = reason_of_t lower_1 },
+                 use_op
+               )
             )
-        in
-        rec_unify cx trace ~use_op super1 super2
+          lower_1
+          lower_2;
+        let upper_1 = Base.Option.value upper_1 ~default:(MixedT.make lreason) in
+        let upper_2 = Base.Option.value upper_2 ~default:(MixedT.make ureason) in
+        rec_unify
+          cx
+          trace
+          ~use_op:
+            (Frame
+               ( OpaqueTypeUpperBoundCompatibility
+                   { lower = reason_of_t upper_1; upper = reason_of_t upper_2 },
+                 use_op
+               )
+            )
+          upper_1
+          upper_2
       end;
       (* Do not check underlying type even if we have access to them, because underlying types
        * are not visible across module boundaries. *)
@@ -1109,7 +1130,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)
     | (UnionT (_, rep), UnionT _) -> union_to_union cx trace use_op l rep u
-    | (OpaqueT (_, { super_t = Some (UnionT _ as l); _ }), UnionT _)
+    | (OpaqueT (_, { upper_t = Some (UnionT _ as l); _ }), UnionT _)
       when union_optimization_guard cx TypeUtil.quick_subtype l u
            = UnionOptimizationGuardResult.True ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via an opaque type)"
@@ -1262,7 +1283,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         SpeculationKit.try_union cx trace use_op l r rep
     (* The following case distributes the opaque constructor over a union/maybe/optional
      * type in the super type position of the opaque type. *)
-    | (OpaqueT (lreason, ({ super_t = Some t; _ } as opaquetype)), UnionT (r, rep)) ->
+    | (OpaqueT (lreason, ({ upper_t = Some t; _ } as opaquetype)), UnionT (r, rep)) ->
       let ts = possible_concrete_types_for_inspection cx (reason_of_t t) t in
       begin
         match ts with
@@ -1271,7 +1292,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (* Same as `_ ~> UnionT` case below *)
           SpeculationKit.try_union cx trace use_op l r rep
         | lt1 :: lt2 :: lts ->
-          let make_opaque t = OpaqueT (lreason, { opaquetype with super_t = Some t }) in
+          let make_opaque t = OpaqueT (lreason, { opaquetype with upper_t = Some t }) in
           let union_of_opaques =
             UnionRep.make (make_opaque lt1) (make_opaque lt2) (Base.List.map ~f:make_opaque lts)
           in
@@ -2322,12 +2343,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EPrimitiveAsInterface { use_op; reason; interface_reason; kind = `String })
-    (**************************)
-    (* opaque types supertype *)
-    (**************************)
-    (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
-    | (OpaqueT (opaque_t_reason, { super_t = Some t; _ }), _) ->
-      rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeBound { opaque_t_reason }, use_op)) (t, u)
+    (************************************)
+    (* opaque types lower & upper bound *)
+    (************************************)
+    (* Opaque types may be treated as their upper bound when they are a lower bound for a use *)
+    | (OpaqueT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
+      rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op)) (t, u)
+    (* Opaque types may be treated as their lower bound when they are a upper bound for a use *)
+    | (_, OpaqueT (opaque_t_reason, { lower_t = Some t; _ })) ->
+      rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeLowerBound { opaque_t_reason }, use_op)) (l, t)
     (*********************)
     (* functions statics *)
     (*********************)

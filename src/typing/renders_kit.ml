@@ -214,7 +214,7 @@ module Make (Flow : INPUT) : S = struct
     in
     match opq with
     | {
-     super_t = Some (DefT (_, ObjT { props_tmap; _ }));
+     upper_t = Some (DefT (_, ObjT { props_tmap; _ }));
      opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
      _;
     } ->

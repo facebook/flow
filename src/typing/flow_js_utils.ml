@@ -2832,13 +2832,13 @@ let array_elem_check
 
 let propref_for_elem_t cx l =
   match l with
-  | OpaqueT (reason, { super_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
+  | OpaqueT (reason, { upper_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
   | GenericT { bound = DefT (_, SingletonStrT { value = name; _ }); reason; _ }
   | DefT (reason, SingletonStrT { value = name; _ }) ->
     update_lit_type_from_annot cx l;
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
-  | OpaqueT (reason_num, { super_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
+  | OpaqueT (reason_num, { upper_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
   | GenericT { bound = DefT (_, SingletonNumT { value = (value, raw); _ }); reason = reason_num; _ }
   | DefT (reason_num, SingletonNumT { value = (value, raw); _ })
     when Js_number.is_float_safe_integer value ->
@@ -3387,7 +3387,7 @@ end = struct
         ( element_r,
           {
             opaque_id;
-            super_t = Some (DefT (_, ObjT { props_tmap; _ }));
+            upper_t = Some (DefT (_, ObjT { props_tmap; _ }));
             opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
             _;
           }

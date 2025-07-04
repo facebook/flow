@@ -508,7 +508,11 @@ module rec TypeTerm : sig
         upper: 'loc virtual_reason;
       }
     | CallFunCompatibility of { n: int }
-    | OpaqueTypeSuperCompatibility of {
+    | OpaqueTypeLowerBoundCompatibility of {
+        lower: 'loc virtual_reason;
+        upper: 'loc virtual_reason;
+      }
+    | OpaqueTypeUpperBoundCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
@@ -539,7 +543,8 @@ module rec TypeTerm : sig
         polarity: Polarity.t;
       }
     | TypeParamBound of { name: Subst_name.t }
-    | OpaqueTypeBound of { opaque_t_reason: 'loc virtual_reason }
+    | OpaqueTypeLowerBound of { opaque_t_reason: 'loc virtual_reason }
+    | OpaqueTypeUpperBound of { opaque_t_reason: 'loc virtual_reason }
     | TypeGuardCompatibility
     | RendersCompatibility
     | UnifyFlip
@@ -1491,7 +1496,8 @@ module rec TypeTerm : sig
   and opaquetype = {
     opaque_id: Opaque.id;
     underlying_t: t option;
-    super_t: t option;
+    lower_t: t option;
+    upper_t: t option;
     opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
     opaque_name: string;
   }
@@ -4091,7 +4097,8 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | ImplicitTypeParam -> "ImplicitTypeParam"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
   | CallFunCompatibility _ -> "CallFunCompatibility"
-  | OpaqueTypeSuperCompatibility _ -> "OpaqueTypeSuperCompatibility"
+  | OpaqueTypeLowerBoundCompatibility _ -> "OpaqueTypeLowerBoundCompatibility"
+  | OpaqueTypeUpperBoundCompatibility _ -> "OpaqueTypeUpperBoundCompatibility"
   | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"
   | ReactConfigCheck -> "ReactConfigCheck"
@@ -4100,7 +4107,8 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | TupleAssignment _ -> "TupleAssignment"
   | TypeArgCompatibility _ -> "TypeArgCompatibility"
   | TypeParamBound _ -> "TypeParamBound"
-  | OpaqueTypeBound _ -> "OpaqueTypeBound"
+  | OpaqueTypeLowerBound _ -> "OpaqueTypeLowerBound"
+  | OpaqueTypeUpperBound _ -> "OpaqueTypeUpperBound"
   | UnifyFlip -> "UnifyFlip"
   | TypeGuardCompatibility -> "TypeGuardCompatibility"
   | RendersCompatibility -> "RendersCompatibility"

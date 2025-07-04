@@ -123,7 +123,8 @@ class virtual ['a] t =
           AnnotT (r, t'', use_desc)
       | OpaqueT (r, opaquetype) ->
         let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
-        let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
+        let lower_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.lower_t in
+        let upper_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.upper_t in
         let opaque_type_args =
           ListUtils.ident_map
             (fun x ->
@@ -137,12 +138,13 @@ class virtual ['a] t =
         in
         if
           underlying_t == opaquetype.underlying_t
-          && super_t == opaquetype.super_t
+          && lower_t == opaquetype.lower_t
+          && upper_t == opaquetype.upper_t
           && opaque_type_args == opaquetype.opaque_type_args
         then
           t
         else
-          OpaqueT (r, { opaquetype with underlying_t; super_t; opaque_type_args })
+          OpaqueT (r, { opaquetype with underlying_t; lower_t; upper_t; opaque_type_args })
       | NamespaceT namespace_t ->
         let namespace_t' = self#namespace_type cx map_cx namespace_t in
         if namespace_t' == namespace_t then
