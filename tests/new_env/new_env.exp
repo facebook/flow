@@ -300,14 +300,6 @@ References:
            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- initialize.js:12:5
-
-This condition is truthy. [constant-condition]
-
-   12| if (42 as any) {
-           ^^
-
-
 Error ----------------------------------------------------------------------------------------------- initialize.js:20:1
 
 Cannot cast `y` to number because possibly uninitialized variable [1] is incompatible with number [2].
@@ -324,14 +316,6 @@ References:
    initialize.js:20:6
    20| y as number; // error
             ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- initialize.js:22:5
-
-This condition is truthy. [constant-condition]
-
-   22| if (42 as any) {
-           ^^
 
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:23:7
@@ -745,4 +729,4 @@ References:
 
 
 
-Found 48 errors
+Found 46 errors

@@ -743,22 +743,6 @@ This condition is truthy. [constant-condition]
              ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:71:6
-
-This condition is truthy. [constant-condition]
-
-   71|   if(2 as number) {} // ERROR
-            ^
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:72:6
-
-This condition is truthy. [constant-condition]
-
-   72|   if(3 as any) {} // ERROR
-            ^
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:76:6
 
 This condition is truthy. [constant-condition]
@@ -1425,4 +1409,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 150 errors
+Found 148 errors

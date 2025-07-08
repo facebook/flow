@@ -463,9 +463,6 @@ let rec check_conditional
       | TypeCast { TypeCast.expression; _ } ->
         should_report_error_ref := false;
         check_conditional cx expression cached_results ~should_report_error
-      | AsExpression { AsExpression.expression; _ } ->
-        should_report_error_ref := false;
-        check_conditional cx expression cached_results ~should_report_error
       | AsConstExpression { AsConstExpression.expression; _ } ->
         should_report_error_ref := false;
         check_conditional cx expression cached_results ~should_report_error
@@ -558,6 +555,7 @@ let rec check_conditional
           check_conditional cx right cached_results ~should_report_error
           (* we don't check compound assignment (e.g. `++`, `--`, `+=`, ...) because their value could change *)
         | Some _ -> condition_allowed)
+      | AsExpression _
       | MetaProperty _
       | Call _
       | OptionalCall _

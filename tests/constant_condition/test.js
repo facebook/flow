@@ -68,8 +68,8 @@ import React from "react";
 {
   if(0 as number) {} // OK
   if(1 as number) {} // OK
-  if(2 as number) {} // ERROR
-  if(3 as any) {} // ERROR
+  if(2 as number) {} // OK, user defined annotation takes priority
+  if(3 as any) {} // OK, user defined annotation takes priority
 }
 
 {
