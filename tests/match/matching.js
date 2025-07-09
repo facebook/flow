@@ -190,6 +190,18 @@
     {zap: u, const a} => a as 3, // OK
   };
 }
+{
+  declare const x: {foo: {a: number}} | {bar: [number]}
+
+  match (x) {
+    {foo: {const a}} => { // OK
+      a as number; // OK
+    }
+    {bar: [const a]} => { // OK
+      a as number; // OK
+    }
+  }
+}
 
 // Disjoint object union
 {

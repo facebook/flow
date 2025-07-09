@@ -421,174 +421,174 @@ References:
                                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:206:14
+Error ----------------------------------------------------------------------------------------------- matching.js:218:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'baz', val: _}` to
 match object type [1]. [match-not-exhaustive]
 
-   matching.js:206:14
-   206|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
+   matching.js:218:14
+   218|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
                      ^^^^^
 
 References:
-   matching.js:198:20
-   198|                  | {type: 'baz', val: boolean};
+   matching.js:210:20
+   210|                  | {type: 'baz', val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:251:14
+Error ----------------------------------------------------------------------------------------------- matching.js:263:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
 `{type: 'bar', n: 2, val: _}` to match object type [1]. [match-not-exhaustive]
 
-   matching.js:251:14
-   251|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
+   matching.js:263:14
+   263|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
                      ^^^^^
 
 References:
-   matching.js:238:20
-   238|                  | {type: 'bar', n: 2, val: boolean};
+   matching.js:250:20
+   250|                  | {type: 'bar', n: 2, val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:277:14
+Error ----------------------------------------------------------------------------------------------- matching.js:289:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'bar', val: _}` to
 match object type [1]. [match-not-exhaustive]
 
-   matching.js:277:14
-   277|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
+   matching.js:289:14
+   289|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
                      ^^^^^
 
 References:
-   matching.js:270:20
-   270|                  | {type: 'bar', val: string}
+   matching.js:282:20
+   282|                  | {type: 'bar', val: string}
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:294:14
+Error ----------------------------------------------------------------------------------------------- matching.js:306:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['baz', _]` to match
 tuple type [1]. [match-not-exhaustive]
 
-   matching.js:294:14
-   294|   const e2 = match (x) { // ERROR: `'baz'` element not checked
+   matching.js:306:14
+   306|   const e2 = match (x) { // ERROR: `'baz'` element not checked
                      ^^^^^
 
 References:
-   matching.js:286:20
-   286|                  | ['baz', boolean];
+   matching.js:298:20
+   298|                  | ['baz', boolean];
                            ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:330:24
+Error ----------------------------------------------------------------------------------------------- matching.js:342:24
 
 Cannot cast `a` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
-   matching.js:330:24
-   330|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:342:24
+   342|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
                                ^
 
 References:
-   matching.js:325:21
-   325|                  | [boolean, boolean, boolean];
+   matching.js:337:21
+   337|                  | [boolean, boolean, boolean];
                             ^^^^^^^ [1]
-   matching.js:330:29
-   330|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
+   matching.js:342:29
+   342|     [const a, _, _] => a as empty, // ERROR: `boolean` is not `empty`
                                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:347:18
+Error ----------------------------------------------------------------------------------------------- matching.js:359:18
 
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   matching.js:347:18
-   347|     [const a] => a as string, // ERROR: `number` is not `string`
+   matching.js:359:18
+   359|     [const a] => a as string, // ERROR: `number` is not `string`
                          ^
 
 References:
-   matching.js:343:21
-   343|   declare const x: [number] | Array<string>;
+   matching.js:355:21
+   355|   declare const x: [number] | Array<string>;
                             ^^^^^^ [1]
-   matching.js:347:23
-   347|     [const a] => a as string, // ERROR: `number` is not `string`
+   matching.js:359:23
+   359|     [const a] => a as string, // ERROR: `number` is not `string`
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:365:14
+Error ----------------------------------------------------------------------------------------------- matching.js:377:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_]` to match tuple
 type [1]. [match-not-exhaustive]
 
-   matching.js:365:14
-   365|   const e2 = match (x) { // ERROR: does not match all possibilities
+   matching.js:377:14
+   377|   const e2 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:359:20
-   359|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:371:20
+   371|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:369:14
+Error ----------------------------------------------------------------------------------------------- matching.js:381:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `[_, _, _]` to match tuple type [1]
 - `[_, _]` to match tuple type [1] [match-not-exhaustive]
 
-   matching.js:369:14
-   369|   const e3 = match (x) { // ERROR: does not match all possibilities
+   matching.js:381:14
+   381|   const e3 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:359:20
-   359|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:371:20
+   371|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:373:14
+Error ----------------------------------------------------------------------------------------------- matching.js:385:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `[_, _]` to match tuple type [1]
 - `[_]` to match tuple type [1] [match-not-exhaustive]
 
-   matching.js:373:14
-   373|   const e4 = match (x) { // ERROR: does not match all possibilities
+   matching.js:385:14
+   385|   const e4 = match (x) { // ERROR: does not match all possibilities
                      ^^^^^
 
 References:
-   matching.js:359:20
-   359|   declare const x: [a: 0, b?: 1, c?: 2];
+   matching.js:371:20
+   371|   declare const x: [a: 0, b?: 1, c?: 2];
                            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:386:14
+Error ----------------------------------------------------------------------------------------------- matching.js:398:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match tuple
 type [1]. [match-not-exhaustive]
 
-   matching.js:386:14
-   386|   const e2 = match (x) { // ERROR: does not match all elements
+   matching.js:398:14
+   398|   const e2 = match (x) { // ERROR: does not match all elements
                      ^^^^^
 
 References:
-   matching.js:380:20
-   380|   declare const x: [a: 0, ...];
+   matching.js:392:20
+   392|   declare const x: [a: 0, ...];
                            ^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- matching.js:396:14
+Error ----------------------------------------------------------------------------------------------- matching.js:408:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: 2}` to match object
 type [1]. [match-not-exhaustive]
 
-   matching.js:396:14
-   396|   const e1 = match (x) {
+   matching.js:408:14
+   408|   const e1 = match (x) {
                      ^^^^^
 
 References:
-   matching.js:394:20
-   394|   declare const x: T;
+   matching.js:406:20
+   406|   declare const x: T;
                            ^ [1]
 
 

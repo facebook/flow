@@ -3093,16 +3093,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | (loc, WildcardPattern _)
           | (loc, BindingPattern _)
           | (loc, IdentifierPattern _)
-          | (loc, MemberPattern _) ->
+          | (loc, MemberPattern _)
+          | (loc, ObjectPattern _)
+          | (loc, ArrayPattern _) ->
             Some loc
           | (_, NumberPattern _)
           | (_, BigIntPattern _)
           | (_, StringPattern _)
           | (_, BooleanPattern _)
           | (_, NullPattern _)
-          | (_, UnaryPattern _)
-          | (_, ObjectPattern _)
-          | (_, ArrayPattern _) ->
+          | (_, UnaryPattern _) ->
             None
           | (_, AsPattern { AsPattern.pattern; _ }) -> needs_prop_exists_refi pattern
           | (_, OrPattern { OrPattern.patterns; _ }) ->
