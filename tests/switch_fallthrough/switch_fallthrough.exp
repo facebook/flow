@@ -1,122 +1,86 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
 Cannot cast `x` to string literal `bar` because string literal `baz` [1] is incompatible with string literal `bar` [2].
 [incompatible-cast]
 
-   test.js:8:2
-   8| (x : 'bar'); // error
-       ^
+   test.js:9:3
+   9|   x as 'bar'; // error
+        ^
 
 References:
-   test.js:2:16
-   2| declare var x: Enum;
-                     ^^^^ [1]
-   test.js:8:6
-   8| (x : 'bar'); // error
-           ^^^^^ [2]
+   test.js:4:20
+   4|   declare const x: Enum;
+                         ^^^^ [1]
+   test.js:9:8
+   9|   x as 'bar'; // error
+             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
 Cannot cast `x` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
 [incompatible-cast]
 
-   test.js:8:2
-   8| (x : 'bar'); // error
-       ^
+   test.js:9:3
+   9|   x as 'bar'; // error
+        ^
 
 References:
-   test.js:2:16
-   2| declare var x: Enum;
-                     ^^^^ [1]
-   test.js:8:6
-   8| (x : 'bar'); // error
-           ^^^^^ [2]
+   test.js:4:20
+   4|   declare const x: Enum;
+                         ^^^^ [1]
+   test.js:9:8
+   9|   x as 'bar'; // error
+             ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:8
+Error ---------------------------------------------------------------------------------------------------- test.js:18:10
 
 Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
 `Enum` [1]. [incompatible-type]
 
-   test.js:14:8
-   14|   case 'qux': // error
-              ^^^^^ [2]
+   test.js:18:10
+   18|     case 'qux': // error
+                ^^^^^ [2]
 
 References:
-   test.js:2:16
-    2| declare var x: Enum;
-                      ^^^^ [1]
+   test.js:13:20
+   13|   declare const x: Enum;
+                          ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:22:8
+Error ---------------------------------------------------------------------------------------------------- test.js:29:10
 
 Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
 `Enum` [1]. [incompatible-type]
 
-   test.js:22:8
-   22|   case 'qux': // error
-              ^^^^^ [2]
+   test.js:29:10
+   29|     case 'qux': // error
+                ^^^^^ [2]
 
 References:
-   test.js:2:16
-    2| declare var x: Enum;
-                      ^^^^ [1]
+   test.js:24:20
+   24|   declare const x: Enum;
+                          ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
+Error ----------------------------------------------------------------------------------------------------- test.js:40:3
 
 Cannot cast `x` to string literal `foo` because string literal `baz` [1] is incompatible with string literal `foo` [2].
 [incompatible-cast]
 
-   test.js:31:2
-   31| (x : 'foo'); // error
-        ^
+   test.js:40:3
+   40|   x as 'foo'; // error
+         ^
 
 References:
-   test.js:2:16
-    2| declare var x: Enum;
-                      ^^^^ [1]
-   test.js:31:6
-   31| (x : 'foo'); // error
-            ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
-
-Cannot cast `x` to string literal `foo` because string literal `qux` [1] is incompatible with string literal `foo` [2].
-[incompatible-cast]
-
-   test.js:31:2
-   31| (x : 'foo'); // error
-        ^
-
-References:
-   test.js:14:8
-   14|   case 'qux': // error
-              ^^^^^ [1]
-   test.js:31:6
-   31| (x : 'foo'); // error
-            ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:2
-
-Cannot cast `x` to string literal `foo` because string literal `qux` [1] is incompatible with string literal `foo` [2].
-[incompatible-cast]
-
-   test.js:31:2
-   31| (x : 'foo'); // error
-        ^
-
-References:
-   test.js:22:8
-   22|   case 'qux': // error
-              ^^^^^ [1]
-   test.js:31:6
-   31| (x : 'foo'); // error
-            ^^^^^ [2]
+   test.js:35:18
+   35|   declare let x: Enum;
+                        ^^^^ [1]
+   test.js:40:8
+   40|   x as 'foo'; // error
+              ^^^^^ [2]
 
 
 
-Found 7 errors
+Found 5 errors

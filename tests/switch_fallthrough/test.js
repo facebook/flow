@@ -1,41 +1,52 @@
 type Enum = 'foo' | 'bar' | 'baz';
-declare var x: Enum;
-switch (x) {
-  case 'bar':
-    break;
+
+{
+  declare const x: Enum;
+  switch (x) {
+    case 'bar':
+      break;
+  }
+  x as 'bar'; // error
 }
 
-(x : 'bar'); // error
-
-switch (x) {
-  case 'foo':
-  case 'bar':
-    break;
-  case 'qux': // error
-    break;
+{
+  declare const x: Enum;
+  switch (x) {
+    case 'foo':
+    case 'bar':
+      break;
+    case 'qux': // error
+      break;
+  }
 }
 
-switch (x) {
-  case 'foo':
-  case 'bar':
-    break;
-  case 'qux': // error
-    break;
+{
+  declare const x: Enum;
+  switch (x) {
+    case 'foo':
+    case 'bar':
+      break;
+    case 'qux': // error
+      break;
+  }
 }
 
-switch (x) {
-  case 'bar':
-    x = 'foo';
+{
+  declare let x: Enum;
+  switch (x) {
+    case 'bar':
+      x = 'foo';
+  }
+  x as 'foo'; // error
 }
 
-(x : 'foo'); // error
+{
+  declare let x: Enum;
+  switch (x) {
+    case 'bar':
+    case 'baz':
+      x = 'foo';
+  }
 
-declare var y: Enum
-
-switch (y) {
-  case 'bar':
-  case 'baz':
-    y = 'foo';
+  x as 'foo'; // no error
 }
-
-(y : 'foo'); // no error
