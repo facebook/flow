@@ -1107,16 +1107,31 @@ let rec whole_ast_visitor tast ~under_function_or_class_body ~allow_hook_call_at
       let cur_in_context_possibly_expecting_fn_component_or_hook =
         in_context_possibly_expecting_fn_component_or_hook
       in
-      let next_in_context_possibly_expecting_fn_component_or_hook =
+      let (next_in_context_possibly_expecting_fn_component_or_hook, init) =
         match (id, init) with
         | ( ( _,
               Ast.Pattern.Identifier
-                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }) as id; _ }
             ),
-            Some (_, Ast.Expression.(ArrowFunction _ | Function _))
+            Some (fn_loc, Ast.Expression.(ArrowFunction f | Function f))
           ) ->
-          Context.hook_compatibility cx && (Flow_ast_utils.hook_name name || componentlike_name name)
-        | _ -> false
+          ( Context.hook_compatibility cx
+            && (Flow_ast_utils.hook_name name || componentlike_name name),
+            let f =
+              (* If the name of the function is missing, we give it the name of the variable it binds to.
+               * Later, we will visit the function. This helps to catch bad code like:
+               *
+               * ```
+               * const badHookName = () => {
+               *   useState()
+               * }
+               * ```
+               *)
+              { f with Ast.Function.id = Some (Base.Option.value f.Ast.Function.id ~default:id) }
+            in
+            Some (fn_loc, Ast.Expression.(Function f))
+          )
+        | _ -> (false, init)
       in
       (* We have a function bind to a component or hook like name. *)
       in_context_possibly_expecting_fn_component_or_hook <-

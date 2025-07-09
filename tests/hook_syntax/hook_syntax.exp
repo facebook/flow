@@ -1872,8 +1872,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:806:3
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:806:3
    806|   useState(); // error
@@ -1887,8 +1888,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- rules_of_hooks.js:808:16
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
 
    rules_of_hooks.js:808:16
    808| let dx = () => useState(); // error
