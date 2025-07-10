@@ -151,7 +151,11 @@ const b = match (obj) {
 
 ## Dealing with disjoint object unions
 
-[Disjoint object unions](../../types/unions#toc-disjoint-object-unions) are unions of object types with some distinguishing property. For example:
+[Disjoint object unions](../../types/unions#toc-disjoint-object-unions) are unions of object types with some distinguishing property. In the following example, that would be the `type` property:
+
+```js flow-check
+type Result = {type: 'ok', value: number} | {type: 'error', error: Error};
+```
 
 Previous patterns would involve checking the `result.type` property, and then accessing properties off of `result`:
 
@@ -197,10 +201,29 @@ match (result) {
   {type: 'ok', const value} => {
     console.log(value);
   }
-  {type: 'error', ...} as err => {
+  {type: 'error', ...} as err => { // Using `as`
     throw processError(err);
   }
 }
 
 declare function processError(err: Err): Error;
+```
+
+If you don't need the `type` property included, you could also use an [object rest pattern](../patterns#object-patterns):
+
+```js flow-check
+type Result = {type: 'ok', value: number} | {type: 'error', error: Error};
+
+declare const result: Result;
+
+match (result) {
+  {type: 'ok', const value} => {
+    console.log(value);
+  }
+  {type: 'error', ...const err} => { // Using object rest
+    throw processError(err);
+  }
+}
+
+declare function processError(err: {error: Error}): Error;
 ```

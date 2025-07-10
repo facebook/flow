@@ -60,7 +60,7 @@ const e = match (x) {
 };
 ```
 
-While `let` variables are also supported by the runtime, these are a type error for now and only `const` variables are allowed. If you have a use case, please share it with the team.
+While `let` variables are also supported by the runtime, these are a type error for now and only `const` variables are allowed. If you have a use case, please share it with the team. `var` is not supported.
 
 ## Object patterns
 
