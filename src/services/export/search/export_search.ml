@@ -93,17 +93,19 @@ let merge_export_import new_index { index; value_matcher; type_matcher } =
 type query =
   | Value of string
   | Type of string
+  | BothValueAndType of string
 
 let string_of_query = function
   | Value str
-  | Type str ->
+  | Type str
+  | BothValueAndType str ->
     str
 
 let search_result_of_export ~query name source kind =
   let open Export_index in
   match (query, kind) with
-  | (Value _, (Default | Named | Namespace))
-  | (Type _, (DefaultType | NamedType)) ->
+  | ((Value _ | BothValueAndType _), (Default | Named | Namespace))
+  | ((Type _ | BothValueAndType _), (DefaultType | NamedType)) ->
     Some { name; source; kind }
   | (Value _, (DefaultType | NamedType))
   | (Type _, (Default | Named | Namespace)) ->
@@ -210,6 +212,8 @@ let search ?(options = default_options) query { index; value_matcher; type_match
     match query with
     | Value txt -> (value_matcher, txt)
     | Type txt -> (type_matcher, txt)
+    | BothValueAndType _ ->
+      failwith "BothValueAndType query should be handled by search_both_values_and_types"
   in
 
   let max_results = options.Fuzzy_path.max_results in
@@ -230,6 +234,45 @@ let search ?(options = default_options) query { index; value_matcher; type_match
 let search_values ?options query t = search ?options (Value query) t
 
 let search_types ?options query t = search ?options (Type query) t
+
+let search_both_values_and_types
+    ?(options = default_options) query { index; value_matcher; type_matcher } =
+  let max_results = options.Fuzzy_path.max_results in
+  let options =
+    if max_results < max_int then
+      Fuzzy_path.{ options with max_results = max_results + 1 }
+    else
+      options
+  in
+
+  let weighted = options.Fuzzy_path.weighted in
+  let value_fuzzy_results = Fuzzy_path.search ~options query value_matcher in
+  let type_fuzzy_results = Fuzzy_path.search ~options query type_matcher in
+
+  let { results; is_incomplete } =
+    take
+      ~weighted
+      ~n:max_results
+      ~index
+      ~query:(BothValueAndType query)
+      (value_fuzzy_results @ type_fuzzy_results)
+  in
+  let results =
+    let seen = ref Export_index.ExportMap.empty in
+    Base.List.filter results ~f:(fun { search_result = { kind = _; name; source }; _ } ->
+        let key = (source, Export_index.Named) in
+        let name_set =
+          Export_index.ExportMap.find_opt key !seen |> Base.Option.value ~default:SSet.empty
+        in
+        if SSet.mem name name_set then
+          false
+        else (
+          seen := Export_index.ExportMap.add key (SSet.add name name_set) !seen;
+          true
+        )
+    )
+  in
+  { results; is_incomplete }
 
 let get name { index; value_matcher = _; type_matcher = _ } = Export_index.find name index
 

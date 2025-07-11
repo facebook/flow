@@ -103,6 +103,8 @@ type t = {
   of_show_status_params: t -> ShowStatus.params -> ShowStatus.params;
   of_show_status_result: t -> ShowStatus.result -> ShowStatus.result;
   of_symbol_information: t -> SymbolInformation.t -> SymbolInformation.t;
+  of_workspace_symbol_information:
+    t -> WorkspaceSymbolInformation.t -> WorkspaceSymbolInformation.t;
   of_text_document_identifier: t -> TextDocumentIdentifier.t -> TextDocumentIdentifier.t;
   of_text_document_item: t -> TextDocumentItem.t -> TextDocumentItem.t;
   of_text_document_position_params:
@@ -682,6 +684,10 @@ let default_mapper =
       (fun mapper { SymbolInformation.name; kind; location; selectionRange; containerName } ->
         let location = mapper.of_location mapper location in
         { SymbolInformation.name; kind; location; selectionRange; containerName });
+    of_workspace_symbol_information =
+      (fun mapper { WorkspaceSymbolInformation.name; kind; location; containerName } ->
+        let location = mapper.of_text_document_identifier mapper location in
+        { WorkspaceSymbolInformation.name; kind; location; containerName });
     of_text_document_identifier =
       (fun mapper { TextDocumentIdentifier.uri } ->
         { TextDocumentIdentifier.uri = mapper.of_document_uri mapper uri });
@@ -751,5 +757,11 @@ let default_mapper =
     of_workspace_symbol_params =
       (fun _mapper { WorkspaceSymbol.query } -> { WorkspaceSymbol.query });
     of_workspace_symbol_result =
-      (fun mapper result -> Base.List.map ~f:(mapper.of_symbol_information mapper) result);
+      (fun mapper -> function
+        | WorkspaceSymbol.SymbolInformation info ->
+          WorkspaceSymbol.SymbolInformation
+            (Base.List.map info ~f:(mapper.of_symbol_information mapper))
+        | WorkspaceSymbol.WorkspaceSymbolInformation info ->
+          WorkspaceSymbol.WorkspaceSymbolInformation
+            (Base.List.map info ~f:(mapper.of_workspace_symbol_information mapper)));
   }

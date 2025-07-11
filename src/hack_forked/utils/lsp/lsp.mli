@@ -194,6 +194,15 @@ module SymbolInformation : sig
   }
 end
 
+module WorkspaceSymbolInformation : sig
+  type t = {
+    name: string;
+    kind: SymbolInformation.symbolKind;
+    location: TextDocumentIdentifier.t;
+    containerName: string option;  (** the symbol containing this symbol *)
+  }
+end
+
 module MessageType : sig
   type t =
     | ErrorMessage [@value 1]
@@ -861,7 +870,9 @@ end
 module WorkspaceSymbol : sig
   type params = workspaceSymbolParams
 
-  and result = SymbolInformation.t list
+  and result =
+    | SymbolInformation of SymbolInformation.t list
+    | WorkspaceSymbolInformation of WorkspaceSymbolInformation.t list
 
   and workspaceSymbolParams = { query: string }
 end

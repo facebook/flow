@@ -221,6 +221,26 @@ let print_symbolInformation (info : SymbolInformation.t) : json =
       ]
   )
 
+let print_workspaceSymbolInformation (info : WorkspaceSymbolInformation.t) : json =
+  WorkspaceSymbolInformation.(
+    Jprint.object_opt
+      [
+        ("name", Some (JSON_String info.name));
+        ("kind", Some (SymbolKindFmt.to_json info.kind));
+        ( "location",
+          Some
+            (JSON_Object
+               [
+                 ( "uri",
+                   JSON_String (DocumentUri.to_string info.location.TextDocumentIdentifier.uri)
+                 );
+               ]
+            )
+        );
+        ("containerName", Base.Option.map info.containerName ~f:string_);
+      ]
+  )
+
 let parse_codeLens (json : json option) : CodeLens.t =
   {
     CodeLens.range = Jget.obj_exn json "range" |> parse_range_exn;
@@ -1030,7 +1050,11 @@ module WorkspaceSymbolFmt = struct
 
   let params_of_json (params : json option) : params = { query = Jget.string_exn params "query" }
 
-  let json_of_result (r : result) : json = JSON_Array (Base.List.map r ~f:print_symbolInformation)
+  let json_of_result (r : result) : json =
+    JSON_Array
+      (match r with
+      | SymbolInformation r -> Base.List.map r ~f:print_symbolInformation
+      | WorkspaceSymbolInformation r -> Base.List.map r ~f:print_workspaceSymbolInformation)
 end
 
 (** textDocument/documentSymbol request *)

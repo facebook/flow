@@ -28,6 +28,9 @@ val search_values : ?options:search_options -> string -> t -> Export_search_type
 
 val search_types : ?options:search_options -> string -> t -> Export_search_types.search_results
 
+val search_both_values_and_types :
+  ?options:search_options -> string -> t -> Export_search_types.search_results
+
 val get : string -> t -> int Export_index.ExportMap.t
 
 val get_values : string -> t -> int Export_index.ExportMap.t

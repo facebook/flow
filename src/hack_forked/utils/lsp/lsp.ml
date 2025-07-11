@@ -278,6 +278,15 @@ module SymbolInformation = struct
   }
 end
 
+module WorkspaceSymbolInformation = struct
+  type t = {
+    name: string;
+    kind: SymbolInformation.symbolKind;
+    location: TextDocumentIdentifier.t;
+    containerName: string option;  (** the symbol containing this symbol *)
+  }
+end
+
 (** For showing messages (not diagnostics) in the user interface. *)
 module MessageType = struct
   type t =
@@ -1065,7 +1074,9 @@ end
 module WorkspaceSymbol = struct
   type params = workspaceSymbolParams
 
-  and result = SymbolInformation.t list
+  and result =
+    | SymbolInformation of SymbolInformation.t list
+    | WorkspaceSymbolInformation of WorkspaceSymbolInformation.t list
 
   and workspaceSymbolParams = { query: string (* a non-empty query string *) }
 end

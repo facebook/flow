@@ -517,6 +517,7 @@ let autocomplete_on_parsed
       let open AutocompleteService_js in
       let (token_opt, ac_loc, ac_type_string, results_res) =
         Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+            (* mark *)
             let (search_exported_values, search_exported_types) =
               match env.ServerEnv.exports with
               | Some exports -> (search_exported_values ~exports, search_exported_types ~exports)
@@ -3022,6 +3023,52 @@ let handle_persistent_signaturehelp_lsp
       | Error _ ->
         Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata)))
 
+let handle_persistent_workspace_symbol ~options ~id ~params ~metadata ~client:_ ~profiling:_ ~env =
+  let { Lsp.WorkspaceSymbol.query } = params in
+  let results =
+    if String.length query < Options.autoimports_min_characters options then
+      []
+    else
+      match env.ServerEnv.exports with
+      | None -> []
+      | Some exports ->
+        let { Export_search_types.results; is_incomplete = _ } =
+          Export_search.search_both_values_and_types
+            ~options:
+              {
+                Fuzzy_path.default_options with
+                Fuzzy_path.max_results = 100;
+                num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
+                weighted = true;
+              }
+            query
+            exports
+        in
+        let map_to_symbol_info result =
+          let open Export_search_types in
+          let { search_result = { name; source; kind = _ }; score = _; weight = _ } = result in
+          match source with
+          | Export_index.Global
+          | Export_index.Builtin _ ->
+            None
+          | Export_index.File_key file ->
+            (match Flow_lsp_conversions.file_key_to_uri (Some file) with
+            | Error _ -> None
+            | Ok uri ->
+              Some
+                {
+                  Lsp.WorkspaceSymbolInformation.name;
+                  kind = Lsp.SymbolInformation.Variable;
+                  location = { Lsp.TextDocumentIdentifier.uri };
+                  containerName = None;
+                })
+        in
+        Base.List.filter_map ~f:map_to_symbol_info results
+  in
+  let r = WorkspaceSymbolResult (Lsp.WorkspaceSymbol.WorkspaceSymbolInformation results) in
+  let response = ResponseMessage (id, r) in
+  Lwt.return (LspProt.LspFromServer (Some response), with_data ~extra_data:None metadata)
+
 let get_file_artifacts ~options ~client ~profiling ~env pos :
     ((Types_js_types.file_artifacts * File_key.t) option, string) result * Hh_json.json option =
   let file_input = file_input_of_text_document_position ~client pos in
@@ -4012,6 +4059,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
     Handle_nonparallelizable_persistent
       (handle_persistent_rename ~reader ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, WorkspaceSymbolRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_workspace_symbol ~options ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let textDocument = params.TypeCoverage.textDocument in

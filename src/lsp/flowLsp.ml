@@ -808,7 +808,7 @@ let do_initialize params : Initialize.result =
         referencesProvider = true;
         documentHighlightProvider = true;
         documentSymbolProvider = true;
-        workspaceSymbolProvider = false;
+        workspaceSymbolProvider = true;
         codeActionProvider;
         codeLensProvider = None;
         documentFormattingProvider = false;
