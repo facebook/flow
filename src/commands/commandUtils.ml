@@ -1392,8 +1392,6 @@ let make_options
     opt_module = FlowConfig.module_system flowconfig;
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
-    opt_natural_inference_object_literal_partial_fix =
-      FlowConfig.natural_inference_object_literal_partial_fix flowconfig;
     opt_natural_inference_object_literal_partial_fix_excludes =
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)

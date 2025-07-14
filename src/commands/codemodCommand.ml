@@ -191,11 +191,7 @@ module Annotate_literal_declaration_command = struct
       let reporter = string_reporter (module Acc)
 
       let check_options o =
-        {
-          o with
-          Options.opt_natural_inference_object_literal_partial_fix = true;
-          opt_natural_inference_object_literal_partial_fix_excludes = [];
-        }
+        { o with Options.opt_natural_inference_object_literal_partial_fix_excludes = [] }
 
       let expand_roots ~env:_ files = files
 

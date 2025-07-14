@@ -113,7 +113,6 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_object_literal_partial_fix: bool;
     natural_inference_object_literal_partial_fix_excludes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
@@ -260,7 +259,6 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
-      natural_inference_object_literal_partial_fix = true;
       natural_inference_object_literal_partial_fix_excludes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
@@ -1197,11 +1195,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.local_object_literals",
-        enum
-          [("off", false); ("partial", true)]
-          (fun opts v -> Ok { opts with natural_inference_object_literal_partial_fix = v })
-      );
       ( "experimental.natural_inference.local_object_literals.partial_fix_excludes",
         string
           ~init:(fun opts ->
@@ -2000,9 +1993,6 @@ let multi_platform_ambient_supports_platform_project_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let natural_inference_object_literal_partial_fix c =
-  c.options.Opts.natural_inference_object_literal_partial_fix
 
 let natural_inference_object_literal_partial_fix_excludes c =
   c.options.Opts.natural_inference_object_literal_partial_fix_excludes
