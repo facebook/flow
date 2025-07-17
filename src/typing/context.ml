@@ -61,7 +61,6 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_object_literal_partial_fix_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
@@ -311,8 +310,6 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    natural_inference_object_literal_partial_fix_excludes =
-      Options.natural_inference_object_literal_partial_fix_excludes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     opaque_type_new_bound_syntax = Options.opaque_type_new_bound_syntax options;
     projects_options = Options.projects_options options;
@@ -744,9 +741,6 @@ let slow_to_check_logging cx = cx.metadata.slow_to_check_logging
 let max_workers cx = cx.metadata.max_workers
 
 let missing_module_generators cx = cx.metadata.missing_module_generators
-
-let natural_inference_object_literal_partial_fix cx =
-  not (in_dirlist cx cx.metadata.natural_inference_object_literal_partial_fix_excludes)
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

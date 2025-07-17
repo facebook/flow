@@ -2541,20 +2541,7 @@ module Make
     let open Ast.Expression.Object in
     error_on_this_uses_in_object_methods cx props;
     let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
-    let reason =
-      Reason.mk_obj_lit_reason
-        ~as_const
-        ~frozen
-        ~use_unsound_fallback:
-          ( lazy
-            ( if Context.natural_inference_object_literal_partial_fix cx then
-              Lazy.force has_hint
-            else
-              true
-            )
-            )
-        loc
-    in
+    let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:has_hint loc in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let obj_proto = ObjProtoT reason in
