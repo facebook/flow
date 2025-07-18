@@ -1,3 +1,15 @@
+### 0.276.0
+
+Likely to cause new Flow errors:
+* Hook calls inside anonynous functions bound to a variable will get `react-rule-hook-definitely-not-in-component-or-hook` error, if the variable name doesn't conform to hook naming convention. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSZkYvIkAAIAEqsZRSmCUdJSgDkUWUqoA3AAdKB62z2RXEKUAXilAAoAJRmgB8UuAeqlztl8pilIAypYFtatVKAPT+qWzBpwCD5QZSjUSRbSNqLWrELZSkzKyi8KVQCAAdyjbtj2ixiYgW0WGngUDgC0GhwgMYqSPSEq+PhhlATSZT1F5eoFetyIAaJhIYagSQaAAYrAAmADsABYZyABUA)
+*
+
+IDE:
+* Added support for workspace symbol feature
+
+Misc:
+* Thanks @jbroma for improving `as` casts with `function` generics and `component` generics!
+
 ### 0.275.0
 
 Likely to cause new Flow errors:
