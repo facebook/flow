@@ -1,3 +1,8 @@
+### 0.277.0
+
+Likely to cause new Flow errors:
+* Array literals that cannot be contextually typed can no longer be passed to mutable tuples with a more general element type. It might cause additional errors. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIqJQJQBeCUAbQAOiAYMQVVKSBLxRIALoSgD0BolAHc4McJVAICaJbUMA1sBKVsYJQBBah0AA8KrVEBVAD4lVBpZqJQASABKrDYAHkoIN3TRaJ77KYoAh-QBuQ3GiBbIMh1mK1MVBC67NGiWzBpwCD5QYSvO8S3WiUmSi8yt5gvUUOJr0l9NZnMS+zm3AS9F1qBsBvdqC5EAO-G1hfIEAZewmEACoA)
+
 ### 0.276.0
 
 Likely to cause new Flow errors:
