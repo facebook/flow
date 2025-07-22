@@ -1236,6 +1236,14 @@ module Opts = struct
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
+      ( "unsuppported.windows",
+        boolean (fun opts v ->
+            if Sys.win32 && v then
+              Error "Windows is not supported under this flowconfig."
+            else
+              Ok opts
+        )
+      );
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
