@@ -1137,7 +1137,7 @@ module Make (I : INPUT) : S = struct
         if Env.preserve_inferred_literal_types env then
           Some
             (match desc with
-            | RArrayLit -> true
+            | RArrayLit_UNSOUND -> true
             | _ -> false)
         else
           None

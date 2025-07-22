@@ -2033,7 +2033,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let use_op = Frame (ArrayElementCompatibility { lower = r1; upper = r2 }, use_op) in
       let lit1 =
         match desc_of_reason r1 with
-        | RArrayLit
+        | RArrayLit_UNSOUND
         | RReactChildren ->
           true
         | RRestArrayLit

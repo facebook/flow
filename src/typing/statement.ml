@@ -3126,13 +3126,15 @@ module Make
         let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
         ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | elems ->
+        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
         let reason =
           if as_const then
             mk_reason RConstArrayLit loc
+          else if Lazy.force has_hint then
+            mk_reason RArrayLit_UNSOUND loc
           else
             mk_reason RArrayLit loc
         in
-        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
         let (elem_spread_list, elements) = array_elements cx ~as_const ~has_hint elems in
         ( ( loc,
             Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun tout ->

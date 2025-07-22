@@ -86,6 +86,7 @@ type 'loc virtual_reason_desc =
   | RInterfaceType
   | RArray
   | RArrayLit
+  | RArrayLit_UNSOUND
   | RConstArrayLit
   | REmptyArrayLit
   | RArrayType
@@ -266,9 +267,9 @@ let rec map_desc_locs f = function
     | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
     | RStringPrefix _ | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _
     | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectLit_UNSOUND | RObjectType | RInterfaceType | RArray | RArrayLit | RConstArrayLit
-    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
-    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RObjectLit_UNSOUND | RObjectType | RInterfaceType | RArray | RArrayLit | RArrayLit_UNSOUND
+    | RConstArrayLit | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole
+    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
     | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
     | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
@@ -581,6 +582,7 @@ let rec string_of_desc = function
   | RInterfaceType -> "interface type"
   | RArray -> "array"
   | RArrayLit -> "array literal"
+  | RArrayLit_UNSOUND -> "array literal"
   | RConstArrayLit -> "const array literal"
   | REmptyArrayLit -> "empty array literal"
   | RArrayType -> "array type"
@@ -855,7 +857,7 @@ let is_literal_object_reason r =
 
 let is_literal_array_reason r =
   match desc_of_reason r with
-  | RArrayLit
+  | RArrayLit_UNSOUND
   | REmptyArrayLit
   | RRestArrayLit _
   | RReactChildren
@@ -1352,6 +1354,7 @@ let classification_of_reason_desc desc =
     `Nullish
   | RArray
   | RArrayLit
+  | RArrayLit_UNSOUND
   | RConstArrayLit
   | REmptyArrayLit
   | RArrayType

@@ -52,6 +52,7 @@ type 'loc virtual_reason_desc =
   | RInterfaceType
   | RArray
   | RArrayLit
+  | RArrayLit_UNSOUND
   | RConstArrayLit
   | REmptyArrayLit
   | RArrayType

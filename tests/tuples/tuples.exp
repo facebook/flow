@@ -2203,7 +2203,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:15:4
 
-Cannot cast `y` to tuple type because array literal [1] has 2-3 elements but tuple type [2] has 2 elements.
+Cannot cast `y` to tuple type because const array literal [1] has 2-3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
    value-spread.js:15:4
@@ -2212,7 +2212,7 @@ Cannot cast `y` to tuple type because array literal [1] has 2-3 elements but tup
 
 References:
    value-spread.js:14:13
-   14|   const y = [0, ...x]; // OK
+   14|   const y = [0, ...x] as const; // OK
                    ^^^^^^^^^ [1]
    value-spread.js:15:7
    15|   (y: [1, 2]); // ERROR
@@ -2221,44 +2221,42 @@ References:
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:17:4
 
-Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `z` to `$ReadOnly` because array literal [1] has an unknown number of elements, so is incompatible with
+tuple type [2]. [invalid-tuple-arity]
 
    value-spread.js:17:4
-   17|   (z: [0, 1, 2, 3]); // ERROR
+   17|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
           ^
 
 References:
    value-spread.js:16:13
    16|   const z = [0, ...x, 3];
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:17:7
-   17|   (z: [0, 1, 2, 3]); // ERROR
-             ^^^^^^^^^^^^ [2]
+   value-spread.js:17:17
+   17|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
+                       ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:24:4
 
-Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `z` to `$ReadOnly` because const array literal [1] is incompatible with tuple type [2]. [incompatible-cast]
 
    value-spread.js:24:4
-   24|   (z: [0, 1, 2, 3]); // ERROR
+   24|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
           ^
 
 References:
    value-spread.js:23:13
-   23|   const z = [...x, ...y];
+   23|   const z = [...x, ...y] as const;
                    ^^^^^^^^^^^^ [1]
-   value-spread.js:24:7
-   24|   (z: [0, 1, 2, 3]); // ERROR
-             ^^^^^^^^^^^^ [2]
+   value-spread.js:24:17
+   24|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
+                       ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:31:4
 
-Cannot cast `z` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `z` to tuple type because const array literal [1] is incompatible with tuple type [2]. [incompatible-cast]
 
    value-spread.js:31:4
    31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
@@ -2266,7 +2264,7 @@ type [2]. [invalid-tuple-arity]
 
 References:
    value-spread.js:30:13
-   30|   const z = [...x, ...y];
+   30|   const z = [...x, ...y] as const;
                    ^^^^^^^^^^^^ [1]
    value-spread.js:31:7
    31|   (z: [a?: 0, b?: 1, c?: 2]); // ERROR
