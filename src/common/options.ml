@@ -165,6 +165,7 @@ type t = {
   opt_constant_condition_null_void_includes: string list;
   opt_constant_condition_function_includes: string list;
   opt_invalid_comparison_general_includes: string list;
+  opt_invalid_comparison_null_check_includes: string list;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -272,6 +273,8 @@ let constant_condition_function_includes opts = opts.opt_constant_condition_func
 let constant_condition_null_void_includes opts = opts.opt_constant_condition_null_void_includes
 
 let invalid_comparison_general_includes opts = opts.opt_invalid_comparison_general_includes
+
+let invalid_comparison_null_check_includes opts = opts.opt_invalid_comparison_null_check_includes
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

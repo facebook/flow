@@ -122,6 +122,7 @@ let stub_metadata ~root ~checked =
     constant_condition_null_void_includes = [];
     constant_condition_function_includes = [];
     invalid_comparison_general_includes = [];
+    invalid_comparison_null_check_includes = [];
     enable_relay_integration = false;
     exact_by_default = true;
     facebook_fbs = None;

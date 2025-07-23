@@ -96,6 +96,8 @@ val constant_condition_function_includes : config -> string list
 
 val invalid_comparison_general_includes : config -> string list
 
+val invalid_comparison_null_check_includes : config -> string list
+
 val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option

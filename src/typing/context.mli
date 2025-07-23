@@ -102,6 +102,7 @@ type metadata = {
   constant_condition_null_void_includes: string list;
   constant_condition_function_includes: string list;
   invalid_comparison_general_includes: string list;
+  invalid_comparison_null_check_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -217,6 +218,8 @@ val enable_constant_condition_null_void : t -> bool
 val enable_constant_condition_function : t -> bool
 
 val enable_invalid_comparison_general : t -> bool
+
+val enable_invalid_comparison_null_check : t -> bool
 
 val enable_relay_integration : t -> bool
 
