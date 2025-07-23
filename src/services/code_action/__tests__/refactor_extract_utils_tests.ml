@@ -59,6 +59,7 @@ let stub_metadata ~root ~checked =
     constant_condition_boolean_literal_includes = [];
     constant_condition_null_void_includes = [];
     constant_condition_function_includes = [];
+    invalid_comparison_general_includes = [];
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.PartialSupport;

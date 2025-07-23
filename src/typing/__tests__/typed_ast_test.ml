@@ -51,6 +51,7 @@ let metadata =
     constant_condition_boolean_literal_includes = [];
     constant_condition_null_void_includes = [];
     constant_condition_function_includes = [];
+    invalid_comparison_general_includes = [];
     opaque_type_new_bound_syntax = true;
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;

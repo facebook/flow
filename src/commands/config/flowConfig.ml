@@ -58,6 +58,7 @@ module Opts = struct
     constant_condition_boolean_literal_includes: string list;
     constant_condition_null_void_includes: string list;
     constant_condition_function_includes: string list;
+    invalid_comparison_general_includes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -203,6 +204,7 @@ module Opts = struct
       constant_condition_boolean_literal_includes = [];
       constant_condition_null_void_includes = [];
       constant_condition_function_includes = [];
+      invalid_comparison_general_includes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1116,6 +1118,17 @@ module Opts = struct
                   v :: opts.constant_condition_function_includes;
               })
       );
+      ( "experimental.constant_condition.invalid_comparison_general_includes.includes",
+        string
+          ~init:(fun opts -> { opts with invalid_comparison_general_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                invalid_comparison_general_includes = v :: opts.invalid_comparison_general_includes;
+              })
+      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -2013,6 +2026,8 @@ let constant_condition_boolean_literal_includes c =
 let constant_condition_null_void_includes c = c.options.Opts.constant_condition_null_void_includes
 
 let constant_condition_function_includes c = c.options.Opts.constant_condition_function_includes
+
+let invalid_comparison_general_includes c = c.options.Opts.invalid_comparison_general_includes
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 
