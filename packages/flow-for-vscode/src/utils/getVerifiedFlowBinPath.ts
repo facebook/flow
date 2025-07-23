@@ -22,10 +22,10 @@ function getFlowBinDirPrefixForPlatform(): null | string {
   return process.platform === 'darwin'
     ? 'flow-osx-v'
     : process.platform === 'linux' && process.arch === 'x64'
-    ? 'flow-linux64-v'
-    : process.platform === 'win32' && process.arch === 'x64'
-    ? 'flow-win64-v'
-    : null;
+      ? 'flow-linux64-v'
+      : process.platform === 'win32' && process.arch === 'x64'
+        ? 'flow-win64-v'
+        : null;
 }
 
 async function getFlowBinRelativePath(
@@ -109,9 +109,8 @@ export default async function getVerifiedFlowBinPath(
     const shasums = await getShasums(flowBinModulePath, logger);
 
     // successfully verified SHASUM256.txt, now we can use it to verify the flow binary
-    const { flowBinDirName, flowBinName } = await getFlowBinRelativePath(
-      flowBinModulePath,
-    );
+    const { flowBinDirName, flowBinName } =
+      await getFlowBinRelativePath(flowBinModulePath);
     const flowBinPath = path.join(
       flowBinModulePath,
       flowBinDirName,
