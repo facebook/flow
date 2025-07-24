@@ -179,6 +179,11 @@ type component_t = {
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable conditions: (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list;
+  mutable strict_comparisons:
+    ( (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+    )
+    list;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
   mutable maybe_unused_promises: (ALoc.t * Type.t * bool) list;
   constraint_cache: Type.FlowSet.t ref;
@@ -431,6 +436,7 @@ let make_ccx () =
     test_prop_hits_and_misses = IMap.empty;
     optional_chains_useful = ALocMap.empty;
     conditions = [];
+    strict_comparisons = [];
     invariants_useful = ALocMap.empty;
     maybe_unused_promises = [];
     constraint_cache = ref Type.FlowSet.empty;
@@ -1147,6 +1153,10 @@ let test_prop_get_never_hit cx =
 let add_condition cx e = cx.ccx.conditions <- e :: cx.ccx.conditions
 
 let get_all_conditions cx = List.rev cx.ccx.conditions
+
+let add_strict_comparison cx comp = cx.ccx.strict_comparisons <- comp :: cx.ccx.strict_comparisons
+
+let get_all_strict_comparisons cx = List.rev cx.ccx.strict_comparisons
 
 let mark_optional_chain cx loc lhs_reason ~useful =
   cx.ccx.optional_chains_useful <-

@@ -5315,6 +5315,7 @@ module Make
         | _ -> matching_prop_check cx right left
       end;
       Operators.check_strict_eq ~encl_ctx cx (t1, t2);
+      Context.add_strict_comparison cx (left, right);
       (BoolModuleT.at loc, { operator; left; right; comments })
     | Instanceof ->
       let left = expression cx left in

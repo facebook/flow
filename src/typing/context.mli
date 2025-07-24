@@ -514,6 +514,16 @@ val add_condition : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t -> unit
 
 val get_all_conditions : t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list
 
+val add_strict_comparison :
+  t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t ->
+  unit
+
+val get_all_strict_comparisons :
+  t ->
+  ((ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t)
+  list
+
 val mark_optional_chain : t -> ALoc.t -> Reason.t -> useful:bool -> unit
 
 val unnecessary_optional_chains : t -> (ALoc.t * Reason.t) list
