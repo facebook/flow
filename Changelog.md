@@ -1,3 +1,8 @@
+### 0.277.1
+
+Notable bug fixes:
+* Fixed windows builds.
+
 ### 0.277.0
 
 Likely to cause new Flow errors:
