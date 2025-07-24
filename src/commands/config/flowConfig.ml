@@ -1120,7 +1120,7 @@ module Opts = struct
                   v :: opts.constant_condition_function_includes;
               })
       );
-      ( "experimental.constant_condition.invalid_comparison_general_includes.includes",
+      ( "experimental.constant_condition.invalid_comparison.general.includes",
         string
           ~init:(fun opts -> { opts with invalid_comparison_general_includes = [] })
           ~multiple:true
@@ -1131,7 +1131,7 @@ module Opts = struct
                 invalid_comparison_general_includes = v :: opts.invalid_comparison_general_includes;
               })
       );
-      ( "experimental.constant_condition.invalid_comparison_null_check_includes.excludes",
+      ( "experimental.constant_condition.invalid_comparison.null_check.includes",
         string
           ~init:(fun opts -> { opts with invalid_comparison_null_check_includes = [] })
           ~multiple:true
