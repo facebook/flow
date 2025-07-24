@@ -30,3 +30,11 @@ function test2() {
       }
     ]));
 }
+
+function test3() {
+    declare function f<Args: $ReadOnlyArray<mixed>, Return>(
+        fn: () => (...Args) => Return,
+    ): (...Args) => Return;
+
+    f(() => (a) => {}) as (a: string) => void; // ok
+}
