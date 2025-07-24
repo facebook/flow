@@ -31,6 +31,19 @@ let flow_loc_patch_to_lsp_edits =
       { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
   )
 
+let mk_log_command ~title ~diagnostic_title =
+  let open Lsp in
+  {
+    Command.title = "";
+    command = Command.Command "log";
+    arguments =
+      [
+        Hh_json.JSON_String "textDocument/codeAction";
+        Hh_json.JSON_String diagnostic_title;
+        Hh_json.JSON_String title;
+      ];
+  }
+
 let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_ast =
   let open Lsp in
   let diff = Insert_type.mk_diff ast new_ast in
@@ -154,24 +167,16 @@ let code_action_insert_inferred_render_type
          )
     in
     let title = "Insert inferred render type" in
-    let diagnostic_title = "insert_inferred_render_type" in
     [
       CodeAction.Action
         {
           CodeAction.title;
           kind = CodeActionKind.refactor;
           diagnostics = [];
-          (* todo log *)
           action =
             CodeAction.BothEditThenCommand
               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                {
-                  Command.title = "";
-                  command = Command.Command "log";
-                  arguments =
-                    ["textDocument/codeAction"; diagnostic_title; title]
-                    |> List.map (fun str -> Hh_json.JSON_String str);
-                }
+                mk_log_command ~title ~diagnostic_title:"insert_inferred_render_type"
               );
         };
     ]
@@ -213,13 +218,7 @@ let refactor_extract_and_stub_out_code_actions
           action =
             CodeAction.BothEditThenCommand
               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                {
-                  Command.title = "";
-                  command = Command.Command "log";
-                  arguments =
-                    ["textDocument/codeAction"; diagnostic_title; title]
-                    |> List.map (fun str -> Hh_json.JSON_String str);
-                }
+                mk_log_command ~title ~diagnostic_title
               );
         }
     in
@@ -355,7 +354,6 @@ let insert_inferred_type_as_cast_code_actions
             |> flow_loc_patch_to_lsp_edits
           in
           let title = "Insert inferred type as a type cast" in
-          let diagnostic_title = "insert_inferred_type_as_cast" in
           let code_action =
             let open Lsp in
             CodeAction.Action
@@ -366,13 +364,7 @@ let insert_inferred_type_as_cast_code_actions
                 action =
                   CodeAction.BothEditThenCommand
                     ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                      {
-                        Command.title = "";
-                        command = Command.Command "log";
-                        arguments =
-                          ["textDocument/codeAction"; diagnostic_title; title]
-                          |> List.map (fun str -> Hh_json.JSON_String str);
-                      }
+                      mk_log_command ~title ~diagnostic_title:"insert_inferred_type_as_cast"
                     );
               }
           in
@@ -550,13 +542,7 @@ let suggest_imports
                    action =
                      CodeAction.BothEditThenCommand
                        ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                         {
-                           Command.title = "";
-                           command = Command.Command "log";
-                           arguments =
-                             ["textDocument/codeAction"; "import"; title]
-                             |> List.map (fun str -> Hh_json.JSON_String str);
-                         }
+                         mk_log_command ~title ~diagnostic_title:"import"
                        );
                  }
              in
@@ -630,13 +616,7 @@ let autofix_in_upstream_file
            action =
              CodeAction.BothEditThenCommand
                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                 {
-                   Command.title = "";
-                   command = Command.Command "log";
-                   arguments =
-                     ["textDocument/codeAction"; diagnostic_title; title]
-                     |> List.map (fun str -> Hh_json.JSON_String str);
-                 }
+                 mk_log_command ~title ~diagnostic_title
                );
          }
       )
@@ -1418,13 +1398,7 @@ let code_action_for_parser_error_with_suggestion
         action =
           CodeAction.BothEditThenCommand
             ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
-              {
-                Command.title = "";
-                command = Command.Command "log";
-                arguments =
-                  ["textDocument/codeAction"; "fix_parse_error"; title]
-                  |> List.map (fun str -> Hh_json.JSON_String str);
-              }
+              mk_log_command ~title ~diagnostic_title:"fix_parse_error"
             );
       }
     :: acc
