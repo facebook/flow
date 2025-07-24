@@ -1345,11 +1345,16 @@ module Make
         cases
         |> Base.List.fold_left
              ~init:([], false)
-             ~f:(fun (cases_ast, has_default) (loc, { Switch.Case.test; consequent; comments }) ->
+             ~f:(fun
+                  (cases_ast, has_default)
+                  (loc, { Switch.Case.test; case_test_loc; consequent; comments })
+                ->
                let test_ast =
-                 match test with
-                 | None -> None
-                 | Some expr ->
+                 match (test, case_test_loc) with
+                 | (_, None)
+                 | (None, _) ->
+                   None
+                 | (Some expr, Some case_test_loc) ->
                    let open Ast.Expression in
                    let fake_discriminant =
                      match discriminant with
@@ -1359,7 +1364,7 @@ module Make
                      | _ -> discriminant
                    in
                    let fake =
-                     ( loc,
+                     ( case_test_loc,
                        Binary
                          {
                            Binary.operator = Binary.StrictEqual;
@@ -1386,7 +1391,14 @@ module Make
                    Some expr_ast
                in
                let consequent_ast = statement_list cx consequent in
-               ( (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
+               ( ( loc,
+                   {
+                     Switch.Case.test = test_ast;
+                     case_test_loc;
+                     consequent = consequent_ast;
+                     comments;
+                   }
+                 )
                  :: cases_ast,
                  has_default || Base.Option.is_none test
                )

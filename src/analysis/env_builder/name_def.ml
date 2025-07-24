@@ -3231,7 +3231,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! switch_case case =
       let open Ast.Statement.Switch.Case in
-      let (_loc, { test; consequent; comments = _ }) = case in
+      let (_loc, { test; case_test_loc = _; consequent; comments = _ }) = case in
       Base.Option.iter ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext) test;
       ignore @@ this#statement_list consequent;
       case

@@ -4026,7 +4026,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (case_starting_env, case_completion_states, fallthrough_env, has_default)
           (case_loc, case, lexical_bindings) =
         let open Ast.Statement.Switch.Case in
-        let { test; consequent; comments = _ } = case in
+        let { test; case_test_loc = _; consequent; comments = _ } = case in
         this#reset_env case_starting_env;
         (* Reset discriminant *)
         this#push_refinement_scope empty_refinements;

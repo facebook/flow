@@ -2453,8 +2453,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       ((loc, s1) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
       ((_, s2) : (Loc.t, Loc.t) Ast.Statement.Switch.Case.t) : node change list option =
     let open Ast.Statement.Switch.Case in
-    let { test = test1; consequent = consequent1; comments = comments1 } = s1 in
-    let { test = test2; consequent = consequent2; comments = comments2 } = s2 in
+    let { test = test1; case_test_loc = _; consequent = consequent1; comments = comments1 } = s1 in
+    let { test = test2; case_test_loc = _; consequent = consequent2; comments = comments2 } = s2 in
     let test = diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) test1 test2 in
     let consequent =
       statement_list ~parent:(SwitchCaseParentOfStatement loc) consequent1 consequent2

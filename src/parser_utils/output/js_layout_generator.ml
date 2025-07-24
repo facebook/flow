@@ -3517,7 +3517,8 @@ and match_rest_pattern (loc, { Ast.MatchPattern.RestPattern.argument; comments }
     layout_node_with_comments_opt loc comments (fuse [Atom "..."; match_binding_pattern arg_loc arg])
   | None -> layout_node_with_comments_opt loc comments (Atom "...")
 
-and switch_case ~opts ~last (loc, { Ast.Statement.Switch.Case.test; consequent; comments }) =
+and switch_case
+    ~opts ~last (loc, { Ast.Statement.Switch.Case.test; case_test_loc = _; consequent; comments }) =
   let case_left =
     layout_node_with_comments_opt
       loc

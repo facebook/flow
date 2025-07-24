@@ -786,6 +786,7 @@ and Statement : sig
 
       and ('M, 'T) t' = {
         test: ('M, 'T) Expression.t option;
+        case_test_loc: 'M option;
         consequent: ('M, 'T) Statement.t list;
         comments: ('M, unit) Syntax.t option;
       }

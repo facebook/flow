@@ -93,7 +93,9 @@ let convert_switch loc switch =
       ~init:([], [], UnknownOutput)
       ~f:(fun i (cases_acc, patterns_acc, output_kind) case ->
         let last_case = i + 1 = num_cases in
-        let (_, { Flow_ast.Statement.Switch.Case.test; consequent; comments }) = case in
+        let (_, { Flow_ast.Statement.Switch.Case.test; case_test_loc = _; consequent; comments }) =
+          case
+        in
         let pattern =
           (* We only allow the wildcard at the end. *)
           match test with

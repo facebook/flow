@@ -3325,14 +3325,14 @@ class ['loc] mapper =
 
     method switch_case (case : ('loc, 'loc) Ast.Statement.Switch.Case.t) =
       let open Ast.Statement.Switch.Case in
-      let (loc, { test; consequent; comments }) = case in
+      let (loc, { test; case_test_loc; consequent; comments }) = case in
       let test' = map_opt this#expression test in
       let consequent' = this#statement_list consequent in
       let comments' = this#syntax_opt comments in
       if test == test' && consequent == consequent' && comments == comments' then
         case
       else
-        (loc, { test = test'; consequent = consequent'; comments = comments' })
+        (loc, { test = test'; case_test_loc; consequent = consequent'; comments = comments' })
 
     method tagged_template _loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in

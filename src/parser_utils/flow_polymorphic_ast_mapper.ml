@@ -2704,11 +2704,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method switch_case (case : ('M, 'T) Ast.Statement.Switch.Case.t') =
       let open Ast.Statement.Switch.Case in
-      let { test; consequent; comments } = case in
+      let { test; case_test_loc; consequent; comments } = case in
       let test' = Option.map ~f:this#expression test in
+      let case_test_loc' = Option.map ~f:this#on_loc_annot case_test_loc in
       let consequent' = this#statement_list consequent in
       let comments' = this#syntax_opt comments in
-      { test = test'; consequent = consequent'; comments = comments' }
+      {
+        test = test';
+        case_test_loc = case_test_loc';
+        consequent = consequent';
+        comments = comments';
+      }
 
     method tagged_template (expr : ('M, 'T) Ast.Expression.TaggedTemplate.t)
         : ('N, 'U) Ast.Expression.TaggedTemplate.t =

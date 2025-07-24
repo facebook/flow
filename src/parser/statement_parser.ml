@@ -524,15 +524,16 @@ module Statement
   and switch =
     let case ~seen_default env =
       let leading = Peek.comments env in
-      let (test, trailing) =
+      let (test, trailing, case_loc_opt) =
         match Peek.token env with
         | T_DEFAULT ->
           if seen_default then error env Parse_error.MultipleDefaultsInSwitch;
           Expect.token env T_DEFAULT;
-          (None, Eat.trailing_comments env)
+          (None, Eat.trailing_comments env, None)
         | _ ->
+          let case_loc = Peek.loc env in
           Expect.token env T_CASE;
-          (Some (Parse.expression env), [])
+          (Some (Parse.expression env), [], Some case_loc)
       in
       let seen_default = seen_default || test = None in
       Expect.token env T_COLON;
@@ -547,7 +548,16 @@ module Statement
       in
       let consequent = Parse.statement_list ~term_fn (env |> with_in_switch true) in
       let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-      let case = { Statement.Switch.Case.test; consequent; comments } in
+      let case_test_loc =
+        match (case_loc_opt, test) with
+        | (_, None)
+        | (None, _) ->
+          None
+        | (Some case_loc, Some (expr_loc, _)) -> Some (Loc.btwn case_loc expr_loc)
+      in
+      let case =
+        { Statement.Switch.Case.test; Statement.Switch.Case.case_test_loc; consequent; comments }
+      in
       (case, seen_default)
     in
     let rec case_list env (seen_default, acc) =
