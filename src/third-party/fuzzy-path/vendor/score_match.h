@@ -14,6 +14,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 
 const int64_t MIN_SCORE = -9007199254740991;
