@@ -23,6 +23,15 @@
             }
           ]
         }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "add_jsdocs",
+          "Add JSDoc documentation"
+        ]
       }
     }
   ]

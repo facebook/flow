@@ -23,6 +23,15 @@
             }
           ]
         }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_arrow_function",
+          "Remove braces from arrow function"
+        ]
       }
     }
   ]

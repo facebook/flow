@@ -54,15 +54,20 @@ let autofix_insert_type_annotation_helper ~options ~ast ~diagnostics ~uri new_as
            { Lsp.TextEdit.range = Lsp.loc_to_lsp_range loc; newText = text }
        )
   in
+  let title = "Insert type annotation to fix signature-verification-failure error" in
   [
     CodeAction.Action
       {
-        CodeAction.title = "Insert type annotation to fix signature-verification-failure error";
+        CodeAction.title;
         kind = CodeActionKind.quickfix;
         (* Handing back the diagnostics we were given is a placeholder for
            eventually generating the diagnostics for the errors we are fixing *)
         diagnostics;
-        action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+        action =
+          CodeAction.BothEditThenCommand
+            ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+              mk_log_command ~title ~diagnostic_title:"insert_type_for_sig_verification_failure"
+            );
       };
   ]
 
@@ -384,13 +389,18 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
        )
     |> fun edits ->
     let open Lsp in
+    let title = "Add JSDoc documentation" in
     [
       CodeAction.Action
         {
-          CodeAction.title = "Add JSDoc documentation";
+          CodeAction.title;
           kind = CodeActionKind.refactor;
           diagnostics = [];
-          action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                mk_log_command ~title ~diagnostic_title:"add_jsdocs"
+              );
         };
     ]
   | _ -> []
@@ -411,7 +421,11 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
             CodeAction.title;
             kind = CodeActionKind.refactor_rewrite;
             diagnostics = [];
-            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command ~title ~diagnostic_title:"refactor_arrow_function"
+                );
           };
       ]
     | _ -> []
@@ -427,13 +441,18 @@ let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
       |> flow_loc_patch_to_lsp_edits
       |> fun edits ->
       let open Lsp in
+      let title = "Refactor `switch` to `match`" in
       [
         CodeAction.Action
           {
-            CodeAction.title = "Refactor `switch` to `match`";
+            CodeAction.title;
             kind = CodeActionKind.refactor_rewrite;
             diagnostics = [];
-            action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command ~title ~diagnostic_title:"refactor_switch_to_match"
+                );
           };
       ]
     | None -> []
@@ -456,13 +475,18 @@ let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options ur
     |> flow_loc_patch_to_lsp_edits
     |> fun edits ->
     let open Lsp in
+    let title = "Add missing attributes" in
     [
       CodeAction.Action
         {
-          CodeAction.title = "Add missing attributes";
+          CodeAction.title;
           kind = CodeActionKind.quickfix;
           diagnostics = [];
-          action = CodeAction.EditOnly WorkspaceEdit.{ changes = UriMap.singleton uri edits };
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                mk_log_command ~title ~diagnostic_title:"add_missing_jsx_props"
+              );
         };
     ]
 

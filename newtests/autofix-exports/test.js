@@ -92,8 +92,14 @@ module.exports = (suite(
                 diagnostics: [
                   {
                     range: {
-                      start: {line: 1, character: 21},
-                      end: {line: 1, character: 22},
+                      start: {
+                        line: 1,
+                        character: 21,
+                      },
+                      end: {
+                        line: 1,
+                        character: 22,
+                      },
                     },
                     severity: 1,
                     code: 'InferError',
@@ -107,13 +113,28 @@ module.exports = (suite(
                     '<PLACEHOLDER_PROJECT_URL>/error1.js': [
                       {
                         range: {
-                          start: {line: 1, character: 22},
-                          end: {line: 1, character: 22},
+                          start: {
+                            line: 1,
+                            character: 22,
+                          },
+                          end: {
+                            line: 1,
+                            character: 22,
+                          },
                         },
                         newText: ': any',
                       },
                     ],
                   },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'insert_type_for_sig_verification_failure',
+                    'Insert type annotation to fix signature-verification-failure error',
+                  ],
                 },
               },
             ],
@@ -172,6 +193,15 @@ module.exports = (suite(
                       },
                     ],
                   },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'insert_type_for_sig_verification_failure',
+                    'Insert type annotation to fix signature-verification-failure error',
+                  ],
                 },
               },
             ],
@@ -243,6 +273,15 @@ module.exports = (suite(
                       },
                     ],
                   },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'insert_type_for_sig_verification_failure',
+                    'Insert type annotation to fix signature-verification-failure error',
+                  ],
                 },
               },
             ],
