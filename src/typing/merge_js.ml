@@ -1469,8 +1469,15 @@ let post_merge_checks cx ast tast metadata =
   detect_unnecessary_optional_chains cx;
   detect_constant_conditions cx;
   detect_import_export_errors cx ast metadata;
-  detect_matching_props_violations cx;
-  detect_literal_subtypes cx;
+  if
+    not
+      (Context.enable_invalid_comparison_general cx
+      && Context.enable_invalid_comparison_null_check cx
+      )
+  then begin
+    detect_matching_props_violations cx;
+    detect_literal_subtypes cx
+  end;
   detect_unused_promises cx;
   check_union_opt cx;
   check_spread_prop_keys cx tast;
