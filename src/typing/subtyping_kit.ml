@@ -659,7 +659,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
     | (_, e1, [], e2) ->
       (* general element1 < general element2 *)
-      rec_flow cx trace (e1, UseT (use_op, e2))
+      flow_to_mutable_child cx trace use_op lit1 e1 e2
     (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
     | (t1 :: ts1, e1, t2 :: ts2, e2) ->
       (* specific element1 = specific element2 *)

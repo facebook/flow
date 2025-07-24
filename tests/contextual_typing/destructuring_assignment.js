@@ -18,7 +18,7 @@ declare var d: (number) => mixed;
   b: (n) => (n: empty), // error: num ~> empty
 })
 
-declare var e: Array<(number) => mixed>;
+declare var e: $ReadOnlyArray<(number) => mixed>;
 declare var f: {[string]: (number) => mixed};
 [...e] = [(n) => (n: empty)]; // error: num ~> empty
 ({...f} = {hello: (n) => (n: empty)}); // error: num ~> empty
