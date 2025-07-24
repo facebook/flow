@@ -348,6 +348,15 @@ let wait_for_recheck_flag prev =
            )
   )
 
+let vpn_less_flag prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> flag
+         "--vpn-less"
+         (optional bool)
+         ~doc:"True if enable the VPN-Less mode to query and download saved state"
+  )
+
 let path_flag prev =
   CommandSpec.ArgSpec.(
     prev
@@ -922,6 +931,7 @@ module Options_flags = struct
     temp_dir: string option;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
+    vpn_less: bool option;
     include_suppressions: bool;
     estimate_recheck_time: bool option;
     long_lived_workers: bool option;
@@ -975,6 +985,7 @@ let options_flags =
       profile
       all
       wait_for_recheck
+      vpn_less
       no_flowlib
       munge_underscore_members
       max_workers
@@ -1003,6 +1014,7 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
+        vpn_less;
         no_flowlib;
         munge_underscore_members;
         max_workers;
@@ -1034,6 +1046,11 @@ let options_flags =
            (optional bool)
            ~doc:
              "If true, always wait for rechecks to finish before serving commands (default: false)"
+      |> flag
+           "--vpn-less"
+           (optional bool)
+           ~doc:
+             "If true, always enable vpn-less mode to query and download saved state (default: false)"
       |> flag "--no-flowlib" truthy ~doc:"Do not include embedded declarations" ~env:"NO_FLOWLIB"
       |> flag
            "--munge-underscore-members"
@@ -1360,6 +1377,9 @@ let make_options
       options_flags.wait_for_recheck
       ~default:(FlowConfig.wait_for_recheck flowconfig)
   in
+  let opt_vpn_less =
+    Base.Option.value options_flags.vpn_less ~default:(FlowConfig.vpn_less flowconfig)
+  in
   let opt_format =
     {
       Options.opt_bracket_spacing =
@@ -1384,6 +1404,7 @@ let make_options
     opt_casting_syntax =
       Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
     opt_wait_for_recheck;
+    opt_vpn_less;
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;

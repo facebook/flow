@@ -31,6 +31,7 @@ let make_options_flags
     ?temp_dir
     ?verbose
     ?wait_for_recheck
+    ?vpn_less
     ?(include_suppressions = false)
     ?estimate_recheck_time
     ?long_lived_workers
@@ -54,6 +55,7 @@ let make_options_flags
     verbose;
     slow_to_check_logging = Slow_to_check_logging.default;
     wait_for_recheck;
+    vpn_less;
     include_suppressions;
     estimate_recheck_time;
     long_lived_workers;

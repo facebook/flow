@@ -198,6 +198,7 @@ type t = {
   opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
+  opt_vpn_less: bool;
   opt_distributed: bool;
 }
 
@@ -422,5 +423,7 @@ let ban_spread_key_props opts = opts.opt_ban_spread_key_props
 let verbose opts = opts.opt_verbose
 
 let wait_for_recheck opts = opts.opt_wait_for_recheck
+
+let vpn_less opts = opts.opt_vpn_less
 
 let distributed opts = opts.opt_distributed

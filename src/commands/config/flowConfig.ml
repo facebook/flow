@@ -152,6 +152,7 @@ module Opts = struct
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
     use_mixed_in_catch_variables: bool option;
+    vpn_less: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
     watchman_sync_timeout: int option;
@@ -299,6 +300,7 @@ module Opts = struct
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
+      vpn_less = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
       watchman_sync_timeout = None;
@@ -1280,6 +1282,7 @@ module Opts = struct
         )
       );
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
+      ("vpn_less", boolean (fun opts v -> Ok { opts with vpn_less = v }));
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
 
@@ -2115,6 +2118,8 @@ let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_l
 let unsuppressable_error_codes c = c.options.Opts.unsuppressable_error_codes
 
 let use_mixed_in_catch_variables c = c.options.Opts.use_mixed_in_catch_variables
+
+let vpn_less c = c.options.Opts.vpn_less
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 
