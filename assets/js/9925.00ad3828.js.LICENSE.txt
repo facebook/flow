@@ -1,0 +1,50 @@
+/*!
+   * Wait for document loaded before starting the execution
+   */
+
+/*!
+  Copyright (c) 2015 Jed Watson.
+  Based on code that is Copyright 2013-2015, Facebook, Inc.
+  All rights reserved.
+*/
+
+/*!
+ * Adapted from jQuery UI core
+ *
+ * http://jqueryui.com
+ *
+ * Copyright 2014 jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/category/ui-core/
+ */
+
+/*!
+ * Determine if an object is a Buffer
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+/*!
+ * regjsgen 0.5.2
+ * Copyright 2014-2020 Benjamin Tan <https://ofcr.se/>
+ * Available under the MIT license <https://github.com/bnjmnt4n/regjsgen/blob/master/LICENSE-MIT.txt>
+ */
+
+/*! @license DOMPurify 3.1.6 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.1.6/LICENSE */
+
+/*! @license DOMPurify 3.2.4 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.2.4/LICENSE */
+
+/*! Bundled license information:
+
+js-yaml/dist/js-yaml.mjs:
+  (*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT *)
+*/
+
+/*! Check if previously processed */
+
+/*! https://mths.be/regenerate v1.4.2 by @mathias | MIT license */
+
+/*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
