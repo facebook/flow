@@ -66,16 +66,18 @@ CAMLexport value type_sig_bin_read_serialized(value ba, value pos_val) {
 /* Read big-endian uint32. GCC/clang optimize this to a load+bswap. */
 static uint32_t read32u(unsigned char* buf) {
   uint32_t x = 0;
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; i++) {
     x = (x << 8) + *buf++;
+  }
   return x;
 }
 
 /* Read big-endian uint64. GCC/clang optimize this to a load+bswap. */
 static uint64_t read64u(unsigned char* buf) {
   uint64_t x = 0;
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 8; i++) {
     x = (x << 8) + *buf++;
+  }
   return x;
 }
 

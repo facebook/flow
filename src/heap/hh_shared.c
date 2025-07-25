@@ -502,8 +502,9 @@ CAMLprim value hh_hash_stats(value unit) {
 
 static void raise_failed_memfd_init(int errcode) {
   static const value* exn = NULL;
-  if (!exn)
+  if (!exn) {
     exn = caml_named_value("failed_memfd_init");
+  }
   caml_raise_with_arg(*exn, unix_error_of_code(errcode));
 }
 
@@ -639,8 +640,9 @@ static char* memfd_map(size_t size) {
 
 static void raise_out_of_shared_memory(void) {
   static const value* exn = NULL;
-  if (!exn)
+  if (!exn) {
     exn = caml_named_value("out_of_shared_memory");
+  }
   caml_raise_constant(*exn);
 }
 
@@ -899,8 +901,9 @@ static void check_should_cancel(void) {
   assert(info != NULL);
   if (worker_can_cancel && info->workers_should_cancel) {
     static const value* exn = NULL;
-    if (!exn)
+    if (!exn) {
       exn = caml_named_value("worker_should_cancel");
+    }
     caml_raise_constant(*exn);
   }
 }
@@ -1449,8 +1452,9 @@ CAMLprim value hh_compact(value unit) {
 
 static void raise_heap_full(void) {
   static const value* exn = NULL;
-  if (!exn)
+  if (!exn) {
     exn = caml_named_value("heap_full");
+  }
   caml_raise_constant(*exn);
 }
 
@@ -1460,8 +1464,9 @@ static void raise_heap_full(void) {
 /*****************************************************************************/
 
 static addr_t hh_alloc(size_t wsize) {
-  if (wsize == 0)
+  if (wsize == 0) {
     return info->heap;
+  }
   size_t slot_size = Bsize_wsize(wsize);
   addr_t addr = __sync_fetch_and_add(&info->heap, slot_size);
   if (addr + slot_size > info->heap_max) {
@@ -1591,8 +1596,9 @@ static uint64_t get_hash(value key) {
 
 static void raise_hash_table_full(void) {
   static const value* exn = NULL;
-  if (!exn)
+  if (!exn) {
     exn = caml_named_value("hash_table_full");
+  }
   caml_raise_constant(*exn);
 }
 
@@ -1818,8 +1824,9 @@ static size_t hh_string_len(addr_t addr, char** ptr) {
 }
 
 CAMLprim value hh_compare_string(value addr1_val, value addr2_val) {
-  if (addr1_val == addr2_val)
+  if (addr1_val == addr2_val) {
     return Val_int(0);
+  }
   char *ptr1, *ptr2;
   size_t len1 = hh_string_len(Long_val(addr1_val), &ptr1);
   size_t len2 = hh_string_len(Long_val(addr2_val), &ptr2);
