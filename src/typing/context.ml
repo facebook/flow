@@ -180,8 +180,10 @@ type component_t = {
   mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
   mutable conditions: (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t list;
   mutable strict_comparisons:
-    ( (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+    ( ALoc.t
+    * ( (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+      * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+      )
     )
     list;
   mutable invariants_useful: (Reason.t * bool) ALocMap.t;
