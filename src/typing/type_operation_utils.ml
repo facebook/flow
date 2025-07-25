@@ -114,8 +114,10 @@ module Operators = struct
         ()
       | (l, r) when Flow_js_utils.is_date l && Flow_js_utils.is_date r -> ()
       | (l, r) ->
-        let reasons = Flow_error.ordered_reasons (TypeUtil.reason_of_t l, TypeUtil.reason_of_t r) in
-        Flow_js_utils.add_output cx (Error_message.EComparison reasons)
+        let (r1, r2) =
+          Flow_error.ordered_reasons (TypeUtil.reason_of_t l, TypeUtil.reason_of_t r)
+        in
+        Flow_js_utils.add_output cx (Error_message.EComparison { r1; r2; loc_opt = None })
     in
     fun cx t1 t2 ->
       DistributeUnionIntersection.distribute_2
@@ -252,8 +254,8 @@ module Operators = struct
           | JsxAttrOrChildrenContext
           | LiteralTestContext
           | MatchPattern ->
-            let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
-            Error_message.EComparison reasons)
+            let (r1, r2) = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
+            Error_message.EComparison { r1; r2; loc_opt = None })
       in
       match (l, r) with
       (* We allow comparison between enums and enum values with the same id. *)

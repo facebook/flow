@@ -137,7 +137,11 @@ and 'loc t' =
       loc: 'loc;
       name: string;
     }
-  | EComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | EComparison of {
+      r1: 'loc virtual_reason;
+      r2: 'loc virtual_reason;
+      loc_opt: 'loc option;
+    }
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ETupleArityMismatch of {
       use_op: 'loc virtual_use_op;
@@ -1138,7 +1142,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EValueUsedAsType { reason_use } -> EValueUsedAsType { reason_use = map_reason reason_use }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     EPolarityMismatch { reason = map_reason reason; name; expected_polarity; actual_polarity }
-  | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
+  | EComparison { r1; r2; loc_opt } ->
+    EComparison { r1 = map_reason r1; r2 = map_reason r2; loc_opt = Base.Option.map ~f loc_opt }
   | ENonStrictEqualityComparison (r1, r2) ->
     ENonStrictEqualityComparison (map_reason r1, map_reason r2)
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
@@ -1684,7 +1689,7 @@ let util_use_op_of_msg nope util = function
   | EBuiltinModuleLookupFailed _
   | EExpectedModuleLookupFailed _
   | EPlatformSpecificImplementationModuleLookupFailed _
-  | EComparison (_, _)
+  | EComparison { r1 = _; r2 = _; loc_opt = _ }
   | ENonStrictEqualityComparison _
   | EUnsupportedExact (_, _)
   | EUnexpectedThisType _
@@ -1863,12 +1868,15 @@ let util_use_op_of_msg nope util = function
 let loc_of_msg : 'loc t' -> 'loc option = function
   | EAnyValueUsedAsType { reason_use = primary }
   | EValueUsedAsType { reason_use = primary }
-  | EComparison (primary, _)
   | ENonStrictEqualityComparison (primary, _)
   | EInvalidTypeArgs (_, primary)
   | ETooFewTypeArgs { reason_tapp = primary; _ }
   | ETooManyTypeArgs { reason_tapp = primary; _ } ->
     Some (loc_of_reason primary)
+  | EComparison { r1; r2 = _; loc_opt } ->
+    (match loc_opt with
+    | Some loc -> Some loc
+    | None -> Some (loc_of_reason r1))
   | ESketchyNumberLint (_, reason)
   | EInvalidExtends reason
   | EUnsupportedSetProto reason
@@ -2502,7 +2510,7 @@ let friendly_message_of_msg = function
       }
   | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
     Normal (MessagePlatformSpecificImplementationModuleLookupFailed name)
-  | EComparison (lower, upper) -> Normal (MessageCannotCompare { lower; upper })
+  | EComparison { r1; r2; loc_opt = _ } -> Normal (MessageCannotCompare { lower = r1; upper = r2 })
   | ENonStrictEqualityComparison (lower, upper) ->
     Normal (MessageCannotCompareNonStrict { lower; upper })
   | ETupleArityMismatch
