@@ -173,8 +173,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:638:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    rules_of_hooks.js:638:5
    638|     useHookInsideCallback(); // error
@@ -188,8 +188,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:649:7
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    rules_of_hooks.js:649:7
    649|       useHookInsideCallback(); // error
@@ -203,8 +203,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:679:5
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    rules_of_hooks.js:679:5
    679|     useState(); // error
@@ -218,8 +218,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:690:7
 
-Cannot call hook [1] because React hooks can only be called within components or hooks.
-(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
 
    rules_of_hooks.js:690:7
    690|       useState(); // error

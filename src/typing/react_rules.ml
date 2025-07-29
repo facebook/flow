@@ -771,6 +771,9 @@ type hook_call_context =
   (* e.g. Calling hooks in things like `() => {...}` where we are not sure whether it can be a
    * component or hook. *)
   | HookCallNotAllowedUnderUnknownContext
+  (* Same as HookCallNotAllowedUnderUnknownContext, but the function is inside component or hooks.
+   * In this case, we should treat the hook call as conditional. *)
+  | HookCallNotAllowedUnderNormalFunctionInComponentOrHooks
   (* e.g. Calling hooks in things like `function Foo(...) {...}` or `function useFoo(...) {...}`,
    * permissively allowed because hook compatibility mode is on *)
   | HookCallPermissivelyAllowedUnderCompatibilityMode
@@ -987,6 +990,8 @@ let rec whole_ast_visitor tast ~under_function_or_class_body ~initial_hook_call_
               hook_error cx ~callee_loc ~call_loc Error_message.HookDefinitelyNotInComponentOrHook
             | HookCallNotAllowedUnderUnknownContext ->
               hook_error cx ~callee_loc ~call_loc Error_message.HookInUnknownContext
+            | HookCallNotAllowedUnderNormalFunctionInComponentOrHooks ->
+              hook_error cx ~callee_loc ~call_loc Error_message.ConditionalHook
             | HookCallStrictlyDisallowedWithoutCompatibilityMode ->
               hook_error
                 cx
@@ -1365,7 +1370,7 @@ and component_ast_visitor tast cx rrid =
                   ( if effect_ = Ast.Function.Hook then
                     HookCallPermissivelyAllowedUnderCompatibilityMode
                   else
-                    HookCallNotAllowedUnderUnknownContext
+                    HookCallNotAllowedUnderNormalFunctionInComponentOrHooks
                   )
                 cx
                 rrid
