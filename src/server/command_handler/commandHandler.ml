@@ -624,12 +624,12 @@ let autocomplete
     in
     json_of_autocomplete_result initial_json_props ac_result
 
-let check_file ~options ~env ~profiling ~force file_input =
+let errors_of_file ~options ~env ~profiling ~force file_input =
   let options = { options with Options.opt_all = Options.all options || force } in
   match of_file_input ~options ~env file_input with
   | Error (Failed _reason)
   | Error (Skipped _reason) ->
-    ServerProt.Response.NOT_COVERED
+    Error ServerProt.Response.NOT_COVERED
   | Ok (file_key, content) ->
     let result =
       let ((_, parse_errs) as intermediate_result) =
@@ -648,7 +648,12 @@ let check_file ~options ~env ~profiling ~force file_input =
     let (errors, warnings) =
       Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
     in
-    convert_errors ~errors ~warnings ~suppressed_errors:[]
+    Ok (errors, warnings)
+
+let check_file ~options ~env ~profiling ~force file_input =
+  match errors_of_file ~options ~env ~profiling ~force file_input with
+  | Error r -> r
+  | Ok (errors, warnings) -> convert_errors ~errors ~warnings ~suppressed_errors:[]
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
