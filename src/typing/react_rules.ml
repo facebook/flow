@@ -778,18 +778,12 @@ type hook_call_context =
    * strictly disallowed because hook compatibility mode is off *)
   | HookCallStrictlyDisallowedWithoutCompatibilityMode
 
-let rec whole_ast_visitor tast ~under_function_or_class_body ~allow_hook_call_at_toplevel cx rrid =
+let rec whole_ast_visitor tast ~under_function_or_class_body ~initial_hook_call_context cx rrid =
   object (this)
     inherit
       [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
 
-    val mutable hook_call_context =
-      lazy
-        ( if allow_hook_call_at_toplevel then
-          HookCallPermissivelyAllowedUnderCompatibilityMode
-        else
-          HookCallNotAllowedUnderUnknownContext
-        )
+    val mutable hook_call_context = lazy initial_hook_call_context
 
     (* If it's true, then we are in some context where we permissively assume can be passed with
      * a function component or hook. *)
@@ -1367,7 +1361,12 @@ and component_ast_visitor tast cx rrid =
           @@ (whole_ast_visitor
                 tast
                 ~under_function_or_class_body:true
-                ~allow_hook_call_at_toplevel:(effect_ = Ast.Function.Hook)
+                ~initial_hook_call_context:
+                  ( if effect_ = Ast.Function.Hook then
+                    HookCallPermissivelyAllowedUnderCompatibilityMode
+                  else
+                    HookCallNotAllowedUnderUnknownContext
+                  )
                 cx
                 rrid
              )
@@ -1381,7 +1380,7 @@ and component_ast_visitor tast cx rrid =
       (whole_ast_visitor
          tast
          ~under_function_or_class_body:true
-         ~allow_hook_call_at_toplevel:false
+         ~initial_hook_call_context:HookCallNotAllowedUnderUnknownContext
          cx
          rrid
       )
@@ -1411,7 +1410,7 @@ let check_react_rules cx ast =
     (whole_ast_visitor
        ast
        ~under_function_or_class_body:false
-       ~allow_hook_call_at_toplevel:false
+       ~initial_hook_call_context:HookCallNotAllowedUnderUnknownContext
        cx
        rrid
     )
