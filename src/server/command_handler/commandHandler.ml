@@ -3748,6 +3748,105 @@ let handle_result_from_client ~id ~metadata ~(result : Lsp.lsp_result) ~client ~
   | None -> ());
   (LspProt.LspFromServer None, metadata)
 
+let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri metadata =
+  let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
+  let file_input = Persistent_connection.get_file client file_path in
+  match file_input with
+  | File_input.FileName _ ->
+    (* Maybe we've received a didClose for this file? Or maybe we got a request for a file
+     * that wasn't open in the first place (that would be a bug). *)
+    ( Error
+        ( {
+            LspProt.live_errors_failure_kind = LspProt.Errored_error_response;
+            live_errors_failure_reason =
+              spf "Cannot get live errors for %s: File not open" file_path;
+            live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
+          },
+          file_input
+        ),
+      metadata
+    )
+  | File_input.FileContent (_, content) ->
+    let (live_errors, live_warnings, refined_locations, metadata) =
+      let file_key = file_key_of_file_input ~options ~env file_input in
+      match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
+      | Ok () ->
+        let file_key =
+          let file_options = Options.file_options options in
+          Files.filename_from_string
+            ~options:file_options
+            ~consider_libdefs:true
+            ~all_unordered_libs:env.ServerEnv.all_unordered_libs
+            file_path
+        in
+        let (result, did_hit_cache) =
+          let ((_, parse_errs) as intermediate_result) =
+            Type_contents.parse_contents ~options ~profiling content file_key
+          in
+          if not (Flow_error.ErrorSet.is_empty parse_errs) then
+            (Error parse_errs, None)
+          else
+            let type_parse_artifacts_cache =
+              Some (Persistent_connection.type_parse_artifacts_cache client)
+            in
+            type_parse_artifacts_with_cache
+              ~options
+              ~profiling
+              ~type_parse_artifacts_cache
+              env.master_cx
+              file_key
+              (lazy intermediate_result)
+        in
+        let (live_errors, live_warnings) =
+          Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
+        in
+        let refined_locations =
+          match result with
+          | Ok (_, Typecheck_artifacts { cx; _ }) when semantic_decorations client ->
+            Context.refined_locations cx
+            |> Loc_collections.ALocMap.keys
+            |> Base.List.map ~f:loc_of_aloc
+          | _ -> []
+        in
+        let metadata =
+          let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+          let json = Hh_json.JSON_Object json_props in
+          with_data ~extra_data:(Some json) metadata
+        in
+        (live_errors, live_warnings, refined_locations, metadata)
+      | Error reason ->
+        Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
+
+        let metadata =
+          let extra_data = json_of_skipped reason in
+          with_data ~extra_data metadata
+        in
+
+        (* If the LSP requests errors for a file for which we wouldn't normally emit errors
+         * then just return empty sets *)
+        ( Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
+          Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
+          [],
+          metadata
+        )
+    in
+    let live_errors_uri = Lsp.DocumentUri.of_string uri in
+    let live_diagnostics =
+      Flow_lsp_conversions.diagnostics_of_flow_errors
+        ~unsaved_content:(Some (File_path.make file_path, content))
+        ~should_include_vscode_detailed_diagnostics:
+          (Base.Fn.const (vscode_detailed_diagnostics client))
+        ~errors:live_errors
+        ~warnings:live_warnings
+      |> Lsp.UriMap.find_opt live_errors_uri
+      |> Base.Option.value ~default:[]
+    in
+    let live_diagnostics =
+      live_diagnostics
+      @ Flow_lsp_conversions.synthetic_diagnostics_of_refined_locations refined_locations
+    in
+    (Ok { LspProt.live_diagnostics; live_errors_uri }, metadata)
+
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
  * response to each. And we could do that, but it might have some weird side effects:
@@ -3791,115 +3890,12 @@ let handle_live_errors_request =
       else
         (* This is the most recent live errors request we've received for this file. All the
          * older ones have already been responded to or canceled *)
-        let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
-        let%lwt ret =
-          let file_input = Persistent_connection.get_file client file_path in
-          match file_input with
-          | File_input.FileName _ ->
-            (* Maybe we've received a didClose for this file? Or maybe we got a request for a file
-             * that wasn't open in the first place (that would be a bug). *)
-            Lwt.return
-              ( LspProt.(
-                  LiveErrorsResponse
-                    (Error
-                       {
-                         live_errors_failure_kind = Errored_error_response;
-                         live_errors_failure_reason =
-                           spf "Cannot get live errors for %s: File not open" file_path;
-                         live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
-                       }
-                    )
-                ),
-                metadata
-              )
-          | File_input.FileContent (_, content) ->
-            let%lwt (live_errors, live_warnings, refined_locations, metadata) =
-              let file_key = file_key_of_file_input ~options ~env file_input in
-              match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
-              | Ok () ->
-                let file_key =
-                  let file_options = Options.file_options options in
-                  Files.filename_from_string
-                    ~options:file_options
-                    ~consider_libdefs:true
-                    ~all_unordered_libs:env.ServerEnv.all_unordered_libs
-                    file_path
-                in
-                let (result, did_hit_cache) =
-                  let ((_, parse_errs) as intermediate_result) =
-                    Type_contents.parse_contents ~options ~profiling content file_key
-                  in
-                  if not (Flow_error.ErrorSet.is_empty parse_errs) then
-                    (Error parse_errs, None)
-                  else
-                    let type_parse_artifacts_cache =
-                      Some (Persistent_connection.type_parse_artifacts_cache client)
-                    in
-                    type_parse_artifacts_with_cache
-                      ~options
-                      ~profiling
-                      ~type_parse_artifacts_cache
-                      env.master_cx
-                      file_key
-                      (lazy intermediate_result)
-                in
-                let (live_errors, live_warnings) =
-                  Type_contents.printable_errors_of_file_artifacts_result
-                    ~options
-                    ~env
-                    file_key
-                    result
-                in
-                let refined_locations =
-                  match result with
-                  | Ok (_, Typecheck_artifacts { cx; _ }) when semantic_decorations client ->
-                    Context.refined_locations cx
-                    |> Loc_collections.ALocMap.keys
-                    |> Base.List.map ~f:loc_of_aloc
-                  | _ -> []
-                in
-                let metadata =
-                  let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-                  let json = Hh_json.JSON_Object json_props in
-                  with_data ~extra_data:(Some json) metadata
-                in
-                Lwt.return (live_errors, live_warnings, refined_locations, metadata)
-              | Error reason ->
-                Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
-
-                let metadata =
-                  let extra_data = json_of_skipped reason in
-                  with_data ~extra_data metadata
-                in
-
-                (* If the LSP requests errors for a file for which we wouldn't normally emit errors
-                 * then just return empty sets *)
-                Lwt.return
-                  ( Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
-                    Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
-                    [],
-                    metadata
-                  )
-            in
-            let live_errors_uri = Lsp.DocumentUri.of_string uri in
-            let live_diagnostics =
-              Flow_lsp_conversions.diagnostics_of_flow_errors
-                ~unsaved_content:(Some (File_path.make file_path, content))
-                ~should_include_vscode_detailed_diagnostics:
-                  (Base.Fn.const (vscode_detailed_diagnostics client))
-                ~errors:live_errors
-                ~warnings:live_warnings
-              |> Lsp.UriMap.find_opt live_errors_uri
-              |> Base.Option.value ~default:[]
-            in
-            let live_diagnostics =
-              live_diagnostics
-              @ Flow_lsp_conversions.synthetic_diagnostics_of_refined_locations refined_locations
-            in
-            Lwt.return
-              ( LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
-                metadata
-              )
+        let ret =
+          match
+            live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri metadata
+          with
+          | (Error (e, _file_input), metadata) -> (LspProt.LiveErrorsResponse (Error e), metadata)
+          | (Ok diagnostics, metadata) -> (LspProt.LiveErrorsResponse (Ok diagnostics), metadata)
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
          * then remove the entry from the map *)
