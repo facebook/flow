@@ -2,7 +2,7 @@ declare opaque type MiniReactElement: {...};
 declare opaque type MiniReactNode super MiniReactElement | string;
 
 function genericTest<N: MiniReactNode>(n: N) {
-  n as MiniReactNode; // todo: bad error
+  n as MiniReactNode; // ok
 }
 
 function subtypingTest() {
