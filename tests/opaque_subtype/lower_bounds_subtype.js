@@ -7,5 +7,5 @@ function genericTest<N: MiniReactNode>(n: N) {
 
 function subtypingTest() {
   declare const e: MiniReactElement;
-  e as MiniReactNode; // todo: bad error
+  e as MiniReactNode; // ok
 }

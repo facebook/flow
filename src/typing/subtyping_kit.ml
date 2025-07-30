@@ -2347,6 +2347,29 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************************************)
     (* opaque types lower & upper bound *)
     (************************************)
+    (* When both bounds are available, we need to do a speculative check, since only one of them
+     * needs to pass. *)
+    | ( OpaqueT (opaque_l_reason, { upper_t = Some lower_upper; _ }),
+        OpaqueT (opaque_u_reason, { lower_t = Some upper_lower; _ })
+      ) ->
+      SpeculationKit.try_custom
+        cx
+        ~use_op
+        ~no_match_error_loc:(loc_of_reason opaque_l_reason)
+        [
+          (fun () ->
+            rec_flow_t
+              cx
+              trace
+              ~use_op:(Frame (OpaqueTypeLowerBound { opaque_t_reason = opaque_u_reason }, use_op))
+              (l, upper_lower));
+          (fun () ->
+            rec_flow_t
+              cx
+              trace
+              ~use_op:(Frame (OpaqueTypeUpperBound { opaque_t_reason = opaque_l_reason }, use_op))
+              (lower_upper, u));
+        ]
     (* Opaque types may be treated as their upper bound when they are a lower bound for a use *)
     | (OpaqueT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op)) (t, u)
