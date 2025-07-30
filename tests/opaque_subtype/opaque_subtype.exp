@@ -305,25 +305,6 @@ References:
              ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- lower_bounds_subtype.js:10:3
-
-Cannot cast `e` to `MiniReactNode` because: [incompatible-cast]
- - Either object type [1] is incompatible with `MiniReactElement` [2].
- - Or object type [1] is incompatible with string [2].
-
-   lower_bounds_subtype.js:10:3
-   10|   e as MiniReactNode; // todo: bad error
-         ^
-
-References:
-   lower_bounds_subtype.js:9:20
-    9|   declare const e: MiniReactElement;
-                          ^^^^^^^^^^^^^^^^ [1]
-   lower_bounds_subtype.js:10:8
-   10|   e as MiniReactNode; // todo: bad error
-              ^^^^^^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:5:48
 
 number [1] is incompatible with `SuperType` [2]. [incompatible-type]
@@ -420,7 +401,7 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 27 errors
+Found 26 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
