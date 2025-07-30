@@ -33,6 +33,7 @@ type trigger =
   | ServerConnected
   | SelectionRange of Lsp.lsp_id
   | SignatureHelp of Lsp.lsp_id
+  | TextDocumentDiagnostics of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
   | WillRenameFiles of Lsp.lsp_id
@@ -106,6 +107,7 @@ let string_of_trigger = function
   | ServerConnected -> "ServerConnected"
   | SelectionRange _ -> "SelectionRange"
   | SignatureHelp _ -> "SignatureHelp"
+  | TextDocumentDiagnostics _ -> "TextDocumentDiagnostics"
   | TypeCoverage _ -> "TypeCoverage"
   | ExecuteCommand _ -> "ExecuteCommand"
   | WillRenameFiles _ -> "willRenameFiles"
@@ -129,6 +131,7 @@ let lsp_id_of_trigger = function
   | Rename lsp_id
   | SelectionRange lsp_id
   | SignatureHelp lsp_id
+  | TextDocumentDiagnostics lsp_id
   | TypeCoverage lsp_id
   | ExecuteCommand lsp_id
   | AutoCloseJsx lsp_id
@@ -206,6 +209,7 @@ let source_of_trigger = function
   | Rename _
   | SelectionRange _
   | SignatureHelp _
+  | TextDocumentDiagnostics _
   | TypeCoverage _
   | ExecuteCommand _
   | AutoCloseJsx _
@@ -374,6 +378,8 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, TypeCoverageRequest _) -> Some (TypeCoverage lsp_id)
   | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
   | RequestMessage (lsp_id, SignatureHelpRequest _) -> Some (SignatureHelp lsp_id)
+  | RequestMessage (lsp_id, TextDocumentDiagnosticsRequest _) ->
+    Some (TextDocumentDiagnostics lsp_id)
   | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
   | RequestMessage (lsp_id, WillRenameFilesRequest _) -> Some (WillRenameFiles lsp_id)
   | RequestMessage (lsp_id, AutoCloseJsxRequest _) -> Some (AutoCloseJsx lsp_id)
@@ -419,6 +425,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, GoToImplementationResult _)
   | ResponseMessage (_, DocumentHighlightResult _)
   | ResponseMessage (_, DocumentCodeLensResult _)
+  | ResponseMessage (_, TextDocumentDiagnosticsResult _)
   | ResponseMessage (_, TypeCoverageResult _)
   | ResponseMessage (_, ExecuteCommandResult _)
   | ResponseMessage (_, ApplyWorkspaceEditResult _)

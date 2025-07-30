@@ -97,6 +97,10 @@ type t = {
   of_selection_range_result: t -> SelectionRange.result -> SelectionRange.result;
   of_signature_help_params: t -> SignatureHelp.params -> SignatureHelp.params;
   of_signature_help_result: t -> SignatureHelp.result -> SignatureHelp.result;
+  of_text_document_diagnostics_params:
+    t -> TextDocumentDiagnostics.params -> TextDocumentDiagnostics.params;
+  of_text_document_diagnostics_result:
+    t -> TextDocumentDiagnostics.result -> TextDocumentDiagnostics.result;
   of_show_message_params: t -> ShowMessage.params -> ShowMessage.params;
   of_show_message_request_params: t -> ShowMessageRequest.params -> ShowMessageRequest.params;
   of_show_message_request_result: t -> ShowMessageRequest.result -> ShowMessageRequest.result;
@@ -503,6 +507,8 @@ let default_mapper =
           SelectionRangeResult (mapper.of_selection_range_result mapper result)
         | SignatureHelpResult result ->
           SignatureHelpResult (mapper.of_signature_help_result mapper result)
+        | TextDocumentDiagnosticsResult result ->
+          TextDocumentDiagnosticsResult (mapper.of_text_document_diagnostics_result mapper result)
         | WorkspaceSymbolResult result ->
           WorkspaceSymbolResult (mapper.of_workspace_symbol_result mapper result)
         | DocumentSymbolResult result ->
@@ -572,6 +578,8 @@ let default_mapper =
           SelectionRangeRequest (mapper.of_selection_range_params mapper params)
         | SignatureHelpRequest params ->
           SignatureHelpRequest (mapper.of_signature_help_params mapper params)
+        | TextDocumentDiagnosticsRequest params ->
+          TextDocumentDiagnosticsRequest (mapper.of_text_document_diagnostics_params mapper params)
         | WorkspaceSymbolRequest params ->
           WorkspaceSymbolRequest (mapper.of_workspace_symbol_params mapper params)
         | DocumentSymbolRequest params ->
@@ -672,6 +680,12 @@ let default_mapper =
         let loc = mapper.of_text_document_position_params mapper loc in
         { SignatureHelp.loc; context });
     of_signature_help_result = (fun _mapper t -> t);
+    of_text_document_diagnostics_params =
+      (fun mapper { TextDocumentDiagnostics.textDocument } ->
+        let textDocument = mapper.of_text_document_identifier mapper textDocument in
+        { TextDocumentDiagnostics.textDocument });
+    of_text_document_diagnostics_result =
+      (fun mapper list -> Base.List.map ~f:(mapper.of_diagnostic mapper) list);
     of_show_message_params =
       (fun _mapper { ShowMessage.type_; message } -> { ShowMessage.type_; message });
     of_show_message_request_params =

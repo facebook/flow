@@ -29,6 +29,7 @@ type trigger =
   | ServerConnected
   | SelectionRange of Lsp.lsp_id
   | SignatureHelp of Lsp.lsp_id
+  | TextDocumentDiagnostics of Lsp.lsp_id
   | TypeCoverage of Lsp.lsp_id
   | ExecuteCommand of Lsp.lsp_id
   | WillRenameFiles of Lsp.lsp_id

@@ -1094,6 +1094,18 @@ module DocumentSymbolFmt = struct
     | `DocumentSymbol xs -> JSON_Array (Base.List.map xs ~f:to_json)
 end
 
+(** textDocument/documentSymbol request *)
+module DocumentDiagnosticsFmt = struct
+  open TextDocumentDiagnostics
+
+  let params_of_json (params : json option) : params =
+    { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
+
+  let json_of_result (r : result) : json =
+    JSON_Object
+      [("kind", JSON_String "full"); ("items", JSON_Array (Base.List.map r ~f:print_diagnostic))]
+end
+
 (************************************************************************)
 (* textDocument/references request                                      *)
 (************************************************************************)
@@ -1928,6 +1940,7 @@ let request_name_to_string (request : lsp_request) : string =
   | ConfigurationRequest _ -> "workspace/configuration"
   | SelectionRangeRequest _ -> "textDocument/selectionRange"
   | SignatureHelpRequest _ -> "textDocument/signatureHelp"
+  | TextDocumentDiagnosticsRequest _ -> "textDocument/diagnostics"
   | DefinitionRequest _ -> "textDocument/definition"
   | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolRequest _ -> "workspace/symbol"
@@ -1967,6 +1980,7 @@ let result_name_to_string (result : lsp_result) : string =
   | ConfigurationResult _ -> "workspace/configuration"
   | SelectionRangeResult _ -> "textDocument/selectionRange"
   | SignatureHelpResult _ -> "textDocument/signatureHelp"
+  | TextDocumentDiagnosticsResult _ -> "textDocument/diagnostics"
   | DefinitionResult _ -> "textDocument/definition"
   | TypeDefinitionResult _ -> "textDocument/typeDefinition"
   | WorkspaceSymbolResult _ -> "workspace/symbol"
@@ -2042,6 +2056,8 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/completion" -> CompletionRequest (CompletionFmt.params_of_json params)
   | "textDocument/definition" -> DefinitionRequest (DefinitionFmt.params_of_json params)
   | "workspace/symbol" -> WorkspaceSymbolRequest (WorkspaceSymbolFmt.params_of_json params)
+  | "textDocument/diagnostics" ->
+    TextDocumentDiagnosticsRequest (DocumentDiagnosticsFmt.params_of_json params)
   | "textDocument/documentSymbol" -> DocumentSymbolRequest (DocumentSymbolFmt.params_of_json params)
   | "textDocument/references" -> FindReferencesRequest (parse_findReferences params)
   | "textDocument/prepareRename" -> PrepareRenameRequest (PrepareRenameFmt.params_of_json params)
@@ -2117,6 +2133,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | CompletionItemResolveRequest _
   | SelectionRangeRequest _
   | SignatureHelpRequest _
+  | TextDocumentDiagnosticsRequest _
   | DefinitionRequest _
   | TypeDefinitionRequest _
   | WorkspaceSymbolRequest _
@@ -2190,6 +2207,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | CompletionItemResolveRequest _
     | SelectionRangeRequest _
     | SignatureHelpRequest _
+    | TextDocumentDiagnosticsRequest _
     | DefinitionRequest _
     | TypeDefinitionRequest _
     | WorkspaceSymbolRequest _
@@ -2254,6 +2272,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | ApplyWorkspaceEditResult r -> ApplyWorkspaceEditFmt.json_of_result r
     | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
+    | TextDocumentDiagnosticsResult r -> DocumentDiagnosticsFmt.json_of_result r
     | WillRenameFilesResult r -> WillRenameFilesFmt.json_of_result r
     | AutoCloseJsxResult r -> AutoCloseJsxFmt.json_of_result r
     | PrepareDocumentPasteResult r -> DocumentPasteFmt.json_of_data_transfer r

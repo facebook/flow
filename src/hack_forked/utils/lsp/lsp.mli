@@ -867,6 +867,12 @@ module Configuration : sig
   and result = Hh_json.json list
 end
 
+module TextDocumentDiagnostics : sig
+  type params = { textDocument: TextDocumentIdentifier.t }
+
+  and result = PublishDiagnostics.diagnostic list
+end
+
 module WorkspaceSymbol : sig
   type params = workspaceSymbolParams
 
@@ -1282,6 +1288,7 @@ type lsp_request =
   | ConfigurationRequest of Configuration.params
   | SelectionRangeRequest of SelectionRange.params
   | SignatureHelpRequest of SignatureHelp.params
+  | TextDocumentDiagnosticsRequest of TextDocumentDiagnostics.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
   | FindReferencesRequest of FindReferences.params
@@ -1320,6 +1327,7 @@ type lsp_result =
   | ConfigurationResult of Configuration.result
   | SelectionRangeResult of SelectionRange.result
   | SignatureHelpResult of SignatureHelp.result
+  | TextDocumentDiagnosticsResult of TextDocumentDiagnostics.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
   | FindReferencesResult of FindReferences.result

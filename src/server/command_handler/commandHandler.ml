@@ -3903,6 +3903,40 @@ let handle_live_errors_request =
           uri_to_latest_metadata_map := SMap.remove uri !uri_to_latest_metadata_map;
         Lwt.return ret
 
+let handle_persistent_text_document_diagnostics_lsp
+    ~options ~id ~params ~metadata ~client ~profiling ~env ~loc_of_aloc =
+  let uri = params.TextDocumentDiagnostics.textDocument.TextDocumentIdentifier.uri in
+  let (result, metadata) =
+    live_diagnostics_of_uri
+      ~options
+      ~env
+      ~profiling
+      ~client
+      ~loc_of_aloc
+      (Lsp.DocumentUri.to_string uri)
+      metadata
+  in
+  let response =
+    match result with
+    | Ok { LspProt.live_diagnostics; live_errors_uri = _ } ->
+      ResponseMessage (id, TextDocumentDiagnosticsResult live_diagnostics)
+    | Error (_, file_input) ->
+      (match errors_of_file ~options ~env ~profiling ~force:false file_input with
+      | Error _ -> ResponseMessage (id, TextDocumentDiagnosticsResult [])
+      | Ok (errors, warnings) ->
+        let live_diagnostics =
+          Flow_lsp_conversions.diagnostics_of_flow_errors
+            ~unsaved_content:None
+            ~should_include_vscode_detailed_diagnostics:(Base.Fn.const false)
+            ~errors
+            ~warnings
+          |> Lsp.UriMap.find_opt uri
+          |> Base.Option.value ~default:[]
+        in
+        ResponseMessage (id, TextDocumentDiagnosticsResult live_diagnostics))
+  in
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
+
 type persistent_command_handler =
   | Handle_persistent_immediately of
       (client:Persistent_connection.single_client ->
@@ -4046,6 +4080,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~file_input ~metadata)
+  | LspToServer (RequestMessage (id, TextDocumentDiagnosticsRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_text_document_diagnostics_lsp ~options ~id ~params ~metadata ~loc_of_aloc)
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
