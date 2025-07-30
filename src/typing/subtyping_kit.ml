@@ -2373,6 +2373,24 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* Opaque types may be treated as their upper bound when they are a lower bound for a use *)
     | (OpaqueT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op)) (t, u)
+      (* Similar to the case of OpaqueT { upper_t=Some _ }  ~> OpaqueT { lower_t=Some _ }
+         We need to do the same for GenericT. *)
+    | ( GenericT { reason; bound = lower_upper; _ },
+        OpaqueT (opaque_u_reason, { lower_t = Some upper_lower; _ })
+      ) ->
+      SpeculationKit.try_custom
+        cx
+        ~use_op
+        ~no_match_error_loc:(loc_of_reason reason)
+        [
+          (fun () ->
+            rec_flow_t
+              cx
+              trace
+              ~use_op:(Frame (OpaqueTypeLowerBound { opaque_t_reason = opaque_u_reason }, use_op))
+              (l, upper_lower));
+          (fun () -> rec_flow_t cx trace ~use_op (reposition_reason cx reason lower_upper, u));
+        ]
     (* Opaque types may be treated as their lower bound when they are a upper bound for a use *)
     | (_, OpaqueT (opaque_t_reason, { lower_t = Some t; _ })) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeLowerBound { opaque_t_reason }, use_op)) (l, t)
