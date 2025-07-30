@@ -1264,6 +1264,52 @@ References:
                   ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- typed_check.js:162:9
+
+Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
+`T` [3]. [incompatible-type]
+
+   typed_check.js:162:9
+   162|   x === 'foox'; // ERROR from existing check. Will be replaced by the new subtyping check
+                ^^^^^^ [2]
+
+References:
+   typed_check.js:161:20
+   161|   declare const x: ?T;
+                           ^^ [1]
+   typed_check.js:161:21
+   161|   declare const x: ?T;
+                            ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:173:8
+
+Cannot get `y.ha` because property `ha` is missing in `Boolean` [1]. [prop-missing]
+
+   typed_check.js:173:8
+   173|   && y.ha === 'fdas'; // existing double errors
+               ^^
+
+References:
+   typed_check.js:171:20
+   171|   declare const y: boolean | idk;
+                           ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:173:8
+
+Cannot get `y.ha` because property `ha` is missing in `Boolean` [1]. [prop-missing]
+
+   typed_check.js:173:8
+   173|   && y.ha === 'fdas'; // existing double errors
+               ^^
+
+References:
+   typed_check.js:171:30
+   171|   declare const y: boolean | idk;
+                                     ^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
 
 This condition is falsy. [constant-condition]
@@ -1409,4 +1455,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 148 errors
+Found 151 errors

@@ -39,6 +39,7 @@ type enclosing_context =
   | LiteralTestContext
   (* match (x) { C => e } *)
   | MatchPattern
+  | StrictComparison
 [@@deriving show]
 
 let is_conditional_test_context = function

@@ -8,3 +8,4 @@ experimental.constant_condition.null_void.includes=<PROJECT_ROOT>/err1
 experimental.constant_condition.null_void.includes=<PROJECT_ROOT>/err2
 experimental.constant_condition.function.includes=<PROJECT_ROOT>/err1
 experimental.constant_condition.function.includes=<PROJECT_ROOT>/err2
+enums=true

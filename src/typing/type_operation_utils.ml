@@ -253,7 +253,8 @@ module Operators = struct
           | JsxTitleNameContext
           | JsxAttrOrChildrenContext
           | LiteralTestContext
-          | MatchPattern ->
+          | MatchPattern
+          | StrictComparison ->
             let (r1, r2) = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
             Error_message.EComparison { r1; r2; loc_opt = None })
       in
@@ -284,7 +285,8 @@ module Operators = struct
         | JsxTitleNameContext
         | JsxAttrOrChildrenContext
         | LiteralTestContext
-        | MatchPattern ->
+        | MatchPattern
+        | StrictComparison ->
           None
       end
       (* We don't allow the comparison of enums and other types in general. *)

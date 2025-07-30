@@ -5315,7 +5315,17 @@ module Make
       (BoolModuleT.at loc, { operator; left; right; comments })
     | StrictEqual
     | StrictNotEqual ->
-      let reconstruct_ast = visit_eq_test cx ~encl_ctx loc left right in
+      let reconstruct_ast =
+        visit_eq_test
+          cx
+          ~encl_ctx:
+            (match encl_ctx with
+            | NoContext -> StrictComparison
+            | _ -> encl_ctx)
+          loc
+          left
+          right
+      in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
       if is_conditional_test_context encl_ctx then begin

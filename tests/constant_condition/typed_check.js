@@ -155,3 +155,31 @@
   if (x1) { if (x1??=5) {} } // ok, we don't check arithmetic assignment
 
 }
+
+{
+  type T = 'foo' | 'bar';
+  declare const x: ?T;
+  x === 'foox'; // ERROR from existing check. Will be replaced by the new subtyping check
+
+  type idk =
+  | {
+      ha?: string,
+      jo?: string,
+      ...
+    }
+  | boolean;
+  declare const y: boolean | idk;
+  y.jo == null  // no existing error
+  && y.ha === 'fdas'; // existing double errors
+
+  enum exampleEnum of string {
+    A = 'a',
+    B = 'b',
+  };
+
+  declare const pp: ?exampleEnum;
+  switch (true) {
+    case pp === exampleEnum.A: break; // should not error
+    default: break;
+  }
+}

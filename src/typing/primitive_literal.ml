@@ -365,7 +365,8 @@ let enclosing_context_needs_precise = function
   | JsxTitleNameContext
   | JsxAttrOrChildrenContext
   | LiteralTestContext
-  | MatchPattern ->
+  | MatchPattern
+  | StrictComparison ->
     true
 
 (* When do we need to preserve a precise primitive literal type?
