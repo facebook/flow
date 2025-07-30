@@ -19,21 +19,24 @@ module.exports = (suite(
     modifyFile,
     lspIgnoreStatusAndCancellation,
   }) => [
-    test('textDocument/publishDiagnostics client enabled', [
+    test('textDocument/diagnostics client enabled', [
+      addFile('file_with_simple_error.js'),
       lspStartAndConnect(null, {
         ...lspInitializeParams,
         initializationOptions: {detailedErrorRendering: true},
       }),
-      addFile('file_with_simple_error.js')
-        .waitUntilLSPMessage(
-          9000,
+      lspRequestAndWaitUntilResponse('textDocument/diagnostics', {
+        textDocument: {
+          uri: `<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js`,
+        },
+      }).verifyLSPMessageSnapshot(
+        join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
+        [
           'textDocument/publishDiagnostics',
-          '{Cannot assign}',
-        )
-        .verifyLSPMessageSnapshot(
-          join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-          ['window/showStatus', '$/cancelRequest'],
-        ),
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
       lspNotification('textDocument/didOpen', {
         textDocument: {
           uri: '<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js',
@@ -43,47 +46,63 @@ module.exports = (suite(
             join(__dirname, 'file_with_simple_error.js'),
           ).toString(),
         },
-      })
-        .waitUntilLSPMessage(
-          9000,
+      }).verifyAllLSPMessagesInStep(
+        [],
+        [
           'textDocument/publishDiagnostics',
-          '{Cannot assign}',
-        )
-        .verifyLSPMessageSnapshot(
-          join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
-          ['window/showStatus', '$/cancelRequest'],
-        ),
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/diagnostics', {
+        textDocument: {
+          uri: `<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js`,
+        },
+      }).verifyLSPMessageSnapshot(
+        join(__dirname, '__snapshots__', 'has-detailed-errors.json'),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
     ]),
 
-    test('textDocument/publishDiagnostics client disabled', [
+    test('textDocument/diagnostics client disabled', [
+      addFile('file_with_simple_error.js'),
       lspStartAndConnect(null, {
         ...lspInitializeParams,
         initializationOptions: {detailedErrorRendering: false},
       }),
-      addFile('file_with_simple_error.js')
-        .waitUntilLSPMessage(
-          9000,
+      lspRequestAndWaitUntilResponse('textDocument/diagnostics', {
+        textDocument: {
+          uri: `<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js`,
+        },
+      }).verifyLSPMessageSnapshot(
+        join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
+        [
           'textDocument/publishDiagnostics',
-          '{Cannot assign}',
-        )
-        .verifyLSPMessageSnapshot(
-          join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-          ['window/showStatus', '$/cancelRequest'],
-        ),
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
     ]),
 
-    test('textDocument/publishDiagnostics no client config', [
+    test('textDocument/diagnostics no client config', [
+      addFile('file_with_simple_error.js'),
       lspStartAndConnect(),
-      addFile('file_with_simple_error.js')
-        .waitUntilLSPMessage(
-          9000,
+      lspRequestAndWaitUntilResponse('textDocument/diagnostics', {
+        textDocument: {
+          uri: `<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js`,
+        },
+      }).verifyLSPMessageSnapshot(
+        join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
+        [
           'textDocument/publishDiagnostics',
-          '{Cannot assign}',
-        )
-        .verifyLSPMessageSnapshot(
-          join(__dirname, '__snapshots__', 'no-detailed-errors.json'),
-          ['window/showStatus', '$/cancelRequest'],
-        ),
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
     ]),
   ],
 ): SuiteType);

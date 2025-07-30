@@ -1,8 +1,8 @@
 {
-  "method": "textDocument/publishDiagnostics",
-  "params": {
-    "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js",
-    "diagnostics": [
+  "method": "textDocument/diagnostics",
+  "result": {
+    "kind": "full",
+    "items": [
       {
         "range": {
           "start": {
