@@ -126,7 +126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:27:6
 
-Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `bar[x]` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
 
    undefined2.js:27:6
    27|     (bar[x]: boolean); // error, string only
@@ -134,8 +134,8 @@ Cannot cast `bar[x]` to boolean because string [1] is incompatible with boolean 
 
 References:
    undefined2.js:15:21
-   15|     var undefined = 'foo';
-                           ^^^^^ [1]
+   15|     var undefined = 6;
+                           ^ [1]
    undefined2.js:27:14
    27|     (bar[x]: boolean); // error, string only
                     ^^^^^^^ [2]

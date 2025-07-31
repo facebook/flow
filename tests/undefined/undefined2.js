@@ -12,8 +12,8 @@ let tests = [
   },
 
   function(x: number) {
-    var undefined = 'foo';
-    (undefined: string); // ok
+    var undefined = 6;
+    (undefined: number); // ok
 
     var x;
     if (x !== undefined) {
