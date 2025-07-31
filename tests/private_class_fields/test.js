@@ -87,7 +87,7 @@ class Static {
   static #q: number;
   #r: number;
   m(): number {
-    Static.#p = 2;
+    Static.#p = 2 as number;
     if (Static.#p === 3) {
       // Refinements still work
       Static.#p as 3;
