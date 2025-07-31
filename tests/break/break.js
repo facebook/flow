@@ -11,7 +11,8 @@ function foo(b: boolean) {
 function bar(b: boolean) {
     var x = b ? null: false;
     if (x == null) return;
-    switch ("") {
+    declare const num: number;
+    switch (num) {
     case 0:
         var y:number = x; // error: boolean !~> number
         x = "";
@@ -26,7 +27,8 @@ function bar(b: boolean) {
 function bar2(b: boolean) {
     var x = b ? null: false;
     if (x == null) return;
-    switch ("") {
+    declare const num: number;
+    switch (num) {
     case 0: {
       let y:number = x; // error: boolean !~> number
       x = "";
