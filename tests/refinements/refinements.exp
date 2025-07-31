@@ -7076,27 +7076,27 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:271:56
+Error ------------------------------------------------------------------------------------------- invalidation.js:271:54
 
 Refinement invalidated due to property assignment at [1]
 
-   invalidation.js:271:56
-   271|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
-                                                               ^^^
+   invalidation.js:271:54
+   271|   if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
+                                                             ^^^
 
 References:
    invalidation.js:271:22
-   271|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
+   271|   if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
                              ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:271:60
+Error ------------------------------------------------------------------------------------------- invalidation.js:271:58
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
-   invalidation.js:271:60
-   271|   if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
-                                                                   ^
+   invalidation.js:271:58
+   271|   if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
+                                                                 ^
 
 References:
    invalidation.js:37:15
@@ -7104,27 +7104,27 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:272:56
+Error ------------------------------------------------------------------------------------------- invalidation.js:272:54
 
 Refinement invalidated due to property assignment at [1]
 
-   invalidation.js:272:56
-   272|   if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
-                                                               ^^^
+   invalidation.js:272:54
+   272|   if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
+                                                             ^^^
 
 References:
    invalidation.js:272:22
-   272|   if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
+   272|   if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
                              ^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- invalidation.js:272:60
+Error ------------------------------------------------------------------------------------------- invalidation.js:272:58
 
 Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
 
-   invalidation.js:272:60
-   272|   if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
-                                                                   ^
+   invalidation.js:272:58
+   272|   if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
+                                                                 ^
 
 References:
    invalidation.js:37:15

@@ -268,8 +268,8 @@ declare var x: { b?: { ... } };
   if (a.b) { switch (p) { default: x.b = y; }          a.b.c; } // error
   if (a.b) { switch (p) { default: x.b = y; break; }   a.b.c; } // error
   if (a.b) { switch (x.b = y) {}                       a.b.c; } // error
-  if (a.b) { switch (x.b = y) { case true: }           a.b.c; } // error
-  if (a.b) { switch (x.b = y) { case true: break; }    a.b.c; } // error
+  if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
+  if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
   if (a.b) { switch (x.b = y) { default: }             a.b.c; } // error
   if (a.b) { switch (x.b = y) { default: break; }      a.b.c; } // error
 

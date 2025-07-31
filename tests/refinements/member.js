@@ -108,7 +108,8 @@
 {
   declare const x: {|
     top: 1,
+    bottom: 1,
   |}
 
-  if (x === x.top) {} // OK
+  if (x.top === x.bottom) {} // OK
 }
