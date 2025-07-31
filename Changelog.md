@@ -1,3 +1,9 @@
+### 0.278.0
+
+Likely to cause new Flow errors:
+* Hooks calls inside normal functions in component or hooks as conditional calls. They will get `react-rule-hook-conditional` error instead of `react-rule-hook` error.
+* Array literals that cannot be contextually typed will be inferred as an actual array type. It might cause additional errors. [example](https://flow.org/try/?fbclid=IwY2xjawLuPH5leHRuA2FlbQIxMQBicmlkETFpd1VmMlphSWVjQlIxOHhmAR6d0gQ9lDWShsIz_pxY8yeHKIg3er7dGn5hu3VMeSyhg54__AqVwQKsxcgLsg_aem_FQMAAHw5tPKK9ybGNCdifQ#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIqJQJQBeCUAbQAOiAYMQVVKSBLxRIALoSgD0BolAHc4McJVAICaJbUMA1sBKVsYJQBBah0AA8KrVEBVAD4lVBpZqJQASABKrDYAHkoIN3TRaJ77KYoAh-QBuQ3GiBbIMh1mK1MVBC67NGiUmSi8gvUUOJr0l9NZnMS2YNOAQfKDCV53iW61V6i1qC5EAO-FdsfIEAZewmEACoA)
+
 ### 0.277.1
 
 Notable bug fixes:
