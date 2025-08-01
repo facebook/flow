@@ -12,7 +12,7 @@ function bar(b: boolean) {
     do {
         var y:string = x;  // Error
         x = false; // Constrain writes error
-    } while (x === null);
+    } while (x == null);
     var z:string = x;  // Error
 }
 

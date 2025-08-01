@@ -31,9 +31,8 @@ setter('B');  // okay
 const x = null;
 const y = x && x.f.g;
 // `null` may reach `y` here, and so this should be reported as an error ('val'
-// cannot refine `null`). It does not, because we allow the check of 'val' <: TypeOf(y)
-// to expand the type of `y`.
-if (y === 'val') {} // error
+// cannot refine `null`).
+if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
 
 
 // Example 3

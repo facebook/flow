@@ -2504,13 +2504,13 @@ References:
                  ^ [1]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:36:11
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:35:11
 
 Invalid check of string literal `val` against null [1] because string literal `val` [2] is incompatible with null [1].
 [incompatible-type]
 
-   inclusion_check_widening.js:36:11
-   36| if (y === 'val') {} // error
+   inclusion_check_widening.js:35:11
+   35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
                  ^^^^^ [2]
 
 References:
@@ -2519,88 +2519,88 @@ References:
                  ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:44:14
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:43:14
 
 Invalid check of string literal `a` against key set [1] because property `a` is missing in object type [2].
 [prop-missing]
 
-   inclusion_check_widening.js:44:14
-   44| if (key2 === 'a') {} // error (key2 does not include 'a')
+   inclusion_check_widening.js:43:14
+   43| if (key2 === 'a') {} // error (key2 does not include 'a')
                     ^^^
 
 References:
-   inclusion_check_widening.js:41:28
-   41| type V<T: {...}> = { key2: $Keys<T> };
+   inclusion_check_widening.js:40:28
+   40| type V<T: {...}> = { key2: $Keys<T> };
                                   ^^^^^^^^ [1]
-   inclusion_check_widening.js:42:23
-   42| declare var column: V<{...}>;
+   inclusion_check_widening.js:41:23
+   41| declare var column: V<{...}>;
                              ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:57:9
+
+Refined at [1]
+
+   inclusion_check_widening.js:57:9
+   57|         prop !== null &&
+               ^^^^
+
+References:
+   inclusion_check_widening.js:56:9
+   56|         prop !== undefined &&
+               ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:58:9
 
-Refined at [1]
-
-   inclusion_check_widening.js:58:9
-   58|         prop !== null &&
-               ^^^^
-
-References:
-   inclusion_check_widening.js:57:9
-   57|         prop !== undefined &&
-               ^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- inclusion_check_widening.js:59:9
-
 Refined at [1] [2]
 
-   inclusion_check_widening.js:59:9
-   59|         prop !== 0 // error (0 incompatible with C)
+   inclusion_check_widening.js:58:9
+   58|         prop !== 0 // error (0 incompatible with C)
                ^^^^
 
 References:
-   inclusion_check_widening.js:57:9
-   57|         prop !== undefined &&
+   inclusion_check_widening.js:56:9
+   56|         prop !== undefined &&
                ^^^^^^^^^^^^^^^^^^ [1]
-   inclusion_check_widening.js:58:9
-   58|         prop !== null &&
+   inclusion_check_widening.js:57:9
+   57|         prop !== null &&
                ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:59:18
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:58:18
 
 Invalid check of number literal `0` against nullable `C` [1] because number literal `0` [2] is incompatible with
 `C` [3]. [incompatible-type]
 
-   inclusion_check_widening.js:59:18
-   59|         prop !== 0 // error (0 incompatible with C)
+   inclusion_check_widening.js:58:18
+   58|         prop !== 0 // error (0 incompatible with C)
                         ^ [2]
 
 References:
-   inclusion_check_widening.js:50:22
-   50| type State = { prop: ?C };
+   inclusion_check_widening.js:49:22
+   49| type State = { prop: ?C };
                             ^^ [1]
-   inclusion_check_widening.js:50:23
-   50| type State = { prop: ?C };
+   inclusion_check_widening.js:49:23
+   49| type State = { prop: ?C };
                              ^ [3]
 
 
-Error --------------------------------------------------------------------------------- inclusion_check_widening.js:69:2
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:68:2
 
 Cannot cast `key5` to string literal `a` because string [1] is incompatible with string literal `a` [2].
 [incompatible-cast]
 
-   inclusion_check_widening.js:69:2
-   69| (key5: 'a'); // error string ~> 'a'
+   inclusion_check_widening.js:68:2
+   68| (key5: 'a'); // error string ~> 'a'
         ^^^^
 
 References:
-   inclusion_check_widening.js:67:23
-   67| const {key5} = {key5: 'a'};
+   inclusion_check_widening.js:66:23
+   66| const {key5} = {key5: 'a'};
                              ^^^ [1]
-   inclusion_check_widening.js:69:8
-   69| (key5: 'a'); // error string ~> 'a'
+   inclusion_check_widening.js:68:8
+   68| (key5: 'a'); // error string ~> 'a'
               ^^^ [2]
 
 
@@ -11377,8 +11377,8 @@ Refined at [1]
 
 References:
    opaque_type.js:40:7
-   40|   if (elem !== null) {
-             ^^^^^^^^^^^^^ [1]
+   40|   if (elem != null) {
+             ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- property.js:5:12

@@ -37,7 +37,7 @@ function test_refine_to_nullish() {
   declare opaque type ME: number
   declare let elem: ME;
 
-  if (elem !== null) {
+  if (elem != null) {
     elem = elem;
   }
 
