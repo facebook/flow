@@ -20,7 +20,7 @@ var y: empty = a.b?.()?.c?.d;
 var x: empty = a.c?.d?.e;
 var w: empty = a.d?.e.f().g;
 
-declare var b: {onClick?: () => number};
+declare var b: {onClick?: null | (() => number)};
 var f: empty = b.onClick !== null ? b.onClick?.() : 42;
 
 declare var c: ?Array<?() => ?Array<?Array<number>>>;

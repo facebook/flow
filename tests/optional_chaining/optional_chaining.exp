@@ -1433,8 +1433,8 @@ Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because undefined
 
 References:
    method_calls.js:23:27
-   23| declare var b: {onClick?: () => number};
-                                 ^^^^^^^^^^^^ [1]
+   23| declare var b: {onClick?: null | (() => number)};
+                                 ^^^^^^^^^^^^^^^^^^^^^ [1]
    method_calls.js:24:8
    24| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
               ^^^^^ [2]
@@ -1450,9 +1450,9 @@ Cannot assign `b.onClick !== null ? b.onClick?.() : 42` to `f` because number [1
                                            ^^^^^^^^^^^^^
 
 References:
-   method_calls.js:23:33
-   23| declare var b: {onClick?: () => number};
-                                       ^^^^^^ [1]
+   method_calls.js:23:41
+   23| declare var b: {onClick?: null | (() => number)};
+                                               ^^^^^^ [1]
    method_calls.js:24:8
    24| var f: empty = b.onClick !== null ? b.onClick?.() : 42;
               ^^^^^ [2]
