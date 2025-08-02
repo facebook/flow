@@ -90,8 +90,8 @@ class RunQueue {
           'Parallelism must be >=1, given ' + String(this.parallelism),
         );
       }
-      this.todo.slice(0, this.parallelism).forEach(() => this.start()),
-        await donePromise;
+      (this.todo.slice(0, this.parallelism).forEach(() => this.start()),
+        await donePromise);
     } else {
       this.checkDone();
     }

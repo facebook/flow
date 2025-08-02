@@ -153,10 +153,10 @@ class Base<T: Object> {
     for (const flag of flags) {
       if (flag.type === 'string' || flag.type === 'enum') {
         if (argv[flag.name] === '') {
-          process.stderr.write(
+          (process.stderr.write(
             format('Missing required argument for flag: %s\n', flag.name),
           ),
-            this.showUsage(this.BAD_ARGS);
+            this.showUsage(this.BAD_ARGS));
         }
       }
       if (flag.type === 'enum') {
