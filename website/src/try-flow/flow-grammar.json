@@ -850,7 +850,7 @@
       "patterns": [
         {
           "name": "meta.match.js",
-          "begin": "(?<!\\.)\\s*\\b(match)\\s*(\\(.*\\))\\s*(\\{)\\s*$",
+          "begin": "(?<!\\.)\\s*\\b(match)\\s*(\\(.*\\))\\s*(\\{)\\s*",
           "end": "\\s*(\\})",
           "beginCaptures": {
             "1": {
@@ -874,18 +874,16 @@
             },
             {
               "begin": "\\s*(=>)\\s*",
-              "end": "\\s*(,|;)",
+              "end": "\\s*(?=(\\}|,)$)",
               "beginCaptures": {
                 "1": {
                   "name": "storage.type.function.arrow.js"
                 }
               },
-              "endCaptures": [
-                {
-                  "1": {"name": "meta.delimiter.comma.js"}
-                }
-              ],
               "patterns": [{"include": "#expression"}, {"include": "#curly-brackets"}]
+            },
+            {
+              "include": "#literal-comma"
             }
           ]
         }
