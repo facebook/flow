@@ -2,3 +2,6 @@
 all=true
 no_flowlib=false
 experimental.opaque_type_new_bound_syntax=true
+
+[libs]
+lib.js

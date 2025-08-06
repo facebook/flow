@@ -286,6 +286,44 @@ References:
                                       ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- lower_bounds_subtype.js:21:3
+
+Cannot cast `rendersMaybeOne` to `Node` because: [incompatible-cast]
+ - Either renders? `C` [1] is incompatible with `React.Element` [2].
+ - Or renders? `C` [1] is incompatible with string [2].
+
+   lower_bounds_subtype.js:21:3
+   21|   rendersMaybeOne as React.Node; // ok
+         ^^^^^^^^^^^^^^^
+
+References:
+   lower_bounds_subtype.js:17:34
+   17|   declare const rendersMaybeOne: renders? C;
+                                        ^^^^^^^^^^ [1]
+   lower_bounds_subtype.js:21:22
+   21|   rendersMaybeOne as React.Node; // ok
+                            ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- lower_bounds_subtype.js:22:3
+
+Cannot cast `rendersMany` to `Node` because: [incompatible-cast]
+ - Either renders* `C` [1] is incompatible with `React.Element` [2].
+ - Or renders* `C` [1] is incompatible with string [2].
+
+   lower_bounds_subtype.js:22:3
+   22|   rendersMany as React.Node; // ok
+         ^^^^^^^^^^^
+
+References:
+   lower_bounds_subtype.js:18:30
+   18|   declare const rendersMany: renders* C;
+                                    ^^^^^^^^^^ [1]
+   lower_bounds_subtype.js:22:18
+   22|   rendersMany as React.Node; // ok
+                        ^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:5:48
 
 number [1] is incompatible with `SuperType` [2]. [incompatible-type]
@@ -382,4 +420,7 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 25 errors
+Found 27 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
