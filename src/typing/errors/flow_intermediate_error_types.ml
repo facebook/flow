@@ -121,9 +121,18 @@ type constant_condition_kind =
   | UnawaitedPromise
   | UncalledFunction
 
+type strict_comparison_kind =
+  | StrictComparisonGeneral
+  | StrictComparisonNull of { null_side: [ `Left | `Right ] }
+  | StrictComparisonEmpty of {
+      is_lhs_empty: bool;
+      is_rhs_empty: bool;
+    }
+
 type 'loc strict_comparison_info = {
   left_precise_reason: 'loc virtual_reason;
   right_precise_reason: 'loc virtual_reason;
+  strict_comparison_kind: strict_comparison_kind;
 }
 
 module IncorrectType = struct

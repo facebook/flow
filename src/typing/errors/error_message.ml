@@ -1152,10 +1152,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         strict_comparison_opt =
           Base.Option.map
             strict_comparison_opt
-            ~f:(fun { left_precise_reason; right_precise_reason } ->
+            ~f:(fun { left_precise_reason; right_precise_reason; strict_comparison_kind } ->
               {
                 left_precise_reason = map_reason left_precise_reason;
                 right_precise_reason = map_reason right_precise_reason;
+                strict_comparison_kind;
               }
           );
       }

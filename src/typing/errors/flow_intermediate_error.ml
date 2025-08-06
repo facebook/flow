@@ -1660,21 +1660,39 @@ let to_printable_error :
       @
       (match strict_comparison_opt with
       | None -> [text "."]
-      | Some { left_precise_reason; right_precise_reason } ->
-        [
-          text ", because ";
-          ref left_precise_reason;
-          text " is not a subtype of ";
-          ref right_precise_reason;
-          text " and ";
-          ref right_precise_reason;
-          text " is not a subtype of ";
-          ref left_precise_reason;
-          text
-            ". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. ";
-          text
-            "If that happens, you can cast one side to the union of both types to pass the flow check. ";
-        ])
+      | Some { left_precise_reason; right_precise_reason; strict_comparison_kind } ->
+        (match strict_comparison_kind with
+        | StrictComparisonGeneral ->
+          [
+            text ", because ";
+            ref left_precise_reason;
+            text " is not a subtype of ";
+            ref right_precise_reason;
+            text " and ";
+            ref right_precise_reason;
+            text " is not a subtype of ";
+            ref left_precise_reason;
+            text
+              ". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. ";
+            text
+              "If that happens, you can cast one side to the union of both types to pass the flow check. ";
+          ]
+        | StrictComparisonNull { null_side } ->
+          let (null_side_reason, the_other_side_reason) =
+            match null_side with
+            | `Left -> (left_precise_reason, right_precise_reason)
+            | `Right -> (right_precise_reason, left_precise_reason)
+          in
+          [
+            text ", because";
+            no_desc_ref (loc_of_reason null_side_reason);
+            text " is null and ";
+            ref the_other_side_reason;
+            text " does not contain null. ";
+            text "Perhaps you meant to use `==`, which checks for both ";
+            text "`undefined` and `null`?";
+          ]
+        | _ -> [text "."]))
     | MessageCannotCompareNonStrict { lower; upper } ->
       [
         text "Cannot compare ";

@@ -1333,9 +1333,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:192:7
 
-Cannot compare `a` [1] to null [2], because `a` [1] is not a subtype of null [2] and null [2] is not a subtype of
-`a` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
-you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `a` [1] to null [2], because [2] is null and `a` [1] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:192:7
    192|   if (a === null){} // error
@@ -1352,9 +1351,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:194:7
 
-Cannot compare null [1] to `a` [2], because null [1] is not a subtype of `a` [2] and `a` [2] is not a subtype of
-null [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
-you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare null [1] to `a` [2], because [1] is null and `a` [2] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:194:7
    194|   if (null === a){} // error
@@ -1516,9 +1514,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:268:3
 
-Cannot compare `b` [1] to null [2], because string [3] is not a subtype of null [2] and null [2] is not a subtype of
-string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
-happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `b` [1] to null [2], because [2] is null and string [3] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:268:3
    268|   b === null; // error, null is not allowed
@@ -1538,9 +1535,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:269:3
 
-Cannot compare `b` [1] to null [2], because string [3] is not a subtype of null [2] and null [2] is not a subtype of
-string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
-happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `b` [1] to null [2], because [2] is null and string [3] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:269:3
    269|   b !== null; // error, null is not allowed
@@ -1560,9 +1556,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:270:3
 
-Cannot compare null [1] to `b` [2], because null [1] is not a subtype of string [3] and string [3] is not a subtype of
-null [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
-you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare null [1] to `b` [2], because [1] is null and string [3] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:270:3
    270|   null === b; // error, null is not allowed
@@ -1582,9 +1577,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:271:3
 
-Cannot compare null [1] to `b` [2], because null [1] is not a subtype of string [3] and string [3] is not a subtype of
-null [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
-you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare null [1] to `b` [2], because [1] is null and string [3] does not contain null. Perhaps you meant to use
+`==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    typed_check.js:271:3
    271|   null !== b; // error, null is not allowed

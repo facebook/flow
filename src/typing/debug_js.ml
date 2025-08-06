@@ -1314,11 +1314,24 @@ let dump_error_message =
         | None -> "None")
         (let open Flow_intermediate_error_types in
         match strict_comparison_opt with
-        | Some { left_precise_reason; right_precise_reason } ->
+        | Some { left_precise_reason; right_precise_reason; strict_comparison_kind } ->
           spf
-            "Some(%s, %s)"
+            "Some(%s, %s, %s)"
             (dump_reason cx left_precise_reason)
             (dump_reason cx right_precise_reason)
+            (match strict_comparison_kind with
+            | Flow_intermediate_error_types.StrictComparisonGeneral -> "StrictComparisonGeneral"
+            | Flow_intermediate_error_types.StrictComparisonNull { null_side } ->
+              spf
+                "StrictComparisonNull { null_side: %s }"
+                (match null_side with
+                | `Left -> "Left"
+                | `Right -> "Right")
+            | Flow_intermediate_error_types.StrictComparisonEmpty { is_lhs_empty; is_rhs_empty } ->
+              spf
+                "StrictComparisonEmpty { is_lhs_empty: %b; is_rhs_empty: %b }"
+                is_lhs_empty
+                is_rhs_empty)
         | None -> "None"
         )
     | ENonStrictEqualityComparison (reason1, reason2) ->

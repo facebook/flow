@@ -596,6 +596,15 @@ let detect_constant_conditions cx =
         ))
     banned_conditions
 
+type strict_comparison_result = {
+  l_reason: Reason.t;
+  r_reason: Reason.t;
+  l_singleton_reason: Reason.t;
+  r_singleton_reason: Reason.t;
+  primary_loc: ALoc.t;
+  kind: Flow_intermediate_error_types.strict_comparison_kind;
+}
+
 let check_strict_comparison cx all_strict_comparisons =
   Base.List.filter_map all_strict_comparisons ~f:(fun (loc, (left_ast, right_ast)) ->
       let ((_, left_t), _) = left_ast in
@@ -627,7 +636,17 @@ let check_strict_comparison cx all_strict_comparisons =
         || Flow_js.FlowJs.speculative_subtyping_succeeds cx left_filtered right_expanded
       in
       let allowed = None in
-      let banned = Some (l_reason, r_reason, l_singleton_reason, r_singleton_reason, loc) in
+      let banned =
+        Some
+          {
+            l_reason;
+            r_reason;
+            l_singleton_reason;
+            r_singleton_reason;
+            primary_loc = loc;
+            kind = Flow_intermediate_error_types.StrictComparisonGeneral;
+          }
+      in
       match (left_conc_t, right_conc_t) with
       | (AnyT _, _)
       | (_, AnyT _) ->
@@ -643,12 +662,22 @@ let check_strict_comparison cx all_strict_comparisons =
           allowed
       | (other, DefT (_, NullT)) when not (has_null_type cx other) ->
         if Context.enable_invalid_comparison_null_check cx then
-          banned
+          Base.Option.map banned ~f:(fun banned ->
+              {
+                banned with
+                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Right };
+              }
+          )
         else
           allowed
       | (DefT (_, NullT), other) when not (has_null_type cx other) ->
         if Context.enable_invalid_comparison_null_check cx then
-          banned
+          Base.Option.map banned ~f:(fun banned ->
+              {
+                banned with
+                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Left };
+              }
+          )
         else
           allowed
       | _ ->
@@ -663,7 +692,7 @@ let check_strict_comparison cx all_strict_comparisons =
 let detect_invalid_strict_comparison cx =
   let all_strict_comparisons = Context.get_all_strict_comparisons cx in
   Base.List.iter
-    ~f:(fun (l_reason, r_reason, l_singleton_reason, r_singleton_reason, primary_loc) ->
+    ~f:(fun { l_reason; r_reason; l_singleton_reason; r_singleton_reason; primary_loc; kind } ->
       Flow_js.add_output
         cx
         (Error_message.EComparison
@@ -676,6 +705,7 @@ let detect_invalid_strict_comparison cx =
                  {
                    Flow_intermediate_error_types.left_precise_reason = l_singleton_reason;
                    Flow_intermediate_error_types.right_precise_reason = r_singleton_reason;
+                   Flow_intermediate_error_types.strict_comparison_kind = kind;
                  };
            }
         ))
