@@ -601,11 +601,6 @@ type 'loc message =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
-  | MessageDollarCallArity of {
-      op: 'loc virtual_reason;
-      def: 'loc virtual_reason;
-      n: int;
-    }
   | MessageDuplicateClassMember of {
       name: string;
       static: bool;

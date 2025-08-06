@@ -3235,7 +3235,6 @@ let error_code_of_use_op use_op ~default =
     | (_, TypeArgCompatibility _)
     | (_, TypeParamBound _) ->
       Some IncompatibleTypeArg
-    | (_, CallFunCompatibility _) -> Some InvalidCallUtil
     | (None, _) -> None
   in
   Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)

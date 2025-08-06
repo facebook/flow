@@ -507,7 +507,6 @@ module rec TypeTerm : sig
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
-    | CallFunCompatibility of { n: int }
     | OpaqueTypeLowerBoundCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
@@ -4098,7 +4097,6 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | FunReturn _ -> "FunReturn"
   | ImplicitTypeParam -> "ImplicitTypeParam"
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
-  | CallFunCompatibility _ -> "CallFunCompatibility"
   | OpaqueTypeLowerBoundCompatibility _ -> "OpaqueTypeLowerBoundCompatibility"
   | OpaqueTypeUpperBoundCompatibility _ -> "OpaqueTypeUpperBoundCompatibility"
   | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"

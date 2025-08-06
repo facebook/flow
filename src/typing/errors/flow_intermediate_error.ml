@@ -208,10 +208,10 @@ let flip_frame = function
   | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
   | EnumRepresentationTypeCompatibility c ->
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
-  | ( CallFunCompatibility _ | TupleAssignment _ | TypeParamBound _ | OpaqueTypeLowerBound _
-    | OpaqueTypeUpperBound _ | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip
-    | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypeGuardCompatibility
-    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
+  | ( TupleAssignment _ | TypeParamBound _ | OpaqueTypeLowerBound _ | OpaqueTypeUpperBound _
+    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
+    | MappedTypeKeyCompatibility _ | TypeGuardCompatibility | RendersCompatibility
+    | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -710,7 +710,6 @@ let rec make_intermediate_error :
       | Frame (ReactConfigCheck, use_op)
       | Frame (ReactGetConfig _, use_op)
       | Frame (UnifyFlip, use_op)
-      | Frame (CallFunCompatibility _, use_op)
       | Frame (MappedTypeKeyCompatibility _, use_op)
       | Frame (TupleAssignment _, use_op)
       | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
@@ -868,7 +867,6 @@ let rec make_intermediate_error :
               def
           in
           MessageFunctionRequiresAnotherArgument { def; from = None }
-        | Frame (CallFunCompatibility { n }, _) -> MessageDollarCallArity { op; def; n }
         | _ -> MessageFunctionRequiresAnotherArgument { def; from = Some op }
       in
       make_error op message
@@ -2664,21 +2662,6 @@ let to_printable_error :
       let upper_desc = loop (desc_of_reason upper) in
       let upper_r = replace_desc_reason upper_desc upper in
       [ref lower_r; text " does not render "; ref upper_r]
-    | MessageDollarCallArity { op; def; n } ->
-      let exp =
-        if n = 1 then
-          "one argument"
-        else
-          string_of_int n ^ " arguments"
-      in
-      [
-        ref op;
-        text (spf " passes only %s to the provided function type, but " exp);
-        ref def;
-        text (spf " expects more than %s. See " exp);
-        text Friendly.(docs.call);
-        text " for documentation";
-      ]
     | MessageDuplicateClassMember { name; static } ->
       let member_type =
         if static then

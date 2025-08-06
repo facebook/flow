@@ -73,7 +73,6 @@ type error_code =
   | IncompatibleUse
   | IncompatibleVariance
   | InternalType
-  | InvalidCallUtil
   | InvalidCatchParameterAnnotation
   | InvalidCompare
   | InvalidComputedProp
@@ -311,7 +310,6 @@ let string_of_code : error_code -> string = function
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"
   | InternalType -> "internal-type"
-  | InvalidCallUtil -> "invalid-call-util"
   | InvalidCatchParameterAnnotation -> "invalid-catch-parameter-annotation"
   | InvalidCompare -> "invalid-compare"
   | InvalidComputedProp -> "invalid-computed-prop"

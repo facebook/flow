@@ -402,7 +402,6 @@ let rec mod_loc_of_virtual_use_op f =
     | ImplicitTypeParam -> ImplicitTypeParam
     | IndexerKeyCompatibility { lower; upper } ->
       IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
-    | CallFunCompatibility { n } -> CallFunCompatibility { n }
     | OpaqueTypeLowerBoundCompatibility { lower; upper } ->
       OpaqueTypeLowerBoundCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | OpaqueTypeUpperBoundCompatibility { lower; upper } ->
