@@ -1687,8 +1687,13 @@ let to_printable_error :
             text " is null and ";
             ref the_other_side_reason;
             text " does not contain null. ";
-            text "Perhaps you meant to use `==`, which checks for both ";
-            text "`undefined` and `null`?";
+            text "Perhaps you meant to use ";
+            code "==";
+            text ", which checks for both ";
+            code "undefined";
+            text " and ";
+            code "null";
+            text "?";
           ]
         | StrictComparisonEmpty { is_lhs_empty; is_rhs_empty } ->
           (match (is_lhs_empty, is_rhs_empty) with
