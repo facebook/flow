@@ -1433,7 +1433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:66:3
 
-Cannot cast `!42` to empty because boolean literal `false` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `!42` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
    expression.js:66:3
    66| ((!42: empty): T).p as empty;

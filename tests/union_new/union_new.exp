@@ -253,7 +253,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `(new Record()).set` because: [incompatible-call]
  - Either string [1] is incompatible with number [2].
- - Or string [3] is incompatible with string literal `bar` [4].
+ - Or string literal `foo` [3] is incompatible with string literal `bar` [4].
 
    test26.js:20:14
    20| new Record().set('foo', '42');

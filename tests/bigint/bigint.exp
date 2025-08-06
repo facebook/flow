@@ -101,7 +101,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3
 
-Cannot cast `x` to `typeof b` because bigint literal `0n` [1] is incompatible with bigint [2]. [incompatible-cast]
+Cannot cast `x` to `typeof b` because bigint literal `0n` [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
 
    bigint.js:47:3
    47|   x as typeof b; // ERROR typeof b is `1n`
@@ -205,7 +206,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:82:3
 
-Cannot cast `x` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+Cannot cast `x` to bigint literal `1n` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
 [incompatible-cast]
 
    bigint.js:82:3
@@ -223,7 +224,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:85:3
 
-Cannot cast `y` to bigint literal `-1n` because bigint [1] is incompatible with bigint literal `-1n` [2].
+Cannot cast `y` to bigint literal `-1n` because bigint literal `2n` [1] is incompatible with bigint literal `-1n` [2].
 [incompatible-cast]
 
    bigint.js:85:3
@@ -277,7 +278,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imported.js:5:2
 
-Cannot cast `x` to empty because bigint literal `1n` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
 
    imported.js:5:2
    5| (x : empty); // error
@@ -311,7 +312,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:11:2
 
-Cannot cast `z` to empty because bigint literal `-1n` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `z` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
 
    imported.js:11:2
    11| (z : empty); // error

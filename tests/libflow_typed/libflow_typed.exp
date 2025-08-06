@@ -1,6 +1,7 @@
 Error -------------------------------------------------------------------------------------------------- libtest.js:2:25
 
-Cannot assign `"Stegosaurus"` to `dino` because string [1] is incompatible with `Dinosaur` [2]. [incompatible-type]
+Cannot assign `"Stegosaurus"` to `dino` because string literal `Stegosaurus` [1] is incompatible with `Dinosaur` [2].
+[incompatible-type]
 
    libtest.js:2:25
    2| const dino : Dinosaur = "Stegosaurus"

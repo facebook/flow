@@ -590,7 +590,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:3
 
-Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+=` with operands number [1] and boolean literal `false` [2] [unsafe-addition]
 
    test.js:83:3
    83|   x.c.e! += false; // incompatible operation
@@ -607,7 +607,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:88:3
 
-Cannot use operator `+=` with operands null [1] and number [2] [unsafe-addition]
+Cannot use operator `+=` with operands null [1] and number literal `10` [2] [unsafe-addition]
 
    test.js:88:3
    88|   y += 10; // error
@@ -624,7 +624,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:3
 
-Cannot use operator `+=` with operands number [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+=` with operands number [1] and boolean literal `false` [2] [unsafe-addition]
 
    test.js:92:3
    92|   w! += false; // error incompatible

@@ -712,7 +712,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot use operator `**=` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `**=` with operands string [1] and number literal `2` [2] [unsafe-arithmetic]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -845,7 +845,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot use operator `*=` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*=` with operands string [1] and number literal `2` [2] [unsafe-arithmetic]
 
    mult.js:12:1
    12| y *= 2; // error

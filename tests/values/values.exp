@@ -540,7 +540,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:69:2
 
-Cannot cast `'DIAMONDS'` to `SuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'DIAMONDS'` to `SuiteEnum` because string literal `DIAMONDS` [1] is incompatible with `$Values` [2].
+[incompatible-cast]
 
    object_types.js:69:2
    69| ('DIAMONDS': SuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -554,7 +555,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:70:2
 
-Cannot cast `'Magic'` to `SuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'Magic'` to `SuiteEnum` because string literal `Magic` [1] is incompatible with `$Values` [2].
+[incompatible-cast]
 
    object_types.js:70:2
    70| ('Magic': SuiteEnum); // Error: 'Magic' is not a value.
@@ -582,8 +584,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:77:12
 
-Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string [1] is incompatible with `$Values` [2].
-[incompatible-call]
+Cannot call `magicTrick` with `'DIAMONDS'` bound to `suite` because string literal `DIAMONDS` [1] is incompatible with
+`$Values` [2]. [incompatible-call]
 
    object_types.js:77:12
    77| magicTrick('DIAMONDS'); // Error: 'DIAMONDS' is a key, but not a value.
@@ -597,8 +599,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:78:12
 
-Cannot call `magicTrick` with `'Magic'` bound to `suite` because string [1] is incompatible with `$Values` [2].
-[incompatible-call]
+Cannot call `magicTrick` with `'Magic'` bound to `suite` because string literal `Magic` [1] is incompatible with
+`$Values` [2]. [incompatible-call]
 
    object_types.js:78:12
    78| magicTrick('Magic'); // Error: 'Magic' is not a value.
@@ -627,7 +629,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:93:2
 
-Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'DIAMONDS'` to `FrozenSuiteEnum` because string literal `DIAMONDS` [1] is incompatible with `$Values` [2].
+[incompatible-cast]
 
    object_types.js:93:2
    93| ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -641,7 +644,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:94:2
 
-Cannot cast `'Magic'` to `FrozenSuiteEnum` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'Magic'` to `FrozenSuiteEnum` because string literal `Magic` [1] is incompatible with `$Values` [2].
+[incompatible-cast]
 
    object_types.js:94:2
    94| ('Magic': FrozenSuiteEnum); // Error: 'Magic' is not a value.
@@ -711,7 +715,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:124:2
 
-Cannot cast `'s'` to `$Values` because string [1] is incompatible with `$Values` [2]. [incompatible-cast]
+Cannot cast `'s'` to `$Values` because string literal `s` [1] is incompatible with `$Values` [2]. [incompatible-cast]
 
    object_types.js:124:2
    124| ('s': $Values<IfaceWithDictAndProps>); // ERROR

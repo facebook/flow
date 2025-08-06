@@ -303,7 +303,7 @@ class C<X>
 file.js:231:18,231:18
 
 At file.js:241:13
-(x: number | string, y: number | string) => void
+(x: string | number, y: string | number) => void
 file.js:241:17,241:17
 
 At file.js:250:13

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------- annotation_inference_regression_test/test.js:2:1
 
-Cannot cast `1` to `R` because number [1] does not render `C` [2]. [incompatible-cast]
+Cannot cast `1` to `R` because number literal `1` [1] does not render `C` [2]. [incompatible-cast]
 
    annotation_inference_regression_test/test.js:2:1
    2| 1 as R; // error
@@ -618,7 +618,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- renders_star.js:9:2
 
-Cannot cast `true` to renders* `MenuItem` because boolean [1] does not render `MenuItem` [2]. [incompatible-cast]
+Cannot cast `true` to renders* `MenuItem` because boolean literal `true` [1] does not render `MenuItem` [2].
+[incompatible-cast]
 
    renders_star.js:9:2
    9| (true: renders* MenuItem); // ERROR

@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:13
 
-Cannot create `Foo` element because number [1] is incompatible with number literal `42` [2] in property `bar`.
-[incompatible-type]
+Cannot create `Foo` element because number literal `43` [1] is incompatible with number literal `42` [2] in property
+`bar`. [incompatible-type]
 
    custom-jsx.js:16:13
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -15,8 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:43
 
-Cannot create `Foo` element because string [1] is incompatible with string literal `a` [2] in property `foo`.
-[incompatible-type]
+Cannot create `Foo` element because string literal `b` [1] is incompatible with string literal `a` [2] in property
+`foo`. [incompatible-type]
 
    custom-jsx.js:16:43
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -30,7 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- custom-jsx.js:17:6
 
-Cannot create `Foo` element because number [1] is incompatible with number literal `42` [2]. [incompatible-type]
+Cannot create `Foo` element because number literal `43` [1] is incompatible with number literal `42` [2].
+[incompatible-type]
 
    custom-jsx.js:17:6
    17|     {43 /* error 43 ~> 42 */}
@@ -899,7 +900,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:218:7
 
-Cannot call `set` with `2` bound to `y` because number [1] is incompatible with number literal `1` [2].
+Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incompatible with number literal `1` [2].
 [incompatible-call]
 
    imported.js:218:7
@@ -914,8 +915,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:225:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    imported.js:225:11
    225|   set({f: 2}); // error
@@ -959,8 +960,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:247:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
+Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+[incompatible-call]
 
    imported.js:247:11
    247|   set({f: "blah"}); // error "blah" ~> 1
@@ -974,8 +975,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:249:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    imported.js:249:11
    249|   set({f: 2}); // error 2 ~> 1
@@ -989,8 +990,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:250:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number literal `1` [2] in
-property `f`. [incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `3` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    imported.js:250:11
    250|   set({f: 3}); // error 3 ~> 1
@@ -1158,8 +1159,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_pragma.js:12:27
 
-Cannot create `C` element because string [1] is incompatible with string literal `BAZ` [2] in property `bar` of array
-element of property `foo`. [incompatible-type]
+Cannot create `C` element because string literal `BAK` [1] is incompatible with string literal `BAZ` [2] in property
+`bar` of array element of property `foo`. [incompatible-type]
 
    jsx_pragma.js:12:27
    12| const c2 = <C foo={[{bar: 'BAK'}]} />; // error 'BAZ' != 'BAK'
@@ -1173,8 +1174,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:37:3
 
-Cannot cast `abc` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    local.js:37:3
    37|   abc as "def" // error "abc" ~> "def"
@@ -1191,7 +1192,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:39:8
 
-Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
 
    local.js:39:8
    39|   _ as "def" as typeof abc; // error "def" ~> "abc"
@@ -1205,7 +1207,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:44:3
 
-Cannot cast `one` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+Cannot cast `one` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
    local.js:44:3
@@ -1223,8 +1225,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:46:3
 
-Cannot cast `minusOne` to number literal `0` because number [1] is incompatible with number literal `0` [2].
-[incompatible-cast]
+Cannot cast `minusOne` to number literal `0` because number literal `-1` [1] is incompatible with number literal
+`0` [2]. [incompatible-cast]
 
    local.js:46:3
    46|   minusOne as 0; // error -1 ~> 0
@@ -1241,7 +1243,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:48:8
 
-Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
 
    local.js:48:8
    48|   _ as 2 as typeof one; // error 2 ~> 1
@@ -1255,7 +1258,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:50:8
 
-Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    local.js:50:8
    50|   _ as 0 as typeof minusOne; // error 0 ~> -1
@@ -1269,8 +1273,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:55:3
 
-Cannot cast `tru` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
+Cannot cast `tru` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
 
    local.js:55:3
    55|   tru as false // error true ~> false
@@ -1305,7 +1309,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:59:8
 
-Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean [2].
+Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
    local.js:59:8
@@ -1335,8 +1339,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:66:3
 
-Cannot cast `bigOne` to bigint literal `2n` because bigint [1] is incompatible with bigint literal `2n` [2].
-[incompatible-cast]
+Cannot cast `bigOne` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
+`2n` [2]. [incompatible-cast]
 
    local.js:66:3
    66|   bigOne as 2n // error 1n ~> 2n
@@ -1353,7 +1357,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:68:8
 
-Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint [2]. [incompatible-cast]
+Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
 
    local.js:68:8
    68|   _ as 2n as typeof bigOne; // error 2n ~> 1n
@@ -1367,8 +1372,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:73:3
 
-Cannot cast `abcRef` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    local.js:73:3
    73|   abcRef as "def" // error "abc" ~> "def"
@@ -1385,7 +1390,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:75:8
 
-Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
 
    local.js:75:8
    75|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
@@ -1399,7 +1405,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:80:3
 
-Cannot cast `oneRef` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+Cannot cast `oneRef` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
    local.js:80:3
@@ -1417,7 +1423,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:82:8
 
-Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
 
    local.js:82:8
    82|   _ as 2 as typeof oneRef; // error 2 ~> 1
@@ -1431,8 +1438,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:87:3
 
-Cannot cast `truRef` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
+Cannot cast `truRef` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
+`false` [2]. [incompatible-cast]
 
    local.js:87:3
    87|   truRef as false // error true ~> false
@@ -1449,7 +1456,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:89:8
 
-Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean [2].
+Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
    local.js:89:8
@@ -1464,8 +1471,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:94:3
 
-Cannot cast `bigOneRef` to bigint literal `2n` because bigint [1] is incompatible with bigint literal `2n` [2].
-[incompatible-cast]
+Cannot cast `bigOneRef` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
+`2n` [2]. [incompatible-cast]
 
    local.js:94:3
    94|   bigOneRef as 2n // error 1n ~> 2n
@@ -1482,7 +1489,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:96:8
 
-Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint [2].
+Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
 [incompatible-cast]
 
    local.js:96:8
@@ -1713,8 +1720,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:123:3
 
-Cannot cast `asConst.abc` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `asConst.abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    local.js:123:3
    123|   asConst.abc as "def"; // error "abc" ~> "def"
@@ -1731,8 +1738,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:124:3
 
-Cannot cast `asConst.abcRef` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `asConst.abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string
+literal `def` [2]. [incompatible-cast]
 
    local.js:124:3
    124|   asConst.abcRef as "def"; // error "abc" ~> "def"
@@ -1749,7 +1756,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:125:8
 
-Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string [2].
+Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    local.js:125:8
@@ -1764,8 +1771,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:126:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string [2].
-[incompatible-cast]
+Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string literal
+`abc` [2]. [incompatible-cast]
 
    local.js:126:8
    126|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
@@ -1779,7 +1786,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:127:8
 
-Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
 
    local.js:127:8
    127|   _ as string as typeof asConst.abc; // error string ~> "abc"
@@ -1793,7 +1801,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:128:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string literal `abc` [2].
+[incompatible-cast]
 
    local.js:128:8
    128|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
@@ -2096,7 +2105,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:230:7
 
-Cannot call `set` with `2` bound to `y` because number [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-call]
 
    local.js:230:7
    230|   set(2); // error 2 ~> 1
@@ -2110,8 +2120,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:237:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    local.js:237:11
    237|   set({f: 2}); // error
@@ -2170,8 +2180,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:261:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    local.js:261:11
    261|   set({f: 2}); // error 2 ~> 1
@@ -2185,8 +2195,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:262:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with number [2] in property `f`.
-[incompatible-call]
+Cannot call `set` with object literal bound to `y` because number literal `3` [1] is incompatible with number literal
+`1` [2] in property `f`. [incompatible-call]
 
    local.js:262:11
    262|   set({f: 3}); // error 3 ~> 1
@@ -2242,8 +2252,8 @@ This condition is truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- local.js:399:3
 
-Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    local.js:399:3
    399|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -2260,8 +2270,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:405:3
 
-Cannot cast `foo(...)` to string literal `def` because string [1] is incompatible with string literal `def` [2].
-[incompatible-cast]
+Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
+`def` [2]. [incompatible-cast]
 
    local.js:405:3
    405|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -2278,7 +2288,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:415:3
 
-Cannot cast `m1` to string literal `a` because string [1] is incompatible with string literal `a` [2].
+Cannot cast `m1` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
 [incompatible-cast]
 
    local.js:415:3
@@ -2296,7 +2306,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:416:3
 
-Cannot cast `m1` to string literal `b` because string [1] is incompatible with string literal `b` [2].
+Cannot cast `m1` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
 [incompatible-cast]
 
    local.js:416:3
@@ -2314,7 +2324,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:423:3
 
-Cannot cast `m2` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `m2` to string literal `abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
 [incompatible-cast]
 
    local.js:423:3
@@ -2332,7 +2342,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:424:3
 
-Cannot cast `m2` to string literal `def` because string [1] is incompatible with string literal `def` [2].
+Cannot cast `m2` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
    local.js:424:3
@@ -2350,7 +2360,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:430:3
 
-Cannot cast `x` to string literal `def` because string [1] is incompatible with string literal `def` [2].
+Cannot cast `x` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
 [incompatible-cast]
 
    local.js:430:3
@@ -2482,8 +2492,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
-Cannot cast object literal to `$ReadOnly` because string [1] is incompatible with string literal `b` [2] in property
-`a`. [incompatible-cast]
+Cannot cast object literal to `$ReadOnly` because string literal `a` [1] is incompatible with string literal `b` [2] in
+property `a`. [incompatible-cast]
 
    local.js:484:16
    484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
@@ -2531,7 +2541,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:572:3
 
-Cannot cast `x2` to number literal `-3` because number [1] is incompatible with number literal `-3` [2].
+Cannot cast `x2` to number literal `-3` because number literal `-2` [1] is incompatible with number literal `-3` [2].
 [incompatible-cast]
 
    local.js:572:3
@@ -2549,7 +2559,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:575:3
 
-Cannot cast `x3` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
+Cannot cast `x3` to number literal `-2` because number literal `2` [1] is incompatible with number literal `-2` [2].
 [incompatible-cast]
 
    local.js:575:3
@@ -2585,7 +2595,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:587:3
 
-Cannot cast `b2` to bigint literal `-3n` because bigint [1] is incompatible with bigint literal `-3n` [2].
+Cannot cast `b2` to bigint literal `-3n` because bigint literal `-2n` [1] is incompatible with bigint literal `-3n` [2].
 [incompatible-cast]
 
    local.js:587:3
@@ -2603,7 +2613,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:590:3
 
-Cannot cast `b3` to bigint literal `-2n` because bigint [1] is incompatible with bigint literal `-2n` [2].
+Cannot cast `b3` to bigint literal `-2n` because bigint literal `2n` [1] is incompatible with bigint literal `-2n` [2].
 [incompatible-cast]
 
    local.js:590:3
@@ -2621,8 +2631,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:612:3
 
-Cannot cast template string to string literal `b` because string [1] is incompatible with string literal `b` [2].
-[incompatible-cast]
+Cannot cast template string to string literal `b` because string literal `a` [1] is incompatible with string literal
+`b` [2]. [incompatible-cast]
 
    local.js:612:3
    612|   `a` as 'b'; // error
@@ -2650,8 +2660,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
-Cannot call `Set` with array literal bound to `iterable` because string [1] is incompatible with union type [2] in type
-argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+Cannot call `Set` with array literal bound to `iterable` because string literal `C` [1] is incompatible with union
+type [2] in type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
 
    local.js:658:20
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
@@ -2699,8 +2709,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
-Cannot call `f` with `'a'` bound to `literalValue` because string [1] is incompatible with string literal `b` [2].
-[incompatible-call]
+Cannot call `f` with `'a'` bound to `literalValue` because string literal `a` [1] is incompatible with string literal
+`b` [2]. [incompatible-call]
 
    nested_generic_calls.js:15:24
    15|   const y0: C<'b'> = f('a'); // error 'a' ~> 'b'
@@ -2735,8 +2745,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:47
 
-Cannot call `f` with `42` bound to `literalValue` because number [1] is incompatible with number literal `43` [2].
-[incompatible-call]
+Cannot call `f` with `42` bound to `literalValue` because number literal `42` [1] is incompatible with number literal
+`43` [2]. [incompatible-call]
 
    nested_generic_calls.js:27:47
    27|   const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
@@ -2750,8 +2760,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:58
 
-Cannot call `f` with object literal bound to `literalValue` because number [1] is incompatible with number literal
-`43` [2] in index 0 of property `f`. [incompatible-call]
+Cannot call `f` with object literal bound to `literalValue` because number literal `42` [1] is incompatible with number
+literal `43` [2] in index 0 of property `f`. [incompatible-call]
 
    nested_generic_calls.js:33:58
    33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
@@ -2765,8 +2775,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37
 
-Cannot assign `object(...)` to `example3` because string [1] is incompatible with union type [2] in property `format` of
-type argument `V` [3]. [incompatible-type-arg]
+Cannot assign `object(...)` to `example3` because string literal `C` [1] is incompatible with union type [2] in property
+`format` of type argument `V` [3]. [incompatible-type-arg]
 
    nested_generic_calls.js:85:37
                                            v---------------------------------

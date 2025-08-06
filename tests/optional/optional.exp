@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
 
-Cannot assign number to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number literal `0` to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:15
 
-Cannot assign number to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number literal `0` to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
@@ -188,7 +188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:26
 
-Cannot assign string to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign string literal `hello` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:7:26
    7| function qux(x: number = "hello", ...y: [string, mixed]):string { foo(x); return y[0]; } // error: string ~> number

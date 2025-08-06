@@ -1456,7 +1456,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- reference_order/test.js:9:2
 
-Cannot cast array literal to tuple type because number literal `42` [1] is incompatible with empty [2] in index 0.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 0.
 [incompatible-cast]
 
    reference_order/test.js:9:2
@@ -1474,7 +1474,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- reference_order/test.js:9:5
 
-Cannot cast array literal to tuple type because number literal `42` [1] is incompatible with empty [2] in index 1.
+Cannot cast array literal to tuple type because number [1] is incompatible with empty [2] in index 1.
 [incompatible-cast]
 
    reference_order/test.js:9:5

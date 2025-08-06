@@ -323,7 +323,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:167:7
 
-Cannot cast `this.p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+Cannot cast `this.p` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
 [incompatible-cast]
 
    test.js:167:7
@@ -395,8 +395,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:181:7
 
-Cannot cast `RefinementClashes.q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+Cannot cast `RefinementClashes.q` to number literal `3` because number literal `4` [1] is incompatible with number
+literal `3` [2]. [incompatible-cast]
 
    test.js:181:7
    181|       RefinementClashes.q as 3; // Error, RefinementClashes.#q doesnt refine RefinementClashes.q

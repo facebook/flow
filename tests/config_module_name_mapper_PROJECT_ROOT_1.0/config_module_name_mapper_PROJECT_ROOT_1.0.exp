@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:4:17
 
-Cannot assign `test` to `b` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `test` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:4:17
    4| var b: string = test; // Error: number ~> string

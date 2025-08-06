@@ -2463,8 +2463,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- use_hook.js:26:7
 
 Cannot call `use` with `0` bound to `usable` because: [incompatible-call]
- - Either number [1], a primitive, cannot be used as a subtype of `Thenable` [2]. You can wrap it in `new Number(...))`
-   to turn it into an object and attempt to use it as a subtype of an interface.
+ - Either number literal `0` [1], a primitive, cannot be used as a subtype of `Thenable` [2]. You can wrap it in
+   `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with `React.Context` [3].
 
    use_hook.js:26:7

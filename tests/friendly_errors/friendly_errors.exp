@@ -947,7 +947,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:8:24
 
-number [1] is not a class. [not-a-class]
+number literal `42` [1] is not a class. [not-a-class]
 
    misc-incompatibles.js:8:24
    8| declare class X mixins Y {}
@@ -975,7 +975,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:14:3
 
-Cannot access object with computed property using boolean [1]. [invalid-computed-prop]
+Cannot access object with computed property using boolean literal `true` [1]. [invalid-computed-prop]
 
    14| o[true];
          ^^^^ [1]
@@ -983,8 +983,9 @@ Cannot access object with computed property using boolean [1]. [invalid-computed
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:15:3
 
-Cannot use boolean [1] to assign a computed property. Computed properties may only be numeric or string literal values.
-See https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+Cannot use boolean literal `true` [1] to assign a computed property. Computed properties may only be numeric or string
+literal values. See https://flow.org/en/docs/types/literals/ for more information on literal types.
+[invalid-computed-prop]
 
    15| o[true] = 42;
          ^^^^ [1]

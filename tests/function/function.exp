@@ -557,8 +557,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:45:11
 
-Cannot call `f` with object literal bound to `y` because string [1] is incompatible with string literal `bar` [2] in
-property `x`. [incompatible-call]
+Cannot call `f` with object literal bound to `y` because string literal `foo` [1] is incompatible with string literal
+`bar` [2] in property `x`. [incompatible-call]
 
    call.js:45:11
    45|     f({x: "foo"}); // error, "foo" !~> "bar"
@@ -572,8 +572,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:51:11
 
-Cannot call `f` with object literal bound to `y` because number [1] is incompatible with number literal `123` [2] in
-property `x`. [incompatible-call]
+Cannot call `f` with object literal bound to `y` because number literal `234` [1] is incompatible with number literal
+`123` [2] in property `x`. [incompatible-call]
 
    call.js:51:11
    51|     f({x: 234}); // error, 234 !~> 123
@@ -587,8 +587,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:57:11
 
-Cannot call `f` with object literal bound to `y` because boolean [1] is incompatible with boolean literal `false` [2] in
-property `x`. [incompatible-call]
+Cannot call `f` with object literal bound to `y` because boolean literal `true` [1] is incompatible with boolean literal
+`false` [2] in property `x`. [incompatible-call]
 
    call.js:57:11
    57|     f({x: true}); // error, true !~> false

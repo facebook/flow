@@ -126,7 +126,7 @@ Cannot resolve name `a`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------------------- expression.js:144:10
 
-Cannot assign `match` to `out` because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot assign `match` to `out` because string literal `xxx` [1] is incompatible with union type [2]. [incompatible-type]
 
    expression.js:144:10
    144|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'

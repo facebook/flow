@@ -1437,7 +1437,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:9
 
-Cannot assign `'BAR'` to `b.FOO` because string [1] is incompatible with string literal `FOO` [2]. [incompatible-type]
+Cannot assign `'BAR'` to `b.FOO` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
+[incompatible-type]
 
    issue-2674.js:7:9
    7| b.FOO = 'BAR'; // error

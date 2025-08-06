@@ -557,8 +557,8 @@ References:
 
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:218:22
 
-Cannot create `React.Fragment` element because number [1] is incompatible with number [1] in array element of property
-`children`. Arrays are invariantly typed. See
+Cannot create `React.Fragment` element because number [1] is incompatible with number literal `3` [1] in array element
+of property `children`. Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
@@ -586,9 +586,9 @@ References:
 Error --------------------------------------------------------------------------------------------- intersections.js:8:3
 
 Cannot call `foo` because: [incompatible-call]
- - Either string [1] is incompatible with string literal `boolean` [2].
- - Or string [1] is incompatible with string literal `str` [3].
- - Or string [1] is incompatible with string literal `num` [4].
+ - Either string literal `a` [1] is incompatible with string literal `boolean` [2].
+ - Or string literal `a` [1] is incompatible with string literal `str` [3].
+ - Or string literal `a` [1] is incompatible with string literal `num` [4].
 
    intersections.js:8:3
    8|   foo('a', (x) => { (x: number); }); // error

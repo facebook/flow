@@ -159,8 +159,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:24
 
-Cannot create `Com` element because number [1] is incompatible with number literal `1` [2] in the third argument.
-[incompatible-type]
+Cannot create `Com` element because number literal `2` [1] is incompatible with number literal `1` [2] in the third
+argument. [incompatible-type]
 
    test.js:21:24
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -174,8 +174,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:27
 
-Cannot create `Com` element because number [1] is incompatible with number literal `2` [2] in the fourth argument.
-[incompatible-type]
+Cannot create `Com` element because number literal `3` [1] is incompatible with number literal `2` [2] in the fourth
+argument. [incompatible-type]
 
    test.js:21:27
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error

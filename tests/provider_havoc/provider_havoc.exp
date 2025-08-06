@@ -441,56 +441,56 @@ References:
 Error ------------------------------------------------------------------------------------------------ truncate.js:106:5
 
 Cannot assign `"hello"` to `y` because: [incompatible-type]
- - Either string [1] is incompatible with string literal `a1` [2].
- - Or string [1] is incompatible with string literal `a2` [3].
- - Or string [1] is incompatible with string literal `a3` [4].
- - Or string [1] is incompatible with string literal `a4` [5].
- - Or string [1] is incompatible with string literal `a5` [6].
- - Or string [1] is incompatible with string literal `a6` [7].
- - Or string [1] is incompatible with string literal `a7` [8].
- - Or string [1] is incompatible with string literal `a8` [9].
- - Or string [1] is incompatible with string literal `a9` [10].
- - Or string [1] is incompatible with string literal `a10` [11].
- - Or string [1] is incompatible with string literal `a11` [12].
- - Or string [1] is incompatible with string literal `a12` [13].
- - Or string [1] is incompatible with string literal `a13` [14].
- - Or string [1] is incompatible with string literal `a14` [15].
- - Or string [1] is incompatible with string literal `a15` [16].
- - Or string [1] is incompatible with string literal `a16` [17].
- - Or string [1] is incompatible with string literal `a17` [18].
- - Or string [1] is incompatible with string literal `a18` [19].
- - Or string [1] is incompatible with string literal `a19` [20].
- - Or string [1] is incompatible with string literal `a20` [21].
- - Or string [1] is incompatible with string literal `a21` [22].
- - Or string [1] is incompatible with string literal `a22` [23].
- - Or string [1] is incompatible with string literal `a23` [24].
- - Or string [1] is incompatible with string literal `a24` [25].
- - Or string [1] is incompatible with string literal `a25` [26].
- - Or string [1] is incompatible with string literal `a26` [27].
- - Or string [1] is incompatible with string literal `a27` [28].
- - Or string [1] is incompatible with string literal `a28` [29].
- - Or string [1] is incompatible with string literal `a29` [30].
- - Or string [1] is incompatible with string literal `a30` [31].
- - Or string [1] is incompatible with string literal `a31` [32].
- - Or string [1] is incompatible with string literal `a32` [33].
- - Or string [1] is incompatible with string literal `a33` [34].
- - Or string [1] is incompatible with string literal `a34` [35].
- - Or string [1] is incompatible with string literal `a35` [36].
- - Or string [1] is incompatible with string literal `a36` [37].
- - Or string [1] is incompatible with string literal `a37` [38].
- - Or string [1] is incompatible with string literal `a38` [39].
- - Or string [1] is incompatible with string literal `a39` [40].
- - Or string [1] is incompatible with string literal `a40` [41].
- - Or string [1] is incompatible with string literal `a41` [42].
- - Or string [1] is incompatible with string literal `a42` [43].
- - Or string [1] is incompatible with string literal `a43` [44].
- - Or string [1] is incompatible with string literal `a44` [45].
- - Or string [1] is incompatible with string literal `a45` [46].
- - Or string [1] is incompatible with string literal `a46` [47].
- - Or string [1] is incompatible with string literal `a47` [48].
- - Or string [1] is incompatible with string literal `a48` [49].
- - Or string [1] is incompatible with string literal `a49` [50].
- - Or string [1] is incompatible with string literal `a50` [51].
+ - Either string literal `hello` [1] is incompatible with string literal `a1` [2].
+ - Or string literal `hello` [1] is incompatible with string literal `a2` [3].
+ - Or string literal `hello` [1] is incompatible with string literal `a3` [4].
+ - Or string literal `hello` [1] is incompatible with string literal `a4` [5].
+ - Or string literal `hello` [1] is incompatible with string literal `a5` [6].
+ - Or string literal `hello` [1] is incompatible with string literal `a6` [7].
+ - Or string literal `hello` [1] is incompatible with string literal `a7` [8].
+ - Or string literal `hello` [1] is incompatible with string literal `a8` [9].
+ - Or string literal `hello` [1] is incompatible with string literal `a9` [10].
+ - Or string literal `hello` [1] is incompatible with string literal `a10` [11].
+ - Or string literal `hello` [1] is incompatible with string literal `a11` [12].
+ - Or string literal `hello` [1] is incompatible with string literal `a12` [13].
+ - Or string literal `hello` [1] is incompatible with string literal `a13` [14].
+ - Or string literal `hello` [1] is incompatible with string literal `a14` [15].
+ - Or string literal `hello` [1] is incompatible with string literal `a15` [16].
+ - Or string literal `hello` [1] is incompatible with string literal `a16` [17].
+ - Or string literal `hello` [1] is incompatible with string literal `a17` [18].
+ - Or string literal `hello` [1] is incompatible with string literal `a18` [19].
+ - Or string literal `hello` [1] is incompatible with string literal `a19` [20].
+ - Or string literal `hello` [1] is incompatible with string literal `a20` [21].
+ - Or string literal `hello` [1] is incompatible with string literal `a21` [22].
+ - Or string literal `hello` [1] is incompatible with string literal `a22` [23].
+ - Or string literal `hello` [1] is incompatible with string literal `a23` [24].
+ - Or string literal `hello` [1] is incompatible with string literal `a24` [25].
+ - Or string literal `hello` [1] is incompatible with string literal `a25` [26].
+ - Or string literal `hello` [1] is incompatible with string literal `a26` [27].
+ - Or string literal `hello` [1] is incompatible with string literal `a27` [28].
+ - Or string literal `hello` [1] is incompatible with string literal `a28` [29].
+ - Or string literal `hello` [1] is incompatible with string literal `a29` [30].
+ - Or string literal `hello` [1] is incompatible with string literal `a30` [31].
+ - Or string literal `hello` [1] is incompatible with string literal `a31` [32].
+ - Or string literal `hello` [1] is incompatible with string literal `a32` [33].
+ - Or string literal `hello` [1] is incompatible with string literal `a33` [34].
+ - Or string literal `hello` [1] is incompatible with string literal `a34` [35].
+ - Or string literal `hello` [1] is incompatible with string literal `a35` [36].
+ - Or string literal `hello` [1] is incompatible with string literal `a36` [37].
+ - Or string literal `hello` [1] is incompatible with string literal `a37` [38].
+ - Or string literal `hello` [1] is incompatible with string literal `a38` [39].
+ - Or string literal `hello` [1] is incompatible with string literal `a39` [40].
+ - Or string literal `hello` [1] is incompatible with string literal `a40` [41].
+ - Or string literal `hello` [1] is incompatible with string literal `a41` [42].
+ - Or string literal `hello` [1] is incompatible with string literal `a42` [43].
+ - Or string literal `hello` [1] is incompatible with string literal `a43` [44].
+ - Or string literal `hello` [1] is incompatible with string literal `a44` [45].
+ - Or string literal `hello` [1] is incompatible with string literal `a45` [46].
+ - Or string literal `hello` [1] is incompatible with string literal `a46` [47].
+ - Or string literal `hello` [1] is incompatible with string literal `a47` [48].
+ - Or string literal `hello` [1] is incompatible with string literal `a48` [49].
+ - Or string literal `hello` [1] is incompatible with string literal `a49` [50].
+ - Or string literal `hello` [1] is incompatible with string literal `a50` [51].
 
 Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 

@@ -68,8 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:6:13
 
-Invalid check of empty string against number [1] because empty string [2] is incompatible with number [1].
-[incompatible-type]
+Invalid check of empty string against number [1] because string [2] is incompatible with number [1]. [incompatible-type]
 
    map.js:6:13
    6|   if (n !== '') { // number incompatible with string

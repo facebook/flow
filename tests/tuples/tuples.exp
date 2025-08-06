@@ -299,7 +299,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:9
 
-Cannot cast array literal to `T` because number [1] is incompatible with number literal `2` [2] in index 2.
+Cannot cast array literal to `T` because number literal `9` [1] is incompatible with number literal `2` [2] in index 2.
 [incompatible-cast]
 
    import.js:7:9
@@ -867,7 +867,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ mapped_type_on_tuple.js:26:16
 
-Cannot assign `'BAR'` to `issue2674[0]` because string [1] is incompatible with string literal `FOO` [2].
+Cannot assign `'BAR'` to `issue2674[0]` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
 [incompatible-type]
 
    mapped_type_on_tuple.js:26:16
@@ -1544,7 +1544,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:21:42
 
-Cannot return `x.length` because length `2` (number) of tuple [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `x.length` because number [1] is incompatible with string [2]. [incompatible-return]
 
    readonly-array.js:21:42
    21| function foo1(x: [1,2]): string { return x.length; } // error
@@ -1640,8 +1640,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:13:7
 
-Cannot cast array literal to `Same` because number [1] is incompatible with number literal `2` [2] in index 1.
-[incompatible-cast]
+Cannot cast array literal to `Same` because number literal `99` [1] is incompatible with number literal `2` [2] in index
+1. [incompatible-cast]
 
    spread.js:13:7
    13|   [1, 99] as Same; // ERROR: element type
@@ -1688,8 +1688,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:25:10
 
-Cannot cast array literal to `Middle` because number [1] is incompatible with number literal `2` [2] in index 2.
-[incompatible-cast]
+Cannot cast array literal to `Middle` because number literal `99` [1] is incompatible with number literal `2` [2] in
+index 2. [incompatible-cast]
 
    spread.js:25:10
    25|   [0, 1, 99, 3] as Middle; // ERROR: element type
@@ -1811,8 +1811,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:87:8
 
-Cannot cast array literal to `WithTail` because number [1] is incompatible with number literal `3` [2] in index 2.
-[incompatible-cast]
+Cannot cast array literal to `WithTail` because number literal `66` [1] is incompatible with number literal `3` [2] in
+index 2. [incompatible-cast]
 
    spread.js:87:8
    87| [1, 2, 66] as WithTail<[2, 3]>; // ERROR
@@ -1857,8 +1857,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:108:7
 
-Cannot call `tail` with array literal bound to `xs` because number [1] is incompatible with number literal `1` [2] in
-index 0. [incompatible-call]
+Cannot call `tail` with array literal bound to `xs` because number literal `666` [1] is incompatible with number literal
+`1` [2] in index 0. [incompatible-call]
 
    spread.js:108:7
    108| tail([666, 2, 3]); // ERROR
@@ -2114,7 +2114,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:40:44
 
-Cannot return `x.length` because length `2` (number) of tuple [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `x.length` because number [1] is incompatible with string [2]. [incompatible-return]
 
    tuples.js:40:44
    40|     function a(x: [1, 2]): string { return x.length; }

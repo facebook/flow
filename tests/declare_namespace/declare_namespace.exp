@@ -286,8 +286,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:37:1
 
-Cannot cast `1` to `Baz3` because number [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+Cannot cast `1` to `Baz3` because number literal `1` [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You
+can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    exported.js:37:1
    37| 1 as exported_ns.Baz3; // error: number ~> interface {}
@@ -757,8 +758,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typing_test.js:37:1
 
-Cannot cast `1` to `Baz3` because number [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+Cannot cast `1` to `Baz3` because number literal `1` [1], a primitive, cannot be used as a subtype of `Baz3` [2]. You
+can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    typing_test.js:37:1
    37| 1 as exported_ns.Baz3; // error: number ~> interface {}

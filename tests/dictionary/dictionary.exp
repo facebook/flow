@@ -880,7 +880,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:277:12
 
-Cannot assign `'c'` to `x[0]` because string [1] is incompatible with `TKey` [2]. [incompatible-type]
+Cannot assign `'c'` to `x[0]` because string literal `c` [1] is incompatible with `TKey` [2]. [incompatible-type]
 
    dictionary.js:277:12
    277|     x[0] = 'c'; // Error 'c' is not 'a' or 'b'

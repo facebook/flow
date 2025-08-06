@@ -793,7 +793,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:32:17
 
-Cannot assign number to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign number literal `3` to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
 
    component_type_checking.js:32:17
    32|   bar: string = 3, // ERROR
@@ -823,7 +823,7 @@ Cannot resolve name `foo`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:34:24
 
-Cannot assign string to `a` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign string literal `str` to `a` because string [1] is incompatible with number [2]. [incompatible-type]
 
    component_type_checking.js:34:24
    34|   destructured as {a = 'str'}: {a?: number}, // ERROR
@@ -1945,7 +1945,7 @@ References:
 
 Error ----------------------------------------------------------------------- import_component_in_type_position.js:25:45
 
-Cannot assign `3` to `errRendersMFoo` because number [1] does not render `Foo` [2]. [incompatible-type]
+Cannot assign `3` to `errRendersMFoo` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
 
    import_component_in_type_position.js:25:45
    25| const errRendersMFoo: renders MemoFooType = 3; // ERROR
@@ -1959,7 +1959,7 @@ References:
 
 Error ----------------------------------------------------------------------- import_component_in_type_position.js:26:49
 
-Cannot assign `3` to `errRendersMFooType` because number [1] does not render `Foo` [2]. [incompatible-type]
+Cannot assign `3` to `errRendersMFooType` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
 
    import_component_in_type_position.js:26:49
    26| const errRendersMFooType: renders MemoFooType = 3; // ERROR
@@ -2381,8 +2381,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:25:25
 
-Cannot create `Foo` element because string literal `number` [1] is incompatible with string [2] in the first parameter
-of property `setTV`. [incompatible-type]
+Cannot create `Foo` element because string literal `number` [1] is incompatible with string literal `out` [2] in the
+first parameter of property `setTV`. [incompatible-type]
 
    poly.js:25:25
    25|     return (<Foo setTV={set /* error */}>
@@ -3299,7 +3299,7 @@ be optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:6:23
 
-Cannot assign boolean to `baz` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign boolean literal `false` to `baz` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    rest_constraints.js:6:23
    6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz

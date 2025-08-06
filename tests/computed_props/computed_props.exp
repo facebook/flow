@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- boolean_key.js:9:23
 
 Cannot use `true` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a boolean [1]. Can you add an appropriate type annotation to `true` [1]? See
+but this one is a boolean literal `true` [1]. Can you add an appropriate type annotation to `true` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    9|   return {...params, [true]: true}; // error true is invalid-computed-prop

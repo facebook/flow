@@ -11,7 +11,7 @@ Did it finish in less than 5 seconds? YES
 Original recheck finished:
 Error -------------------------------------------------------------------------------------------- slow_dependent.js:5:2
 
-Cannot cast `x` to number because string literal `x` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
 
    slow_dependent.js:5:2
    5| (x: number); // error

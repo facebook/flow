@@ -76,9 +76,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:36:14
 
-Cannot call `String.raw` with `'foo'` bound to `callSite` because string [1], a primitive, cannot be used as a subtype
-of interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
-subtype of an interface. [incompatible-type]
+Cannot call `String.raw` with `'foo'` bound to `callSite` because string literal `foo` [1], a primitive, cannot be used
+as a subtype of interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    tagged_template.js:36:14
      36|   String.raw('foo'); // ERROR

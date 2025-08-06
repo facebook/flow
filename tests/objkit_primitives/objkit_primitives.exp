@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:20:21
 
-Cannot spread object literal because number [1] is not an object. [not-an-object]
+Cannot spread object literal because number literal `3` [1] is not an object. [not-an-object]
 
    20| const a: {||} = {...3}; // ERROR
                            ^ [1]
@@ -16,7 +16,7 @@ Cannot spread object literal because number literal `3` [1] is not an object. [n
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:21
 
-Cannot spread object literal because string [1] is not an object. [not-an-object]
+Cannot spread object literal because empty string [1] is not an object. [not-an-object]
 
    22| const c: {||} = {...''}; // ERROR
                            ^^ [1]

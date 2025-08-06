@@ -1076,7 +1076,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Either string [1] is incompatible with boolean [2] in array element.
  - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:30:9
@@ -1098,7 +1098,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Either string [1] is incompatible with boolean [2] in array element.
  - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:31:9
@@ -1120,7 +1120,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either JSX text [1] is incompatible with boolean [2] in array element.
+ - Either string [1] is incompatible with boolean [2] in array element.
  - Or children array [3] is incompatible with `React.Element` [4].
 
    tabs.js:32:9
@@ -1498,8 +1498,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:49:15
 
-Cannot create `TextLiteral` element because string [1] is incompatible with union type [2] in property `children`.
-[incompatible-type]
+Cannot create `TextLiteral` element because string literal `buz` [1] is incompatible with union type [2] in property
+`children`. [incompatible-type]
 
    text.js:49:15
    49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
@@ -1701,8 +1701,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:35:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either JSX text [1] is incompatible with boolean [2].
- - Or JSX text [1] is incompatible with `React.Element` [3].
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with `React.Element` [3].
 
    view.js:35:7
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.

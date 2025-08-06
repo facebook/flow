@@ -175,7 +175,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:113:21
 
-Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number literal `42` [2]. [incompatible-type]
+Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_typeof.js:113:21
    113| var g2: num_named = 'asdf'; // Error: string ~> number
@@ -217,8 +217,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:139:39
 
-Cannot assign object literal to `j2` because number [1] is incompatible with string literal `asdf` [2] in property
-`str`. [incompatible-type]
+Cannot assign object literal to `j2` because number [1] is incompatible with string [2] in property `str`.
+[incompatible-type]
 
    import_typeof.js:139:39
    139| var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string

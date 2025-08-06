@@ -242,9 +242,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:5:27
 
-Cannot call `Promise.any` with `0` bound to `promises` because number [1], a primitive, cannot be used as a subtype of
-`$Iterable` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
-an interface. [incompatible-type]
+Cannot call `Promise.any` with `0` bound to `promises` because number literal `0` [1], a primitive, cannot be used as a
+subtype of `$Iterable` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
 
    any.js:5:27
       5| Promise.any<Array<mixed>>(0); // Error: expected array instead of number

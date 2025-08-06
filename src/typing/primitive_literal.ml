@@ -401,12 +401,12 @@ let needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc =
   || Lazy.force has_hint
   || loc_has_hint cx loc
 
-let adjust_precision cx reason syntactic_flags ~precise ~general loc =
+let adjust_precision cx syntactic_flags ~precise ~general loc =
   let { encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in
   match Context.typing_mode cx with
   | Context.SynthesisMode { target_loc = Some target_loc }
     when aloc_contains ~outer:target_loc ~inner:loc ->
-    Context.mk_placeholder cx reason
+    Context.mk_placeholder cx (TypeUtil.reason_of_t (general ()))
   | Context.SynthesisMode { target_loc = _ } ->
     Context.set_synthesis_produced_uncacheable_result cx;
     if needs_precise_type cx ~encl_ctx ~decl ~as_const ~frozen ~has_hint loc then
@@ -424,6 +424,6 @@ let try_generalize cx syntactic_flags loc t =
   if is_generalization_candidate cx t then
     let general () = convert_literal_type cx ~singleton_action:(fun _ -> DoNotKeep) t in
     let precise () = t in
-    adjust_precision cx (TypeUtil.reason_of_t t) syntactic_flags ~precise ~general loc
+    adjust_precision cx syntactic_flags ~precise ~general loc
   else
     t

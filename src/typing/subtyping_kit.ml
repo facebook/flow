@@ -2617,15 +2617,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
            { loc = loc_of_reason reason; arg = reason_of_t u }
         )
     | (_, _) ->
+      let reason_lower = generalized_reason_of_t ~compared_with_t:u l in
+      let reason_upper = generalized_reason_of_t ~compared_with_t:l u in
       add_output
         cx
         (Error_message.EIncompatibleWithUseOp
-           {
-             reason_lower = reason_of_t l;
-             reason_upper = reason_of_t u;
-             use_op;
-             explanation = None;
-           }
+           { reason_lower; reason_upper; use_op; explanation = None }
         )
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref p =

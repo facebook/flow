@@ -1,10 +1,10 @@
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:8:22
 
-Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `rectangle` [3].
- - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `circle` [4].
+Cannot compare string literal `square` [1] with property `type` of `shape` [2] because: [incompatible-type]
+ - Either cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal
+   `square` [1] is incompatible with string literal `rectangle` [3].
+ - Or cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal `square` [1]
+   is incompatible with string literal `circle` [4].
 
    disjoint_union.js:8:22
    8|   if (shape.type === 'square') { // error
@@ -24,11 +24,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:21:22
 
-Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `rectangle` [3].
- - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `circle` [4].
+Cannot compare string literal `square` [1] with property `type` of `shape` [2] because: [incompatible-type]
+ - Either cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal
+   `square` [1] is incompatible with string literal `rectangle` [3].
+ - Or cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal `square` [1]
+   is incompatible with string literal `circle` [4].
 
    disjoint_union.js:21:22
    21|   if (shape.type === 'square') { // error
@@ -48,11 +48,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:34:22
 
-Cannot compare string [1] with property `type` of `shape` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `rectangle` [3].
- - Or cannot compare string [1] with property `type` of `shape` [2] because string [1] is incompatible with string
-   literal `circle` [4].
+Cannot compare string literal `square` [1] with property `type` of `shape` [2] because: [incompatible-type]
+ - Either cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal
+   `square` [1] is incompatible with string literal `rectangle` [3].
+ - Or cannot compare string literal `square` [1] with property `type` of `shape` [2] because string literal `square` [1]
+   is incompatible with string literal `circle` [4].
 
    disjoint_union.js:34:22
    34|   if (shape.type === 'square') { // error
@@ -607,10 +607,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:126:12
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:126:12
    126|       case C: break; // error C is not included in 'A' | 'B'
@@ -637,10 +637,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:127:12
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:127:12
    127|       case D: break; // error D is not included in 'A' | 'B'
@@ -667,10 +667,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:134:20
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:134:20
    134|     if (x.type === C) {}; // error C is not included in 'A' | 'B'
@@ -697,10 +697,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:135:20
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:135:20
    135|     if (x.type === D) {}; // error D is not included in 'A' | 'B'
@@ -727,10 +727,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:141:12
 
 Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `C` [5].
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with string
+   literal `C` [5].
 
    disjoint_union.js:141:12
    141|       case B: break; // error B is not included in 'A'
@@ -757,10 +757,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:142:12
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:142:12
    142|       case C: break; // error C is not included in 'A'
@@ -787,10 +787,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:143:12
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:143:12
    143|       case D: break; // error D is not included in 'A'
@@ -817,10 +817,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:143:12
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `C` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `C` [5].
 
    disjoint_union.js:143:12
    143|       case D: break; // error D is not included in 'A'
@@ -847,10 +847,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:149:20
 
 Cannot compare `B` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `B` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `C` [5].
+ - Either cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `B` [1] with property `type` of `x` [2] because string literal `B` [3] is incompatible with string
+   literal `C` [5].
 
    disjoint_union.js:149:20
    149|     if (x.type === B) {}; // error B is not included in 'A'
@@ -877,10 +877,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:150:20
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:150:20
    150|     if (x.type === C) {}; // error C is not included in 'A'
@@ -907,10 +907,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:151:20
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:151:20
    151|     if (x.type === D) {}; // error D is not included in 'A'
@@ -937,10 +937,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:151:20
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `C` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `C` [5].
 
    disjoint_union.js:151:20
    151|     if (x.type === D) {}; // error D is not included in 'A'
@@ -967,10 +967,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:161:12
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:161:12
    161|       case C: break; // error C is not included in 'A'|'B'
@@ -997,10 +997,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:162:12
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:162:12
    162|       case D: break; // error D is not included in 'A'|'B'
@@ -1027,10 +1027,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:169:20
 
 Cannot compare `C` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `C` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `C` [1] with property `type` of `x` [2] because string literal `C` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:169:20
    169|     if (x.type === C) {}; // error C is not included in 'A'|'B'
@@ -1057,10 +1057,10 @@ References:
 Error ----------------------------------------------------------------------------------------- disjoint_union.js:170:20
 
 Cannot compare `D` [1] with property `type` of `x` [2] because: [incompatible-type]
- - Either cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `A` [4].
- - Or cannot compare `D` [1] with property `type` of `x` [2] because string [3] is incompatible with string literal
-   `B` [5].
+ - Either cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with
+   string literal `A` [4].
+ - Or cannot compare `D` [1] with property `type` of `x` [2] because string literal `D` [3] is incompatible with string
+   literal `B` [5].
 
    disjoint_union.js:170:20
    170|     if (x.type === D) {}; // error D is not included in 'A'|'B'
@@ -1086,8 +1086,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:6:25
 
-Invalid check of number literal `2` against `Binary` [1] because number literal `2` [2] is incompatible with
-`Binary` [1]. [incompatible-type]
+Invalid check of number literal `2` against `Binary` [1] because number [2] is incompatible with `Binary` [1].
+[incompatible-type]
 
    enum.js:6:25
    6|   } else if (binary === 2) { // oops
@@ -1101,8 +1101,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generics.js:3:19
 
-Cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with union type [3].
-[incompatible-type]
+Cannot compare string literal `q` [1] with property `type` of `mm` [2] because string literal `q` [1] is incompatible
+with union type [3]. [incompatible-type]
 
    generics.js:3:19
    3|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'
@@ -1119,11 +1119,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:12:19
 
-Cannot compare string [1] with property `type` of `mm` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with string
-   literal `s` [3].
- - Or cannot compare string [1] with property `type` of `mm` [2] because string [1] is incompatible with string literal
-   `p` [4].
+Cannot compare string literal `q` [1] with property `type` of `mm` [2] because: [incompatible-type]
+ - Either cannot compare string literal `q` [1] with property `type` of `mm` [2] because string literal `q` [1] is
+   incompatible with string literal `s` [3].
+ - Or cannot compare string literal `q` [1] with property `type` of `mm` [2] because string literal `q` [1] is
+   incompatible with string literal `p` [4].
 
    generics.js:12:19
    12|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'

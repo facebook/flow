@@ -1221,7 +1221,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- error-access.js:14:3
 
-Cannot access string on enum `E` [1] because computed access is not allowed on enums. [invalid-enum-access]
+Cannot access string literal `A` on enum `E` [1] because computed access is not allowed on enums. [invalid-enum-access]
 
    error-access.js:14:3
    14| E['A'];

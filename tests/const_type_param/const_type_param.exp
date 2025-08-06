@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ file.js:5:3
 
-Cannot cast `2` to `typeof x1` because number [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `2` to `typeof x1` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
 
    file.js:5:3
    5|   2 as typeof x1; // error 2 ~> 1
@@ -125,7 +126,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:79:14
 
-Cannot assign `2` to `obj.prop` because number [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `2` to `obj.prop` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
 
    file.js:79:14
    79|   obj.prop = 2; // error 2 ~> 1
@@ -257,7 +259,7 @@ parameter. [incompatible-type-param-const]
 
 Error ---------------------------------------------------------------------------------------------------- file.js:140:3
 
-Cannot cast `x.size` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+Cannot cast `x.size` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
    file.js:140:3
@@ -293,7 +295,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:160:3
 
-Cannot cast `y2.size` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+Cannot cast `y2.size` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-cast]
 
    file.js:160:3

@@ -957,8 +957,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `foo` [1] to number [2] with a non-strict equality check. Make sure the arguments are
-valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare string literal `foo` [1] to number literal `123` [2] with a non-strict equality check. Make sure the
+arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -975,8 +975,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `bar` [1] to number [2] with a non-strict equality check. Make sure the arguments are
-valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare string literal `bar` [1] to number literal `123` [2] with a non-strict equality check. Make sure the
+arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -993,11 +993,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
 
-Cannot compare number [1] with property `y` of `x` [2] because: [incompatible-type]
- - Either cannot compare number [1] with property `y` of `x` [2] because number [1] is incompatible with string literal
-   `foo` [3].
- - Or cannot compare number [1] with property `y` of `x` [2] because number [1] is incompatible with string literal
-   `bar` [4].
+Cannot compare number literal `123` [1] with property `y` of `x` [2] because: [incompatible-type]
+ - Either cannot compare number literal `123` [1] with property `y` of `x` [2] because number [1] is incompatible with
+   string literal `foo` [3].
+ - Or cannot compare number literal `123` [1] with property `y` of `x` [2] because number [1] is incompatible with
+   string literal `bar` [4].
 
    eq.js:20:17
    20|     if (x.y === 123) {} // error
@@ -2135,7 +2135,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:44:5
 
-Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    ident.js:44:5
    44|     x as empty; // ERROR: it is `1`
@@ -2506,7 +2506,7 @@ References:
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:35:11
 
-Invalid check of string literal `val` against null [1] because string literal `val` [2] is incompatible with null [1].
+Invalid check of string literal `val` against null [1] because string [2] is incompatible with null [1].
 [incompatible-type]
 
    inclusion_check_widening.js:35:11
@@ -2570,8 +2570,8 @@ References:
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:58:18
 
-Invalid check of number literal `0` against nullable `C` [1] because number literal `0` [2] is incompatible with
-`C` [3]. [incompatible-type]
+Invalid check of number literal `0` against nullable `C` [1] because number [2] is incompatible with `C` [3].
+[incompatible-type]
 
    inclusion_check_widening.js:58:18
    58|         prop !== 0 // error (0 incompatible with C)
@@ -9101,8 +9101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:83:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean literal `true` [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:83:17
    83|     takesString(x); // error
@@ -9133,8 +9132,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:89:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean literal `false` [1] is incompatible with string [2].
-[incompatible-call]
+Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-call]
 
    mixed.js:89:17
    89|     takesString(x); // error
@@ -9723,7 +9721,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- number.js:6:8
 
-Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:6:8
    6|       (x: void); // error
@@ -10125,7 +10123,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:95:14
 
-Cannot return `s` because number literal `3` [1] is incompatible with `Mode` [2]. [incompatible-return]
+Cannot return `s` because number [1] is incompatible with `Mode` [2]. [incompatible-return]
 
    number.js:95:14
    95|       return s; // error
@@ -10232,7 +10230,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:124:8
 
-Cannot cast `x` to undefined because number literal `-1` [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
 
    number.js:124:8
    124|       (x: void); // error
@@ -10927,11 +10925,11 @@ References:
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:21:10
 
-Cannot compare string [1] with property `0` of `x` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
-   `a` [3].
- - Or cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
-   `b` [4].
+Cannot compare string literal `xxx` [1] with property `0` of `x` [2] because: [incompatible-type]
+ - Either cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
+   incompatible with string literal `a` [3].
+ - Or cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
+   incompatible with string literal `b` [4].
 
    object_union_number_keys.js:21:10
    21|     case 'xxx': break; // ERROR
@@ -10985,11 +10983,11 @@ References:
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:27:10
 
-Cannot compare string [1] with property `0` of `x` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
-   `a` [3].
- - Or cannot compare string [1] with property `0` of `x` [2] because string [1] is incompatible with string literal
-   `b` [4].
+Cannot compare string literal `xxx` [1] with property `0` of `x` [2] because: [incompatible-type]
+ - Either cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
+   incompatible with string literal `a` [3].
+ - Or cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
+   incompatible with string literal `b` [4].
 
    object_union_number_keys.js:27:10
    27|     case 'xxx': break; // ERROR
@@ -11953,7 +11951,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:6:8
 
-Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
    string.js:6:8
    6|       (x: void); // error
@@ -12994,7 +12992,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
 
-Cannot cast `x.kindTypo` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.kindTypo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:89:8
    89|       (x.kindTypo: string); // typos can't be used, though
@@ -13095,7 +13093,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
 
-Cannot cast `x.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.legnth` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:113:8
    113|       (x.legnth: string); // error: number literal 0 !~> string
@@ -13154,7 +13152,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
 
-Cannot cast `y.legnth` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `y.legnth` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:118:8
    118|       (y.legnth: string); // error: number literal 0 !~> string
@@ -13185,8 +13183,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
 
-Cannot compare number [1] with property `toString` of `z` [2] because number [1] is incompatible with function type [3].
-[incompatible-type]
+Cannot compare number literal `0` [1] with property `toString` of `z` [2] because number [1] is incompatible with
+function type [3]. [incompatible-type]
 
    tagged_union.js:120:24
    120|     if (z.toString === 0) {} // Error
@@ -13231,7 +13229,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
 
-Cannot cast `z.toStirng` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `z.toStirng` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:123:8
    123|       (z.toStirng: string); // error: number literal 0 !~> string
@@ -13262,8 +13260,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
 
-Cannot compare number [1] with property `valueOf` of `q` [2] because number [1] is incompatible with function type [3].
-[incompatible-type]
+Cannot compare number literal `0` [1] with property `valueOf` of `q` [2] because number [1] is incompatible with
+function type [3]. [incompatible-type]
 
    tagged_union.js:125:23
    125|     if (q.valueOf === 0) {} // Error
@@ -13308,7 +13306,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
 
-Cannot cast `q.valeuOf` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `q.valeuOf` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:128:8
    128|       (q.valeuOf: string); // error: number literal 0 !~> string
@@ -13339,8 +13337,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
 
-Cannot compare number [1] with property `call` of `t` [2] because number [1] is incompatible with function type [3].
-[incompatible-type]
+Cannot compare number literal `0` [1] with property `call` of `t` [2] because number [1] is incompatible with function
+type [3]. [incompatible-type]
 
    tagged_union.js:137:20
    137|     if (t.call === 0) {} // Error
@@ -13385,7 +13383,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
 
-Cannot cast `t.calll` to string because number literal `0` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `t.calll` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    tagged_union.js:140:8
    140|       (t.calll: string); // error: number literal 0 !~> string
@@ -13526,7 +13524,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
 
-Cannot cast `x.badStr` to empty because string literal `bad` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x.badStr` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:157:8
    157|       (x.badStr: empty); // error: 'bad' !~> empty
@@ -13571,7 +13569,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
 
-Cannot cast `x.badNum` to empty because number literal `123` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x.badNum` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:160:8
    160|       (x.badNum: empty); // error: 123 !~> empty
@@ -13616,7 +13614,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
 
-Cannot cast `x.badBool` to empty because boolean literal `true` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x.badBool` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
 
    tagged_union.js:163:8
    163|       (x.badBool: empty); // error: true !~> empty
@@ -14987,7 +14985,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:44:1
 
 Cannot call `calc` because: [incompatible-call]
- - Either string [1] is incompatible with string literal `add` [2] in index 0.
+ - Either string literal `abs` [1] is incompatible with string literal `add` [2] in index 0.
  - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
 
    tuple_union.js:44:1
@@ -15012,7 +15010,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:47:1
 
 Cannot call `calc` because: [incompatible-call]
- - Either string [1] is incompatible with string literal `abs` [2] in index 0.
+ - Either string literal `add` [1] is incompatible with string literal `abs` [2] in index 0.
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
 
    tuple_union.js:47:1

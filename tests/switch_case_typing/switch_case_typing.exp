@@ -15,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:10
 
-Invalid check of number literal `3` against `Enum` [1] because number literal `3` [2] is incompatible with `Enum` [1].
+Invalid check of number literal `3` against `Enum` [1] because number [2] is incompatible with `Enum` [1].
 [incompatible-type]
 
    test.js:19:10
@@ -75,7 +75,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:10
 
-Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with `eNum` [1].
+Invalid check of number literal `4` against `eNum` [1] because number [2] is incompatible with `eNum` [1].
 [incompatible-type]
 
    test.js:54:10
@@ -90,7 +90,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:65:10
 
-Invalid check of number literal `4` against `eNum` [1] because number literal `4` [2] is incompatible with `eNum` [1].
+Invalid check of number literal `4` against `eNum` [1] because number [2] is incompatible with `eNum` [1].
 [incompatible-type]
 
    test.js:65:10
@@ -105,13 +105,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:77:10
 
-Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string
-   literal `foo` [3].
- - Or cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string literal
-   `bar` [4].
- - Or cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string literal
-   `baz` [5].
+Cannot compare string literal `qux` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `foo` [3].
+ - Or cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `bar` [4].
+ - Or cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `baz` [5].
 
    test.js:77:10
    77|     case 'qux': // error
@@ -219,13 +219,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:89:10
 
-Cannot compare string [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string
-   literal `foo` [3].
- - Or cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string literal
-   `bar` [4].
- - Or cannot compare string [1] with property `type` of `o` [2] because string [1] is incompatible with string literal
-   `baz` [5].
+Cannot compare string literal `qux` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `foo` [3].
+ - Or cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `bar` [4].
+ - Or cannot compare string literal `qux` [1] with property `type` of `o` [2] because string literal `qux` [1] is
+   incompatible with string literal `baz` [5].
 
    test.js:89:10
    89|     case 'qux': // error
@@ -248,13 +248,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:101:10
 
-Cannot compare number [1] with property `type` of `o` [2] because: [incompatible-type]
- - Either cannot compare number [1] with property `type` of `o` [2] because number [1] is incompatible with string
-   literal `foo` [3].
- - Or cannot compare number [1] with property `type` of `o` [2] because number [1] is incompatible with string literal
-   `bar` [4].
- - Or cannot compare number [1] with property `type` of `o` [2] because number [1] is incompatible with string literal
-   `baz` [5].
+Cannot compare number literal `3` [1] with property `type` of `o` [2] because: [incompatible-type]
+ - Either cannot compare number literal `3` [1] with property `type` of `o` [2] because number [1] is incompatible with
+   string literal `foo` [3].
+ - Or cannot compare number literal `3` [1] with property `type` of `o` [2] because number [1] is incompatible with
+   string literal `bar` [4].
+ - Or cannot compare number literal `3` [1] with property `type` of `o` [2] because number [1] is incompatible with
+   string literal `baz` [5].
 
    test.js:101:10
    101|     case 3: // error
@@ -277,8 +277,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:108:13
 
-Invalid check of string literal `a` against `String` [1] because string literal `a` [2] is incompatible with
-`String` [1]. [incompatible-type]
+Invalid check of string literal `a` against `String` [1] because string [2] is incompatible with `String` [1].
+[incompatible-type]
 
    test.js:108:13
    108|   if (s === "a" || s === "b") {} // error
@@ -292,8 +292,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:108:26
 
-Invalid check of string literal `b` against `String` [1] because string literal `b` [2] is incompatible with
-`String` [1]. [incompatible-type]
+Invalid check of string literal `b` against `String` [1] because string [2] is incompatible with `String` [1].
+[incompatible-type]
 
    test.js:108:26
    108|   if (s === "a" || s === "b") {} // error
@@ -307,8 +307,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:109:13
 
-Invalid check of string literal `a` against `String` [1] because string literal `a` [2] is incompatible with
-`String` [1]. [incompatible-type]
+Invalid check of string literal `a` against `String` [1] because string [2] is incompatible with `String` [1].
+[incompatible-type]
 
    test.js:109:13
    109|   if (s === "a" && s === "b") {} // error
@@ -322,8 +322,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:109:26
 
-Invalid check of string literal `b` against `String` [1] because string literal `b` [2] is incompatible with
-`String` [1]. [incompatible-type]
+Invalid check of string literal `b` against `String` [1] because string [2] is incompatible with `String` [1].
+[incompatible-type]
 
    test.js:109:26
    109|   if (s === "a" && s === "b") {} // error
@@ -337,7 +337,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:114:14
 
-Invalid check of number literal `1` against string [1] because number literal `1` [2] is incompatible with string [1].
+Invalid check of number literal `1` against string [1] because number [2] is incompatible with string [1].
 [incompatible-type]
 
    test.js:114:14
@@ -352,7 +352,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:114:26
 
-Invalid check of number literal `2` against string [1] because number literal `2` [2] is incompatible with string [1].
+Invalid check of number literal `2` against string [1] because number [2] is incompatible with string [1].
 [incompatible-type]
 
    test.js:114:26
@@ -367,7 +367,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:115:14
 
-Invalid check of number literal `1` against string [1] because number literal `1` [2] is incompatible with string [1].
+Invalid check of number literal `1` against string [1] because number [2] is incompatible with string [1].
 [incompatible-type]
 
    test.js:115:14
@@ -382,7 +382,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:115:26
 
-Invalid check of number literal `2` against string [1] because number literal `2` [2] is incompatible with string [1].
+Invalid check of number literal `2` against string [1] because number [2] is incompatible with string [1].
 [incompatible-type]
 
    test.js:115:26
@@ -397,8 +397,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:121:21
 
-Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
-[incompatible-type]
+Cannot compare number literal `1` [1] with property `field` of `obj` [2] because number [1] is incompatible with
+string [3]. [incompatible-type]
 
    test.js:121:21
    121|   if (obj.field === 1 || obj.field === 2) {} // error
@@ -415,8 +415,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:121:40
 
-Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
-[incompatible-type]
+Cannot compare number literal `2` [1] with property `field` of `obj` [2] because number [1] is incompatible with
+string [3]. [incompatible-type]
 
    test.js:121:40
    121|   if (obj.field === 1 || obj.field === 2) {} // error
@@ -433,8 +433,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:122:21
 
-Cannot compare number [1] with property `field` of `obj` [2] because number [1] is incompatible with string [3].
-[incompatible-type]
+Cannot compare number literal `1` [1] with property `field` of `obj` [2] because number [1] is incompatible with
+string [3]. [incompatible-type]
 
    test.js:122:21
    122|   if (obj.field === 1 && obj.field === 2) {} // error

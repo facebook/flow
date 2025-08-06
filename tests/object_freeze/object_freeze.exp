@@ -223,8 +223,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:41:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number [1] is incompatible with number literal `-1` [2].
-[incompatible-cast]
+Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
+`-1` [2]. [incompatible-cast]
 
    downstream.js:41:1
    41| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1
@@ -481,8 +481,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:47:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number [1] is incompatible with number literal `-1` [2].
-[incompatible-cast]
+Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
+`-1` [2]. [incompatible-cast]
 
    object_freeze.js:47:1
    47| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1

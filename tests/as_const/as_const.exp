@@ -809,7 +809,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-primitive.js:9:3
 
-Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+Cannot cast `2` to `typeof n` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
 
    import-primitive.js:9:3
    9|   2 as typeof n; // error 2 ~> 1
@@ -855,7 +856,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:19:3
 
-Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+Cannot cast `"b"` to `typeof s` because string literal `b` [1] is incompatible with string literal `a` [2].
+[incompatible-cast]
 
    import-primitive.js:19:3
    19|   "b" as typeof s; // error b ~> a
@@ -901,7 +903,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:29:3
 
-Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `false` to `typeof b` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
    import-primitive.js:29:3
@@ -949,7 +951,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:39:3
 
-Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
+Cannot cast `2n` to `typeof bi` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
 
    import-primitive.js:39:3
    39|   2n as typeof bi; // error 2n ~> 1n
@@ -995,7 +998,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:47:3
 
-Cannot cast `1` to `typeof neg` because number [1] is incompatible with number literal `-1` [2]. [incompatible-cast]
+Cannot cast `1` to `typeof neg` because number literal `1` [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    import-primitive.js:47:3
    47|   1 as typeof neg; // error
@@ -1027,7 +1031,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:52:3
 
-Cannot cast `1` to `typeof obj_neg.f` because number [1] is incompatible with number literal `-1` [2].
+Cannot cast `1` to `typeof obj_neg.f` because number literal `1` [1] is incompatible with number literal `-1` [2].
 [incompatible-cast]
 
    import-primitive.js:52:3
@@ -1429,7 +1433,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:14:3
 
-Cannot cast `2` to `typeof n` because number [1] is incompatible with number literal `1` [2]. [incompatible-cast]
+Cannot cast `2` to `typeof n` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
 
    primitive.js:14:3
    14|   2 as typeof n; // error 2 ~> 1
@@ -1475,7 +1480,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:24:3
 
-Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-cast]
+Cannot cast `"b"` to `typeof s` because string literal `b` [1] is incompatible with string literal `a` [2].
+[incompatible-cast]
 
    primitive.js:24:3
    24|   "b" as typeof s; // error b ~> a
@@ -1521,7 +1527,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:34:3
 
-Cannot cast `false` to `typeof b` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `false` to `typeof b` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
 [incompatible-cast]
 
    primitive.js:34:3
@@ -1569,7 +1575,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:44:3
 
-Cannot cast `2n` to `typeof bi` because bigint [1] is incompatible with bigint literal `1n` [2]. [incompatible-cast]
+Cannot cast `2n` to `typeof bi` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
+[incompatible-cast]
 
    primitive.js:44:3
    44|   2n as typeof bi; // error 2n ~> 1n
@@ -1615,7 +1622,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:52:3
 
-Cannot cast `1` to `typeof neg` because number [1] is incompatible with number literal `-1` [2]. [incompatible-cast]
+Cannot cast `1` to `typeof neg` because number literal `1` [1] is incompatible with number literal `-1` [2].
+[incompatible-cast]
 
    primitive.js:52:3
    52|   1 as typeof neg; // error
@@ -1647,7 +1655,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:57:3
 
-Cannot cast `1` to `typeof obj_neg.f` because number [1] is incompatible with number literal `-1` [2].
+Cannot cast `1` to `typeof obj_neg.f` because number literal `1` [1] is incompatible with number literal `-1` [2].
 [incompatible-cast]
 
    primitive.js:57:3

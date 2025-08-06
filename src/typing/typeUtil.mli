@@ -9,6 +9,13 @@ open Reason
 
 val reason_of_t : Type.t -> reason
 
+(**
+ * Variant of reason_of_t that converts the reason of a SingletonStrT {from_annot = true}
+ * from RStringLit to RString when the type is compared against a non-string type.
+ * The same approach is followed for number, boolean, and bigint types.
+ *)
+val generalized_reason_of_t : compared_with_t:Type.t -> Type.t -> reason
+
 val reason_of_defer_use_t : Type.defer_use_t -> reason
 
 val reason_of_use_t : Type.use_t -> reason

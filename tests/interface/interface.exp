@@ -767,9 +767,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:5:4
 
-Cannot cast `1` to interface type because number [1], a primitive, cannot be used as a subtype of interface type [2].
-You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
-[incompatible-type]
+Cannot cast `1` to interface type because number literal `1` [1], a primitive, cannot be used as a subtype of interface
+type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an
+interface. [incompatible-type]
 
    primitives.js:5:4
    5|   (1: interface {}); // ERROR
@@ -802,9 +802,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:13:4
 
-Cannot cast `true` to interface type because boolean [1], a primitive, cannot be used as a subtype of interface
-type [2]. You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an
-interface. [incompatible-type]
+Cannot cast `true` to interface type because boolean literal `true` [1], a primitive, cannot be used as a subtype of
+interface type [2]. You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype
+of an interface. [incompatible-type]
 
    primitives.js:13:4
    13|   (true: interface {}); // ERROR

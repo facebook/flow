@@ -669,7 +669,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- logical.js:628:8
 
 Cannot assign `1` to `n_` because: [incompatible-type]
- - Either number [1] is incompatible with number [2].
+ - Either number literal `1` [1] is incompatible with number [2].
  - Or number [1] is incompatible with object literal [3].
 
 All writes to `n_` must be compatible with the type of its initializer [4]. Add an annotation to `n_` [4] if a different
@@ -694,7 +694,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- logical.js:629:8
 
 Cannot assign `"1"` to `s_` because: [incompatible-type]
- - Either string [1] is incompatible with string [2].
+ - Either string literal `1` [1] is incompatible with string [2].
  - Or string [1] is incompatible with object literal [3].
 
 All writes to `s_` must be compatible with the type of its initializer [4]. Add an annotation to `s_` [4] if a different
@@ -719,7 +719,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- logical.js:630:8
 
 Cannot assign `true` to `b_` because: [incompatible-type]
- - Either boolean [1] is incompatible with boolean [2].
+ - Either boolean literal `true` [1] is incompatible with boolean [2].
  - Or boolean [1] is incompatible with object literal [3].
 
 All writes to `b_` must be compatible with the type of its initializer [4]. Add an annotation to `b_` [4] if a different

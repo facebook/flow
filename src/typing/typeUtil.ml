@@ -124,6 +124,43 @@ let singleton_reason_of_t = function
     Reason.mk_reason (Reason.RBigIntLit (snd value)) loc
   | t -> reason_of_t t
 
+let generalized_reason_of_t =
+  let not_a_string = function
+    | DefT (_, SingletonStrT _)
+    | DefT (_, StrGeneralT _) ->
+      false
+    | _ -> true
+  in
+  let not_a_number = function
+    | DefT (_, SingletonNumT _)
+    | DefT (_, NumGeneralT _) ->
+      false
+    | _ -> true
+  in
+  let not_a_boolean = function
+    | DefT (_, SingletonBoolT _)
+    | DefT (_, BoolGeneralT) ->
+      false
+    | _ -> true
+  in
+  let not_a_bigint = function
+    | DefT (_, SingletonBigIntT _)
+    | DefT (_, BigIntGeneralT _) ->
+      false
+    | _ -> true
+  in
+  fun ~compared_with_t:u l ->
+    match l with
+    | DefT (r, SingletonStrT { from_annot = false; _ }) when not_a_string u ->
+      replace_desc_reason RString r
+    | DefT (r, SingletonNumT { from_annot = false; _ }) when not_a_number u ->
+      replace_desc_reason RNumber r
+    | DefT (r, SingletonBoolT { from_annot = false; _ }) when not_a_boolean u ->
+      replace_desc_reason RBoolean r
+    | DefT (r, SingletonBigIntT { from_annot = false; _ }) when not_a_bigint u ->
+      replace_desc_reason RBigInt r
+    | l -> reason_of_t l
+
 let desc_of_t = reason_of_t %> desc_of_reason
 
 let loc_of_t = reason_of_t %> loc_of_reason

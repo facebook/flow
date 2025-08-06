@@ -60,7 +60,6 @@ val loc_has_hint : Context.t -> ALoc.t -> bool
 
 val adjust_precision :
   Context.t ->
-  Reason.t ->
   syntactic_flags ->
   precise:(unit -> Type.t) ->
   general:(unit -> Type.t) ->

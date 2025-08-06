@@ -312,7 +312,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:40:4
 
-Cannot create `Bar` element because string [1] is incompatible with string literal `should be empty string` [2].
+Cannot create `Bar` element because empty string [1] is incompatible with string literal `should be empty string` [2].
 [incompatible-type]
 
    text_trimming.js:40:4
