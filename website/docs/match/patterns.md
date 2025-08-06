@@ -16,7 +16,7 @@ The identifier `_` is special cased for “Wildcard patterns”, if you want to 
 
 You can use a number literal prefixed with  `+` or `-`, or BigInt literals prefixed with `-` (`+` on a BigInt is an error in JS). `+0` and `-0` are not allowed (Flow doesn’t differentiate these type-wise from `0`). `NaN` is special-cased, since `NaN === NaN` is always `false`. It is matched using `Number.isNaN`.
 
-Other types of expressions are not supported.
+Other types of expressions are not supported. To match against an arbitrary expression (which has a literal type), first assign it to a variable, and then match against that variable.
 
 Example:
 ```js

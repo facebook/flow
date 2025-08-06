@@ -53,6 +53,8 @@ match (<arg>) {} //  This is a match statement, not a match expression
 
 If no pattern matches, Flow will error due to a non-exhaustive match, and an exception will be thrown at runtime. You can use a [wildcard](./patterns#wildcard-patterns) (`_`) or [variable declaration pattern](./patterns#variable-declaration-patterns) (`const x`) as the last case of a match to catch all remaining possible matches.
 
+To throw an exception in a `match` expression case body you can't use `throw` as it is a statement, and `match` expressions require expression bodies. Instead, you can use `invariant(false, <msg>)`, which Flow understands will always throw (with the supplied message).
+
 Match expression case bodies do not yet support usage of `yield`, `yield*`, or `await`. Unlike match expressions, [match statements](#match-statements) do support these keywords.
 
 *Fine print:* The opening brace `{` is required to be on the same line as the match argument `match (<arg>)`. This way, we can introduce this feature in a way that is backwards compatible with all existing syntax: `match(x);` is still a call to a function called `match`. Prettier will automatically format match expressions in this way.
