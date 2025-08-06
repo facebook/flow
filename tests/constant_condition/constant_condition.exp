@@ -1264,50 +1264,372 @@ References:
                   ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- typed_check.js:162:9
+Error --------------------------------------------------------------------------------------------- typed_check.js:162:3
 
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
+Cannot compare `x` [1] to string [2]. [invalid-compare]
 
-   typed_check.js:162:9
-   162|   x === 'foox'; // ERROR from existing check. Will be replaced by the new subtyping check
-                ^^^^^^ [2]
+   typed_check.js:162:3
+   162|   x === 'foox'; // error
+          ^^^^^^^^^^^^
 
 References:
-   typed_check.js:161:20
+   typed_check.js:161:17
    161|   declare const x: ?T;
-                           ^^ [1]
-   typed_check.js:161:21
-   161|   declare const x: ?T;
-                            ^ [3]
+                        ^ [1]
+   typed_check.js:162:9
+   162|   x === 'foox'; // error
+                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- typed_check.js:173:8
+Error --------------------------------------------------------------------------------------------- typed_check.js:172:8
 
 Cannot get `y.ha` because property `ha` is missing in `Boolean` [1]. [prop-missing]
 
-   typed_check.js:173:8
-   173|   && y.ha === 'fdas'; // existing double errors
+   typed_check.js:172:8
+   172|   && y.ha === 'fdas'; // [prop-missing] double errors
                ^^
 
 References:
-   typed_check.js:171:20
-   171|   declare const y: boolean | idk;
+   typed_check.js:170:20
+   170|   declare const y: boolean | idk;
                            ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- typed_check.js:173:8
+Error --------------------------------------------------------------------------------------------- typed_check.js:172:8
 
 Cannot get `y.ha` because property `ha` is missing in `Boolean` [1]. [prop-missing]
 
-   typed_check.js:173:8
-   173|   && y.ha === 'fdas'; // existing double errors
+   typed_check.js:172:8
+   172|   && y.ha === 'fdas'; // [prop-missing] double errors
                ^^
 
 References:
-   typed_check.js:171:30
-   171|   declare const y: boolean | idk;
+   typed_check.js:170:30
+   170|   declare const y: boolean | idk;
                                      ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:191:7
+
+Cannot compare `a` [1] to `b` [2]. [invalid-compare]
+
+   typed_check.js:191:7
+   191|   if (a === b){} // error
+              ^^^^^^^
+
+References:
+   typed_check.js:189:7
+   189|   let a: even = 2;
+              ^ [1]
+   typed_check.js:190:7
+   190|   let b: odd = 1;
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:192:7
+
+Cannot compare `a` [1] to null [2]. [invalid-compare]
+
+   typed_check.js:192:7
+   192|   if (a === null){} // error
+              ^^^^^^^^^^
+
+References:
+   typed_check.js:189:7
+   189|   let a: even = 2;
+              ^ [1]
+   typed_check.js:192:13
+   192|   if (a === null){} // error
+                    ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:194:7
+
+Cannot compare null [1] to `a` [2]. [invalid-compare]
+
+   typed_check.js:194:7
+   194|   if (null === a){} // error
+              ^^^^^^^^^^
+
+References:
+   typed_check.js:194:7
+   194|   if (null === a){} // error
+              ^^^^ [1]
+   typed_check.js:189:7
+   189|   let a: even = 2;
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:202:7
+
+Cannot compare `c` [1] to `d` [2]. [invalid-compare]
+
+   typed_check.js:202:7
+   202|   if (c === d){} // error by current implementation. This is not a good error.
+              ^^^^^^^
+
+References:
+   typed_check.js:200:7
+   200|   let c: evenAndZero = 0;
+              ^ [1]
+   typed_check.js:201:7
+   201|   let d: oddAndZero = 0;
+              ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:231:7
+
+Cannot compare `a` [1] to string literal `s3` [2]. [invalid-compare]
+
+   typed_check.js:231:7
+   231|   if (a===('s3' as const)) {} // error
+              ^^^^^^^^^^^^^^^^^^^
+
+References:
+   typed_check.js:226:7
+   226|   let a : s1 = 's1';
+              ^ [1]
+   typed_check.js:231:12
+   231|   if (a===('s3' as const)) {} // error
+                   ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:233:7
+
+Cannot compare `a` [1] to string [2]. [invalid-compare]
+
+   typed_check.js:233:7
+   233|   if (a==='s3') {} // error
+              ^^^^^^^^
+
+References:
+   typed_check.js:226:7
+   226|   let a : s1 = 's1';
+              ^ [1]
+   typed_check.js:233:11
+   233|   if (a==='s3') {} // error
+                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:238:7
+
+Cannot compare `a` [1] to string literal `s3` [2]. [invalid-compare]
+
+   typed_check.js:238:7
+   238|   if (a!==('s3' as const)) {} // error
+              ^^^^^^^^^^^^^^^^^^^
+
+References:
+   typed_check.js:226:7
+   226|   let a : s1 = 's1';
+              ^ [1]
+   typed_check.js:238:12
+   238|   if (a!==('s3' as const)) {} // error
+                   ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:240:7
+
+Cannot compare `a` [1] to string [2]. [invalid-compare]
+
+   typed_check.js:240:7
+   240|   if (a!=='s3') {} // error
+              ^^^^^^^^
+
+References:
+   typed_check.js:226:7
+   226|   let a : s1 = 's1';
+              ^ [1]
+   typed_check.js:240:11
+   240|   if (a!=='s3') {} // error
+                  ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:256:7
+
+Cannot compare string literal `a` [1] to string literal `b` [2]. [invalid-compare]
+
+   typed_check.js:256:7
+   256|   if (v1 === ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+              ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typed_check.js:256:7
+   256|   if (v1 === ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+              ^^ [1]
+   typed_check.js:256:15
+   256|   if (v1 === ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:257:7
+
+Cannot compare string literal `a` [1] to string literal `b` [2]. [invalid-compare]
+
+   typed_check.js:257:7
+   257|   if (v1 !== ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+              ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typed_check.js:257:7
+   257|   if (v1 !== ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+              ^^ [1]
+   typed_check.js:257:15
+   257|   if (v1 !== ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:268:3
+
+Cannot compare string [1] to null [2]. [invalid-compare]
+
+   typed_check.js:268:3
+   268|   b === null; // error, null is not allowed
+          ^^^^^^^^^^
+
+References:
+   typed_check.js:267:20
+   267|   declare const b: string;
+                           ^^^^^^ [1]
+   typed_check.js:268:9
+   268|   b === null; // error, null is not allowed
+                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:269:3
+
+Cannot compare string [1] to null [2]. [invalid-compare]
+
+   typed_check.js:269:3
+   269|   b !== null; // error, null is not allowed
+          ^^^^^^^^^^
+
+References:
+   typed_check.js:267:20
+   267|   declare const b: string;
+                           ^^^^^^ [1]
+   typed_check.js:269:9
+   269|   b !== null; // error, null is not allowed
+                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:270:3
+
+Cannot compare null [1] to string [2]. [invalid-compare]
+
+   typed_check.js:270:3
+   270|   null === b; // error, null is not allowed
+          ^^^^^^^^^^
+
+References:
+   typed_check.js:270:3
+   270|   null === b; // error, null is not allowed
+          ^^^^ [1]
+   typed_check.js:267:20
+   267|   declare const b: string;
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:271:3
+
+Cannot compare null [1] to string [2]. [invalid-compare]
+
+   typed_check.js:271:3
+   271|   null !== b; // error, null is not allowed
+          ^^^^^^^^^^
+
+References:
+   typed_check.js:271:3
+   271|   null !== b; // error, null is not allowed
+          ^^^^ [1]
+   typed_check.js:267:20
+   267|   declare const b: string;
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:280:3
+
+Cannot compare `d` [1] to string [2]. [invalid-compare]
+
+   typed_check.js:280:3
+   280|   d === 'a'; // error, empty is not allowed
+          ^^^^^^^^^
+
+References:
+   typed_check.js:279:17
+   279|   declare const d: empty;
+                        ^ [1]
+   typed_check.js:280:9
+   280|   d === 'a'; // error, empty is not allowed
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:281:3
+
+Cannot compare `d` [1] to string [2]. [invalid-compare]
+
+   typed_check.js:281:3
+   281|   d !== 'a'; // error, empty is not allowed
+          ^^^^^^^^^
+
+References:
+   typed_check.js:279:17
+   279|   declare const d: empty;
+                        ^ [1]
+   typed_check.js:281:9
+   281|   d !== 'a'; // error, empty is not allowed
+                ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:282:3
+
+Cannot compare string [1] to `d` [2]. [invalid-compare]
+
+   typed_check.js:282:3
+   282|   'a' === d; // error, empty is not allowed
+          ^^^^^^^^^
+
+References:
+   typed_check.js:282:3
+   282|   'a' === d; // error, empty is not allowed
+          ^^^ [1]
+   typed_check.js:279:17
+   279|   declare const d: empty;
+                        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:283:3
+
+Cannot compare string [1] to `d` [2]. [invalid-compare]
+
+   typed_check.js:283:3
+   283|   'a' !== d; // error, empty is not allowed
+          ^^^^^^^^^
+
+References:
+   typed_check.js:283:3
+   283|   'a' !== d; // error, empty is not allowed
+          ^^^ [1]
+   typed_check.js:279:17
+   279|   declare const d: empty;
+                        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:293:5
+
+Cannot compare `a` [1] to string [2]. [invalid-compare]
+
+   typed_check.js:293:5
+   293|     case 'c': // error
+            ^^^^^^^^
+
+References:
+   typed_check.js:287:17
+   287|   declare const a: 'a' | 'b';
+                        ^ [1]
+   typed_check.js:293:10
+   293|     case 'c': // error
+                 ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
@@ -1455,4 +1777,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 151 errors
+Found 170 errors

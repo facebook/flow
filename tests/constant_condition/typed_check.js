@@ -159,8 +159,7 @@
 {
   type T = 'foo' | 'bar';
   declare const x: ?T;
-  x === 'foox'; // ERROR from existing check. Will be replaced by the new subtyping check
-
+  x === 'foox'; // error
   type idk =
   | {
       ha?: string,
@@ -170,7 +169,7 @@
   | boolean;
   declare const y: boolean | idk;
   y.jo == null  // no existing error
-  && y.ha === 'fdas'; // existing double errors
+  && y.ha === 'fdas'; // [prop-missing] double errors
 
   enum exampleEnum of string {
     A = 'a',
@@ -179,7 +178,119 @@
 
   declare const pp: ?exampleEnum;
   switch (true) {
-    case pp === exampleEnum.A: break; // should not error
+    case pp === exampleEnum.A: break; // ok
     default: break;
+  }
+}
+
+{
+  type even = 2 | 4 | 6 | 8 | 10;
+  type odd = 1 | 3 | 5 | 7 | 9;
+  let a: even = 2;
+  let b: odd = 1;
+  if (a === b){} // error
+  if (a === null){} // error
+  if (a === undefined){} // ok
+  if (null === a){} // error
+  if (undefined === a){} // ok
+
+  type zero = 0;
+  type evenAndZero = zero | even;
+  type oddAndZero = zero | odd;
+  let c: evenAndZero = 0;
+  let d: oddAndZero = 0;
+  if (c === d){} // error by current implementation. This is not a good error.
+  // This is the case that there's intersection but they are not subtype of each other.
+
+  // WORKAROUNDS:
+
+  // Workaround 1: Cast one side to a more general type
+  if (c === (d as number)){} // OK - cast d to number
+  if ((c as number) === d){} // OK - cast c to number
+
+  // Workaround 2: Cast one side to the union type
+  if ((c as evenAndZero | oddAndZero) === d) {} // OK
+
+  // Workaround 3: Cast both sides to the union type
+  if ((c as evenAndZero | oddAndZero) === (d as evenAndZero | oddAndZero)) // OK
+  {}
+
+  let e: ?even = 2;
+  let f: number = 6;
+  if (e === f){} // ok, the void is stripped before from subtype check.
+}
+
+{
+  type s1 = 's1' | 's2';
+  type s2 = 's2' ;
+  let a : s1 = 's1';
+  let b: ?s2 = 's2';
+  if (a===b) {} // ok. we strip nulls before subtype check
+  if (a===('s1' as const)) {} // ok
+  if (a===('s2' as const)) {} // ok
+  if (a===('s3' as const)) {} // error
+  if (a==='s1') {} // ok
+  if (a==='s3') {} // error
+
+  if (a!==b) {} // ok. we strip nulls before subtype check
+  if (a!==('s1' as const)) {}
+  if (a!==('s2' as const)) {}
+  if (a!==('s3' as const)) {} // error
+  if (a!=='s1') {} // ok
+  if (a!=='s3') {} // error
+}
+
+{
+  type aa = $ReadOnly<{
+    a: '',
+    ...
+  }>;
+
+  type bb = $ReadOnly<{
+    b: 'fdass',
+    ...
+  }>;
+  type comb = aa & bb;
+  type KEYS_AGG = $Keys<comb>;
+  let v1: KEYS_AGG = 'a';
+  if (v1 === ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+  if (v1 !== ('b' as const)) {} // not supposed to error, but there's bug with intersections: T230742740
+}
+
+{
+  declare const a: any;
+  if (a===null) {} // ok, any is allowed
+  if (a!==null) {} // ok, any is allowed
+  if (null===a) {} // ok, any is allowed
+  if (null!==a) {} // ok, any is allowed
+
+  declare const b: string;
+  b === null; // error, null is not allowed
+  b !== null; // error, null is not allowed
+  null === b; // error, null is not allowed
+  null !== b; // error, null is not allowed
+
+  declare const c: string;
+  c === undefined; // ok
+  c !== undefined; // ok
+  undefined === c; // ok
+  undefined !== c; // ok
+
+  declare const d: empty;
+  d === 'a'; // error, empty is not allowed
+  d !== 'a'; // error, empty is not allowed
+  'a' === d; // error, empty is not allowed
+  'a' !== d; // error, empty is not allowed
+}
+
+{
+  declare const a: 'a' | 'b';
+  switch (a) {
+    case 'a':
+      break;
+    case 'b':
+      break;
+    case 'c': // error
+      break;
   }
 }

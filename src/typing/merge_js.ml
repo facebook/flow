@@ -596,6 +596,81 @@ let detect_constant_conditions cx =
         ))
     banned_conditions
 
+let check_strict_comparison cx all_strict_comparisons =
+  Base.List.filter_map all_strict_comparisons ~f:(fun (loc, (left_ast, right_ast)) ->
+      let ((_, left_t), _) = left_ast in
+      let ((_, right_t), _) = right_ast in
+      let left_conc_t =
+        Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t left_t) left_t
+      in
+      let right_conc_t =
+        Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t right_t) right_t
+      in
+      (* the reason after concretization will contain more information. *)
+      let l_reason = TypeUtil.reason_of_t left_conc_t in
+      let r_reason = TypeUtil.reason_of_t right_conc_t in
+      let has_null_type cx t =
+        match Type_filter.not_null cx t with
+        | Type_filter.TypeFilterResult { changed = true; _ } -> true
+        | _ -> false
+      in
+      let type_of_filtering_result (Type_filter.TypeFilterResult { type_; changed = _ }) = type_ in
+      let open Type in
+      let filter_maybe_and_check_is_subtyping cx left right =
+        (* not_maybe will return emptyT if null or undefined is passed in.
+           emptyT is a subtype of any type, so we don't need to check the AST node
+           of `left` or `right`.
+        *)
+        let left_filtered = type_of_filtering_result (Type_filter.not_maybe cx left) in
+        let right_filtered = type_of_filtering_result (Type_filter.not_maybe cx right) in
+        let left_expanded = drop_generic left in
+        let right_expanded = drop_generic right in
+        Flow_js.FlowJs.speculative_subtyping_succeeds cx right_filtered left_expanded
+        || Flow_js.FlowJs.speculative_subtyping_succeeds cx left_filtered right_expanded
+      in
+      let allowed = None in
+      let banned = Some (l_reason, r_reason, loc) in
+      match (left_conc_t, right_conc_t) with
+      | (AnyT _, _)
+      | (_, AnyT _) ->
+        allowed
+      | (DefT (_, VoidT), _)
+      | (_, DefT (_, VoidT)) ->
+        allowed
+      | (DefT (_, EmptyT), _)
+      | (_, DefT (_, EmptyT)) ->
+        if Context.enable_invalid_comparison_general cx then
+          banned
+        else
+          allowed
+      | (other, DefT (_, NullT)) when not (has_null_type cx other) ->
+        if Context.enable_invalid_comparison_null_check cx then
+          banned
+        else
+          allowed
+      | (DefT (_, NullT), other) when not (has_null_type cx other) ->
+        if Context.enable_invalid_comparison_null_check cx then
+          banned
+        else
+          allowed
+      | _ ->
+        if filter_maybe_and_check_is_subtyping cx left_conc_t right_conc_t then
+          allowed
+        else if Context.enable_invalid_comparison_general cx then
+          banned
+        else
+          allowed
+  )
+
+let detect_invalid_strict_comparison cx =
+  let all_strict_comparisons = Context.get_all_strict_comparisons cx in
+  Base.List.iter
+    ~f:(fun (left_r, right_r, primary_loc) ->
+      Flow_js.add_output
+        cx
+        (Error_message.EComparison { r1 = left_r; r2 = right_r; loc_opt = Some primary_loc }))
+    (check_strict_comparison cx all_strict_comparisons)
+
 let detect_unnecessary_optional_chains cx =
   Base.List.iter
     ~f:(fun (loc, lhs_reason) ->
@@ -1469,6 +1544,10 @@ let post_merge_checks cx ast tast metadata =
   detect_unnecessary_optional_chains cx;
   detect_constant_conditions cx;
   detect_import_export_errors cx ast metadata;
+  if Context.enable_invalid_comparison_general cx || Context.enable_invalid_comparison_null_check cx
+  then begin
+    detect_invalid_strict_comparison cx
+  end;
   if
     not
       (Context.enable_invalid_comparison_general cx

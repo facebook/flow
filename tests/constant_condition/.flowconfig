@@ -9,3 +9,5 @@ experimental.constant_condition.null_void.includes=<PROJECT_ROOT>/err2
 experimental.constant_condition.function.includes=<PROJECT_ROOT>/err1
 experimental.constant_condition.function.includes=<PROJECT_ROOT>/err2
 enums=true
+experimental.constant_condition.invalid_comparison.general.includes=<PROJECT_ROOT>/typed_check.js
+experimental.constant_condition.invalid_comparison.null_check.includes=<PROJECT_ROOT>/typed_check.js
