@@ -766,13 +766,9 @@ let quick_error_fun_as_obj cx ~use_op reason statics reason_o props =
     ) else (
       NameUtils.Map.iter
         (fun x _ ->
-          let use_op =
-            Frame (PropertyCompatibility { prop = Some x; lower = reason; upper = reason_o }, use_op)
-          in
-          let reason_prop = update_desc_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
           let err =
-            Error_message.EPropNotFound
-              { prop_name = Some x; reason_prop; reason_obj = reason; use_op; suggestion = None }
+            Error_message.EPropNotFoundInSubtyping
+              { prop_name = Some x; reason_lower = reason; reason_upper = reason_o; use_op }
           in
           add_output cx err)
         props_not_found;

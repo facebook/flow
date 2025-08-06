@@ -6185,26 +6185,15 @@ struct
     call_t
     |> Base.Option.iter ~f:(fun ut ->
            let prop_name = Some (OrdinaryName "$call") in
-           let use_op =
-             Frame
-               ( PropertyCompatibility { prop = prop_name; lower = lreason; upper = reason_struct },
-                 use_op
-               )
-           in
            match lower with
            | DefT (_, ObjT { call_t = Some lid; _ })
            | DefT (_, InstanceT { inst = { inst_call_t = Some lid; _ }; _ }) ->
              let lt = Context.find_call cx lid in
              rec_flow cx trace (lt, UseT (use_op, ut))
            | _ ->
-             let reason_prop =
-               update_desc_reason
-                 (fun desc -> RPropertyOf (OrdinaryName "$call", desc))
-                 reason_struct
-             in
              let error_message =
-               Error_message.EPropNotFound
-                 { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
+               Error_message.EPropNotFoundInSubtyping
+                 { reason_lower = lreason; reason_upper = reason_struct; prop_name; use_op }
              in
              add_output cx error_message
        )
@@ -7810,38 +7799,16 @@ struct
                    (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
                 )
           | (Some _, None) ->
-            let use_op =
-              Frame (PropertyCompatibility { prop = None; lower = ureason; upper = lreason }, use_op)
-            in
-            let lreason = replace_desc_reason RSomeProperty lreason in
             let err =
-              Error_message.EPropNotFound
-                {
-                  prop_name = None;
-                  reason_prop = lreason;
-                  reason_obj = ureason;
-                  use_op;
-                  suggestion = None;
-                }
+              Error_message.EPropNotFoundInSubtyping
+                { prop_name = None; reason_lower = ureason; reason_upper = lreason; use_op }
             in
             add_output cx err
           | (None, Some _) ->
-            let use_op =
-              Frame
-                ( PropertyCompatibility { prop = None; lower = lreason; upper = ureason },
-                  Frame (UnifyFlip, use_op)
-                )
-            in
-            let ureason = replace_desc_reason RSomeProperty ureason in
+            let use_op = Frame (UnifyFlip, use_op) in
             let err =
-              Error_message.EPropNotFound
-                {
-                  prop_name = None;
-                  reason_prop = lreason;
-                  reason_obj = ureason;
-                  use_op;
-                  suggestion = None;
-                }
+              Error_message.EPropNotFoundInSubtyping
+                { prop_name = None; reason_lower = lreason; reason_upper = ureason; use_op }
             in
             add_output cx err
           | (None, None) -> ()
@@ -7983,21 +7950,9 @@ struct
       in
       unify_props cx trace ~use_op x prop_obj_reason dict_reason p p2
     | None ->
-      let use_op =
-        Frame
-          ( PropertyCompatibility { prop = Some x; lower = dict_reason; upper = prop_obj_reason },
-            use_op
-          )
-      in
       let err =
-        Error_message.EPropNotFound
-          {
-            prop_name = Some x;
-            reason_prop = prop_reason;
-            reason_obj = dict_reason;
-            use_op;
-            suggestion = None;
-          }
+        Error_message.EPropNotFoundInSubtyping
+          { prop_name = Some x; reason_lower = dict_reason; reason_upper = prop_obj_reason; use_op }
       in
       add_output cx err
 

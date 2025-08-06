@@ -946,19 +946,9 @@ let object_rest
            * then we need to throw an error. *)
           | (ReactConfigMerge _, None, Some _, _) ->
             ( if Obj_type.is_exact flags1.obj_kind then
-              let use_op =
-                Frame (PropertyCompatibility { prop = Some k; lower = r2; upper = r1 }, unknown_use)
-              in
-              let r2 = replace_desc_reason (RProperty (Some k)) r2 in
               let err =
-                Error_message.EPropNotFound
-                  {
-                    prop_name = Some k;
-                    reason_prop = r2;
-                    reason_obj = r1;
-                    use_op;
-                    suggestion = None;
-                  }
+                Error_message.EPropNotFoundInSubtyping
+                  { prop_name = Some k; reason_lower = r2; reason_upper = r1; use_op = unknown_use }
               in
               add_output cx err
             );

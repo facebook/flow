@@ -237,23 +237,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Base.Option.iter lcall ~f:(fun _ ->
           if Base.Option.is_none ucall then
             let prop = Some (OrdinaryName "$call") in
-            let use_op =
-              Frame
-                ( PropertyCompatibility
-                    {
-                      prop;
-                      (* Lower and upper are reversed in this case since the lower object
-                       * is the one requiring the prop. *)
-                      lower = ureason;
-                      upper = lreason;
-                    },
-                  use_op
-                )
-            in
-            let reason_prop = replace_desc_reason (RProperty prop) lreason in
             let err =
-              Error_message.EPropNotFound
-                { prop_name = prop; reason_prop; reason_obj = ureason; use_op; suggestion = None }
+              (* Lower and upper are reversed in this case since the lower object
+               * is the one requiring the prop. *)
+              Error_message.EPropNotFoundInSubtyping
+                { prop_name = prop; reason_lower = ureason; reason_upper = lreason; use_op }
             in
             add_output cx err
       )
@@ -262,17 +250,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (match ucall with
     | Some ucall ->
       let prop_name = Some (OrdinaryName "$call") in
-      let use_op =
-        Frame (PropertyCompatibility { prop = prop_name; lower = lreason; upper = ureason }, use_op)
-      in
       (match lcall with
       | Some lcall ->
         rec_flow cx trace (Context.find_call cx lcall, UseT (use_op, Context.find_call cx ucall))
       | None ->
-        let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
         let error_message =
-          Error_message.EPropNotFound
-            { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
+          Error_message.EPropNotFoundInSubtyping
+            { reason_lower = lreason; reason_upper = ureason; prop_name; use_op }
         in
         add_output cx error_message)
     | None -> ());
@@ -1918,18 +1902,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       Base.Option.iter ucall ~f:(fun ucall ->
           let prop_name = Some (OrdinaryName "$call") in
-          let use_op =
-            Frame
-              (PropertyCompatibility { prop = prop_name; lower = lreason; upper = ureason }, use_op)
-          in
           match lcall with
           | Some lcall ->
             rec_flow cx trace (Context.find_call cx lcall, UseT (use_op, Context.find_call cx ucall))
           | None ->
-            let reason_prop = replace_desc_reason (RProperty prop_name) ureason in
             let error_message =
-              Error_message.EPropNotFound
-                { reason_prop; reason_obj = lreason; prop_name; use_op; suggestion = None }
+              Error_message.EPropNotFoundInSubtyping
+                { reason_lower = lreason; reason_upper = ureason; prop_name; use_op }
             in
             add_output cx error_message
       );

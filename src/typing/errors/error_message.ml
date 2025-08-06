@@ -83,6 +83,12 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       suggestion: string option;
     }
+  | EPropNotFoundInSubtyping of {
+      prop_name: name option;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropsExtraAgainstExactObject of {
       prop_names: name Nel.t;
       reason_l_obj: 'loc virtual_reason;
@@ -989,6 +995,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         suggestion;
       }
+  | EPropNotFoundInSubtyping { prop_name; reason_lower; reason_upper; use_op } ->
+    EPropNotFoundInSubtyping
+      {
+        prop_name;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+      }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     EPropsExtraAgainstExactObject
       {
@@ -1657,6 +1671,7 @@ let util_use_op_of_msg nope util = function
   | EExpectedBooleanLit { use_op; _ } -> util use_op
   | EExpectedBigIntLit { use_op; _ } -> util use_op
   | EPropNotFound { use_op; _ } -> util use_op
+  | EPropNotFoundInSubtyping { use_op; _ } -> util use_op
   | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
   | EIndexerCheckFailed { use_op; _ } -> util use_op
   | EPropNotReadable { use_op; _ } -> util use_op
@@ -2141,6 +2156,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropNotReadable _
   | EPropNotWritable _
   | EPropNotFound _
+  | EPropNotFoundInSubtyping _
   | EPropsExtraAgainstExactObject _
   | EIndexerCheckFailed _
   | EExpectedBooleanLit _
@@ -2341,6 +2357,12 @@ type 'loc friendly_message_recipe =
       (* Adds a reference to the indexer in the error message *)
       reason_indexer: 'loc Reason.virtual_reason option;
     }
+  | PropMissingInSubtyping of {
+      prop: string option;
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+    }
   | PropsExtraAgainstExactObject of {
       props: string Nel.t;
       reason_l_obj: 'loc Reason.virtual_reason;
@@ -2463,6 +2485,14 @@ let friendly_message_of_msg = function
         use_op;
         suggestion;
         reason_indexer = None;
+      }
+  | EPropNotFoundInSubtyping { prop_name; reason_lower; reason_upper; use_op } ->
+    PropMissingInSubtyping
+      {
+        prop = Base.Option.map ~f:display_string_of_name prop_name;
+        reason_lower;
+        reason_upper;
+        use_op;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     PropsExtraAgainstExactObject
@@ -3416,6 +3446,8 @@ let error_code_of_message err : error_code option =
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFound { use_op; _ } -> react_rule_of_use_op use_op ~default:Error_codes.PropMissing
+  | EPropNotFoundInSubtyping { use_op; _ } ->
+    react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EPropsExtraAgainstExactObject { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EIndexerCheckFailed { use_op; _ } ->
