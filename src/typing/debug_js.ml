@@ -1304,14 +1304,23 @@ let dump_error_message =
         (string_of_use_op use_op)
     | EPlatformSpecificImplementationModuleLookupFailed { loc = _; name } ->
       spf "EPlatformSpecificImplementationModuleLookupFailed(%s)" name
-    | EComparison { r1; r2; loc_opt } ->
+    | EComparison { r1; r2; loc_opt; strict_comparison_opt } ->
       spf
-        "EComparison (%s, %s, %s)"
+        "EComparison (%s, %s, %s, %s)"
         (dump_reason cx r1)
         (dump_reason cx r2)
         (match loc_opt with
         | Some loc -> string_of_aloc loc
         | None -> "None")
+        (let open Flow_intermediate_error_types in
+        match strict_comparison_opt with
+        | Some { left_precise_reason; right_precise_reason } ->
+          spf
+            "Some(%s, %s)"
+            (dump_reason cx left_precise_reason)
+            (dump_reason cx right_precise_reason)
+        | None -> "None"
+        )
     | ENonStrictEqualityComparison (reason1, reason2) ->
       spf "ENonStrictEqualityComparison (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | ETupleArityMismatch

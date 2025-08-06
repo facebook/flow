@@ -294,3 +294,11 @@
       break;
   }
 }
+
+{
+  declare const a: string;
+  declare const b: number;
+  if (b===0) {
+    a === b; // error
+  }
+}

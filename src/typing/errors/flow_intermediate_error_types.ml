@@ -121,6 +121,11 @@ type constant_condition_kind =
   | UnawaitedPromise
   | UncalledFunction
 
+type 'loc strict_comparison_info = {
+  left_precise_reason: 'loc virtual_reason;
+  right_precise_reason: 'loc virtual_reason;
+}
+
 module IncorrectType = struct
   type t =
     | Partial
@@ -408,6 +413,7 @@ type 'loc message =
   | MessageCannotCompare of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
+      strict_comparison_opt: 'loc strict_comparison_info option;
     }
   | MessageCannotCompareNonStrict of {
       lower: 'loc virtual_reason;

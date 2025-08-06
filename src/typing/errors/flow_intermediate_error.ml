@@ -1655,8 +1655,26 @@ let to_printable_error :
       [text msg; text " "; ref def_reason]
     | MessageCannotChangeEnumMember enum_reason ->
       [text "Cannot change member of "; ref enum_reason; text " because enums are frozen."]
-    | MessageCannotCompare { lower; upper } ->
-      [text "Cannot compare "; ref lower; text " to "; ref upper; text "."]
+    | MessageCannotCompare { lower; upper; strict_comparison_opt } ->
+      [text "Cannot compare "; ref lower; text " to "; ref upper]
+      @
+      (match strict_comparison_opt with
+      | None -> [text "."]
+      | Some { left_precise_reason; right_precise_reason } ->
+        [
+          text ", because ";
+          ref left_precise_reason;
+          text " is not a subtype of ";
+          ref right_precise_reason;
+          text " and ";
+          ref right_precise_reason;
+          text " is not a subtype of ";
+          ref left_precise_reason;
+          text
+            ". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. ";
+          text
+            "If that happens, you can cast one side to the union of both types to pass the flow check. ";
+        ])
     | MessageCannotCompareNonStrict { lower; upper } ->
       [
         text "Cannot compare ";

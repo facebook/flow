@@ -600,15 +600,13 @@ let check_strict_comparison cx all_strict_comparisons =
   Base.List.filter_map all_strict_comparisons ~f:(fun (loc, (left_ast, right_ast)) ->
       let ((_, left_t), _) = left_ast in
       let ((_, right_t), _) = right_ast in
-      let left_conc_t =
-        Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t left_t) left_t
-      in
-      let right_conc_t =
-        Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t right_t) right_t
-      in
+      let l_reason = TypeUtil.reason_of_t left_t in
+      let r_reason = TypeUtil.reason_of_t right_t in
+      let left_conc_t = Flow_js.singleton_concrete_type_for_inspection cx l_reason left_t in
+      let right_conc_t = Flow_js.singleton_concrete_type_for_inspection cx r_reason right_t in
       (* the reason after concretization will contain more information. *)
-      let l_reason = TypeUtil.reason_of_t left_conc_t in
-      let r_reason = TypeUtil.reason_of_t right_conc_t in
+      let l_singleton_reason = TypeUtil.singleton_reason_of_t left_conc_t in
+      let r_singleton_reason = TypeUtil.singleton_reason_of_t right_conc_t in
       let has_null_type cx t =
         match Type_filter.not_null cx t with
         | Type_filter.TypeFilterResult { changed = true; _ } -> true
@@ -629,7 +627,7 @@ let check_strict_comparison cx all_strict_comparisons =
         || Flow_js.FlowJs.speculative_subtyping_succeeds cx left_filtered right_expanded
       in
       let allowed = None in
-      let banned = Some (l_reason, r_reason, loc) in
+      let banned = Some (l_reason, r_reason, l_singleton_reason, r_singleton_reason, loc) in
       match (left_conc_t, right_conc_t) with
       | (AnyT _, _)
       | (_, AnyT _) ->
@@ -665,10 +663,22 @@ let check_strict_comparison cx all_strict_comparisons =
 let detect_invalid_strict_comparison cx =
   let all_strict_comparisons = Context.get_all_strict_comparisons cx in
   Base.List.iter
-    ~f:(fun (left_r, right_r, primary_loc) ->
+    ~f:(fun (l_reason, r_reason, l_singleton_reason, r_singleton_reason, primary_loc) ->
       Flow_js.add_output
         cx
-        (Error_message.EComparison { r1 = left_r; r2 = right_r; loc_opt = Some primary_loc }))
+        (Error_message.EComparison
+           {
+             r1 = l_reason;
+             r2 = r_reason;
+             loc_opt = Some primary_loc;
+             strict_comparison_opt =
+               Some
+                 {
+                   Flow_intermediate_error_types.left_precise_reason = l_singleton_reason;
+                   Flow_intermediate_error_types.right_precise_reason = r_singleton_reason;
+                 };
+           }
+        ))
     (check_strict_comparison cx all_strict_comparisons)
 
 let detect_unnecessary_optional_chains cx =
