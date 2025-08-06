@@ -1598,10 +1598,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:280:3
 
-Cannot compare `d` [1] to string [2], because `d` [1] is not a subtype of string literal `a` [2] and string literal
-`a` [2] is not a subtype of `d` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `d` [1] to string [2], because `d` [1] is empty.  [invalid-compare]
 
    typed_check.js:280:3
    280|   d === 'a'; // error, empty is not allowed
@@ -1618,10 +1615,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:281:3
 
-Cannot compare `d` [1] to string [2], because `d` [1] is not a subtype of string literal `a` [2] and string literal
-`a` [2] is not a subtype of `d` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `d` [1] to string [2], because `d` [1] is empty.  [invalid-compare]
 
    typed_check.js:281:3
    281|   d !== 'a'; // error, empty is not allowed
@@ -1638,10 +1632,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:282:3
 
-Cannot compare string [1] to `d` [2], because string literal `a` [1] is not a subtype of `d` [2] and `d` [2] is not a
-subtype of string literal `a` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare string [1] to `d` [2], because `d` [2] is empty.  [invalid-compare]
 
    typed_check.js:282:3
    282|   'a' === d; // error, empty is not allowed
@@ -1658,10 +1649,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:283:3
 
-Cannot compare string [1] to `d` [2], because string literal `a` [1] is not a subtype of `d` [2] and `d` [2] is not a
-subtype of string literal `a` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare string [1] to `d` [2], because `d` [2] is empty.  [invalid-compare]
 
    typed_check.js:283:3
    283|   'a' !== d; // error, empty is not allowed

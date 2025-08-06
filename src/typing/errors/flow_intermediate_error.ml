@@ -1692,7 +1692,19 @@ let to_printable_error :
             text "Perhaps you meant to use `==`, which checks for both ";
             text "`undefined` and `null`?";
           ]
-        | _ -> [text "."]))
+        | StrictComparisonEmpty { is_lhs_empty; is_rhs_empty } ->
+          (match (is_lhs_empty, is_rhs_empty) with
+          | (true, true) ->
+            [
+              text ", because both sides,";
+              no_desc_ref (loc_of_reason left_precise_reason);
+              text " and";
+              no_desc_ref (loc_of_reason right_precise_reason);
+              text " , are empty. ";
+            ]
+          | (true, false) -> [text ", because "; ref left_precise_reason; text " is empty. "]
+          | (false, true) -> [text ", because "; ref right_precise_reason; text " is empty. "]
+          | (false, false) -> assert false)))
     | MessageCannotCompareNonStrict { lower; upper } ->
       [
         text "Cannot compare ";
