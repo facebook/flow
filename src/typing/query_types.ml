@@ -142,6 +142,17 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   in
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
+let dump_types_for_tool cx typed_ast =
+  let types = Typed_ast_utils.typed_ast_to_list typed_ast in
+  let print_type_json (loc, t) =
+    ( loc,
+      Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t
+      |> ConvertTypes.type_to_json cx 10
+      |> Hh_json.json_to_string
+    )
+  in
+  Base.List.map types ~f:print_type_json |> concretize_loc_pairs |> sort_loc_pairs
+
 let insert_type_normalize ~cx ~file_sig ~omit_targ_defaults ~typed_ast loc t : Ty.elt result =
   let options =
     {

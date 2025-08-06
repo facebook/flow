@@ -2257,6 +2257,8 @@ and Poly : sig
 
   val string_of_id : id -> string
 
+  val stable_string_of_id : id -> string
+
   val generate_id : unit -> id
 
   module Set : Flow_set.S with type elt = id

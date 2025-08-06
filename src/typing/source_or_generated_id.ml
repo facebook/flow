@@ -58,3 +58,8 @@ let string_of_id = function
   | Generated id -> string_of_int id
   | Source { type_sig; loc = id } ->
     Utils_js.spf "%s (type_sig: %b)" (Reason.string_of_aloc (id :> ALoc.t)) type_sig
+
+let stable_string_of_id = function
+  | Generated id -> string_of_int id
+  | Source { type_sig; loc = id } ->
+    Utils_js.spf "%s (type_sig: %b)" (ALoc.to_string_no_source (id :> ALoc.t)) type_sig

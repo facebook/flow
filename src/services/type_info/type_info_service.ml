@@ -164,13 +164,16 @@ let batched_type_at_pos_from_special_comments
   in
   (friendly_results, Hh_json.JSON_Array json_data_list)
 
-let dump_types ~evaluate_type_destructors cx file_sig typed_ast =
+let dump_types ~evaluate_type_destructors ~for_tool cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
-  let exact_by_default = Context.exact_by_default cx in
-  let printer =
-    Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax:(Context.ts_syntax cx)
-  in
-  Query_types.dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast
+  if for_tool then
+    Query_types.dump_types_for_tool cx typed_ast
+  else
+    let exact_by_default = Context.exact_by_default cx in
+    let printer =
+      Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax:(Context.ts_syntax cx)
+    in
+    Query_types.dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast
 
 let coverage ~cx ~typed_ast ~force file content =
   let should_check =

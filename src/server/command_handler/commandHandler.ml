@@ -1165,7 +1165,7 @@ let collect_rage ~options ~reader ~env ~files =
   in
   items
 
-let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
+let dump_types ~options ~env ~profiling ~evaluate_type_destructors ~for_tool file_input =
   let open Base.Result in
   let file_key = file_key_of_file_input ~options ~env file_input in
   File_input.content_of_file_input file_input >>= fun content ->
@@ -1176,7 +1176,7 @@ let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
   match file_artifacts_result with
   | Error _parse_errors -> Error "Couldn't parse file in parse_contents"
   | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
-    Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
+    Ok (Type_info_service.dump_types ~evaluate_type_destructors ~for_tool cx file_sig typed_ast)
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force file_key content =
   let (file_artifacts_result, did_hit_cache) =
@@ -1701,9 +1701,11 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env =
+let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env ~for_tool =
   let response =
-    try_with (fun () -> dump_types ~options ~env ~profiling ~evaluate_type_destructors input)
+    try_with (fun () ->
+        dump_types ~options ~env ~profiling ~evaluate_type_destructors ~for_tool input
+    )
   in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
@@ -2065,7 +2067,8 @@ let get_ephemeral_handler genv command =
         filename
     in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
-  | ServerProt.Request.DUMP_TYPES { input; evaluate_type_destructors; wait_for_recheck } ->
+  | ServerProt.Request.DUMP_TYPES { input; evaluate_type_destructors; wait_for_recheck; for_tool }
+    ->
     let evaluate_type_destructors =
       if evaluate_type_destructors then
         Ty_normalizer_env.EvaluateAll
@@ -2075,7 +2078,7 @@ let get_ephemeral_handler genv command =
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_dump_types ~options ~input ~evaluate_type_destructors)
+      (handle_dump_types ~options ~input ~evaluate_type_destructors ~for_tool)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck

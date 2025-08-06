@@ -15,4 +15,6 @@ val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
 
 val string_of_id : id -> string
 
+val stable_string_of_id : id -> string
+
 val generate_id : unit -> id

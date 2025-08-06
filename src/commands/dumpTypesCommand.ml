@@ -37,6 +37,7 @@ let spec =
              "--evaluate-type-destructors"
              truthy
              ~doc:"Use the result of type destructor evaluation if available"
+        |> flag "--for-tool" truthy ~doc:""
         |> anon "file" (optional string)
       );
   }
@@ -97,6 +98,7 @@ let main
     path
     wait_for_recheck
     evaluate_type_destructors
+    for_tool
     filename
     () =
   let json = json || pretty in
@@ -117,7 +119,8 @@ let main
       None
   in
   let request =
-    ServerProt.Request.DUMP_TYPES { input = file; evaluate_type_destructors; wait_for_recheck }
+    ServerProt.Request.DUMP_TYPES
+      { input = file; evaluate_type_destructors; wait_for_recheck; for_tool }
   in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.DUMP_TYPES (Error err) ->
