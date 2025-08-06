@@ -1732,15 +1732,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
           Flow_intermediate_error_types.ReactModuleForReactMixedElementType
       in
       rec_flow_t cx trace ~use_op (mixed_element, u)
-    | ( DefT
-          ( r,
-            RendersT
-              (StructuralRenders { renders_variant = RendersNormal; renders_structural_type = t })
-          ),
+    | ( DefT (r, RendersT (StructuralRenders { renders_variant = _; renders_structural_type = t })),
         u
       ) ->
       let u' = ExitRendersT { renders_reason = r; u = UseT (use_op, u) } in
       rec_flow cx trace (t, u')
+    | (DefT (r, RendersT DefaultRenders), u) ->
+      let u' = ExitRendersT { renders_reason = r; u = UseT (use_op, u) } in
+      rec_flow cx trace (l, u')
     (***********************************************)
     (* function types deconstruct into their parts *)
     (***********************************************)
