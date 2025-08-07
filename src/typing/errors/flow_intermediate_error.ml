@@ -894,29 +894,12 @@ let rec make_intermediate_error :
         | _ -> make_error lower (MessageIncompatibleGeneral { lower; upper })
       end)
   in
-  (* When we fail to find a property on an object we use this function to create
-   * an error. prop_loc should be the position of the use which caused this
-   * error. The use_op represents how we got to this error.
-   *
-   * If the use_op is a PropertyCompatibility frame then we encountered this
-   * error while subtyping two objects. In this case we add a bit more
-   * information to the error message. *)
-  let mk_prop_missing_error prop_loc prop lower use_op suggestion reason_indexer =
-    let (loc, lower, upper, use_op) =
-      match use_op with
-      (* If we are missing a property while performing property compatibility
-       * then we are subtyping. Record the upper reason. *)
-      | Frame (PropertyCompatibility { prop = compat_prop; lower; upper; _ }, use_op)
-        when prop = Base.Option.map ~f:display_string_of_name compat_prop ->
-        (loc_of_reason lower, lower, Some upper, use_op)
-      (* Otherwise this is a general property missing error. *)
-      | _ -> (prop_loc, lower, None, use_op)
-    in
+  let mk_prop_missing_error loc prop lower use_op suggestion reason_indexer =
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
     mk_use_op_error
       loc
       use_op
-      (MessagePropMissing { lower; upper; prop; suggestion; reason_indexer })
+      (MessagePropMissing { lower; upper = None; prop; suggestion; reason_indexer })
   in
   let mk_prop_missing_in_subtyping_error prop suggestion lower upper reason_indexer use_op =
     let loc = loc_of_reason lower in
