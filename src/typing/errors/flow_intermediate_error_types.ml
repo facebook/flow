@@ -124,10 +124,7 @@ type constant_condition_kind =
 type strict_comparison_kind =
   | StrictComparisonGeneral
   | StrictComparisonNull of { null_side: [ `Left | `Right ] }
-  | StrictComparisonEmpty of {
-      is_lhs_empty: bool;
-      is_rhs_empty: bool;
-    }
+  | StrictComparisonEmpty of { empty_side: [ `Left | `Right ] }
 
 type 'loc strict_comparison_info = {
   left_precise_reason: 'loc virtual_reason;

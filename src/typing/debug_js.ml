@@ -1344,11 +1344,12 @@ let dump_error_message =
                 (match null_side with
                 | `Left -> "Left"
                 | `Right -> "Right")
-            | Flow_intermediate_error_types.StrictComparisonEmpty { is_lhs_empty; is_rhs_empty } ->
+            | Flow_intermediate_error_types.StrictComparisonEmpty { empty_side } ->
               spf
-                "StrictComparisonEmpty { is_lhs_empty: %b; is_rhs_empty: %b }"
-                is_lhs_empty
-                is_rhs_empty)
+                "StrictComparisonEmpty { empty_side: %s }"
+                (match empty_side with
+                | `Left -> "Left"
+                | `Right -> "Right"))
         | None -> "None"
         )
     | ENonStrictEqualityComparison (reason1, reason2) ->

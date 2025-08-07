@@ -656,26 +656,13 @@ let check_strict_comparison cx all_strict_comparisons =
       | (DefT (_, VoidT), _)
       | (_, DefT (_, VoidT)) ->
         allowed
-      | (DefT (_, EmptyT), DefT (_, EmptyT)) ->
-        if Context.enable_invalid_comparison_general cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind =
-                  Flow_intermediate_error_types.StrictComparisonEmpty
-                    { is_lhs_empty = true; is_rhs_empty = true };
-              }
-          )
-        else
-          allowed
+      | (DefT (_, EmptyT), DefT (_, EmptyT)) -> allowed
       | (DefT (_, EmptyT), _) ->
         if Context.enable_invalid_comparison_general cx then
           Base.Option.map banned ~f:(fun banned ->
               {
                 banned with
-                kind =
-                  Flow_intermediate_error_types.StrictComparisonEmpty
-                    { is_lhs_empty = true; is_rhs_empty = false };
+                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Left };
               }
           )
         else
@@ -685,9 +672,7 @@ let check_strict_comparison cx all_strict_comparisons =
           Base.Option.map banned ~f:(fun banned ->
               {
                 banned with
-                kind =
-                  Flow_intermediate_error_types.StrictComparisonEmpty
-                    { is_lhs_empty = false; is_rhs_empty = true };
+                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Right };
               }
           )
         else

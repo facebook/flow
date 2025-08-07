@@ -302,3 +302,13 @@
     a === b; // error
   }
 }
+
+{
+  declare const a: empty;
+  declare const b: empty;
+  declare const c: string;
+  a === b; // ok
+  a !== b; // ok
+  a === c; // error
+  a !== c; // error
+}

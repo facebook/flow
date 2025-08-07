@@ -1699,19 +1699,14 @@ let to_printable_error :
             code "null";
             text "?";
           ]
-        | StrictComparisonEmpty { is_lhs_empty; is_rhs_empty } ->
-          (match (is_lhs_empty, is_rhs_empty) with
-          | (true, true) ->
-            [
-              text ", because both sides,";
-              no_desc_ref (loc_of_reason left_precise_reason);
-              text " and";
-              no_desc_ref (loc_of_reason right_precise_reason);
-              text " , are empty. ";
-            ]
-          | (true, false) -> [text ", because "; ref left_precise_reason; text " is empty. "]
-          | (false, true) -> [text ", because "; ref right_precise_reason; text " is empty. "]
-          | (false, false) -> assert false)))
+        | StrictComparisonEmpty { empty_side } ->
+          [
+            text ", because ";
+            (match empty_side with
+            | `Left -> ref left_precise_reason
+            | `Right -> ref right_precise_reason);
+            text " is empty. ";
+          ]))
     | MessageCannotCompareNonStrict { lower; upper } ->
       [
         text "Cannot compare ";

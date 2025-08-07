@@ -1707,6 +1707,40 @@ References:
                            ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------- typed_check.js:312:3
+
+Cannot compare `a` [1] to `c` [2], because `a` [1] is empty.  [invalid-compare]
+
+   typed_check.js:312:3
+   312|   a === c; // error
+          ^^^^^^^
+
+References:
+   typed_check.js:307:17
+   307|   declare const a: empty;
+                        ^ [1]
+   typed_check.js:309:17
+   309|   declare const c: string;
+                        ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- typed_check.js:313:3
+
+Cannot compare `a` [1] to `c` [2], because `a` [1] is empty.  [invalid-compare]
+
+   typed_check.js:313:3
+   313|   a !== c; // error
+          ^^^^^^^
+
+References:
+   typed_check.js:307:17
+   307|   declare const a: empty;
+                        ^ [1]
+   typed_check.js:309:17
+   309|   declare const c: string;
+                        ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- unary_not.js:2:8
 
 This condition is falsy. [constant-condition]
@@ -1852,4 +1886,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 171 errors
+Found 173 errors
