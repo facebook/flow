@@ -190,7 +190,14 @@ struct
         ureason
         propref
         (p, OrdinaryField { type_ = tout; polarity })
-    | LookupPropForSubtyping (use_op, up) ->
+    | LookupPropForSubtyping { use_op; prop = up; prop_name; reason_lower; reason_upper } ->
+      let use_op =
+        Frame
+          ( PropertyCompatibility
+              { prop = Some prop_name; lower = reason_lower; upper = reason_upper },
+            use_op
+          )
+      in
       rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
     | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
     | ReadProp { use_op; obj_t; tout } ->
@@ -4720,14 +4727,25 @@ struct
               }
           ) ->
           let error_message =
-            let use_op = use_op_of_lookup_action action in
             let suggestion =
               Base.Option.bind ids ~f:(fun ids ->
                   prop_typo_suggestion cx (Properties.Set.elements ids) (display_string_of_name name)
               )
             in
-            Error_message.EPropNotFound
-              { reason_prop; reason_obj = strict_reason; prop_name = Some name; use_op; suggestion }
+            match action with
+            | LookupPropForSubtyping { use_op; prop = _; prop_name; reason_lower; reason_upper } ->
+              Error_message.EPropNotFoundInSubtyping
+                { prop_name = Some prop_name; suggestion; reason_lower; reason_upper; use_op }
+            | _ ->
+              let use_op = use_op_of_lookup_action action in
+              Error_message.EPropNotFound
+                {
+                  reason_prop;
+                  reason_obj = strict_reason;
+                  prop_name = Some name;
+                  use_op;
+                  suggestion;
+                }
           in
           add_output cx error_message;
           let p =
@@ -4762,15 +4780,27 @@ struct
           | _ ->
             let reason_prop = reason_op in
             let error_message =
-              let use_op = use_op_of_lookup_action action in
-              Error_message.EPropNotFound
-                {
-                  reason_prop;
-                  reason_obj = strict_reason;
-                  prop_name = None;
-                  use_op;
-                  suggestion = None;
-                }
+              match action with
+              | LookupPropForSubtyping { use_op; prop = _; prop_name; reason_lower; reason_upper }
+                ->
+                Error_message.EPropNotFoundInSubtyping
+                  {
+                    prop_name = Some prop_name;
+                    suggestion = None;
+                    reason_lower;
+                    reason_upper;
+                    use_op;
+                  }
+              | _ ->
+                let use_op = use_op_of_lookup_action action in
+                Error_message.EPropNotFound
+                  {
+                    reason_prop;
+                    reason_obj = strict_reason;
+                    prop_name = None;
+                    use_op;
+                    suggestion = None;
+                  }
             in
             add_output cx error_message)
         (* LookupT is a non-strict lookup *)
@@ -6101,12 +6131,6 @@ struct
        );
     own_props
     |> NameUtils.Map.iter (fun name p ->
-           let use_op =
-             Frame
-               ( PropertyCompatibility { prop = Some name; lower = lreason; upper = reason_struct },
-                 use_op
-               )
-           in
            match p with
            | Field { type_ = OptionalT _ as t; polarity; _ } ->
              let propref =
@@ -6134,7 +6158,14 @@ struct
                      try_ts_on_failure = [];
                      propref;
                      lookup_action =
-                       LookupPropForSubtyping (use_op, OrdinaryField { type_ = t; polarity });
+                       LookupPropForSubtyping
+                         {
+                           use_op;
+                           prop = OrdinaryField { type_ = t; polarity };
+                           prop_name = name;
+                           reason_lower = lreason;
+                           reason_upper = reason_struct;
+                         };
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                      ignore_dicts = false;
@@ -6157,7 +6188,15 @@ struct
                      lookup_kind = Strict lreason;
                      try_ts_on_failure = [];
                      propref;
-                     lookup_action = LookupPropForSubtyping (use_op, read_only_if_lit p);
+                     lookup_action =
+                       LookupPropForSubtyping
+                         {
+                           use_op;
+                           prop = read_only_if_lit p;
+                           prop_name = name;
+                           reason_lower = lreason;
+                           reason_upper = reason_struct;
+                         };
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                      ignore_dicts = false;
@@ -6166,12 +6205,6 @@ struct
        );
     proto_props
     |> NameUtils.Map.iter (fun name p ->
-           let use_op =
-             Frame
-               ( PropertyCompatibility { prop = Some name; lower = lreason; upper = reason_struct },
-                 use_op
-               )
-           in
            let propref =
              let reason = update_desc_reason (fun desc -> RPropertyOf (name, desc)) reason_struct in
              mk_named_prop ~reason name
@@ -6186,7 +6219,15 @@ struct
                    lookup_kind = Strict lreason;
                    try_ts_on_failure = [];
                    propref;
-                   lookup_action = LookupPropForSubtyping (use_op, read_only_if_lit p);
+                   lookup_action =
+                     LookupPropForSubtyping
+                       {
+                         use_op;
+                         prop = read_only_if_lit p;
+                         prop_name = name;
+                         reason_lower = lreason;
+                         reason_upper = reason_struct;
+                       };
                    method_accessible = true;
                    ids = Some Properties.Set.empty;
                    ignore_dicts = false;

@@ -426,8 +426,8 @@ and dump_use_t_ (depth, tvars) cx t =
     | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
     | LookupPropForTvarPopulation { tout; polarity } ->
       spf "LookupPropForTvarPopulation (%s, %s)" (Polarity.show polarity) (kid tout)
-    | LookupPropForSubtyping (op, p) ->
-      spf "LookupPropForSubtyping (%s, %s)" (string_of_use_op op) (normalized_prop p)
+    | LookupPropForSubtyping { use_op; prop; _ } ->
+      spf "LookupPropForSubtyping (%s, %s)" (string_of_use_op use_op) (normalized_prop prop)
     | SuperProp (_, p) -> spf "Super %s" (normalized_prop p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in

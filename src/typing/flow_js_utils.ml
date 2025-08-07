@@ -476,7 +476,7 @@ let error_message_kind_of_upper = function
 let use_op_of_lookup_action = function
   | ReadProp { use_op; _ }
   | WriteProp { use_op; _ }
-  | LookupPropForSubtyping (use_op, _)
+  | LookupPropForSubtyping { use_op; _ }
   | SuperProp (use_op, _)
   | MatchProp { use_op; _ } ->
     use_op

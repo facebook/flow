@@ -378,7 +378,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       propref;
                       lookup_action =
                         LookupPropForSubtyping
-                          (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
+                          {
+                            use_op = use_op';
+                            prop = OrdinaryField { type_; polarity = Polarity.Positive };
+                            prop_name = name;
+                            reason_lower = lreason;
+                            reason_upper = ureason;
+                          };
                       method_accessible = true;
                       ids = None;
                       ignore_dicts = false;
@@ -402,7 +408,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       lookup_kind;
                       try_ts_on_failure = [];
                       propref;
-                      lookup_action = LookupPropForSubtyping (use_op, Property.type_ up);
+                      lookup_action =
+                        LookupPropForSubtyping
+                          {
+                            use_op = use_op';
+                            prop = Property.type_ up;
+                            prop_name = name;
+                            reason_lower = lreason;
+                            reason_upper = ureason;
+                          };
                       method_accessible = true;
                       ids = None;
                       ignore_dicts = false;
@@ -1930,17 +1944,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           uflds
           (fun name up acc ->
-            let use_op =
-              Frame
-                ( PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason },
-                  use_op
-                )
-            in
             let propref =
               mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) ureason) name
             in
             match NameUtils.Map.find_opt name lflds with
             | Some lp ->
+              let use_op =
+                Frame
+                  ( PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason },
+                    use_op
+                  )
+              in
               let errs =
                 rec_flow_p cx ~trace ~use_op propref (Property.type_ lp, Property.type_ up)
               in
@@ -1966,7 +1980,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
                             lookup_kind;
                             try_ts_on_failure = [];
                             propref;
-                            lookup_action = LookupPropForSubtyping (use_op, Property.type_ up);
+                            lookup_action =
+                              LookupPropForSubtyping
+                                {
+                                  use_op;
+                                  prop = Property.type_ up;
+                                  prop_name = name;
+                                  reason_lower = lreason;
+                                  reason_upper = ureason;
+                                };
                             method_accessible = false;
                             ids = Some (Properties.Set.of_list [lown; lproto]);
                             ignore_dicts = false;

@@ -1335,7 +1335,13 @@ module rec TypeTerm : sig
         polarity: Polarity.t;
         tout: t;
       }
-    | LookupPropForSubtyping of use_op * property_type
+    | LookupPropForSubtyping of {
+        use_op: use_op;
+        prop: property_type;
+        prop_name: name;
+        reason_lower: reason;
+        reason_upper: reason;
+      }
     | SuperProp of use_op * property_type
     | MatchProp of {
         use_op: use_op;

@@ -660,20 +660,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let lookup_kind = NonstrictReturning (None, None) in
         let prop_name = OrdinaryName "key" in
         let propref = mk_named_prop ~reason:reason_key prop_name in
-        let use_op =
-          Frame
-            ( PropertyCompatibility
-                {
-                  prop = Some prop_name;
-                  lower = reason_of_t normalized_jsx_props;
-                  upper = reason_key;
-                },
-              use_op
-            )
-        in
         let action =
           LookupPropForSubtyping
-            (use_op, OrdinaryField { type_ = key_t; polarity = Polarity.Positive })
+            {
+              use_op;
+              prop = OrdinaryField { type_ = key_t; polarity = Polarity.Positive };
+              prop_name;
+              reason_lower = reason_of_t normalized_jsx_props;
+              reason_upper = reason_key;
+            }
         in
         rec_flow
           cx
@@ -711,20 +706,15 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           let lookup_kind = NonstrictReturning (None, None) in
           let prop_name = OrdinaryName "ref" in
           let propref = mk_named_prop ~reason:reason_ref prop_name in
-          let use_op =
-            Frame
-              ( PropertyCompatibility
-                  {
-                    prop = Some prop_name;
-                    lower = reason_of_t normalized_jsx_props;
-                    upper = reason_ref;
-                  },
-                use_op
-              )
-          in
           let action =
             LookupPropForSubtyping
-              (use_op, OrdinaryField { type_ = ref_t; polarity = Polarity.Positive })
+              {
+                use_op;
+                prop = OrdinaryField { type_ = ref_t; polarity = Polarity.Positive };
+                prop_name;
+                reason_lower = reason_of_t normalized_jsx_props;
+                reason_upper = reason_ref;
+              }
           in
           rec_flow
             cx
