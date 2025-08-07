@@ -1206,7 +1206,7 @@ module rec ConsGen : S = struct
         Annot_LookupT (reason_op, use_op, Named { reason = reason_prop; name; _ }, _)
       ) ->
       let error_message =
-        Error_message.EPropNotFound
+        Error_message.EPropNotFoundInLookup
           { reason_prop; reason_obj = reason_op; prop_name = Some name; use_op; suggestion = None }
       in
       Flow_js_utils.add_output cx error_message;

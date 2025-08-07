@@ -1452,7 +1452,7 @@ struct
               | _ -> (None, None)
             in
             let err =
-              Error_message.EPropNotFound
+              Error_message.EPropNotFoundInLookup
                 {
                   prop_name = prop;
                   reason_prop = reason_op;
@@ -1476,7 +1476,7 @@ struct
           | Some _ -> ()
           | None ->
             let err =
-              Error_message.EPropNotFound
+              Error_message.EPropNotFoundInLookup
                 {
                   prop_name = Some x;
                   reason_prop = reason_op;
@@ -1491,7 +1491,7 @@ struct
             | None -> add_output cx err))
         | (DefT (reason_o, InstanceT _), HasOwnPropT (use_op, reason_op, _)) ->
           let err =
-            Error_message.EPropNotFound
+            Error_message.EPropNotFoundInLookup
               {
                 prop_name = None;
                 reason_prop = reason_op;
@@ -2719,7 +2719,7 @@ struct
             | _ ->
               let reason_prop = replace_desc_reason (RProperty prop_name) reason_op in
               let error_message =
-                Error_message.EPropNotFound
+                Error_message.EPropNotFoundInLookup
                   { reason_prop; reason_obj = reason; prop_name; use_op; suggestion = None }
               in
               add_output cx error_message;
@@ -4738,7 +4738,7 @@ struct
                 { prop_name = Some prop_name; suggestion; reason_lower; reason_upper; use_op }
             | _ ->
               let use_op = use_op_of_lookup_action action in
-              Error_message.EPropNotFound
+              Error_message.EPropNotFoundInLookup
                 {
                   reason_prop;
                   reason_obj = strict_reason;
@@ -4793,7 +4793,7 @@ struct
                   }
               | _ ->
                 let use_op = use_op_of_lookup_action action in
-                Error_message.EPropNotFound
+                Error_message.EPropNotFoundInLookup
                   {
                     reason_prop;
                     reason_obj = strict_reason;
@@ -5200,7 +5200,7 @@ struct
           ) ->
           add_output
             cx
-            (Error_message.EPropNotFound
+            (Error_message.EPropNotFoundInLookup
                {
                  prop_name = None;
                  reason_prop = TypeUtil.reason_of_t l;
@@ -7242,7 +7242,7 @@ struct
         if Obj_type.is_exact o.flags.obj_kind then
           add_output
             cx
-            (Error_message.EPropNotFound
+            (Error_message.EPropNotFoundInLookup
                {
                  prop_name = Some name;
                  reason_prop;

@@ -139,7 +139,7 @@ let score_of_msg msg =
      * a missing prop does not increase the likelihood that the user was close to
      * the right types. *)
     | EIncompatibleProp { use_op = Some (Frame (PropertyCompatibility _, _)); _ }
-    | EPropNotFound { use_op = Frame (PropertyCompatibility _, _); _ } ->
+    | EPropNotFoundInLookup { use_op = Frame (PropertyCompatibility _, _); _ } ->
       -frame_score
     | _ -> 0
   in
@@ -321,12 +321,14 @@ let post_process_errors original_errors =
                 casting_syntax;
               }
            )
-    | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
+    | EPropNotFoundInLookup { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
       (* PropNotFound error will always display the missing vs existing prop in the same order. *)
       let use_op' = remove_unify_flip use_op in
       use_op = use_op'
       || is_not_duplicate
-           (EPropNotFound { prop_name; reason_obj; reason_prop; use_op = use_op'; suggestion })
+           (EPropNotFoundInLookup
+              { prop_name; reason_obj; reason_prop; use_op = use_op'; suggestion }
+           )
     | _ -> true
   in
   Flow_error.ErrorSet.filter retain_error original_errors
@@ -894,7 +896,7 @@ let rec make_intermediate_error :
         | _ -> make_error lower (MessageIncompatibleGeneral { lower; upper })
       end)
   in
-  let mk_prop_missing_error loc prop lower use_op suggestion reason_indexer =
+  let mk_prop_missing_in_lookup_error loc prop lower use_op suggestion reason_indexer =
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
     mk_use_op_error
       loc
@@ -947,7 +949,7 @@ let rec make_intermediate_error :
     | IncompatibleSetPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop) ->
-      mk_prop_missing_error
+      mk_prop_missing_in_lookup_error
         prop_loc
         (Base.Option.map ~f:display_string_of_name prop)
         lower
@@ -957,7 +959,7 @@ let rec make_intermediate_error :
     | IncompatibleGetElemT prop_loc
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc ->
-      mk_prop_missing_error prop_loc None lower use_op None None
+      mk_prop_missing_in_lookup_error prop_loc None lower use_op None None
     | IncompatibleGetStaticsT -> mk_use_op_error use_loc use_op (MessageLowerIsNotInstanceType lower)
     | IncompatibleBindT -> mk_use_op_error use_loc use_op (MessageLowerIsNotFunctionType lower)
     (* unreachable or unclassified use-types. until we have a mechanical way
@@ -992,8 +994,8 @@ let rec make_intermediate_error :
       mk_error ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
     | (None, UseOp { loc; message; use_op; explanation }) ->
       mk_use_op_error loc use_op ?explanation message
-    | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
-      mk_prop_missing_error loc prop reason_obj use_op suggestion reason_indexer
+    | (None, PropMissingInLookup { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
+      mk_prop_missing_in_lookup_error loc prop reason_obj use_op suggestion reason_indexer
     | ( None,
         PropMissingInSubtyping
           { prop; reason_lower; reason_upper; reason_indexer; suggestion; use_op }

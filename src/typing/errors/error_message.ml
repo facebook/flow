@@ -76,7 +76,7 @@ and 'loc t' =
       reason_upper: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
-  | EPropNotFound of {
+  | EPropNotFoundInLookup of {
       prop_name: name option;
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
@@ -987,8 +987,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
       }
-  | EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion } ->
-    EPropNotFound
+  | EPropNotFoundInLookup { prop_name; reason_prop; reason_obj; use_op; suggestion } ->
+    EPropNotFoundInLookup
       {
         prop_name;
         reason_prop = map_reason reason_prop;
@@ -1672,7 +1672,7 @@ let util_use_op_of_msg nope util = function
   | EExpectedNumberLit { use_op; _ } -> util use_op
   | EExpectedBooleanLit { use_op; _ } -> util use_op
   | EExpectedBigIntLit { use_op; _ } -> util use_op
-  | EPropNotFound { use_op; _ } -> util use_op
+  | EPropNotFoundInLookup { use_op; _ } -> util use_op
   | EPropNotFoundInSubtyping { use_op; _ } -> util use_op
   | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
   | EIndexerCheckFailed { use_op; _ } -> util use_op
@@ -2157,7 +2157,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropPolarityMismatch _
   | EPropNotReadable _
   | EPropNotWritable _
-  | EPropNotFound _
+  | EPropNotFoundInLookup _
   | EPropNotFoundInSubtyping _
   | EPropsExtraAgainstExactObject _
   | EIndexerCheckFailed _
@@ -2350,7 +2350,7 @@ type 'loc friendly_message_recipe =
       representation_type: string option;
       casting_syntax: Options.CastingSyntax.t;
     }
-  | PropMissing of {
+  | PropMissingInLookup of {
       loc: 'loc;
       prop: string option;
       suggestion: string option;
@@ -2405,7 +2405,7 @@ let friendly_message_of_msg = function
     else
       Speculation { loc = loc_of_reason reason_upper; use_op; branches }
   | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
-    PropMissing
+    PropMissingInLookup
       {
         loc = loc_of_reason reason_prop;
         prop = Base.Option.map ~f:display_string_of_name prop;
@@ -2480,8 +2480,8 @@ let friendly_message_of_msg = function
     Incompatible { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
     Incompatible { reason_lower; reason_upper; use_op; explanation = None }
-  | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
-    PropMissing
+  | EPropNotFoundInLookup { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
+    PropMissingInLookup
       {
         loc = loc_of_reason reason_prop;
         prop = Base.Option.map ~f:display_string_of_name prop_name;
@@ -2551,7 +2551,7 @@ let friendly_message_of_msg = function
   | EExpectedModuleLookupFailed { loc = _; name; expected_module_purpose } ->
     Normal (MessageCannotResolveExpectedModule { name; expected_module_purpose })
   | EPrivateLookupFailed (reasons, x, use_op) ->
-    PropMissing
+    PropMissingInLookup
       {
         loc = loc_of_reason (fst reasons);
         prop = Some ("#" ^ display_string_of_name x);
@@ -3451,7 +3451,8 @@ let error_code_of_message err : error_code option =
   | EPrimitiveAsInterface _ -> Some IncompatibleType
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
-  | EPropNotFound { use_op; _ } -> react_rule_of_use_op use_op ~default:Error_codes.PropMissing
+  | EPropNotFoundInLookup { use_op; _ } ->
+    react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EPropNotFoundInSubtyping { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EPropsExtraAgainstExactObject { use_op; _ } ->

@@ -194,7 +194,9 @@ let detect_test_prop_misses cx =
     ~f:(fun (prop_name, (reason_prop, reason_obj), use_op, suggestion) ->
       Flow_js.add_output
         cx
-        (Error_message.EPropNotFound { prop_name; reason_prop; reason_obj; use_op; suggestion }))
+        (Error_message.EPropNotFoundInLookup
+           { prop_name; reason_prop; reason_obj; use_op; suggestion }
+        ))
     misses
 
 type truthyness_result =
