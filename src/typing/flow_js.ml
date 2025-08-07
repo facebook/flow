@@ -181,7 +181,17 @@ struct
   let perform_lookup_action cx trace propref p target_kind lreason ureason =
     let open FlowJs in
     function
-    | LookupProp (use_op, up) -> rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
+    | LookupPropForTvarPopulation { tout; polarity } ->
+      rec_flow_p
+        cx
+        ~trace
+        ~use_op:unknown_use
+        lreason
+        ureason
+        propref
+        (p, OrdinaryField { type_ = tout; polarity })
+    | LookupPropForSubtyping (use_op, up) ->
+      rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
     | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
     | ReadProp { use_op; obj_t; tout } ->
       let react_dro =
@@ -6123,7 +6133,8 @@ struct
                          (Base.Option.map ~f:(fun { value; _ } -> (value, t)) inst_dict, None);
                      try_ts_on_failure = [];
                      propref;
-                     lookup_action = LookupProp (use_op, OrdinaryField { type_ = t; polarity });
+                     lookup_action =
+                       LookupPropForSubtyping (use_op, OrdinaryField { type_ = t; polarity });
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                      ignore_dicts = false;
@@ -6146,7 +6157,7 @@ struct
                      lookup_kind = Strict lreason;
                      try_ts_on_failure = [];
                      propref;
-                     lookup_action = LookupProp (use_op, read_only_if_lit p);
+                     lookup_action = LookupPropForSubtyping (use_op, read_only_if_lit p);
                      method_accessible = true;
                      ids = Some Properties.Set.empty;
                      ignore_dicts = false;
@@ -6175,7 +6186,7 @@ struct
                    lookup_kind = Strict lreason;
                    try_ts_on_failure = [];
                    propref;
-                   lookup_action = LookupProp (use_op, read_only_if_lit p);
+                   lookup_action = LookupPropForSubtyping (use_op, read_only_if_lit p);
                    method_accessible = true;
                    ids = Some Properties.Set.empty;
                    ignore_dicts = false;

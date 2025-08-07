@@ -1331,7 +1331,11 @@ module rec TypeTerm : sig
         write_ctx: write_ctx;
         mode: set_mode;
       }
-    | LookupProp of use_op * property_type
+    | LookupPropForTvarPopulation of {
+        polarity: Polarity.t;
+        tout: t;
+      }
+    | LookupPropForSubtyping of use_op * property_type
     | SuperProp of use_op * property_type
     | MatchProp of {
         use_op: use_op;

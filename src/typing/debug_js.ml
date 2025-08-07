@@ -424,7 +424,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | ReadProp { tout = (reason, tout); _ } ->
       spf "Read (%s, %s)" (string_of_reason reason) (tvar tout)
     | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
-    | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (normalized_prop p)
+    | LookupPropForTvarPopulation { tout; polarity } ->
+      spf "LookupPropForTvarPopulation (%s, %s)" (Polarity.show polarity) (kid tout)
+    | LookupPropForSubtyping (op, p) ->
+      spf "LookupPropForSubtyping (%s, %s)" (string_of_use_op op) (normalized_prop p)
     | SuperProp (_, p) -> spf "Super %s" (normalized_prop p)
     | MatchProp { prop_t = tin; _ } -> spf "Match %s" (kid tin)
   in

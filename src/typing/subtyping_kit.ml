@@ -377,7 +377,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       try_ts_on_failure = [];
                       propref;
                       lookup_action =
-                        LookupProp (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
+                        LookupPropForSubtyping
+                          (use_op, OrdinaryField { type_; polarity = Polarity.Positive });
                       method_accessible = true;
                       ids = None;
                       ignore_dicts = false;
@@ -401,7 +402,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       lookup_kind;
                       try_ts_on_failure = [];
                       propref;
-                      lookup_action = LookupProp (use_op, Property.type_ up);
+                      lookup_action = LookupPropForSubtyping (use_op, Property.type_ up);
                       method_accessible = true;
                       ids = None;
                       ignore_dicts = false;
@@ -1965,7 +1966,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                             lookup_kind;
                             try_ts_on_failure = [];
                             propref;
-                            lookup_action = LookupProp (use_op, Property.type_ up);
+                            lookup_action = LookupPropForSubtyping (use_op, Property.type_ up);
                             method_accessible = false;
                             ids = Some (Properties.Set.of_list [lown; lproto]);
                             ignore_dicts = false;

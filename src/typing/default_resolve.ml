@@ -47,7 +47,8 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     match action with
     | ReadProp { tout; _ } -> resolve_tvar tout
     | WriteProp { prop_tout; _ } -> map_opt resolve prop_tout
-    | LookupProp _
+    | LookupPropForTvarPopulation _
+    | LookupPropForSubtyping _
     | SuperProp _
     | MatchProp _ ->
       ()

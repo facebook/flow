@@ -150,8 +150,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             lookup_kind = Strict reason_op;
             try_ts_on_failure = [];
             propref;
-            lookup_action =
-              LookupProp (unknown_use, OrdinaryField { type_ = tout; polarity = prop_polarity });
+            lookup_action = LookupPropForTvarPopulation { tout; polarity = prop_polarity };
             method_accessible = true;
             ids = Some Properties.Set.empty;
             ignore_dicts = false;
@@ -195,7 +194,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let reason_prop = replace_desc_reason (RProperty (Some name)) reason_op in
     let lookup_kind = NonstrictReturning (Some (DefT (reason_missing, VoidT), upper), None) in
     let propref = mk_named_prop ~reason:reason_prop name in
-    let action = LookupProp (unknown_use, OrdinaryField { type_ = upper; polarity = pole }) in
+    let action = LookupPropForTvarPopulation { tout = upper; polarity = pole } in
     (* Lookup the `defaultProps` property. *)
     rec_flow
       cx
@@ -673,7 +672,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             )
         in
         let action =
-          LookupProp (use_op, OrdinaryField { type_ = key_t; polarity = Polarity.Positive })
+          LookupPropForSubtyping
+            (use_op, OrdinaryField { type_ = key_t; polarity = Polarity.Positive })
         in
         rec_flow
           cx
@@ -723,7 +723,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               )
           in
           let action =
-            LookupProp (use_op, OrdinaryField { type_ = ref_t; polarity = Polarity.Positive })
+            LookupPropForSubtyping
+              (use_op, OrdinaryField { type_ = ref_t; polarity = Polarity.Positive })
           in
           rec_flow
             cx
