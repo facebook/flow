@@ -88,6 +88,7 @@ and 'loc t' =
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
+      suggestion: string option;
     }
   | EPropsExtraAgainstExactObject of {
       prop_names: name Nel.t;
@@ -995,13 +996,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         suggestion;
       }
-  | EPropNotFoundInSubtyping { prop_name; reason_lower; reason_upper; use_op } ->
+  | EPropNotFoundInSubtyping { prop_name; reason_lower; reason_upper; use_op; suggestion } ->
     EPropNotFoundInSubtyping
       {
         prop_name;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
+        suggestion;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     EPropsExtraAgainstExactObject
@@ -2359,6 +2361,7 @@ type 'loc friendly_message_recipe =
     }
   | PropMissingInSubtyping of {
       prop: string option;
+      suggestion: string option;
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
@@ -2486,10 +2489,11 @@ let friendly_message_of_msg = function
         suggestion;
         reason_indexer = None;
       }
-  | EPropNotFoundInSubtyping { prop_name; reason_lower; reason_upper; use_op } ->
+  | EPropNotFoundInSubtyping { prop_name; suggestion; reason_lower; reason_upper; use_op } ->
     PropMissingInSubtyping
       {
         prop = Base.Option.map ~f:display_string_of_name prop_name;
+        suggestion;
         reason_lower;
         reason_upper;
         use_op;

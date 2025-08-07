@@ -241,7 +241,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (* Lower and upper are reversed in this case since the lower object
                * is the one requiring the prop. *)
               Error_message.EPropNotFoundInSubtyping
-                { prop_name = prop; reason_lower = ureason; reason_upper = lreason; use_op }
+                {
+                  prop_name = prop;
+                  reason_lower = ureason;
+                  reason_upper = lreason;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx err
       )
@@ -256,7 +262,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | None ->
         let error_message =
           Error_message.EPropNotFoundInSubtyping
-            { reason_lower = lreason; reason_upper = ureason; prop_name; use_op }
+            { reason_lower = lreason; reason_upper = ureason; prop_name; use_op; suggestion = None }
         in
         add_output cx error_message)
     | None -> ());
@@ -1908,7 +1914,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | None ->
             let error_message =
               Error_message.EPropNotFoundInSubtyping
-                { reason_lower = lreason; reason_upper = ureason; prop_name; use_op }
+                {
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  prop_name;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx error_message
       );

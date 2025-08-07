@@ -6193,7 +6193,13 @@ struct
            | _ ->
              let error_message =
                Error_message.EPropNotFoundInSubtyping
-                 { reason_lower = lreason; reason_upper = reason_struct; prop_name; use_op }
+                 {
+                   reason_lower = lreason;
+                   reason_upper = reason_struct;
+                   prop_name;
+                   use_op;
+                   suggestion = None;
+                 }
              in
              add_output cx error_message
        )
@@ -7801,14 +7807,26 @@ struct
           | (Some _, None) ->
             let err =
               Error_message.EPropNotFoundInSubtyping
-                { prop_name = None; reason_lower = ureason; reason_upper = lreason; use_op }
+                {
+                  prop_name = None;
+                  reason_lower = ureason;
+                  reason_upper = lreason;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx err
           | (None, Some _) ->
             let use_op = Frame (UnifyFlip, use_op) in
             let err =
               Error_message.EPropNotFoundInSubtyping
-                { prop_name = None; reason_lower = lreason; reason_upper = ureason; use_op }
+                {
+                  prop_name = None;
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  use_op;
+                  suggestion = None;
+                }
             in
             add_output cx err
           | (None, None) -> ()
@@ -7952,7 +7970,13 @@ struct
     | None ->
       let err =
         Error_message.EPropNotFoundInSubtyping
-          { prop_name = Some x; reason_lower = dict_reason; reason_upper = prop_obj_reason; use_op }
+          {
+            prop_name = Some x;
+            reason_lower = dict_reason;
+            reason_upper = prop_obj_reason;
+            use_op;
+            suggestion = None;
+          }
       in
       add_output cx err
 

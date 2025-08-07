@@ -918,15 +918,13 @@ let rec make_intermediate_error :
       use_op
       (MessagePropMissing { lower; upper; prop; suggestion; reason_indexer })
   in
-  let mk_prop_missing_in_subtyping_error prop lower upper use_op =
+  let mk_prop_missing_in_subtyping_error prop suggestion lower upper use_op =
     let loc = loc_of_reason lower in
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
     mk_use_op_error
       loc
       use_op
-      (MessagePropMissing
-         { lower; upper = Some upper; prop; suggestion = None; reason_indexer = None }
-      )
+      (MessagePropMissing { lower; upper = Some upper; prop; suggestion; reason_indexer = None })
   in
   (* An error that occurs when some arbitrary "use" is incompatible with the
    * "lower" type. The use_op describes the path which we followed to find this
@@ -1013,8 +1011,8 @@ let rec make_intermediate_error :
       mk_use_op_error loc use_op ?explanation message
     | (None, PropMissing { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
       mk_prop_missing_error loc prop reason_obj use_op suggestion reason_indexer
-    | (None, PropMissingInSubtyping { prop; reason_lower; reason_upper; use_op }) ->
-      mk_prop_missing_in_subtyping_error prop reason_lower reason_upper use_op
+    | (None, PropMissingInSubtyping { prop; reason_lower; reason_upper; suggestion; use_op }) ->
+      mk_prop_missing_in_subtyping_error prop suggestion reason_lower reason_upper use_op
     | ( None,
         PropsExtraAgainstExactObject { props; reason_l_obj = lower; reason_r_obj = upper; use_op }
       ) ->

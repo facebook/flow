@@ -948,7 +948,13 @@ let object_rest
             ( if Obj_type.is_exact flags1.obj_kind then
               let err =
                 Error_message.EPropNotFoundInSubtyping
-                  { prop_name = Some k; reason_lower = r2; reason_upper = r1; use_op = unknown_use }
+                  {
+                    prop_name = Some k;
+                    reason_lower = r2;
+                    reason_upper = r1;
+                    use_op = unknown_use;
+                    suggestion = None;
+                  }
               in
               add_output cx err
             );

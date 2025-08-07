@@ -768,7 +768,13 @@ let quick_error_fun_as_obj cx ~use_op reason statics reason_o props =
         (fun x _ ->
           let err =
             Error_message.EPropNotFoundInSubtyping
-              { prop_name = Some x; reason_lower = reason; reason_upper = reason_o; use_op }
+              {
+                prop_name = Some x;
+                reason_lower = reason;
+                reason_upper = reason_o;
+                use_op;
+                suggestion = None;
+              }
           in
           add_output cx err)
         props_not_found;

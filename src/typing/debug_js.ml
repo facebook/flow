@@ -1227,15 +1227,19 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
-    | EPropNotFoundInSubtyping { prop_name = prop; reason_lower; reason_upper; use_op } ->
+    | EPropNotFoundInSubtyping { prop_name = prop; reason_lower; reason_upper; use_op; suggestion }
+      ->
       spf
-        "EPropNotFoundInSubtyping (%s, %s, %s, %s)"
+        "EPropNotFoundInSubtyping (%s, %s, %s, %s, %s)"
         (match prop with
         | Some prop -> spf "Some %s" (display_string_of_name prop)
         | None -> "None")
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
+        (match suggestion with
+        | Some prop -> spf "Some %s" prop
+        | None -> "None")
     | EIndexerCheckFailed { prop_name = prop; reason_prop; reason_obj; reason_indexer; use_op } ->
       spf
         "EIndexerCheckFailed (%s, %s, %s, %s, %s)"
