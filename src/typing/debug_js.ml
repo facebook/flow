@@ -1243,12 +1243,13 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
-    | EIndexerCheckFailed { prop_name = prop; reason_prop; reason_obj; reason_indexer; use_op } ->
+    | EIndexerCheckFailed { prop_name = prop; reason_lower; reason_upper; reason_indexer; use_op }
+      ->
       spf
         "EIndexerCheckFailed (%s, %s, %s, %s, %s)"
         (display_string_of_name prop)
-        (dump_reason cx reason_prop)
-        (dump_reason cx reason_obj)
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
         (dump_reason cx reason_indexer)
         (string_of_use_op use_op)
     | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->

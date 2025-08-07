@@ -98,8 +98,8 @@ and 'loc t' =
     }
   | EIndexerCheckFailed of {
       prop_name: name;
-      reason_prop: 'loc virtual_reason;
-      reason_obj: 'loc virtual_reason;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
       reason_indexer: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
     }
@@ -1013,12 +1013,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_r_obj = map_reason reason_r_obj;
         use_op = map_use_op use_op;
       }
-  | EIndexerCheckFailed { prop_name; reason_prop; reason_obj; reason_indexer; use_op } ->
+  | EIndexerCheckFailed { prop_name; reason_lower; reason_upper; reason_indexer; use_op } ->
     EIndexerCheckFailed
       {
         prop_name;
-        reason_prop = map_reason reason_prop;
-        reason_obj = map_reason reason_obj;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
         reason_indexer = map_reason reason_indexer;
         use_op = map_use_op use_op;
       }
@@ -2364,6 +2364,7 @@ type 'loc friendly_message_recipe =
       suggestion: string option;
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
+      reason_indexer: 'loc Reason.virtual_reason option;
       use_op: 'loc Type.virtual_use_op;
     }
   | PropsExtraAgainstExactObject of {
@@ -2496,20 +2497,21 @@ let friendly_message_of_msg = function
         suggestion;
         reason_lower;
         reason_upper;
+        reason_indexer = None;
         use_op;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     PropsExtraAgainstExactObject
       { props = Nel.map display_string_of_name prop_names; reason_l_obj; reason_r_obj; use_op }
-  | EIndexerCheckFailed { prop_name; reason_obj; reason_prop; reason_indexer; use_op } ->
-    PropMissing
+  | EIndexerCheckFailed { prop_name; reason_lower; reason_upper; reason_indexer; use_op } ->
+    PropMissingInSubtyping
       {
-        loc = loc_of_reason reason_prop;
         prop = Some (display_string_of_name prop_name);
-        reason_obj;
-        use_op;
         suggestion = None;
+        reason_lower;
+        reason_upper;
         reason_indexer = Some reason_indexer;
+        use_op;
       }
   | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
     UseOp

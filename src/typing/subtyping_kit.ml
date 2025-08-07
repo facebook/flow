@@ -474,27 +474,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
               if speculative_subtyping_succeeds cx (type_of_key_name cx name lreason) key then
                 flow_prop_to_indexer lp name
               else
-                let use_op =
-                  Frame
-                    ( PropertyCompatibility
-                        {
-                          prop = Some name;
-                          (* Lower and upper are reversed in this case since the lower object
-                           * is the one requiring the prop. *)
-                          lower = ureason;
-                          upper = lreason;
-                        },
-                      use_op
-                    )
-                in
                 add_output
                   cx
                   Error_message.(
                     EIndexerCheckFailed
                       {
                         prop_name = name;
-                        reason_prop = lreason;
-                        reason_obj = ureason;
+                        (* Lower and upper are reversed in this case since the lower object
+                         * is the one requiring the prop. *)
+                        reason_lower = ureason;
+                        reason_upper = lreason;
                         reason_indexer = reason_of_t key;
                         use_op;
                       }
