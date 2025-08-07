@@ -233,7 +233,7 @@ type error_code_kind =
   | ErrorCodeRequireSpecific
   | ErrorCodeGeneral
 
-let check_loc ~error_code_migration:_ suppressions specific_codes (result, (unused : t)) loc =
+let check_loc ~error_code_migration suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
@@ -253,13 +253,39 @@ let check_loc ~error_code_migration:_ suppressions specific_codes (result, (unus
           | ErrorCodeUnsuppressable -> false
           | ErrorCodeRequireSpecific
           | ErrorCodeGeneral ->
-            CodeSet.mem code specific_codes2)
+            (match (error_code_migration, code) with
+            | ( Options.ErrorCodeMigration.Compatibility,
+                ( ( "incompatible-call" | "incompatible-cast" | "incompatible-extend"
+                  | "incompatible-return" | "incompatible-type-arg" | "prop-missing" ),
+                  code_loc
+                )
+              ) ->
+              CodeSet.mem code specific_codes2
+              || CodeSet.mem ("incompatible-type", code_loc) specific_codes2
+            | _ -> CodeSet.mem code specific_codes2))
         specific_codes
   in
   match suppression_at_loc loc suppressions with
   | Some (locs, codes') when suppression_applies codes' ->
     let used = locs in
     let unused = remove_suppression_from_map loc (Lazy.force specific_codes_set) unused in
+    let unused =
+      match (error_code_migration, codes') with
+      | (Options.ErrorCodeMigration.Compatibility, Specific _) ->
+        let set = Lazy.force specific_codes_set in
+        if
+          CodeSet.mem ("incompatible-call", loc) set
+          || CodeSet.mem ("incompatible-cast", loc) set
+          || CodeSet.mem ("incompatible-extend", loc) set
+          || CodeSet.mem ("incompatible-return", loc) set
+          || CodeSet.mem ("incompatible-type-arg", loc) set
+          || CodeSet.mem ("prop-missing", loc) set
+        then
+          remove_suppression_from_map loc (CodeSet.singleton ("incompatible-type", loc)) unused
+        else
+          unused
+      | _ -> unused
+    in
     (Off, used, unused)
   | _ -> (result, LocSet.empty, unused)
 

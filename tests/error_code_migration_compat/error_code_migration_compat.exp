@@ -1,0 +1,230 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
+
+Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:1:1
+   1| 1 as string; // not suppressed
+      ^ [1]
+
+References:
+   test.js:1:6
+   1| 1 as string; // not suppressed
+           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:3:1
+   3| 1 as string; // not suppressed
+      ^ [1]
+
+References:
+   test.js:3:6
+   3| 1 as string; // not suppressed
+           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:14
+
+Cannot call `expectString` with `1` bound to `v` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   test.js:10:14
+   10| expectString(1); // not suppressed
+                    ^ [1]
+
+References:
+   test.js:9:34
+    9| declare function expectString(v: string): void;
+                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:14
+
+Cannot call `expectString` with `1` bound to `v` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   test.js:12:14
+   12| expectString(1); // not suppressed
+                    ^ [1]
+
+References:
+   test.js:9:34
+    9| declare function expectString(v: string): void;
+                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:41
+
+Cannot return `1` because number [1] is incompatible with string [2]. [incompatible-return]
+
+   test.js:18:41
+   18| function testReturn1(): string { return 1 } // not suppressed
+                                               ^ [1]
+
+References:
+   test.js:18:25
+   18| function testReturn1(): string { return 1 } // not suppressed
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:41
+
+Cannot return `1` because number [1] is incompatible with string [2]. [incompatible-return]
+
+   test.js:20:41
+   20| function testReturn2(): string { return 1 } // not suppressed
+                                               ^ [1]
+
+References:
+   test.js:20:25
+   20| function testReturn2(): string { return 1 } // not suppressed
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:36
+
+Cannot assign object literal to `_testProp1` because property `prop` is missing in object literal [1] but exists in
+object type [2]. [prop-missing]
+
+   test.js:26:36
+   26| const _testProp1: {prop: string} = {}; // not suppressed
+                                          ^^ [1]
+
+References:
+   test.js:26:19
+   26| const _testProp1: {prop: string} = {}; // not suppressed
+                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:28:36
+
+Cannot assign object literal to `_testProp2` because property `prop` is missing in object literal [1] but exists in
+object type [2]. [prop-missing]
+
+   test.js:28:36
+   28| const _testProp2: {prop: string} = {}; // not suppressed
+                                          ^^ [1]
+
+References:
+   test.js:28:19
+   28| const _testProp2: {prop: string} = {}; // not suppressed
+                         ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:24
+
+Cannot instantiate `ExpectString` because number literal `1` [1] is incompatible with string [2] in type argument `T`.
+[incompatible-type-arg]
+
+   test.js:35:24
+   35| type T1 = ExpectString<1>; // not suppressed
+                              ^ [1]
+
+References:
+   test.js:34:37
+   34| declare opaque type ExpectString<T: string>;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:37:24
+
+Cannot instantiate `ExpectString` because number literal `1` [1] is incompatible with string [2] in type argument `T`.
+[incompatible-type-arg]
+
+   test.js:37:24
+   37| type T2 = ExpectString<1>; // not suppressed
+                              ^ [1]
+
+References:
+   test.js:34:37
+   34| declare opaque type ExpectString<T: string>;
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:44:39
+
+Cannot extend `Base` [1] with `TestExtend1` because number literal `1` [2] is incompatible with string [3] in property
+`foo`. [incompatible-extend]
+
+   test.js:44:39
+   44| class TestExtend1 extends Base { foo: 1 } // not suppressed
+                                             ^ [2]
+
+References:
+   test.js:44:27
+   44| class TestExtend1 extends Base { foo: 1 } // not suppressed
+                                 ^^^^ [1]
+   test.js:43:27
+   43| declare class Base { foo: string }
+                                 ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:46:39
+
+Cannot extend `Base` [1] with `TestExtend2` because number literal `1` [2] is incompatible with string [3] in property
+`foo`. [incompatible-extend]
+
+   test.js:46:39
+   46| class TestExtend2 extends Base { foo: 1 } // not suppressed
+                                             ^ [2]
+
+References:
+   test.js:46:27
+   46| class TestExtend2 extends Base { foo: 1 } // not suppressed
+                                 ^^^^ [1]
+   test.js:43:27
+   43| declare class Base { foo: string }
+                                 ^^^^^^ [3]
+
+
+Warning ---------------------------------------------------------------------------------------------------- test.js:2:1
+
+Unused suppression comment.
+
+   2| // $FlowFixMe[incompatible-random]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:11:1
+
+Unused suppression comment.
+
+   11| // $FlowFixMe[incompatible-random]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:19:1
+
+Unused suppression comment.
+
+   19| // $FlowFixMe[incompatible-random]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:27:1
+
+Unused suppression comment.
+
+   27| // $FlowFixMe[incompatible-random]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:36:1
+
+Unused suppression comment.
+
+   36| // $FlowFixMe[incompatible-random]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning --------------------------------------------------------------------------------------------------- test.js:45:1
+
+Unused suppression comment.
+
+   45| // $FlowFixMe[incompatible-random]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 12 errors and 6 warnings

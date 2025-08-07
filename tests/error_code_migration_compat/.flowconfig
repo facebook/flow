@@ -1,0 +1,6 @@
+[options]
+all=true
+casting_syntax=both
+experimental.error_code_migration=compatibility
+; Test that compatibility mode doesn't break unused suppression warning
+include_warnings=true
