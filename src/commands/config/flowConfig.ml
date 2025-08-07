@@ -64,6 +64,7 @@ module Opts = struct
     emoji: bool option;
     enable_const_params: bool option;
     enums: bool;
+    error_code_migration: Options.ErrorCodeMigration.t;
     estimate_recheck_time: bool option;
     exact_by_default: bool option;
     facebook_fbs: string option;
@@ -212,6 +213,7 @@ module Opts = struct
       emoji = None;
       enable_const_params = None;
       enums = false;
+      error_code_migration = Options.ErrorCodeMigration.Old;
       estimate_recheck_time = None;
       exact_by_default = None;
       facebook_fbs = None;
@@ -1145,6 +1147,15 @@ module Opts = struct
                   v :: opts.invalid_comparison_null_check_includes;
               })
       );
+      ( "experimental.error_code_migration",
+        enum
+          [
+            ("old", Options.ErrorCodeMigration.Old);
+            ("compatibility", Options.ErrorCodeMigration.Compatibility);
+            ("new", Options.ErrorCodeMigration.New);
+          ]
+          (fun opts v -> Ok { opts with error_code_migration = v })
+      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -1918,6 +1929,8 @@ let emoji c = c.options.Opts.emoji
 let enable_const_params c = c.options.Opts.enable_const_params
 
 let enums c = c.options.Opts.enums
+
+let error_code_migration c = c.options.Opts.error_code_migration
 
 let estimate_recheck_time c = c.options.Opts.estimate_recheck_time
 

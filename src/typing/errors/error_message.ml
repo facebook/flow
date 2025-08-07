@@ -3290,7 +3290,7 @@ let error_code_of_upper_kind = function
     Some NotAClass
   | _ -> Some Error_codes.IncompatibleUse
 
-let error_code_of_message err : error_code option =
+let error_code_of_message ~updated_error_code:_ err : error_code option =
   match err with
   | EArithmeticOperand _ -> Some UnsafeArith
   | EInvalidBinaryArith { kind = (_, op); _ } -> begin

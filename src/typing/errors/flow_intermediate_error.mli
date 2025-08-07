@@ -9,6 +9,7 @@ val post_process_errors : Flow_error.ErrorSet.t -> Flow_error.ErrorSet.t
 
 val make_intermediate_error :
   loc_of_aloc:('loc -> Loc.t) ->
+  updated_error_code:bool ->
   'loc Flow_error.t ->
   'loc Flow_intermediate_error_types.intermediate_error
 
@@ -21,5 +22,6 @@ val to_printable_error :
 val make_errors_printable :
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   strip_root:File_path.t option ->
+  updated_error_code:bool ->
   Flow_error.ErrorSet.t ->
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t

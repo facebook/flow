@@ -541,7 +541,9 @@ let autocomplete_on_parsed
             in
             let ac_options =
               {
-                AutocompleteService_js.imports;
+                AutocompleteService_js.error_code_update =
+                  Options.(error_code_migration options = ErrorCodeMigration.New);
+                imports;
                 imports_min_characters;
                 imports_ranked_usage;
                 imports_ranked_usage_boost_exact_match_min_length;

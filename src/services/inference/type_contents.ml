@@ -124,6 +124,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~error_code_migration:(Options.error_code_migration options)
       ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions
@@ -136,6 +137,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~error_code_migration:(Options.error_code_migration options)
       ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions
@@ -163,7 +165,11 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
     (errors, warnings)
   | Error errors ->
     let errors =
-      Flow_intermediate_error.make_errors_printable ~loc_of_aloc ~strip_root:(Some root) errors
+      Flow_intermediate_error.make_errors_printable
+        ~loc_of_aloc
+        ~strip_root:(Some root)
+        ~updated_error_code:Options.(error_code_migration options = ErrorCodeMigration.New)
+        errors
     in
     (errors, Flow_errors_utils.ConcreteLocPrintableErrorSet.empty)
 

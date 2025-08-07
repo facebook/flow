@@ -9,7 +9,7 @@ open ServerEnv
 open Utils_js
 open Collated_errors
 
-let add_suppression_warnings root checked unused warnings =
+let add_suppression_warnings ~updated_error_code root checked unused warnings =
   let open Flow_errors_utils in
   (* For each unused suppression, create an warning *)
   let all_locs = Error_suppressions.all_unused_locs unused in
@@ -32,7 +32,9 @@ let add_suppression_warnings root checked unused warnings =
           let err =
             let msg = Error_message.EUnusedSuppression loc in
             Flow_error.error_of_msg ~source_file msg
-            |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+            |> Flow_intermediate_error.make_intermediate_error
+                 ~loc_of_aloc:Fun.id
+                 ~updated_error_code
             |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
           in
           let file_warnings =
@@ -56,7 +58,7 @@ let add_suppression_warnings root checked unused warnings =
       let err =
         Error_message.ECodelessSuppression (loc, code)
         |> Flow_error.error_of_msg ~source_file
-        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id ~updated_error_code
         |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
       in
       let file_warnings =
@@ -68,14 +70,14 @@ let add_suppression_warnings root checked unused warnings =
     (Error_suppressions.universally_suppressed_codes unused)
     warnings
 
-let collate_duplicate_providers ~update root =
+let collate_duplicate_providers ~updated_error_code ~update root =
   let pos = Loc.{ line = 1; column = 0 } in
   let f module_name (provider_file, provider) acc duplicate =
     let conflict = Loc.{ source = Some duplicate; start = pos; _end = pos } in
     let err =
       Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
       |> Flow_error.error_of_msg ~source_file:duplicate
-      |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
+      |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id ~updated_error_code
       |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
     in
     update provider_file duplicate err acc
@@ -100,6 +102,7 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
           Error_suppressions.filter_suppressed_errors
             ~root
             ~file_options
+            ~error_code_migration:(Options.error_code_migration options)
             ~unsuppressable_error_codes
             ~loc_of_aloc
             suppressions
@@ -117,12 +120,14 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = errors in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+  let error_code_migration = Options.error_code_migration options in
   let acc_fun filename file_errs (errors, suppressed, unused) =
     let file_options = Some (Options.file_options options) in
     let (file_errs, file_suppressed, unused) =
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~error_code_migration
         ~unsuppressable_error_codes
         ~loc_of_aloc
         (* Use all_suppressions here to account for misplaced errors. *)
@@ -148,6 +153,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
   in
   let collated_duplicate_providers_errors =
     collate_duplicate_providers
+      ~updated_error_code:(error_code_migration = Options.ErrorCodeMigration.New)
       ~update:(fun provider_file duplicate err acc -> (err, provider_file, duplicate) :: acc)
       root
       duplicate_providers
@@ -167,7 +173,12 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
   (* Compute "unused suppression warnings" based on the suppression set that
    * emerged from the current checked set, not the entire set of suppressions. *)
   let collated_warning_map =
-    add_suppression_warnings root checked_files unused warnings
+    add_suppression_warnings
+      ~updated_error_code:(error_code_migration = Options.ErrorCodeMigration.New)
+      root
+      checked_files
+      unused
+      warnings
     |> FilenameMap.union collated_warning_map
   in
   {

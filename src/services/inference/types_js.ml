@@ -340,6 +340,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
+        ~error_code_migration:(Options.error_code_migration options)
         ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions
@@ -350,6 +351,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options:None
+        ~error_code_migration:(Options.error_code_migration options)
         ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions
@@ -956,6 +958,7 @@ end = struct
           Flow_intermediate_error.make_errors_printable
             ~loc_of_aloc
             ~strip_root:(Some (Options.root options))
+            ~updated_error_code:Options.(error_code_migration options = ErrorCodeMigration.New)
             errors
         in
         if not (Flow_errors_utils.ConcreteLocPrintableErrorSet.is_empty errors) then

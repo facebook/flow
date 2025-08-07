@@ -6,6 +6,7 @@
  *)
 
 type ac_options = {
+  error_code_update: bool;
   imports: bool;
   imports_min_characters: int;
   imports_ranked_usage: bool;

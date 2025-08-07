@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module ErrorCodeMigration = struct
+  type t =
+    | Old (* Old very specific error code. e.g. incompatible-call *)
+    | Compatibility
+      (* Display old error code, but allow them to be suppressed by incompatible-type. *)
+    | New (* New generalized error code. Subtyping errors should all have incompatible-type *)
+end
+
 type module_system =
   | Node
   | Haste
@@ -123,6 +131,7 @@ type t = {
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
+  opt_error_code_migration: ErrorCodeMigration.t;
   opt_estimate_recheck_time: bool;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
@@ -282,6 +291,8 @@ let enable_relay_integration opts = opts.opt_enable_relay_integration
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 
 let enums opts = opts.opt_enums
+
+let error_code_migration opts = opts.opt_error_code_migration
 
 let estimate_recheck_time opts = opts.opt_estimate_recheck_time
 

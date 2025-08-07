@@ -233,7 +233,7 @@ type error_code_kind =
   | ErrorCodeRequireSpecific
   | ErrorCodeGeneral
 
-let check_loc suppressions specific_codes (result, (unused : t)) loc =
+let check_loc ~error_code_migration:_ suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
@@ -276,6 +276,7 @@ let in_declarations ~file_options loc =
 let check
     ~root
     ~file_options
+    ~error_code_migration
     ~unsuppressable_error_codes
     (err : 'loc Flow_intermediate_error_types.intermediate_error)
     (suppressions : t)
@@ -306,7 +307,9 @@ let check
   | (true, _) -> None
   | (_, None) -> Some (Err, LocSet.empty, unused)
   | (_, Some specific_codes) ->
-    let (result, used, unused) = check_loc suppressions specific_codes (Err, unused) loc in
+    let (result, used, unused) =
+      check_loc suppressions ~error_code_migration specific_codes (Err, unused) loc
+    in
     let result =
       match err.Flow_intermediate_error_types.kind with
       | Flow_errors_utils.RecursionLimitError ->
@@ -330,12 +333,33 @@ let universally_suppressed_codes map =
     CodeLocSet.empty
 
 let filter_suppressed_errors
-    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =
+    ~root
+    ~file_options
+    ~error_code_migration
+    ~unsuppressable_error_codes
+    ~loc_of_aloc
+    suppressions
+    errors
+    ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
-      let error = Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error in
-      match check ~root ~file_options ~unsuppressable_error_codes error suppressions unused with
+      let error =
+        Flow_intermediate_error.make_intermediate_error
+          ~loc_of_aloc
+          ~updated_error_code:(error_code_migration = Options.ErrorCodeMigration.New)
+          error
+      in
+      match
+        check
+          ~root
+          ~file_options
+          ~error_code_migration
+          ~unsuppressable_error_codes
+          error
+          suppressions
+          unused
+      with
       | None -> acc
       | Some (severity, used, unused) ->
         (match severity with

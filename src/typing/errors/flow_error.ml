@@ -19,7 +19,8 @@ let loc_of_error { loc; _ } = loc
 
 let msg_of_error { msg; _ } = msg
 
-let code_of_error err = msg_of_error err |> Error_message.error_code_of_message
+let code_of_error ~updated_error_code err =
+  msg_of_error err |> Error_message.error_code_of_message ~updated_error_code
 
 let source_file { source_file; _ } = source_file
 

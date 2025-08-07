@@ -33,6 +33,7 @@ val universally_suppressed_codes : t -> CodeLocSet.t
 val filter_suppressed_errors :
   root:File_path.t ->
   file_options:Files.options option ->
+  error_code_migration:Options.ErrorCodeMigration.t ->
   unsuppressable_error_codes:SSet.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   t ->

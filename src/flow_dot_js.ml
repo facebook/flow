@@ -14,7 +14,7 @@ let loc_of_aloc = ALoc.to_loc_exn
 let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~source_file
-  |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
+  |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc ~updated_error_code:true
   |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:None
 
 let parse_content file content =
@@ -331,6 +331,7 @@ let check_content ~filename ~content ~js_config_object =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~error_code_migration:Options.ErrorCodeMigration.Old
           ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
           suppressions
@@ -341,6 +342,7 @@ let check_content ~filename ~content ~js_config_object =
         Error_suppressions.filter_suppressed_errors
           ~root
           ~file_options:None
+          ~error_code_migration:Options.ErrorCodeMigration.Old
           ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
           suppressions
@@ -439,6 +441,7 @@ let autocomplete filename content line col js_config_object :
         autocomplete_get_results
           artifacts
           {
+            error_code_update = false;
             imports = false;
             imports_min_characters = 0;
             imports_ranked_usage = true;
