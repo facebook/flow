@@ -1,0 +1,1 @@
+cmd: codemod error-code-migration --strip-root --quiet ./

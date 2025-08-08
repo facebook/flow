@@ -112,7 +112,7 @@ val identifier : (Loc.t, Loc.t) Flow_ast.Identifier.t -> Layout.layout_node
 val pattern :
   ?ctxt:expression_context -> opts:opts -> (Loc.t, Loc.t) Flow_ast.Pattern.t -> Layout.layout_node
 
-val comment : Loc.t Flow_ast.Comment.t -> Layout.layout_node
+val comment : ?replacement_for_same_type:bool -> Loc.t Flow_ast.Comment.t -> Layout.layout_node
 
 val template_literal :
   opts:opts -> (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node

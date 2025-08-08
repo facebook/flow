@@ -567,7 +567,7 @@ and combine_directives_and_comments ~opts directives comments : Layout.layout_no
       ~f:(function
         | (loc, Statement s) ->
           (loc, Comment_attachment.statement_comment_bounds s, statement ~opts s)
-        | (loc, Comment c) -> (loc, (None, None), comment c))
+        | (loc, Comment c) -> (loc, (None, None), comment ~replacement_for_same_type:false c))
       merged
   in
   fuse (list_with_newlines nodes)
@@ -579,13 +579,17 @@ and maybe_embed_checksum nodes checksum =
     fuse [nodes; Newline; Atom comment]
   | None -> nodes
 
-and comment (loc, comment) =
+and comment ?(replacement_for_same_type = false) (loc, comment) =
   let open Ast.Comment in
   source_location_with_comments
     ( loc,
       match comment with
       | { kind = Block; text; _ } -> fuse [Atom "/*"; Atom text; Atom "*/"]
-      | { kind = Line; text; _ } -> fuse [Atom "//"; Atom text; Newline]
+      | { kind = Line; text; _ } ->
+        if replacement_for_same_type then
+          fuse [Atom "//"; Atom text]
+        else
+          fuse [Atom "//"; Atom text; hardline]
     )
 
 (**

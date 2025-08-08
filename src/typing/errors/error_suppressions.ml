@@ -406,6 +406,44 @@ let filter_suppressed_errors
     errors
     (Flow_errors_utils.ConcreteLocPrintableErrorSet.empty, [], unused)
 
+let find_error_suppressions_to_change_error_code_for_codemod
+    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc ~suppressions ~errors =
+  (* Filter out suppressed errors. also track which suppressions are used. *)
+  Flow_error.ErrorSet.fold
+    (fun error ((suppressed, unused) as acc) ->
+      let error_old =
+        Flow_intermediate_error.make_intermediate_error ~loc_of_aloc ~updated_error_code:false error
+      in
+      let error_new =
+        Flow_intermediate_error.make_intermediate_error ~loc_of_aloc ~updated_error_code:true error
+      in
+      let error_code_old = error_old.Flow_intermediate_error_types.error_code in
+      let error_code_new = error_new.Flow_intermediate_error_types.error_code in
+      (* The error code needs to be migrated if old code != new code (incompatible-type) *)
+      if error_code_old <> error_code_new && error_code_new = Some Error_codes.IncompatibleType then
+        (* Use the same error suppression checking logic to find the location that needs to be changed. *)
+        match
+          check
+            ~root
+            ~file_options
+            ~error_code_migration:Options.ErrorCodeMigration.Old
+            ~unsuppressable_error_codes
+            error_old
+            suppressions
+            unused
+        with
+        | None -> acc
+        | Some (severity, used, unused) ->
+          (match severity with
+          | Off -> ((error, used) :: suppressed, unused)
+          | _ -> acc)
+      else
+        acc)
+    errors
+    ([], suppressions)
+  |> fst
+  |> Base.List.fold ~init:LocSet.empty ~f:(fun acc (_, locs) -> LocSet.union acc locs)
+
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold
     begin

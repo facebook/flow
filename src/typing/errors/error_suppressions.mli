@@ -43,6 +43,15 @@ val filter_suppressed_errors :
   * (ALoc.t Flow_intermediate_error_types.intermediate_error * Loc_collections.LocSet.t) list
   * t
 
+val find_error_suppressions_to_change_error_code_for_codemod :
+  root:File_path.t ->
+  file_options:Files.options option ->
+  unsuppressable_error_codes:SSet.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  suppressions:t ->
+  errors:Flow_error.ErrorSet.t ->
+  Loc_collections.LocSet.t
+
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens
    during merge rather than during collation as filter_suppressed_errors does *)
 val filter_lints :

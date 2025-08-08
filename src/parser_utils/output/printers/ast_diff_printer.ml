@@ -129,6 +129,19 @@ let text_of_nodes ~opts ~separator ~leading_separator nodes =
     text
 
 let edit_of_change ~opts = function
+  | ( loc,
+      Replace
+        ( Comment (_, { Flow_ast.Comment.kind = Flow_ast.Comment.Line; _ }),
+          Comment ((_, { Flow_ast.Comment.kind = Flow_ast.Comment.Line; _ }) as new_node)
+        )
+    )
+  | ( loc,
+      Replace
+        ( Comment (_, { Flow_ast.Comment.kind = Flow_ast.Comment.Block; _ }),
+          Comment ((_, { Flow_ast.Comment.kind = Flow_ast.Comment.Block; _ }) as new_node)
+        )
+    ) ->
+    (loc, text_of_layout (Js_layout_generator.comment ~replacement_for_same_type:true new_node))
   | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
   | (loc, Insert { items; separator; leading_separator }) when is_statement_list items ->
     let text = text_of_statement_list ~opts items in
