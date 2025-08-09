@@ -239,7 +239,75 @@ let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
   let program_init profiling = init ~profiling ?focus_targets genv in
   (genv, program_init)
 
+let detect_linux_distro () =
+  try
+    let ic = open_in "/etc/os-release" in
+    let rec read_lines acc =
+      try
+        let line = input_line ic in
+        read_lines (line :: acc)
+      with
+      | End_of_file -> List.rev acc
+    in
+    let lines = read_lines [] in
+    close_in ic;
+    let id_regex = Str.regexp "^ID=" in
+    let id_line = List.find_opt (fun line -> Str.string_match id_regex line 0) lines in
+    match id_line with
+    | Some line ->
+      let id = String.sub line 3 (String.length line - 3) in
+      let id = String.trim id in
+      (* Remove quotes if present *)
+      let id =
+        if String.length id >= 2 && id.[0] = '"' && id.[String.length id - 1] = '"' then
+          String.sub id 1 (String.length id - 2)
+        else
+          id
+      in
+      Some id
+    | None -> None
+  with
+  | _ -> None
+
+let check_supported_operating_system options =
+  let supported_os_list = Options.supported_operating_systems options in
+  (* Only check if there are supported operating systems specified *)
+  let current_os_unsupported =
+    match supported_os_list with
+    | [] -> false (* If no supported OS list is specified, allow all operating systems *)
+    | _ ->
+      (* Check if current OS is NOT in the supported list *)
+      not
+        (List.exists
+           (fun os ->
+             match os with
+             | Options.CentOS ->
+               (match detect_linux_distro () with
+               | Some "centos" -> true
+               (* If our detection logic becomes wrong in the future we will refuse to start.
+                * This is an intentional choice-- it is easy to change the .flowconfig to
+                * temporarily disable enforcement.*)
+               | _ -> false))
+           supported_os_list
+        )
+  in
+  if current_os_unsupported then
+    let current_os =
+      match detect_linux_distro () with
+      | Some distro -> distro
+      | None -> "Unknown"
+    in
+    let msg =
+      Printf.sprintf
+        "This operating system (%s) is not supported by this Flow configuration."
+        current_os
+    in
+    Exit.(exit ~msg Invalid_flowconfig)
+
 let run ~monitor_channels ~init_id ~shared_mem_config options =
+  (* Check if the current operating system is supported *)
+  check_supported_operating_system options;
+
   MonitorRPC.init ~channels:monitor_channels;
   let (genv, program_init) = create_program_init ~init_id ~shared_mem_config options in
   let initial_lwt_thread () =

@@ -146,6 +146,7 @@ module Opts = struct
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
     shm_heap_size: int;
+    supported_operating_systems: Options.supported_os list;
     strict_es6_import_export: bool;
     suppress_types: SSet.t;
     ts_syntax: bool;
@@ -296,6 +297,7 @@ module Opts = struct
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
+      supported_operating_systems = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
@@ -1276,6 +1278,14 @@ module Opts = struct
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
+      ( "supported_operating_systems",
+        enum
+          [("CentOS", Options.CentOS)]
+          ~init:(fun opts -> { opts with supported_operating_systems = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok { opts with supported_operating_systems = v :: opts.supported_operating_systems })
+      );
       ( "unsupported.windows",
         boolean (fun opts v ->
             if Sys.win32 && v then
@@ -2115,6 +2125,8 @@ let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 
 let shm_heap_size c = c.options.Opts.shm_heap_size
+
+let supported_operating_systems c = c.options.Opts.supported_operating_systems
 
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 

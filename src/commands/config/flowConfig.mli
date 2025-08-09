@@ -276,6 +276,8 @@ val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
+val supported_operating_systems : config -> Options.supported_os list
+
 val strict_es6_import_export : config -> bool
 
 val strict_mode : config -> StrictModeSettings.t

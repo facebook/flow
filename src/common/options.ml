@@ -17,6 +17,8 @@ type module_system =
   | Node
   | Haste
 
+type supported_os = CentOS
+
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
   | Jsx_react
@@ -209,6 +211,7 @@ type t = {
   opt_wait_for_recheck: bool;
   opt_vpn_less: bool;
   opt_distributed: bool;
+  opt_supported_operating_systems: supported_os list;
 }
 
 let all opts = opts.opt_all
@@ -438,3 +441,5 @@ let wait_for_recheck opts = opts.opt_wait_for_recheck
 let vpn_less opts = opts.opt_vpn_less
 
 let distributed opts = opts.opt_distributed
+
+let supported_operating_systems opts = opts.opt_supported_operating_systems
