@@ -1718,7 +1718,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (l, DefT (renders_r, RendersT upper_renders)) ->
       RendersKit.non_renders_to_renders cx trace ~use_op l (renders_r, upper_renders)
     (* Exiting the renders world *)
-    | (DefT (r, RendersT (InstrinsicRenders _ | NominalRenders _)), u) ->
+    | (DefT (r, RendersT (IntrinsicRenders _ | NominalRenders _)), u) ->
       let mixed_element =
         get_builtin_react_type
           cx

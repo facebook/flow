@@ -4907,10 +4907,10 @@ struct
         | (_, (DeepReadOnlyT (tout, _) | HooklikeT tout)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)
         (* Render Type Misc Uses *)
-        | ( DefT (_, RendersT (InstrinsicRenders _ | NominalRenders _)),
+        | ( DefT (_, RendersT (IntrinsicRenders _ | NominalRenders _)),
             ExitRendersT { renders_reason; u }
           )
-        | (DefT (renders_reason, RendersT (InstrinsicRenders _ | NominalRenders _)), u) ->
+        | (DefT (renders_reason, RendersT (IntrinsicRenders _ | NominalRenders _)), u) ->
           let mixed_element =
             get_builtin_react_type
               cx
@@ -5785,7 +5785,7 @@ struct
           DefT
             ( _,
               RendersT
-                ( InstrinsicRenders _
+                ( IntrinsicRenders _
                 | NominalRenders { renders_id = _; renders_name = _; renders_super = _ }
                 | DefaultRenders )
             )

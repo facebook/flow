@@ -313,8 +313,8 @@ and json_of_enum_info cx depth = function
 (* Convert canonical_renders_form to JSON *)
 and json_of_canonical_renders_form cx depth (renders : canonical_renders_form) =
   match renders with
-  | InstrinsicRenders name ->
-    JSON_Object [("kind", JSON_String "InstrinsicRenders"); ("name", JSON_String name)]
+  | IntrinsicRenders name ->
+    JSON_Object [("kind", JSON_String "IntrinsicRenders"); ("name", JSON_String name)]
   | NominalRenders { renders_id; renders_name; renders_super } ->
     JSON_Object
       [
