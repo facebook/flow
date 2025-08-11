@@ -3385,7 +3385,7 @@ end = struct
     | DefT (reason, SingletonStrT { value = OrdinaryName "svg"; _ }) ->
       TypeCollector.add
         normalization_cx.type_collector
-        (DefT (reason, RendersT (InstrinsicRenders "svg")))
+        (DefT (reason, RendersT (IntrinsicRenders "svg")))
     | OpaqueT
         ( element_r,
           {

@@ -356,7 +356,7 @@ class virtual ['a] t =
 
     method private canonical_renders_form cx map_cx form =
       match form with
-      | InstrinsicRenders _ -> form
+      | IntrinsicRenders _ -> form
       | NominalRenders { renders_id; renders_name; renders_super } ->
         let renders_super' = self#type_ cx map_cx renders_super in
         if renders_super' == renders_super then

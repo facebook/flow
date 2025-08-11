@@ -44,7 +44,7 @@ module Make (Flow : INPUT) : S = struct
 
   let rec rec_renders_to_renders cx trace ~use_op ((reasonl, l), (reasonu, u)) =
     match (l, u) with
-    | (InstrinsicRenders n1, InstrinsicRenders n2) ->
+    | (IntrinsicRenders n1, IntrinsicRenders n2) ->
       if n1 = n2 then
         ()
       else
@@ -58,7 +58,7 @@ module Make (Flow : INPUT) : S = struct
                explanation = None;
              }
           )
-    | (InstrinsicRenders _, StructuralRenders { renders_variant = _; renders_structural_type = t })
+    | (IntrinsicRenders _, StructuralRenders { renders_variant = _; renders_structural_type = t })
       ->
       if not (speculative_subtyping_succeeds cx (reconstruct_render_type reasonl l) t) then
         Flow_js_utils.add_output
@@ -71,8 +71,8 @@ module Make (Flow : INPUT) : S = struct
                explanation = None;
              }
           )
-    | (InstrinsicRenders _, NominalRenders _)
-    | (_, InstrinsicRenders _) ->
+    | (IntrinsicRenders _, NominalRenders _)
+    | (_, IntrinsicRenders _) ->
       Flow_js_utils.add_output
         cx
         (Error_message.EIncompatibleWithUseOp
@@ -179,7 +179,7 @@ module Make (Flow : INPUT) : S = struct
           ),
           (reasonu, u)
         )
-    | ( (InstrinsicRenders _ | NominalRenders _ | StructuralRenders _ | DefaultRenders),
+    | ( (IntrinsicRenders _ | NominalRenders _ | StructuralRenders _ | DefaultRenders),
         DefaultRenders
       ) ->
       ()
@@ -252,7 +252,7 @@ module Make (Flow : INPUT) : S = struct
                (elem_reason, SingletonStrT { from_annot = true; value = Reason.OrdinaryName "svg" })
             )
         then
-          ([DefT (elem_reason, RendersT (InstrinsicRenders "svg"))], false)
+          ([DefT (elem_reason, RendersT (IntrinsicRenders "svg"))], false)
         else
           ([], true))
     | _ -> ([], true)
@@ -295,7 +295,7 @@ module Make (Flow : INPUT) : S = struct
       ) ->
       rec_flow_t cx trace ~use_op (t, reconstruct_render_type renders_r upper_renders)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)), (InstrinsicRenders _ | NominalRenders _))
+    | (OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)), (IntrinsicRenders _ | NominalRenders _))
       when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
       try_promote_render_type_from_react_element_type
         cx
@@ -379,7 +379,7 @@ module Make (Flow : INPUT) : S = struct
               state
             | DefT (_, RendersT renders) ->
               (match renders with
-              | InstrinsicRenders _
+              | IntrinsicRenders _
               | NominalRenders _ ->
                 TypeCollector.add normalized_render_type_collector t;
                 state

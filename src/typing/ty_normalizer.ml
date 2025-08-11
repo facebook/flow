@@ -873,7 +873,7 @@ module Make (I : INPUT) : S = struct
           convert_component ~env config instance renders
         in
         return (Ty.Component { regular_props; ref_prop; renders })
-      | DefT (_, RendersT (InstrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
+      | DefT (_, RendersT (IntrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (_, RendersT (NominalRenders { renders_id; renders_name; _ })) ->
         let symbol =
           Reason_utils.component_symbol
