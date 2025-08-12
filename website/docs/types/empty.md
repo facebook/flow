@@ -34,7 +34,7 @@ function f(x: 'a' | 'b'): number {
 If you had not checked for all members of the union (for example, changed `x` to be of type `'a' | 'b' | 'c'`),
 then `x` would no longer be `empty` in the `default`, and Flow would error.
 
-> Note: If you want exhaustively checked enums by defualt, without having to cast to `empty`,
+> Note: If you want exhaustively checked enums by default, without having to cast to `empty`,
 > you could enable and use [Flow Enums](../../enums) in your project.
 
 Since `empty` is the subtype of all types, all operations are permitted on something that has the `empty` type.

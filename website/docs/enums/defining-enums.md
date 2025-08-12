@@ -212,7 +212,7 @@ switch (status) {
 When this is used, Flow will always require a `default` when [switching over the enum](../using-enums/#toc-exhaustive-checking-with-unknown-members),
 even if all known enum members are checked. The `default` checks for "unknown" members you haven't explicitly listed.
 
-This feature is useful when an enum value crosses some boundary and the enum declaration on each side may have different memebers.
+This feature is useful when an enum value crosses some boundary and the enum declaration on each side may have different members.
 For example, an enum definition which is used on both the client and the server: an enum member could be added, which would be immediately seen by the server,
 but could be sent to an outdated client which isn't yet aware of the new member.
 

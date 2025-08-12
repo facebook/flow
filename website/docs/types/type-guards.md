@@ -219,7 +219,7 @@ function missing(param: mixed): prop is number {
 }
 ```
 
-It cannot be a parameter bound in a destructuring pattern, or a rest paramter:
+It cannot be a parameter bound in a destructuring pattern, or a rest parameter:
 ```js flow-check
 function destructuring({prop}: {prop: mixed}): prop is number {
   return typeof prop === "number";

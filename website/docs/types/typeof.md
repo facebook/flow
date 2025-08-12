@@ -40,7 +40,7 @@ let str2: typeof str1 = 'world'; // Works!
 let str3: typeof str1 = false;   // Error!
 ```
 
-You can use any value with `typeof`, as long as the arugment itself is a variable or member access:
+You can use any value with `typeof`, as long as the argument itself is a variable or member access:
 
 ```js flow-check
 let obj1 = {foo: 1, bar: true, baz: 'three'};

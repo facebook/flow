@@ -33,7 +33,7 @@ let attempt_union_rep_optimization cx (rep : Type.UnionRep.t) : unit =
       ~find_props:(Context.find_props cx)
 
 (***********************)
-(* Datatype defintions *)
+(* Datatype definitions *)
 (***********************)
 
 type pattern_ast_list =

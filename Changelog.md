@@ -17,7 +17,7 @@ Likely to cause new Flow errors:
 ### 0.276.0
 
 Likely to cause new Flow errors:
-* Hook calls inside anonynous functions bound to a variable will get `react-rule-hook-definitely-not-in-component-or-hook` error, if the variable name doesn't conform to hook naming convention. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSZkYvIkAAIAEqsZRSmCUdJSgDkUWUqoA3AAdKB62z2RXEKUAXilAAoAJRmgB8UuAeqlztl8pilIAypYFtatVKAPT+qWzBpwCD5QZSjUSRbSNqLWrELZSkzKyi8KVQCAAdyjbtj2ixiYgW0WGngUDgC0GhwgMYqSPSEq+PhhlATSZT1F5eoFetyIAaJhIYagSQaAAYrAAmADsABYZyABUA)
+* Hook calls inside anonymous functions bound to a variable will get `react-rule-hook-definitely-not-in-component-or-hook` error, if the variable name doesn't conform to hook naming convention. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSZkYvIkAAIAEqsZRSmCUdJSgDkUWUqoA3AAdKB62z2RXEKUAXilAAoAJRmgB8UuAeqlztl8pilIAypYFtatVKAPT+qWzBpwCD5QZSjUSRbSNqLWrELZSkzKyi8KVQCAAdyjbtj2ixiYgW0WGngUDgC0GhwgMYqSPSEq+PhhlATSZT1F5eoFetyIAaJhIYagSQaAAYrAAmADsABYZyABUA)
 *
 
 IDE:
@@ -873,7 +873,7 @@ Likely to cause new Flow errors:
 * `untyped-import` errors are now on the import source rather than imported names.
 
 New Features:
-* Under `files.implictly_include_root=false` (default is true, which is the current behavior), Flow will no longer include everything under the directory where the flowconfig is in by default.
+* Under `files.implicitly_include_root=false` (default is true, which is the current behavior), Flow will no longer include everything under the directory where the flowconfig is in by default.
 
 Notable bug fixes:
 * Fixed a category of spurious errors when using `Array.reduce` and returning a union type (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkO4AX34kA0SQ0Tyo2AABIDOQ84NBkJyAILUOgAHnspigCAAfJyAD7C0W0MXCEQ3GUAbgAOlA2bgOZzbPZOVRKIKRTQVZKKrKdVBdcaJJyWCRtBIAIycgC8puosVKQkhAApg0owBblRKpLaZbxOfJBTbpQBKH1y4CcgD0Wc5AHdoAByZ04U1QTkmSgQShl2giavYXWc5su3ZCSjlvnQe2MzkAbQAuin7Y7oCbXe6AEw+v2UANsIPYUPhyNW6NS2XxxOc5MINPejPZ3MFqDFzml4EV6jV2v1lhNltwGCc4MABk5Ys5HrTwAfLZbLASO25Z9lYYHhgO9r-vSf6tkBHb9mBVjhlukG6r2g4prquQgA0JgkPyUBJA0r5WJOADMADsZEgPSQA))
@@ -1080,7 +1080,7 @@ Likely to cause new Flow errors:
 
 New Features:
 * No longer trigger `method-unbinding` errors with indexed access types.
-* Add `relay_integration.esmodules` option. When this option, along with `relay_integration`, is enabled, Flow will treat `graphql` fragments/queries/etc. as `import default` rather than `require`. Use this when you ouput ESM from Relay's codegen (e.g. `eagerEsModules`).
+* Add `relay_integration.esmodules` option. When this option, along with `relay_integration`, is enabled, Flow will treat `graphql` fragments/queries/etc. as `import default` rather than `require`. Use this when you output ESM from Relay's codegen (e.g. `eagerEsModules`).
 
 Notable bug fixes:
 * Don't error when returning an array, map, etc when an `AsyncGenerator<T, void, void>` type is expected (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+IFkolXpUCWewUEAwhCQgRDH8wEH4hMnwROHlsNnw4KHwwSLAAC3wANyo4LFxscWQuHgMNZmwsiRSAWglaY1cq-hIAa2wJXNpG4Vxcdvdu3v7B0RxKUYMhKDBSqmbWwIq3eagoOrKSKgH0wtMMPznY7d2SfcoBiEZ-aG5G3Ix085AF-ZhsRoRehqUEiNMgSQHlSruBZxJrMcJwMhzAC+-EgGiCAB0JBioBgSLRFgACGALZRwaCEgBU-ygAEYABQASmQhIAgvjFgBxQQmSIQSgAHmEIhmvEJ+QgcDYYolUoAfITgDjCSrCbQ4Hg2JTCQBtWligBMYoAzABdADchIA9FbCQB3aAAcgkhJMlH5hNOtBE-OwOKROJxeIJYGJpMeUCpNINTJZ7JD3J2NDCguFovFkulGfliuVqvVmu1GDtbxdAAV3YkyFZuLh6XrDSbTYzLTb7U6XW6PV6fSx-YHcRzQyTFhGo4JjbG2UPE7yUwKdfZTFAEGK0yZTTLM1uc0rI-mNbgtYSdnbCQBZDCMAVL9Krk-TExypmt20OqDO13UbtQb2+-tQDEID5CYJDkoByDAQADFYBoGgAnLBIBIkAA))
@@ -1438,8 +1438,8 @@ Misc:
 * We slightly optimized Flow's performance of subtyping check between two union types.
 
 Library Definitions:
-* Add defintions `Array.prototype.findLastIndex()`, `String.prototype.at()`, `TypedArray.prototype.at()` and `Object.hasOwn()` (thanks @pascalduez).
-* Update `URL` defintions (thanks @pascalduez).
+* Add definitions `Array.prototype.findLastIndex()`, `String.prototype.at()`, `TypedArray.prototype.at()` and `Object.hasOwn()` (thanks @pascalduez).
+* Update `URL` definitions (thanks @pascalduez).
 * Add typing for cause option in Error constructor.
 
 ### 0.217.2
@@ -1510,7 +1510,7 @@ Library Definitions:
 
 Likely to cause new Flow errors:
 * Flow now has stricter behavior with `$Call`, `$ObjMap`, `$ObjMapi`, `$ObjMapConst`, `$TupleMap`. Previously hidden type errors might be revealed now.
-* You can no longer disable `tuple_ehancements`, `conditional_type`, `mapped_type`, `type_guards` in flowconfig, since these options have been removed. They were enabled by default since v0.212.0.
+* You can no longer disable `tuple_enhancements`, `conditional_type`, `mapped_type`, `type_guards` in flowconfig, since these options have been removed. They were enabled by default since v0.212.0.
 
 IDE:
 * We now provide a new refactor that extracts JSX elements into a new React component.
@@ -2535,7 +2535,7 @@ Parser:
 
 Likely to cause new Flow errors:
 * Fix a bug where refinements should be invalidated when going through multiple control flow branches (thanks @gnprice)
-* Make catch parameters explicitely `any` typed
+* Make catch parameters explicitly `any` typed
 * Ban object spreads of numbers and strings
 * Fix a bug that makes Flow consider some function names to have the empty type
 * Numbers, booleans, and enums are no longer subtypes of the empty interface `interface {}`
@@ -2940,7 +2940,7 @@ Parser:
 ### 0.157.0
 
 Likely to cause new Flow errors:
-* Add a new error for unreachable code occuring in a loop after a conditional with mixed `break` and `continue` branches.
+* Add a new error for unreachable code occurring in a loop after a conditional with mixed `break` and `continue` branches.
 
 New Features:
 * LSP extract to function/method/constant/class fields/type alias is enabled by default. These refactors will show up under after selecting some code. They can be disabled by adding `experimental.refactor=false` to the `.flowconfig`. (thanks to our intern, @SamChou19815)
@@ -2998,7 +2998,7 @@ Library Definitions:
 
 Misc:
 * Remove `experimental.this_annot` config option and permanently enable now that our core lib defs rely on this feature.
-* Remove prevously defaulted on `new_check` config option for the new check mode that uses significantly less RAM for large projects.
+* Remove previously defaulted on `new_check` config option for the new check mode that uses significantly less RAM for large projects.
 
 ### 0.153.0
 
@@ -3544,7 +3544,7 @@ against this type we would treat it like `$Exact<T> & $Exact<U>`, instead.
 * Fix to prevent infinitely expanding recursive type applications of arrays ([example](https://flow.org/try/#0C4TwDgpgBAqgPAFQHxQLxQIICcsEMSIoA+sc2eBySA3FFAFAAUA2gLpQBcpAdgK4C2AIwhYkASmpA)).
 
 Misc:
-* Improvements in comment attachement in various kinds of AST nodes. These will
+* Improvements in comment attachment in various kinds of AST nodes. These will
 help improve the accuracy of error suppression and various services that inspect
 comments (printing, showing documentation, etc.).
 * `$Exports<'m'>` will now lookup module 'm' directly in builtins, instead of the
@@ -3774,7 +3774,7 @@ Misc:
 * Improved performance for utility types and refinements in unions
 * Various improvements to autocomplete and get-def IDE services
 * Add `useDeferredValue` and `useTransition` to React library definitions
-* Add `bytesWritten` funciton to library definition (thanks @farzonl)
+* Add `bytesWritten` function to library definition (thanks @farzonl)
 
 ### 0.111.3
 
@@ -3837,7 +3837,7 @@ Notable bug fixes:
 Misc:
 * Added `--evaluate-type-destructors` to `type-at-pos` command.
 * Added `--evaluate-type-destructors` and `--expand-type-aliases` to `dump-types` command (thanks @goodmind!)
-* Changed `proceses.env` values from `?string` to `string|void` (thanks @FireyFly!)
+* Changed `process.env` values from `?string` to `string|void` (thanks @FireyFly!)
 * Improved detection of rebases when using watchman file watcher
 * Improved positions for error messages involving the deprecated `*` type
 
@@ -4373,7 +4373,7 @@ Many, many libdef fixes and improvements! Many thanks to the open source communi
 * #7358 Add `oncontextmenu` to `HTMLElement` (thanks @jasonLaster!)
 * #7363 Add `MediaDeviceInfo` declaration (thanks @ea167!)
 * #7367 Add `userSelect` to CSS declaration (thanks @shubhodeep9!)
-* #7368 Fix `fs.promises.readFile` being incorreclty overloaded (thanks @Macil!)
+* #7368 Fix `fs.promises.readFile` being incorrectly overloaded (thanks @Macil!)
 * #7381 add `EventSource` to dom libdef. Likely to cause new errors (thanks @SlIdE42!)
 * #7386 fix `XDomainRequest` in bom libdef. Likely to cause new errors (thanks @Mouvedia!)
 * #7387 Added optional `displayName` property to `React$Context` (thanks @bvaughn!)
@@ -6805,7 +6805,7 @@ Likely to cause new Flow errors:
 New Features:
 
 - Generators support, courtesy of [@samwgoldman](https://github.com/samwgoldman)
-- The number of worker processers is now configurable, defaults to the # of CPUs
+- The number of worker processors is now configurable, defaults to the # of CPUs
 - If Flow knows the value of a boolean expression, then it will know the value of that expression negated.
 - Flow can remember refinements for things like `if(x.y[a.b])`
 - `export type {type1, type2}` syntax

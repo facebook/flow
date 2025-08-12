@@ -184,7 +184,7 @@ arr4[0] = true; // Error!
 
 #### Nearer Scope Wins
 
-Shallow scope of assignment is prefered when there are multiple scopes where assignments happen:
+Shallow scope of assignment is preferred when there are multiple scopes where assignments happen:
 
 ``` js flow-check
 const arr5 = [];

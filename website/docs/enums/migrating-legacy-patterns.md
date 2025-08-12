@@ -188,7 +188,7 @@ Read more about [mapping enums to other values](../using-enums/#toc-mapping-enum
 You can't use a Flow Enum directly as its representation type (e.g. a `string`).
 If you get Flow errors about using an enum as its representation type, first try to refactor your code so that it expects the enum type instead of the representation type
 (e.g. change annotations from `string` to `Status`). If you really want to use the enum as its representation type, you can add in explicit casts.
-See [casting to represetation type](../using-enums/#toc-casting-to-representation-type).
+See [casting to representation type](../using-enums/#toc-casting-to-representation-type).
 
 
 #### Casting to the enum type {#toc-casting-to-the-enum-type}

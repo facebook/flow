@@ -36,7 +36,7 @@ type A = Array<bool>; // Error
 Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even when the `exact_by_default` option is set to `false`.
 
 ### `nonstrict-import` {#toc-nonstrict-import}
-Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
+Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
 ### `sketchy-null` {#toc-sketchy-null}
 Triggers when you do an existence check on a value that can be either null/undefined or falsey.

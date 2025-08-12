@@ -4,7 +4,7 @@ slug: /linting/flowlint-comments
 ---
 
 You can use `flowlint` comments to specify more granular lint settings within a file.
-These comments come in three froms:
+These comments come in three forms:
 * [flowlint](#toc-flowlint)
 * [flowlint-line](#toc-flowlint-line)
 * [flowlint-next-line](#toc-flowlint-next-line)
