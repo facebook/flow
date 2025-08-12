@@ -38,7 +38,7 @@ let g:ale_linters = {
 set nocompatible
 filetype off
 
-" install coc.nvim using Plug or preffered plugin manager
+" install coc.nvim using Plug or preferred plugin manager
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 call plug#end()
@@ -89,7 +89,7 @@ if !empty(s:languageservers)
 
 Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
 
-* Suports vim 8 and neovim
+* Supports vim 8 and neovim
 * Adds completions to omnifunc
 * Checks JavaScript files for type errors on save
 * Look up types under cursor

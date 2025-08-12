@@ -145,7 +145,7 @@
       ]
     },
     "ignore-long-lines": {
-      "comment": "so set at arbitary 1000 chars to avoid parsing minified files",
+      "comment": "so set at arbitrary 1000 chars to avoid parsing minified files",
       "patterns": [
         {
           "match": "^.{1000,}"
@@ -2044,7 +2044,7 @@
           ]
         },
         {
-          "comment": "GraphQL ( Relay.QL ) supprt. Use two forms of scopes! fixes some themes",
+          "comment": "GraphQL ( Relay.QL ) support. Use two forms of scopes! fixes some themes",
           "begin": "\\s*+(?:((Relay)(?:(\\?\\.)|(\\.))(QL))|(gql|graphql|graphql\\.experimental)|(/\\* GraphQL \\*/))\\s*((`))",
           "end": "\\s*((`))",
           "beginCaptures": {
@@ -2156,7 +2156,7 @@
       }
     },
     "literal-object": {
-      "comment": "obj lteral ({ or ,{ or [{ or ={ or return { or default {",
+      "comment": "obj literal ({ or ,{ or [{ or ={ or return { or default {",
       "begin": "(?:(?<=\\(|\\[|,)|(?:\\s*(?:(=)|\\b(default)\\b|\\b(return)\\b|(,))))\\s*({)",
       "end": "\\s*+(})",
       "beginCaptures": {
@@ -3805,7 +3805,7 @@
           ]
         },
         {
-          "comment": "getter/setter set [expresion]() or get 'literal-text'()",
+          "comment": "getter/setter set [expression]() or get 'literal-text'()",
           "name": "meta.accessor.js",
           "begin": "(?<=^|;|,|@@|}|{)\\s*+\\b(?:(static)\\s+)?(get|set)\\s+(?=((\\[(?:(?>[^\\[\\]]+)|\\g<-1>)*\\])|\\s*+(((')((?:[^']|\\\\')*)('))|\\s*+((\")((?:[^\"]|\\\\\")*)(\"))))\\s*+(\\())",
           "end": "\\s*(?={)|(?=;|}|,)",
@@ -4361,7 +4361,7 @@
           },
           "patterns": [
             {
-              "commnent": "decorator .property or .method which may be on a different line",
+              "comment": "decorator .property or .method which may be on a different line",
               "begin": "\\s*(?:(\\?\\.)|(\\.))",
               "end": "\\s*(\\#?)(?:((?:[\\p{Lu}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)|((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+))",
               "beginCaptures": {
@@ -4928,7 +4928,7 @@
     "jsx-entities": {
       "patterns": [
         {
-          "comment": "Embeded HTML entities &blah",
+          "comment": "Embedded HTML entities &blah",
           "match": "(&)([a-zA-Z0-9]+|#[0-9]+|#x[0-9a-fA-F]+)(;)",
           "captures": {
             "0": {
@@ -5807,7 +5807,7 @@
               "name": "keyword.other.declare.flowtype"
             },
             "2": {
-              "name": "keyword.constrol.module.flowtype"
+              "name": "keyword.control.module.flowtype"
             },
             "3": {
               "name": "storage.type.class.flowtype"

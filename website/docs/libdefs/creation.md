@@ -164,7 +164,7 @@ If you want to declare the types for a deeply nested module in a package like
 declare export const SECRET_INTERNALS_Foo: {...};
 ```
 
-This approach is preferrable to the approach described [below](#toc-declaring-a-module-globally),
+This approach is preferable to the approach described [below](#toc-declaring-a-module-globally),
 because editing these files will not trigger a restart of Flow server.
 
 ### Declaring a module in the global namespace  {#toc-declaring-a-module-globally}

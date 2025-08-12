@@ -121,7 +121,7 @@ In a different file:
 import type {MyTypeAlias, MyOpaqueType} from "A.js";
 
 const x: MyTypeAlias = "hi"; // Works
-const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangable with `string`
+const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
 //                      ^^^^ Cannot assign "hi" to y because string is incompatible with MyOpaqueType
 ```
 
