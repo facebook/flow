@@ -1902,7 +1902,7 @@ module Make
               let (t, fn) = mk_function_declaration cx reason loc fn in
               (t, (loc, FunctionDeclaration fn))
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
-              let reason = DescFormat.instance_reason (InternalName "*default*") loc in
+              let reason = DescFormat.instance_reason (OrdinaryName "<<anonymous class>>") loc in
               let (t, c) = mk_class cx loc ~name_loc:loc reason c in
               (t, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
