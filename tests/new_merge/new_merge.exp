@@ -44,12 +44,12 @@ Error --------------------------------------------------------------------------
 Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-cast]
 
    main.js:6:1
-   6| '' as T1; // error string ~> nunber
+   6| '' as T1; // error string ~> number
       ^^ [1]
 
 References:
    main.js:6:7
-   6| '' as T1; // error string ~> nunber
+   6| '' as T1; // error string ~> number
             ^^ [2]
 
 

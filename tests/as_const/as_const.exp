@@ -72,12 +72,12 @@ Cannot cast `_` to `typeof arr1` because tuple type [1] has 3 or more elements (
 literal [2] has 3 elements. [invalid-tuple-arity]
 
    array.js:29:17
-   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
+   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERROR: inexact ~> exact
                        ^^^^^^^^^^^^^^ [1]
 
 References:
    array.js:29:35
-   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
+   29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERROR: inexact ~> exact
                                          ^^^^^^^^^^^ [2]
 
 

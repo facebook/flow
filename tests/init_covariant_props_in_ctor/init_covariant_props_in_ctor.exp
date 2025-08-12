@@ -27,7 +27,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign function to `this.m` because property `m` is not writable. [cannot-write]
 
-   18|     this.m = () => {};        // ERORR: cannot assign method
+   18|     this.m = () => {};        // ERROR: cannot assign method
                 ^
 
 
@@ -35,7 +35,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `prop` to `this.prop` because property `prop` is not writable. [cannot-write]
 
-   44|       this.prop = prop;       // ERROR: the initilized object can only be
+   44|       this.prop = prop;       // ERROR: the initialized object can only be
                   ^^^^
 
 

@@ -240,7 +240,7 @@ Error --------------------------------------------------------------------------
 The imported module supports the `ios` platform, but the current module requires the support of the following platforms:
 `android`, `ios`. Support for the `android` platform is missing. [missing-platform-support]
 
-   3| import './shadowing.ios'; // ok, platform specific files can still be **explictly** imported
+   3| import './shadowing.ios'; // ok, platform specific files can still be **explicitly** imported
              ^^^^^^^^^^^^^^^^^
 
 
@@ -249,7 +249,7 @@ Error --------------------------------------------------------------------------
 The imported module supports the `android` platform, but the current module requires the support of the following
 platforms: `android`, `ios`. Support for the `ios` platform is missing. [missing-platform-support]
 
-   4| import './shadowing.android'; // ok, platform specific files can still be **explictly** imported
+   4| import './shadowing.android'; // ok, platform specific files can still be **explicitly** imported
              ^^^^^^^^^^^^^^^^^^^^^
 
 

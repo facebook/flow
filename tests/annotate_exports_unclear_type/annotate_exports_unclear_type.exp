@@ -42,21 +42,21 @@ Warnings:
   Empty SomeKnownUpper:                     0
 
 
-=== Should print $MyPreferedSuppression instead of the any type
+=== Should print $MyPreferredSuppression instead of the any type
 
 >>> non_strict_file.js (#changes: 1)
 // @flow
 
 import { foo } from './any';
 
-module.exports = (foo() as $MyPreferedSuppression);
+module.exports = (foo() as $MyPreferredSuppression);
 
 >>> strict_file.js (#changes: 1)
 // @flow strict
 
 import { foo } from './any';
 
-module.exports = (foo() as $MyPreferedSuppression);
+module.exports = (foo() as $MyPreferredSuppression);
 
 >>> Launching report...
 

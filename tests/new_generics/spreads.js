@@ -25,7 +25,7 @@ function t2<X>(x: X, sp_x: {...X}) {
   sp_x as X; // this probably should be banned--imagine if X=number--but is currently allowed
 }
 
-// all below ok exept as noted
+// all below ok except as noted
 //(Bound _, Spread (id2, []))
 function f1<X: {}>(x: X): {...X} {
   return x;

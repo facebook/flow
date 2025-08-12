@@ -15,4 +15,4 @@ tuple[3] as number; // error: out of bound
 tuple[key] as number; // error: void ~> number
 
 declare export const typeTest: (typeof roArray)[number];
-typeTest as string; // ok: the flag should not affect type-level acccess
+typeTest as string; // ok: the flag should not affect type-level access

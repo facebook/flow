@@ -63,7 +63,7 @@ declare const rendersBazOrBaz: renders (
   component A0() renders null { // invalid-render
     return null;
   }
-  component A1() renders (A0 | null) { // invalide-render
+  component A1() renders (A0 | null) { // invalid-render
     return null;
   }
   declare const x: renders A1; // OK

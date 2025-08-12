@@ -177,12 +177,12 @@ Error --------------------------------------------------------------------------
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
    under_constrained_speculation.js:1:2
-   1| (0: string); // error: intentially left here to ensure that implicit instantiation
+   1| (0: string); // error: intentionally left here to ensure that implicit instantiation
        ^ [1]
 
 References:
    under_constrained_speculation.js:1:5
-   1| (0: string); // error: intentially left here to ensure that implicit instantiation
+   1| (0: string); // error: intentionally left here to ensure that implicit instantiation
           ^^^^^^ [2]
 
 

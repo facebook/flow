@@ -25,7 +25,7 @@ export default class L {
 
 /* This program, surprisingly, still doesn't
    exhibit free variable capture. Why not?
-   After all, we're subsituting a free `X` for
+   After all, we're substituting a free `X` for
    `Y` within a binding for `X`: why doesn't the
    resulting type, `<X>() => X`, have the return type
    `X` refer to the abstraction?

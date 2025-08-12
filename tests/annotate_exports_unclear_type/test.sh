@@ -12,6 +12,6 @@ echo
 assert_ok "$FLOW" codemod annotate-exports --strip-root .
 
 echo
-echo "=== Should print \$MyPreferedSuppression instead of the any type"
+echo "=== Should print \$MyPreferredSuppression instead of the any type"
 echo
 assert_ok "$FLOW" codemod annotate-exports --strip-root --lints unclear-type=error .

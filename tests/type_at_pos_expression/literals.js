@@ -2,7 +2,7 @@
 
 declare var rand: number;
 
-// Infered literal types
+// Inferred literal types
 const s = "A";
 const n = 1;
 const f = 1.01;

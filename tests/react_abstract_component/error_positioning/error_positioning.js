@@ -31,7 +31,7 @@ let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component
 <RefetchContainer />;
 
 // This test makes sure that create element issues always point to callers of the
-// component instead of the defintion
+// component instead of the definition
 const C = require('./C');
 const View = require('./View');
 

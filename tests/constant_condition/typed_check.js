@@ -83,7 +83,7 @@
   if(a[0]) {} // ok because it could be `undefined`
 
   const b: {[string]: C} = {};
-  if(b['foo']) {} // ok because it coudl be `undefined`
+  if(b['foo']) {} // ok because it could be `undefined`
 
   // Class members
   const c: C = new C();

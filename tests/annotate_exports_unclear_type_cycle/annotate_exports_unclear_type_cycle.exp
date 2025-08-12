@@ -15,18 +15,18 @@ export default f() as any; // any okay
 
 import {g} from './cycle1';
 
-declare export function f(): $MyPreferedSuppression;
+declare export function f(): $MyPreferredSuppression;
 
-export default g() as $MyPreferedSuppression; // should be annotated with $MyPreferedSuppression
+export default g() as $MyPreferredSuppression; // should be annotated with $MyPreferredSuppression
 
 >>> ./other_cycle1.js
 // @flow strict-local
 
 import {f} from './other_cycle2';
 
-declare export function g(): $MyPreferedSuppression;
+declare export function g(): $MyPreferredSuppression;
 
-export default f() as $MyPreferedSuppression; // should be annotated with $MyPreferedSuppression
+export default f() as $MyPreferredSuppression; // should be annotated with $MyPreferredSuppression
 
 >>> ./other_cycle2.js
 // @flow
@@ -80,18 +80,18 @@ export default f() as any; // any okay
 
 import {g} from './cycle1';
 
-declare export function f(): $MyPreferedSuppression;
+declare export function f(): $MyPreferredSuppression;
 
-export default g() as any; // should be annotated with $MyPreferedSuppression
+export default g() as any; // should be annotated with $MyPreferredSuppression
 
 >>> ./other_cycle1.js
 // @flow strict-local
 
 import {f} from './other_cycle2';
 
-declare export function g(): $MyPreferedSuppression;
+declare export function g(): $MyPreferredSuppression;
 
-export default f() as any; // should be annotated with $MyPreferedSuppression
+export default f() as any; // should be annotated with $MyPreferredSuppression
 
 >>> ./other_cycle2.js
 // @flow
@@ -106,13 +106,13 @@ export default g() as any; // any okay
 === Diff between codemod-ed & autofix-ed ===
 >>> ./cycle2.js
 7c7
-< export default g() as $MyPreferedSuppression; // should be annotated with $MyPreferedSuppression
+< export default g() as $MyPreferredSuppression; // should be annotated with $MyPreferredSuppression
 ---
-> export default g() as any; // should be annotated with $MyPreferedSuppression
+> export default g() as any; // should be annotated with $MyPreferredSuppression
 
 >>> ./other_cycle1.js
 7c7
-< export default f() as $MyPreferedSuppression; // should be annotated with $MyPreferedSuppression
+< export default f() as $MyPreferredSuppression; // should be annotated with $MyPreferredSuppression
 ---
-> export default f() as any; // should be annotated with $MyPreferedSuppression
+> export default f() as any; // should be annotated with $MyPreferredSuppression
 

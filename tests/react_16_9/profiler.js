@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-const onRenderBad: React.ProfilerOnRenderFnType = ( // Error, the type isnt exported
+const onRenderBad: React.ProfilerOnRenderFnType = ( // Error, the type isn't exported
   id: string,
   phase: "mount" | "update",
   actualDuration: number,

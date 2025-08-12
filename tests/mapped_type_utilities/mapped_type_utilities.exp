@@ -212,7 +212,7 @@ Cannot cast `exact` to object type because property `bar` is extra in `Record` [
 objects do not accept extra props. [prop-missing]
 
    record.js:5:2
-   5| (exact: {foo: number}); // ERROR, mising bar
+   5| (exact: {foo: number}); // ERROR, missing bar
        ^^^^^
 
 References:
@@ -220,7 +220,7 @@ References:
    3| declare const exact: Exact;
                            ^^^^^ [1]
    record.js:5:9
-   5| (exact: {foo: number}); // ERROR, mising bar
+   5| (exact: {foo: number}); // ERROR, missing bar
               ^^^^^^^^^^^^^ [2]
 
 

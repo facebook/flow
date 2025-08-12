@@ -907,7 +907,7 @@ Error --------------------------------------------------------------------------
 Cannot call `x.m` because undefined [1] is not a function. [not-a-function]
 
    refinements.js:10:7
-   10|     x.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+   10|     x.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
              ^
 
 References:
@@ -920,7 +920,7 @@ Error --------------------------------------------------------------------------
 
 An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   10|     x.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+   10|     x.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
                ^
 
 
@@ -963,7 +963,7 @@ Error --------------------------------------------------------------------------
 Cannot call `x?.m` because undefined [1] is not a function. [not-a-function]
 
    refinements.js:29:8
-   29|     x?.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+   29|     x?.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
               ^
 
 References:
@@ -976,7 +976,7 @@ Error --------------------------------------------------------------------------
 
 An annotation on `u` is required because Flow cannot infer its type from local context. [missing-local-annot]
 
-   29|     x?.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+   29|     x?.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
                 ^
 
 

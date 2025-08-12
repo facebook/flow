@@ -409,15 +409,15 @@ Cannot assign `obj` to `noCopyReadWrite` because string `bar` [1] is incompatibl
 the indexer property's key. [incompatible-type]
 
    prefix.js:122:82
-   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+   122|   const noCopyReadWrite: {[SpreadOverOptionalProperties]: number, bar?: number} = obj; // ERROR
                                                                                          ^^^
 
 References:
    prefix.js:122:26
-   122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
+   122|   const noCopyReadWrite: {[SpreadOverOptionalProperties]: number, bar?: number} = obj; // ERROR
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    prefix.js:119:16
-   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+   119|   const obj: {[SpreadOverOptionalProperties]: number} = {foo: 1};
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -427,15 +427,15 @@ Cannot assign `obj` to `validKeyInvalidValue` because number [1] is incompatible
 [incompatible-type]
 
    prefix.js:123:91
-   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
+   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperties]: number, +foobar?: string} = obj; // ERROR
                                                                                                   ^^^
 
 References:
    prefix.js:119:46
-   119|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
+   119|   const obj: {[SpreadOverOptionalProperties]: number} = {foo: 1};
                                                      ^^^^^^ [1]
    prefix.js:123:81
-   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperies]: number, +foobar?: string} = obj; // ERROR
+   123|   const validKeyInvalidValue: {[SpreadOverOptionalProperties]: number, +foobar?: string} = obj; // ERROR
                                                                                         ^^^^^^ [2]
 
 

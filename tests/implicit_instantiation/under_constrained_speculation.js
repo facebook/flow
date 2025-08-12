@@ -1,4 +1,4 @@
-(0: string); // error: intentially left here to ensure that implicit instantiation
+(0: string); // error: intentionally left here to ensure that implicit instantiation
              // below does not reset it
 
 declare export class C<K, +V> {

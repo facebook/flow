@@ -172,82 +172,82 @@ Error --------------------------------------------------------------------------
 Cannot use number as the bound of infer type `Y` because number [1] is incompatible with string [2]. [incompatible-type]
 
    duplicate_infer.js:1:89
-   1| type DuplicatInfer1 = [string, number] extends [infer Y extends string, infer Y extends number] ? Y : empty; // error: string = number
+   1| type DuplicateInfer1 = [string, number] extends [infer Y extends string, infer Y extends number] ? Y : empty; // error: string = number
                                                                                               ^^^^^^ [1]
 
 References:
    duplicate_infer.js:1:65
-   1| type DuplicatInfer1 = [string, number] extends [infer Y extends string, infer Y extends number] ? Y : empty; // error: string = number
+   1| type DuplicateInfer1 = [string, number] extends [infer Y extends string, infer Y extends number] ? Y : empty; // error: string = number
                                                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- duplicate_infer.js:7:2
 
-Cannot cast `1` to `DuplicatInfer1` because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1` to `DuplicateInfer1` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    duplicate_infer.js:7:2
-   7| (1: DuplicatInfer1); // error: number ~> empty
+   7| (1: DuplicateInfer1); // error: number ~> empty
        ^ [1]
 
 References:
    duplicate_infer.js:7:5
-   7| (1: DuplicatInfer1); // error: number ~> empty
+   7| (1: DuplicateInfer1); // error: number ~> empty
           ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- duplicate_infer.js:8:2
 
-Cannot cast `1` to `DuplicatInfer2` because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1` to `DuplicateInfer2` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    duplicate_infer.js:8:2
-   8| (1: DuplicatInfer2); // error: number ~> empty
+   8| (1: DuplicateInfer2); // error: number ~> empty
        ^ [1]
 
 References:
    duplicate_infer.js:8:5
-   8| (1: DuplicatInfer2); // error: number ~> empty
+   8| (1: DuplicateInfer2); // error: number ~> empty
           ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- duplicate_infer.js:9:2
 
-Cannot cast `1` to `DuplicatInfer3` because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `1` to `DuplicateInfer3` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    duplicate_infer.js:9:2
-   9| (1: DuplicatInfer3); // error: number ~> string
+   9| (1: DuplicateInfer3); // error: number ~> string
        ^ [1]
 
 References:
    duplicate_infer.js:9:5
-   9| (1: DuplicatInfer3); // error: number ~> string
+   9| (1: DuplicateInfer3); // error: number ~> string
           ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ duplicate_infer.js:10:2
 
-Cannot cast `1` to `DuplicatInfer4` because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `1` to `DuplicateInfer4` because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    duplicate_infer.js:10:2
-   10| (1: DuplicatInfer4); // error: number ~> empty
+   10| (1: DuplicateInfer4); // error: number ~> empty
         ^ [1]
 
 References:
    duplicate_infer.js:10:5
-   10| (1: DuplicatInfer4); // error: number ~> empty
+   10| (1: DuplicateInfer4); // error: number ~> empty
            ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ duplicate_infer.js:11:2
 
-Cannot cast `1` to `DuplicatInfer5` because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `1` to `DuplicateInfer5` because number [1] is incompatible with string [2]. [incompatible-cast]
 
    duplicate_infer.js:11:2
-   11| (1: DuplicatInfer5); // error: number ~> string
+   11| (1: DuplicateInfer5); // error: number ~> string
         ^ [1]
 
 References:
    duplicate_infer.js:11:5
-   11| (1: DuplicatInfer5); // error: number ~> string
+   11| (1: DuplicateInfer5); // error: number ~> string
            ^^^^^^^^^^^^^^ [2]
 
 

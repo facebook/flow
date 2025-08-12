@@ -45,7 +45,7 @@ const optBad = <OptionalRest foo="bad" />; // ERROR
 declare var Duplicate: component(x: number, ...{x: number}); // error
 <Duplicate x={1} />;
 
-declare var InlineRef: component(ref: number); // ok: ref type in componenent type can be arbitrary
+declare var InlineRef: component(ref: number); // ok: ref type in component type can be arbitrary
 <InlineRef ref={1} />; // error: string and number refs are still not allowed
 
 declare var SpreadRef: component(...p: {ref: number}); // error

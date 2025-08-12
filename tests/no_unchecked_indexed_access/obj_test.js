@@ -14,4 +14,4 @@ protoDictObj[key] = undefined; // error: cannot write, proto ignored
 protoDictObj.hahaha = undefined; // error: cannot write, proto ignored
 
 declare export const typeTest: (typeof dictObj)[string];
-typeTest as string; // ok: the flag should not affect type-level acccess
+typeTest as string; // ok: the flag should not affect type-level access

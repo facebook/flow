@@ -15,7 +15,7 @@ class B {
 
   constructor(prop: string) {
     this.prop = prop;         // ERROR: we should not be assigning a string here
-    this.m = () => {};        // ERORR: cannot assign method
+    this.m = () => {};        // ERROR: cannot assign method
   }
 }
 
@@ -41,7 +41,7 @@ class E {
   constructor(prop: number) {
     this.prop = prop;         // OK
     const f = () => {
-      this.prop = prop;       // ERROR: the initilized object can only be
+      this.prop = prop;       // ERROR: the initialized object can only be
                               //        assigned a property in the constructor
                               //        scope
     };

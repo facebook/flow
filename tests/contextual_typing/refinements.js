@@ -7,7 +7,7 @@ function test_member() {
 
   if (x.m) {
     havoc();
-    x.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+    x.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
   }
 
   if (x.m) {
@@ -26,7 +26,7 @@ function test_optional_member() {
 
   if (x?.m) {
     havoc();
-    x?.m(u => { (u: string); });  // error: undefined not a function & mising local annotation
+    x?.m(u => { (u: string); });  // error: undefined not a function & missing local annotation
   }
 
   if (x?.m) {

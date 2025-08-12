@@ -2,7 +2,7 @@ type Exact = Record<'foo' | 'bar', number>;
 
 declare const exact: Exact;
 (exact: {foo: number, bar: number}); // OK!
-(exact: {foo: number}); // ERROR, mising bar
+(exact: {foo: number}); // ERROR, missing bar
 
 type Indexed = Record<'foo' | string, number>;
 declare const indexed: Indexed;

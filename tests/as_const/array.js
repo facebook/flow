@@ -26,7 +26,7 @@ function test_arr1() {
 
   _ as [1, 2, 3] as typeof arr1; // okay
   _ as readonly [1, 2, 3] as typeof arr1; // okay
-  _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
+  _ as readonly [1, 2, 3, ...] as typeof arr1; // ERROR: inexact ~> exact
   _ as [number, 1, 3] as typeof arr1; // error number ~> 1, 1 ~> 2
 }
 

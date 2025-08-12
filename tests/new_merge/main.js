@@ -3,7 +3,7 @@
 import {x as x1, type T as T1} from './primitive';
 1 as T1;
 x1 as T1;
-'' as T1; // error string ~> nunber
+'' as T1; // error string ~> number
 
 import {x as x2} from './intersection';
 x2 as empty; // okay - this is already an error at the definition site

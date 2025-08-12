@@ -11,7 +11,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
 
    exported.js:4:3
-   4|   v as string; // erorr: %checks is ignored
+   4|   v as string; // error: %checks is ignored
         ^
 
 References:
@@ -19,7 +19,7 @@ References:
    2| declare const v: string | null;
                                 ^^^^ [1]
    exported.js:4:8
-   4|   v as string; // erorr: %checks is ignored
+   4|   v as string; // error: %checks is ignored
              ^^^^^^ [2]
 
 
@@ -44,7 +44,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
 
    test_exported.js:5:3
-   5|   v as string; // erorr: %checks is ignored
+   5|   v as string; // error: %checks is ignored
         ^
 
 References:
@@ -52,7 +52,7 @@ References:
    3| declare const v: string | null;
                                 ^^^^ [1]
    test_exported.js:5:8
-   5|   v as string; // erorr: %checks is ignored
+   5|   v as string; // error: %checks is ignored
              ^^^^^^ [2]
 
 
@@ -61,7 +61,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
 
    test_exported.js:8:3
-   8|   v as string; // erorr: %checks is ignored
+   8|   v as string; // error: %checks is ignored
         ^
 
 References:
@@ -69,7 +69,7 @@ References:
    3| declare const v: string | null;
                                 ^^^^ [1]
    test_exported.js:8:8
-   8|   v as string; // erorr: %checks is ignored
+   8|   v as string; // error: %checks is ignored
              ^^^^^^ [2]
 
 

@@ -50,7 +50,7 @@ function f() {
   addsAPropToExports(module); // OK
 }
 
-// This is a pattern recommended by Node, and shold be allowed.
+// This is a pattern recommended by Node, and should be allowed.
 if (require.main === module) { } // OK
 // This doesn't need to be allowed, the above can be special-cased.
 if (require.main === (5, module)) { } // ERROR

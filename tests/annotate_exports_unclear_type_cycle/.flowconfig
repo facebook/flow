@@ -9,7 +9,7 @@
 [options]
 all=true
 
-suppress_type=$MyPreferedSuppression
+suppress_type=$MyPreferredSuppression
 
 [strict]
 unclear-type

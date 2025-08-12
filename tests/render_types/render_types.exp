@@ -1018,12 +1018,12 @@ Cannot use null [1] as the type argument of renders type. Only elements of a com
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
    renders_to_renders.js:66:27
-   66|   component A1() renders (A0 | null) { // invalide-render
+   66|   component A1() renders (A0 | null) { // invalid-render
                                  ^^^^^^^^^
 
 References:
    renders_to_renders.js:66:32
-   66|   component A1() renders (A0 | null) { // invalide-render
+   66|   component A1() renders (A0 | null) { // invalid-render
                                       ^^^^ [1]
 
 

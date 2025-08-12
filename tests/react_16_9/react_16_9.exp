@@ -4,7 +4,7 @@ Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnTy
 [prop-missing]
 
    profiler.js:5:26
-     5| const onRenderBad: React.ProfilerOnRenderFnType = ( // Error, the type isnt exported
+     5| const onRenderBad: React.ProfilerOnRenderFnType = ( // Error, the type isn't exported
                                  ^^^^^^^^^^^^^^^^^^^^^^
 
 References:

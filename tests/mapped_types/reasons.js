@@ -1,4 +1,4 @@
-// We make a SingeltonStringT to implement mapped types via substitution.
+// We make a SingletonStringT to implement mapped types via substitution.
 // Let's make sure they have good reasons for error messages.
 
 
