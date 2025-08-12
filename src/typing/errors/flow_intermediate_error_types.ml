@@ -543,6 +543,7 @@ type 'loc message =
       kind: [ `Boolean | `Number | `String ];
     }
   | MessageCannotUseStrUtilType
+  | MessageCannotUseThisSuperBeforeSuperCall of concrete_reason
   | MessageCannotUseTypeDueToPolarityMismatch of {
       reason_targ: 'loc virtual_reason;
       expected_polarity: Polarity.t;

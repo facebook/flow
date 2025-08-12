@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- constructor.js:15:5
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:15:5
    15|     this.y; // error (no super call)
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:16:5
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:16:5
    16|     this.x; // error (no super call)
@@ -28,7 +28,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:36:10
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:36:10
    36|     leak(this); // error (no super call yet)
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:45:5
 
-Must call `super` before accessing super [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `super` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:45:5
    45|     super.x; // error (no super call)
@@ -56,7 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:69:11
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:69:11
    69|     super(this); // error (no super call yet)
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:83:17
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    constructor.js:83:17
    83|     super(() => this.foo()); // error (no super call yet)
@@ -178,7 +178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ multi-call-error.js:7:9
 
-Cannot declare this [1] because the name is already bound. [name-already-bound]
+Cannot declare `this` [1] because the name is already bound. [name-already-bound]
 
    multi-call-error.js:7:9
               v-----
@@ -195,7 +195,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ multi-call-error.js:7:9
 
-Cannot declare super [1] because the name is already bound. [name-already-bound]
+Cannot declare `super` [1] because the name is already bound. [name-already-bound]
 
    multi-call-error.js:7:9
               v-----

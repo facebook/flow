@@ -2129,22 +2129,20 @@ let to_printable_error :
         text " as a superclass. Only variables and member expressions may be extended";
       ]
     | MessageCannotUseBeforeDeclaration x ->
-      let desc = desc_of_reason x in
-      if desc = RThis || desc = RSuper then
-        [
-          text "Must call ";
-          code "super";
-          text " before accessing ";
-          Friendly.ref x;
-          text " in a derived constructor.";
-        ]
-      else
-        [
-          text "Cannot use variable ";
-          Friendly.ref x;
-          text " because the declaration ";
-          text "either comes later or was skipped.";
-        ]
+      [
+        text "Cannot use variable ";
+        Friendly.ref x;
+        text " because the declaration ";
+        text "either comes later or was skipped.";
+      ]
+    | MessageCannotUseThisSuperBeforeSuperCall x ->
+      [
+        text "Must call ";
+        code "super";
+        text " before accessing ";
+        Friendly.ref x;
+        text " in a derived constructor.";
+      ]
     | MessageCannotUseComputedPropertyWithUnion computed_property_reason ->
       [
         text "Cannot use ";

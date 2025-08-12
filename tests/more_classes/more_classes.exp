@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- Foo.js:8:5
 
-Must call `super` before accessing this [1] in a derived constructor. [reference-before-declaration]
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
 
    Foo.js:8:5
    8|     this.x = x;

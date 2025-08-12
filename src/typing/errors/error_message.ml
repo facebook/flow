@@ -749,6 +749,7 @@ and binding_error =
   | ENameAlreadyBound
   | EVarRedeclaration
   | EReferencedBeforeDeclaration
+  | EReferencedThisSuperBeforeSuperCall
   | ETypeInValuePosition of {
       imported: bool;
       type_only_namespace: bool;
@@ -2755,12 +2756,7 @@ let friendly_message_of_msg = function
     else
       Normal (MessageMissingAnnotation (desc_of_reason reason))
   | EBindingError (binding_error, _, x, entry_loc) ->
-    let desc =
-      match x with
-      | InternalName "this" -> RThis
-      | InternalName "super" -> RSuper
-      | _ -> RIdentifier x
-    in
+    let desc = RIdentifier x in
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
     let x = mk_reason desc (ALoc.to_loc_exn entry_loc) in
@@ -2770,6 +2766,7 @@ let friendly_message_of_msg = function
       | ENameAlreadyBound -> MessageCannotDeclareAlreadyBoundName x
       | EVarRedeclaration -> MessageCannotRedeclareVar x
       | EReferencedBeforeDeclaration -> MessageCannotUseBeforeDeclaration x
+      | EReferencedThisSuperBeforeSuperCall -> MessageCannotUseThisSuperBeforeSuperCall x
       | ETypeInValuePosition { imported = true; type_only_namespace; name } ->
         MessageCannotUseTypeInValuePosition
           { reason = x; type_only_namespace; imported_name = Some name }
@@ -3329,6 +3326,7 @@ let error_code_of_message ~updated_error_code err : error_code option =
     | ENameAlreadyBound -> Some NameAlreadyBound
     | EVarRedeclaration -> Some NameAlreadyBound
     | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
+    | EReferencedThisSuperBeforeSuperCall -> Some ReferenceBeforeDeclaration
     | ETypeInValuePosition _ -> Some TypeAsValue
     | EConstReassigned
     | EConstParamReassigned ->

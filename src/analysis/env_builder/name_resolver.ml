@@ -511,11 +511,11 @@ end = struct
           then (
             add_output
               Error_message.(
-                EBindingError (ENameAlreadyBound, loc, InternalName "this", this_def_loc)
+                EBindingError (ENameAlreadyBound, loc, OrdinaryName "this", this_def_loc)
               );
             add_output
               Error_message.(
-                EBindingError (ENameAlreadyBound, loc, InternalName "super", super_def_loc)
+                EBindingError (ENameAlreadyBound, loc, OrdinaryName "super", super_def_loc)
               )
           )
         in
@@ -529,7 +529,7 @@ end = struct
           then
             add_output
               Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, InternalName name, def_loc)
+                EBindingError (EReferencedThisSuperBeforeSuperCall, loc, OrdinaryName name, def_loc)
               )
         in
         Base.List.iter super_call_loc_list ~f:add_name_already_bound_error_opt;
