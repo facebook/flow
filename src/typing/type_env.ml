@@ -1087,6 +1087,4 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
   | Ok t -> Some t
   | Error _ -> None
 
-let get_next cx loc =
-  let name = InternalName "next" in
-  read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RIdentifier name) loc)
+let get_next cx loc = read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RCustom "next") loc)
