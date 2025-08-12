@@ -836,10 +836,8 @@ let rec resolve_binding cx def_scope_kind reason loc b =
     let refined_type =
       match selector with
       | Selector.Prop { prop; prop_loc; _ } ->
-        (* The key is used to generate a reason for read,
-           and only the last prop in the chain matters. *)
-        let key = (InternalName "_", [Key.Prop prop]) in
-        Type_env.get_refinement cx key prop_loc
+        let desc = RProperty (Some (OrdinaryName prop)) in
+        Type_env.get_refinement cx desc prop_loc
       | _ -> None
     in
     (match refined_type with

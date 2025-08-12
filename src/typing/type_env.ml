@@ -684,8 +684,8 @@ let find_write cx kind reason =
   | Some t -> t
   | None -> AnyT.error reason
 
-let get_refinement cx key loc =
-  let reason = mk_reason (Key.reason_desc key) loc in
+let get_refinement cx desc loc =
+  let reason = mk_reason desc loc in
   match read_entry ~lookup_mode:ForValue cx loc reason with
   | Ok x -> Some (Flow_js.reposition cx loc x)
   | Error _ ->
