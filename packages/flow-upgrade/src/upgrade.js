@@ -37,13 +37,13 @@ export default async function upgrade(
   // Collect all of the upgrades we will need to run.
   for (let i = 0; i < VERSION_UPGRADES.length; i++) {
     const {version, upgrades} = VERSION_UPGRADES[i];
-    // If the version number is larger then the version we are upgrading to we
+    // If the version number is larger than the version we are upgrading to we
     // are done! Do not add any more upgrades,
     if (semver.cmp(version, '>', nextVersion)) {
       break;
     }
-    // If the version number is larget then the current version, but not larger
-    // then the next version then we want to run the upgrades for this version.
+    // If the version number is larger than the current version, but not larger
+    // than the next version then we want to run the upgrades for this version.
     if (semver.cmp(version, '>', currentVersion)) {
       upgrades.forEach(upgrade => allUpgrades.push(upgrade));
     }

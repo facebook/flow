@@ -6,7 +6,7 @@ import type {SuiteType} from "../Tester";
 const {suite, test} = require('../Tester');
 
 // A suite is a function. It takes an empty step and returns a list of tests.
-// For convinience, it's nice to destructure the empty test, since you almost
+// For convenience, it's nice to destructure the empty test, since you almost
 // always want to perform some action first.
 module.exports = (suite(({addFile, addFiles, addCode}) => [
   // A test is a list of steps.

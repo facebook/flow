@@ -8,7 +8,7 @@
 /* @flow*/
 import Logger from './Logger';
 import importFresh from './importFresh';
-import getExtensionPath from './getExtentionPath';
+import getExtensionPath from './getExtensionPath';
 import { promises, createReadStream } from 'fs';
 import path from 'path';
 // $FlowFixMe Flow doesn't recognize crypto.verify
@@ -61,7 +61,7 @@ async function getShasums(
 ): Promise<Buffer> {
   const extensionPath = getExtensionPath();
   try {
-    // try veryifying against SHASUM256.txt.sign
+    // try verifying against SHASUM256.txt.sign
     const shasums = await readFile(
       path.join(flowBinModulePath, 'SHASUM256.txt'),
     );
@@ -144,11 +144,11 @@ export default async function getVerifiedFlowBinPath(
     const quickPickItems = [
       {
         label: `Don't try to use ${flowBinModulePath}`,
-        proceedAnyay: false,
+        proceedAnyway: false,
       },
       {
         label: `Try to use ${flowBinModulePath} anyway`,
-        proceedAnyay: true,
+        proceedAnyway: true,
       },
     ];
 
@@ -157,7 +157,7 @@ export default async function getVerifiedFlowBinPath(
       quickPickOptions,
     );
 
-    if (userSelection && userSelection.proceedAnyay) {
+    if (userSelection && userSelection.proceedAnyway) {
       // user can change version of module or remove module while plugin is running
       // so always importFresh
       return importFresh(flowBinModulePath);

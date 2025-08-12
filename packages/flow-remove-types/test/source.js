@@ -95,7 +95,7 @@ declare class Baz {
   method(): mixed;
 }
 
-// Declare funtion
+// Declare function
 declare function someFunc(): void;
 
 // Declare interface
@@ -167,7 +167,7 @@ export type TestReadOnly = {|
   +readOnly: $ReadOnlyArray<>
 |};
 
-// Test covariant type variant class with constaint and default.
+// Test covariant type variant class with constraint and default.
 export class TestClassWithDefault<+CovariantType: TestReadOnly = TestReadOnly> {
 
   constructor() {}

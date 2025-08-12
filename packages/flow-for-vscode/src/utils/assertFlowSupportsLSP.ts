@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import checkFlowVersionSatisfies from './checkFlowVersionSatisifies';
+import checkFlowVersionSatisfies from './checkFlowVersionSatisfies';
 
 const FLOW_VERSION_FOR_LSP = '>=0.75';
 

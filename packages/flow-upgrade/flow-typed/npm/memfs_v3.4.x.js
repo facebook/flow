@@ -315,7 +315,7 @@ declare module 'memfs' {
     static fromNestedJSON(json: NestedDirectoryJSON, cwd?: string): Volume;
     /**
      * Global file descriptor counter. UNIX file descriptors start from 0 and go sequentially
-     * up, so here, in order not to conflict with them, we choose some big number and descrease
+     * up, so here, in order not to conflict with them, we choose some big number and decrease
      * the file descriptor of every new opened file.
      * @type {number}
      * @todo This should not be static, right?
