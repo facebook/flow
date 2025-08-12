@@ -629,7 +629,7 @@ let quote_kind token =
     | _ -> None
 
 (* Use the given token to tweak the edit range to respect existing quotations
- * and avoid overridding existing quotations *)
+ * and avoid overriding existing quotations *)
 let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit_locs ~token =
   let prefer_single_quotes =
     (* If the user already typed a quote, use that kind regardless of the config option *)
@@ -640,7 +640,7 @@ let autocomplete_create_string_literal_edit_controls ~prefer_single_quotes ~edit
   in
   let edit_locs =
     (* When completing a string literal, always replace. Inserting is likely to produce
-       an invalid string which is probably not what the user wnats. *)
+       an invalid string which is probably not what the user wants. *)
     match quote_kind token with
     | Some _ -> (snd edit_locs, snd edit_locs)
     | None -> edit_locs
@@ -2055,7 +2055,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
   let exclude_keys =
     Base.List.fold ~init:used_keys spreads ~f:(fun acc (spread_loc, spread_type) ->
         (* Only exclude the keys of spreads after our prop. If the spread is before our
-           insertion we do not use it to exclude properties from our autcomplete
+           insertion we do not use it to exclude properties from our autocomplete
            suggestions. It is a common pattern to use a spread to set default values and
            then override some of those defaults. *)
         if Loc.compare spread_loc insert_loc < 0 then

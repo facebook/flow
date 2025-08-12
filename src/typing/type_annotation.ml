@@ -667,7 +667,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             comments;
           }
       ) as t_ast ->
-      (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
+      (* Comments are unnecessary, so they can be stripped to meet the generic requirements *)
       let convert_type_params ?(env = env) () =
         match targs with
         | None -> ([], None)

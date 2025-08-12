@@ -207,7 +207,7 @@ let extract_docblock =
     fun ~max_tokens ~file_options filename content ->
       (* Consume tokens in the file until we get a comment. This is a hack to
        * support Nuclide, which needs 'use babel' as the first token due to
-       * contstraints with Atom (see https://github.com/atom/atom/issues/8416 for
+       * constraints with Atom (see https://github.com/atom/atom/issues/8416 for
        * more context). At some point this should change back to consuming only
        * the first token. *)
       let lb =

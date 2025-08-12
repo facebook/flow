@@ -506,7 +506,7 @@ end
 (** Add named type parameter to ensure a Flow_ast.Type can be parsed after being
   * pretty printed.
   *
-  * This was originally in annotate exports and may not be necissary now if this
+  * This was originally in annotate exports and may not be necessary now if this
   * issue with the pretty-printer/parser has been fixed.
   *)
 
@@ -863,7 +863,7 @@ end = struct
     match get_ast_from_shared_mem graphql_file with
     | None -> None
     | Some graphql_ast ->
-      (* Collect information about imports in currect file to accurately compute
+      (* Collect information about imports in current file to accurately compute
        * wether the base GraphQL type is imported in the current file. *)
       let defs =
         Ty_normalizer_imports.extract_types cx file_sig (Some typed_ast)
@@ -1228,7 +1228,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
 
   (* Converts types like 'Array<T> | Array<S> | R' to '$ReadOnlyArray<T | S> | R'
    * In certain kinds of codemods this has shown to cause fewer [ambiguous-speculation]
-   * errros. *)
+   * errors. *)
   let array_simplification t =
     let open Ty in
     let arr_elts ts =

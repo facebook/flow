@@ -520,7 +520,7 @@ let nominal_id_have_same_logical_module
     || (* Regardless of which namespace the Haste module has or what platform they have, if they have
         * the same name, we assume it's the same logical module. It's impossible to happen in normal
         * circumstances due to uniqueness guarantee. It's only possible to happen during multiplatform
-        * conformance check, but in tihs case we already enforced uniqueness guarantee elsewhere. *)
+        * conformance check, but in this case we already enforced uniqueness guarantee elsewhere. *)
     a_src <> b_src
     &&
     match (haste_name_opt a_src, haste_name_opt b_src) with

@@ -69,7 +69,7 @@ let pick_saved_state options root merge_base timestamp =
       (* if two saved states have the same timestamp, then we have to worry
          about whether one of them is the merge base. normally it doesn't
          really matter which one ACTUALLY comes first so we just sort the
-         hashes lexographically. but if one of them is the mergebase itself,
+         hashes lexicographically. but if one of them is the mergebase itself,
          we want it to be the first one. below, when we binary search for
          the best saved state, we will pessimistically assume any saved state
          with the same timestamp but different hash as the mergebase is
@@ -119,7 +119,7 @@ let pick_saved_state options root merge_base timestamp =
   file like the "local" fetcher requires.
 
   If multiple commits have the same timestamp, the chosen one is stable but
-  unspecified (currently, it's the first one lexographically, but this is
+  unspecified (currently, it's the first one lexicographically, but this is
   subject to change). However, if one of them is the current mergebase, it
   is selected.
 

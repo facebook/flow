@@ -46,7 +46,7 @@ let change_compare (pos1, chg1) (pos2, chg2) =
 
 (* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
 let list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list option =
-  (* Lots of acccesses in this algorithm so arrays are faster *)
+  (* Lots of accesses in this algorithm so arrays are faster *)
   let (old_arr, new_arr) = (Array.of_list old_list, Array.of_list new_list) in
   let (n, m) = (Array.length old_arr, Array.length new_arr) in
   (* The shortest edit sequence problem is equivalent to finding the longest

@@ -1294,7 +1294,7 @@ module Opts = struct
               Ok opts
         )
       );
-      ( "unsuppported.windows",
+      ( "unsupported.windows",
         boolean (fun opts v ->
             if Sys.win32 && v then
               Error "Windows is not supported under this flowconfig."

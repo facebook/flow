@@ -376,7 +376,7 @@ let condition_banned_and_FALSY =
 let condition_allowed = ConditionAllowed
 
 let use_type_to_check_conditional cx ttype =
-  (* We always show warning for errors generated from type inferrence *)
+  (* We always show warning for errors generated from type inference *)
   match try_eval_type_truthyness cx ttype with
   | ConstCond_Truthy { constant_condition_kind; reason } ->
     ConditionBanned { is_truthy = true; show_warning = true; constant_condition_kind; reason }
@@ -1248,7 +1248,7 @@ let check_multiplatform_conformance cx ast tast =
      with
     | Context.MissingModule
     | Context.UncheckedModule _ ->
-      (* It's ok if a platform speicific implementation file doesn't have an interface.
+      (* It's ok if a platform specific implementation file doesn't have an interface.
        * It just makes the module non-importable without platform extension. *)
       ()
     | Context.TypedModule interface_module_f ->
@@ -1634,7 +1634,7 @@ let post_merge_checks cx ast tast metadata =
  * transitive dependency's context, then copied into the dependency's context,
  * and so on.
  *
- * Finally, due to cycles, it's possile that src_cx and dst_cx share the same
+ * Finally, due to cycles, it's possible that src_cx and dst_cx share the same
  * component cx, and thus have the same tvar graph, property maps, etc. Happily,
  * this does not complicate the implementation, as the mem checks and early
  * returns on each method override are sufficient.
@@ -1792,12 +1792,12 @@ let merge_lib_files ~project_opts ~sig_opts ordered_asts_with_scoped_projects =
           in
           match Base.List.Assoc.find acc ~equal:scoped_project_key_equal scoped_project_key with
           | None -> Base.List.Assoc.add ~equal:scoped_project_key_equal acc scoped_project_key [ast]
-          | Some exisiting_list ->
+          | Some existing_list ->
             Base.List.Assoc.add
               ~equal:scoped_project_key_equal
               acc
               scoped_project_key
-              (ast :: exisiting_list)
+              (ast :: existing_list)
       )
     in
     let non_scoped_asts =

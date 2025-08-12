@@ -3209,7 +3209,7 @@ let friendly_message_of_msg = function
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
 
-let defered_in_speculation = function
+let deferred_in_speculation = function
   | EUntypedTypeImport _
   | EMethodUnbinding _
   | EUntypedImport _
@@ -3570,7 +3570,7 @@ let error_code_of_message ~updated_error_code err : error_code option =
   | EHookRuleViolation { hook_rule = HookHasIllegalName; _ } -> Some ReactRuleHookNamingConvention
   | EHookRuleViolation { hook_rule = HookDefinitelyNotInComponentOrHook; _ } ->
     Some ReactRuleHookDefinitelyNotInComponentOrHook
-  | EHookRuleViolation { hook_rule = MaybeHook _; _ } -> Some ReactRuleHookMixedWithNonHoook
+  | EHookRuleViolation { hook_rule = MaybeHook _; _ } -> Some ReactRuleHookMixedWithNonHook
   | EHookRuleViolation { hook_rule = NotHookSyntaxHook; _ } -> Some ReactRuleHookNonHookSyntax
   | EHookRuleViolation
       { hook_rule = HookInUnknownContext | HookNotInComponentSyntaxComponentOrHookSyntaxHook; _ } ->

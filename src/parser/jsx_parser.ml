@@ -546,7 +546,7 @@ module JSX (Parse : Parser_common.PARSER) (Expression : Parser_common.EXPRESSION
               frag_closing_element =
                 (match closing_element with
                 | `Fragment loc -> loc
-                (* the following are parse erros *)
+                (* the following are parse errors *)
                 | `Element (loc, _) -> loc
                 | _ -> end_loc);
               frag_children = children;

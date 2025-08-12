@@ -10,7 +10,7 @@ type error_code =
   | ReactRuleUnsafeMutation
   | ReactRuleHookConditional
   | ReactRuleHookDefinitelyNotInComponentOrHook
-  | ReactRuleHookMixedWithNonHoook
+  | ReactRuleHookMixedWithNonHook
   | ReactRuleHookMutation
   | ReactRuleHookNamingConvention
   | ReactRuleHookNonHookSyntax
@@ -228,7 +228,7 @@ let require_specific : error_code -> bool = function
   | ReactRuleUnsafeMutation
   | ReactRuleHookConditional
   | ReactRuleHookDefinitelyNotInComponentOrHook
-  | ReactRuleHookMixedWithNonHoook
+  | ReactRuleHookMixedWithNonHook
   | ReactRuleHookMutation
   | ReactRuleHookNamingConvention
   | ReactRuleHookNonHookSyntax
@@ -246,7 +246,7 @@ let string_of_code : error_code -> string = function
   | ReactRuleHookConditional -> "react-rule-hook-conditional"
   | ReactRuleHookDefinitelyNotInComponentOrHook ->
     "react-rule-hook-definitely-not-in-component-or-hook"
-  | ReactRuleHookMixedWithNonHoook -> "react-rule-hook-mixed-with-non-hook"
+  | ReactRuleHookMixedWithNonHook -> "react-rule-hook-mixed-with-non-hook"
   | ReactRuleHookMutation -> "react-rule-hook-mutation"
   | ReactRuleHookNamingConvention -> "react-rule-hook-naming-convention"
   | ReactRuleHookNonHookSyntax -> "react-rule-hook-non-hook-syntax"

@@ -1002,7 +1002,7 @@ let object_rest
       ~reason
       ~invalidate_aliases:true
       ~interface
-        (* Keep the reachable targs from o1, because we don't know whether all appearences of them were removed *)
+        (* Keep the reachable targs from o1, because we don't know whether all appearances of them were removed *)
       ~reachable_targs
       ~kind:Subst_name.Spread
       flags
@@ -1474,7 +1474,7 @@ let resolve
         }
     in
     resolved ~next ~recurse cx use_op reason resolve_tool tool x
-  (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
+  (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjectRep/Rest.
    * In principle, we should be able to use it for Rest, but right now
    * `const {x, ...y} = 3;` tries to get `x` from Number.
    * They don't make sense with $ReadOnly's semantics, since $ReadOnly doesn't model

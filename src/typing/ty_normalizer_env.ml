@@ -15,7 +15,7 @@ type evaluate_type_destructors_mode =
 type options = {
   (* If this flag is set to `true` then the normalizer will attempt to reuse the
    * cached results of evaluated type-destructors. If this is set to `false`, then
-   * instread it will try to use:
+   * instead it will try to use:
    *  - a potentially attendant type-alias annotation, or
    *  - reuse the utility type that corresponds to this the specific type-destructor.
    *

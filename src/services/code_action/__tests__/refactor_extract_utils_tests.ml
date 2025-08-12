@@ -299,7 +299,7 @@ let b = 4;
       |} in
       assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 0) (4, 0))
     );
-    (* Partially select a statement is not alllowed. *)
+    (* Partially select a statement is not allowed. *)
     ( "extract_statements_linear_partial" >:: fun ctxt ->
       let source =
         {|

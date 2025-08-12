@@ -24,19 +24,19 @@ let create_from_shorthand_value ~value =
 
 let create_from_shorthand ~path = create_from_shorthand_value ~value:(Path path)
 
-let is_targeted_condition valid_conditions canidate_condition =
-  List.mem canidate_condition valid_conditions || canidate_condition = "default"
+let is_targeted_condition valid_conditions candidate_condition =
+  List.mem candidate_condition valid_conditions || candidate_condition = "default"
 
 let rec pick_target valid_conditions pattern_match = function
-  | (canidate_condition, Nested child_condition_map) :: rest ->
-    if is_targeted_condition valid_conditions canidate_condition then
+  | (candidate_condition, Nested child_condition_map) :: rest ->
+    if is_targeted_condition valid_conditions candidate_condition then
       match pick_target valid_conditions pattern_match child_condition_map with
       | Some t -> Some t
       | None -> pick_target valid_conditions pattern_match rest
     else
       pick_target valid_conditions pattern_match rest
-  | (canidate_condition, Path target_path) :: rest ->
-    if is_targeted_condition valid_conditions canidate_condition then
+  | (candidate_condition, Path target_path) :: rest ->
+    if is_targeted_condition valid_conditions candidate_condition then
       match pattern_match with
       | Some pattern_match ->
         Some (Base.String.substr_replace_first ~pattern:"*" ~with_:pattern_match target_path)

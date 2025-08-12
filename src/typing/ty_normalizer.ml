@@ -11,7 +11,7 @@ open Loc_collections
 module Env = Ty_normalizer_env
 module T = Type
 
-(* The type normalizer converts infered types (of type `Type.t`) under a context
+(* The type normalizer converts inferred types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,
    e.g. type-at-pos, coverage, dump-types, and so is parameterized by a
    configuration struct, instantiated by the client.
@@ -69,7 +69,7 @@ let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
 
 (* Utility that determines the next immediate concrete constructor, ie. reads
  * through OpenTs and AnnotTs. This is useful in determining, for example, the
- * toplevel cosntructor and adjusting the logic accordingly. *)
+ * toplevel constructor and adjusting the logic accordingly. *)
 module Lookahead = struct
   type t =
     | Recursive

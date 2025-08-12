@@ -62,7 +62,7 @@ let tests =
            let ast = E.plus x (E.mult plus_y y) in
            assert_expression ~ctxt "x+(+y)*y" ast;
 
-           (* parens are necessary around the inner `+y+y`, but would be reundant
+           (* parens are necessary around the inner `+y+y`, but would be redundant
               around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
            let ast = E.plus x (E.mult (E.plus plus_y y) y) in
            assert_expression ~ctxt "x+(+y+y)*y" ast

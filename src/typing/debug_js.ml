@@ -329,7 +329,7 @@ let rec dump_t_ (depth, tvars) cx t =
           )
         t
     | DefT (_, ReactAbstractComponentT _) -> p t
-    | DefT (_, RendersT (IntrinsicRenders n)) -> p t ~extra:(spf "instrinsic %s" n)
+    | DefT (_, RendersT (IntrinsicRenders n)) -> p t ~extra:(spf "intrinsic %s" n)
     | DefT (_, RendersT (NominalRenders { renders_name; _ })) ->
       p t ~extra:(spf "Nominal(%s)" renders_name)
     | DefT

@@ -33,7 +33,7 @@ let attempt_union_rep_optimization cx (rep : Type.UnionRep.t) : unit =
       ~find_props:(Context.find_props cx)
 
 (***********************)
-(* Datatype defintions *)
+(* Datatype definitions *)
 (***********************)
 
 type pattern_ast_list =
@@ -482,7 +482,7 @@ end = struct
         ( if last then
           let loc = Reason.loc_of_reason reason in
           (* We avoid more complex analysis by simply erroring when there is a
-             guarded wilcard which is in the last case. *)
+             guarded wildcard which is in the last case. *)
           Flow_js.add_output cx (Error_message.EMatchInvalidGuardedWildcard loc)
         );
         pattern_union

@@ -2294,7 +2294,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             env_state <- { env_state with current_bindings = old_val }
         )
 
-      (* Override the object type constuctor to disable the EReferenceInAnnotation check
+      (* Override the object type constructor to disable the EReferenceInAnnotation check
        * since this is a common and safe way to encode recursive object types. *)
       method! object_type loc ot =
         let old_val = env_state.current_bindings in
@@ -2689,7 +2689,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                        because the type should be computed from the array providers. *)
                     EnvMap.add_ordinary name_loc write_kind env_state.write_entries
                   ) else
-                    (* All of the providers are aleady in the map. We don't want to overwrite them with
+                    (* All of the providers are already in the map. We don't want to overwrite them with
                      * a non-assigning write. We _do_ want to enter regular function declarations as
                      * non-assigning writes so that they are not checked against the providers in
                      * Env.set_env_entry *)
@@ -5073,7 +5073,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Compare that to
             if {x.y} { } else { }
           For this case, we will call commit_refinement only once, with a map that contains both the refinement x HasProp(y) and
-          x.y Truthy. When we negate this, because we only called commit_refinement once and therefore our refinement propositon
+          x.y Truthy. When we negate this, because we only called commit_refinement once and therefore our refinement proposition
           contains just a single set of refinements (not multiple ones conjuncted together), we'll end up with
           x NotHasProp(y) and x.y Falsey--which is what we want.
       *)
@@ -5266,7 +5266,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         this#merge_self_refinement_scope new_latest_refinements
 
-      (* Refines an expr if that expr has a refinement key, othewise does nothing *)
+      (* Refines an expr if that expr has a refinement key, otherwise does nothing *)
       method add_refinement_to_expr expr ~refining_locs refi_kind =
         match RefinementKey.of_expression expr with
         | None -> ()
@@ -5931,7 +5931,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ignore @@ this#arg_list arguments;
           this#havoc_current_env ~invalidation_reason:Refinement_invalidation.FunctionCall ~loc;
           let refis = LookupMap.empty in
-          (* Paremeter type-guard refinements *)
+          (* Parameter type-guard refinements *)
           (* Function calls may introduce refinements if the function called is a
            * type-guard function. The EnvBuilder has no idea if a function is a
            * type-guard function or not. To handle that, we encode that a variable

@@ -178,7 +178,7 @@ let string_of_event = function
   | GC_start -> "GC_start"
   | Collating_errors_start -> "Collating_errors_start"
   | Watchman_wait_start _deadline -> "Watchman_wait_start"
-  | Load_libraries_start -> "Loading_libaries_start"
+  | Load_libraries_start -> "Loading_libraries_start"
 
 (** As a general rule, use past tense for status updates that show progress and present perfect
     progressive for those that don't. *)
@@ -344,7 +344,7 @@ let is_significant_transition old_status new_status =
           they take a long time for some reason. *)
        false
      | (Typechecking (old_mode, old_tc_status), Typechecking (new_mode, new_tc_status)) ->
-       (* A change in mode is always signifcant *)
+       (* A change in mode is always significant *)
        old_mode <> new_mode
        || begin
             match (old_tc_status, new_tc_status) with

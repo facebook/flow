@@ -70,10 +70,10 @@ module type Pattern_substitutions = sig
   (** List of key-value pairs. We perform these key to value
    * substitutions in-order.
    *
-   * For example, consider the substitions:
+   * For example, consider the substitutions:
    *   [ ("foo", "bar"); ("bar", "world"); ]
    *
-   * being appied to the string:
+   * being applied to the string:
    *   "hello {{foo}}"
    *
    * which gets transformed to:
@@ -103,7 +103,7 @@ module Pattern_comparator (Substitutions : Pattern_substitutions) = struct
   (** Argh, due to the signature of Comparator, the "expected" and
    * "actual" have the same type, even though for this Pattern_comparator
    * we would really like them to be different. We'd like "actual" to
-   * be type string, and "epxected" to be type "pattern", and
+   * be type string, and "expected" to be type "pattern", and
    * so we can apply the substitutions to only the pattern. But splitting
    * them out into different types for all the modules only because this module
    * needs it isn't really worth it. Oh well. So we treat actual as a pattern

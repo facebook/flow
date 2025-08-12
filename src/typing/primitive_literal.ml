@@ -237,7 +237,7 @@ class implicit_instantiation_literal_mapper ~singleton_action =
           t
 
     (* The EvalT case is the only case that calls this function. We've explicitly
-     * overrided it in all cases, so this should never be called *)
+     * overridden it in all cases, so this should never be called *)
     method eval_id _cx _map_cx _id = assert false
   end
 

@@ -145,7 +145,7 @@ let get_status () =
 
 let ever_been_free () = !current_status.ever_been_free
 
-let wait_for_signficant_status ~timeout =
+let wait_for_significant_status ~timeout =
   (* If there is a significant transition before the timeout, the cancel the sleep and return the
    * new status. Otherwise, stop waiting on the condition variable and return the current status *)
   Lwt.pick

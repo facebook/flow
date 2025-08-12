@@ -194,7 +194,7 @@ external hash_stats : unit -> table_stats = "hh_hash_stats"
 external get_next_version : unit -> int = "hh_next_version" [@@noalloc]
 
 (* Any entities which were advanced since the last commit will be committed
- * after this. Committing the transaction requries synchronization with readers
+ * after this. Committing the transaction requires synchronization with readers
  * and writers. *)
 external commit_transaction : unit -> unit = "hh_commit_transaction"
 

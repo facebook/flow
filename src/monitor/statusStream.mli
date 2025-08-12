@@ -18,7 +18,7 @@ val call_on_free : f:(unit -> unit Lwt.t) -> unit Lwt.t
 
 val get_status : unit -> ServerStatus.status * FileWatcherStatus.status
 
-val wait_for_signficant_status :
+val wait_for_significant_status :
   timeout:float -> (ServerStatus.status * FileWatcherStatus.status) Lwt.t
 
 val ever_been_free : unit -> bool

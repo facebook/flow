@@ -8,7 +8,7 @@
 /**
  * This file exports a customized fast comparison function
  * for most common cases, it does not cover edge cases like OCaml's built-in
- * ones. And its string comparision is based on length first, and content later.
+ * ones. And its string comparison is based on length first, and content later.
  *
  * The restrictions are documented in the
  * exported functions.
@@ -79,7 +79,7 @@ static void resize_stack(stack* stk, item** sp) {
   } while (0)
 
 /**
- * comapre [v1] [v2] assuming they are
+ * compare [v1] [v2] assuming they are
  * immediate numbers
  */
 #define SIMPLE_COMPARE(v1, v2) \
@@ -137,7 +137,7 @@ static void resize_stack(stack* stk, item** sp) {
 
 /**
  * POP_STACK(sp,stk,val1,val2)
- * POP the stack the poped value is put inside [val1]
+ * POP the stack the popped value is put inside [val1]
  * and [val2]
  */
 #define POP_STACK(sp, stk, val1, val2) \
@@ -192,7 +192,7 @@ static value compare_with_stack(value v1, value v2, stack* stk, item* sp) {
 }
 
 /**
- * compare two values [v1] and [v2] which foucs on performance
+ * compare two values [v1] and [v2] which focus on performance
  * restrictions:
  * - The entry point of [v1] and [v2] should not be an
  *   array, string or double

@@ -604,7 +604,7 @@ module rec TypeTerm : sig
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
      * we generate the constraint, since the lower bound may be an unresolved OpenT. If it
      * resolves to a ClassT, we flip the flag to true, which causes us to check the private static
-     * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
+     * fields when the InstanceT ~> SetPrivatePropT constraint is processed *)
     | SetPrivatePropT of
         use_op * reason * string * set_mode * class_binding list * bool * write_ctx * t * t option
     | GetTypeFromNamespaceT of {
@@ -1011,7 +1011,7 @@ module rec TypeTerm : sig
     | PropNonVoidP of string * reason
     (* `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))` *)
     | PropNonMaybeP of string * reason
-    (* Encondes the latent predicate associated with the [index]-th parameter
+    (* Encodes the latent predicate associated with the [index]-th parameter
        of the function in type [t]. We also include information for all type arguments
        and argument types of the call, to enable polymorphic calls. *)
     | LatentP of pred_funcall_info Lazy.t * index list
@@ -3498,7 +3498,7 @@ module AConstraint = struct
         type for its body yet.
 
       - [Annot_op { op; id; _ }] expresses the fact that the current variable is the
-        result of applying the opereation [op] on the type that another annotation
+        result of applying the operation [op] on the type that another annotation
         variable [id] will resolve to.
 
       An annotation variable starts off in the Annot_unresolved or Annot_op state

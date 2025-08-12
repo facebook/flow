@@ -200,7 +200,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
 
       method private typeapp =
         let rec loop cx pole seen = function
-          (* Any arity erors are already handled in Flow_js *)
+          (* Any arity errors are already handled in Flow_js *)
           | (_, []) -> seen
           | (Some [], _) -> seen
           | (None, targ :: targs) ->

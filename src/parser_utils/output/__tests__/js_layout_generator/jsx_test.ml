@@ -268,7 +268,7 @@ let tests =
       ignore ctxt
     );
     ( "valueless_attribute" >:: fun ctxt ->
-      (* TODO: valueless attributes shouldnt print trailing spaces when last *)
+      (* TODO: valueless attributes shouldn't print trailing spaces when last *)
       assert_expression_string ~ctxt "<A a />"
     );
     ("namespaced_valueluess_attribute" >:: fun ctxt -> assert_expression_string ~ctxt "<A a:a />");

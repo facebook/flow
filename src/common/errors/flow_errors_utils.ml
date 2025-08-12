@@ -2632,7 +2632,7 @@ module Cli_output = struct
       in
       (* Go through a very similar process as primary locations to add a reference
        * for the root location and record its id. If a reference already exists
-       * then we will not higlight our root location any differently! *)
+       * then we will not highlight our root location any differently! *)
       let (next_id, loc_to_id, id_to_loc, root_id, custom_root_color) =
         match LocMap.find_opt root_loc loc_to_id with
         | Some id -> (next_id, loc_to_id, id_to_loc, Some id, false)

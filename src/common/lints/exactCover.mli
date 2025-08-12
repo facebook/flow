@@ -15,7 +15,7 @@
  * ExactCover.t is a read-only structure for efficient querying.
  *
  * ExactCover.builder is a write-only structure for efficient construction
- * (under some assuptions) that can be baked into an ExactCover.t.
+ * (under some assumptions) that can be baked into an ExactCover.t.
  *)
 
 open Lints

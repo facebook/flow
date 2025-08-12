@@ -474,7 +474,7 @@ function newFunction(): void {
       while (true) {
         // selection start
         switch (true) {default:continue;}
-        // seletion end
+        // selection end
       }
 
       |}

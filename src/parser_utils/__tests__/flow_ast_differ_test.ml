@@ -1470,12 +1470,12 @@ let tests =
              ~mapper:(new useless_mapper)
          );
          ( "with_body" >:: fun ctxt ->
-           let source = "with (objct) { rename; };" in
+           let source = "with (object) { rename; };" in
            assert_edits_equal
              ctxt
              ~edits:[((15, 21), "gotRenamed")]
              ~source
-             ~expected:"with (objct) { gotRenamed; };"
+             ~expected:"with (object) { gotRenamed; };"
              ~mapper:(new useless_mapper)
          );
          ( "function_expression" >:: fun ctxt ->

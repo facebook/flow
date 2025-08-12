@@ -593,7 +593,7 @@ module Initialize = struct
   }
 
   and workspaceClientCapabilities = {
-    applyEdit: bool;  (** client supports appling batch edits *)
+    applyEdit: bool;  (** client supports applying batch edits *)
     configuration: bool;  (** client supports workspace/configuration requests *)
     workspaceEdit: workspaceEdit;
     didChangeConfiguration: dynamicRegistration;

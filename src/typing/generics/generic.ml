@@ -185,7 +185,7 @@ type sat_result =
    multiple possible results. For example, suppose X and Y are generics, and Y's upper
    bound is X. Then the Generic.id for Y is "Y:X". When a GenericT for Y flows into a
    GenericT for X, we check "Y:X" against "X" to see if it's satisfied. Y =/= X,
-   so we "strip off" Y from Y:X and check X against X, which succeds, so we return
+   so we "strip off" Y from Y:X and check X against X, which succeeds, so we return
    Satisfied.
 
    If Z:W is not bounded by X, and we check if Z:W satisfies X, we first strip off

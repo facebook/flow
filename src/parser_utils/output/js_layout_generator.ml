@@ -1166,7 +1166,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.Logical { E.Logical.operator; left; right; comments } ->
         let expression_with_parens ~precedence ~ctxt ~opts expr =
           match (operator, expr) with
-          (* Logical expressions inside a nullish coalese expression must be wrapped in parens *)
+          (* Logical expressions inside a nullish coalesce expression must be wrapped in parens *)
           | ( E.Logical.NullishCoalesce,
               (_, E.Logical { E.Logical.operator = E.Logical.And | E.Logical.Or; _ })
             ) ->

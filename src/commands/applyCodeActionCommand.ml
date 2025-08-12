@@ -14,7 +14,7 @@ let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 module SourceAddMissingImports = struct
   let spec =
     {
-      name = "Add mising imports";
+      name = "Add missing imports";
       doc = "Runs the 'source.addMissingImports' code action";
       usage =
         Printf.sprintf

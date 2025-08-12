@@ -435,7 +435,7 @@ class ['A] comparator_ty =
       with
       | Difference n -> n
 
-    (* Take advantage of pointer equality at type nodes to short circut *)
+    (* Take advantage of pointer equality at type nodes to short circuit *)
     method! private on_t env x y =
       if x == y then
         ()

@@ -582,7 +582,7 @@ module SpecialCasedFunctions = struct
       match to_obj with
       | AnyT _ ->
         (* Special case any. Otherwise this will lead to confusing errors when
-         * any tranforms to an object type. *)
+         * any transforms to an object type. *)
         Flow.flow_t cx (to_obj, t)
       | to_obj ->
         Base.List.iter

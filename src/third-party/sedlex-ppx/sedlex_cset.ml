@@ -3,7 +3,7 @@
 (* Copyright 2005, 2013 by Alain Frisch and LexiFi.                       *)
 
 (* Character sets are represented as lists of intervals.  The
-   intervals must be non-overlapping and not collapsable, and the list
+   intervals must be non-overlapping and not collapsible, and the list
    must be ordered in increasing order. *)
 
 type t = (int * int) list

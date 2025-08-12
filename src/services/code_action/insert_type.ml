@@ -28,7 +28,7 @@ type expected =
       location: Loc.t;
       error_message: string;
     }
-  | MulipleTypesPossibleAtPoint of {
+  | MultipleTypesPossibleAtPoint of {
       generalized: (Loc.t, Loc.t) Flow_ast.Type.t;
       specialized: (Loc.t, Loc.t) Flow_ast.Type.t;
     }
@@ -161,7 +161,7 @@ let remove_ambiguous_types
     | Some t -> Ok t
     | None ->
       Error
-        (MulipleTypesPossibleAtPoint
+        (MultipleTypesPossibleAtPoint
            {
              specialized =
                serialize
@@ -329,7 +329,7 @@ class mapper ~strict ~synth_type ~casting_syntax target =
         node
       else
         match (patt, kind) with
-        (* In `const x = exp;` for signature varification errors the error appears on the exp portion.
+        (* In `const x = exp;` for signature verification errors the error appears on the exp portion.
            When strict we only look for that error. *)
         | (Identifier _, Const) when strict -> super#variable_declarator_pattern ~kind node
         | (Identifier ({ name; annot; _ } as id), (Var | Let | Const))
@@ -458,7 +458,7 @@ let unexpected_error_to_string = function
 
 let expected_error_to_string = function
   | TypeAnnotationAtPoint { location; type_ast } ->
-    "Preexisiting type annotation at "
+    "Preexisting type annotation at "
     ^ Loc.to_string_no_source location
     ^ ": "
     ^ type_to_string type_ast
@@ -467,7 +467,7 @@ let expected_error_to_string = function
   | UnsupportedAnnotation { location; error_message } ->
     error_message ^ " found at " ^ Loc.to_string_no_source location ^ " is not currently supported"
   | FailedToTypeCheck _ -> "Failed to typecheck file"
-  | MulipleTypesPossibleAtPoint { generalized; specialized } ->
+  | MultipleTypesPossibleAtPoint { generalized; specialized } ->
     "Multiple types possible at point:\n"
     ^ "    generalized type: "
     ^ type_to_string generalized

@@ -741,7 +741,7 @@ module Make
     let open TypeUtil in
     (* NOTE: SuperT ignores the constructor anyway, so we don't pass it here.
        Call properties are also ignored, so we ignore that result. *)
-    (* The this parameter of a class method is irrelvant for class subtyping, since
+    (* The this parameter of a class method is irrelevant for class subtyping, since
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
     let inst_loc = loc_of_reason reason in

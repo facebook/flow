@@ -347,7 +347,7 @@ class ['a] t =
 
     method private obj_type cx pole acc o =
       (* We intentionally do not visit reachable_targs. By definition, they are already reachable
-       * by traversing the other fields. Until substitution keeps track of polarity, visitng the
+       * by traversing the other fields. Until substitution keeps track of polarity, visiting the
        * other fields will be more accurate *)
       let { props_tmap; proto_t; call_t; flags; reachable_targs = _ } = o in
       let acc = self#obj_flags cx pole acc flags in

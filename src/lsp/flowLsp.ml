@@ -1062,7 +1062,7 @@ let track_to_server (state : server_state) (c : Lsp.lsp_message) : server_state 
          right now ourselves, since all editors take care of that; but if ever we
          re-send the server's existing diagnostics for this file then that should take
          into account any user edits since then. This isn't perfect - e.g. if the user
-         modifies a file we'll update squiggles, but if the user subsquently closes the
+         modifies a file we'll update squiggles, but if the user subsequently closes the
          file unsaved and then re-opens it then we'll be left with wrong squiggles.
          It also doesn't compensate if the flow server starts a typecheck, then receives
          a DidChange, then sends error spans from as it was at the start of the typecheck.

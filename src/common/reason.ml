@@ -15,7 +15,7 @@ module Ast = Flow_ast
 
 (* Eventually, trace information should be printed out only in verbose mode,
    since Flow reports all errors it finds and the trace for every error can get
-   quite detailed dependening on how far apart the "source" and "sink" are and
+   quite detailed depending on how far apart the "source" and "sink" are and
    how convoluted the flow between them is. *)
 
 open Utils_js
@@ -1309,7 +1309,7 @@ let mk_initial_arguments_reason =
 let mk_pattern_reason ((loc, _) as patt) = mk_reason (RCode (code_desc_of_pattern patt)) loc
 
 (* Classifies a reason description. These classifications can be used to
- * implement various asthetic behaviors in error messages when we would like to
+ * implement various aesthetic behaviors in error messages when we would like to
  * distinguish between different error "classes".
  *
  * The classifications we currently support:

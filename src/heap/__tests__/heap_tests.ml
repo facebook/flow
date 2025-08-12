@@ -562,7 +562,7 @@ let sklist_barrier_test _ =
    * objects to blue. *)
   collect_full ();
 
-  (* Reload the set from the root, in case it moved due to compation. *)
+  (* Reload the set from the root, in case it moved due to compaction. *)
   let set = Option.get (get_file_dependents (Option.get (Files.get "root"))) in
 
   (* The set should contain "a" "b" and "d" -- the write barrier on

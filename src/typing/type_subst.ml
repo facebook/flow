@@ -445,7 +445,7 @@ let substituter =
             }
       | _ -> super#destructor cx map_cx t
 
-    (* The EvalT case is the only case that calls this function. We've explicitly overrided it
+    (* The EvalT case is the only case that calls this function. We've explicitly overridden it
      * in all cases, so this should never be called *)
     method eval_id _cx _map_cx _id = assert false
   end

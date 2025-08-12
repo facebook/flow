@@ -167,7 +167,7 @@ let mk_selector_reason_has_default cx loc = function
     )
   | Selector.ArrRest n -> (Type.ArrRest n, mk_reason RArrayPatternRestProp loc, false)
   | Selector.ObjRest { used_props; after_computed = _ } ->
-    (* TODO: eveyrthing after a computed prop should be optional *)
+    (* TODO: everything after a computed prop should be optional *)
     (Type.ObjRest used_props, mk_reason RObjectPatternRestProp loc, false)
   | Selector.Computed { expression = exp; has_default } ->
     let t = expression cx ~encl_ctx:IndexContext exp in

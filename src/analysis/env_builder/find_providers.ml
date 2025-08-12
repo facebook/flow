@@ -98,7 +98,7 @@ end = struct
     | ArrInitialized of int
     | Uninitialized
 
-  (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
+  (* This describes a single assignment/initialization of a var (rather than the var's state as a whole). ints are
      number of scopes deeper than the variable's declaration that the assignment occurs *)
   type write_state =
     | Annotation of { contextual: bool }
@@ -127,7 +127,7 @@ end = struct
         case, we exclude declarations--declare_locs and def_locs should be disjoint.
       * provider_locs are the candidate providers we're calculating in this module, and can be either declares or defs.
         Initially, in this module, 'locs will be instantiated as `write_state L.LMap.t`, recording what kind
-        of write an indvidual candidate provider is. Later on, in provider_api, this will be simplified and filtered
+        of write an individual candidate provider is. Later on, in provider_api, this will be simplified and filtered
         into a single `L.LSet.t` of providers
 
         We expect that the keys/elements of provider_locs are a subset of the union of def_locs and declare_locs.

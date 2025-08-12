@@ -4867,7 +4867,7 @@ struct
           rec_flow cx trace (instance, GetStaticsT statics);
           rec_flow cx trace (OpenT statics, u)
         | (DefT (_, NullT), ExtendsUseT (use_op, reason, next :: try_ts_on_failure, l, u)) ->
-          (* When seaching for a nominal superclass fails, we always try to look it
+          (* When searching for a nominal superclass fails, we always try to look it
              up in the next element in the list try_ts_on_failure. *)
           rec_flow cx trace (next, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
         | ( DefT (_, NullT),
@@ -5589,7 +5589,7 @@ struct
      Note: we can get away with a shallow (i.e. non-recursive) expansion here because the flow between
      the any-expanded type and the original will handle the any-propagation to any relevant positions,
      some of which may invoke this function when they hit the any propagation functions in the
-     recusive call to __flow. *)
+     recursive call to __flow. *)
   and expand_any _cx any t =
     let only_any _ = any in
     match t with
@@ -7400,7 +7400,7 @@ struct
 
     4. When roots are unresolved (they have lower bounds and upper bounds,
     possibly consisting of concrete types as well as type variables), we
-    maintain the invarant that every lower bound has already been propagated to
+    maintain the invariant that every lower bound has already been propagated to
     every upper bound. We also maintain the invariant that the bounds are
     transitively closed modulo equivalence: for every type variable in the
     bounds, all the bounds of its root are also included.
@@ -8488,7 +8488,7 @@ struct
              this keeps the element type "open," at least locally.[*]
 
              Using a union pins down the element type prematurely, and moreover,
-             might lead to speculative matching when setting elements or caling
+             might lead to speculative matching when setting elements or calling
              contravariant methods (`push`, `concat`, etc.) on the array.
 
              In any case, using a union doesn't quite work as intended today
@@ -9041,7 +9041,7 @@ struct
             )
         end
       | MaybeT (r, t) ->
-        (* repositions both the MaybeT and the nested type. MaybeT represets `?T`.
+        (* repositions both the MaybeT and the nested type. MaybeT represents `?T`.
            elsewhere, when we decompose into T | NullT | VoidT, we use the reason
            of the MaybeT for NullT and VoidT but don't reposition `t`, so that any
            errors on the NullT or VoidT point at ?T, but errors on the T point at

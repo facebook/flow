@@ -24,7 +24,7 @@ type expected =
       location: Loc.t;
       error_message: string;
     }
-  | MulipleTypesPossibleAtPoint of {
+  | MultipleTypesPossibleAtPoint of {
       generalized: (Loc.t, Loc.t) Flow_ast.Type.t;
       specialized: (Loc.t, Loc.t) Flow_ast.Type.t;
     }

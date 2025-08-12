@@ -746,7 +746,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           "React$Element"
           [component; Tvar.mk_where cx reason_op props_to_tout]
       in
-      (* Concretize to an ObjT so that we can asssociate the monomorphized component with the props id *)
+      (* Concretize to an ObjT so that we can associate the monomorphized component with the props id *)
       let elem =
         let result = Flow.singleton_concrete_type_for_inspection cx elem_reason elem in
         match result with

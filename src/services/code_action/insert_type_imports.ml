@@ -400,7 +400,7 @@ end = struct
   (* Mapping from imported names to lists of imports (ImportInfo). Here we hold
    * information of symbols that have been successfully imported. Only the symbols
    * that appear here will be used to add the necessary imports at the end of
-   * the tranformation.
+   * the transformation.
    *)
   module ImportedNameMap : sig
     type t
@@ -662,8 +662,8 @@ end = struct
               let { import_kind; source; default; named_specifier } = import_declaration in
               let specifiers =
                 match named_specifier with
-                | Some specifer ->
-                  Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers [specifer])
+                | Some specifier ->
+                  Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers [specifier])
                 | None -> None
               in
               ( dummy_loc,

@@ -7,7 +7,7 @@
 
 (* This module is responsible for building a mapping from variable reads to the
  * writes those reads. This is used in type checking to determine if a variable is
- * const-like, but the name_resolver is used to build the type checking envrionment.
+ * const-like, but the name_resolver is used to build the type checking environment.
  * The name_resolver copied much of the implementation here, but with sufficient divergence
  * to warrant forking the implementation.
  * If you're here to add support for a new syntax feature, you'll likely

@@ -31,7 +31,7 @@ let find_tests =
 
       (* - libs are mixed together with source files
          - a.js comes before a.bar.js which comes before a.foo.js, even
-           though .j is lexographically after .b. *)
+           though .j is lexicographically after .b. *)
       let expected =
         [
           (file_a, Export_index.Default);

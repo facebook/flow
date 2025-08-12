@@ -597,7 +597,7 @@ type 'a op =
  * which are all conflated in this type.
  *
  * 1. If there are insufficient annotations to extract a signature, we should
- *    should inform the user and proceeed as if the unknown type was any.
+ *    should inform the user and proceed as if the unknown type was any.
  * 2. If some unsupported or unexpected syntax was detected, we should proceed
  *    as if the type was any, but not inform the user. The checking phase will
  *    uncover the same error.

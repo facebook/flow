@@ -191,7 +191,7 @@ module rec ConsGen : S = struct
    * is what the input `cx` in elab_t etc. represents). However, in order to be
    * able to raise errors during annotation inference, we need to have access to the
    * destination context. This is what this reference is for. `dst_cx_ref` is set
-   * Check_serivce.mk_check_file once per file right after the destination context
+   * Check_service.mk_check_file once per file right after the destination context
    * is created. *)
   let dst_cx_ref = ref None
 
@@ -478,7 +478,7 @@ module rec ConsGen : S = struct
          * attempt to force the constraint for `x.p`. *)
         let resolved =
           lazy
-            ((* resolved ids definitelly appear in the type graph *)
+            ((* resolved ids definitely appear in the type graph *)
              let t = get_fully_resolved_type cx id in
              elab_t cx ~seen:(ISet.add id seen) t op
             )
@@ -642,7 +642,7 @@ module rec ConsGen : S = struct
       AnyT.error reason
     | (l, Annot_UseT_TypeT (reason_use, _)) ->
       (match l with
-      (* Short-circut as we already error on the unresolved name. *)
+      (* Short-circuit as we already error on the unresolved name. *)
       | AnyT (_, AnyError _) -> ()
       | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));

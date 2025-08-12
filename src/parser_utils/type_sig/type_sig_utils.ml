@@ -12,7 +12,7 @@ module Pack = Type_sig_pack
 
 (* For builtins, each lib file is parsed separately into an unresolved global
    scope. The parsed lib files are then combined before resolving names. The
-   proceses of combining deals with overridden definitions. Finally, the
+   processes of combining deals with overridden definitions. Finally, the
    resolved builtins are merged. Declared modules can depend on each other, so
    they are treated like a cycle. *)
 let parse_lib opts scope tbls ast =

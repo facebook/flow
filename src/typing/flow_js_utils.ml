@@ -490,7 +490,7 @@ exception SpeculationSingletonError
  * in which it is recorded. *)
 let add_output_generic ~src_cx:cx ~dst_cx msg =
   if Speculation.speculating cx then
-    if Error_message.defered_in_speculation msg then
+    if Error_message.deferred_in_speculation msg then
       Speculation.defer_error cx msg
     else (
       if Context.is_verbose cx then
@@ -1266,7 +1266,7 @@ module ValueToTypeReferenceTransform = struct
       add_output cx Error_message.(EValueUsedAsType { reason_use = reason_op });
       AnyT.error r
     | AnyT (_, AnyError _) as l ->
-      (* Short-circut as we already error on the unresolved name. *)
+      (* Short-circuit as we already error on the unresolved name. *)
       l
     | AnyT (r, _) ->
       add_output cx Error_message.(EAnyValueUsedAsType { reason_use = reason_op });
@@ -3504,10 +3504,10 @@ end = struct
       data.speculative_candidates <- (l, id) :: data.speculative_candidates
     | _ -> data.finalized <- l :: data.finalized
 
-  (* For signature-help, we are intereseted in all branches of intersections, so
+  (* For signature-help, we are interested in all branches of intersections, so
    * we include intersections in the accumulated result. Note that we discard nested
    * intersection types. These would appear under speculation, so we can effectively
-   * enforce this constraint by checking that we are not in a speculation enviornment.
+   * enforce this constraint by checking that we are not in a speculation environment.
    * Also we skip voided out results in case of optional chaining. *)
   let add_signature_help cx l (Specialized_callee data) =
     if Base.Option.is_none (Context.speculation_id cx) then data.sig_help <- l :: data.sig_help

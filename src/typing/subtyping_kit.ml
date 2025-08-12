@@ -1128,7 +1128,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when union_optimization_guard cx TypeUtil.quick_subtype l u
            = UnionOptimizationGuardResult.True ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via an opaque type)"
-    (* Optimization to treat maybe and optional types as special unions for subset comparision *)
+    (* Optimization to treat maybe and optional types as special unions for subset comparison *)
     | (UnionT (reason, rep), MaybeT (r, maybe)) ->
       let quick_subtype = TypeUtil.quick_subtype in
       let void = VoidT.why r in

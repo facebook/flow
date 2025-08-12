@@ -431,7 +431,7 @@ let private_identifier env =
     error_at env (loc, Parse_error.WhitespaceInPrivateName);
   (loc, { PrivateName.name; comments })
 
-(** The operation IsSimpleParamterList
+(** The operation IsSimpleParameterList
     https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist *)
 let is_simple_parameter_list =
   let is_simple_param = function

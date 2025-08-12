@@ -713,9 +713,9 @@ LZ4_FORCE_INLINE int LZ4HC_compress_generic_internal (
     const dictCtx_directive dict
     )
 {
-    typedef enum { lz4hc, lz4opt } lz4hc_strat_e;
+    typedef enum { lz4hc, lz4opt } lz4hc_start_e;
     typedef struct {
-        lz4hc_strat_e strat;
+        lz4hc_start_e start;
         U32 nbSearches;
         U32 targetLength;
     } cParams_t;
@@ -745,11 +745,11 @@ LZ4_FORCE_INLINE int LZ4HC_compress_generic_internal (
     cLevel = MIN(LZ4HC_CLEVEL_MAX, cLevel);
     {   cParams_t const cParam = clTable[cLevel];
         HCfavor_e const favor = ctx->favorDecSpeed ? favorDecompressionSpeed : favorCompressionRatio;
-        if (cParam.strat == lz4hc)
+        if (cParam.start == lz4hc)
             return LZ4HC_compress_hashChain(ctx,
                                 src, dst, srcSizePtr, dstCapacity,
                                 cParam.nbSearches, limit, dict);
-        assert(cParam.strat == lz4opt);
+        assert(cParam.start == lz4opt);
         return LZ4HC_compress_optimal(ctx,
                             src, dst, srcSizePtr, dstCapacity,
                             cParam.nbSearches, cParam.targetLength, limit,

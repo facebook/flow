@@ -229,7 +229,7 @@ let ordinal = function
   | 5 -> "fifth"
   | 6 -> "sixth"
   | 7 -> "seventh"
-  | 8 -> "eigth"
+  | 8 -> "eighth"
   | 9 -> "ninth"
   | n ->
     let n = string_of_int n in

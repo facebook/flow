@@ -121,7 +121,7 @@ let score_of_use_op use_op =
  *
  * This scoring mechanism is useful for union and intersection error messages
  * where we want to approximate which branch the user meant to target with
- * their code. Branches with higher scores have a higher liklihood of being
+ * their code. Branches with higher scores have a higher likelihood of being
  * the branch the user was targeting. *)
 let score_of_msg msg =
   (* Start by getting the score based off the use_op of our error message. If

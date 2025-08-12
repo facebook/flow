@@ -46,7 +46,7 @@ end
  * prefixes before the sigil. Having a single form to represent all these forms
  * enables caching of typing artifacts for autocomplete.
  *
- * When this function succeds in adding a canonical form for the token under
+ * When this function succeeds in adding a canonical form for the token under
  * cursor, it will return a [canon_token] structure. This structure includes
  * information used in typechecking the canonical form of the contents, and also
  * in restoring the results of `Autocomplete_js.process_location` to a form that

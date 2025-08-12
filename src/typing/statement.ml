@@ -309,7 +309,7 @@ module Make
 
   let snd_fst ((_, x), _) = x
 
-  let translate_identifer_or_literal_key t =
+  let translate_identifier_or_literal_key t =
     let module P = Ast.Expression.Object.Property in
     function
     | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
@@ -2320,14 +2320,14 @@ module Make
           let frozen = Utils_js.ite frozen FrozenProp NotFrozen in
           if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
             let t = Unsoundness.at InferenceHooks loc in
-            let key = translate_identifer_or_literal_key t key in
+            let key = translate_identifier_or_literal_key t key in
             (* don't add `name` to `acc` because `name` is the autocomplete token *)
             let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
             let (((_, _t), _) as value) = expression cx ~as_const ~frozen ~has_hint v in
             (acc, key, value)
           else
             let (((_, t), _) as value) = expression cx ~as_const ~frozen ~has_hint v in
-            let key = translate_identifer_or_literal_key t key in
+            let key = translate_identifier_or_literal_key t key in
             let acc =
               ObjectExpressionAcc.add_prop
                 (Properties.add_field
@@ -2365,7 +2365,7 @@ module Make
           Property
             ( prop_loc,
               Property.Method
-                { key = translate_identifer_or_literal_key t key; value = (fn_loc, func) }
+                { key = translate_identifier_or_literal_key t key; value = (fn_loc, func) }
             )
         ))
     (* We enable some unsafe support for getters and setters. The main unsafe bit
@@ -2403,7 +2403,7 @@ module Make
             ( loc,
               Property.Get
                 {
-                  key = translate_identifer_or_literal_key return_t key;
+                  key = translate_identifier_or_literal_key return_t key;
                   value = (vloc, func);
                   comments;
                 }
@@ -2441,7 +2441,7 @@ module Make
             ( loc,
               Property.Set
                 {
-                  key = translate_identifer_or_literal_key param_t key;
+                  key = translate_identifier_or_literal_key param_t key;
                   value = (vloc, func);
                   comments;
                 }
@@ -2666,7 +2666,7 @@ module Make
                 ( prop_loc,
                   Property.Init
                     {
-                      key = translate_identifer_or_literal_key vt key;
+                      key = translate_identifier_or_literal_key vt key;
                       value = v;
                       shorthand = false;
                     }
@@ -5674,7 +5674,7 @@ module Make
             "exports"
           )
           when not (Type_env.local_scope_entry_exists cx id_loc) ->
-          (* module.exports has type `any` in theory, but shouldnt be treated as uncovered *)
+          (* module.exports has type `any` in theory, but shouldn't be treated as uncovered *)
           t
         | _ -> prop_t
       in
