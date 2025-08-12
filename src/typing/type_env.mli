@@ -148,7 +148,7 @@ val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> u
 val get_refinement : Context.t -> Reason.reason_desc -> ALoc.t -> Type.t option
 
 val discriminant_after_negated_cases :
-  Context.t -> ALoc.t -> (Reason.name * Key.proj list) option -> Type.t option
+  Context.t -> ALoc.t -> (Key.base * Key.proj list) option -> Type.t option
 
 val get_next : Context.t -> ALoc.t -> Type.t
 

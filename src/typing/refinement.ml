@@ -23,10 +23,10 @@ module Keys = struct
     function
     | (_, This _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.InternalName "this", [])
+      Some (Key.This, [])
     | (_, Super _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.InternalName "super", [])
+      Some (Key.Super, [])
     | (_, Identifier id) -> key_of_identifier id
     | (_, OptionalMember { OptionalMember.member; _ }) when allow_optional ->
       key_of_member ~allow_optional member
@@ -39,7 +39,7 @@ module Keys = struct
     if name = "undefined" then
       None
     else
-      Some (Reason.OrdinaryName name, [])
+      Some (Key.OrdinaryIdentifier name, [])
 
   and key_of_member ~allow_optional { Ast.Expression.Member._object; property; _ } =
     let open Ast.Expression.Member in

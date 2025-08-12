@@ -7,16 +7,24 @@
 
 open Utils_js
 
+type base =
+  | OrdinaryIdentifier of string
+  | This
+  | Super
+
 (* keys for refinements *)
 type proj =
   | Prop of string
   | Elem of t
   | PrivateField of string
 
-and t = Reason.name * proj list
+and t = base * proj list
 
 let rec string_of_key (base, projs) =
-  Reason.display_string_of_name base
+  (match base with
+  | OrdinaryIdentifier name -> name
+  | This -> "this"
+  | Super -> "super")
   ^ String.concat
       ""
       (List.rev projs
@@ -47,7 +55,9 @@ let is_simple (_, ps) = List.length ps = 0
 let reason_desc =
   Reason.(
     function
-    | (name, []) -> RIdentifier name
+    | (OrdinaryIdentifier name, []) -> RIdentifier (OrdinaryName name)
+    | (This, []) -> RThis
+    | (Super, []) -> RSuper
     | (_, projs) ->
       (match List.hd (List.rev projs) with
       | Prop x -> RProperty (Some (OrdinaryName x))
