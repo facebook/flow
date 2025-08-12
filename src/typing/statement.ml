@@ -2930,9 +2930,9 @@ module Make
     let open Ast.Expression in
     match Refinement.get ~allow_optional:true cx (loc, This this) loc with
     | Some t -> t
-    | None -> Type_env.var_ref cx (InternalName "this") loc
+    | None -> Type_env.var_ref cx (OrdinaryName "this") loc
 
-  and super_ cx loc = Type_env.var_ref cx (InternalName "super") loc
+  and super_ cx loc = Type_env.var_ref cx (OrdinaryName "super") loc
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in

@@ -483,8 +483,16 @@ end = struct
 
       val mutable super_call_loc_list = []
 
-      method private init_internal_name name loc def_loc =
-        let reason = mk_reason (RIdentifier (InternalName name)) def_loc in
+      method private init_this_super_name name loc def_loc =
+        let reason =
+          let desc =
+            if name = "this" then
+              RThis
+            else
+              RSuper
+          in
+          mk_reason desc def_loc
+        in
         let { Ssa_builder.val_ref; havoc } = smap_find name ssa_env in
         this#any_identifier loc name;
         super_call_loc_list <- loc :: super_call_loc_list;
@@ -529,8 +537,8 @@ end = struct
         Base.List.iter super_read_loc_list ~f:(add_ref_before_decl_error_opt "super" super_def_loc)
 
       method private init_this_super loc =
-        this#init_internal_name "this" loc this_def_loc;
-        this#init_internal_name "super" loc super_def_loc
+        this#init_this_super_name "this" loc this_def_loc;
+        this#init_this_super_name "super" loc super_def_loc
 
       (* We don't want to havoc `this` and `super` initialization states. *)
       method! havoc_current_ssa_env = ()
@@ -1727,7 +1735,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               let (initial_val, havoc, writes_by_closure_provider_val) =
                 match name with
                 | "this" ->
-                  let reason = mk_reason (RIdentifier (InternalName "this")) loc in
+                  let reason = mk_reason RThis loc in
                   let v =
                     match this_super_binding_env with
                     | FunctionEnv -> Val.function_this reason
@@ -1737,7 +1745,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   in
                   (v, v, None)
                 | "super" ->
-                  let reason = mk_reason (RIdentifier (InternalName "super")) loc in
+                  let reason = mk_reason RSuper loc in
                   let v =
                     match this_super_binding_env with
                     | FunctionEnv ->
@@ -4211,7 +4219,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let write_entries =
             EnvMap.add
               (Env_api.FunctionThisLoc, fun_loc)
-              (Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "this")) fun_loc))
+              (Env_api.AssigningWrite (mk_reason RThis fun_loc))
               env_state.write_entries
           in
           env_state <- { env_state with write_entries }
@@ -4506,12 +4514,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         if this#is_assigning_write (Env_api.OrdinaryNameLoc, class_write_loc) then
           let self_write = Env_api.AssigningWrite class_self_reason in
-          let this_write =
-            Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "this")) loc)
-          in
-          let super_write =
-            Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "super")) loc)
-          in
+          let this_write = Env_api.AssigningWrite (mk_reason RThis loc) in
+          let super_write = Env_api.AssigningWrite (mk_reason RSuper loc) in
           let write_entries =
             env_state.write_entries
             |> EnvMap.add (Env_api.ClassSelfLoc, loc) self_write
