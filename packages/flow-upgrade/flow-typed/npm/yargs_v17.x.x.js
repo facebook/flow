@@ -132,7 +132,7 @@ declare module 'yargs/yargs' {
         | ((
             current: string,
             argv: Argv,
-            done: (compeltion: Array<string>) => void,
+            done: (completion: Array<string>) => void,
           ) => ?(Array<string> | Promise<Array<string>>)),
       fn?: (
         current: string,

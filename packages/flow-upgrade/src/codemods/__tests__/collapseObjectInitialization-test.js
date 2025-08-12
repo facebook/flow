@@ -31,7 +31,7 @@ testCodemod('collapseObjectInitialization', codemod, {
       `,
     },
   ],
-  // # TRANFORMED
+  // # TRANSFORMED
   transformed: [
     {
       description: 'basic',

@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import getExtensionPath from './getExtentionPath';
+import getExtensionPath from './getExtensionPath';
 import which from './which';
 import Logger from './Logger';
 import importFresh from './importFresh';

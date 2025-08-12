@@ -79,7 +79,7 @@ You can specify a configuration by amending the VS Code `settings.json` file. Ac
 * `Restart Client`: Restarts flow client.
 * `Show Client Status`: Show current status of client.
 * `Log Client Debug Info`: Log client debug info in output panel.
-* `Show Output Channel`: Opens plugin output pannel.
+* `Show Output Channel`: Opens plugin output panel.
 
 ## Known Issues
 

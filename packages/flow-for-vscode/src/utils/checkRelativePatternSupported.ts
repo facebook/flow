@@ -14,7 +14,7 @@ export default function checkRelativePatternSupported(
 ): boolean {
   // NOTE: vscode.RelativePattern is not working when extension run using
   // remote extension pack on windows (on linux it's working fine)
-  // it's not possible to detect local maching is linux or windows
+  // it's not possible to detect local machine is linux or windows
   // so disabling in all cases if extension is running remotely
   // @ts-ignore
   return context.executionContext !== EXECUTION_CONTEXT_REMOTE;

@@ -95,7 +95,7 @@ class StringWrapper extends Wrapper         {
                   
  
 
-// Declare funtion
+// Declare function
                                   
 
 // Declare interface
@@ -167,7 +167,7 @@ async function asyncFunction           (input           )                     {
                              
    
 
-// Test covariant type variant class with constaint and default.
+// Test covariant type variant class with constraint and default.
 export class TestClassWithDefault                                              {
 
   constructor() {}

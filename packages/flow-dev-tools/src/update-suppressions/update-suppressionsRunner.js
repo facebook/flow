@@ -308,7 +308,7 @@ async function updateSuppressionsInText(
   ] of errors) {
     // For each line we:
     // 1. Get the start of the line. All changes will go _AFTER_ this line.
-    // 2. Remove the unused supressions from the line
+    // 2. Remove the unused suppressions from the line
     // 3. Add the error suppressions at the original start of the line.
     // This ensures that we do not disrupt any offsets for errors coming before this one in the file.
     const beginningOfLine = findStartOfLine(contents, errorLoc.start.offset);
