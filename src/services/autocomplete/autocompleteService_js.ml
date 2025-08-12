@@ -495,9 +495,7 @@ let members_of_type
     else
       let open Reason in
       match s with
-      | OrdinaryName "constructor"
-      | InternalName _ ->
-        None
+      | OrdinaryName "constructor" -> None
       (* TODO consider making the $-prefixed names internal *)
       | OrdinaryName str when (String.length str >= 1 && str.[0] = '$') || SSet.mem str exclude_keys
         ->
@@ -1027,15 +1025,10 @@ let exports_of_module_ty
   let open AcCompletion in
   let open Ty in
   let is_kind export_kind = kind = `Either || export_kind = `Either || export_kind = kind in
-  let filter_name name =
-    match name with
-    | Reason.InternalName _ ->
-      (* don't show internal names in autocomplete *)
-      false
-    | Reason.OrdinaryName name ->
-      (match filter_name with
-      | Some filter_name -> filter_name name
-      | None -> true)
+  let filter_name (Reason.OrdinaryName name) =
+    match filter_name with
+    | Some filter_name -> filter_name name
+    | None -> true
   in
   let is_ok export_kind name = is_kind export_kind && filter_name name in
   function

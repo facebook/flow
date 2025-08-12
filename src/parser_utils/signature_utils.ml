@@ -46,10 +46,9 @@ end
 
 let is_munged_property_string name = String.length name >= 2 && name.[0] = '_' && name.[1] <> '_'
 
-let is_munged_property_name = function
+let is_munged_property_name (Reason.OrdinaryName name) =
   (* TODO consider adding another name variant for munged property strings *)
-  | Reason.OrdinaryName name -> is_munged_property_string name
-  | Reason.InternalName _ -> false
+  is_munged_property_string name
 
 module This_finder = struct
   class ['a] finder =

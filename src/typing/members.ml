@@ -493,14 +493,9 @@ let to_command_result = function
 
 let find_props cx =
   Context.find_props cx
-  %> NameUtils.Map.filter (fun key _ ->
-         match key with
-         | OrdinaryName key ->
-           (* Filter out keys that start with "$" *)
-           not (String.length key >= 1 && key.[0] = '$')
-         | InternalName _ ->
-           (* TODO we probably should filter out internal names too, but for now keeping behavior the same *)
-           true
+  %> NameUtils.Map.filter (fun (OrdinaryName key) _ ->
+         (* Filter out keys that start with "$" *)
+         not (String.length key >= 1 && key.[0] = '$')
      )
   %> NameUtils.display_smap_of_namemap
 

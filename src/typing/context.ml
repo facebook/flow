@@ -1187,8 +1187,7 @@ let add_hint_eval_cache_entry cx id result =
   cx.hint_eval_cache <- IMap.add id result cx.hint_eval_cache
 
 (* utils *)
-let find_real_props cx id =
-  find_props cx id |> NameUtils.Map.filter (fun x _ -> not (Reason.is_internal_name x))
+let find_real_props cx id = find_props cx id
 
 let iter_props cx id f = find_props cx id |> NameUtils.Map.iter f
 

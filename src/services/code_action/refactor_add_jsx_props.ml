@@ -53,8 +53,7 @@ let get_obj_prop_names ~include_optional cx reason t =
                SSet.add n acc
              else
                acc
-           | (Reason.OrdinaryName n, _) -> SSet.add n acc
-           | (_, _) -> acc)
+           | (Reason.OrdinaryName n, _) -> SSet.add n acc)
          SSet.empty
       )
   | _ -> None

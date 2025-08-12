@@ -7888,7 +7888,7 @@ struct
         let upmap = Context.find_props cx uflds in
         NameUtils.Map.merge
           (fun x lp up ->
-            ( if not (is_internal_name x || is_dictionary_exempt x) then
+            ( if not (is_dictionary_exempt x) then
               match (lp, up) with
               | (Some p1, Some p2) -> unify_props cx trace ~use_op x lreason ureason p1 p2
               | (Some p1, None) -> unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict

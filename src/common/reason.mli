@@ -7,10 +7,7 @@
 
 val mk_id : unit -> int
 
-type name =
-  | OrdinaryName of string
-  | InternalName of string
-[@@deriving eq, ord, show]
+type name = OrdinaryName of string [@@deriving eq, ord, show]
 
 type 'loc virtual_reason_desc =
   | RAnyExplicit
@@ -268,10 +265,6 @@ val locationless_reason : reason_desc -> reason
 val func_reason : async:bool -> generator:bool -> ALoc.t -> reason
 
 val display_string_of_name : name -> string
-
-val is_internal_name : name -> bool
-
-val uninternal_name : name -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool
 

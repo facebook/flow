@@ -604,21 +604,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
         Ty.Generic (symbol, kind, args_opt)
       | _ -> super#on_t loc t
 
-    method! on_prop loc prop =
-      let prop =
-        match prop with
-        | Ty.NamedProp { name; prop = named_prop; inherited; source; def_locs }
-          when Reason.is_internal_name name ->
-          Hh_logger.warn
-            "ShadowProp %s at %s"
-            (Reason.display_string_of_name name)
-            (Reason.string_of_loc loc);
-          (* Shadow props appear as regular props *)
-          let name = Reason.OrdinaryName (Reason.uninternal_name name) in
-          Ty.NamedProp { name; prop = named_prop; inherited; source; def_locs }
-        | prop -> prop
-      in
-      super#on_prop loc prop
+    method! on_prop (loc : Loc.t) (prop : Ty.prop) = super#on_prop loc prop
   end
 
 let reverse_append_all : 'a list list -> 'a list = List.fold_left List.rev_append []

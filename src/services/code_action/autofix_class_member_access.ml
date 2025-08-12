@@ -84,11 +84,7 @@ let is_member cx typed_ast file_sig type_ name =
   with
   | Error _ -> false
   | Ok Ty_members.{ members; _ } ->
-    NameUtils.Map.keys members
-    |> Base.List.exists ~f:(function
-           | Reason.OrdinaryName n -> n = name
-           | _ -> false
-           )
+    NameUtils.Map.keys members |> Base.List.exists ~f:(function Reason.OrdinaryName n -> n = name)
 
 let fix ~cx ~file_sig ~loc_of_aloc ~ast ~typed_ast ~member_name target =
   let open Base.Option.Let_syntax in

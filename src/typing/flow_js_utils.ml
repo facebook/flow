@@ -2589,7 +2589,6 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
     | OrdinaryName _ ->
       let t = enum_proto cx ~reason:access_reason ~enum_object_t ~enum_value_t ~representation_t in
       F.cg_get_prop cx trace t access
-    | InternalName _ -> error_invalid_access ~suggestion:None
 
   let on_array_length cx trace reason ~inexact arity reason_op =
     (* Use definition as the reason for the length, as this is
@@ -2857,18 +2856,13 @@ let keylist_of_props props reason_op =
       match name with
       | OrdinaryName _ ->
         let reason = replace_desc_new_reason (RStringLit name) reason_op in
-        DefT (reason, SingletonStrT { from_annot = true; value = name }) :: acc
-      | InternalName _ -> acc)
+        DefT (reason, SingletonStrT { from_annot = true; value = name }) :: acc)
     props
     []
 
 let objt_to_obj_rest cx props_tmap ~reachable_targs ~obj_kind ~reason_op ~reason_obj xs =
   let props = Context.find_props cx props_tmap in
   let props = List.fold_left (fun map x -> NameUtils.Map.remove (OrdinaryName x) map) props xs in
-  (* Remove shadow properties from rest result *)
-  (* TODO consider converting to SMap here so downstream code doesn't need to
-   * handle internal names *)
-  let props = NameUtils.Map.filter (fun x _ -> not (is_internal_name x)) props in
   let use_op = Op (ObjectRest { op = replace_desc_reason (desc_of_reason reason_obj) reason_op }) in
   let props =
     NameUtils.Map.mapi

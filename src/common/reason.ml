@@ -20,14 +20,10 @@ module Ast = Flow_ast
 
 open Utils_js
 
-type name =
-  | OrdinaryName of string
-  | InternalName of string
-[@@deriving eq, ord, show]
+type name = OrdinaryName of string [@@deriving eq, ord, show]
 
 let display_string_of_name = function
   | OrdinaryName x -> x
-  | InternalName x -> spf ".%s" x
 
 let mk_id () = HeapIdent.make ""
 
@@ -811,15 +807,6 @@ let desc_of_reason ?(unwrap = true) r =
     r.desc
   else
     unwrap_reason_desc r.desc
-
-let is_internal_name = function
-  | OrdinaryName _ -> false
-  | InternalName _ -> true
-
-let uninternal_name = function
-  | OrdinaryName x
-  | InternalName x ->
-    x
 
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types

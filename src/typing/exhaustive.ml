@@ -1243,8 +1243,7 @@ end = struct
                     else
                       sentinel_props
                   in
-                  (props, sentinel_props)
-                | _ -> acc)
+                  (props, sentinel_props))
               (Context.find_props cx props_tmap)
               (SMap.empty, SSet.empty)
           in
