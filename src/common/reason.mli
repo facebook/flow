@@ -271,10 +271,6 @@ val display_string_of_name : name -> string
 
 val is_internal_name : name -> bool
 
-val internal_name : string -> name
-
-val internal_name_of_name : name -> name
-
 val uninternal_name : name -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool

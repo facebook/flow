@@ -484,7 +484,7 @@ end = struct
       val mutable super_call_loc_list = []
 
       method private init_internal_name name loc def_loc =
-        let reason = mk_reason (RIdentifier (internal_name name)) def_loc in
+        let reason = mk_reason (RIdentifier (InternalName name)) def_loc in
         let { Ssa_builder.val_ref; havoc } = smap_find name ssa_env in
         this#any_identifier loc name;
         super_call_loc_list <- loc :: super_call_loc_list;
@@ -503,11 +503,11 @@ end = struct
           then (
             add_output
               Error_message.(
-                EBindingError (ENameAlreadyBound, loc, internal_name "this", this_def_loc)
+                EBindingError (ENameAlreadyBound, loc, InternalName "this", this_def_loc)
               );
             add_output
               Error_message.(
-                EBindingError (ENameAlreadyBound, loc, internal_name "super", super_def_loc)
+                EBindingError (ENameAlreadyBound, loc, InternalName "super", super_def_loc)
               )
           )
         in
@@ -521,7 +521,7 @@ end = struct
           then
             add_output
               Error_message.(
-                EBindingError (EReferencedBeforeDeclaration, loc, internal_name name, def_loc)
+                EBindingError (EReferencedBeforeDeclaration, loc, InternalName name, def_loc)
               )
         in
         Base.List.iter super_call_loc_list ~f:add_name_already_bound_error_opt;
@@ -1727,7 +1727,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               let (initial_val, havoc, writes_by_closure_provider_val) =
                 match name with
                 | "this" ->
-                  let reason = mk_reason (RIdentifier (internal_name "this")) loc in
+                  let reason = mk_reason (RIdentifier (InternalName "this")) loc in
                   let v =
                     match this_super_binding_env with
                     | FunctionEnv -> Val.function_this reason
@@ -1737,7 +1737,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   in
                   (v, v, None)
                 | "super" ->
-                  let reason = mk_reason (RIdentifier (internal_name "super")) loc in
+                  let reason = mk_reason (RIdentifier (InternalName "super")) loc in
                   let v =
                     match this_super_binding_env with
                     | FunctionEnv ->
@@ -4211,7 +4211,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let write_entries =
             EnvMap.add
               (Env_api.FunctionThisLoc, fun_loc)
-              (Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) fun_loc))
+              (Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "this")) fun_loc))
               env_state.write_entries
           in
           env_state <- { env_state with write_entries }
@@ -4507,10 +4507,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         if this#is_assigning_write (Env_api.OrdinaryNameLoc, class_write_loc) then
           let self_write = Env_api.AssigningWrite class_self_reason in
           let this_write =
-            Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "this")) loc)
+            Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "this")) loc)
           in
           let super_write =
-            Env_api.AssigningWrite (mk_reason (RIdentifier (internal_name "super")) loc)
+            Env_api.AssigningWrite (mk_reason (RIdentifier (InternalName "super")) loc)
           in
           let write_entries =
             env_state.write_entries

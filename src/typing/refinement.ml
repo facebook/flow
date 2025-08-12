@@ -23,10 +23,10 @@ module Keys = struct
     function
     | (_, This _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.internal_name "this", [])
+      Some (Reason.InternalName "this", [])
     | (_, Super _) ->
       (* treat this as a property chain, in terms of refinement lifetime *)
-      Some (Reason.internal_name "super", [])
+      Some (Reason.InternalName "super", [])
     | (_, Identifier id) -> key_of_identifier id
     | (_, OptionalMember { OptionalMember.member; _ }) when allow_optional ->
       key_of_member ~allow_optional member

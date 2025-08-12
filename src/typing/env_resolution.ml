@@ -838,7 +838,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       | Selector.Prop { prop; prop_loc; _ } ->
         (* The key is used to generate a reason for read,
            and only the last prop in the chain matters. *)
-        let key = (internal_name "_", [Key.Prop prop]) in
+        let key = (InternalName "_", [Key.Prop prop]) in
         Type_env.get_refinement cx key prop_loc
       | _ -> None
     in

@@ -1902,7 +1902,7 @@ module Make
               let (t, fn) = mk_function_declaration cx reason loc fn in
               (t, (loc, FunctionDeclaration fn))
             | ClassDeclaration ({ Ast.Class.id = None; _ } as c) ->
-              let reason = DescFormat.instance_reason (internal_name "*default*") loc in
+              let reason = DescFormat.instance_reason (InternalName "*default*") loc in
               let (t, c) = mk_class cx loc ~name_loc:loc reason c in
               (t, (loc, ClassDeclaration c))
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
@@ -2930,9 +2930,9 @@ module Make
     let open Ast.Expression in
     match Refinement.get ~allow_optional:true cx (loc, This this) loc with
     | Some t -> t
-    | None -> Type_env.var_ref cx (internal_name "this") loc
+    | None -> Type_env.var_ref cx (InternalName "this") loc
 
-  and super_ cx loc = Type_env.var_ref cx (internal_name "super") loc
+  and super_ cx loc = Type_env.var_ref cx (InternalName "super") loc
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in

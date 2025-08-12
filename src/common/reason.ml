@@ -812,15 +812,6 @@ let desc_of_reason ?(unwrap = true) r =
   else
     unwrap_reason_desc r.desc
 
-let internal_name name = InternalName name
-
-let internal_name_of_name name =
-  match name with
-  | OrdinaryName str -> internal_name str
-  | InternalName _ ->
-    (* Already internal *)
-    name
-
 let is_internal_name = function
   | OrdinaryName _ -> false
   | InternalName _ -> true
