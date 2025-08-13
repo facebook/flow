@@ -215,7 +215,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       if not (Obj_type.is_exact lflags.obj_kind) then
         exact_obj_error cx lflags.obj_kind ~use_op ~exact_reason:ureason (DefT (lreason, ObjT l_obj));
       let missing_props =
-        Context.fold_real_props
+        Context.fold_props
           cx
           lflds
           (fun name _ acc ->
@@ -269,7 +269,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* Properties in u must either exist in l, or match l's indexer. *)
     let errs =
-      Context.fold_real_props
+      Context.fold_props
         cx
         uflds
         (fun name up acc ->
@@ -467,7 +467,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
        * flowing both can cause redundant errors when the key is already not a valid indexer key, so we avoid the
        * value flows when that does not pass *)
       ( if not (Context.in_implicit_instantiation cx) then
-        Context.iter_real_props cx lflds (fun name lp ->
+        Context.iter_props cx lflds (fun name lp ->
             if Context.has_prop cx uflds name then
               ()
             else begin
@@ -492,7 +492,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
       else
         let keys =
-          Context.fold_real_props
+          Context.fold_props
             cx
             lflds
             (fun name lp keys ->
@@ -1320,7 +1320,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       when NameUtils.Map.cardinal (Context.find_props cx props_tmap) > 1 && flags.obj_kind <> Exact
       ->
       Debug_js.Verbose.print_if_verbose cx ["trapped"];
-      Context.iter_real_props cx props_tmap (fun x p ->
+      Context.iter_props cx props_tmap (fun x p ->
           let pmap = NameUtils.Map.singleton x p in
           let id = Context.generate_property_map cx pmap in
           let obj = mk_objecttype ~flags ~call:call_t id dummy_prototype in
@@ -1929,7 +1929,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             add_output cx error_message
       );
       let errs =
-        Context.fold_real_props
+        Context.fold_props
           cx
           uflds
           (fun name up acc ->

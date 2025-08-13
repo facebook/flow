@@ -1187,13 +1187,9 @@ let add_hint_eval_cache_entry cx id result =
   cx.hint_eval_cache <- IMap.add id result cx.hint_eval_cache
 
 (* utils *)
-let find_real_props cx id = find_props cx id
-
 let iter_props cx id f = find_props cx id |> NameUtils.Map.iter f
 
-let iter_real_props cx id f = find_real_props cx id |> NameUtils.Map.iter f
-
-let fold_real_props cx id f = find_real_props cx id |> NameUtils.Map.fold f
+let fold_props cx id f = find_props cx id |> NameUtils.Map.fold f
 
 let has_prop cx id x = find_props cx id |> NameUtils.Map.mem x
 

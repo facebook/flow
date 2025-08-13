@@ -245,8 +245,6 @@ val aloc_tables : t -> ALoc.table Lazy.t Utils_js.FilenameMap.t
 
 val find_props : t -> Type.Properties.id -> Type.Properties.t
 
-val find_real_props : t -> Type.Properties.id -> Type.Properties.t
-
 val find_call : t -> int -> Type.t
 
 val find_exports : t -> Type.Exports.id -> Type.Exports.t
@@ -542,10 +540,7 @@ val maybe_unused_promises : t -> (ALoc.t * Type.t * bool) list
 (* utils *)
 val iter_props : t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> unit) -> unit
 
-val iter_real_props : t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> unit) -> unit
-
-val fold_real_props :
-  t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
+val fold_props : t -> Type.Properties.id -> (Reason.name -> Type.Property.t -> 'a -> 'a) -> 'a -> 'a
 
 val has_prop : t -> Type.Properties.id -> Reason.name -> bool
 

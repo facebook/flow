@@ -799,7 +799,7 @@ let tag_of_value cx type_ =
   | _ -> None
 
 let sentinel_of_obj cx id =
-  Context.fold_real_props
+  Context.fold_props
     cx
     id
     (fun name prop acc ->

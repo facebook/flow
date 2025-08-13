@@ -42,7 +42,7 @@ let get_obj_prop_names ~include_optional cx reason t =
   match ts with
   | DefT (_, ObjT { props_tmap; _ }) :: _ ->
     Some
-      (Context.fold_real_props
+      (Context.fold_props
          cx
          props_tmap
          (fun name prop acc ->

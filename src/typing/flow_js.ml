@@ -5225,7 +5225,7 @@ struct
             CheckReactImmutableT { use_op; lower_reason; upper_reason; dro_loc }
           ) ->
           let props_safe =
-            Context.fold_real_props
+            Context.fold_props
               cx
               props_tmap
               (fun _ prop acc ->
@@ -7102,7 +7102,7 @@ struct
   and prop_typo_suggestion cx ids =
     Base.List.(
       ids
-      >>| Context.find_real_props cx
+      >>| Context.find_props cx
       >>= NameUtils.Map.keys
       |> Base.List.rev_map ~f:display_string_of_name
       |> typo_suggestion
