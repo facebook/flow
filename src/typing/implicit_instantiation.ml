@@ -160,7 +160,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
 
   let speculative_subtyping_succeeds cx trace use_op l u =
     match SpeculationKit.try_singleton_throw_on_failure cx trace l (UseT (use_op, u)) with
-    | exception Flow_js_utils.SpeculationSingletonError -> false
+    | exception Flow_js_utils.SpeculationSingletonError _ -> false
     | _ -> true
 
   (* This visitor records the polarities at which BoundTs are found. We follow the bounds of each
@@ -1837,7 +1837,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                  check_t
                  (UseT (use_op, extends_t))
              with
-            | exception Flow_js_utils.SpeculationSingletonError ->
+            | exception Flow_js_utils.SpeculationSingletonError _ ->
               (* When all the GenericT and infer types are replaced with any, and subtyping
                  check still cannot succeed, then we can safely conclude that, in every possible
                  instantiation, we will always take the false branch *)

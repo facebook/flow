@@ -316,7 +316,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (Error_message.EUnionSpeculationFailed
              { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches = msgs }
           )
-      | SingletonCase _ -> raise SpeculationSingletonError
+      | SingletonCase _ ->
+        (match msgs with
+        | [msg] -> raise (SpeculationSingletonError msg)
+        | _ ->
+          failwith
+            ("SingletonCase should not have exactly one error, but we got "
+            ^ string_of_int (List.length msgs)
+            ))
       | CustomCases { use_op; no_match_error_loc; cases } ->
         assert (List.length cases = List.length msgs);
         add_output

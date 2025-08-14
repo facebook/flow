@@ -484,7 +484,7 @@ let use_op_of_lookup_action = function
 
 exception SpeculativeError of Error_message.t
 
-exception SpeculationSingletonError
+exception SpeculationSingletonError of Error_message.t
 
 (* [src_cx] is the context in which the error is created, and [dst_cx] the context
  * in which it is recorded. *)

@@ -173,7 +173,7 @@ struct
         l
         (UseT (unknown_use, u))
     with
-    | exception Flow_js_utils.SpeculationSingletonError -> false
+    | exception Flow_js_utils.SpeculationSingletonError _ -> false
     | _ -> true
 
   (* get prop *)

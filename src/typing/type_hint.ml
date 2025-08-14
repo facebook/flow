@@ -43,7 +43,7 @@ let in_sandbox_cx cx t ~f =
       in
       Context.reset_errors cx Flow_error.ErrorSet.empty;
       match f (Tvar_resolver.resolved_t cx ~no_lowers ~filter_empty:false t) with
-      | (exception Flow_js_utils.SpeculationSingletonError)
+      | (exception Flow_js_utils.SpeculationSingletonError _)
       | (exception UnconstrainedTvarException)
       | (exception DecompFuncParamOutOfBoundsException) ->
         Context.reset_errors cx original_errors;
