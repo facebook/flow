@@ -331,9 +331,15 @@ module Friendly = struct
       let frames = Base.List.concat (List.rev (frames :: acc_frames)) in
       Base.List.concat (Base.List.intersperse (List.rev frames) ~sep:[text " of "])
     in
-    let message_of_explanations ~sep explanations acc_explanations =
+    let message_of_explanations ~leading_sep ~sep explanations acc_explanations =
       let explanations = Base.List.concat (List.rev (explanations :: acc_explanations)) in
-      Base.List.concat (Base.List.intersperse (List.rev explanations) ~sep:[text "."; text sep])
+      let explanations =
+        Base.List.concat (Base.List.intersperse (List.rev explanations) ~sep:[text "."; text sep])
+      in
+      if Base.List.is_empty explanations then
+        []
+      else
+        text leading_sep :: explanations
     in
     let rec flatten_speculation_branches
         ~show_all_branches ~hidden_branches ~high_score acc_frames acc_explanations acc = function
@@ -419,6 +425,7 @@ module Friendly = struct
         ~show_all_branches
         ~hidden_branches
         ~error_code
+        ~in_speculation
         acc_frames
         acc_explanations
         error =
@@ -467,7 +474,14 @@ module Friendly = struct
         let explanations =
           Base.Option.value_map
             ~default:[]
-            ~f:(fun explanations -> message_of_explanations ~sep:" " explanations acc_explanations)
+            ~f:(fun explanations ->
+              let (leading_sep, sep) =
+                if in_speculation then
+                  ("", "")
+                else
+                  ("\n\n", "\n")
+              in
+              message_of_explanations ~leading_sep ~sep explanations acc_explanations)
             explanations
         in
         let message =
@@ -535,6 +549,7 @@ module Friendly = struct
           loop
             ~show_root
             ~show_all_branches
+            ~in_speculation
             ~hidden_branches
             ~error_code
             ~show_code
@@ -546,7 +561,9 @@ module Friendly = struct
         | _ ->
           (* Get the message from the frames. *)
           let frames = message_of_frames frames acc_frames in
-          let explanations = message_of_explanations ~sep:"\n\n" explanations acc_explanations in
+          let explanations =
+            message_of_explanations ~leading_sep:"" ~sep:"\n\n" explanations acc_explanations
+          in
           let message =
             (* If we don't have an error root _and_ we don't have any frames
              * then use a mock error message. (We should always have a root
@@ -605,6 +622,7 @@ module Friendly = struct
                     ~show_root:true
                     ~show_code:false
                     ~show_all_branches
+                    ~in_speculation:true
                     ~hidden_branches
                     ~error_code
                     acc_frames'
@@ -657,7 +675,8 @@ module Friendly = struct
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    (fun error -> loop ~hidden_branches:None ~error_code:error.code [] [] error)
+    fun error ->
+      loop ~hidden_branches:None ~in_speculation:false ~error_code:error.code [] [] error
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =

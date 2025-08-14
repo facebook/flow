@@ -273,8 +273,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:54:38
 
-Cannot assign `x14` to `y14` because `A` [1] is incompatible with `B` [2] in array element. Arrays are invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+Cannot assign `x14` to `y14` because `A` [1] is incompatible with `B` [2] in array element. 
+
+Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    main.js:54:38
@@ -724,8 +726,10 @@ References:
 Error ---------------------------------------------------------------------------------------------------- main.js:149:1
 
 Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because `FrozenSuiteValues` [1] is incompatible with
-`IndirectFrozenSuiteValues` [2]. Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not included in
-type `IndirectFrozenSuiteValues` [2]. [incompatible-cast]
+`IndirectFrozenSuiteValues` [2]. 
+
+Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not included in type
+`IndirectFrozenSuiteValues` [2]. [incompatible-cast]
 
    main.js:149:1
    149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing

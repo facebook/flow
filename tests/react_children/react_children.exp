@@ -1,7 +1,9 @@
 Error ------------------------------------------------------------------------------------------------------ api.js:14:4
 
 Cannot call `na` with `Children.map(...)` bound to `x` because number [1] is incompatible with string [2] in array
-element. Arrays are invariantly typed. See
+element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-call]
 
@@ -66,7 +68,9 @@ References:
 Error ------------------------------------------------------------------------------------------------------ api.js:15:4
 
 Cannot call `sa` with `Children.map(...)` bound to `x` because string [1] is incompatible with number [2] in array
-element. Arrays are invariantly typed. See
+element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-call]
 
@@ -641,7 +645,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:56:3
 
-Cannot create `Fun` element because `React.Element` [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because `React.Element` [1] is incompatible with `Fn` [2] in property `children`. 
+
 Non-callable objects are not compatible with functions. [incompatible-type]
 
    fun.js:56:3

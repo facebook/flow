@@ -138,9 +138,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:75:11
 
-Cannot assign `c2.#private()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. All
-writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different type
-is desired. [incompatible-type-arg]
+Cannot assign `c2.#private()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. 
+
+All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
+type is desired. [incompatible-type-arg]
 
    test.js:75:11
    75|       x = c2.#private(); // error
@@ -163,9 +164,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:85:5
 
-Cannot assign `c2.public()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. All
-writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different type
-is desired. [incompatible-type-arg]
+Cannot assign `c2.public()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. 
+
+All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
+type is desired. [incompatible-type-arg]
 
    test.js:85:5
    85| x = c2.public(); // error

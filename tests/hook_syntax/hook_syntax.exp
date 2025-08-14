@@ -42,8 +42,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------- declare_hook_tests.js:4:3
 
-Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
-written to.
+Cannot assign `100` to `v.a` because property `a` is not writable. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -60,8 +61,10 @@ References:
 Error ---------------------------------------------------------------------------------------- declare_hook_tests.js:6:1
 
 Cannot cast `useCustom` to function type because function type [1] is a React hook type annotation but function type [2]
-is not a hook. React hooks and other functions are not compatible with each other, because hooks cannot be called
-conditionally. [react-rule-hook-incompatible]
+is not a hook. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
 
    declare_hook_tests.js:6:1
    6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
@@ -79,8 +82,10 @@ References:
 Error --------------------------------------------------------------------------------------- declare_hook_tests.js:10:1
 
 Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function type [2] is a
-hook type annotation. React hooks and other functions are not compatible with each other, because hooks cannot be called
-conditionally. [react-rule-hook-incompatible]
+hook type annotation. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
 
    declare_hook_tests.js:10:1
    10| nonhook as typeof useCustom; // error, nonhook and hook incompatible
@@ -340,8 +345,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ hook_tests.js:4:3
 
-Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
-written to.
+Cannot assign `100` to `v.a` because property `a` is not writable. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -357,8 +363,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ hook_tests.js:6:1
 
-Cannot cast `useCustom` to function type because function [1] is a React hook but function type [2] is not a hook. React
-hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+Cannot cast `useCustom` to function type because function [1] is a React hook but function type [2] is not a hook. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 [react-rule-hook-incompatible]
 
    hook_tests.js:6:1
@@ -376,7 +383,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:10:1
 
-Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function [2] is a hook.
+Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function [2] is a hook. 
+
 React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 [react-rule-hook-incompatible]
 
@@ -395,7 +403,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:13:1
 
-Cannot cast `useCustom` to `typeof useCustom2` because function [1] and function [2] are different React hooks.
+Cannot cast `useCustom` to `typeof useCustom2` because function [1] and function [2] are different React hooks. 
+
 Different React hooks are not compatible with each other, because hooks cannot be called conditionally.
 [react-rule-hook-incompatible]
 
@@ -414,8 +423,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:19:9
 
-Cannot assign `"hi"` to `foo.a` because property `a` is not writable. The return value of a React hook [1] cannot be
-written to.
+Cannot assign `"hi"` to `foo.a` because property `a` is not writable. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -431,8 +441,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:32:5
 
-Cannot assign `42` to `arr[0]` because read-only arrays cannot be written to. The return value of a React hook [1]
-cannot be written to.
+Cannot assign `42` to `arr[0]` because read-only arrays cannot be written to. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -448,8 +459,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:34:9
 
-Cannot assign `"hi"` to `foo.a` because property `a` is not writable. The return value of a React hook [1] cannot be
-written to.
+Cannot assign `"hi"` to `foo.a` because property `a` is not writable. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -465,8 +477,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- hook_tests.js:42:5
 
-Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. React hook arguments [1] and their nested
-elements cannot be written to.
+Cannot assign `42` to `x[0]` because read-only arrays cannot be written to. 
+
+React hook arguments [1] and their nested elements cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-unsafe-mutation]
 
@@ -867,8 +880,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:4:3
 
-Cannot assign `100` to `v.a` because property `a` is not writable. The return value of a React hook [1] cannot be
-written to.
+Cannot assign `100` to `v.a` because property `a` is not writable. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -885,8 +899,10 @@ References:
 Error ------------------------------------------------------------------------------------------- hook_type_tests.js:6:1
 
 Cannot cast `useCustom` to function type because function type [1] is a React hook type annotation but function type [2]
-is not a hook. React hooks and other functions are not compatible with each other, because hooks cannot be called
-conditionally. [react-rule-hook-incompatible]
+is not a hook. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
 
    hook_type_tests.js:6:1
    6| useCustom as <T>(T) => [T]; // error, hook and nonhook incompatible
@@ -904,8 +920,10 @@ References:
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:10:1
 
 Cannot cast `nonhook` to `typeof useCustom` because function type [1] is not a React hook but function type [2] is a
-hook type annotation. React hooks and other functions are not compatible with each other, because hooks cannot be called
-conditionally. [react-rule-hook-incompatible]
+hook type annotation. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+[react-rule-hook-incompatible]
 
    hook_type_tests.js:10:1
    10| nonhook as typeof useCustom; // error, nonhook and hook incompatible
@@ -1229,8 +1247,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- imp.js:7:5
 
-Cannot assign `1` to `x[0]` because read-only arrays cannot be written to. The return value of a React hook [1] cannot
-be written to.
+Cannot assign `1` to `x[0]` because read-only arrays cannot be written to. 
+
+The return value of a React hook [1] cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
 . [react-rule-hook-mutation]
 
@@ -1270,8 +1289,9 @@ value (`current`) property) during render. (https://react.dev/reference/react/us
 
 Error ------------------------------------------------------------------------------ require_specific_suppression.js:2:1
 
-Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. React
-hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 [react-rule-hook-incompatible]
 
    require_specific_suppression.js:2:1
@@ -1289,8 +1309,9 @@ References:
 
 Error ------------------------------------------------------------------------------ require_specific_suppression.js:6:1
 
-Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. React
-hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. 
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 [react-rule-hook-incompatible]
 
    require_specific_suppression.js:6:1

@@ -142,9 +142,10 @@ Cannot assign `42` to `v2[1].a` because property `a` is not writable. [cannot-wr
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:32:7
 
-Cannot assign `42` to `x.y` because property `y` is not writable. React component properties [1] and their nested props
-and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot assign `42` to `x.y` because property `y` is not writable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:32:7
    32|     x.y = 42 // error;
@@ -158,9 +159,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:36:10
 
-Cannot assign `42` to `rest.bar` because property `bar` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot assign `42` to `rest.bar` because property `bar` is not writable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:36:10
    36|     rest.bar = 42; // error;
@@ -174,9 +176,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:37:5
 
-Cannot call `rest.baz.push` because property `push` is not readable. React component properties [1] and their nested
-props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot call `rest.baz.push` because property `push` is not readable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:37:5
    37|     rest.baz.push("hello"); // error
@@ -190,8 +193,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
 
-Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. React component properties [1] and
-their nested props and elements cannot be written to.
+Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. 
+
+React component properties [1] and their nested props and elements cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:38:5
@@ -206,9 +210,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:39:5
 
-Cannot call `rest.qux[1].pop` because property `pop` is not readable. React component properties [1] and their nested
-props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot call `rest.qux[1].pop` because property `pop` is not readable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:39:5
    39|     rest.qux[1].pop(); // error
@@ -222,9 +227,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
 
-Cannot assign `0` to `obj.prop` because property `prop` is not writable. React component properties [1] and their nested
-props and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot assign `0` to `obj.prop` because property `prop` is not writable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:56:9
    56|     obj.prop = 0; // error
@@ -243,8 +249,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:61:1
 
-Cannot call `droset.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droset.add` because property `add` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:61:1
    61| droset.add(new Set()); // error
@@ -258,8 +266,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:62:1
 
-Cannot call `droset.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droset.add` because property `add` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:62:1
    62| droset.add((42: any)); // error
@@ -273,8 +283,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:63:21
 
-Cannot call `x.add` because property `add` is not readable. Values annotated using `React.Immutable` [1] are managed by
-the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `x.add` because property `add` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:63:21
    63| droset.forEach(x => x.add(42)) // error
@@ -289,8 +301,9 @@ References:
 Error ------------------------------------------------------------------------------------------------------ dro.js:65:1
 
 Cannot cast `droset` to `Set` because `Set` [1] is managed by the React runtime [2] and cannot be mutated, while
-`Set` [3] may allow mutations (possibly in nested values). Consider using `React.Immutable<>`.
-[react-rule-immutable-incompatible]
+`Set` [3] may allow mutations (possibly in nested values). 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:65:1
    65| droset as Set<Set<number>> as typeof droset // error
@@ -310,8 +323,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:68:1
 
-Cannot call `dromap.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `dromap.set` because property `set` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:68:1
    68| dromap.set({x: 42}, new Map()); // error
@@ -325,8 +340,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:69:1
 
-Cannot call `dromap.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `dromap.set` because property `set` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:69:1
    69| dromap.set({x: 42}, (42: any)); // error
@@ -340,8 +357,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:71:7
 
-Cannot assign `42` to `key.x` because property `x` is not writable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot assign `42` to `key.x` because property `x` is not writable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:71:7
    71|   key.x = 42; // error
@@ -355,8 +374,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:72:3
 
-Cannot call `val.set` because property `set` is not readable. Values annotated using `React.Immutable` [1] are managed
-by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `val.set` because property `set` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:72:3
    72|   val.set({y: 420}, 42) // error
@@ -370,8 +391,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:80:10
 
-Cannot assign `42` to `drc.prop.x` because property `x` is not writable. Values annotated using `React.Immutable` [1]
-are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot assign `42` to `drc.prop.x` because property `x` is not writable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:80:10
    80| drc.prop.x = 42 // error;
@@ -385,8 +408,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:81:5
 
-Cannot assign object literal to `drc.prop` because property `prop` is not writable. Values annotated using
-`React.Immutable` [1] are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot assign object literal to `drc.prop` because property `prop` is not writable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:81:5
    81| drc.prop = {x: 42}; // error;
@@ -400,8 +425,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:84:1
 
-Cannot call `droarr.push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droarr.push` because property `push` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:84:1
    84| droarr.push([]); // error
@@ -415,8 +442,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:85:1
 
-Cannot call `droarr[0].push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droarr[0].push` because property `push` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:85:1
    85| droarr[0].push(42); // error
@@ -430,8 +459,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:86:1
 
-Cannot call `droarr.at(...)?.push` because property `push` is not readable. Values annotated using `React.Immutable` [1]
-are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droarr.at(...)?.push` because property `push` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:86:1
    86| droarr.at(0)?.push(42) // error;
@@ -447,7 +478,9 @@ Error --------------------------------------------------------------------------
 
 Cannot call `useMyReducer` with `badReducer` bound to `reducer` because array literal [1] is managed by the React
 runtime [2] and cannot be mutated, while array type [3] may allow mutations (possibly in nested values) in the first
-parameter. Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
+parameter. 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:102:16
    102|   useMyReducer(badReducer, [1]); // error
@@ -469,7 +502,9 @@ Error --------------------------------------------------------------------------
 
 Cannot call `useMyReducerWithNoState` with `badReducer` bound to `reducer` because array type [1] is managed by the
 React runtime [2] and cannot be mutated, while array type [3] may allow mutations (possibly in nested values) in the
-first parameter. Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
+first parameter. 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:103:45
    103|   useMyReducerWithNoState<Array<number>, _>(badReducer); // error
@@ -491,7 +526,9 @@ Error --------------------------------------------------------------------------
 
 Cannot call `useMyReducerWithNoState` with `badReducer` bound to `reducer` because array type [1] is managed by the
 React runtime [2] and cannot be mutated, while array type [3] may allow mutations (possibly in nested values) in the
-first parameter. Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
+first parameter. 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:104:27
    104|   useMyReducerWithNoState(badReducer); // error
@@ -511,8 +548,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- dro.js:109:37
 
-Cannot call `arr.push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are managed
-by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `arr.push` because property `push` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:109:37
    109|   useMyReducer((arr, act: any) => { arr.push(42); return arr }, [0]); // error
@@ -527,8 +566,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:115:1
 
 Cannot cast `droarr` to read-only array type because array type [1] is managed by the React runtime [2] and cannot be
-mutated, while read-only array type [3] may allow mutations (possibly in nested values). Consider using
-`React.Immutable<>`. [react-rule-immutable-incompatible]
+mutated, while read-only array type [3] may allow mutations (possibly in nested values). 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:115:1
    115| droarr as $ReadOnlyArray<Array<number>> // error
@@ -549,8 +589,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:118:1
 
 Cannot cast `droset` to `$ReadOnlySet` because `Set` [1] is managed by the React runtime [2] and cannot be mutated,
-while `$ReadOnlySet` [3] may allow mutations (possibly in nested values). Consider using `React.Immutable<>`.
-[react-rule-immutable-incompatible]
+while `$ReadOnlySet` [3] may allow mutations (possibly in nested values). 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:118:1
    118| droset as $ReadOnlySet<Set<number>> // error
@@ -570,8 +611,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:125:1
 
-Cannot call `droobj.x.push` because property `push` is not readable. Values annotated using `React.Immutable` [1] are
-managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot call `droobj.x.push` because property `push` is not readable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:125:1
    125| droobj.x.push(42); // error
@@ -585,8 +628,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:126:8
 
-Cannot assign array literal to `droobj.x` because property `x` is not writable. Values annotated using
-`React.Immutable` [1] are managed by the React runtime and cannot be mutated. [react-rule-unsafe-mutation]
+Cannot assign array literal to `droobj.x` because property `x` is not writable. 
+
+Values annotated using `React.Immutable` [1] are managed by the React runtime and cannot be mutated.
+[react-rule-unsafe-mutation]
 
    dro.js:126:8
    126| droobj.x = []; // error
@@ -601,8 +646,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:128:1
 
 Cannot cast `droobj` to object type because object type [1] is managed by the React runtime [2] and cannot be mutated,
-while object type [3] may allow mutations (possibly in nested values). Consider using `React.Immutable<>`.
-[react-rule-immutable-incompatible]
+while object type [3] may allow mutations (possibly in nested values). 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:128:1
    128| droobj as {+x: Array<number>}; // error
@@ -623,8 +669,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- dro.js:128:1
 
 Cannot cast `droobj` to object type because array type [1] is managed by the React runtime [2] and cannot be mutated,
-while array type [3] may allow mutations (possibly in nested values) in property `x`. Consider using
-`React.Immutable<>`. [react-rule-immutable-incompatible]
+while array type [3] may allow mutations (possibly in nested values) in property `x`. 
+
+Consider using `React.Immutable<>`. [react-rule-immutable-incompatible]
 
    dro.js:128:1
    128| droobj as {+x: Array<number>}; // error
@@ -644,8 +691,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:132:5
 
-Cannot assign function to `x.constructor` because property `constructor` is not writable. React component properties [1]
-and their nested props and elements cannot be written to.
+Cannot assign function to `x.constructor` because property `constructor` is not writable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
 (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:132:5
@@ -660,9 +708,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:145:3
 
-Cannot call `arr.sort` because property `sort` is not readable. React component properties [1] and their nested props
-and elements cannot be written to. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
-[react-rule-unsafe-mutation]
+Cannot call `arr.sort` because property `sort` is not readable. 
+
+React component properties [1] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
 
    dro.js:145:3
    145|   arr.sort((a, b) => { // only dro error

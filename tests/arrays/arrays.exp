@@ -128,8 +128,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- subtyping.js:5:4
 
-Cannot cast `arr` to array type because `Animal` [1] is incompatible with `Dog` [2] in array element. Arrays are
-invariantly typed. See
+Cannot cast `arr` to array type because `Animal` [1] is incompatible with `Dog` [2] in array element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-cast]
 

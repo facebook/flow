@@ -123,8 +123,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:91:36
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in the indexer property of array element. This
-property is invariantly typed. See
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in the indexer property of array element. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:91:36
@@ -177,9 +178,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:101:29
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in the indexer property. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in the indexer property. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:101:29
    101|   let a: {[k: string]: A} = x; // error
@@ -360,9 +362,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:155:42
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p` of array element. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p` of array element. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:155:42
    155|   let c: Array<{[k: string]: B, p: C}> = x; // error
@@ -396,8 +399,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:164:36
 
-Cannot assign `xa` to `a` because `A` [1] is incompatible with `B` [2] in property `p` of array element. This property
-is invariantly typed. See
+Cannot assign `xa` to `a` because `A` [1] is incompatible with `B` [2] in property `p` of array element. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:164:36
@@ -450,9 +454,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:174:35
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:174:35
    174|   let a: {[k: string]: B, p: A} = x; // error: A ~> B
@@ -503,9 +508,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:188:29
 
-Cannot assign `xa` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `xa` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:188:29
    188|   let a: {[k: string]: A} = xa; // error
@@ -575,7 +581,9 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:202:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. Arrays are invariantly typed. See
+exists in object type [2] in array element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [prop-missing]
 
@@ -594,9 +602,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:206:19
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:206:19
    206|   let a: {p: A} = x; // error
@@ -647,9 +656,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:216:29
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:216:29
    216|   let a: {[k: string]: A} = x; // error
@@ -700,9 +710,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:228:35
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:228:35
    228|   let a: {[k: string]: A, x: X} = x; // error (as above), but exclusive of x
@@ -754,9 +765,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:236:42
 
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p` of array element. This property is
-invariantly typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in property `p` of array element. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:236:42
    236|   let c: Array<{[k: string]: B, p: C}> = x; // error
@@ -773,9 +785,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:240:35
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:240:35
    240|   let a: {[k: string]: B, p: A} = x; // error
@@ -809,9 +822,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:246:20
 
-Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. This property is invariantly
-typed. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
-[incompatible-type]
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in property `p`. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:246:20
    246|   let a: {p?: A} = x; // error
@@ -862,7 +876,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:269:10
 
-Cannot return `x` because `B` [1] is incompatible with `C` [2] in property `p`. This property is invariantly typed. See
+Cannot return `x` because `B` [1] is incompatible with `C` [2] in property `p`. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-return]
 
    dictionary.js:269:10
@@ -947,8 +963,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:9:35
 
-Cannot assign `b` to `c` because null or undefined [1] is incompatible with string [2] in the indexer property. This
-property is invariantly typed. See
+Cannot assign `b` to `c` because null or undefined [1] is incompatible with string [2] in the indexer property. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    incompatible.js:9:35
@@ -1002,8 +1019,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:29:10
 
-Cannot return `x` because mixed [1] is incompatible with string [2] in property `fooBar` of array element. This property
-is invariantly typed. See
+Cannot return `x` because mixed [1] is incompatible with string [2] in property `fooBar` of array element. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-return]
 
    incompatible.js:29:10
@@ -1057,7 +1075,9 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:52:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. Arrays are invariantly typed. See
+exists in object type [2] in array element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [prop-missing]
 

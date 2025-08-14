@@ -1,7 +1,8 @@
 Error ------------------------------------------------------------------------------- android_and_common.android.js:1:27
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `foo`. Read the
-docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `foo`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    android_and_common.android.js:1:27
@@ -42,7 +43,8 @@ flow config. [invalid-supports-platform]
 
 Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
 
-Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`.
+Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`. 
+
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
@@ -60,8 +62,9 @@ References:
 
 Error ------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    cjs_conformance_errors.ios.js:1:18
@@ -85,8 +88,10 @@ Error --------------------------------------------------------------------------
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because property `a` is missing in self [1] but exists in common
-interface [2]. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [prop-missing]
+interface [2]. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[prop-missing]
 
    esm_conformance_errors.android.js:1:16
    1| export default 3;
@@ -154,8 +159,9 @@ References:
 
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`. Read the
-docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    esm_conformance_errors.ios.js:1:18
@@ -178,8 +184,10 @@ https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [prop-missing]
+interface [2]. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[prop-missing]
 
    shadowing.android.js:1:1
    1|
@@ -193,8 +201,10 @@ References:
 Error --------------------------------------------------------------------------------------------- shadowing.ios.js:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [prop-missing]
+interface [2]. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[prop-missing]
 
    shadowing.ios.js:1:1
    1|
@@ -208,8 +218,10 @@ References:
 Error ------------------------------------------------------------------------------------ shadowing_cjs.android.cjs:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [prop-missing]
+interface [2]. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[prop-missing]
 
    shadowing_cjs.android.cjs:1:1
    1|
@@ -223,8 +235,10 @@ References:
 Error ---------------------------------------------------------------------------------------- shadowing_cjs.ios.cjs:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [prop-missing]
+interface [2]. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[prop-missing]
 
    shadowing_cjs.ios.cjs:1:1
    1|

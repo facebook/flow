@@ -299,9 +299,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:397:14
 
-Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. All writes to `y` must be
-compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. 
+
+All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
+type is desired. [incompatible-type]
 
    logical.js:397:14
    397|     y = y || true; // error `y` is a number

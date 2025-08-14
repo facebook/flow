@@ -55,8 +55,9 @@ References:
 
 Error ------------------------------------------------------------------------------ common/JsFlowConflict1.js.flow:2:16
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    common/JsFlowConflict1.js.flow:2:16
@@ -74,8 +75,9 @@ References:
 
 Error ------------------------------------------------------------------------------ common/JsFlowConflict2.js.flow:2:16
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    common/JsFlowConflict2.js.flow:2:16

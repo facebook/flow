@@ -4,8 +4,10 @@ We start with an interface conformance error in Android file for logical module 
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
-property `default`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    A.android.js:1:38
    1| declare export default function A(): string;
@@ -37,8 +39,10 @@ Now we have an interface conformance error in iOS file.
 Error ---------------------------------------------------------------------------------------------------- A.ios.js:1:38
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in the return value of
-property `default`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    A.ios.js:1:38
    1| declare export default function A(): string;
@@ -62,8 +66,10 @@ Now we have an interface conformance error in Android file, but not in iOS file.
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
-property `default`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    A.android.js:1:38
    1| declare export default function A(): number;
@@ -119,8 +125,10 @@ Add back interface file for logical module A
 Error ------------------------------------------------------------------------------------------------ A.android.js:1:38
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in the return value of
-property `default`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+property `default`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    A.android.js:1:38
    1| declare export default function A(): number;

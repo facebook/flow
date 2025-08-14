@@ -1,8 +1,10 @@
 Error --------------------------------------------------------------------------------------------- classes.ios.js:47:65
 
 Cannot conform to common interface module because `SameShapeDifferentNominalHierarchy22` [1] is incompatible with
-`SameShapeDifferentNominalHierarchy2` [2] in property `SameShapeDifferentNominalHierarchy`. Read the docs on Flow's
-multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`SameShapeDifferentNominalHierarchy2` [2] in property `SameShapeDifferentNominalHierarchy`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    classes.ios.js:47:65
    47| declare export class SameShapeDifferentNominalHierarchy extends SameShapeDifferentNominalHierarchy22 { // error
@@ -17,8 +19,10 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:65:22
 
 Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError1` [1] is incompatible with
-`GenericDifferentSizedTypeParametersError1` [2] in property `GenericDifferentSizedTypeParametersError1`. Read the docs
-on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`GenericDifferentSizedTypeParametersError1` [2] in property `GenericDifferentSizedTypeParametersError1`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    classes.ios.js:65:22
    65| declare export class GenericDifferentSizedTypeParametersError1<T1, T2> { // error
@@ -33,8 +37,10 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:69:22
 
 Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError2` [1] is incompatible with
-`GenericDifferentSizedTypeParametersError2` [2] in property `GenericDifferentSizedTypeParametersError2`. Read the docs
-on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`GenericDifferentSizedTypeParametersError2` [2] in property `GenericDifferentSizedTypeParametersError2`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    classes.ios.js:69:22
    69| declare export class GenericDifferentSizedTypeParametersError2<T1> { // error
@@ -49,8 +55,10 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:73:40
 
 Cannot conform to common interface module because string [1] is incompatible with number [2] in type argument `T1` [3]
-of property `generic1`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type-arg]
+of property `generic1`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type-arg]
 
    classes.ios.js:73:40
    73| declare export const generic1: Generic<string>; // error
@@ -68,8 +76,10 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:74:32
 
 Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError1` [1] is incompatible with
-`GenericDifferentSizedTypeParametersError1` [2] in property `generic2`. Read the docs on Flow's multi-platform support
-for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`GenericDifferentSizedTypeParametersError1` [2] in property `generic2`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    classes.ios.js:74:32
    74| declare export const generic2: GenericDifferentSizedTypeParametersError1<string, string>; // error
@@ -84,8 +94,10 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:75:32
 
 Cannot conform to common interface module because `GenericDifferentSizedTypeParametersError2` [1] is incompatible with
-`GenericDifferentSizedTypeParametersError2` [2] in property `generic3`. Read the docs on Flow's multi-platform support
-for more information: https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`GenericDifferentSizedTypeParametersError2` [2] in property `generic3`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    classes.ios.js:75:32
    75| declare export const generic3: GenericDifferentSizedTypeParametersError2<string>; // error
@@ -319,7 +331,9 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
 
 Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because number [2] is incompatible with `T1` [3]
-in property `foo`. This property is invariantly typed. See
+in property `foo`. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    classes.ios.js:56:22
@@ -362,7 +376,9 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
-`T2` [3] in property `bar`. This property is invariantly typed. See
+`T2` [3] in property `bar`. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    classes.ios.js:60:22
@@ -405,7 +421,9 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because mixed [2] is incompatible with
-`T1` [3] in property `foo`. This property is invariantly typed. See
+`T1` [3] in property `foo`. 
+
+This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    classes.ios.js:60:22
@@ -444,7 +462,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- component.ios.js:1:26
 
-Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `Foo.baz`.
+Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `Foo.baz`. 
+
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
@@ -463,7 +482,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- component.ios.js:5:45
 
-Cannot conform to common interface module because `Acid` [1] does not render `Base` [2] in property `DifferentRenders`.
+Cannot conform to common interface module because `Acid` [1] does not render `Base` [2] in property `DifferentRenders`. 
+
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
@@ -479,7 +499,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:11:21
 
-Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `FooBad`.
+Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `FooBad`. 
+
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
@@ -496,8 +517,10 @@ References:
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:16:13
 
 Cannot conform to common interface module because number [1] is incompatible with string [2] in the enum's
-representation type of property `BarBad1`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+representation type of property `BarBad1`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    enums.ios.js:16:13
    16| export enum BarBad1 { // error
@@ -512,8 +535,10 @@ References:
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:21:13
 
 Cannot conform to common interface module because `BarBad2` [1] is incompatible with `BarBad2` [2] in property
-`BarBad2`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`BarBad2`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    enums.ios.js:21:13
    21| export enum BarBad2 { // error
@@ -527,7 +552,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:32:30
 
-Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `fooBar`.
+Cannot conform to common interface module because `FooBad` [1] is incompatible with `FooBad` [2] in property `fooBar`. 
+
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
@@ -544,8 +570,10 @@ References:
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:35:31
 
 Cannot conform to common interface module because `BarBad2` [1] is incompatible with `BarBad2` [2] in property
-`barBad2`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+`barBad2`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    enums.ios.js:35:31
    35| declare export const barBad2: BarBad2; // error
@@ -560,8 +588,10 @@ References:
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:36:30
 
 Cannot conform to common interface module because `BazBadNotExported` [1] is incompatible with `BazBadNotExported` [2]
-in property `bazBad`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+in property `bazBad`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    enums.ios.js:36:30
    36| declare export const bazBad: BazBadNotExported; // error
@@ -575,8 +605,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:9:26
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `o3`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `o3`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    opaque_type.ios.js:9:26
@@ -592,7 +623,9 @@ References:
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:10:26
 
 Cannot conform to common interface module because `OpaqueType4` [1] is incompatible with string [2] in  of property
-`o4`. Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+`o4`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    opaque_type.ios.js:10:26
@@ -608,7 +641,9 @@ References:
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:11:26
 
 Cannot conform to common interface module because `OpaqueType5` [1] is incompatible with number [2] in  of property
-`o5`. Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+`o5`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    opaque_type.ios.js:11:26
@@ -624,8 +659,10 @@ References:
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:22:27
 
 Cannot conform to common interface module because `GenericOpaqueType3` [1] is incompatible with `GenericOpaqueType3` [2]
-in property `go3`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+in property `go3`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    opaque_type.ios.js:22:27
    22| declare export const go3: GenericOpaqueType3<string, string>; // error
@@ -640,8 +677,10 @@ References:
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:23:27
 
 Cannot conform to common interface module because `GenericOpaqueType4` [1] is incompatible with `GenericOpaqueType4` [2]
-in property `go4`. Read the docs on Flow's multi-platform support for more information:
-https://flow.org/en/docs/react/multiplatform. [incompatible-type]
+in property `go4`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+[incompatible-type]
 
    opaque_type.ios.js:23:27
    23| declare export const go4: GenericOpaqueType4<string>; // error
@@ -655,8 +694,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:46
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in  of property `go6`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because number [1] is incompatible with string [2] in  of property `go6`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    opaque_type.ios.js:25:46
@@ -671,8 +711,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:54
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `go6`. Read
-the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
+Cannot conform to common interface module because string [1] is incompatible with number [2] in  of property `go6`. 
+
+Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 [incompatible-type]
 
    opaque_type.ios.js:25:54

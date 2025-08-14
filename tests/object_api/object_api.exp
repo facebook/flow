@@ -356,7 +356,9 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
 Cannot cast `Object.keys(...)` to array type because array type [1] is incompatible with union type [2] in array
-element. Type array type [1] includes members `x`, `y` that are not included in type union type [2]. [incompatible-cast]
+element. 
+
+Type array type [1] includes members `x`, `y` that are not included in type union type [2]. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
@@ -371,9 +373,11 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
 Cannot cast `Object.keys(...)` to array type because union type [1] is incompatible with array type [2] in array
-element. Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number. Type union
-type [1] includes members `$key`, `$value` that are not included in type array type [2]. [incompatible-cast]
+element. 
+
+Arrays are invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+Type union type [1] includes members `$key`, `$value` that are not included in type array type [2]. [incompatible-cast]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR

@@ -59,8 +59,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------- constrain_array.js:8:5
 
-Cannot assign `100` to `x` because number [1] is incompatible with `x` [2]. All writes to `x` must be compatible with
-the type of its initializer [2]. Add an annotation to `x` [2] if a different type is desired. [incompatible-type]
+Cannot assign `100` to `x` because number [1] is incompatible with `x` [2]. 
+
+All writes to `x` must be compatible with the type of its initializer [2]. Add an annotation to `x` [2] if a different
+type is desired. [incompatible-type]
 
    constrain_array.js:8:5
    8| x = 100; // error
@@ -82,9 +84,10 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
 
-Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. All writes to `y` must be
-compatible with the type of its initializer [2]. Add an annotation to `y` [2] if a different type is desired.
-[incompatible-type]
+Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. 
+
+All writes to `y` must be compatible with the type of its initializer [2]. Add an annotation to `y` [2] if a different
+type is desired. [incompatible-type]
 
    constrain_array.js:11:5
    11| y = 100; // error
@@ -98,9 +101,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:15:8
 
-Cannot assign array literal to `z` because number [1] is incompatible with string [2] in array element. All writes to
-`z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different type is
-desired. [incompatible-type]
+Cannot assign array literal to `z` because number [1] is incompatible with string [2] in array element. 
+
+All writes to `z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different
+type is desired. [incompatible-type]
 
    constrain_array.js:15:8
    15|   z = [1];
@@ -117,8 +121,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:21:1
 
-Cannot cast `w` to array type because null or undefined [1] is incompatible with number [2] in array element. Arrays are
-invariantly typed. See
+Cannot cast `w` to array type because null or undefined [1] is incompatible with number [2] in array element. 
+
+Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-cast]
 
@@ -504,8 +509,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:7
 
-Cannot assign `x` to `y` because string [1] is incompatible with number [2]. All writes to `y` must be compatible with
-the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
+Cannot assign `x` to `y` because string [1] is incompatible with number [2]. 
+
+All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
+type is desired. [incompatible-type]
 
    test.js:11:7
    11|   y = x; // error: string ~> number
@@ -525,8 +532,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot assign `'a'` to `z` because string [1] is incompatible with number [2]. All writes to `z` must be compatible with
-the type of its initial assignment [3]. Add an annotation to `z` [4] if a different type is desired. [incompatible-type]
+Cannot assign `'a'` to `z` because string [1] is incompatible with number [2]. 
+
+All writes to `z` must be compatible with the type of its initial assignment [3]. Add an annotation to `z` [4] if a
+different type is desired. [incompatible-type]
 
    test.js:19:5
    19| z = 'a';
@@ -546,9 +555,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:6
 
-Cannot assign `'hello world'` to `a2` because string [1] is incompatible with number [2]. All writes to `a2` must be
-compatible with the type of its initializer [3]. Add an annotation to `a2` [3] if a different type is desired.
-[incompatible-type]
+Cannot assign `'hello world'` to `a2` because string [1] is incompatible with number [2]. 
+
+All writes to `a2` must be compatible with the type of its initializer [3]. Add an annotation to `a2` [3] if a different
+type is desired. [incompatible-type]
 
    test.js:26:6
    26| a2 = 'hello world';
@@ -661,8 +671,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:6
 
-Cannot assign `y` to `x2` because number [1] is incompatible with string [2]. All writes to `x2` must be compatible with
-the type of its initializer [3]. Add an annotation to `x2` [3] if a different type is desired. [incompatible-type]
+Cannot assign `y` to `x2` because number [1] is incompatible with string [2]. 
+
+All writes to `x2` must be compatible with the type of its initializer [3]. Add an annotation to `x2` [3] if a different
+type is desired. [incompatible-type]
 
    test.js:50:6
    50| x2 = y;
