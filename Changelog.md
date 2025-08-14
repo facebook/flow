@@ -1,3 +1,14 @@
+### 0.279.0
+
+New Features:
+* In the next release (0.280.0) of Flow, we intend to standardize the error code for various subtyping errors into `incompatible-type`. You can add `experimental.error_code_migration=new` in your flowconfig to enable the new behavior now. We also provide a codemod `flow codemod error-code-migration --write .` that you can run over your codebase to automatically change the error code. Both the flowconfig option and the codemod will be removed in the next version.
+
+Notable bug fixes:
+* Improved precision of error messages when inferred primitive types are checked against other incompatible primitive types (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIoBKALwSgCMAG4ADqwB7KODQCWYSgACnkyAlACYAJQS4AClVQHW6qAmxUSgD0jolJkovIlAHc4McpRBPRLvPDpRJapkpdcTBLcHA8dwJQADeUJiW01OPdKOLJoNpe2O1CMiG7R2Pc3CJo0J3IgBomEiaqBJBoABisRoA7AAOKzNkACoA))
+
+Misc:
+* Thanks @JamBalaya56562 for fixing various typos across the codebase!
+
 ### 0.278.0
 
 Likely to cause new Flow errors:
