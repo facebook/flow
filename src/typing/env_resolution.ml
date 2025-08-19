@@ -597,7 +597,12 @@ let rec resolve_binding cx def_scope_kind reason loc b =
         | Ast.Expression.Yield _ ->
           failwith "Object not synthesizable"
       in
-      let reason = mk_reason RObjectLit_UNSOUND obj_loc in
+      let reason =
+        if Context.natural_inference_object_literal_followup_fix cx then
+          mk_reason RObjectLit obj_loc
+        else
+          mk_reason RObjectLit_UNSOUND obj_loc
+      in
       let obj_proto = ObjProtoT reason in
       let acc =
         Base.List.fold properties ~init:(Statement.ObjectExpressionAcc.empty ()) ~f:(fun acc prop ->
