@@ -33,7 +33,6 @@ val universally_suppressed_codes : t -> CodeLocSet.t
 val filter_suppressed_errors :
   root:File_path.t ->
   file_options:Files.options option ->
-  error_code_migration:Options.ErrorCodeMigration.t ->
   unsuppressable_error_codes:SSet.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   t ->
@@ -42,15 +41,6 @@ val filter_suppressed_errors :
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t
   * (ALoc.t Flow_intermediate_error_types.intermediate_error * Loc_collections.LocSet.t) list
   * t
-
-val find_error_suppressions_to_change_error_code_for_codemod :
-  root:File_path.t ->
-  file_options:Files.options option ->
-  unsuppressable_error_codes:SSet.t ->
-  loc_of_aloc:(ALoc.t -> Loc.t) ->
-  suppressions:t ->
-  errors:Flow_error.ErrorSet.t ->
-  Loc_collections.LocSet.t
 
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens
    during merge rather than during collation as filter_suppressed_errors does *)

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either function type [1] requires another argument from call of method `cloneElement` [2].
  - Or function type [3] requires another argument from call of method `cloneElement` [2].
  - Or function type [4] requires another argument from call of method `cloneElement` [2].
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either string [1] is incompatible with `React.Element` [2].
  - Or string [1] is incompatible with `React.Element` [3].
  - Or string [1] is incompatible with `React.Element` [4].
@@ -81,7 +81,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Element` [3].
  - Or object literal [1] is incompatible with `React.Element` [4].
@@ -112,7 +112,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:25:8
 
 Cannot call `React.cloneElement` because `A` [1] is incompatible with `B` [2] in type argument `C` [3].
-[incompatible-call]
+[incompatible-type]
 
    test.js:25:8
    25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
@@ -132,7 +132,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `A` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
@@ -161,7 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `A` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or string [4] is incompatible with number [5] in property `foo`.
 
@@ -189,7 +189,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `B` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or string [4] is incompatible with number [5] in property `foo`.
 
@@ -217,7 +217,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `C` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or string [4] is incompatible with number [5] in property `children`.
 
@@ -245,7 +245,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:48:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `C` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
@@ -274,7 +274,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:49:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `C` [1] is incompatible with key set [2] in type argument `ElementType` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
@@ -303,7 +303,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `C` [1] is incompatible with key set [2] in type argument `ElementType` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
@@ -332,7 +332,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `D` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or number [4] is incompatible with array type [5] in property `children`.
 
@@ -360,7 +360,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `D` [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or number [4] is incompatible with array type [5].
 
@@ -388,7 +388,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `D` [1] is incompatible with key set [2] in type argument `ElementType` [3].
  - Or number [4] is incompatible with array type [5].
 
@@ -416,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:58:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either statics of `D` [1] is incompatible with key set [2] in type argument `ElementType` [3].
  - Or number [4] is incompatible with array type [5].
 
@@ -444,7 +444,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either function [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or string [4] is incompatible with number [5] in property `p`.
 
@@ -472,7 +472,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:76:7
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either function type [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
@@ -501,7 +501,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either component [1] is incompatible with key set [2] in type argument `ElementType` [3].
  - Or string [1] is incompatible with component [4] in type argument `ElementType` [3].
  - Or string [1] is incompatible with component [5] in type argument `ElementType` [3].
@@ -534,7 +534,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:93:9
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either component [1] is incompatible with string [2] in type argument `ElementType` [3].
  - Or string [1] is incompatible with component [4] in type argument `ElementType` [3].
  - Or string [1] is incompatible with component [5] in type argument `ElementType` [3].
@@ -567,7 +567,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:9
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either undefined [1] is incompatible with `React.Element` [2].
  - Or undefined [1] is incompatible with `React.Element` [3].
  - Or undefined [1] is incompatible with `React.Element` [4].
@@ -597,7 +597,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:100:9
 
-Cannot call `React.cloneElement` because: [incompatible-call]
+Cannot call `React.cloneElement` because: [incompatible-type]
  - Either undefined [1] is incompatible with `React.Element` [2].
  - Or undefined [1] is incompatible with `React.Element` [3].
  - Or undefined [1] is incompatible with `React.Element` [4].

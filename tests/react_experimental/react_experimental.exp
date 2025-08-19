@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- startTransition.js:8:7
 
-Cannot call `React.startTransition` because function [1] requires another argument. [incompatible-call]
+Cannot call `React.startTransition` because function [1] requires another argument. [incompatible-type]
 
    startTransition.js:8:7
      8| React.startTransition(); // Error: function requires another argument
@@ -42,7 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:12:2
 
-Cannot cast `isPending` to function type because boolean [1] is incompatible with function type [2]. [incompatible-cast]
+Cannot cast `isPending` to function type because boolean [1] is incompatible with function type [2]. [incompatible-type]
 
    useTransition_hook.js:12:2
     12| (isPending: (() => void) => void); // Error: boolean is incompatible with function type
@@ -59,7 +59,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:13:2
 
-Cannot cast `startTransition` to boolean because function type [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `startTransition` to boolean because function type [1] is incompatible with boolean [2]. [incompatible-type]
 
    useTransition_hook.js:13:2
     13| (startTransition: boolean); // Error: function type is incompatible with boolean
@@ -76,7 +76,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:16:1
 
-Cannot call `startTransition` because function [1] requires another argument. [incompatible-call]
+Cannot call `startTransition` because function [1] requires another argument. [incompatible-type]
 
    useTransition_hook.js:16:1
     16| startTransition(); // Error: function requires another argument

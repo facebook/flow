@@ -15,7 +15,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ repos_use.js:20:1
 
 Cannot cast `err1` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
-`FOO` [2]. [incompatible-cast]
+`FOO` [2]. [incompatible-type]
 
    repos_use.js:20:1
    20| err1 as 'FOO'; // ERR
@@ -51,7 +51,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ repos_use.js:24:1
 
 Cannot cast `err2` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
-`FOO` [2]. [incompatible-cast]
+`FOO` [2]. [incompatible-type]
 
    repos_use.js:24:1
    24| err2 as 'FOO'; // ERR
@@ -121,7 +121,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-Cannot cast `z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:18:1
    18| z as string; // Error, number lower bound string upper bound
@@ -174,7 +174,7 @@ References:
 
 Error ----------------------------------------------------------------------------- under_constrained_speculation.js:1:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    under_constrained_speculation.js:1:2
    1| (0: string); // error: intentially left here to ensure that implicit instantiation

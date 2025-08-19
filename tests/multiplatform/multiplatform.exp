@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- android_only_use.android.js:2:1
 
-Cannot cast `require(...).foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    android_only_use.android.js:2:1
    2| require('./android_and_common').foo as string; // error: android_and_common.android is actually imported
@@ -91,7 +91,7 @@ Cannot conform to common interface module because property `a` is missing in sel
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    esm_conformance_errors.android.js:1:16
    1| export default 3;
@@ -187,7 +187,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing.android.js:1:1
    1|
@@ -204,7 +204,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing.ios.js:1:1
    1|
@@ -221,7 +221,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing_cjs.android.cjs:1:1
    1|
@@ -238,7 +238,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing_cjs.ios.cjs:1:1
    1|
@@ -269,7 +269,7 @@ platforms: `android`, `ios`. Support for the `ios` platform is missing. [missing
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:2
 
-Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test_interface_import.js:8:2
    8| (o1: empty); // error

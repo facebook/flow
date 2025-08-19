@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- object_create.js:14:2
 
-Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2]. [incompatible-type]
 
    object_create.js:14:2
    14| ({foo: 'foo'}) as C;
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_create.js:19:1
 
-Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `o` to `C` because `O` [1] is incompatible with `C` [2]. [incompatible-type]
 
    object_create.js:19:1
    19| o as C;
@@ -32,7 +32,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:27:2
 
 Cannot cast `Object.entries(...)` to array type because number [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:27:2
    27| (Object.entries(dict): Array<[string, empty]>); // ERROR
@@ -50,7 +50,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:28:2
 
 Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:28:2
    28| (Object.entries(iface): Array<[string, empty]>); // ERROR
@@ -65,7 +65,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:29:2
 
 Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:29:2
    29| (Object.entries(dictWithProps): Array<[string, empty]>); // ERROR
@@ -80,7 +80,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:30:2
 
 Cannot cast `Object.entries(...)` to array type because number [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:30:2
    30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
@@ -98,7 +98,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:30:2
 
 Cannot cast `Object.entries(...)` to array type because boolean [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:30:2
    30| (Object.entries(dictUnion): Array<[string, empty]>); // ERROR
@@ -116,7 +116,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:31:2
 
 Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:31:2
    31| (Object.entries(writeOnlyDict): Array<[string, empty]>); // ERROR
@@ -131,7 +131,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:32:2
 
 Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:32:2
    32| (Object.entries(obj): Array<['a' | 'b', empty]>); // ERROR
@@ -146,7 +146,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:33:2
 
 Cannot cast `Object.entries(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:33:2
    33| (Object.entries(instance): Array<['a' | 'b', empty]>); // ERROR
@@ -161,7 +161,7 @@ References:
 Error ------------------------------------------------------------------------------------------- object_entries.js:34:2
 
 Cannot cast `Object.entries(...)` to array type because tuple type [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_entries.js:34:2
    34| (Object.entries(dict): Array<empty>); // ERROR
@@ -246,7 +246,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- object_keys.js:3:2
 
 Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    object_keys.js:3:2
    3| (Object.keys(sealed): void); // error, Array<string>
@@ -260,7 +260,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:7:4
 
-Cannot cast `k` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `k` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    object_keys.js:7:4
    7|   (k : number) // error: string ~> number
@@ -278,7 +278,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:17:2
 
 Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with number [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_keys.js:17:2
    17| (Object.keys(any): Array<number>); // error, Array<string>
@@ -293,7 +293,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:24:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `prop` [1] is incompatible with string literal
-`error` [2] in array element. [incompatible-cast]
+`error` [2] in array element. [incompatible-type]
 
    object_keys.js:24:2
    24| (Object.keys(new Foo()): Array<'error'>); // error: prop ~> error
@@ -308,7 +308,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:31:2
 
 Cannot cast `Object.keys(...)` to array type because string literal `bar_prop` [1] is incompatible with string literal
-`error` [2] in array element. [incompatible-cast]
+`error` [2] in array element. [incompatible-type]
 
    object_keys.js:31:2
    31| (Object.keys(new Bar()): Array<'error'>); // error: bar_prop ~> error
@@ -323,7 +323,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:37:6
 
 Cannot cast `Object.keys(...)` to array type because string literal `hi` [1] is incompatible with string literal
-`bye` [2] in array element. [incompatible-cast]
+`bye` [2] in array element. [incompatible-type]
 
    object_keys.js:37:6
    37|     (Object.keys(dict): Array<'bye'>); // error
@@ -341,7 +341,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:43:6
 
 Cannot cast `Object.keys(...)` to array type because string [1] is incompatible with string literal `123` [2] in array
-element. [incompatible-cast]
+element. [incompatible-type]
 
    object_keys.js:43:6
    43|     (Object.keys(dict): Array<'123'>); // error: not supported yet
@@ -358,7 +358,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `Object.keys(...)` to array type because array type [1] is incompatible with union type [2] in array
 element. 
 
-Type array type [1] includes members `x`, `y` that are not included in type union type [2]. [incompatible-cast]
+Type array type [1] includes members `x`, `y` that are not included in type union type [2]. [incompatible-type]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
@@ -377,7 +377,7 @@ element.
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-Type union type [1] includes members `$key`, `$value` that are not included in type array type [2]. [incompatible-cast]
+Type union type [1] includes members `$key`, `$value` that are not included in type array type [2]. [incompatible-type]
 
    object_keys.js:55:2
    55| (Object.keys(ifaceDict): Array<'$value' | '$key'>); // ERROR
@@ -448,7 +448,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:67:4
 
 Cannot cast `Object.keys(...)[0]` to `OpaqueKey` because string [1] is incompatible with `OpaqueKey` [2].
-[incompatible-cast]
+[incompatible-type]
 
    object_keys.js:67:4
    67|   (Object.keys(opaqueDict)[0]: OpaqueKey); // ERROR
@@ -466,7 +466,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:74:4
 
 Cannot cast `Object.keys(...)[0]` to empty because `OpaqueKeyWithSupertype1` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    object_keys.js:74:4
    74|   (Object.keys(opaqueDict)[0]: empty); // ERROR
@@ -484,7 +484,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_keys.js:87:4
 
 Cannot cast `Object.keys(...)[0]` to `OpaqueKeyWithSupertype3` because string [1] is incompatible with
-`OpaqueKeyWithSupertype3` [2]. [incompatible-cast]
+`OpaqueKeyWithSupertype3` [2]. [incompatible-type]
 
    object_keys.js:87:4
    87|   (Object.keys(opaqueDict)[0]: OpaqueKeyWithSupertype3); // ERROR
@@ -671,7 +671,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_prototype.js:51:16
 
 Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    object_prototype.js:51:16
     51| (123).toString('foo'); // error
@@ -686,7 +686,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_prototype.js:52:16
 
 Cannot call `123.toString` with `null` bound to `radix` because null [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    object_prototype.js:52:16
     52| (123).toString(null); // error
@@ -1166,7 +1166,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:27:2
 
 Cannot cast `Object.values(...)` to array type because number [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:27:2
    27| (Object.values(dict): Array<empty>); // ERROR
@@ -1184,7 +1184,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:28:2
 
 Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:28:2
    28| (Object.values(iface): Array<empty>); // ERROR
@@ -1199,7 +1199,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:29:2
 
 Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:29:2
    29| (Object.values(dictWithProps): Array<empty>); // ERROR
@@ -1214,7 +1214,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:30:2
 
 Cannot cast `Object.values(...)` to array type because number [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:30:2
    30| (Object.values(dictUnion): Array<empty>); // ERROR
@@ -1232,7 +1232,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:30:2
 
 Cannot cast `Object.values(...)` to array type because boolean [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:30:2
    30| (Object.values(dictUnion): Array<empty>); // ERROR
@@ -1250,7 +1250,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:31:2
 
 Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:31:2
    31| (Object.values(writeOnlyDict): Array<empty>); // ERROR
@@ -1265,7 +1265,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:32:2
 
 Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:32:2
    32| (Object.values(obj): Array<empty>); // ERROR
@@ -1280,7 +1280,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_values.js:33:2
 
 Cannot cast `Object.values(...)` to array type because mixed [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    object_values.js:33:2
    33| (Object.values(instance): Array<empty>); // ERROR
@@ -1364,7 +1364,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:2
 
-Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    proto.js:3:2
      3| (o1_proto.toString: empty); // error: function ~> empty
@@ -1396,7 +1396,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:7:2
 
-Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    proto.js:7:2
    7| (o2.__proto__.p: empty); // error: number ~> empty
@@ -1413,7 +1413,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:13:2
 
-Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    proto.js:13:2
    13| (C1_proto.bind: empty); // error: function ~> empty

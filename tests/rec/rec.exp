@@ -8,7 +8,7 @@ Invalid trivially recursive definition of `$Values`.  [recursive-definition]
 
 Error ---------------------------------------------------------------------------------------------- eval_values.js:11:1
 
-Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empty [2]. [incompatible-type]
 
    eval_values.js:11:1
    11| options.foo as empty; // error
@@ -52,7 +52,7 @@ Invalid trivially recursive definition of `T`.  [recursive-definition]
 
 Error ------------------------------------------------------------------------------------------------ issue-598.js:8:10
 
-Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3]. [incompatible-return]
+Cannot return `y` because number [1] is incompatible with string [2] in type argument `A` [3]. [incompatible-type]
 
    issue-598.js:8:10
    8|   return y;
@@ -73,7 +73,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `B` [1] but
-exists in `A` [2]. [prop-missing]
+exists in `A` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -91,7 +91,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `C` [1] but
-exists in `A` [2]. [prop-missing]
+exists in `A` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -109,7 +109,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `A` [1] but
-exists in `B` [2]. [prop-missing]
+exists in `B` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -127,7 +127,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `C` [1] but
-exists in `B` [2]. [prop-missing]
+exists in `B` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -145,7 +145,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `A` [1] but
-exists in `B` [2]. [prop-missing]
+exists in `B` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -163,7 +163,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `C` [1] but
-exists in `B` [2]. [prop-missing]
+exists in `B` [2]. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -181,7 +181,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `b` [1] is incompatible
-with string literal `a` [2] in property `kind`. [incompatible-call]
+with string literal `a` [2] in property `kind`. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -199,7 +199,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `c` [1] is incompatible
-with string literal `a` [2] in property `kind`. [incompatible-call]
+with string literal `a` [2] in property `kind`. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -217,7 +217,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because string literal `c` [1] is incompatible
-with string literal `b` [2] in property `kind`. [incompatible-call]
+with string literal `b` [2] in property `kind`. [incompatible-type]
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -272,7 +272,7 @@ Cannot resolve name `DoesntMatter`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot cast `p.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `p.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:6:2
    6| (p.x: string); // error
@@ -289,7 +289,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2
 
-Cannot cast `pstar` to number because `P` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `pstar` to number because `P` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:9:2
    9| (pstar: number); // error, but limit potentially unbounded number of errors!
@@ -306,7 +306,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
-Cannot cast `pstar.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pstar.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:13:2
    13| (pstar.x: string); // error
@@ -323,7 +323,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
-Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:16:2
    16| (pstar.x: string); // error
@@ -341,7 +341,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:12
 
 Cannot cast `new C` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
-[incompatible-cast]
+[incompatible-type]
 
    test2.js:4:12
    4| ((new C: C<number>): D<string>) // error: number ~/~ string
@@ -360,7 +360,7 @@ Error --------------------------------------------------------------------------
 
 Cannot return `x` because `Q` [1] is incompatible with `P` [2] in the return value. 
 
-Non-callable objects are not compatible with functions. [incompatible-return]
+Non-callable objects are not compatible with functions. [incompatible-type]
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error

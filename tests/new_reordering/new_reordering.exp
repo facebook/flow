@@ -150,7 +150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ a.js:169:14
 
-Cannot return `Utils.foo` because array literal [1] is incompatible with empty [2]. [incompatible-return]
+Cannot return `Utils.foo` because array literal [1] is incompatible with empty [2]. [incompatible-type]
 
    a.js:169:14
    169|       return Utils.foo;

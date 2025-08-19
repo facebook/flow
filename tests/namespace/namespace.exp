@@ -71,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- namespace.js:17:24
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    namespace.js:17:24
    17| module.exports = {foo: '' as number};

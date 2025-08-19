@@ -13,7 +13,7 @@ element.
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-cast]
+[incompatible-type]
 
    fully_resolved_unification.js:20:2
    20| (x: Array<{bar: string}>); // ERROR

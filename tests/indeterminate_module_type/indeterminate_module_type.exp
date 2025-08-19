@@ -9,7 +9,7 @@ module! [module-type-conflict]
 
 Error ---------------------------------------------------------------------------------------------- cjs_after_es.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    cjs_after_es.js:3:2
    3| (0: string); // error
@@ -32,7 +32,7 @@ module! [module-type-conflict]
 
 Error ----------------------------------------------------------------------------------------- es_decl_after_cjs.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    es_decl_after_cjs.js:3:2
    3| (0: string); // error
@@ -55,7 +55,7 @@ module! [module-type-conflict]
 
 Error -------------------------------------------------------------------------------------- es_default_after_cjs.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    es_default_after_cjs.js:3:2
    3| (0: string); // error
@@ -78,7 +78,7 @@ module! [module-type-conflict]
 
 Error ------------------------------------------------------------------------------------------- es_ns_after_cjs.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    es_ns_after_cjs.js:3:2
    3| (0: string); // error
@@ -101,7 +101,7 @@ module! [module-type-conflict]
 
 Error ----------------------------------------------------------------------------------------- es_spec_after_cjs.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    es_spec_after_cjs.js:3:2
    3| (0: string); // error
@@ -124,7 +124,7 @@ module! [module-type-conflict]
 
 Error ----------------------------------------------------------------------------------------- es_star_after_cjs.js:3:2
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    es_star_after_cjs.js:3:2
    3| (0: string); // error

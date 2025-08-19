@@ -3247,30 +3247,15 @@ let react_rule_of_use_op use_op ~default =
   in
   Base.Option.first_some (fold_use_op (fun _ -> None) code_of_frame use_op) (Some default)
 
-let error_code_of_use_op use_op ~updated_error_code ~default =
+let error_code_of_use_op use_op ~default =
   let code_of_root = function
-    | Cast _ ->
-      if updated_error_code then
-        Some IncompatibleType
-      else
-        Some IncompatibleCast
-    | ClassExtendsCheck _ ->
-      if updated_error_code then
-        Some IncompatibleType
-      else
-        Some IncompatibleExtend
+    | Cast _
+    | ClassExtendsCheck _
     | FunCall _
-    | FunCallMethod _ ->
-      if updated_error_code then
-        Some IncompatibleType
-      else
-        Some IncompatibleCall
+    | FunCallMethod _
     | FunReturnStatement _
     | FunImplicitReturn _ ->
-      if updated_error_code then
-        Some IncompatibleType
-      else
-        Some IncompatibleReturn
+      Some IncompatibleType
     | TypeGuardIncompatibility _
     | PositiveTypeGuardConsistency _ ->
       Some IncompatibleTypeGuard
@@ -3281,10 +3266,7 @@ let error_code_of_use_op use_op ~updated_error_code ~default =
     | (Some _, _) -> acc
     | (_, TypeArgCompatibility _)
     | (_, TypeParamBound _) ->
-      if updated_error_code then
-        Some IncompatibleType
-      else
-        Some IncompatibleTypeArg
+      Some IncompatibleType
     | (None, _) -> None
   in
   Base.Option.first_some (fold_use_op code_of_root code_of_frame use_op) (Some default)
@@ -3304,7 +3286,7 @@ let error_code_of_upper_kind = function
     Some NotAClass
   | _ -> Some Error_codes.IncompatibleUse
 
-let error_code_of_message ~updated_error_code err : error_code option =
+let error_code_of_message err : error_code option =
   match err with
   | EArithmeticOperand _ -> Some UnsafeArith
   | EInvalidBinaryArith { kind = (_, op); _ } -> begin
@@ -3384,14 +3366,10 @@ let error_code_of_message ~updated_error_code err : error_code option =
   | EEnumNotAllChecked { default_case_loc = None; _ } -> Some InvalidExhaustiveCheck
   | EEnumNotAllChecked { default_case_loc = Some _; _ } -> Some RequireExplicitEnumSwitchCases
   | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
-  | EExpectedBooleanLit { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
-  | EExpectedNumberLit { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
-  | EExpectedStringLit { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
-  | EExpectedBigIntLit { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
+  | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  | EExpectedBigIntLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EEnumsNotEnabled _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
@@ -3418,19 +3396,18 @@ let error_code_of_message ~updated_error_code err : error_code option =
   | EImportValueAsType (_, _) -> Some ImportValueAsType
   | EIncompatible { upper = (_, upper_kind); _ } -> error_code_of_upper_kind upper_kind
   | EIncompatibleSpeculation { use_op = Some use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:Error_codes.IncompatibleUse
+    error_code_of_use_op use_op ~default:Error_codes.IncompatibleUse
   | EIncompatibleSpeculation _ -> Some Error_codes.IncompatibleUse
-  | EIncompatibleDefs { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
+  | EIncompatibleDefs { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EIncompatibleProp { use_op = Some use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
+    error_code_of_use_op use_op ~default:IncompatibleType
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
   | EIncompatibleWithExact (_, _, UnexpectedInexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, UnexpectedIndexer) -> Some IncompatibleIndexer
   | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
+    error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
@@ -3474,23 +3451,9 @@ let error_code_of_message ~updated_error_code err : error_code option =
   | EPropNotFoundInLookup { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.PropMissing
   | EPropNotFoundInSubtyping { use_op; _ } ->
-    react_rule_of_use_op
-      use_op
-      ~default:
-        ( if updated_error_code then
-          Error_codes.IncompatibleType
-        else
-          Error_codes.PropMissing
-        )
+    react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EPropsExtraAgainstExactObject { use_op; _ } ->
-    react_rule_of_use_op
-      use_op
-      ~default:
-        ( if updated_error_code then
-          Error_codes.IncompatibleType
-        else
-          Error_codes.PropMissing
-        )
+    react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EIndexerCheckFailed { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EPropNotReadable { use_op; _ } -> react_rule_of_use_op use_op ~default:CannotRead
@@ -3530,8 +3493,7 @@ let error_code_of_message ~updated_error_code err : error_code option =
   end
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
-  | EUnionSpeculationFailed { use_op; _ } ->
-    error_code_of_use_op use_op ~updated_error_code ~default:IncompatibleType
+  | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EUnreachable _ -> Some UnreachableCode
   | EUnsupportedExact (_, _) -> Some InvalidExact
   | EUnsupportedImplements _ -> Some CannotImplement

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:4:2
 
-Cannot cast `a` to interface type because in the return value of property `pop`: [incompatible-cast]
+Cannot cast `a` to interface type because in the return value of property `pop`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -39,7 +39,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `f` to interface type because function [1] is incompatible with interface type [2]. 
 
-Functions without statics are not compatible with objects. [incompatible-cast]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    fun.js:11:2
    11| (f: interface {xxx: boolean}); // ERROR
@@ -58,7 +58,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `build` to interface type because function [1] is incompatible with interface type [2]. 
 
-Functions without statics are not compatible with objects. [incompatible-cast]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    fun.js:21:2
    21| (build: interface {foo: boolean}); // ERROR
@@ -170,7 +170,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `Invariant` because string [1] is incompatible with number [2] in the indexer property. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    indexer.js:64:4
    64|   (x: Invariant); // ERROR
@@ -190,7 +190,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `Invariant` because string [1] is incompatible with number [2] in the indexer property. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    indexer.js:70:4
    70|   (x: Invariant); // ERROR
@@ -208,7 +208,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- indexer.js:77:4
 
 Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    indexer.js:77:4
    77|   (x: interface {[Keys]: number}); // ERROR
@@ -226,7 +226,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- indexer.js:78:4
 
 Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    indexer.js:78:4
    78|   (x: interface {+[Keys]: number}); // ERROR
@@ -244,7 +244,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- indexer.js:83:4
 
 Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    indexer.js:83:4
    83|   (x: interface {[Keys]: number}); // ERROR
@@ -262,7 +262,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- indexer.js:84:4
 
 Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    indexer.js:84:4
    84|   (x: interface {+[Keys]: number}); // ERROR
@@ -279,7 +279,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:137:4
 
-Cannot cast `x['bar']` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x['bar']` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    indexer.js:137:4
    137|   (x['bar']: empty); // ERROR
@@ -296,7 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:145:4
 
-Cannot cast `x['foo']` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x['foo']` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    indexer.js:145:4
    145|   (x['foo']: empty); // ERROR
@@ -328,7 +328,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:148:4
 
-Cannot cast `x['xxx']` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x['xxx']` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    indexer.js:148:4
    148|   (x['xxx']: empty); // ERROR
@@ -368,7 +368,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
 
 Cannot cast object literal to `A` because string [1] is incompatible with number [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    inline.js:5:6
    5| ({p: "bad"}: A); // error: string ~> number
@@ -383,7 +383,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- inline.js:8:6
 
 Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    inline.js:8:6
    8| ({p: "bad", q: 0}: B); // error: string ~> number
@@ -398,7 +398,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:9:12
 
 Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `q`.
-[incompatible-cast]
+[incompatible-type]
 
    inline.js:9:12
    9| ({p: 0, q: "bad"}: B); // error: string ~> number
@@ -413,7 +413,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:10:2
 
 Cannot cast object literal to `B` because property `p` is missing in object literal [1] but exists in `A` [2].
-[prop-missing]
+[incompatible-type]
 
    inline.js:10:2
    10| ({q: 0}: B); // error: missing property p
@@ -428,7 +428,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:11:2
 
 Cannot cast object literal to `B` because property `q` is missing in object literal [1] but exists in `B` [2].
-[prop-missing]
+[incompatible-type]
 
    inline.js:11:2
    11| ({p: 0}: B); // error: missing property q
@@ -442,7 +442,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:16:4
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    inline.js:16:4
    16|   (o.p: empty); // error: number ~> empty
@@ -459,7 +459,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:17:4
 
-Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    inline.js:17:4
    17|   (o.q: empty); // error: string ~> empty
@@ -520,7 +520,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:29:6
 
 Cannot extend `Base` [1] with interface type because string [2] is incompatible with number [3] in property `p`.
-[incompatible-extend]
+[incompatible-type]
 
    inline.js:29:6
    29|   p: string, // error: string ~> number
@@ -538,7 +538,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- inline.js:34:3
 
 Cannot cast `x` to interface type because number [1] is incompatible with string [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    inline.js:34:3
    34|   x as interface {foo: string}; // ERROR
@@ -603,7 +603,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `new D` to `J` because undefined [1] is incompatible with number [2] in property `x`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:29:2
    29| (new D : J); // error, x is invariant
@@ -620,7 +620,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:38:2
 
-Cannot cast `o2["b"]` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o2["b"]` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    interface.js:38:2
    38| (o2["b"] : boolean); // error
@@ -638,7 +638,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ interface.js:43:2
 
 Cannot cast `o3` to interface type because number [1] is incompatible with boolean [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    interface.js:43:2
    43| (o3 : interface {[string] : boolean}); // error
@@ -656,7 +656,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ interface.js:44:7
 
 Cannot cast object literal to interface type because number [1] is incompatible with boolean [2] in property `x`.
-[incompatible-cast]
+[incompatible-type]
 
    interface.js:44:7
    44| ({x : 3} : interface {[string] : boolean}); // error
@@ -671,7 +671,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ interface.js:46:2
 
 Cannot cast `o3` to interface type because string [1] is incompatible with number [2] in the indexer property's key.
-[incompatible-cast]
+[incompatible-type]
 
    interface.js:46:2
    46| (o3: interface {[number] : number}); // error
@@ -708,7 +708,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ interface.js:51:2
 
 Cannot cast `o4` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
-property's key. [incompatible-cast]
+property's key. [incompatible-type]
 
    interface.js:51:2
    51| (o4 : interface {[string] : number}); // error
@@ -726,7 +726,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ interface.js:59:2
 
 Cannot cast `o6` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
-property's key. [incompatible-cast]
+property's key. [incompatible-type]
 
    interface.js:59:2
    59| (o6 : interface {["asdf"] : number}); // error
@@ -744,7 +744,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ primitives.js:1:2
 
 Cannot cast `undefined` to interface type because undefined [1] is incompatible with interface type [2].
-[incompatible-cast]
+[incompatible-type]
 
    primitives.js:1:2
    1| (undefined: interface {}); // ERROR
@@ -758,7 +758,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:2:2
 
-Cannot cast `null` to interface type because null [1] is incompatible with interface type [2]. [incompatible-cast]
+Cannot cast `null` to interface type because null [1] is incompatible with interface type [2]. [incompatible-type]
 
    primitives.js:2:2
    2| (null: interface {}); // ERROR
@@ -842,7 +842,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:21:4
 
-Cannot cast `x` to interface type because symbol [1] is incompatible with interface type [2]. [incompatible-cast]
+Cannot cast `x` to interface type because symbol [1] is incompatible with interface type [2]. [incompatible-type]
 
    primitives.js:21:4
    21|   (x: interface {}); // ERROR
@@ -896,7 +896,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:34:1
 
-Cannot cast `new A()` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [prop-missing]
+Cannot cast `new A()` to `J` because property `y` is missing in `A` [1] but exists in `J` [2]. [incompatible-type]
 
    subtyping.js:34:1
    34| new A() as J; // error
@@ -910,7 +910,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:45:1
 
-Cannot cast `new D()` to `K` because property `x` is missing in `D` [1] but exists in `K` [2]. [prop-missing]
+Cannot cast `new D()` to `K` because property `x` is missing in `D` [1] but exists in `K` [2]. [incompatible-type]
 
    subtyping.js:45:1
    45| new D() as K; // error
@@ -924,7 +924,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:61:1
 
-Cannot cast `E` to `L` because property `y` is missing in class `E` [1] but exists in `L` [2]. [prop-missing]
+Cannot cast `E` to `L` because property `y` is missing in class `E` [1] but exists in `L` [2]. [incompatible-type]
 
    subtyping.js:61:1
    61| E as L; // error
@@ -941,7 +941,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:72:1
 
-Cannot cast `new G()` to `M` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+Cannot cast `new G()` to `M` because property `z` is missing in `G` [1] but exists in `M` [2]. [incompatible-type]
 
    subtyping.js:72:1
    72| new G() as M; // error
@@ -955,7 +955,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:73:1
 
-Cannot cast `new G()` to `N` because property `z` is missing in `G` [1] but exists in `M` [2]. [prop-missing]
+Cannot cast `new G()` to `N` because property `z` is missing in `G` [1] but exists in `M` [2]. [incompatible-type]
 
    subtyping.js:73:1
    73| new G() as N; // error
@@ -984,7 +984,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
-Cannot cast `k.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `k.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:7:2
    7| (k.x: string); // error: x is number
@@ -1031,7 +1031,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:2
 
-Cannot cast `e.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `e.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:18:2
    18| (e.x: string); // error: x is number
@@ -1048,7 +1048,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
 
-Cannot cast `e.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `e.z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:20:2
    20| (e.z: string); // error: z is number
@@ -1079,7 +1079,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:3:31
 
-Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`. [incompatible-extend]
+Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`. [incompatible-type]
 
    test3.js:3:31
    3| interface K extends I, J { x: string } // error: x is number in I
@@ -1096,7 +1096,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:4
 
-Cannot cast `k.x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `k.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:5:4
    5|   (k.x: number); // error: x is string in K
@@ -1113,7 +1113,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:6:4
 
-Cannot cast `k.y` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `k.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test3.js:6:4
    6|   (k.y: number); // error: y is string in I
@@ -1130,7 +1130,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:2:2
 
-Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2]. [prop-missing]
+Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2]. [incompatible-type]
 
    test4.js:2:2
    2| (function foo(x: number) { }: I); // error, property `foo` not found function
@@ -1144,7 +1144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:9
 
-Cannot call `(new C()).bar` because: [incompatible-call]
+Cannot call `(new C()).bar` because: [incompatible-type]
  - Either string [1] is incompatible with number [2] in the first parameter.
  - Or property `foo` is missing in function [3] but exists in `I` [4].
 
@@ -1169,7 +1169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:12:2
 
-Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.x` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    test5.js:12:2
    12| (a.x: empty); // error: function ~> empty
@@ -1201,7 +1201,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:15:2
 
-Cannot cast `b.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `b.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test5.js:15:2
    15| (b.x: empty); // error: number ~> empty
@@ -1218,7 +1218,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- top.js:3:2
 
-Cannot cast `x` to interface type because mixed [1] is incompatible with interface type [2]. [incompatible-cast]
+Cannot cast `x` to interface type because mixed [1] is incompatible with interface type [2]. [incompatible-type]
 
    top.js:3:2
    3| (x: interface {}); // ERROR
@@ -1243,7 +1243,7 @@ Cannot assign `3` to `x.foo` because property `foo` is not writable. [cannot-wri
 
 Error -------------------------------------------------------------------------------------------------- utility.js:33:2
 
-Cannot cast `b` to `$ReadOnly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [prop-missing]
+Cannot cast `b` to `$ReadOnly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [incompatible-type]
 
    utility.js:33:2
    33| (b : $ReadOnly<K>); // error

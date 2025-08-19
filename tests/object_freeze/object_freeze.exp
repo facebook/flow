@@ -27,7 +27,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:16:1
 
 Cannot cast `frozenObject` to object type because string literal `12345` [1] is incompatible with string literal
-`1234` [2] in property `bar`. [incompatible-cast]
+`1234` [2] in property `bar`. [incompatible-type]
 
    downstream.js:16:1
    16| frozenObject as {+bar: '1234'}; // error '12345' ~> '1234'
@@ -45,7 +45,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:17:1
 
 Cannot cast `frozenObject` to object type because property `baz` is missing in frozen object literal [1] but exists in
-object type [2]. [prop-missing]
+object type [2]. [incompatible-type]
 
    downstream.js:17:1
    17| frozenObject as {+bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
@@ -144,7 +144,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:28:1
 
 Cannot cast `frozenObjectWithSpread` to object type because string literal `12345` [1] is incompatible with string
-literal `1234` [2] in property `bar`. [incompatible-cast]
+literal `1234` [2] in property `bar`. [incompatible-type]
 
    downstream.js:28:1
    28| frozenObjectWithSpread as {+bar: '1234', +baz: number}; // error '12345' ~> '1234'
@@ -162,7 +162,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:29:1
 
 Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
+missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    downstream.js:29:1
    29| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
@@ -206,7 +206,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:39:1
 
 Cannot cast `frozenNegativeNumber.foo` to number literal `1` because number literal `-1` [1] is incompatible with number
-literal `1` [2]. [incompatible-cast]
+literal `1` [2]. [incompatible-type]
 
    downstream.js:39:1
    39| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -224,7 +224,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- downstream.js:41:1
 
 Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
-`-1` [2]. [incompatible-cast]
+`-1` [2]. [incompatible-type]
 
    downstream.js:41:1
    41| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1
@@ -275,7 +275,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:22:1
 
 Cannot cast `frozenObject` to object type because string literal `12345` [1] is incompatible with string literal
-`1234` [2] in property `bar`. [incompatible-cast]
+`1234` [2] in property `bar`. [incompatible-type]
 
    object_freeze.js:22:1
    22| frozenObject as {+bar: '1234'}; // error '12345' ~> '1234'
@@ -293,7 +293,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:23:1
 
 Cannot cast `frozenObject` to object type because property `baz` is missing in frozen object literal [1] but exists in
-object type [2]. [prop-missing]
+object type [2]. [incompatible-type]
 
    object_freeze.js:23:1
    23| frozenObject as {+bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
@@ -404,7 +404,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:34:1
 
 Cannot cast `frozenObjectWithSpread` to object type because string literal `12345` [1] is incompatible with string
-literal `1234` [2] in property `bar`. [incompatible-cast]
+literal `1234` [2] in property `bar`. [incompatible-type]
 
    object_freeze.js:34:1
    34| frozenObjectWithSpread as {+bar: '1234', +baz: number}; // error '12345' ~> '1234'
@@ -422,7 +422,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:35:1
 
 Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
+missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    object_freeze.js:35:1
    35| frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
@@ -466,7 +466,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:45:1
 
 Cannot cast `frozenNegativeNumber.foo` to number literal `1` because number literal `-1` [1] is incompatible with number
-literal `1` [2]. [incompatible-cast]
+literal `1` [2]. [incompatible-type]
 
    object_freeze.js:45:1
    45| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -484,7 +484,7 @@ References:
 Error -------------------------------------------------------------------------------------------- object_freeze.js:47:1
 
 Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
-`-1` [2]. [incompatible-cast]
+`-1` [2]. [incompatible-type]
 
    object_freeze.js:47:1
    47| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1

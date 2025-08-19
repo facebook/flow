@@ -33,7 +33,7 @@ Cannot resolve name `HTMLElement`. [cannot-resolve-name]
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:14:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in object type [2]. [prop-missing]
+in object type [2]. [incompatible-type]
 
    implicit_instantiation.js:14:2
    14| ({}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
@@ -48,7 +48,7 @@ References:
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:15:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in object type [2]. [prop-missing]
+in object type [2]. [incompatible-type]
 
    implicit_instantiation.js:15:2
    15| ({}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
@@ -63,7 +63,7 @@ References:
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:16:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in object type [2]. [prop-missing]
+in object type [2]. [incompatible-type]
 
    implicit_instantiation.js:16:2
    16| ({}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
@@ -77,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:18:1
 
-Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with undefined [2]. [incompatible-type]
 
    implicit_instantiation.js:18:1
    18| null as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // error: null ~> void
@@ -108,7 +108,7 @@ Cannot resolve name `HTMLElement`. [cannot-resolve-name]
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:33:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in props of component CompWithoutRefProp [2]. [prop-missing]
+in props of component CompWithoutRefProp [2]. [incompatible-type]
 
    implicit_instantiation.js:33:2
    33| ({}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
@@ -123,7 +123,7 @@ References:
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:34:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in props of component CompWithOptionalRefProp [2]. [prop-missing]
+in props of component CompWithOptionalRefProp [2]. [incompatible-type]
 
    implicit_instantiation.js:34:2
    34| ({}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
@@ -138,7 +138,7 @@ References:
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:35:2
 
 Cannot cast object literal to `React.ElementConfig` because property `foo` is missing in object literal [1] but exists
-in props of component CompWithRequiredRefProp [2]. [prop-missing]
+in props of component CompWithRequiredRefProp [2]. [incompatible-type]
 
    implicit_instantiation.js:35:2
    35| ({}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop
@@ -152,7 +152,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:36:1
 
-Cannot cast `undefined` to `React.ElementRef` because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `undefined` to `React.ElementRef` because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    implicit_instantiation.js:36:1
    36| undefined as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty (missing ref prop of IdMappedCompWithoutRefProp becomes empty)
@@ -166,7 +166,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:37:1
 
-Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with empty [2]. [incompatible-type]
 
    implicit_instantiation.js:37:1
    37| null as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty
@@ -197,7 +197,7 @@ Cannot resolve name `HTMLElement`. [cannot-resolve-name]
 Error ---------------------------------------------------------------------------------------------- jsx_checking.js:6:2
 
 Cannot create `FnWithRequiredRefProp` element because property `ref` is missing in props [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    jsx_checking.js:6:2
    6| <FnWithRequiredRefProp foo="bar" />; // error: missing ref prop
@@ -230,7 +230,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- jsx_checking.js:8:2
 
 Cannot create `FnWithoutRefProp` element because property `ref` is extra in props [1] but missing in object type [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    jsx_checking.js:8:2
    8| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
@@ -287,7 +287,7 @@ References:
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:18:2
 
 Cannot create `CompWithoutRefProp` element because property `ref` is extra in props [1] but missing in props of
-component CompWithoutRefProp [2]. Exact objects do not accept extra props. [prop-missing]
+component CompWithoutRefProp [2]. Exact objects do not accept extra props. [incompatible-type]
 
    jsx_checking.js:18:2
    18| <CompWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
@@ -329,7 +329,7 @@ Cannot resolve name `HTMLElement`. [cannot-resolve-name]
 Error ------------------------------------------------------------------------------------------------ subtyping.js:14:1
 
 Cannot cast `FnWithRequiredRefProp` to component because property `ref` is missing in props [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    subtyping.js:14:1
    14| FnWithRequiredRefProp as component(foo: string); // error: missing ref prop
@@ -347,7 +347,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ subtyping.js:15:1
 
 Cannot cast `FnWithRequiredRefProp` to `React.ComponentType` because property `ref` is missing in props [1] but exists
-in object type [2]. [prop-missing]
+in object type [2]. [incompatible-type]
 
    subtyping.js:15:1
     15| FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // error: missing ref prop
@@ -365,7 +365,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ subtyping.js:20:1
 
 Cannot cast `CompWithoutRefProp` to component because function type [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    subtyping.js:20:1
    20| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void
@@ -382,7 +382,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:20:1
 
-Cannot cast `CompWithoutRefProp` to component because null [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `CompWithoutRefProp` to component because null [1] is incompatible with undefined [2]. [incompatible-type]
 
    subtyping.js:20:1
    20| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void
@@ -400,7 +400,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ subtyping.js:20:1
 
 Cannot cast `CompWithoutRefProp` to component because object type [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    subtyping.js:20:1
    20| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error: React.RefSetter<mixed> ~> void

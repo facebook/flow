@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------- test_interface_import.js:5:2
 
-Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test_interface_import.js:5:2
    5| (o1: empty); // error

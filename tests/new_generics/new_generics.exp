@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ arr_spread.js:7:3
 
-Cannot call `fn` because rest array [1] is incompatible with `X` [2]. [incompatible-call]
+Cannot call `fn` because rest array [1] is incompatible with `X` [2]. [incompatible-type]
 
    arr_spread.js:7:3
    7|   fn(...arr) as R; // nope
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:17:12
 
-Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-type]
 
    arr_spread.js:17:12
    17|     return [...B, 42]; // nope
@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:28:3
 
-Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-type]
 
    arr_spread.js:28:3
    28|   f(42, 42, 42); // nope
@@ -96,7 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:34:3
 
-Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-type]
 
    arr_spread.js:34:3
    34|   f(42, 42, 42); // nope
@@ -113,7 +113,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:35:3
 
-Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-call]
+Cannot call `f` because rest array [1] is incompatible with `A` [2]. [incompatible-type]
 
    arr_spread.js:35:3
    35|   f(42, 42, 42, ...x); // should be nope
@@ -131,7 +131,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:40:5
 
 Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
-[incompatible-call]
+[incompatible-type]
 
    arr_spread.js:40:5
    40|   f([42, 42, 42]); // nope
@@ -146,7 +146,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:41:5
 
 Cannot call `f` with array literal bound to the first parameter because array literal [1] is incompatible with `A` [2].
-[incompatible-call]
+[incompatible-type]
 
    arr_spread.js:41:5
    41|   f([42, ...x]); // should be nope
@@ -160,7 +160,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:47:3
 
-Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-type]
 
    arr_spread.js:47:3
    47|   [...x, ...y] as Y; // should be nope
@@ -174,7 +174,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:48:3
 
-Cannot cast array literal to `X` because array literal [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast array literal to `X` because array literal [1] is incompatible with `X` [2]. [incompatible-type]
 
    arr_spread.js:48:3
    48|   [...x, ...y] as X; // should be nope
@@ -188,7 +188,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- arr_spread.js:52:3
 
-Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-cast]
+Cannot cast array literal to `Y` because array literal [1] is incompatible with `Y` [2]. [incompatible-type]
 
    arr_spread.js:52:3
    52|   [...x, ...y] as Y; // should be nope
@@ -202,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:61:10
 
-Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-type]
 
    arr_spread.js:61:10
    61|   return [...x, ...x]; // nope, because X could be a tuple
@@ -216,7 +216,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:65:10
 
-Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return array literal because array literal [1] is incompatible with `X` [2]. [incompatible-type]
 
    arr_spread.js:65:10
    65|   return [42, ...x]; // error
@@ -245,7 +245,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- basic_class.js:12:12
 
-Cannot return `this.x` because mixed [1] is incompatible with `Y` [2]. [incompatible-return]
+Cannot return `this.x` because mixed [1] is incompatible with `Y` [2]. [incompatible-type]
 
    basic_class.js:12:12
    12|     return this.x;
@@ -262,7 +262,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- basic_class.js:28:14
 
-Cannot return `this.get_bad()` because number [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `this.get_bad()` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    basic_class.js:28:14
    28|       return this.get_bad();
@@ -313,7 +313,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ basic_function.js:10:12
 
-Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    basic_function.js:10:12
    10|     return 42;
@@ -327,7 +327,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ basic_function.js:20:12
 
-Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `42` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    basic_function.js:20:12
    20|     return 42;
@@ -342,7 +342,7 @@ References:
 Error ------------------------------------------------------------------------------------------ basic_function.js:31:12
 
 Cannot return `arg[arg.length - 1]` because array element of refined mixed [1] is incompatible with `T` [2].
-[incompatible-return]
+[incompatible-type]
 
    basic_function.js:31:12
    31|     return arg[arg.length - 1];
@@ -496,7 +496,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- exact.js:7:16
 
 Cannot cast `42` to `X` because object type [1] is incompatible with type including generic type(s) `X` [2].
-[incompatible-cast]
+[incompatible-type]
 
    exact.js:7:16
    7|   42 as any as {||} as $Exact<X>; // nope
@@ -510,7 +510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- intersection.js:8:3
 
-Cannot cast `x` to intersection type because: [incompatible-cast]
+Cannot cast `x` to intersection type because: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or string [1] is incompatible with boolean [2].
 
@@ -529,7 +529,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:15:3
 
-Cannot cast `x` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `x` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-type]
 
    maybe.js:15:3
    15|   x as X; //nope
@@ -546,7 +546,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:20:5
 
-Cannot cast `x` to union type because: [incompatible-cast]
+Cannot cast `x` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -568,7 +568,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:31:5
 
-Cannot cast `y` to union type because: [incompatible-cast]
+Cannot cast `y` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -590,7 +590,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:38:3
 
-Cannot cast `z` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `z` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-type]
 
    maybe.js:38:3
    38|   z as X; // nope
@@ -607,7 +607,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:44:5
 
-Cannot cast `z` to union type because: [incompatible-cast]
+Cannot cast `z` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -629,7 +629,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:50:3
 
-Cannot cast `xu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `xu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-type]
 
    maybe.js:50:3
    50|   xu as X; //nope
@@ -646,7 +646,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:55:5
 
-Cannot cast `xu` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `xu` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    maybe.js:55:5
    55|     xu as void; // nope
@@ -663,7 +663,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:59:3
 
-Cannot cast `yu` to union type because: [incompatible-cast]
+Cannot cast `yu` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with undefined [2].
  - Or null or undefined [1] is incompatible with number [3].
 
@@ -685,7 +685,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:60:3
 
-Cannot cast `yu` to `Y` because undefined [1] is incompatible with `Y` [2]. [incompatible-cast]
+Cannot cast `yu` to `Y` because undefined [1] is incompatible with `Y` [2]. [incompatible-type]
 
    maybe.js:60:3
    60|   yu as Y; // nope
@@ -702,7 +702,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:61:3
 
-Cannot cast `yu` to union type because: [incompatible-cast]
+Cannot cast `yu` to union type because: [incompatible-type]
  - Either undefined [1] is incompatible with `Y` [2].
  - Or undefined [1] is incompatible with `X` [3].
 
@@ -724,7 +724,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:67:5
 
-Cannot cast `yu` to union type because: [incompatible-cast]
+Cannot cast `yu` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -746,7 +746,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:74:3
 
-Cannot cast `zu` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `zu` to `X` because null or undefined [1] is incompatible with `X` [2]. [incompatible-type]
 
    maybe.js:74:3
    74|   zu as X; // nope
@@ -763,7 +763,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:74:3
 
-Cannot cast `zu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `zu` to `X` because undefined [1] is incompatible with `X` [2]. [incompatible-type]
 
    maybe.js:74:3
    74|   zu as X; // nope
@@ -780,7 +780,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:76:3
 
-Cannot cast `zu` to `Z` because undefined [1] is incompatible with `Z` [2]. [incompatible-cast]
+Cannot cast `zu` to `Z` because undefined [1] is incompatible with `Z` [2]. [incompatible-type]
 
    maybe.js:76:3
    76|   zu as Z; // nope
@@ -797,7 +797,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:81:5
 
-Cannot cast `zu` to union type because: [incompatible-cast]
+Cannot cast `zu` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -819,7 +819,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:88:3
 
-Cannot cast `b.x` to union type because: [incompatible-cast]
+Cannot cast `b.x` to union type because: [incompatible-type]
  - Either number [1] is incompatible with `Y` [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -841,7 +841,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:94:3
 
-Cannot cast `c` to union type because: [incompatible-cast]
+Cannot cast `c` to union type because: [incompatible-type]
  - Either number [1] is incompatible with null [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -863,7 +863,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ misc.js:3:4
 
-Cannot cast `x + x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `x + x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    misc.js:3:4
    3|   (x + x: X); // nope
@@ -877,7 +877,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ misc.js:6:5
 
-Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `-x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    misc.js:6:5
    6|   (-x: X); // nope
@@ -894,7 +894,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ misc.js:9:4
 
-Cannot cast `x * x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `x * x` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    misc.js:9:4
    9|   (x * x: X);
@@ -944,7 +944,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- misc.js:52:10
 
 Cannot return array literal because array literal [1] is incompatible with type including generic type(s) `X` [2].
-[incompatible-return]
+[incompatible-type]
 
    misc.js:52:10
    52|   return ['a']; // error, mapped type doesn't have the unsoundness issue
@@ -958,7 +958,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:68:28
 
-Cannot call `Object.keys(...).reduce` because: [incompatible-call]
+Cannot call `Object.keys(...).reduce` because: [incompatible-type]
  - Either object literal [1] is incompatible with type including generic type(s) `TFormData` [2].
  - Or no more than 1 argument is expected by function type [3].
 
@@ -983,7 +983,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:134:3
 
-Cannot return `otherData` because object type [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
+Cannot return `otherData` because object type [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-type]
 
    misc.js:134:3
    134|   otherData;
@@ -1000,7 +1000,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10
 
-Cannot return `w` because mixed [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `w` because mixed [1] is incompatible with `X` [2]. [incompatible-type]
 
    nested.js:8:10
    8|   return w; // nope
@@ -1018,7 +1018,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- react.js:13:3
 
 Cannot cast `a` to `React.ComponentType` because `Props` [1] is incompatible with object type [2] in type argument
-`P` [3]. [incompatible-cast]
+`P` [3]. [incompatible-type]
 
    react.js:13:3
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
@@ -1039,7 +1039,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- react.js:14:3
 
 Cannot cast `b` to `React.Component` because object type [1] is incompatible with `Props` [2] in type argument
-`Props` [3]. [incompatible-cast]
+`Props` [3]. [incompatible-type]
 
    react.js:14:3
     14|   b as React.Component<Props>; // nope
@@ -1082,7 +1082,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:11:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:11:5
    11|     x as string; // nope
@@ -1099,7 +1099,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:13:3
 
-Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-type]
 
    refinements.js:13:3
    13|   x as number; // nope
@@ -1116,7 +1116,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:18:5
 
-Cannot cast `x` to string because `C` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because `C` [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:18:5
    18|     x as string; // nope
@@ -1133,7 +1133,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:20:3
 
-Cannot cast `x` to `C` because mixed [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x` to `C` because mixed [1] is incompatible with `C` [2]. [incompatible-type]
 
    refinements.js:20:3
    20|   x as C; // nope
@@ -1150,7 +1150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:4:3
 
-Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:4:3
    4|   x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
@@ -1167,7 +1167,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:5:3
 
-Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:5:3
    5|   y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
@@ -1185,7 +1185,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
 
 Cannot cast `rest` to object type because property `x` is missing in rest of object pattern [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    rest.js:10:3
    10|   rest as {...X, ...Y}; //no, because x is missing
@@ -1203,7 +1203,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- rest.js:12:3
 
 Cannot cast `rest` to object type because rest of object pattern [1] is incompatible with `{ ...X }` [2].
-[incompatible-cast]
+[incompatible-type]
 
    rest.js:12:3
    12|   rest as {...X}; // no, because X's props could have been overwritten
@@ -1221,7 +1221,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spreads.js:4:4
 
 Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X }` [2].
-[incompatible-cast]
+[incompatible-type]
 
    spreads.js:4:4
    4|   ({...x, ...y}) as {...X}; // nope, which is different than old generics
@@ -1236,7 +1236,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spreads.js:6:4
 
 Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...Y, ...X }` [2].
-[incompatible-cast]
+[incompatible-type]
 
    spreads.js:6:4
    6|   ({...x}) as {...Y, ...X}; // nope
@@ -1251,7 +1251,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spreads.js:7:4
 
 Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Y }` [2].
-[incompatible-cast]
+[incompatible-type]
 
    spreads.js:7:4
    7|   ({...y, ...x}) as {...X, ...Y}; // nope, which is different than old generics
@@ -1266,7 +1266,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- spreads.js:11:4
 
 Cannot cast object literal to object type because object literal [1] is incompatible with `{ ...X, ...Z, ...Y }` [2].
-[incompatible-cast]
+[incompatible-type]
 
    spreads.js:11:4
    11|   ({...x, ...y}) as {...X, ...Z, ...Y}; // nope
@@ -1280,7 +1280,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:24:3
 
-Cannot cast `x` to object type because mixed [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `x` to object type because mixed [1] is incompatible with object type [2]. [incompatible-type]
 
    spreads.js:24:3
    24|   x as {...X}; // nope
@@ -1297,7 +1297,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- spreads.js:41:10
 
-Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-return]
+Cannot return `y` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    spreads.js:41:10
    41|   return y; // should error
@@ -1314,7 +1314,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- spreads.js:49:10
 
-Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompatible-return]
+Cannot return `y` because object type [1] is incompatible with `Y` [2]. [incompatible-type]
 
    spreads.js:49:10
    49|   return y; // should be an error!
@@ -1331,7 +1331,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:53:3
 
-Cannot cast `x` to object type because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-cast]
+Cannot cast `x` to object type because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    spreads.js:53:3
    53|   x as {...X & Y}; // nope
@@ -1349,7 +1349,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
 
 Cannot return `x` because mapped type [1] is incompatible with type including generic type(s) `T` [2].
-[incompatible-return]
+[incompatible-type]
 
    synthetic.js:2:10
    2|   return x; // error S incompatible with T
@@ -1366,7 +1366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:6:10
 
-Cannot return `x` because `$ReadOnly` [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-return]
+Cannot return `x` because `$ReadOnly` [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-type]
 
    synthetic.js:6:10
    6|   return x; // error S incompatible with T
@@ -1383,7 +1383,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
 
-Cannot return `x` because `Pick` [1] is incompatible with type including generic type(s) `T` [2]. [incompatible-return]
+Cannot return `x` because `Pick` [1] is incompatible with type including generic type(s) `T` [2]. [incompatible-type]
 
    synthetic.js:10:10
    10|   return x; // error S incompatible with T
@@ -1400,7 +1400,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
 
-Cannot return `x` because partial `S` [1] is incompatible with `Partial<T>` [2]. [incompatible-return]
+Cannot return `x` because partial `S` [1] is incompatible with `Partial<T>` [2]. [incompatible-type]
 
    synthetic.js:14:10
    14|   return x; // error S incompatible with T
@@ -1417,7 +1417,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:18:10
 
-Cannot return `x` because required of `S` [1] is incompatible with `Required<T>` [2]. [incompatible-return]
+Cannot return `x` because required of `S` [1] is incompatible with `Required<T>` [2]. [incompatible-type]
 
    synthetic.js:18:10
    18|   return x; // error S incompatible with T
@@ -1434,7 +1434,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- this.js:8:14
 
-Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [incompatible-return]
+Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [incompatible-type]
 
    this.js:8:14
    8|       return this.f2();
@@ -1451,7 +1451,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:4:3
 
-Cannot cast `x` to union type because: [incompatible-cast]
+Cannot cast `x` to union type because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -1473,7 +1473,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:3
 
-Cannot cast `x` to number because boolean [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    union.js:9:3
    9|   x as number; // nope
@@ -1490,7 +1490,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:17:5
 
-Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `y` to `X` because boolean [1] is incompatible with `X` [2]. [incompatible-type]
 
    union.js:17:5
    17|     y as X; // nope

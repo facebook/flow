@@ -50,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
-Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-type]
 
    apply-array-like.js:14:1
    14| test.apply("", y); // ERROR
@@ -67,7 +67,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
-Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `test.apply` because number [1] is incompatible with string [2]. [incompatible-type]
 
    apply-array-like.js:14:1
    14| test.apply("", y); // ERROR
@@ -104,7 +104,7 @@ References:
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
 Cannot call `test.apply` because property `length` is missing in `$Generator` [1] but exists in `$ArrayLike` [2] in type
-argument `A`. [prop-missing]
+argument `A`. [incompatible-type]
 
    apply-array-like.js:21:16
      21| test.apply([], gen()); // error: iterable ~> array-like
@@ -122,7 +122,7 @@ References:
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
 Cannot call `test.apply` because property `length` is missing in `$Generator` [1] but exists in `$ArrayLike` [2] in type
-argument `A`. [prop-missing]
+argument `A`. [incompatible-type]
 
    apply-array-like.js:21:16
     21| test.apply([], gen()); // error: iterable ~> array-like
@@ -167,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:15:1
 
-Cannot call `test.apply` because function [1] requires another argument from function type [2]. [incompatible-call]
+Cannot call `test.apply` because function [1] requires another argument from function type [2]. [incompatible-type]
 
    apply.js:15:1
     15| test.apply("", [""]); // error: void ~> number
@@ -184,7 +184,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:18:1
 
-Cannot call `test.apply` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+Cannot call `test.apply` because string [1] is incompatible with number [2] in the second argument. [incompatible-type]
 
    apply.js:18:1
    18| test.apply("", ["", ""]); // error: string ~> number (2nd arg)
@@ -201,7 +201,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:19:1
 
-Cannot call `test.apply` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+Cannot call `test.apply` because number [1] is incompatible with string [2] in the first argument. [incompatible-type]
 
    apply.js:19:1
    19| test.apply("", [0, 0]); // error: number ~> string (1st arg)
@@ -250,7 +250,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
 
 Cannot call `test.call.apply` because number [1] is incompatible with string [2] in the first argument.
-[incompatible-call]
+[incompatible-type]
 
    apply.js:29:2
    29| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -268,7 +268,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
 
 Cannot call `test.call.apply` because string [1] is incompatible with number [2] in the second argument.
-[incompatible-call]
+[incompatible-type]
 
    apply.js:29:2
    29| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -286,7 +286,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:2
 
 Cannot cast `test.call.apply(...)` to undefined because number [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    apply.js:29:2
    29| (test.call.apply(test, [0, 123, 'foo']): void);
@@ -305,7 +305,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `test.bind.apply` because function type [1] is incompatible with function type [2]. 
 
-Non-callable objects are not compatible with functions. [incompatible-call]
+Non-callable objects are not compatible with functions. [incompatible-type]
 
    apply.js:34:2
     34| (test.bind.apply(test, [0, 123]): (b: number) => number);
@@ -319,7 +319,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:44:5
 
-Cannot call `x.apply` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
+Cannot call `x.apply` because number [1] is incompatible with string [2] in the second argument. [incompatible-type]
 
    apply.js:44:5
    44|   x.apply(x, ['foo', 123]); // error, number !~> string
@@ -336,7 +336,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ bind.js:5:7
 
-Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    bind.js:5:7
    5|     y(123); // error, number !~> string
@@ -350,7 +350,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bind.js:12:7
 
-Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    bind.js:12:7
    12|     y(123); // error, number !~> string
@@ -378,7 +378,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bind.js:23:13
 
-Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `x.bind` with `123` bound to `a` because number [1] is incompatible with string [2]. [incompatible-type]
 
    bind.js:23:13
    23|     (x.bind(123): void); // error, number !~> string
@@ -420,7 +420,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:1
 
-Cannot call `test.call` because function [1] requires another argument from function type [2]. [incompatible-call]
+Cannot call `test.call` because function [1] requires another argument from function type [2]. [incompatible-type]
 
    call.js:12:1
     12| test.call("", ""); // error: void ~> number
@@ -437,7 +437,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:15:1
 
-Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-type]
 
    call.js:15:1
    15| test.call("", "", ""); // error: string ~> number (2nd arg)
@@ -454,7 +454,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:16:1
 
-Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-type]
 
    call.js:16:1
    16| test.call("", 0, 0); // error: number ~> string (1st arg)
@@ -471,7 +471,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:19:46
 
-Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-call]
+Cannot call `test.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-type]
 
    call.js:19:46
    19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
@@ -488,7 +488,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:19:46
 
-Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-call]
+Cannot call `test.call` because string [1] is incompatible with number [2] in the second argument. [incompatible-type]
 
    call.js:19:46
    19| function f(args: Array<(number | string)>) { test.call("", args[0], args[1]) } // error: args[0], args[1] mismatch
@@ -506,7 +506,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- call.js:28:2
 
 Cannot call `test.apply.call` because number [1] is incompatible with string [2] in the first argument of the second
-argument. [incompatible-call]
+argument. [incompatible-type]
 
    call.js:28:2
    28| (test.apply.call(test, 0, [0, 'foo']): number);
@@ -524,7 +524,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- call.js:28:2
 
 Cannot call `test.apply.call` because string [1] is incompatible with number [2] in the second argument of the second
-argument. [incompatible-call]
+argument. [incompatible-type]
 
    call.js:28:2
    28| (test.apply.call(test, 0, [0, 'foo']): number);
@@ -541,7 +541,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:38:5
 
-Cannot call `x.call` because number [1] is incompatible with string [2] in the second argument. [incompatible-call]
+Cannot call `x.call` because number [1] is incompatible with string [2] in the second argument. [incompatible-type]
 
    call.js:38:5
    38|   x.call(x, 'foo', 123); // error, number !~> string
@@ -559,7 +559,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:45:11
 
 Cannot call `f` with object literal bound to `y` because string literal `foo` [1] is incompatible with string literal
-`bar` [2] in property `x`. [incompatible-call]
+`bar` [2] in property `x`. [incompatible-type]
 
    call.js:45:11
    45|     f({x: "foo"}); // error, "foo" !~> "bar"
@@ -574,7 +574,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:51:11
 
 Cannot call `f` with object literal bound to `y` because number literal `234` [1] is incompatible with number literal
-`123` [2] in property `x`. [incompatible-call]
+`123` [2] in property `x`. [incompatible-type]
 
    call.js:51:11
    51|     f({x: 234}); // error, 234 !~> 123
@@ -589,7 +589,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- call.js:57:11
 
 Cannot call `f` with object literal bound to `y` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2] in property `x`. [incompatible-call]
+`false` [2] in property `x`. [incompatible-type]
 
    call.js:57:11
    57|     f({x: true}); // error, true !~> false
@@ -622,7 +622,7 @@ References:
 Error --------------------------------------------------------------------------------------- call_error_generic.js:21:5
 
 Cannot call `bar` with `foo` bound to `x` because null or undefined [1] is incompatible with string [2] in type argument
-`T` [3]. [incompatible-call]
+`T` [3]. [incompatible-type]
 
    call_error_generic.js:21:5
    21| bar(foo);
@@ -643,7 +643,7 @@ References:
 Error --------------------------------------------------------------------------------------- call_error_generic2.js:4:8
 
 Cannot call `bar1` because property `$data` is missing in object type [1] but exists in object type [2] in type argument
-`TKey`. [prop-missing]
+`TKey`. [incompatible-type]
 
    call_error_generic2.js:4:8
    4|   bar1(fragmentRef);
@@ -668,7 +668,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------- function.js:40:5
 
-Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    function.js:40:5
     40|     x.length as void; // error, it's a number
@@ -685,7 +685,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:41:5
 
-Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    function.js:41:5
     41|     y.length as void; // error, it's a number
@@ -702,7 +702,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:43:5
 
-Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    function.js:43:5
     43|     x.name as void; // error, it's a string
@@ -719,7 +719,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:44:5
 
-Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    function.js:44:5
     44|     y.name as void; // error, it's a string
@@ -768,7 +768,7 @@ Cannot assign `123` to `y.name` because property `name` is not writable. [cannot
 
 Error ------------------------------------------------------------------------------------------------ issue-7529.js:2:7
 
-Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    issue-7529.js:2:7
    2|   foo(123);
@@ -805,7 +805,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- rest.js:38:55
 
 Cannot call `string_rest_t` because rest array [1] is incompatible with string [2] in type argument `T`.
-[incompatible-call]
+[incompatible-type]
 
    rest.js:38:55
    38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
@@ -823,7 +823,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- rest.js:39:54
 
 Cannot call `empty_rest_t2` because rest array [1] is incompatible with empty [2] in type argument `T`.
-[incompatible-call]
+[incompatible-type]
 
    rest.js:39:54
    39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
@@ -840,7 +840,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:2
 
-Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `empty_rest()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-type]
 
    rest.js:53:2
    53| (empty_rest(): empty); // Error Array ~> empty
@@ -854,7 +854,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- rest.js:58:10
 
-Cannot return function because rest array [1] is incompatible with number [2] in the return value. [incompatible-return]
+Cannot return function because rest array [1] is incompatible with number [2] in the return value. [incompatible-type]
 
    rest.js:58:10
    58|   return function(...args) {
@@ -871,7 +871,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:64:1
 
-Cannot call `requires_first_param` because function [1] requires another argument. [incompatible-call]
+Cannot call `requires_first_param` because function [1] requires another argument. [incompatible-type]
 
    rest.js:64:1
    64| requires_first_param(); // Error: missing first arg
@@ -913,7 +913,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
 
-Cannot call `f` because rest array [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `f` because rest array [1] is incompatible with string [2]. [incompatible-type]
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors
@@ -930,7 +930,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- rest_type.js:31:22
 
-Cannot cast `f()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f()` to empty because rest array [1] is incompatible with empty [2]. [incompatible-type]
 
    rest_type.js:31:22
    31| ((f: empty_rest) => (f(): empty)); // Error Array ~> empty

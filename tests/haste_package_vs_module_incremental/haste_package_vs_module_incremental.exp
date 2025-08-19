@@ -1,7 +1,7 @@
 'package' module resolves to file:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:4:2
    4| (pkg: string); // error
@@ -37,7 +37,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:4:2
    4| (pkg: string); // error
@@ -58,7 +58,7 @@ Found 2 errors
 'package' module resolves to package:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:4:2
    4| (pkg: string); // error
@@ -94,7 +94,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:4:2
    4| (pkg: string); // error
@@ -115,7 +115,7 @@ Found 2 errors
 'package' module resolves to file again:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pkg` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:4:2
    4| (pkg: string); // error

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:10:6
 
-Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because `A` [1] is incompatible with empty [2]. [incompatible-type]
 
    any.js:10:6
    10|     (a: empty); // error A ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:13:6
 
-Cannot cast `a` to empty because `P` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because `P` [1] is incompatible with empty [2]. [incompatible-type]
 
    any.js:13:6
    13|     (a: empty); // error P ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ any.js:14:6
 
-Cannot cast `a.n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    any.js:14:6
    14|     (a.n: empty); // error number ~> empty
@@ -146,7 +146,7 @@ The right-hand side of an `instanceof` expression must be an object, but got mix
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:132:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-type]
 
    instanceof.js:132:5
    132|     x as empty; //error
@@ -163,7 +163,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:145:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-type]
 
    instanceof.js:145:5
    145|     x as empty; //error
@@ -194,7 +194,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- instanceof.js:159:5
 
-Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because `B` [1] is incompatible with empty [2]. [incompatible-type]
 
    instanceof.js:159:5
    159|     x as empty; //error
@@ -211,7 +211,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:4:6
 
-Cannot cast `x` to number because `C` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because `C` [1] is incompatible with number [2]. [incompatible-type]
 
    mixed.js:4:6
    4|     (x: number);
@@ -257,7 +257,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objproto.js:4:4
 
-Cannot cast `c.p` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c.p` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    objproto.js:4:4
    4|   (c.p: empty); // error: string ~> empty

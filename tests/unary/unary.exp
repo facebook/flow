@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:19:1
 
-Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `-1` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    unary.js:19:1
    19| -1 as void; // error, number ~> void
@@ -43,7 +43,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- unary.js:28:10
 
 Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-return]
+[incompatible-type]
 
    unary.js:28:10
    28|   return !a; // error, true ~> false
@@ -58,7 +58,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- unary.js:36:10
 
 Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-return]
+[incompatible-type]
 
    unary.js:36:10
    36|   return !a; // error, true ~> false
@@ -86,7 +86,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:73:3
 
-Cannot cast `+y` to bigint because number [1] is incompatible with bigint [2]. [incompatible-cast]
+Cannot cast `+y` to bigint because number [1] is incompatible with bigint [2]. [incompatible-type]
 
    unary.js:73:3
    73|   +y as bigint; // error, bigint ~> number
@@ -100,7 +100,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:78:3
 
-Cannot cast `+y` to bigint because number [1] is incompatible with bigint [2]. [incompatible-cast]
+Cannot cast `+y` to bigint because number [1] is incompatible with bigint [2]. [incompatible-type]
 
    unary.js:78:3
    78|   +y as bigint; // error, bigint ~> number

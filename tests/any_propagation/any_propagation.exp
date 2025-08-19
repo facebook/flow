@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- arrays.js:8:14
 
 Cannot call `noop` with `new_arr` bound to `arr` because null or undefined [1] is incompatible with string [2] in array
-element of array element. [incompatible-call]
+element of array element. [incompatible-type]
 
    arrays.js:8:14
    8| noop<string>(new_arr);

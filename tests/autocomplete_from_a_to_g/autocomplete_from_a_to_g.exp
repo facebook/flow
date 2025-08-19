@@ -340,13 +340,13 @@ Flags: --pretty
 fixme.js:21:10
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-call]",
+  "label":"$FlowFixMe[incompatible-type]",
   "kind":1,
   "sortText":"00000000000000000000",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":20,"character":3},"end":{"line":20,"character":9}},
-    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
   },
   "command":{
     "title":"",
@@ -359,7 +359,7 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]",
+        "completion":"$FlowFixMe[incompatible-type]",
         "ac_type":"Ac_comment"
       }
     ]
@@ -369,13 +369,13 @@ Flags: --lsp
 fixme.js:5:4
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-call]",
+  "label":"$FlowFixMe[incompatible-type]",
   "kind":1,
   "sortText":"00000000000000000000",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":4,"character":3},"end":{"line":4,"character":3}},
-    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
   },
   "command":{
     "title":"",
@@ -388,7 +388,7 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]",
+        "completion":"$FlowFixMe[incompatible-type]",
         "ac_type":"Ac_comment"
       }
     ]
@@ -398,13 +398,13 @@ Flags: --lsp
 fixme.js:8:5
 Flags: --lsp
 {
-  "label":"$FlowFixMe[incompatible-call]",
+  "label":"$FlowFixMe[incompatible-type]",
   "kind":1,
   "sortText":"00000000000000000000",
   "insertTextFormat":2,
   "textEdit":{
     "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
-    "newText":"\\$FlowFixMe[incompatible-call] ${1:reason for suppression}"
+    "newText":"\\$FlowFixMe[incompatible-type] ${1:reason for suppression}"
   },
   "command":{
     "title":"",
@@ -417,7 +417,7 @@ Flags: --lsp
         "index":0,
         "session_requests":null,
         "typed_length":null,
-        "completion":"$FlowFixMe[incompatible-call]",
+        "completion":"$FlowFixMe[incompatible-type]",
         "ac_type":"Ac_comment"
       }
     ]

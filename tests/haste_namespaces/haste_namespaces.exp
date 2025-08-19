@@ -8,7 +8,7 @@ Cannot resolve module `NativeOnly`. [cannot-resolve-module]
 
 Error --------------------------------------------------------------------------------------------- common/Common.js:4:1
 
-Cannot cast `web` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `web` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    common/Common.js:4:1
    4| web as empty; // error: string ~> empty
@@ -110,7 +110,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- native/NativeOnly.js:4:1
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/NativeOnly.js:4:1
    4| foo as empty; // error: string ~> empty
@@ -135,7 +135,7 @@ Cannot resolve module `WebInCommon`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------- web/WebOnly.js:4:1
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    web/WebOnly.js:4:1
    4| foo as empty; // error: string ~> empty

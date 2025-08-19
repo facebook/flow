@@ -1,7 +1,7 @@
 Initial status:
 Error ------------------------------------------------------------------------------------------------------- bar.js:3:2
 
-Cannot cast `foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    bar.js:3:2
    3| (foo: empty); // error: foo.js.flow declares foo to be number
@@ -22,7 +22,7 @@ Found 1 error
 Change .js file:
 Error ------------------------------------------------------------------------------------------------------- bar.js:3:2
 
-Cannot cast `foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    bar.js:3:2
    3| (foo: empty); // error: foo.js.flow declares foo to be number

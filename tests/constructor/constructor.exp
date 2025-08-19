@@ -29,7 +29,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    6|     constructor():number { }
                         ^^^^^^ [1]
@@ -37,7 +37,7 @@ undefined. [incompatible-return]
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
-Cannot return number because number [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return number because number [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    constructor.js:6:19
    6|     constructor():number { }
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:15:10
 
-Cannot call `Foo` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `Foo` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-type]
 
    constructor.js:15:10
    15| (new Foo(123): Bar<string>); // error, number !~> string
@@ -65,7 +65,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:22:10
 
-Cannot call `Baz` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `Baz` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-type]
 
    constructor.js:22:10
    22| (new Baz(123): Baz<string>); // error, number !~> string
@@ -79,8 +79,7 @@ References:
 
 Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:2:18
 
-Cannot return object type because object type [1] is incompatible with constructor void return [2].
-[incompatible-return]
+Cannot return object type because object type [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    exported_nonvoid_return_constructor.js:2:18
    2|   constructor(): {foo: number} { // Error: must return void

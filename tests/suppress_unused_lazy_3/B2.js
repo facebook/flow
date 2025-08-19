@@ -6,13 +6,13 @@ import {b3} from './B3';
 (b1: number);
 (b3: number);
 
-// $FlowFixMe[incompatible-cast] -- used suppression in B2.js
+// $FlowFixMe[incompatible-type] -- used suppression in B2.js
 (b1: string);
 
 export const b2: number | number = b1;
 
 type T = string;
-// $FlowFixMe[incompatible-cast] This is an unused suppression
+// $FlowFixMe[incompatible-type] This is an unused suppression
 // $FlowFixMe[incompatible-use] This is a used suppression for a misplaced error caused by B4
 export type B2 = T<string>;
 

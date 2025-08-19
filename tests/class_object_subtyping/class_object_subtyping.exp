@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:2
 
-Cannot cast `o` to `A` because `O` [1] is incompatible with `A` [2]. [incompatible-cast]
+Cannot cast `o` to `A` because `O` [1] is incompatible with `A` [2]. [incompatible-type]
 
    test.js:26:2
    26| (o : A); // error
@@ -35,7 +35,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:30:2
 
-Cannot cast `i` to `A` because `I` [1] is incompatible with `A` [2]. [incompatible-cast]
+Cannot cast `i` to `A` because `I` [1] is incompatible with `A` [2]. [incompatible-type]
 
    test.js:30:2
    30| (i : A); // error
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:2
 
-Cannot cast `t` to `A` because `T` [1] is incompatible with `A` [2]. [incompatible-cast]
+Cannot cast `t` to `A` because `T` [1] is incompatible with `A` [2]. [incompatible-type]
 
    test.js:34:2
    34| (t : A); // error

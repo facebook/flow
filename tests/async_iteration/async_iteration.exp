@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------- delegate_yield.js:7:22
 
 Cannot call `delegate_next().next` with `0` bound to `value` because number [1] is incompatible with undefined (default
-`next` of unannotated generator function) [2]. [incompatible-call]
+`next` of unannotated generator function) [2]. [incompatible-type]
 
    delegate_yield.js:7:22
    7| delegate_next().next(0); // err number ~> void
@@ -21,7 +21,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- delegate_yield.js:17:6
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    delegate_yield.js:17:6
    17|     (x: void); // error: number ~> void
@@ -55,7 +55,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generator.js:23:6
 
-Cannot cast `line` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `line` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    generator.js:23:6
    23|     (line: void); // error: string ~> void
@@ -72,7 +72,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:6:4
 
-Cannot cast `result.value` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `result.value` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    return.js:6:4
    6|   (result.value: void); // error: string | number ~> void
@@ -89,7 +89,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:6:4
 
-Cannot cast `result.value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `result.value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    return.js:6:4
    6|   (result.value: void); // error: string | number ~> void
@@ -106,7 +106,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:6
 
-Cannot cast `result.value` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `result.value` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    return.js:20:6
      20|     (result.value: string); // error: number | void ~> string
@@ -123,7 +123,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:6
 
-Cannot cast `result.value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `result.value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    return.js:20:6
    20|     (result.value: string); // error: number | void ~> string
@@ -140,7 +140,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:12:8
 
-Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    throw.js:12:8
    12|       (value: void); // error: number ~> void
@@ -157,7 +157,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:29:8
 
-Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    throw.js:29:8
    29|       (value: void); // error: number ~> void

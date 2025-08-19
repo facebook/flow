@@ -213,7 +213,7 @@ Cannot assign function to `Component` because property `other_prop` is missing i
 `OtherProps` [2] in the first parameter. 
 
 All writes to `Component` must be compatible with the type of its initializer [3]. Add an annotation to `Component` [3]
-if a different type is desired. [prop-missing]
+if a different type is desired. [incompatible-type]
 
    wiki_examples.js:22:15
    22|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
@@ -237,7 +237,7 @@ Cannot assign function to `Component` because property `prop` is extra in `Props
 Exact objects do not accept extra props in the first parameter. 
 
 All writes to `Component` must be compatible with the type of its initializer [3]. Add an annotation to `Component` [3]
-if a different type is desired. [prop-missing]
+if a different type is desired. [incompatible-type]
 
    wiki_examples.js:22:15
    22|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
@@ -261,7 +261,7 @@ Cannot assign `<OtherComponent />` to `element` because property `other_prop` is
 in `Props` [2]. Exact objects do not accept extra props in type argument `P` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [prop-missing]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:13
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -288,7 +288,7 @@ Cannot assign `<OtherComponent />` to `element` because property `prop` is missi
 `Props` [2] in type argument `P` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [prop-missing]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:13
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -315,7 +315,7 @@ Cannot assign `<OtherComponent />` to `element` because property `other_prop` is
 `OtherProps` [2] in the first parameter of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [prop-missing]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -342,7 +342,7 @@ Cannot assign `<OtherComponent />` to `element` because property `prop` is extra
 `OtherProps` [2]. Exact objects do not accept extra props in the first parameter of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [prop-missing]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -369,7 +369,7 @@ Cannot assign `<OtherComponent />` to `element` because `$Iterable` [1] is incom
 the return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -396,7 +396,7 @@ Cannot assign `<OtherComponent />` to `element` because `React.Portal` [1] is in
 in the return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -423,7 +423,7 @@ Cannot assign `<OtherComponent />` to `element` because boolean [1] is incompati
 return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -450,7 +450,7 @@ Cannot assign `<OtherComponent />` to `element` because null [1] is incompatible
 return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -477,7 +477,7 @@ Cannot assign `<OtherComponent />` to `element` because number [1] is incompatib
 return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -504,7 +504,7 @@ Cannot assign `<OtherComponent />` to `element` because string [1] is incompatib
 return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error
@@ -531,7 +531,7 @@ Cannot assign `<OtherComponent />` to `element` because undefined [1] is incompa
 return value of type argument `ElementType` [3]. 
 
 All writes to `element` must be compatible with the type of its initializer [4]. Add an annotation to `element` [4] if a
-different type is desired. [incompatible-type-arg]
+different type is desired. [incompatible-type]
 
    wiki_examples.js:23:14
    23|   element = <OtherComponent {...other_props} />; // Error

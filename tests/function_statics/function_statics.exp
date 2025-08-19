@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- arrow.js:2:4
 
-Cannot cast `this` to number because global object [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `this` to number because global object [1] is incompatible with number [2]. [incompatible-type]
 
    arrow.js:2:4
    2|   (this: number); // ERROR
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- arrow.js:7:2
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    arrow.js:7:2
    7| (f.a: empty); // ERROR
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arrow.js:27:7
 
-Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
+Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
 
    arrow.js:27:7
    27|     d(n, s); // ERROR
@@ -48,7 +48,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrow.js:27:10
 
-Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-call]
+Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-type]
 
    arrow.js:27:10
    27|     d(n, s); // ERROR
@@ -109,7 +109,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:11:2
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function_declaration.js:11:2
    11| (f.a: empty); // ERROR
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:12:2
 
-Cannot cast `f.b()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f.b()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function_declaration.js:12:2
    12| (f.b(): empty); // ERROR
@@ -171,7 +171,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_expression.js:7:2
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function_expression.js:7:2
    7| (f.a: empty); // ERROR
@@ -188,7 +188,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:28:9
 
-Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
+Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
 
    function_expression.js:28:9
    28|       d(n, s); // ERROR
@@ -205,7 +205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:28:12
 
-Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-call]
+Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-type]
 
    function_expression.js:28:12
    28|       d(n, s); // ERROR
@@ -222,7 +222,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:34:9
 
-Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
+Cannot call `d` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
 
    function_expression.js:34:9
    34|       d(n, s); // ERROR
@@ -239,7 +239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:34:12
 
-Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-call]
+Cannot call `d` because string [1] is incompatible with number [2] in index 1. [incompatible-type]
 
    function_expression.js:34:12
    34|       d(n, s); // ERROR
@@ -302,7 +302,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `add` to `InexactCallableObj` because function [1] is incompatible with `InexactCallableObj` [2]. 
 
-Functions without statics are not compatible with objects. [incompatible-cast]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    used_as_callable_object.js:33:2
    33| (add: InexactCallableObj); // error prop 'bar' missing
@@ -337,7 +337,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:35:2
 
-Cannot cast `add` to `C` because function [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `add` to `C` because function [1] is incompatible with `C` [2]. [incompatible-type]
 
    used_as_callable_object.js:35:2
    35| (add: C); // error object incompatible with class instance
@@ -356,7 +356,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `add` to `I` because function [1] is incompatible with `I` [2]. 
 
-Functions without statics are not compatible with objects. [incompatible-cast]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    used_as_callable_object.js:36:2
    36| (add: I); // error prop 'bar' missing
@@ -391,7 +391,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:40:2
 
-Cannot cast `addWithBar` to `C` because function [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `addWithBar` to `C` because function [1] is incompatible with `C` [2]. [incompatible-type]
 
    used_as_callable_object.js:40:2
    40| (addWithBar: C); // error object incompatible with class instance

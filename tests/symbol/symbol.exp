@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:2
 
 Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator` [1] is incompatible with boolean [2].
-[incompatible-cast]
+[incompatible-type]
 
    iterator.js:6:2
    6| (foo[Symbol.iterator]: boolean); // Error
@@ -32,7 +32,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:6
 
-Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-type]
 
    symbol.js:23:6
    23|     (x: boolean); // Error
@@ -49,7 +49,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:26:6
 
-Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-cast]
+Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-type]
 
    symbol.js:26:6
    26|     (x: symbol); // Error

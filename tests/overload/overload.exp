@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:6:1
 
-Cannot call `f` because: [incompatible-call]
+Cannot call `f` because: [incompatible-type]
  - Either null [1] is incompatible with string [2].
  - Or null [1] is incompatible with number [3].
 
@@ -53,7 +53,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
-Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-call]
+Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `RegExp` [3].
 
@@ -120,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:24:3
 
-Cannot call `a.foo` because: [incompatible-call]
+Cannot call `a.foo` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -142,7 +142,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:28:3
 
-Cannot call `a.bar` because: [incompatible-call]
+Cannot call `a.bar` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
@@ -164,7 +164,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:32:3
 
-Cannot call `a.bar` because: [incompatible-call]
+Cannot call `a.bar` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2] in property `a`.
  - Or boolean [1] is incompatible with string [3] in property `a`.
 
@@ -186,7 +186,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:2
 
-Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test2.js:7:2
    7| (foo.bar('hmmm'): number); // error
@@ -203,7 +203,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:8:1
 
-Cannot call `f` because: [incompatible-call]
+Cannot call `f` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or string [3] is incompatible with number [4].
 
@@ -228,7 +228,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:15:1
 
-Cannot call `g` because: [incompatible-call]
+Cannot call `g` because: [incompatible-type]
  - Either null or undefined [1] is incompatible with null [2].
  - Or null or undefined [1] is incompatible with undefined [3].
 
@@ -250,7 +250,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:21:1
 
-Cannot call `h` because: [incompatible-call]
+Cannot call `h` because: [incompatible-type]
  - Either string [1] is incompatible with undefined [2].
  - Or undefined [1] is incompatible with string [3].
 

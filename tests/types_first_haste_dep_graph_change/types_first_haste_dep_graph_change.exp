@@ -19,7 +19,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:5:2
    5| (foo(): empty);
@@ -40,7 +40,7 @@ Found 2 errors
 Removing foo1.js should make error refer to foo2/foo.js
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:5:2
    5| (foo(): empty);
@@ -76,7 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:5:2
    5| (foo(): empty);

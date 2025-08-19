@@ -11,7 +11,7 @@ Add trivial error to file.js:
 Error ------------------------------------------------------------------------------------------------------ file.js:1:1
 
 Cannot cast `0` to number literal `1` because number literal `0` [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
+[incompatible-type]
 
    file.js:1:1
    1| 0 as 1;

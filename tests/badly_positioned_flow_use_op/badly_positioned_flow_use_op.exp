@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
 Cannot call `o['fun']` with `data` bound to `data` because property `x` is missing in object literal [1] but exists in
-`Data` [2]. [prop-missing]
+`Data` [2]. [incompatible-type]
 
    b.js:19:12
    19|   o['fun'](data); // Error: { z: 0 } ~> Data
@@ -19,7 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
 Cannot call `o['fun']` with `data` bound to `data` because property `z` is extra in object literal [1] but missing in
-`Data` [2]. Exact objects do not accept extra props. [prop-missing]
+`Data` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    b.js:19:12
    19|   o['fun'](data); // Error: { z: 0 } ~> Data

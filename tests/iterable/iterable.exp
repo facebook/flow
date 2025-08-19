@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- array.js:7:1
 
 Cannot cast array literal to `Iterable` because string [1] is incompatible with number [2] in type argument `Yield` [3]
-of the return value of property `@@iterator`. [incompatible-cast]
+of the return value of property `@@iterator`. [incompatible-type]
 
    array.js:7:1
       7| ['hi'] as Iterable<number>; // Error string ~> number
@@ -22,7 +22,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- array.js:8:1
 
 Cannot cast array literal to `Iterable` because number [1] is incompatible with string [2] in type argument `Yield` [3]
-of the return value of property `@@iterator`. [incompatible-cast]
+of the return value of property `@@iterator`. [incompatible-type]
 
    array.js:8:1
       8| ['hi', 1] as Iterable<string>; // Error number ~> string
@@ -43,7 +43,7 @@ References:
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
 
 Cannot return `x` because number [1] is incompatible with string [2] in type argument `Yield` [3] of the return value of
-property `@@iterator`. [incompatible-return]
+property `@@iterator`. [incompatible-type]
 
    caching_bug.js:21:79
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
@@ -64,7 +64,7 @@ References:
 Error ----------------------------------------------------------------------------------------- iterator_result.js:23:31
 
 Cannot return object literal because string [1] is incompatible with undefined [2] in property `value`.
-[incompatible-return]
+[incompatible-type]
 
    iterator_result.js:23:31
    23|         return { done, value: "still going..." }; // Error string ~> void
@@ -79,7 +79,7 @@ References:
 Error ----------------------------------------------------------------------------------------- iterator_result.js:25:16
 
 Cannot return object literal because property `value` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    iterator_result.js:25:16
      25|         return { done }; // Error void ~> string, LTI: prop-missing of value
@@ -99,7 +99,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
 
 Cannot return `map` because tuple type [1] is incompatible with string [2] in type argument `Yield` [3] of the return
-value of property `@@iterator`. [incompatible-return]
+value of property `@@iterator`. [incompatible-type]
 
    map.js:14:10
      14|   return map;
@@ -120,7 +120,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
 
 Cannot return `set` because string [1] is incompatible with number [2] in type argument `Yield` [3] of the return value
-of property `@@iterator`. [incompatible-return]
+of property `@@iterator`. [incompatible-type]
 
    set.js:14:10
      14|   return set;
@@ -141,7 +141,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- string.js:3:2
 
 Cannot cast `new String(...)` to `Iterable` because string [1] is incompatible with number [2] in type argument
-`Yield` [3] of the return value of property `@@iterator`. [incompatible-cast]
+`Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
 
    string.js:3:2
       3| (new String("hi"): Iterable<number>); // Error - string is a Iterable<string>

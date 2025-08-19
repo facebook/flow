@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
 Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
-`x`. [prop-missing]
+`x`. [incompatible-type]
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -19,7 +19,7 @@ References:
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
 Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
-`x`. [prop-missing]
+`x`. [incompatible-type]
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -138,7 +138,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:10:1
 
-Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2]. [incompatible-cast]
+Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2]. [incompatible-type]
 
    conversion.js:10:1
    10| Object(undefined) as Number; // error
@@ -170,7 +170,7 @@ References:
 Error -------------------------------------------------------------------------- different_call_prop_no_fast_path.js:8:1
 
 Cannot cast `MyThunk` to `ThunkType` because number [1] is incompatible with string [2] in the return value.
-[incompatible-cast]
+[incompatible-type]
 
    different_call_prop_no_fast_path.js:8:1
    8| MyThunk as ThunkType<string>; // error: number ~> string
@@ -215,7 +215,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:6:1
 
-Cannot cast `x[123]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x[123]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    objects.js:6:1
    6| x[123] as boolean; // error, string !~> boolean
@@ -232,7 +232,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:7:1
 
-Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    objects.js:7:1
    7| x.bar as boolean; // error, string !~> boolean
@@ -249,7 +249,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:8:1
 
-Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    objects.js:8:1
    8| x['123'] as boolean; // error, string !~> boolean
@@ -352,7 +352,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- objects.js:18:1
 
 Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompatible with string [2].
-[incompatible-cast]
+[incompatible-type]
 
    objects.js:18:1
     18| y['hasOwnProperty'] as string; // error, prototype method is not a string

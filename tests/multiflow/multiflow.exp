@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- apply.js:10:7
 
 Cannot call `apply` with `noRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in the
-second argument. [incompatible-call]
+second argument. [incompatible-type]
 
    apply.js:10:7
    10| apply(noRest1, ['hi', 456]); // Error - 456 ~> 123
@@ -19,7 +19,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:11:7
 
 Cannot call `apply` with `noRest1` bound to `fn` because function [1] requires another argument from function type [2].
-[incompatible-call]
+[incompatible-type]
 
    apply.js:11:7
    11| apply(noRest1, ['hi']); // Error - too few args
@@ -37,7 +37,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- apply.js:17:7
 
 Cannot call `apply` with `withRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
-index 1. [incompatible-call]
+index 1. [incompatible-type]
 
    apply.js:17:7
    17| apply(withRest1, ['hi', 456]); // Error - 456 ~> 123
@@ -91,7 +91,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:29:11
 
 Cannot call `applyType` with `noRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
-the second argument. [incompatible-call]
+the second argument. [incompatible-type]
 
    apply.js:29:11
    29| applyType(noRest2, ['hi', 456]); // Error - 456 ~> 123
@@ -109,7 +109,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:30:11
 
 Cannot call `applyType` with `noRest2` bound to `fn` because function [1] requires another argument from function
-type [2]. [incompatible-call]
+type [2]. [incompatible-type]
 
    apply.js:30:11
    30| applyType(noRest2, ['hi']); // Error - too few args
@@ -127,7 +127,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- apply.js:36:11
 
 Cannot call `applyType` with `withRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2]
-in index 1. [incompatible-call]
+in index 1. [incompatible-type]
 
    apply.js:36:11
    36| applyType(withRest2, ['hi', 456]); // Error - 456 ~> 123
@@ -371,7 +371,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:6:29
 
 Cannot call `fun` with boolean literal `true` bound to `y` because boolean literal `true` [1] is incompatible with
-number literal `123` [2]. [incompatible-call]
+number literal `123` [2]. [incompatible-type]
 
    spread.js:6:29
    6| fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
@@ -386,7 +386,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- spread.js:17:42
 
 Cannot call `funWithRestArray` with boolean literal `true` bound to `y` because boolean literal `true` [1] is
-incompatible with number literal `123` [2]. [incompatible-call]
+incompatible with number literal `123` [2]. [incompatible-type]
 
    spread.js:17:42
    17| funWithRestArray(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123
@@ -400,7 +400,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:26:37
 
-Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2]. [incompatible-call]
+Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2]. [incompatible-type]
 
    spread.js:26:37
    26| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
@@ -414,7 +414,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:26:37
 
-Cannot call `funWithRestArray` because string [1] is incompatible with number [2] in array element. [incompatible-call]
+Cannot call `funWithRestArray` because string [1] is incompatible with number [2] in array element. [incompatible-type]
 
    spread.js:26:37
    26| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);

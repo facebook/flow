@@ -40,7 +40,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:2
 
-Cannot cast `(new C).foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `(new C).foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:20:2
    20| ((new C).foo(): boolean); // last wins
@@ -57,7 +57,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:2
 
-Cannot cast `(new C).x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `(new C).x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:21:2
    21| ((new C).x: boolean); // last wins
@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:2
 
-Cannot cast `(new C).bar` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C).bar` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:22:2
    22| ((new C).bar: empty); // error: string ~> empty (own prop wins)
@@ -91,7 +91,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
-Cannot cast `(new C).qux` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C).qux` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:23:2
    23| ((new C).qux: empty); // error: number ~> empty (own prop wins)
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:2
 
-Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o.foo()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:40:2
    40| (o.foo(): boolean); // last wins
@@ -125,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:2
 
-Cannot cast `o.x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o.x` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:41:2
    41| (o.x: boolean); // last wins
@@ -142,7 +142,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:2
 
-Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:42:2
    42| (o.bar: boolean); // last wins
@@ -159,7 +159,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:2
 
-Cannot cast `o.qux()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o.qux()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:43:2
    43| (o.qux(): boolean); // last wins

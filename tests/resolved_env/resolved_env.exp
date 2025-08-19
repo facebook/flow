@@ -43,7 +43,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:4:1
    4| x as string; // num </: string
@@ -74,7 +74,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- bindings.js:7:1
 
-Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:7:1
    7| y as string; // err
@@ -91,7 +91,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:10:1
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:10:1
    10| a as string; // num </: string
@@ -108,7 +108,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:11:1
 
-Cannot cast `rest1[0]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `rest1[0]` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:11:1
    11| rest1[0] as string; // num </: string
@@ -125,7 +125,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:14:1
 
-Cannot cast `w` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `w` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:14:1
    14| w as string; // err
@@ -142,7 +142,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:16:1
 
-Cannot cast `rest2.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `rest2.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:16:1
    16| rest2.p as string; //err
@@ -159,7 +159,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:25:3
 
-Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `of_` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    bindings.js:25:3
    25|   of_ as string; //err
@@ -176,7 +176,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- bindings.js:30:3
 
-Cannot cast `in_` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `in_` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    bindings.js:30:3
    30|   in_ as number; //err
@@ -193,7 +193,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- class.js:6:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:6:5
    6|     x as empty;
@@ -210,7 +210,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:13:1
 
-Cannot cast `a` to empty because `Annotated` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because `Annotated` [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:13:1
    13| a as empty;
@@ -227,7 +227,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:15:1
 
-Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `b` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:15:1
    15| b as empty;
@@ -244,7 +244,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:17:1
 
-Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:17:1
    17| c as empty;
@@ -269,7 +269,7 @@ Missing an annotation on return. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------------------- class.js:22:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:22:5
    22|     x as empty;
@@ -286,7 +286,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:29:1
 
-Cannot cast `a1` to empty because `Unannotated` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a1` to empty because `Unannotated` [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:29:1
    29| a1 as empty; // error
@@ -303,7 +303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:31:1
 
-Cannot cast `b1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `b1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:31:1
    31| b1 as empty; // error
@@ -320,7 +320,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- emp_arr.js:9:1
 
-Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
+Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-type]
 
    emp_arr.js:9:1
    9| x as Array<number>;
@@ -384,7 +384,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:16:1
 
-Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function.js:16:1
    16| f() as empty; // err
@@ -401,7 +401,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:17:1
 
-Cannot cast `g()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `g()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function.js:17:1
    17| g() as empty; // err
@@ -418,7 +418,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:28:3
 
-Cannot cast `k()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `k()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function.js:28:3
    28|   k() as empty;
@@ -435,7 +435,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:32:1
 
-Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `h()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function.js:32:1
    32| h() as empty; // err
@@ -452,7 +452,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- function.js:33:1
 
-Cannot cast `i()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `i()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function.js:33:1
    33| i() as empty; // err
@@ -469,7 +469,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ heap_refis.js:6:3
 
-Cannot cast `x.y.z` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x.y.z` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    heap_refis.js:6:3
    6|   x.y.z as empty; //err num
@@ -486,7 +486,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- heap_refis.js:17:5
 
-Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-type]
 
    heap_refis.js:17:5
    17|     y as empty; // err C
@@ -518,7 +518,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- heap_refis.js:25:3
 
-Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because `C` [1] is incompatible with empty [2]. [incompatible-type]
 
    heap_refis.js:25:3
    25|   y as empty; // err C
@@ -557,7 +557,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:8:1
 
-Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:8:1
    8| y as empty; // err
@@ -574,7 +574,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:9:1
 
-Cannot cast `X` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `X` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:9:1
    9| X as empty; // err
@@ -591,7 +591,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:1
 
-Cannot cast `Y.x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Y.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:10:1
    10| Y.x as empty; // err
@@ -608,7 +608,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- inter.js:20:1
 
-Cannot cast `a.foo.w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.foo.w()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    inter.js:20:1
    20| a.foo.w() as empty; // err
@@ -625,7 +625,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- inter.js:23:1
 
-Cannot cast `c.m().w()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c.m().w()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    inter.js:23:1
    23| c.m().w() as empty; // err
@@ -642,7 +642,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- member_assignments.js:8:3
 
-Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    member_assignments.js:8:3
    8|   foo.bar as number; // error: string is incompatible with number
@@ -659,7 +659,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- member_assignments.js:11:3
 
-Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    member_assignments.js:11:3
    11|   foo.bar as number; // error: string is incompatible with number
@@ -684,7 +684,7 @@ Cannot get `foo.bar` because property `bar` is not readable. [cannot-read]
 
 Error --------------------------------------------------------------------------------------- member_assignments.js:21:3
 
-Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `foo.bar` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    member_assignments.js:21:3
    21|   foo.bar as number; // error: string is incompatible with number
@@ -781,7 +781,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- tparams.js:4:3
 
-Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
 
    tparams.js:4:3
    4|   a as empty;
@@ -798,7 +798,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tparams.js:5:3
 
-Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-type]
 
    tparams.js:5:3
    5|   42 as A;
@@ -846,7 +846,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tparams.js:13:3
 
-Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
 
    tparams.js:13:3
    13|   a as empty;
@@ -863,7 +863,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tparams.js:14:3
 
-Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-cast]
+Cannot cast `42` to `A` because number [1] is incompatible with `A` [2]. [incompatible-type]
 
    tparams.js:14:3
    14|   42 as A;
@@ -929,7 +929,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
 
-Cannot return array literal because mixed [1] is incompatible with `B` [2] in index 1. [incompatible-return]
+Cannot return array literal because mixed [1] is incompatible with `B` [2] in index 1. [incompatible-type]
 
    tparams.js:23:14
    23|   return [o, p];
@@ -954,7 +954,7 @@ Cannot resolve name `A`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:48:40
 
-Cannot cast `42` to `X` because number [1] is incompatible with `X` [2]. [incompatible-cast]
+Cannot cast `42` to `X` because number [1] is incompatible with `X` [2]. [incompatible-type]
 
    tparams.js:48:40
    48|   function tparam_in_default<X>(x: X = 42 as X) {} // Error: cannot cast 42 to X
@@ -968,7 +968,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- updates.js:5:1
 
-Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `++x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    updates.js:5:1
    5| ++x as empty; // err
@@ -982,7 +982,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- updates.js:6:1
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    updates.js:6:1
    6| x as empty; // err
@@ -999,7 +999,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- updates.js:8:1
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    updates.js:8:1
    8| x as empty; // err
@@ -1016,7 +1016,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- updates.js:10:1
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    updates.js:10:1
    10| x as empty; // err
@@ -1076,7 +1076,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- updates.js:39:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    39|   function alwaysThrows1(): number {
                                    ^^^^^^ [1]
@@ -1085,7 +1085,7 @@ undefined. [incompatible-return]
 Error ------------------------------------------------------------------------------------------------- updates.js:42:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    42|   function alwaysThrows2(): number {
                                    ^^^^^^ [1]
@@ -1094,7 +1094,7 @@ undefined. [incompatible-return]
 Error ------------------------------------------------------------------------------------------------- updates.js:45:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    45|   function alwaysThrows3(): number {
                                    ^^^^^^ [1]

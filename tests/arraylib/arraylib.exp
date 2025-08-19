@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- array_lib.js:6:7
 
-Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    array_lib.js:6:7
    6|   foo(x);
@@ -132,7 +132,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
 
 Cannot cast `Array.from(...)` to array type because string [1] is incompatible with empty [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    array_lib.js:71:3
      71|   Array.from('abcd') as Array<empty>; // ERROR
@@ -149,7 +149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:57
 
-Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
+Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-type]
 
    array_lib.js:80:57
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -163,7 +163,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:60
 
-Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-call]
+Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-type]
 
    array_lib.js:80:60
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -177,7 +177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- at.js:6:5
 
-Cannot call `arr.at` because function [1] requires another argument. [incompatible-call]
+Cannot call `arr.at` because function [1] requires another argument. [incompatible-type]
 
    at.js:6:5
      6| arr.at(); // ERROR
@@ -191,7 +191,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- at.js:7:8
 
-Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2]. [incompatible-type]
 
    at.js:7:8
      7| arr.at("1"); // ERROR
@@ -205,7 +205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- at.js:14:7
 
-Cannot call `roArr.at` because function [1] requires another argument. [incompatible-call]
+Cannot call `roArr.at` because function [1] requires another argument. [incompatible-type]
 
    at.js:14:7
     14| roArr.at(); // ERROR
@@ -220,7 +220,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ at.js:15:10
 
 Cannot call `roArr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    at.js:15:10
     15| roArr.at("1"); // ERROR

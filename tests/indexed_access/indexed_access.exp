@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- import.js:4:2
 
-Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    import.js:4:2
    4| (1: ObjFoo); // Error
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:2
 
-Cannot cast `1` to `B` because: [incompatible-cast]
+Cannot cast `1` to `B` because: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
  - Or number [1] is incompatible with undefined [3].
 
@@ -33,7 +33,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `true` to `N` because: [incompatible-cast]
+Cannot cast `true` to `N` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:2
 
-Cannot cast `true` to `S` because: [incompatible-cast]
+Cannot cast `true` to `S` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -104,7 +104,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:15:2
 
-Cannot cast `true` to `T` because: [incompatible-cast]
+Cannot cast `true` to `T` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -183,7 +183,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:24:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -202,7 +202,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:28:2
 
-Cannot cast `true` to indexed access because: [incompatible-cast]
+Cannot cast `true` to indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:32:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -240,7 +240,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:36:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -259,7 +259,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:39:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -278,7 +278,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:46:2
 
-Cannot cast `true` to indexed access because: [incompatible-cast]
+Cannot cast `true` to indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -297,7 +297,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:50:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -316,7 +316,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:54:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -335,7 +335,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:59:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -354,7 +354,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:64:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -373,7 +373,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:68:2
 
-Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    optional.js:68:2
    68| (1: void?.['c']); // Error
@@ -387,7 +387,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:71:2
 
-Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    optional.js:71:2
    71| (1: empty?.['x']); // Error
@@ -402,7 +402,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:79:2
 
 Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    optional.js:79:2
    79| (f(z, 'c'): true); // Error - wrong type
@@ -420,7 +420,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:79:2
 
 Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    optional.js:79:2
    79| (f(z, 'c'): true); // Error - wrong type
@@ -452,7 +452,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:84:2
 
 Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    optional.js:84:2
    84| (f(mz, 'c'): true); // Error - wrong type
@@ -470,7 +470,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:84:2
 
 Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    optional.js:84:2
    84| (f(mz, 'c'): true); // Error - wrong type
@@ -501,7 +501,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:88:2
 
-Cannot cast `'s'` to `Before` because: [incompatible-cast]
+Cannot cast `'s'` to `Before` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
@@ -520,7 +520,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:103:2
 
-Cannot cast `'xx'` to optional indexed access because: [incompatible-cast]
+Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
@@ -539,7 +539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:117:2
 
-Cannot cast `'xx'` to optional indexed access because: [incompatible-cast]
+Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string [1] is incompatible with undefined [3].
 
@@ -558,7 +558,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:122:2
 
-Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:122:2
    122| (true: NonMaybeNumber); // Error
@@ -572,7 +572,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:123:2
 
-Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:123:2
    123| (undefined: NonMaybeNumber); // Error
@@ -586,7 +586,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:2
 
-Cannot cast `true` to optional indexed access because: [incompatible-cast]
+Cannot cast `true` to optional indexed access because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with undefined [3].
 
@@ -605,7 +605,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
-Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:5:2
    5| ('hello world': ArrElem); // Error
@@ -619,7 +619,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
-Cannot cast `'hello world'` to `DictElem` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'hello world'` to `DictElem` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:16:2
    16| ('hello world': DictElem); // Error
@@ -633,7 +633,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:2
 
-Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:31:2
    31| (1: ObjFoo); // Error
@@ -647,7 +647,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:2
 
-Cannot cast `1` to indexed access because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `1` to indexed access because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:34:2
    34| (1: Obj['baz']); // Error
@@ -661,7 +661,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:2
 
-Cannot cast `f(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `f(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:42:2
    42| (f(o): string); // Error
@@ -736,7 +736,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:2
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:65:2
    65| ('xx': O['bar']); // Error
@@ -750,7 +750,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:74:2
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:74:2
    74| ('xx': C['bar']); // Error
@@ -764,7 +764,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:2
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:83:2
    83| ('xx': I['bar']); // ERROR
@@ -779,7 +779,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:89:8
 
 Cannot cast function to indexed access because boolean [1] is incompatible with number [2] in the return value.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:89:8
    89| (() => true) as M['method']; // ERROR
@@ -793,7 +793,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:94:5
 
-Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:94:5
    94|     f() as empty; // ERROR
@@ -810,7 +810,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:7:2
 
-Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    unions.js:7:2
    7| (v: string); // error
@@ -827,7 +827,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:8:2
 
-Cannot cast `v` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `v` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    unions.js:8:2
    8| (v: number); // error
@@ -863,7 +863,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:21:2
 
-Cannot cast `w` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `w` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
 
    unions.js:21:2
    21| (w: M['a']); // error

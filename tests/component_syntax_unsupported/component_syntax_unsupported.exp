@@ -9,7 +9,7 @@ Component syntax is not enabled. You may opt-in to using component syntax by put
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
-Cannot cast `3` to indexed access because number [1] is incompatible with component Fragment [2]. [incompatible-cast]
+Cannot cast `3` to indexed access because number [1] is incompatible with component Fragment [2]. [incompatible-type]
 
    test.js:4:2
      4| (3: $Exports<'react'>['Fragment']); // ERROR
@@ -26,7 +26,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `Foo` to empty because component Foo [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Foo` to empty because component Foo [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:8:1
    8| Foo as empty; // ERROR
@@ -43,7 +43,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
-Cannot cast `c` to empty because component [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c` to empty because component [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:11:1
    11| c as empty; // ERROR

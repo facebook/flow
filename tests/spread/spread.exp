@@ -43,7 +43,7 @@ References:
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
 
 Cannot call `foo` with `bar(...)` bound to the first parameter because `ComponentType` [1] is incompatible with class
-`C` [2]. [incompatible-call]
+`C` [2]. [incompatible-type]
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call
@@ -215,7 +215,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test10.js:3:2
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test10.js:3:2
    3| (o.p: empty); // error: number ~> empty
@@ -232,7 +232,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test11.js:14:3
 
-Cannot cast `ret` to empty because object literal [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `ret` to empty because object literal [1] is incompatible with empty [2]. [incompatible-type]
 
    test11.js:14:3
    14|   ret as empty; //err
@@ -287,7 +287,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
 
 Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    test6.js:10:2
    10| (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
@@ -308,7 +308,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
 Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
-[incompatible-cast]
+[incompatible-type]
 
    test8.js:7:2
     7| ({ ...o }: { p: number, q: number }); // error: string ~> number (prop q)
@@ -326,7 +326,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
 Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    test8.js:8:2
     8| ({ ...o }: { p: string, q: string }); // error: number ~> string (prop p)

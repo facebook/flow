@@ -18,7 +18,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- A.js:21:26
 
 Cannot cast object literal to object type because property `foo` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    A.js:21:26
    21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {
@@ -255,7 +255,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:6:8
 
-Cannot call method `assign` because `Object.assign` [1] requires another argument. [incompatible-call]
+Cannot call method `assign` because `Object.assign` [1] requires another argument. [incompatible-type]
 
    non_objects.js:6:8
    6| Object.assign();
@@ -269,7 +269,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:32:3
 
-Cannot cast `obj.attr` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `obj.attr` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    scope.js:32:3
    32|   obj.attr as number;
@@ -287,7 +287,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:5:28
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    spread.js:5:28
    5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
@@ -302,7 +302,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:6:28
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    spread.js:6:28
    6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
@@ -317,7 +317,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:7:42
 
 Cannot cast `Object.assign(...)` to object type because number [1] is incompatible with boolean [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    spread.js:7:42
    7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
@@ -332,7 +332,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- spread.js:10:25
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with boolean literal `true` [2] in
-property `b`. [incompatible-cast]
+property `b`. [incompatible-type]
 
    spread.js:10:25
    10|   ({}: {a?: number, b?: string, c?: boolean}),

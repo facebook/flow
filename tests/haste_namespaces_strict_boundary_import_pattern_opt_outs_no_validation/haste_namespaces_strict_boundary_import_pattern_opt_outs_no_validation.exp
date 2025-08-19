@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- common/test.js:6:1
 
-Cannot cast `gql` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `gql` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    common/test.js:6:1
    6| gql as number; // error: string ~> number
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- common/test.js:8:1
 
-Cannot cast `params` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `params` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    common/test.js:8:1
    8| params as number; // error: string ~> number

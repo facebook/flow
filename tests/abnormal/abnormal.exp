@@ -32,7 +32,7 @@ Unreachable code. [unreachable-code]
 
 Error ------------------------------------------------------------------------------------------- break-continue.js:63:4
 
-Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    break-continue.js:63:4
    63|   (x: number); // Error - null incompatible with number

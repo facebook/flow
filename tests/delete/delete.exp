@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:11:1
 
-Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    delete.js:11:1
    11| x as number;
@@ -90,7 +90,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:31:1
 
-Cannot cast `w.a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `w.a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    delete.js:31:1
    31| w.a as void;

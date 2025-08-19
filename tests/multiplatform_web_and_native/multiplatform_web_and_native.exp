@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------- native/use_tests.android.js:1:1
 
-Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.android.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- native/use_tests.android.js:2:1
 
-Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.android.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
@@ -60,7 +60,7 @@ Support for the `android` platform is missing. [missing-platform-support]
 
 Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:1:1
 
-Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.ios.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
@@ -77,7 +77,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- native/use_tests.ios.js:2:1
 
-Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.ios.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
@@ -120,7 +120,7 @@ Support for the `ios` platform is missing. [missing-platform-support]
 
 Error ------------------------------------------------------------------------------------------ native/use_tests.js:1:1
 
-Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
@@ -137,7 +137,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ native/use_tests.js:2:1
 
-Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
@@ -180,7 +180,7 @@ The imported module supports the `web` platform, but the current module requires
 
 Error ----------------------------------------------------------------------------------- native/use_tests.native.js:1:1
 
-Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.native.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
@@ -197,7 +197,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- native/use_tests.native.js:2:1
 
-Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    native/use_tests.native.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see string ~> empty error since it imports the .native.js file
@@ -240,7 +240,7 @@ The imported module supports the `web` platform, but the current module requires
 
 Error --------------------------------------------------------------------------------------------- web/use_tests.js:1:1
 
-Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    web/use_tests.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
@@ -257,7 +257,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- web/use_tests.js:2:1
 
-Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    web/use_tests.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
@@ -300,7 +300,7 @@ the `web` platform. Support for the `web` platform is missing. [missing-platform
 
 Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:1:1
 
-Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    web/use_tests.web.js:1:1
    1| require('../xplat/all_platform_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
@@ -317,7 +317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- web/use_tests.web.js:2:1
 
-Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    web/use_tests.web.js:2:1
    2| require('../xplat/web_native_forked').foo as empty; // should see boolean ~> empty error since it imports the .js.flow file
@@ -394,7 +394,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:1:1
 
-Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    xplat/use_tests.js:1:1
    1| require('./all_platform_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file
@@ -411,7 +411,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- xplat/use_tests.js:2:1
 
-Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...).foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    xplat/use_tests.js:2:1
    2| require('./web_native_forked').foo as empty; // should see number ~> empty error since it imports the .js.flow file

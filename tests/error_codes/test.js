@@ -21,13 +21,13 @@ $FlowFixMe*/
 //$FlowFixMe arithmetic isn't parsed as an error code
 (x : string); // error suppressed
 
-//$FlowFixMe[incompatible-cast] asdfasdf
+//$FlowFixMe[incompatible-type] asdfasdf
 (x : string); // error suppressed
 
-//$FlowFixMe[incompatible-cast][anythinghere][moregarbage]
+//$FlowFixMe[incompatible-type][anythinghere][moregarbage]
 (x : string); // error suppressed
 
-// $FlowFixMe [incompatible-cast]
+// $FlowFixMe [incompatible-type]
 (x : string); // error not suppressed, malformed code
 
 // $FlowFixMe[arithmetic]
@@ -42,20 +42,20 @@ let y : number | { x : number }  = 1;
 // $FlowFixMe
 (y.x : string); // no errors
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 (y.x : string); // only the property access shows up
 
 //$FlowFixMe[prop-missing]
 (y.x : string); // only the incompatibility shows up
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 //$FlowFixMe[prop-missing]
 (y.x : string); // errors suppressed
 
 //foo
 /*
 
-$FlowFixMe[incompatible-cast]
+$FlowFixMe[incompatible-type]
 
 
 
@@ -64,22 +64,22 @@ $FlowFixMe[incompatible-cast]
 //$FlowFixMe[prop-missing]
 (y.x : string); // errors suppressed
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 
 //$FlowFixMe[prop-missing]
 (y.x : string); // incompatibility shows up
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 /* interrupt */
 //$FlowFixMe[prop-missing]
 (y.x : string); // incompatibility shows up
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 //$FlowFixMe[prop-missing]
 
 (y.x : string); // both
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 //$FlowFixMe[prop-missing]
 //$FlowFixMe[arithmetic]
 (y.x : string); // errors suppressed, unused arithmetic
@@ -91,7 +91,7 @@ let z : number = 3;
 //$FlowFixMe
 (z : string | boolean); // suppressed
 
-//$FlowFixMe[incompatible-cast]
+//$FlowFixMe[incompatible-type]
 (z : string | boolean); // suppressed
 
 //$FlowFixMe[prop-missing]
@@ -103,11 +103,11 @@ declare function foo (string) : void;
 // $FlowFixMe
 foo(3, 4); // no error
 
-// $FlowFixMe[incompatible-call]
+// $FlowFixMe[incompatible-type]
 // $FlowFixMe[extra-arg]
 foo(3, 4); // no error
 
-// $FlowFixMe[incompatible-call]
+// $FlowFixMe[incompatible-type]
 foo(3, 4); // one error
 
 // $FlowFixMe[extra-arg]
@@ -121,7 +121,7 @@ declare var any: any;
 // $FlowFixMe
 ((any: {} & number): {bar:string});  // no error
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 ((any: {} & number): {bar:string});  // no error
 
 // $FlowFixMe[incompatible-type]
@@ -170,5 +170,5 @@ declare var any: any;
 (x : number); // malformed
 
 /* last in file */
-//$FlowFixMe[incompatible-cast] asdfasdf
+//$FlowFixMe[incompatible-type] asdfasdf
 (x : string);

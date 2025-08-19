@@ -3,7 +3,7 @@ Stop any already-running server.
 Full check:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -56,7 +56,7 @@ Unexpected end of input
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:3:2
    3| ("": number);
@@ -74,7 +74,7 @@ Found 5 errors
 Full focus-check:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -127,7 +127,7 @@ Unexpected end of input
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:3:2
    3| ("": number);
@@ -153,7 +153,7 @@ Unexpected end of input
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:3:2
    3| ("": number);
@@ -171,7 +171,7 @@ Found 2 errors
 Focused check on a file with no local errors but a dependency:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -200,7 +200,7 @@ Found 2 errors
 Focused check on a file with no local errors but a reverse dependency:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -229,7 +229,7 @@ Found 2 errors
 Focused check on two files with overlapping errors:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -258,7 +258,7 @@ Found 2 errors
 Focused check on multiple files with disjoint sets of errors:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -283,7 +283,7 @@ Unexpected end of input
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:3:2
    3| ("": number);
@@ -323,7 +323,7 @@ Unexpected end of input
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:2
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:3:2
    3| ("": number);
@@ -341,7 +341,7 @@ Found 3 errors
 Focused check on files specified in list.txt:
 Error --------------------------------------------------------------------------------------------------------- a.js:3:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    a.js:3:2
    3| (require('./b'): number);
@@ -384,7 +384,7 @@ Found 3 errors
 Focused check guessing root by looking at first file:
 Error --------------------------------------------------------------------------- other_root/other_root_dependent.js:5:2
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    other_root/other_root_dependent.js:5:2
    5| (foo: string); // Error

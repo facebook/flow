@@ -18,7 +18,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:23:42
 
 Cannot call `this.#foo` with empty string bound to `a` because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    test.js:23:42
    23|     const fooInvalid: string = this.#foo(""); // Error: type mismatch
@@ -51,7 +51,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:26:59
 
 Cannot call `CanCallPrivateMethods.#bar` with `3` bound to `b` because number [1] is incompatible with string [2].
-[incompatible-call]
+[incompatible-type]
 
    test.js:26:59
    26|     const barInvalid: number = CanCallPrivateMethods.#bar(3); // Error: type mismatch
@@ -141,7 +141,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `c2.#private()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. 
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    test.js:75:11
    75|       x = c2.#private(); // error
@@ -167,7 +167,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `c2.public()` to `x` because number [1] is incompatible with string [2] in type argument `T` [3]. 
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    test.js:85:5
    85| x = c2.public(); // error

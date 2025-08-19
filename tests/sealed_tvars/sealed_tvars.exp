@@ -148,7 +148,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error --------------------------------------------------------------------------------------------------- react.js:21:10
 
-Cannot cast `Dialog.c` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Dialog.c` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    react.js:21:10
    21|   return Dialog.c as empty;
@@ -179,7 +179,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:20:12
 
-Cannot return `42` because number [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return `42` because number [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    regression_tests.js:20:12
    20|     return 42;
@@ -265,7 +265,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
 
-Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    regression_tests.js:54:14
    54| (((42: any): ModScope): empty); // string ~> empty, not num ~> empty

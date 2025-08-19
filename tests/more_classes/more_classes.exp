@@ -15,7 +15,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- Foo.js:19:12
 
 Cannot extend `Qux` [1] with `Foo` because string [2] is incompatible with number [3] in the first parameter of property
-`fooqux`. [incompatible-extend]
+`fooqux`. [incompatible-type]
 
    Foo.js:19:12
    19|   fooqux(x:string) {
@@ -46,7 +46,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:14:21
 
-Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    Foo.js:14:21
    14|     var v = new Bar(y);
@@ -63,7 +63,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:16:12
 
-Cannot return `v.bar(...)` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `v.bar(...)` because string [1] is incompatible with number [2]. [incompatible-type]
 
    Foo.js:16:12
    16|     return v.bar(z,u);
@@ -80,7 +80,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- Foo.js:16:20
 
-Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible with string [2]. [incompatible-type]
 
    Foo.js:16:20
    16|     return v.bar(z,u);

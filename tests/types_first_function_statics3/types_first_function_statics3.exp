@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:2:1
 
-Cannot call `foo.call` because string [1] is incompatible with number [2] in the first argument. [incompatible-call]
+Cannot call `foo.call` because string [1] is incompatible with number [2] in the first argument. [incompatible-type]
 
    b.js:2:1
    2| foo.call(undefined, "");

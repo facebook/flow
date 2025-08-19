@@ -43,7 +43,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in object type [2] but exists in object
-type [3] in the first parameter of property `setState`. [prop-missing]
+type [3] in the first parameter of property `setState`. [incompatible-type]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -64,7 +64,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
 Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with nullable `$ReadOnly` [3] in
-the first parameter of property `setState`. [incompatible-extend]
+the first parameter of property `setState`. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string }): void { }
@@ -84,7 +84,7 @@ Error --------------------------------------------------------------------------
 Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with function type [3] in the
 first parameter of property `setState`. 
 
-Functions without statics are not compatible with objects. [incompatible-extend]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string }): void { }
@@ -161,7 +161,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type-arg]
+Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with component [3].
 
@@ -184,7 +184,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
 Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in type argument
-`ElementType` [3]. [incompatible-type-arg]
+`ElementType` [3]. [incompatible-type]
 
    classes.js:39:26
    39| var foo: $jsx<number> = <Foo/>;
@@ -204,7 +204,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
-Cannot create `Foo` element because property `x` is missing in props [1] but exists in `Props` [2]. [prop-missing]
+Cannot create `Foo` element because property `x` is missing in props [1] but exists in `Props` [2]. [incompatible-type]
 
    classes.js:39:26
    39| var foo: $jsx<number> = <Foo/>;
@@ -237,7 +237,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_component.js:13:13
 
 Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    object_component.js:13:13
    13| const _a = <Component />; // Error, missing bar
@@ -255,7 +255,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_component.js:16:13
 
 Cannot create `Component` element because property `baz` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    object_component.js:16:13
    16| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
@@ -287,7 +287,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_component.js:23:57
 
 Cannot assign object literal to `_badProps2` because property `baz` is extra in object literal [1] but missing in object
-type [2]. Exact objects do not accept extra props. [prop-missing]
+type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    object_component.js:23:57
    23| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
@@ -316,7 +316,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- props4.js:14:2
 
 Cannot create `Example` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    props4.js:14:2
    14| <Example foo="foo" />;
@@ -347,7 +347,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19
 
-Cannot call `this.setState` with function bound to `partialState` because: [incompatible-call]
+Cannot call `this.setState` with function bound to `partialState` because: [incompatible-type]
  - Either string [1] is incompatible with number [2] in property `bar` of the return value.
  - Or function [3] is incompatible with nullable `$ReadOnly` [4].
 
@@ -400,7 +400,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- state6.js:39:25
 
-Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-call]
+Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
  - Either number [1] is incompatible with `State` [2] in the first parameter.
  - Or `StateUpdater3` [3] is incompatible with nullable `$ReadOnly` [4].
 

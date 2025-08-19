@@ -4,7 +4,7 @@ Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatibl
 `T` [3]. 
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    empty.js:14:17
    14|     si = si.add(x);
@@ -30,7 +30,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `si.add(...)` to `si` because string [1] is incompatible with empty [2] in type argument `T` [3]. 
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    empty.js:14:17
    14|     si = si.add(x);
@@ -121,7 +121,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with number [2] in type argument `T` [3]. 
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    empty.js:74:16
    74|   si = new Set<string>(); // error
@@ -142,7 +142,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- empty.js:76:3
 
 Cannot cast `si` to `Set` because string [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    empty.js:76:3
    76|   si as Set<number>;
@@ -165,7 +165,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `si.add(...)` to `si` because number [1] is incompatible with empty [2] in type argument `T` [3]. 
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type-arg]
+type is desired. [incompatible-type]
 
    empty.js:88:15
    88|   si = si.add(42); // error
@@ -209,7 +209,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:17:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    providers_closure.js:17:3
    17|   x as empty; // error, just to show that x is not empty
@@ -226,7 +226,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:21:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    providers_closure.js:21:3
    21|   x as empty; // error similarly
@@ -243,7 +243,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:22:3
 
-Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    providers_closure.js:22:3
    22|   y as number; // error b/c y was fully havoced
@@ -260,7 +260,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:32:1
 
-Cannot cast `z` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `z` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    providers_closure.js:32:1
    32| z as number; // should fail, initial type of z was null
@@ -277,7 +277,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:42:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    providers_closure.js:42:3
    42|   x as empty; // error, just to show that x is not empty
@@ -294,7 +294,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:46:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    providers_closure.js:46:3
    46|   x as empty; // error similarly
@@ -311,7 +311,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:47:3
 
-Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    providers_closure.js:47:3
    47|   y as number; // error b/c y was fully havoced
@@ -345,7 +345,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:3
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    test.js:23:3
    23|   x as void; // should error
@@ -362,7 +362,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:5
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:33:5
    33|     x as number; // should fail
@@ -403,7 +403,7 @@ Cannot assign `{...}` to `x` because property `a` is extra in object type [1] bu
 objects do not accept extra props. 
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
-type is desired. [prop-missing]
+type is desired. [incompatible-type]
 
    test.js:46:20
    46|     x = {a: 42} as {a: number, ...}; // error here

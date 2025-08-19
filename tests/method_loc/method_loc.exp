@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- class.js:5:2
 
-Cannot cast `C.m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:5:2
    5| (C.m: empty); //err
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- class.js:6:2
 
-Cannot cast `(new C()).m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C()).m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    class.js:6:2
    6| (new C().m: empty); // err
@@ -49,7 +49,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- class_dep.js:2:2
 
-Cannot cast `C.m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    class_dep.js:2:2
    2| (C.m: empty); //err
@@ -66,7 +66,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- class_dep.js:3:2
 
-Cannot cast `(new C()).m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C()).m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    class_dep.js:3:2
    3| (new C().m: empty); // err
@@ -98,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declare_class.js:5:2
 
-Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    declare_class.js:5:2
    5| (C.m: empty); //err
@@ -115,7 +115,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declare_class.js:6:2
 
-Cannot cast `(new C()).m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C()).m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    declare_class.js:6:2
    6| (new C().m: empty); // err
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_class_dep.js:2:2
 
-Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    declare_class_dep.js:2:2
    2| (C.m: empty); //err
@@ -164,7 +164,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_class_dep.js:3:2
 
-Cannot cast `(new C()).m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `(new C()).m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    declare_class_dep.js:3:2
    3| (new C().m: empty); // err
@@ -196,7 +196,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- interface.js:5:2
 
-Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    interface.js:5:2
    5| (o.m: empty); // err
@@ -228,7 +228,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- interface_dep.js:2:2
 
-Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    interface_dep.js:2:2
    2| (o.m: empty); // err
@@ -260,7 +260,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- obj_lit.js:2:2
 
-Cannot cast `o.m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    obj_lit.js:2:2
    2| (o.m: empty); // err
@@ -277,7 +277,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- obj_lit_dep.js:2:2
 
-Cannot cast `o.m` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    obj_lit_dep.js:2:2
    2| (o.m: empty); // err
@@ -294,7 +294,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- obj_type.js:2:2
 
-Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    obj_type.js:2:2
    2| (o.m: empty); // err
@@ -311,7 +311,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- obj_type_dep.js:2:2
 
-Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    obj_type_dep.js:2:2
    2| (o.m: empty); // err

@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- cycle_C.js:7:25
 
-Cannot call `f` with `null` bound to `x` because: [incompatible-call]
+Cannot call `f` with `null` bound to `x` because: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
  - Or null [1] is incompatible with number [3].
 

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ enum-filtering.js:16:17
 
-Cannot cast `y.x` to empty because string literal `NONE` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y.x` to empty because string literal `NONE` [1] is incompatible with empty [2]. [incompatible-type]
 
    enum-filtering.js:16:17
    16|       default: (y.x: empty); // We error here. Ideally we would not, so if you figure it out in the future with good perf, you can remove error from snapshot
@@ -53,7 +53,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7322.js:20:2
 
-Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x.noReturn()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    issue-7322.js:20:2
    20| (x.noReturn(): number);
@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7322.js:21:2
 
-Cannot cast `x.returnNoArg()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x.returnNoArg()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    issue-7322.js:21:2
    21| (x.returnNoArg(): number);
@@ -87,7 +87,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7322.js:22:2
 
-Cannot cast `x.returnUndefined()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x.returnUndefined()` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    issue-7322.js:22:2
    22| (x.returnUndefined(): number);
@@ -106,7 +106,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `t2` with `t1` bound to the first parameter because `T1` [1] is incompatible with `T2` [2]. 
 
-Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T2` [2]. [incompatible-call]
+Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T2` [2]. [incompatible-type]
 
    short_enum_error.js:11:8
    11|     t2(t1); // error (function)
@@ -125,7 +125,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `t1` to `T2` because `T1` [1] is incompatible with `T2` [2]. 
 
-Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T2` [2]. [incompatible-cast]
+Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T2` [2]. [incompatible-type]
 
    short_enum_error.js:12:5
    12|     t1 as T2; // error (cast)
@@ -142,7 +142,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:22:10
 
-Cannot cast `_` to `T1` because string [1] is incompatible with `T1` [2]. [incompatible-cast]
+Cannot cast `_` to `T1` because string [1] is incompatible with `T1` [2]. [incompatible-type]
 
    short_enum_error.js:22:10
    22|     _ as T2 as T1; // error fails quick_subtype and slow path
@@ -156,7 +156,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:41:10
 
-Cannot cast `_` to `T2` because: [incompatible-cast]
+Cannot cast `_` to `T2` because: [incompatible-type]
  - Either string literal `a` [1] is incompatible with number [2].
  - Or string literal `a` [1] is incompatible with number [3].
  - Or string literal `a` [1] is incompatible with number [4].
@@ -179,7 +179,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:41:10
 
-Cannot cast `_` to `T2` because: [incompatible-cast]
+Cannot cast `_` to `T2` because: [incompatible-type]
  - Either string literal `b` [1] is incompatible with number [2].
  - Or string literal `b` [1] is incompatible with number [3].
  - Or string literal `b` [1] is incompatible with number [4].
@@ -202,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:41:10
 
-Cannot cast `_` to `T2` because: [incompatible-cast]
+Cannot cast `_` to `T2` because: [incompatible-type]
  - Either string literal `c` [1] is incompatible with number [2].
  - Or string literal `c` [1] is incompatible with number [3].
  - Or string literal `c` [1] is incompatible with number [4].
@@ -225,7 +225,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:42:10
 
-Cannot cast `_` to `T1` because number [1] is incompatible with `T1` [2]. [incompatible-cast]
+Cannot cast `_` to `T1` because number [1] is incompatible with `T1` [2]. [incompatible-type]
 
    short_enum_error.js:42:10
    42|     _ as T2 as T1; // error -- folded into a single error
@@ -241,7 +241,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `_` to `T2` because `T1` [1] is incompatible with `T2` [2]. 
 
-Type `T1` [1] includes members `a1`, `b1`, `c1` and 5 more that are not included in type `T2` [2]. [incompatible-cast]
+Type `T1` [1] includes members `a1`, `b1`, `c1` and 5 more that are not included in type `T2` [2]. [incompatible-type]
 
    short_enum_error.js:49:10
    49|     _ as T1 as T2; // error
@@ -257,7 +257,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `_` to `T1` because `T2` [1] is incompatible with `T1` [2]. 
 
-Type `T2` [1] includes members `a2`, `b2`, `c2` that are not included in type `T1` [2]. [incompatible-cast]
+Type `T2` [1] includes members `a2`, `b2`, `c2` that are not included in type `T1` [2]. [incompatible-type]
 
    short_enum_error.js:50:10
    50|     _ as T2 as T1; // error
@@ -271,7 +271,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:2:5
 
-Cannot call `bar` with `0` bound to `x` because: [incompatible-call]
+Cannot call `bar` with `0` bound to `x` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `Document` [3].
 

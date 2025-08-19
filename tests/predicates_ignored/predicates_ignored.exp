@@ -8,7 +8,7 @@ Support for predicate functions is removed. `%checks` declaration is now ignored
 
 Error -------------------------------------------------------------------------------------------------- exported.js:4:3
 
-Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-type]
 
    exported.js:4:3
    4|   v as string; // erorr: %checks is ignored
@@ -41,7 +41,7 @@ Support for predicate functions is removed. `%checks` declaration is now ignored
 
 Error --------------------------------------------------------------------------------------------- test_exported.js:5:3
 
-Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-type]
 
    test_exported.js:5:3
    5|   v as string; // erorr: %checks is ignored
@@ -58,7 +58,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- test_exported.js:8:3
 
-Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because null [1] is incompatible with string [2]. [incompatible-type]
 
    test_exported.js:8:3
    8|   v as string; // erorr: %checks is ignored

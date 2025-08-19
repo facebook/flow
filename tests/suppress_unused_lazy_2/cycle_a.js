@@ -13,5 +13,5 @@ export const a: B = 'a';
 // dependency dirties this file's signature
 export {dependency} from './dependency';
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 (1: string); // suppressed error

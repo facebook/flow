@@ -134,7 +134,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error
@@ -151,7 +151,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error
@@ -168,7 +168,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because string literal `baz` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.type` to empty because string literal `baz` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error
@@ -185,7 +185,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.type` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error
@@ -202,7 +202,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.type` to empty because string literal `bar` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error

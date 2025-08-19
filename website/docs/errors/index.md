@@ -40,7 +40,7 @@ Some examples of suppression comments:
 
 /* $FlowIgnore[prop-missing] some other text here */
 
-/* $FlowFixMe[incompatible-cast] this
+/* $FlowFixMe[incompatible-type] this
     is a multi-line
     comment */
 
@@ -55,10 +55,10 @@ In order to be a valid suppression comment, there are also some conditions that 
 
 Suppressible Flow errors will also have an error code associated with them (after version 0.127). This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
 
-In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-cast]` would only suppress errors with the `incompatible-cast` code. So:
+In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
 
 ```js flow-check
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 3 as string;
 ```
 would report no errors, but
@@ -73,7 +73,7 @@ To suppress multiple error codes on the same line, you can stack suppression com
 ```js flow-check
 let y: number | {x : number}  = 1;
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 // $FlowFixMe[prop-missing]
 y.x as string;
 ```

@@ -18,7 +18,7 @@ globalThis. [prop-missing]
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
 Cannot cast `window.myWeirdWindowScopedGlobal` to empty because string [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:3:1
    3| window.myWeirdWindowScopedGlobal as empty; // error: string ~> empty
@@ -35,7 +35,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Cannot cast `window.myGlobal` to empty because `Opaque` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `window.myGlobal` to empty because `Opaque` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:7:1
    7| window.myGlobal as empty; // error
@@ -52,7 +52,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `globalThis.myGlobal` to empty because `Opaque` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `globalThis.myGlobal` to empty because `Opaque` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:8:1
    8| globalThis.myGlobal as empty; // error
@@ -69,7 +69,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot cast `Array` to `Node` because: [incompatible-cast]
+Cannot cast `Array` to `Node` because: [incompatible-type]
  - Either class `Array` [1] is incompatible with `React.Element` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `$Iterable` [4].

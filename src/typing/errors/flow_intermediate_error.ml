@@ -369,10 +369,9 @@ let rec make_intermediate_error :
           'loc.
           loc_of_aloc:('loc -> Loc.t) ->
           speculation:bool ->
-          updated_error_code:bool ->
           'loc Flow_error.t ->
           'loc intermediate_error =
- fun ~loc_of_aloc ~speculation ~updated_error_code error ->
+ fun ~loc_of_aloc ~speculation error ->
   let loc = Flow_error.loc_of_error error in
   let msg = Flow_error.msg_of_error error in
   let source_file = Flow_error.source_file error in
@@ -795,7 +794,7 @@ let rec make_intermediate_error :
    * an error message. *)
   let mk_use_op_error loc use_op ?explanation message =
     let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
-    let code = Flow_error.code_of_error ~updated_error_code error in
+    let code = Flow_error.code_of_error error in
     let explanations =
       Base.Option.value_map ~f:(fun x -> x :: explanations) ~default:explanations explanation
     in
@@ -806,7 +805,7 @@ let rec make_intermediate_error :
   in
   let mk_no_frame_or_explanation_error reason message =
     let loc = loc_of_aloc (loc_of_reason reason) in
-    let code = Flow_error.code_of_error ~updated_error_code error in
+    let code = Flow_error.code_of_error error in
     mk_error ~frames:[] ~explanations:[] loc code message
   in
 
@@ -820,14 +819,14 @@ let rec make_intermediate_error :
         (MessageIncompatibleMappedTypeKey { source_type; mapped_type })
     | _ ->
       let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
-      let error_code = Flow_error.code_of_error ~updated_error_code error in
+      let error_code = Flow_error.code_of_error error in
       let speculation_errors =
         Base.List.map
           ~f:(fun msg ->
             let score = score_of_msg msg in
             let error =
               Flow_error.error_of_msg ~source_file msg
-              |> make_intermediate_error ~loc_of_aloc ~speculation:true ~updated_error_code
+              |> make_intermediate_error ~loc_of_aloc ~speculation:true
             in
             (score, error))
           branches
@@ -992,7 +991,7 @@ let rec make_intermediate_error :
   let intermediate_error =
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal message) ->
-      mk_error ~kind (loc_of_aloc loc) (Flow_error.code_of_error ~updated_error_code error) message
+      mk_error ~kind (loc_of_aloc loc) (Flow_error.code_of_error error) message
     | (None, UseOp { loc; message; use_op; explanation }) ->
       mk_use_op_error loc use_op ?explanation message
     | (None, PropMissingInLookup { loc; prop; reason_obj; use_op; suggestion; reason_indexer }) ->
@@ -4588,12 +4587,10 @@ let to_printable_error :
   in
   printable_error
 
-let make_errors_printable ~loc_of_aloc ~strip_root ~updated_error_code errors =
+let make_errors_printable ~loc_of_aloc ~strip_root errors =
   let f err acc =
     let err =
-      err
-      |> make_intermediate_error ~loc_of_aloc ~updated_error_code
-      |> to_printable_error ~loc_of_aloc ~strip_root
+      err |> make_intermediate_error ~loc_of_aloc |> to_printable_error ~loc_of_aloc ~strip_root
     in
     Flow_errors_utils.ConcreteLocPrintableErrorSet.add err acc
   in

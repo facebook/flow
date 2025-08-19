@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:3:2
 
-Cannot cast `A.prop` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `A.prop` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    b.js:3:2
    3| (A.prop : string);
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:4:2
 
-Cannot cast `B.prop` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `B.prop` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    b.js:4:2
    4| (B.prop : string);

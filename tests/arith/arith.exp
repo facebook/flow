@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- Arith.js:10:7
 
-Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `num` with `x + y` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    Arith.js:10:7
    10|   num(x+y); // error
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:12:7
 
-Cannot call `str` with `x + x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `str` with `x + x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    Arith.js:12:7
    12|   str(x+x); // error

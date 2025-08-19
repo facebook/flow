@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- maybe.js:9:2
 
-Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    maybe.js:9:2
    9| ('foo': typeof x); // error: string ~> number
@@ -14,7 +14,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:9:2
 
-Cannot cast `null` to `typeof x` because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `null` to `typeof x` because null [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:9:2
    9| (null: typeof x); // error: null ~> $Optional<number> (i.e., void|number)
@@ -97,7 +97,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:95:1
 
-Cannot cast `g` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `g` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    typeof.js:95:1
    95| g as string; // error
@@ -114,7 +114,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:101:1
 
-Cannot cast `i.p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `i.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    typeof.js:101:1
    101| i.p as string; // error
@@ -131,7 +131,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
-Cannot cast `null` to `typeof x` because: [incompatible-cast]
+Cannot cast `null` to `typeof x` because: [incompatible-type]
  - Either null [1] is incompatible with number [2].
  - Or null [1] is incompatible with string [3].
 
@@ -151,7 +151,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ with-targs.js:9:1
 
 Cannot cast `new FooClass()` to `Foo` because string [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    with-targs.js:9:1
    9| new FooClass() as Foo<number>; // error: string ~> number
@@ -171,7 +171,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:10:1
 
-Cannot cast `barF()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `barF()` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    with-targs.js:10:1
    10| barF() as number; // error: string ~> number
@@ -189,7 +189,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- with-targs.js:11:1
 
 Cannot cast `new FooClassStringExported()` to `FooClassExported` because string [1] is incompatible with number [2] in
-type argument `T` [3]. [incompatible-cast]
+type argument `T` [3]. [incompatible-type]
 
    with-targs.js:11:1
    11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
@@ -209,7 +209,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:12:1
 
-Cannot cast `barFExported()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `barFExported()` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    with-targs.js:12:1
    12| barFExported() as number; // error: string ~> number
@@ -312,7 +312,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- with-targs.js:32:26
 
 Cannot call `barGeneric` with function bound to `cb` because number [1] is incompatible with string [2] in the return
-value. [incompatible-call]
+value. [incompatible-type]
 
    with-targs.js:32:26
    32| barGeneric<string>(() => 1); // error: number ~> string
@@ -326,7 +326,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:34:1
 
-Cannot cast `barGeneric(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `barGeneric(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    with-targs.js:34:1
    34| barGeneric(() => 1) as string; // error: number ~> string
@@ -344,7 +344,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- with-targs.js:36:34
 
 Cannot call `barGenericExported` with function bound to `cb` because number [1] is incompatible with string [2] in the
-return value. [incompatible-call]
+return value. [incompatible-type]
 
    with-targs.js:36:34
    36| barGenericExported<string>(() => 1); // error: number ~> string
@@ -358,7 +358,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:38:1
 
-Cannot cast `barGenericExported(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `barGenericExported(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    with-targs.js:38:1
    38| barGenericExported(() => 1) as string; // error: number ~> string

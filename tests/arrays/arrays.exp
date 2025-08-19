@@ -111,7 +111,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- spread.js:67:2
 
 Cannot cast array literal to array type because number [1] is incompatible with string [2] in array element.
-[incompatible-cast]
+[incompatible-type]
 
    spread.js:67:2
    67| ([...emp]: Array<string>); // error
@@ -132,7 +132,7 @@ Cannot cast `arr` to array type because `Animal` [1] is incompatible with `Dog` 
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-cast]
+[incompatible-type]
 
    subtyping.js:5:4
    5|   (arr: Array<Animal>); // error
@@ -150,7 +150,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ subtyping.js:10:4
 
 Cannot cast `arr` to array type because property `foo` is missing in object type [1] but exists in object type [2] in
-array element. [prop-missing]
+array element. [incompatible-type]
 
    subtyping.js:10:4
    10|   (arr: Array<{...}>); // error
@@ -168,7 +168,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ subtyping.js:15:4
 
 Cannot cast `arr` to array type because property `foo` is missing in object type [1] but exists in object type [2] in
-array element. [prop-missing]
+array element. [incompatible-type]
 
    subtyping.js:15:4
    15|   (arr: Array<{}>); // error

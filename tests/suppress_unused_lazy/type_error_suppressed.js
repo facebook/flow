@@ -4,5 +4,5 @@
 
 import {b} from './b';
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 (123: string);

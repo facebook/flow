@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:9
 
-Cannot cast `this.#p` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `this.#p` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:53:9
    53|         this.#p as number; // Error, #p is a string not a number
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:9
 
-Cannot cast `x.#p` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.#p` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:57:9
    57|         x.#p as string; // Error, here #p is a number not a string
@@ -76,7 +76,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:7
 
-Cannot cast `this.#p` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `this.#p` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:69:7
    69|       this.#p as number; // Error #p is null or undefined
@@ -219,7 +219,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:123:12
 
-Cannot return `this.#t` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `this.#t` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:123:12
    123|     return this.#t; // Error, string ~> number
@@ -236,7 +236,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:129:12
 
-Cannot return `Annotations.#st` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `Annotations.#st` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:129:12
    129|     return Annotations.#st; // Error, string ~> number
@@ -253,7 +253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:135:12
 
-Cannot return `this.#r` because number [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `this.#r` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:135:12
    135|     return this.#r; // Error, number ~> string
@@ -270,7 +270,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:144:12
 
-Cannot return `Annotations.#sr` because number [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `Annotations.#sr` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:144:12
    144|     return Annotations.#sr; // Error, number ~> string
@@ -288,7 +288,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:160:7
 
 Cannot cast `this.p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:160:7
    160|       this.p as 3; // Error, this.#p doesn't refine this.p
@@ -306,7 +306,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:164:7
 
 Cannot cast `this.#p` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:164:7
    164|       this.#p as 4; // Error, this.p doesnt refine this.#p
@@ -324,7 +324,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:167:7
 
 Cannot cast `this.p` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:167:7
    167|       this.p as 3; // Error, this.#p doesnt refine this.p
@@ -342,7 +342,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:170:5
 
 Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:170:5
    170|     this.#p as 3; // Error, Havoc happens as normal
@@ -360,7 +360,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:174:7
 
 Cannot cast `RefinementClashes.q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:174:7
    174|       RefinementClashes.q as 3; // Error, RefinementClashes.#q doesn't refine RefinementClashes.q
@@ -378,7 +378,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:178:7
 
 Cannot cast `RefinementClashes.#q` to number literal `4` because number literal `3` [1] is incompatible with number
-literal `4` [2]. [incompatible-cast]
+literal `4` [2]. [incompatible-type]
 
    test.js:178:7
    178|       RefinementClashes.#q as 4; // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
@@ -396,7 +396,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:181:7
 
 Cannot cast `RefinementClashes.q` to number literal `3` because number literal `4` [1] is incompatible with number
-literal `3` [2]. [incompatible-cast]
+literal `3` [2]. [incompatible-type]
 
    test.js:181:7
    181|       RefinementClashes.q as 3; // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
@@ -414,7 +414,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:184:5
 
 Cannot cast `RefinementClashes.#q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:184:5
    184|     RefinementClashes.#q as 3; // Error, Havoc happens as normal
@@ -432,7 +432,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:190:7
 
 Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:190:7
    190|       this.#p as 3; // Error, other.#p does havoc this.#p
@@ -520,7 +520,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:213:62
 
 Cannot call `this.#optionalFoo` with `42` bound to the first parameter because number [1] is incompatible with
-string [2]. [incompatible-call]
+string [2]. [incompatible-type]
 
    test.js:213:62
    213|     const optionalFooInvalid3: ?number = this.#optionalFoo?.(42);
@@ -571,7 +571,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:218:63
 
 Cannot call `Calls.#optionalBar` with empty string bound to the first parameter because string [1] is incompatible with
-number [2]. [incompatible-call]
+number [2]. [incompatible-type]
 
    test.js:218:63
    218|     const optionalBarInvalid3: ?string = Calls.#optionalBar?.('');

@@ -242,7 +242,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:70:7
 
-Cannot call `foo` with object literal bound to `o` because: [incompatible-call]
+Cannot call `foo` with object literal bound to `o` because: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in the indexer property.
  - Or boolean [2] is incompatible with number [1] in the indexer property.
 
@@ -346,7 +346,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
 Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string literal `ff0000` [1] is
-incompatible with string literal `ffffff` [2]. [incompatible-cast]
+incompatible with string literal `ffffff` [2]. [incompatible-type]
 
    test.js:19:2
    19| (ColorIdToNumber[ColorId.RED]: 'ffffff'); // oops
@@ -397,7 +397,7 @@ simple key in object: [signature-verification-failure]
 Error ----------------------------------------------------------------------------------------------------- test2.js:9:2
 
 Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string literal `00ff00` [1] is
-incompatible with string literal `ffffff` [2]. [incompatible-cast]
+incompatible with string literal `ffffff` [2]. [incompatible-type]
 
    test2.js:9:2
    9| (ColorIdToNumber[ColorId.GREEN]: 'ffffff'); // oops

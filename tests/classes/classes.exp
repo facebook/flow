@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- B.js:6:2
 
-Cannot cast `b.foo` to number because function [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `b.foo` to number because function [1] is incompatible with number [2]. [incompatible-type]
 
    B.js:6:2
    6| (b.foo: number); // error, number !~> function
@@ -33,7 +33,7 @@ References:
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
 
 Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first parameter of property
-`foo`. [incompatible-extend]
+`foo`. [incompatible-type]
 
    C.js:4:9
    4|   foo(x:string):void { }
@@ -50,7 +50,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:8:2
 
-Cannot cast `c.foo` to number because function [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `c.foo` to number because function [1] is incompatible with number [2]. [incompatible-type]
 
    C.js:8:2
    8| (c.foo: number); // error, number !~> function
@@ -124,7 +124,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:22:15
 
-Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2]. [prop-missing]
+Cannot assign `x` to `y` because property `b` is missing in `TestClass` [1] but exists in `Foo` [2]. [incompatible-type]
 
    class_shapes.js:22:15
    22| var y : Foo = x;
@@ -253,7 +253,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:10:1
 
-Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`. [incompatible-cast]
+Cannot cast `C` to object type because string [1] is incompatible with number [2] in property `p`. [incompatible-type]
 
    statics.js:10:1
    10| C as {p: number}; // errors, string ~> number & vice versa (unify)
@@ -270,7 +270,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:13:1
 
-Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2]. [incompatible-cast]
+Cannot cast `o` to statics of `C` because object type [1] is incompatible with statics of `C` [2]. [incompatible-type]
 
    statics.js:13:1
    13| o as Class<C>; // error, object type incompatible with class type
@@ -287,7 +287,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:20:1
 
-Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Dup1.x` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    statics.js:20:1
    20| Dup1.x as empty; // function ~> empty
@@ -304,7 +304,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:27:1
 
-Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Dup2.x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    statics.js:27:1
    27| Dup2.x as empty; // string ~> empty

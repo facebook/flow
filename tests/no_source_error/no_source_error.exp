@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ no_source.js:16:7
 
-Cannot call `x.filter` because: [incompatible-call]
+Cannot call `x.filter` because: [incompatible-type]
  - Either property `bar` is missing in `Foo` [1] but exists in `FooPlus` [2] in the first parameter.
  - Or function type [3] is incompatible with class `Boolean` [4].
 

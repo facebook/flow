@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:16:3
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    switch_default_fallthrough.js:16:3
    16|   a as string; // error, string | number ~/> string
@@ -65,7 +65,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:17:3
 
-Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    switch_default_fallthrough.js:17:3
    17|   a as number; // error, string | number ~/> number
@@ -82,7 +82,7 @@ References:
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:21:10
 
-Cannot return `b` because number [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `b` because number [1] is incompatible with string [2]. [incompatible-type]
 
    switch_default_fallthrough.js:21:10
    21|   return b; // error, number ~/> string
@@ -99,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:39:3
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    switch_default_fallthrough.js:39:3
    39|   a as string; // error, string | number ~/> string
@@ -116,7 +116,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:40:3
 
-Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    switch_default_fallthrough.js:40:3
    40|   a as number; // error, string | number ~/> number
@@ -133,7 +133,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:43:3
 
-Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    switch_default_fallthrough.js:43:3
    43|   b as string; // error, string | number ~/> string
@@ -150,7 +150,7 @@ References:
 
 Error ------------------------------------------------------------------------------- switch_default_fallthrough.js:44:3
 
-Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `b` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    switch_default_fallthrough.js:44:3
    44|   b as number; // error, string | number ~/> number
@@ -167,7 +167,7 @@ References:
 
 Error ------------------------------------------------------------------------------ switch_default_fallthrough.js:46:10
 
-Cannot return `a + b` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `a + b` because string [1] is incompatible with number [2]. [incompatible-type]
 
    switch_default_fallthrough.js:46:10
    46|   return a + b; // error, string ~/> number

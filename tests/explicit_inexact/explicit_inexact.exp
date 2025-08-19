@@ -18,7 +18,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
 Cannot cast `x` to object type because property `foo` is extra in `U` [1] but missing in object type [2]. Exact objects
-do not accept extra props. [prop-missing]
+do not accept extra props. [incompatible-type]
 
    test.js:8:1
    8| x as {||}; // Error, inexact vs. exact

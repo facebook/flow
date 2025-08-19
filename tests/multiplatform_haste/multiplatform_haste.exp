@@ -4,7 +4,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing.android.js:1:1
    1|
@@ -21,7 +21,7 @@ Cannot conform to common interface module because property `myValue` is missing 
 interface [2]. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[prop-missing]
+[incompatible-type]
 
    shadowing.ios.js:1:14
    1| export const iosOnly = true;
@@ -53,7 +53,7 @@ Cannot resolve module `shadowing.android`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:2
 
-Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test_interface_import.js:8:2
    8| (o1: empty); // error

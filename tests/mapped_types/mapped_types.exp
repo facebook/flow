@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- deep_types.js:12:4
 
-Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    deep_types.js:12:4
    12|   (a: empty); // error: number ~> empty
@@ -18,7 +18,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- deep_types.js:16:4
 
 Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    deep_types.js:16:4
    16|   (b: {+foo: {+bar?: {+baz?: string}}}); // error: foo not optional
@@ -36,7 +36,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- deep_types.js:17:4
 
 Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo.bar`.
-[incompatible-cast]
+[incompatible-type]
 
    deep_types.js:17:4
    17|   (b: {+foo?: {+bar: {+baz?: string}}}); // error: bar not optional
@@ -54,7 +54,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- deep_types.js:18:4
 
 Cannot cast `b` to object type because undefined [1] is incompatible with string [2] in property `foo.bar.baz`.
-[incompatible-cast]
+[incompatible-type]
 
    deep_types.js:18:4
    18|   (b: {+foo?: {+bar?: {+baz: string}}}); // error: baz not optional
@@ -71,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:44:4
 
-Cannot cast `obj` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `obj` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-type]
 
    deep_types.js:44:4
    44|   (obj: empty); // error
@@ -183,7 +183,7 @@ Cannot assign `'goodbye'` to `arr[0]` because read-only arrays cannot be written
 
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
-Cannot cast `o` to union type because: [incompatible-cast]
+Cannot cast `o` to union type because: [incompatible-type]
  - Either number [1] is incompatible with empty [2] in property `bar`.
  - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
@@ -209,7 +209,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
-Cannot cast `o` to union type because: [incompatible-cast]
+Cannot cast `o` to union type because: [incompatible-type]
  - Either number [1] is incompatible with empty [2] in property `foo`.
  - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
@@ -236,7 +236,7 @@ References:
 Error ------------------------------------------------------------------------------------------- distributivity.js:15:4
 
 Cannot cast `o` to object type because property `foo` is extra in mapped type [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    distributivity.js:15:4
    15|   (o: {}); // ERROR
@@ -253,7 +253,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
 
-Cannot cast `oExplicit` to object type because null [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `oExplicit` to object type because null [1] is incompatible with object type [2]. [incompatible-type]
 
    distributivity.js:25:4
    25|   (oExplicit: {-foo: number}); // ERROR 2x
@@ -270,7 +270,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:25:4
 
-Cannot cast `oExplicit` to object type because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `oExplicit` to object type because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    distributivity.js:25:4
    25|   (oExplicit: {-foo: number}); // ERROR 2x
@@ -288,7 +288,7 @@ References:
 Error ------------------------------------------------------------------------------------------- distributivity.js:29:4
 
 Cannot cast `oMaybe` to object type because null or undefined [1] is incompatible with object type [2].
-[incompatible-cast]
+[incompatible-type]
 
    distributivity.js:29:4
    29|   (oMaybe: {-foo: number}); // ERROR
@@ -306,7 +306,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:13:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
-[incompatible-cast]
+[incompatible-type]
 
    identity.js:13:6
    13|   a: 'asd', // Error: string ~> number
@@ -321,7 +321,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:14:6
 
 Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
-[incompatible-cast]
+[incompatible-type]
 
    identity.js:14:6
    14|   b: 'asd', // Error: string ~> number
@@ -335,7 +335,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:18:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`. [incompatible-cast]
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`. [incompatible-type]
 
    identity.js:18:6
    18|   a: string, // Error: string ~> number
@@ -349,7 +349,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:19:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`. [incompatible-cast]
+Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`. [incompatible-type]
 
    identity.js:19:6
    19|   b: string, // Error: string ~> number
@@ -364,7 +364,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:22:7
 
 Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
-[prop-missing]
+[incompatible-type]
 
    identity.js:22:7
    22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -379,7 +379,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:22:7
 
 Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
-[prop-missing]
+[incompatible-type]
 
    identity.js:22:7
    22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -394,7 +394,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:24:8
 
 Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
-[prop-missing]
+[incompatible-type]
 
    identity.js:24:8
    24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -409,7 +409,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:24:8
 
 Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
-[prop-missing]
+[incompatible-type]
 
    identity.js:24:8
    24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
@@ -423,7 +423,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`. [incompatible-cast]
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`. [incompatible-type]
 
    identity.js:31:2
    31| (foo: {
@@ -440,7 +440,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`. [incompatible-cast]
+Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`. [incompatible-type]
 
    identity.js:31:2
    31| (foo: {
@@ -457,7 +457,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:36:2
 
-Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    identity.js:36:2
    36| (foo.a: empty); // Error: number ~> empty
@@ -474,7 +474,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:47:8
 
-Cannot cast object literal to `IdentityMap` because in property `foo`: [incompatible-cast]
+Cannot cast object literal to `IdentityMap` because in property `foo`: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
@@ -493,7 +493,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:50:2
 
-Cannot cast object literal to `IdentityMap` because: [incompatible-cast]
+Cannot cast object literal to `IdentityMap` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2] in property `foo`.
  - Or boolean [1] is incompatible with string [2] in property `foo`.
 
@@ -529,7 +529,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:33:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:33:4
    33|   (idx(obj1, obj => obj.a.b.c): number); // error: result must be MaybeT
@@ -546,7 +546,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:34:4
 
-Cannot cast `idx(...)` to nullable string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `idx(...)` to nullable string because number [1] is incompatible with string [2]. [incompatible-type]
 
    idx_replacement.js:34:4
    34|   (idx(obj1, obj => obj.a.b.c): ?string); // error: number ~> string
@@ -563,7 +563,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:35:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:35:4
    35|   (idx(obj1, obj => obj["a"].b.c): number); // error: result must be MaybeT
@@ -602,7 +602,7 @@ Cannot assign `null` to `obj.a` because property `a` is not writable. [cannot-wr
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:40:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:40:4
    40|   (idx(obj2, obj => obj.a.b.c): number); // error: result must be MaybeT
@@ -619,7 +619,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:43:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:43:4
    43|   (idx(obj3, obj => obj.a.b.c): number); // error: result must be MaybeT
@@ -636,7 +636,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
 
-Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:50:4
    50|   (idx(ab, _ => _.a): empty); // error
@@ -654,7 +654,7 @@ References:
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `a`) [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    idx_replacement.js:50:4
    50|   (idx(ab, _ => _.a): empty); // error
@@ -671,7 +671,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:50:4
 
-Cannot cast `idx(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `idx(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:50:4
    50|   (idx(ab, _ => _.a): empty); // error
@@ -688,7 +688,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
 
-Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:51:4
    51|   (idx(ab, _ => _.b): empty); // error
@@ -706,7 +706,7 @@ References:
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `b`) [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    idx_replacement.js:51:4
    51|   (idx(ab, _ => _.b): empty); // error
@@ -723,7 +723,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:51:4
 
-Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `idx(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:51:4
    51|   (idx(ab, _ => _.b): empty); // error
@@ -740,7 +740,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
 
-Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `idx(...)` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:52:4
    52|   (idx(ab, _ => _.c): empty); // error
@@ -758,7 +758,7 @@ References:
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:52:4
 
 Cannot cast `idx(...)` to empty because `void` (due to access of non-existent property `c`) [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    idx_replacement.js:52:4
    52|   (idx(ab, _ => _.c): empty); // error
@@ -789,7 +789,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:59:4
    59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
@@ -806,7 +806,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:59:4
    59|   (idx(new Foo1(), o => o.a.b): number); // error: result must be MaybeT
@@ -831,7 +831,7 @@ Cannot assign `null` to `o.a` because property `a` is not writable. [cannot-writ
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:72:4
 
-Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `idx(...)` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    idx_replacement.js:72:4
    72|   (idx(42, n => n): number); // error: result must be MaybeT
@@ -877,7 +877,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:89:4
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:89:4
    89|   (a: empty); // error
@@ -894,7 +894,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:91:6
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    idx_replacement.js:91:6
    91|     (a: empty); // error
@@ -912,7 +912,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -930,7 +930,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -948,7 +948,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -966,7 +966,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -984,7 +984,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1042,7 +1042,7 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1060,7 +1060,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
 Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1078,7 +1078,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
 Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1096,7 +1096,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
 Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1114,7 +1114,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1172,7 +1172,7 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
 Error -------------------------------------------------------------------------------------------------- import.js:71:10
 
 Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:71:10
    71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
@@ -1187,7 +1187,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:71:21
 
 Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    import.js:71:21
    71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
@@ -1219,7 +1219,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
-Cannot cast `semi` to union type because: [incompatible-cast]
+Cannot cast `semi` to union type because: [incompatible-type]
  - Either number [1] is incompatible with string [2] in property `foo`.
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
@@ -1244,7 +1244,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
-Cannot cast `semi` to union type because: [incompatible-cast]
+Cannot cast `semi` to union type because: [incompatible-type]
  - Either string [1] is incompatible with number [2] in property `foo`.
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
@@ -1269,7 +1269,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:89:4
 
-Cannot cast `homomorphic` to union type because: [incompatible-cast]
+Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `bar` is extra in object type [1] but missing in object type [2]. Exact objects do not accept extra
    props.
  - Or property `bar` is read-only in object type [1] but writable in object type [3].
@@ -1292,7 +1292,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:89:4
 
-Cannot cast `homomorphic` to union type because: [incompatible-cast]
+Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `foo` is read-only in object type [1] but writable in object type [2].
  - Or property `foo` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
    props.
@@ -1420,7 +1420,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:6:2
 
 Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2]. [incompatible-cast]
+`BAR` [2]. [incompatible-type]
 
    issue-2674.js:6:2
    6| (b.FOO : 'BAR'); // error
@@ -1453,7 +1453,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2]. [incompatible-cast]
+`BAR` [2]. [incompatible-type]
 
    key_mirror.js:9:2
    9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
@@ -1572,7 +1572,7 @@ Mapped Types cannot be used when other properties or indexers are present. [inva
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:11:4
 
-Cannot cast `mapped` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mapped` to empty because mapped type [1] is incompatible with empty [2]. [incompatible-type]
 
    non_homomorphic.js:11:4
    11|   (mapped: empty); // ERROR!
@@ -1590,7 +1590,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:12:4
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
@@ -1608,7 +1608,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
 
 Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:12:4
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
@@ -1626,7 +1626,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
 Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:21:4
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
@@ -1644,7 +1644,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
 Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:21:4
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
@@ -1677,7 +1677,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
 Cannot cast `keyMirroredObject` to object type because string literal `bar` [1] is incompatible with string literal
-`baz` [2] in property `bar`. [incompatible-cast]
+`baz` [2] in property `bar`. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1695,7 +1695,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
 Cannot cast `keyMirroredObject` to object type because string literal `baz` [1] is incompatible with string literal
-`foo` [2] in property `baz`. [incompatible-cast]
+`foo` [2] in property `baz`. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1713,7 +1713,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
 Cannot cast `keyMirroredObject` to object type because string literal `foo` [1] is incompatible with string literal
-`bar` [2] in property `foo`. [incompatible-cast]
+`bar` [2] in property `foo`. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1731,7 +1731,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
 Cannot cast `noContext` to object type because property `baz` is missing in mapped type [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    non_homomorphic.js:48:4
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
@@ -1749,7 +1749,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
 Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:48:4
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
@@ -1767,7 +1767,7 @@ References:
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
 Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    non_homomorphic.js:48:4
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
@@ -1784,7 +1784,7 @@ References:
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
 
-Cannot cast `mappedTypeApp` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mappedTypeApp` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
    non_homomorphic_resolution.js:10:4
    10|   (mappedTypeApp: empty); // ERROR
@@ -1801,7 +1801,7 @@ References:
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:18:4
 
-Cannot cast `mappedKeys` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mappedKeys` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
    non_homomorphic_resolution.js:18:4
    18|   (mappedKeys: empty); // ERROR
@@ -1818,7 +1818,7 @@ References:
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:27:4
 
-Cannot cast `mappedEval` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `mappedEval` to empty because `Mapped` [1] is incompatible with empty [2]. [incompatible-type]
 
    non_homomorphic_resolution.js:27:4
    27|   (mappedEval: empty); // ERROR
@@ -1836,7 +1836,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
 Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
@@ -1856,7 +1856,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `bar`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
@@ -1874,7 +1874,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
 Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
@@ -1892,7 +1892,7 @@ References:
 Error --------------------------------------------------------------------------------------------- optionality.js:13:10
 
 Cannot cast object literal to `Preserve` because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    optionality.js:13:10
    13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
@@ -1907,7 +1907,7 @@ References:
 Error --------------------------------------------------------------------------------------------- optionality.js:13:22
 
 Cannot cast object literal to `Preserve` because number [1] is incompatible with string [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    optionality.js:13:22
    13|   ({foo: 'str', bar: 3}: Preserve); // ERROR
@@ -1959,7 +1959,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `bar` is missing in object literal [1] but
-exists in `Omit` [2]. [prop-missing]
+exists in `Omit` [2]. [incompatible-type]
 
    pick_and_omit.js:49:47
    49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -1974,7 +1974,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `foo` is extra in object literal [1] but
-missing in `Omit` [2]. Exact objects do not accept extra props. [prop-missing]
+missing in `Omit` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    pick_and_omit.js:49:47
    49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -2003,7 +2003,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `bar` is extra in object literal [1] but
-missing in `Pick` [2]. Exact objects do not accept extra props. [prop-missing]
+missing in `Pick` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    pick_and_omit.js:83:47
    83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
@@ -2018,7 +2018,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `foo` is missing in object literal [1] but
-exists in `Pick` [2]. [prop-missing]
+exists in `Pick` [2]. [incompatible-type]
 
    pick_and_omit.js:83:47
    83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
@@ -2069,7 +2069,7 @@ An annotation on `o` is required because Flow cannot infer its type from local c
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
 Cannot instantiate mapped type [1] because string literal `bar` [2] is incompatible with string literal `foo` [3] in
-type argument `T`. [incompatible-type-arg]
+type argument `T`. [incompatible-type]
 
    reasons.js:10:26
    10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
@@ -2145,7 +2145,7 @@ References:
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:38:29
 
 Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
-[incompatible-type-arg]
+[incompatible-type]
 
    semi_homomorphic.js:38:29
    38|   type IndexedBad = Semi<P, number>; // ERROR
@@ -2160,7 +2160,7 @@ References:
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
 
 Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
-[incompatible-type-arg]
+[incompatible-type]
 
    semi_homomorphic.js:44:32
    44|   type NoIndexerBad = Semi<{}, number>; // ERROR
@@ -2174,7 +2174,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:4
 
-Cannot cast `a` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:31:4
    31|   (a: empty); // ERROR
@@ -2191,7 +2191,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:4
 
-Cannot cast `b` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `b` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:32:4
    32|   (b: empty); // ERROR
@@ -2208,7 +2208,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:4
 
-Cannot cast `c` to empty because array type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:33:4
    33|   (c: empty); // ERROR
@@ -2226,7 +2226,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:42:4
 
 Cannot cast `badKey` to `Mapped` because property `bar` is extra in object type [1] but missing in `Mapped` [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    test.js:42:4
    42|   (badKey: Mapped<O>); // ERROR
@@ -2244,7 +2244,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:42:4
 
 Cannot cast `badKey` to `Mapped` because property `foo` is missing in object type [1] but exists in `Mapped` [2].
-[prop-missing]
+[incompatible-type]
 
    test.js:42:4
    42|   (badKey: Mapped<O>); // ERROR
@@ -2262,7 +2262,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
 Cannot cast `badVal` to `Mapped` because string [1] is incompatible with number [2] in property `foo.contents`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:45:4
    45|   (badVal: Mapped<O>); // ERROR
@@ -2280,7 +2280,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:59:4
 
 Cannot cast `badA` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
-element. [incompatible-cast]
+element. [incompatible-type]
 
    test.js:59:4
    59|   (badA: Mapped<Arr>); // ERROR
@@ -2298,7 +2298,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:60:4
 
 Cannot cast `badB` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
-element. [incompatible-cast]
+element. [incompatible-type]
 
    test.js:60:4
    60|   (badB: Mapped<ROArr>); // ERROR
@@ -2318,7 +2318,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `badC` to `Mapped` because undefined [1] is incompatible with string [2] in property `contents` of index 1. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:61:4
    61|   (badC: Mapped<Tuple>); // ERROR
@@ -2351,7 +2351,7 @@ Mapped Types are not supported in interfaces or declared classes. [invalid-mappe
 
 Error ----------------------------------------------------------------------------------------------------- test.js:79:4
 
-Cannot cast `mappedIndexer.foo` to number because `Box` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `mappedIndexer.foo` to number because `Box` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:79:4
    79|   (mappedIndexer.foo: number); // ERROR
@@ -2368,7 +2368,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:80:4
 
-Cannot cast `mappedIndexer.bar` to string because `Box` [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `mappedIndexer.bar` to string because `Box` [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:80:4
    80|   (mappedIndexer.bar: string); // ERROR
@@ -2417,7 +2417,7 @@ Mapped Types do not yet support variance annotations on array inputs. [invalid-m
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:4
 
-Cannot cast `partial.foo` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `partial.foo` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:111:4
    111|   (partial.foo: number); // ERROR
@@ -2434,7 +2434,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:115:4
 
-Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:115:4
    115|   (partialIndexer.qux: string); // ERROR
@@ -2451,7 +2451,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:119:4
 
-Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:119:4
    119|   (partialArr[0]: number); // ERROR;
@@ -2468,7 +2468,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:121:4
 
-Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:121:4
    121|   (partialTuple[0]: number); // ERROR;
@@ -2486,7 +2486,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:131:28
 
 Cannot instantiate `MappedConstrained` because number [1] is incompatible with string [2] in type argument `T`.
-[incompatible-type-arg]
+[incompatible-type]
 
    test.js:131:28
    131|   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
@@ -2518,7 +2518,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:4
 
-Cannot cast `badKeys` to empty because `UnconstrainedKey` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `badKeys` to empty because `UnconstrainedKey` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:140:4
    140|   (badKeys: empty); // ERROR
@@ -2535,7 +2535,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:8:2
 
-Cannot cast object literal to `T` because: [incompatible-cast]
+Cannot cast object literal to `T` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2] in property `p`.
  - Or boolean [1] is incompatible with number [3] in property `p`.
 
@@ -2557,7 +2557,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
-Cannot cast object literal to `U` because: [incompatible-cast]
+Cannot cast object literal to `U` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2] in property `p`.
  - Or boolean [1] is incompatible with number [2] in property `p`.
 

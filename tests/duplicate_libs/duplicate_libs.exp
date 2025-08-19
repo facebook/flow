@@ -18,7 +18,7 @@ behaviors. [libdef-override]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:1:2
 
-Cannot cast `global_foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `global_foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:1:2
    1| (global_foo: string); // error: number ~> string
@@ -35,7 +35,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:2:2
 
-Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `require(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:2:2
    2| (require('bar'): number); // error: string ~> number

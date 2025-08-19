@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:3:2
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:3:2
    3| (o.p: empty); // error: number ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- annot.js:4:2
 
-Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.q` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:4:2
    4| (o.q: empty); // error: string ~> empty
@@ -35,7 +35,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:12
 
 Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
-[incompatible-cast]
+[incompatible-type]
 
    annot.js:8:12
    8| ({p: 0, q: 0}: O); // error: number ~> string
@@ -50,7 +50,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:9:24
 
 Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
-[incompatible-cast]
+[incompatible-type]
 
    annot.js:9:24
    9| ({p: 0, __proto__: {q: 0}}: O); // error: number ~> string
@@ -65,7 +65,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:10:2
 
 Cannot cast object literal to `O` because property `q` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    annot.js:10:2
    10| ({p: 0}: O); // error, property `q` not found
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:16:2
 
-Cannot cast `o_optional.__proto__` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_optional.__proto__` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:16:2
    16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
@@ -110,7 +110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:16:2
 
-Cannot cast `o_optional.__proto__` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_optional.__proto__` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:16:2
    16| (o_optional.__proto__: empty); // error: void ~> empty, object type ~> empty
@@ -141,7 +141,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:22:2
 
-Cannot cast `o_variance.__proto__` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_variance.__proto__` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:22:2
    22| (o_variance.__proto__: empty); // error: object type ~> empty
@@ -181,7 +181,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- annot.js:28:2
 
 Cannot cast `o_callable.__proto__` to empty because function prototype [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    annot.js:28:2
    28| (o_callable.__proto__: empty); // error: function proto ~> empty
@@ -195,7 +195,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:33:2
 
-Cannot cast `o_method.__proto__` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_method.__proto__` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:33:2
    33| (o_method.__proto__: empty); // error: function ~> empty
@@ -212,7 +212,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:37:2
 
-Cannot cast `o_loop.p` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_loop.p` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-type]
 
    annot.js:37:2
    37| (o_loop.p: empty); // error: number ~> empty
@@ -245,7 +245,7 @@ Multiple prototypes specified. [unsupported-syntax]
 
 Error --------------------------------------------------------------------------------------------------- literal.js:2:2
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    literal.js:2:2
    2| (o.p: empty); // error: number ~> empty
@@ -262,7 +262,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- literal.js:3:2
 
-Cannot cast `o.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o.q` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    literal.js:3:2
    3| (o.q: empty); // error: number ~> empty
@@ -280,7 +280,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- literal.js:6:2
 
 Cannot cast `o_get.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    literal.js:6:2
    6| (o_get.q: empty); // error: property `q` not found
@@ -316,7 +316,7 @@ Cannot get `o_set.__proto__` because property `__proto__` is not readable. [cann
 
 Error -------------------------------------------------------------------------------------------------- literal.js:13:2
 
-Cannot cast `o_method.__proto__` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_method.__proto__` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    literal.js:13:2
    13| (o_method.__proto__: empty); // error: function ~> empty
@@ -334,7 +334,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- literal.js:17:2
 
 Cannot cast `o_shorthand.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible
-with empty [2]. [incompatible-cast]
+with empty [2]. [incompatible-type]
 
    literal.js:17:2
    17| (o_shorthand.q: empty); // error: property `q` not found
@@ -362,7 +362,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- literal.js:21:2
 
-Cannot cast `o_computed.__proto__` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_computed.__proto__` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    literal.js:21:2
    21| (o_computed.__proto__: empty); // error: number ~> empty
@@ -393,7 +393,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- literal.js:24:2
 
-Cannot cast `o_loop.p` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o_loop.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    literal.js:24:2
    24| (o_loop.p: empty); // error: number ~> empty
@@ -411,7 +411,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- literal.js:25:2
 
 Cannot cast `o_loop.q` to empty because `void` (due to access of non-existent property `q`) [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    literal.js:25:2
    25| (o_loop.q: empty); // error: property `q` not found
@@ -476,7 +476,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- null.js:14:4
 
 Cannot cast `o_nonstrict.p` to empty because property `p` of unknown type [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    null.js:14:4
    14|   (o_nonstrict.p: empty); // error: mixed ~> empty

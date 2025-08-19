@@ -24,7 +24,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:15:1
 
-Cannot cast `f` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    keys.js:15:1
    15| f as empty; // error
@@ -41,7 +41,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ main.js:6:1
 
-Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast empty string to `T1` because string [1] is incompatible with number [2]. [incompatible-type]
 
    main.js:6:1
    6| '' as T1; // error string ~> nunber
@@ -55,7 +55,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:13:1
 
-Cannot cast `x3` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x3` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:13:1
    13| x3 as empty; // error number ~> empty
@@ -72,7 +72,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:22:1
 
-Cannot cast `x4` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x4` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:22:1
    22| x4 as empty; // error number ~> empty
@@ -89,7 +89,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:26:1
 
-Cannot cast `x5` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x5` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:26:1
    26| x5 as empty; // error number ~> empty
@@ -106,7 +106,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:27:1
 
-Cannot cast `y5` to empty because function [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y5` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:27:1
    27| y5 as empty; // error function type ~> empty
@@ -123,7 +123,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:30:1
 
-Cannot cast `1` to `T6` because number [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `1` to `T6` because number [1] is incompatible with `C` [2]. [incompatible-type]
 
    main.js:30:1
    30| 1 as T6; // error number ~> class
@@ -137,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:32:1
 
-Cannot cast `x6` to empty because `C` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x6` to empty because `C` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:32:1
    32| x6 as empty; // error C ~> empty
@@ -154,7 +154,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:35:1
 
-Cannot cast `(new Foo8()).x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `(new Foo8()).x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    main.js:35:1
    35| new Foo8().x as number; // error: Qux wins
@@ -171,7 +171,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:36:1
 
-Cannot cast `(new Foo8()).y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `(new Foo8()).y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:36:1
    36| new Foo8().y as string; // error: Bar wins
@@ -188,7 +188,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:37:1
 
-Cannot cast `(new Foo8()).z` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `(new Foo8()).z` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    main.js:37:1
    37| new Foo8().z as number; // error: Qux wins
@@ -205,7 +205,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:38:1
 
-Cannot cast `C8` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C8` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:38:1
    38| C8 as empty; // error class ~> empty
@@ -222,7 +222,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:41:1
 
-Cannot cast `x9` to empty because module `./export_named_any` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x9` to empty because module `./export_named_any` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:41:1
    41| x9 as empty; // error module ~> empty
@@ -238,7 +238,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:46:1
 
-Cannot cast `C10` to empty because class `<<anonymous class>>` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `C10` to empty because class `<<anonymous class>>` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:46:1
    46| C10 as empty; // error anonymous class ~> empty
@@ -294,7 +294,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:58:1
 
-Cannot cast `f15()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f15()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:58:1
      58| f15() as empty;
@@ -351,7 +351,7 @@ Cannot resolve name `D16`. [cannot-resolve-name]
 
 Error ----------------------------------------------------------------------------------------------------- main.js:73:1
 
-Cannot cast `E17` to empty because enum `E` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `E17` to empty because enum `E` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:73:1
    73| E17 as empty; // error enum ~> empty
@@ -368,7 +368,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:74:1
 
-Cannot cast `E17.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `E17.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:74:1
    74| E17.A as empty; // error enum ~> empty
@@ -399,7 +399,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:80:1
 
-Cannot cast `x18` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x18` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:80:1
    80| x18 as empty; // error number, string ~> empty
@@ -416,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:80:1
 
-Cannot cast `x18` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x18` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:80:1
    80| x18 as empty; // error number, string ~> empty
@@ -433,7 +433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:81:1
 
-Cannot cast `y18` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y18` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:81:1
    81| y18 as empty; // error number ~> empty
@@ -450,7 +450,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:82:1
 
-Cannot cast `z18` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `z18` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:82:1
    82| z18 as empty; // error string ~> empty
@@ -467,7 +467,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:85:1
 
-Cannot cast `baz01` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `baz01` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:85:1
    85| baz01 as empty; // error number ~> empty
@@ -484,7 +484,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:86:1
 
-Cannot cast `baz02` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `baz02` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:86:1
    86| baz02 as empty; // error number ~> empty
@@ -502,7 +502,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:91:1
 
 Cannot cast `y19` to object type because property `a` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    main.js:91:1
    91| y19 as {a: number}; // error undefined ~> number
@@ -519,7 +519,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:113:1
 
-Cannot cast `p1_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p1_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:113:1
    113| p1_f_22 as empty; // error string ~> empty
@@ -536,7 +536,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:114:1
 
-Cannot cast `p2_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p2_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:114:1
    114| p2_f_22 as empty; // error string ~> empty
@@ -553,7 +553,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:115:1
 
-Cannot cast `p3_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p3_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:115:1
    115| p3_f_22 as empty; // error string ~> empty
@@ -570,7 +570,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:116:1
 
-Cannot cast `p4_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p4_f_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:116:1
    116| p4_f_22 as empty; // error string ~> empty
@@ -587,7 +587,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:117:1
 
-Cannot cast `p1_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p1_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:117:1
    117| p1_g_22 as empty; // error string ~> empty
@@ -604,7 +604,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:118:1
 
-Cannot cast `p2_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p2_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:118:1
    118| p2_g_22 as empty; // error string ~> empty
@@ -621,7 +621,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:119:1
 
-Cannot cast `p3_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p3_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:119:1
    119| p3_g_22 as empty; // error string ~> empty
@@ -638,7 +638,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:120:1
 
-Cannot cast `p4_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `p4_g_22` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:120:1
    120| p4_g_22 as empty; // error string ~> empty
@@ -691,7 +691,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:134:1
 
-Cannot cast `t24` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `t24` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:134:1
    134| t24 as empty; // error number (length) ~> empty
@@ -708,7 +708,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:137:1
 
-Cannot cast `x25` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x25` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:137:1
    137| x25 as empty; // error number ~> empty
@@ -729,7 +729,7 @@ Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because `FrozenSu
 `IndirectFrozenSuiteValues` [2]. 
 
 Type `FrozenSuiteValues` [1] includes members `Extra Suite` that are not included in type
-`IndirectFrozenSuiteValues` [2]. [incompatible-cast]
+`IndirectFrozenSuiteValues` [2]. [incompatible-type]
 
    main.js:149:1
    149| frozenSuitevalues as IndirectFrozenSuiteValues; // error = 'Extra Suite' missing
@@ -746,7 +746,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:155:1
 
-Cannot cast `S26.getState()` to empty because `RecordInstance` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `S26.getState()` to empty because `RecordInstance` [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:155:1
    155| S26.getState() as empty; // error RecordInstance ~> empty
@@ -763,7 +763,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:161:1
 
-Cannot cast `C27.Q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `C27.Q` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:161:1
    161| C27.Q as string; // error
@@ -780,7 +780,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:163:1
 
-Cannot cast `x27.q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x27.q` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:163:1
    163| x27.q as string; // error
@@ -797,7 +797,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:167:1
 
-Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `t28` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:167:1
    167| t28 as empty; // error number (length) ~> empty
@@ -814,7 +814,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:171:1
 
-Cannot cast `instance_named` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `instance_named` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:171:1
    171| instance_named as empty; // ERROR

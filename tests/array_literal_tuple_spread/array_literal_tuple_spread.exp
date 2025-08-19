@@ -85,7 +85,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:44:4
 
 Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:44:4
    44|   (ret1[0]: 2); // error
@@ -103,7 +103,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
 Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:45:4
    45|   (ret2[0]: 3); // error
@@ -189,7 +189,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:76:12
 
-Cannot return array literal because string [1] is incompatible with number [2] in array element. [incompatible-return]
+Cannot return array literal because string [1] is incompatible with number [2] in array element. [incompatible-type]
 
    test.js:76:12
    76|     return [...iter]; // error: Spec says you can spread iterables

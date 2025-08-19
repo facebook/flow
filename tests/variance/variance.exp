@@ -75,7 +75,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:61:4
    61|   (rwB: RWA); // error
@@ -95,7 +95,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `drwB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:62:4
    62|   (drwB: dRWA); // error
@@ -166,7 +166,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:4
 
-Cannot cast `woB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `woB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:69:4
    69|   (woB: RWA); // error
@@ -201,7 +201,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:4
 
-Cannot cast `dwoB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `dwoB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:70:4
    70|   (dwoB: dRWA); // error
@@ -326,7 +326,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:131:4
 
-Cannot cast `rwB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `rwB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:131:4
    131|   (rwB: WOA); // error
@@ -343,7 +343,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:132:4
 
-Cannot cast `drwB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `drwB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:132:4
    132|   (drwB: dWOA); // error
@@ -396,7 +396,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:139:4
 
-Cannot cast `woB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `woB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:139:4
    139|   (woB: WOA); // error
@@ -413,7 +413,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:4
 
-Cannot cast `dwoB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `dwoB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:140:4
    140|   (dwoB: dWOA); // error
@@ -430,7 +430,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:146:8
 
-Cannot cast object literal to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:146:8
    146|   ({p: new A}: RWB); // error
@@ -444,7 +444,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:147:8
 
-Cannot cast object literal to `dRWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `dRWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:147:8
    147|   ({p: new A}: dRWB); // error
@@ -458,7 +458,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:150:4
 
-Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:150:4
    150|   (rwA: RWB); // error
@@ -475,7 +475,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:151:4
 
-Cannot cast `drwA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `drwA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:151:4
    151|   (drwA: dRWB); // error
@@ -510,7 +510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:4
 
-Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:154:4
    154|   (roA: RWB); // error
@@ -545,7 +545,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:155:4
 
-Cannot cast `droA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `droA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:155:4
    155|   (droA: dRWB); // error
@@ -598,7 +598,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:165:8
 
-Cannot cast object literal to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:165:8
    165|   ({p: new A}: ROB); // error
@@ -612,7 +612,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:166:8
 
-Cannot cast object literal to `dROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `dROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:166:8
    166|   ({p: new A}: dROB); // error
@@ -626,7 +626,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:169:4
 
-Cannot cast `rwA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `rwA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:169:4
    169|   (rwA: ROB); // error
@@ -643,7 +643,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:170:4
 
-Cannot cast `drwA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `drwA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:170:4
    170|   (drwA: dROB); // error
@@ -660,7 +660,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:173:4
 
-Cannot cast `roA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast `roA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    test.js:173:4
    173|   (roA: ROB); // error
@@ -677,7 +677,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:4
 
-Cannot cast `droA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-cast]
+Cannot cast `droA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
 
    test.js:174:4
    174|   (droA: dROB); // error

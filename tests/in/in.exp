@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ refinement.js:7:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:7:5
    7|     x as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:10:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:10:5
    10|     x as empty; // ERROR
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:18:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:18:5
    18|     x as empty; // ERROR
@@ -51,7 +51,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:29:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:29:5
    29|     x as empty; // ERROR
@@ -68,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:40:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:40:5
    40|     x as empty; // ERROR
@@ -85,7 +85,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:48:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:48:5
    48|     x as empty; // ERROR
@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:59:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:59:5
    59|     x as empty; // ERROR
@@ -119,7 +119,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:71:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:71:5
    71|     x as empty; // ERROR
@@ -137,7 +137,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:90:5
 
 Cannot cast `x` to object type because property `b` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    refinement.js:90:5
    90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
@@ -155,7 +155,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:90:5
 
 Cannot cast `x` to object type because number literal `0` [1] is incompatible with number literal `1` [2] in property
-`a`. [incompatible-cast]
+`a`. [incompatible-type]
 
    refinement.js:90:5
    90|     x as {a: 1, b: void, ...}; // ERROR: could exist in inexact object
@@ -172,7 +172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:92:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:92:5
    92|     x as empty; // ERROR
@@ -189,7 +189,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:102:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:102:5
    102|     x as empty; // ERROR
@@ -206,7 +206,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:102:5
 
-Cannot cast `x` to empty because: [incompatible-cast]
+Cannot cast `x` to empty because: [incompatible-type]
  - Either object type [1] is incompatible with empty [2].
  - Or object type [3] is incompatible with empty [2].
 
@@ -228,7 +228,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:113:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:113:5
    113|     x as empty; // ERROR
@@ -245,7 +245,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:116:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:116:5
    116|     x as empty; // ERROR
@@ -262,7 +262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:116:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:116:5
    116|     x as empty; // ERROR
@@ -280,7 +280,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:5
 
 Cannot cast `x.a` to number literal `0` because number literal `1` [1] is incompatible with number literal `0` [2].
-[incompatible-cast]
+[incompatible-type]
 
    refinement.js:117:5
    117|     x.a as 0; // ERROR: is optional so unknown
@@ -298,7 +298,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:126:5
 
 Cannot cast `x` to interface type because property `b` is missing in interface type [1] but exists in interface
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    refinement.js:126:5
    126|     x as interface {a: 1, b: void}; // ERROR: could exist
@@ -316,7 +316,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:126:5
 
 Cannot cast `x` to interface type because number literal `0` [1] is incompatible with number literal `1` [2] in property
-`a`. [incompatible-cast]
+`a`. [incompatible-type]
 
    refinement.js:126:5
    126|     x as interface {a: 1, b: void}; // ERROR: could exist
@@ -333,7 +333,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:128:5
 
-Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:128:5
    128|     x as empty; // ERROR
@@ -350,7 +350,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:135:5
 
-Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because interface type [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:135:5
    135|     x as empty; // ERROR
@@ -367,7 +367,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:146:5
 
-Cannot cast `x` to empty because `A` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because `A` [1] is incompatible with empty [2]. [incompatible-type]
 
    refinement.js:146:5
    146|     x as empty; // ERROR

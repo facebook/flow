@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- nested/test.js:6:1
 
-Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nested/test.js:6:1
    6| foo.foo as empty; // error
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- nested/test.js:8:1
 
-Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nested/test.js:8:1
    8| bar.foo as empty; // error
@@ -34,7 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- nested/test.js:10:1
 
-Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    nested/test.js:10:1
    10| scopedFoo.foo as empty; // error
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:6:1
    6| foo.foo as empty; // error
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `bar.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:8:1
    8| bar.foo as empty; // error
@@ -85,7 +85,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `scopedFoo.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:10:1
    10| scopedFoo.foo as empty; // error

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- Profile.js:23:5
 
-Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.props.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    Profile.js:23:5
    23|     this.props.foo as empty; // Error: number ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:24:5
 
-Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.props.user.id` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    Profile.js:24:5
    24|     this.props.user.id as empty; // Error: string ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:25:5
 
-Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.props.user.name` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    Profile.js:25:5
    25|     this.props.user.name as empty; // Error: string ~> empty
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Profile.js:26:5
 
-Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    Profile.js:26:5
    26|     this.props.user.pic.id as empty; // Error: string ~> empty
@@ -83,7 +83,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- ProfilePic.js:17:5
 
-Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this.props.image.url` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    ProfilePic.js:17:5
    17|     this.props.image.url as empty; // Error: string ~> empty
@@ -101,7 +101,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:15:2
 
 Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[prop-missing]
+[incompatible-type]
 
    main.js:15:2
    15| <Profile user={userRef} />; // Error: Missing foo
@@ -119,7 +119,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:16:2
 
 Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[prop-missing]
+[incompatible-type]
 
    main.js:16:2
    16| <Profile foo={42} />; // Error: Missing user
@@ -152,7 +152,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
 Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[prop-missing]
+[incompatible-type]
 
    main.js:18:2
    18| <Profile />; // Error: Missing user and foo
@@ -170,7 +170,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
 Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[prop-missing]
+[incompatible-type]
 
    main.js:18:2
    18| <Profile />; // Error: Missing user and foo
@@ -283,7 +283,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- more.js:108:2
 
 Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in `MapRelayProps` [2].
-[prop-missing]
+[incompatible-type]
 
    more.js:108:2
    108| <SingularTest onClick={cb} string="x" nullableUser={null} />;
@@ -335,7 +335,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- more.js:144:34
 
 Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
-argument `T`. [incompatible-type-arg]
+argument `T`. [incompatible-type]
 
    more.js:144:34
    144|   __fragments: FragmentReference<{thing1: true}> &
@@ -350,7 +350,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- more.js:146:23
 
 Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
-argument `T`. [incompatible-type-arg]
+argument `T`. [incompatible-type]
 
    more.js:146:23
    146|     FragmentReference<{thing2: true}>,
@@ -380,7 +380,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- more.js:160:2
 
 Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in `MapRelayProps` [2].
-[prop-missing]
+[incompatible-type]
 
    more.js:160:2
    160| <PluralTest nullableUsers={null} />;

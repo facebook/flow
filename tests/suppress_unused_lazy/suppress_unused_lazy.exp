@@ -27,7 +27,7 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
-   7| // $FlowFixMe[incompatible-cast]
+   7| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -39,7 +39,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Status after check-contents type_error.js:
 Error ------------------------------------------------------------------------------------------------ type_error.js:7:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    type_error.js:7:2
    7| (123: string); // error
@@ -75,7 +75,7 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
-   7| // $FlowFixMe[incompatible-cast]
+   7| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -105,7 +105,7 @@ annotation at function return: [signature-verification-failure]
 
 Error ------------------------------------------------------------------------------------------------ type_error.js:7:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    type_error.js:7:2
    7| (123: string); // error

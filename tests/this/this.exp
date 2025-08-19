@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- This.js:7:10
 
-Cannot return `this.x` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `this.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    This.js:7:10
    7|   return this.x // error: x not in Object, string not compatible with number
@@ -76,7 +76,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- This.js:27:12
 
-Cannot return `a2()` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `a2()` because string [1] is incompatible with number [2]. [incompatible-type]
 
    This.js:27:12
    27|     return a2() // error: string not compatible with number
@@ -110,7 +110,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- This.js:36:2
 
-Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2]. [incompatible-type]
 
    This.js:36:2
    36| (this: void);
@@ -124,7 +124,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrows.js:16:2
 
-Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2]. [incompatible-cast]
+Cannot cast `j` to `D` because `C` [1] is incompatible with `D` [2]. [incompatible-type]
 
    arrows.js:16:2
    16| (j: D); // error, since return type of bar is C, not the type of `this`
@@ -142,7 +142,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- arrows.js:24:17
 
 Cannot call `super.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    arrows.js:24:17
    24|       super.foo(""); // find super method, error due to incorrect arg

@@ -18,7 +18,7 @@ Cannot import `A` because there is no `A` export in `./A`. [missing-export]
 
 Error --------------------------------------------------------------------------------------------------------- B.js:5:2
 
-Cannot cast `5` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `5` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    B.js:5:2
    5| (5: string);

@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
 
 Cannot create `C1` element because `C1` [1] is incompatible with `B` [2] in type argument `T` [3] of the first parameter
-of property `onKeyDown`. [incompatible-type-arg]
+of property `onKeyDown`. [incompatible-type]
 
    concretize.js:8:16
    8| <C1 onKeyDown={_onKeyDown} />;
@@ -22,7 +22,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
 
 Cannot create `C1` element because `B` [1] is incompatible with `C1` [2] in type argument `T` of the first parameter of
-property `onKeyDown`. [incompatible-type-arg]
+property `onKeyDown`. [incompatible-type]
 
    concretize.js:8:16
    8| <C1 onKeyDown={_onKeyDown} />;

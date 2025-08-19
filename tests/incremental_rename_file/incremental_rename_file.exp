@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- c.js:5:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:5:2
    5| (x: string);
@@ -19,7 +19,7 @@ References:
 Found 1 error
 Error --------------------------------------------------------------------------------------------------------- c.js:5:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    c.js:5:2
    5| (x: string);

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- recursive.js:8:2
 
-Cannot cast function to `Value` because: [incompatible-cast]
+Cannot cast function to `Value` because: [incompatible-type]
  - Either function [1] is incompatible with indexed `Aggregate` [2].
  - Or function [1] is incompatible with boolean [3].
 

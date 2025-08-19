@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:11:3
 
 Cannot cast `x` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
+[incompatible-type]
 
    main.js:11:3
    11|   x as "abc"; // error string ~> "abc"
@@ -19,7 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:16:3
 
 Cannot cast `cjs_prim` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
+[incompatible-type]
 
    main.js:16:3
    16|   cjs_prim as "abc"; // error string ~> "abc"
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:20:3
 
 Cannot cast `cjs_obj.foo` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-cast]
+[incompatible-type]
 
    main.js:20:3
    20|   cjs_obj.foo as "abc"; // error string ~> "abc"
@@ -55,7 +55,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:21:3
 
 Cannot cast `cjs_obj.bar` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-cast]
+[incompatible-type]
 
    main.js:21:3
    21|   cjs_obj.bar as 1; // error number ~> 1
@@ -73,7 +73,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:22:3
 
 Cannot cast `cjs_obj.baz` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    main.js:22:3
    22|   cjs_obj.baz as true; // error boolean ~> true

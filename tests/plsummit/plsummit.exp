@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_class.js:3:15
 
-Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `C` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    import_class.js:3:15
    3| var c = new C("");

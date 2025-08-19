@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:15:8
 
-Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    class.js:15:8
    15|       (b : string); // error: number ~> string
@@ -32,7 +32,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- class.js:24:12
 
 Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
-[incompatible-return]
+[incompatible-type]
 
    class.js:24:12
      24|     return ""; // error: string ~> number
@@ -66,7 +66,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:37:8
 
-Cannot cast `x` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    class.js:37:8
    37|       (x : string) // nope
@@ -118,7 +118,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
 Cannot yield `xs` because undefined [1] is incompatible with string [2] in type argument `Next` [3] of the return value
-of property `@@iterator`. [incompatible-type-arg]
+of property `@@iterator`. [incompatible-type]
 
    class.js:72:12
      72|     yield *xs;
@@ -138,7 +138,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    class.js:98:41
    98| for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
@@ -156,7 +156,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- class.js:100:50
 
 Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with
-undefined [2]. [incompatible-call]
+undefined [2]. [incompatible-type]
 
    class.js:100:50
    100| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
@@ -170,7 +170,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:104:4
 
-Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    class.js:104:4
    104|   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -188,7 +188,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- class.js:107:28
 
 Cannot call `examples.widen_next().next` with `0` bound to `value` because number [1] is incompatible with
-undefined [2]. [incompatible-call]
+undefined [2]. [incompatible-type]
 
    class.js:107:28
    107| examples.widen_next().next(0) // err number -> void
@@ -203,7 +203,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- class.js:108:28
 
 Cannot call `examples.widen_next().next` with empty string bound to `value` because string [1] is incompatible with
-undefined [2]. [incompatible-call]
+undefined [2]. [incompatible-type]
 
    class.js:108:28
    108| examples.widen_next().next("") // err number -> void
@@ -218,7 +218,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- class.js:109:28
 
 Cannot call `examples.widen_next().next` with `true` bound to `value` because boolean [1] is incompatible with
-undefined [2]. [incompatible-call]
+undefined [2]. [incompatible-type]
 
    class.js:109:28
    109| examples.widen_next().next(true) // err number -> void
@@ -232,7 +232,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:122:4
 
-Cannot cast `x1` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x1` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    class.js:122:4
    122|   (x1 : number) // error: string ~> number
@@ -249,7 +249,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:128:4
 
-Cannot cast `x2` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x2` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    class.js:128:4
    128|   (x2 : string) // error: number ~> string
@@ -283,7 +283,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- class_failure.js:12:41
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    class_failure.js:12:41
    12| for (var x of examples.infer_stmt()) { (x : string) } // error: number ~> string
@@ -301,7 +301,7 @@ References:
 Error ------------------------------------------------------------------------------------------- class_failure.js:14:50
 
 Cannot call `examples.infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with
-undefined [2]. [incompatible-call]
+undefined [2]. [incompatible-type]
 
    class_failure.js:14:50
    14| var infer_stmt_next = examples.infer_stmt().next(0).value; // error: number ~> void
@@ -315,7 +315,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_failure.js:19:4
 
-Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    class_failure.js:19:4
    19|   (infer_stmt_next : boolean) // error: void ~> boolean
@@ -346,7 +346,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generators.js:14:6
 
-Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    generators.js:14:6
    14|     (b : string); // error: number ~> string
@@ -364,7 +364,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:23:10
 
 Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
-[incompatible-return]
+[incompatible-type]
 
    generators.js:23:10
      23|   return ""; // error: string ~> number
@@ -403,7 +403,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:30:32
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    generators.js:30:32
    30| for (var x of infer_stmt()) { (x : string) } // error: number ~> string
@@ -421,7 +421,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:31:41
 
 Cannot call `infer_stmt().next` with `0` bound to `value` because number [1] is incompatible with undefined (default
-`next` of unannotated generator function) [2]. [incompatible-call]
+`next` of unannotated generator function) [2]. [incompatible-type]
 
    generators.js:31:41
    31| var infer_stmt_next = infer_stmt().next(0).value; // error: number ~> void
@@ -439,7 +439,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generators.js:35:4
 
-Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `infer_stmt_next` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    generators.js:35:4
    35|   (infer_stmt_next : boolean) // error: string ~> boolean
@@ -478,7 +478,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:69:32
 
 Cannot call `delegate_next_generator().next` with empty string bound to `value` because string [1] is incompatible with
-undefined (default `next` of unannotated generator function) [2]. [incompatible-call]
+undefined (default `next` of unannotated generator function) [2]. [incompatible-type]
 
    generators.js:69:32
    69| delegate_next_generator().next(""); // err string -> void
@@ -498,7 +498,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generators.js:79:4
 
-Cannot cast `x2` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x2` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    generators.js:79:4
    79|   (x2 : number) // error: string ~> number
@@ -533,7 +533,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:94:33
 
 Cannot call `delegate_next_iterable(...).next` with empty string bound to `value` because string [1] is incompatible
-with undefined (default `next` of unannotated generator function) [2]. [incompatible-call]
+with undefined (default `next` of unannotated generator function) [2]. [incompatible-type]
 
    generators.js:94:33
    94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
@@ -550,7 +550,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:100:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    generators.js:100:4
    100|   (x : string) // error: number ~> string
@@ -568,7 +568,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:128:4
 
 Cannot cast `multiple_return_result.value` to undefined because number [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    generators.js:128:4
    128|   (multiple_return_result.value: void); // error: number|string ~> void
@@ -586,7 +586,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- generators.js:128:4
 
 Cannot cast `multiple_return_result.value` to undefined because string [1] is incompatible with undefined [2].
-[incompatible-cast]
+[incompatible-type]
 
    generators.js:128:4
    128|   (multiple_return_result.value: void); // error: number|string ~> void
@@ -603,7 +603,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ refi.js:5:4
 
-Cannot cast `x.a` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.a` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    refi.js:5:4
    5|   (x.a: string); // error
@@ -620,7 +620,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refi.js:22:4
 
-Cannot cast `x.a` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.a` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    refi.js:22:4
    22|   (x.a: string); // error
@@ -637,7 +637,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:5:4
 
-Cannot cast `ret.value` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `ret.value` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
 
    return.js:5:4
    5|   (ret.value: void); // error: string | number ~> void
@@ -654,7 +654,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- return.js:5:4
 
-Cannot cast `ret.value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `ret.value` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    return.js:5:4
    5|   (ret.value: void); // error: string | number ~> void
@@ -672,7 +672,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- return.js:20:4
 
 Cannot cast `refuse_return_result.value` to string because undefined [1] is incompatible with string [2].
-[incompatible-cast]
+[incompatible-type]
 
    return.js:20:4
      20|   (refuse_return_result.value: string); // error: number | void ~> string
@@ -690,7 +690,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- return.js:20:4
 
 Cannot cast `refuse_return_result.value` to string because number [1] is incompatible with string [2].
-[incompatible-cast]
+[incompatible-type]
 
    return.js:20:4
    20|   (refuse_return_result.value: string); // error: number | void ~> string
@@ -707,7 +707,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:11:4
 
-Cannot cast `catch_return_value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `catch_return_value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    throw.js:11:4
    11|   (catch_return_value : string); // error: number ~> string
@@ -724,7 +724,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- throw.js:24:4
 
-Cannot cast `yield_return_value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `yield_return_value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    throw.js:24:4
    24|   (yield_return_value: string); // error: number ~> string

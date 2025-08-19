@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- error.js:8:8
 
-Cannot cast `any` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `any` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    error.js:8:8
    8| any as ?number as number;
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- error.js:9:8
 
-Cannot cast `any` to null because null or undefined [1] is incompatible with null [2]. [incompatible-cast]
+Cannot cast `any` to null because null or undefined [1] is incompatible with null [2]. [incompatible-type]
 
    error.js:9:8
    9| any as ?number as null;
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- error.js:9:9
 
-Cannot cast `any` to null because number [1] is incompatible with null [2]. [incompatible-cast]
+Cannot cast `any` to null because number [1] is incompatible with null [2]. [incompatible-type]
 
    error.js:9:9
    9| any as ?number as null;
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:10:8
 
-Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `any` to undefined because null or undefined [1] is incompatible with undefined [2]. [incompatible-type]
 
    error.js:10:8
    10| any as ?number as void;
@@ -56,7 +56,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:10:9
 
-Cannot cast `any` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `any` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    error.js:10:9
    10| any as ?number as void;
@@ -70,7 +70,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:16:8
 
-Cannot cast `any` to union type because: [incompatible-cast]
+Cannot cast `any` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with null [2].
  - Or null or undefined [1] is incompatible with number [3].
 
@@ -89,7 +89,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- error.js:17:8
 
-Cannot cast `any` to union type because: [incompatible-cast]
+Cannot cast `any` to union type because: [incompatible-type]
  - Either null or undefined [1] is incompatible with undefined [2].
  - Or null or undefined [1] is incompatible with number [3].
 
@@ -108,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- maybe.js:3:11
 
-Cannot cast `123` to nullable string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to nullable string because number [1] is incompatible with string [2]. [incompatible-type]
 
    maybe.js:3:11
    3| ((123: ?(?number)): ?string); // error (only num ~> string)
@@ -122,7 +122,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:1:32
 
-Cannot return `null` because null [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `null` because null [1] is incompatible with string [2]. [incompatible-type]
 
    nullable.js:1:32
    1| function foo():string { return null; }
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ nullable.js:11:22
 
-Cannot call `corge` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `corge` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    nullable.js:11:22
    11| if (x != null) corge(x); // x: ?string | null
@@ -153,7 +153,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- simple_nullable.js:4:5
 
-Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `bar` with `'hmm'` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    simple_nullable.js:4:5
    4| bar('hmm');

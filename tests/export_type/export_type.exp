@@ -124,7 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:42:1
 
-Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2]. [incompatible-cast]
+Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2]. [incompatible-type]
 
    importer.js:42:1
    42| 5 as ClsType;

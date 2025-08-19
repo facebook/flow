@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:2
 
-Cannot cast `literal.foo` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `literal.foo` to empty because string literal `foo` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:27:2
    27| (literal.foo: empty); // error, 'foo' </: empty

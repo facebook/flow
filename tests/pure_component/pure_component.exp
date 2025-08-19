@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:3
 
-Cannot create `C` element because property `x` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `C` element because property `x` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    test.js:4:3
    4| (<C />); // error (`x` is a required prop)

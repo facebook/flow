@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:7:1
 
-Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
    class_to_component_type.js:7:1
    7| Foo as component(bar: number, ref: React.RefSetter<Foo>); // error: number ~> string
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:8:1
 
-Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
    class_to_component_type.js:8:1
    8| Foo as component(ref: React.RefSetter<Foo>, ...{bar: number}); // error: number ~> string
@@ -35,7 +35,7 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because string [1] is incompatible with `Foo` [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
@@ -55,7 +55,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- class_to_component_type.js:13:1
 
-Cannot cast `Foo` to component because: [incompatible-cast]
+Cannot cast `Foo` to component because: [incompatible-type]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
  - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
@@ -80,7 +80,7 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
 
 Cannot cast `ComponentNarrower` to component because property `bar` is missing in object type [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    classes_lower.js:17:1
    17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
@@ -98,7 +98,7 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
 
 Cannot cast `ComponentNarrower` to component because property `foo` is missing in object type [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    classes_lower.js:17:1
    17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
@@ -116,7 +116,7 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:18:1
 
 Cannot cast `ComponentNarrower` to component because property `bar` is missing in props of component [1] but exists in
-object type [2]. [prop-missing]
+object type [2]. [incompatible-type]
 
    classes_lower.js:18:1
    18| ComponentNarrower as component(ref: React.RefSetter<any>, foo?: number); // Error missing bar in config
@@ -134,7 +134,7 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
 Cannot cast `ComponentNarrower` to component because `Component` [1] is incompatible with `ComponentNarrower` [2] in
-type argument `T` [3]. [incompatible-cast]
+type argument `T` [3]. [incompatible-type]
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
@@ -155,7 +155,7 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:25:1
 
 Cannot cast `Component` to component because `Subclass` [1] is incompatible with `Component` [2] in type argument
-`T` [3]. [incompatible-cast]
+`T` [3]. [incompatible-type]
 
    classes_lower.js:25:1
     25| Component as component(ref: React.RefSetter<Subclass>, ...any); // Ok, Instance is covariant
@@ -175,7 +175,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_to_component.js:22:10
 
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2]. [prop-missing]
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+[incompatible-type]
 
    component_to_component.js:22:10
    22|   return x;
@@ -193,7 +194,7 @@ References:
 Error ---------------------------------------------------------------------------------- component_to_component.js:28:10
 
 Cannot return `x` because `Subcomponent` [1] is incompatible with `Component` [2] in type argument `T` [3].
-[incompatible-return]
+[incompatible-type]
 
    component_to_component.js:28:10
     28|   return x;
@@ -214,7 +215,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
 
 Cannot cast `x` to `NotTheRightConfig` because property `baz` is missing in `Config` [1] but exists in
-`NotTheRightConfig` [2]. [prop-missing]
+`NotTheRightConfig` [2]. [incompatible-type]
 
    config_HOC.js:10:1
    10| x as NotTheRightConfig; // Error, configs don't match
@@ -232,7 +233,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
 
 Cannot cast `x` to `NotTheRightConfig` because property `qux` is missing in `Config` [1] but exists in
-`NotTheRightConfig` [2]. [prop-missing]
+`NotTheRightConfig` [2]. [incompatible-type]
 
    config_HOC.js:10:1
    10| x as NotTheRightConfig; // Error, configs don't match
@@ -250,7 +251,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- config_HOC.js:27:13
 
 Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    config_HOC.js:27:13
    27| const _c = <WrappedComponent foo={3} />; // Error missing bar
@@ -267,7 +268,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:15:13
 
-Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    create_element.js:15:13
    15| const _c = <C baz={4} />; // Error missing bar
@@ -284,7 +286,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:16:13
 
-Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    create_element.js:16:13
    16| const _d = <C bar={3} />; // Error missing baz
@@ -343,7 +346,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:9:13
 
-Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    destructors.js:9:13
    9| const _b = <C baz={3} />; // Error, bar missing
@@ -360,7 +364,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:1
 
-Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    destructors.js:14:1
    14| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.
@@ -375,7 +379,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
 
 Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
-in object type [2]. [prop-missing]
+in object type [2]. [incompatible-type]
 
    destructors.js:21:2
    21| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
@@ -390,7 +394,7 @@ References:
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
 
 Cannot create `WrappedBoth` element because property `bar` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    double_wrapped.js:23:13
    23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
@@ -408,7 +412,7 @@ References:
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:13
 
 Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    double_wrapped.js:24:13
    24| const _b = <WrappedBoth />; // Error, missing prop foo
@@ -425,7 +429,7 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:10:1
 
-Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
    everything_implicit_instantiation.js:10:1
    10| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error
@@ -443,7 +447,7 @@ References:
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:11:1
 
 Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
-argument `T` [4]. [incompatible-cast]
+argument `T` [4]. [incompatible-type]
 
    everything_implicit_instantiation.js:11:1
      11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
@@ -466,7 +470,7 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:12:1
 
-Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-cast]
+Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-type]
 
    everything_implicit_instantiation.js:12:1
    12| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders A; // error
@@ -484,7 +488,7 @@ References:
 Error -------------------------------------------------------------------------------------------- function_lower.js:9:1
 
 Cannot cast `Component` to component because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    function_lower.js:9:1
    9| Component as component(...{...}); // Error, missing foo
@@ -502,7 +506,7 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:12:1
 
 Cannot cast `Component` to component because number [1] is incompatible with undefined [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    function_lower.js:12:1
     12| Component as component(ref: React.RefSetter<number>, ...Props); // Error
@@ -548,7 +552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:20:1
 
-Cannot cast `NotAFunctionComponent` to component because: [incompatible-cast]
+Cannot cast `NotAFunctionComponent` to component because: [incompatible-type]
  - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
@@ -574,7 +578,7 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
 
-Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-cast]
+Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
 
    function_to_component_type.js:5:1
    5| Foo as component(bar: number); // error: number ~> string
@@ -591,7 +595,7 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:6:1
 
-Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-cast]
+Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
 
    function_to_component_type.js:6:1
    6| Foo as component(...{bar: number}); // error: number ~> string
@@ -609,7 +613,7 @@ References:
 Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1
 
 Cannot cast `Foo` to component because string [1] is incompatible with undefined [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    function_to_component_type.js:8:1
      8| Foo as component( // error: void ~> string
@@ -629,7 +633,7 @@ References:
 
 Error ------------------------------------------------------------------------------- function_to_component_type.js:12:1
 
-Cannot cast `Foo` to component because: [incompatible-cast]
+Cannot cast `Foo` to component because: [incompatible-type]
  - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
    consider rewriting object type [2] as an interface.
  - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
@@ -769,7 +773,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:11:1
 
-Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-cast]
+Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
 
    props_implicit_instantiation.js:11:1
    11| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
@@ -787,7 +791,7 @@ References:
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:12:1
 
 Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
-argument `T` [4]. [incompatible-cast]
+argument `T` [4]. [incompatible-type]
 
    props_implicit_instantiation.js:12:1
      12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
@@ -811,7 +815,7 @@ References:
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
 Cannot cast `props1` to object type because number [1] is incompatible with string [2] in property `bar`.
-[incompatible-cast]
+[incompatible-type]
 
    props_implicit_instantiation.js:16:1
    16| props1 as {+foo: number, +bar: string}; // error: string != number
@@ -829,7 +833,7 @@ References:
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
 Cannot cast `props1` to object type because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-cast]
+[incompatible-type]
 
    props_implicit_instantiation.js:16:1
    16| props1 as {+foo: number, +bar: string}; // error: string != number
@@ -846,7 +850,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:21:1
 
-Cannot cast `props2` to empty because props of component B [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `props2` to empty because props of component B [1] is incompatible with empty [2]. [incompatible-type]
 
    props_implicit_instantiation.js:21:1
    21| props2 as empty; // error
@@ -863,7 +867,7 @@ References:
 
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
 
-Cannot cast `instance` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `instance` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:6:1
    6| instance as empty; // error
@@ -880,7 +884,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `refSetter` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -897,7 +901,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `refSetter` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -914,7 +918,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `refSetter` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -931,7 +935,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `refSetter` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -948,7 +952,7 @@ References:
 
 Error --------------------------------------------------------------------------- renders_implicit_instantiation.js:12:1
 
-Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-cast]
+Cannot cast `C` to component because a value that renders nothing [1] does not render `A` [2]. [incompatible-type]
 
    renders_implicit_instantiation.js:12:1
    12| C as component() renders A; // error: renders A ~> renders? A
@@ -965,7 +969,7 @@ References:
 
 Error --------------------------------------------------------------------------- renders_implicit_instantiation.js:13:1
 
-Cannot cast `C` to component because component B [1] does not render `A2` [2]. [incompatible-cast]
+Cannot cast `C` to component because component B [1] does not render `A2` [2]. [incompatible-type]
 
    renders_implicit_instantiation.js:13:1
    13| C as component() renders? A2; // error: renders? A2 ~> renders? A

@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
 Cannot create `React.Profiler` element because property `id` is missing in props [1] but exists in props of
-component [2]. [prop-missing]
+component [2]. [incompatible-type]
 
    profiler.js:17:13
     17| const _b = <React.Profiler />; // Error, id and onRender are required
@@ -39,7 +39,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
 Cannot create `React.Profiler` element because property `onRender` is missing in props [1] but exists in props of
-component [2]. [prop-missing]
+component [2]. [incompatible-type]
 
    profiler.js:17:13
     17| const _b = <React.Profiler />; // Error, id and onRender are required

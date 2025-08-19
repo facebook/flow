@@ -1042,7 +1042,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-let-const.js:5:2
 
-Cannot cast `l` to empty because string literal `let` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `l` to empty because string literal `let` [1] is incompatible with empty [2]. [incompatible-type]
 
    import-let-const.js:5:2
    5| (l: empty); // ERROR
@@ -1059,7 +1059,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import-let-const.js:8:2
 
-Cannot cast `c` to empty because string literal `const` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c` to empty because string literal `const` [1] is incompatible with empty [2]. [incompatible-type]
 
    import-let-const.js:8:2
    8| (c: empty); // ERROR

@@ -17,7 +17,7 @@ Moving to commit 2
 Should find new errors:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:2
 
-Cannot cast `dep2` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `dep2` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:7:2
    7| (dep2: string);

@@ -195,7 +195,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- func.js:13:12
 
-Cannot return `ng(...)` because mixed [1] is incompatible with `T` [2]. [incompatible-return]
+Cannot return `ng(...)` because mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    func.js:13:12
    13|     return ng(value); // no escape errors
@@ -477,7 +477,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:17:12
 
-Cannot return `e` because: [incompatible-return]
+Cannot return `e` because: [incompatible-type]
  - Either class `e` [1] is incompatible with `X` [2].
  - Or `e` [1] is incompatible with `this` [3].
 
@@ -547,7 +547,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:44:12
 
-Cannot return `g` because: [incompatible-return]
+Cannot return `g` because: [incompatible-type]
  - Either undefined [1] is incompatible with boolean [2] in the first parameter.
  - Or function [3] is incompatible with `X` [4].
 
@@ -600,7 +600,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:62:12
 
-Cannot return `D` because class `D` [1] is incompatible with `X` [2]. [incompatible-return]
+Cannot return `D` because class `D` [1] is incompatible with `X` [2]. [incompatible-type]
 
    misc.js:62:12
    62|     return D;

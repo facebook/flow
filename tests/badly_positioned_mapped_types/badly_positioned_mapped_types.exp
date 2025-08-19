@@ -23,7 +23,7 @@ References:
 Error ---------------------------------------------------------------------------------- still_badly_positioned.js:11:17
 
 Cannot assign `_a` to `_b` because property `q` is missing in object type [1] but exists in `PickKeysFromObject` [2].
-[prop-missing]
+[incompatible-type]
 
    still_badly_positioned.js:11:17
    11|   const _b: A = _a; // `q` is missing in object type

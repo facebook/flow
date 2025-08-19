@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------- lib/test.js:9:10
 
 Cannot extend mixins `_module.C` [1] with `D` because string [2] is incompatible with number [3] in the return value of
-property `foo`. [incompatible-extend]
+property `foo`. [incompatible-type]
 
    lib/test.js:9:10
    9|   foo(): string;
@@ -33,7 +33,7 @@ References:
 Error --------------------------------------------------------------------------------------------- declare_class.js:9:7
 
 Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    declare_class.js:9:7
    9| C.foo("");
@@ -47,7 +47,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:12:2
 
-Cannot cast `C.name` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `C.name` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    declare_class.js:12:2
    12| (C.name: number); // error, it's a string
@@ -64,7 +64,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:15:7
 
-Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    declare_class.js:15:7
    15| new D(123); // error, number ~> string

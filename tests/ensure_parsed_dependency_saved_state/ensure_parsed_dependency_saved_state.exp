@@ -31,7 +31,7 @@ Check will skip 0 of 1 files
 ==== force-recheck checks dependent ====
 Error ------------------------------------------------------------------------------------------------- dependent.js:7:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    dependent.js:7:2
    7| (123: string); // no error!
@@ -57,7 +57,7 @@ Check will skip 0 of 3 files
 ==== force-recheck on dependent finds errors ====
 Error ------------------------------------------------------------------------------------------------- dependent.js:7:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    dependent.js:7:2
    7| (123: string); // no error!

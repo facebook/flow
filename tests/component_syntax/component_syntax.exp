@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ annotation.js:5:2
 
 Cannot create `Basic` element because property `foo` is extra in props [1] but missing in props of component [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    annotation.js:5:2
    5| <Basic foo={42} /> // error
@@ -171,7 +171,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- annotation.js:52:2
 
 Cannot create `SpreadRef` element because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    annotation.js:52:2
    52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
@@ -197,7 +197,7 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 Error ----------------------------------------------------------------------------------------------- annotation.js:59:2
 
 Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component [2].
-[prop-missing]
+[incompatible-type]
 
    annotation.js:59:2
    59| <Export />; // error
@@ -651,7 +651,7 @@ References:
 Error ----------------------------------------------------------------------------- component_in_type_position.js:12:115
 
 Cannot assign `<Poly />` to `polyElemBad` because string [1] is incompatible with number [2] in property `prop` of type
-argument `P` [3]. [incompatible-type-arg]
+argument `P` [3]. [incompatible-type]
 
    component_in_type_position.js:12:115
    12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
@@ -685,7 +685,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:4
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    component_type_checking.js:10:4
    10|   (foo: string); // ERROR
@@ -702,7 +702,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:12:4
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    component_type_checking.js:12:4
    12|   (bar: string); // ERROR
@@ -727,7 +727,7 @@ Cannot resolve name `baz`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:16:4
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    component_type_checking.js:16:4
    16|   (a: string); // ERROR
@@ -744,7 +744,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:17:10
 
-Cannot return `null` because null [1] does not render `InlineParams` [2]. [incompatible-return]
+Cannot return `null` because null [1] does not render `InlineParams` [2]. [incompatible-type]
 
    component_type_checking.js:17:10
    17|   return null; // ERROR
@@ -776,7 +776,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:4
 
-Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    component_type_checking.js:26:4
    26|   (rest: empty); // ERROR
@@ -923,7 +923,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:15:1
 
-Cannot cast `Bar` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-cast]
+Cannot cast `Bar` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
 
    cycle1.js:15:1
    15| Bar as typeof Baz; // ERROR
@@ -940,7 +940,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:16:1
 
-Cannot cast `Foo` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-cast]
+Cannot cast `Foo` to `typeof Baz` because component Foo [1] is incompatible with component Baz [2]. [incompatible-type]
 
    cycle1.js:16:1
    16| Foo as typeof Baz; // ERROR
@@ -957,7 +957,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:17:1
 
-Cannot cast `Baz` to `typeof Bar` because component Baz [1] is incompatible with component Foo [2]. [incompatible-cast]
+Cannot cast `Baz` to `typeof Bar` because component Baz [1] is incompatible with component Foo [2]. [incompatible-type]
 
    cycle1.js:17:1
    17| Baz as typeof Bar; // ERROR
@@ -975,7 +975,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- declared.js:5:2
 
 Cannot create `Basic` element because property `foo` is extra in props [1] but missing in props of component Basic [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    declared.js:5:2
    5| <Basic foo={42} /> // error
@@ -1177,7 +1177,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- declared.js:54:2
 
 Cannot create `SpreadRef` element because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    declared.js:54:2
    54| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
@@ -1203,7 +1203,7 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 Error ------------------------------------------------------------------------------------------------- declared.js:60:2
 
 Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component Export [2].
-[prop-missing]
+[incompatible-type]
 
    declared.js:60:2
    60| <Export />; // error
@@ -1465,7 +1465,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:8:2
 
-Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    export_syntax.js:8:2
    8| <D y={"a"} /> // 2 errors
@@ -1602,7 +1603,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:17:28
 
 Cannot create `RenamedParams` element because property `baz` is extra in props [1] but missing in props of component
-RenamedParams [2]. Exact objects do not accept extra props. [prop-missing]
+RenamedParams [2]. Exact objects do not accept extra props. [incompatible-type]
 
    import.js:17:28
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -1625,7 +1626,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:17:28
 
 Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in props of
-component RenamedParams [2]. [prop-missing]
+component RenamedParams [2]. [incompatible-type]
 
    import.js:17:28
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -1677,7 +1678,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:2
 
-Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:21:2
    21| (Foo.displayName: empty); // error, displayName is a string
@@ -1694,7 +1695,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:2
 
-Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:21:2
    21| (Foo.displayName: empty); // error, displayName is a string
@@ -1711,7 +1712,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:2
 
-Cannot cast `Foo.displayName` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `Foo.displayName` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:21:2
    21| (Foo.displayName: empty); // error, displayName is a string
@@ -1765,7 +1766,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:28:2
 
-Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    import.js:28:2
    28| <D y={"a"} /> // 2 errors
@@ -1797,7 +1799,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:33:2
 
 Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component Export [2].
-[prop-missing]
+[incompatible-type]
 
    import.js:33:2
    33| <Export />; // error
@@ -1830,7 +1832,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:42:2
 
 Cannot create `ExportType` element because property `x` is missing in props [1] but exists in props of component [2].
-[prop-missing]
+[incompatible-type]
 
    import.js:42:2
    42| <ExportType />; // error
@@ -1893,7 +1895,7 @@ References:
 Error ---------------------------------------------------------------------- import_component_in_type_position.js:13:121
 
 Cannot assign `<Poly />` to `polyElemError` because string [1] is incompatible with number [2] in property `prop` of
-type argument `P` [3]. [incompatible-type-arg]
+type argument `P` [3]. [incompatible-type]
 
    import_component_in_type_position.js:13:121
    13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
@@ -1914,7 +1916,7 @@ References:
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:18:2
 
 Cannot cast `<Bar />` to `Foo` because `React.Element` [1] is incompatible with `React.RendersExactly` [2].
-[incompatible-cast]
+[incompatible-type]
 
    import_component_in_type_position.js:18:2
    18| (<Bar />) as Foo; // ERROR
@@ -1928,7 +1930,7 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:21:1
 
-Cannot cast `aliasedFoo` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `aliasedFoo` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-type]
 
    import_component_in_type_position.js:21:1
    21| aliasedFoo as number; // ERROR
@@ -2213,7 +2215,7 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:13:1
 
-Cannot cast `Bar` to `typeof Foo` because component Bar [1] is incompatible with component Foo [2]. [incompatible-cast]
+Cannot cast `Bar` to `typeof Foo` because component Bar [1] is incompatible with component Foo [2]. [incompatible-type]
 
    nominal.js:13:1
    13| Bar as typeof Foo; // ERROR
@@ -2230,7 +2232,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:14:1
 
-Cannot cast `Foo` to `typeof Bar` because component Foo [1] is incompatible with component Bar [2]. [incompatible-cast]
+Cannot cast `Foo` to `typeof Bar` because component Foo [1] is incompatible with component Bar [2]. [incompatible-type]
 
    nominal.js:14:1
    14| Foo as typeof Bar; // ERROR
@@ -2248,7 +2250,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:1
 
 Cannot cast `Foo` to `React.ComponentType` because property `foo` is extra in object type [1] but missing in props of
-component Foo [2]. Exact objects do not accept extra props. [prop-missing]
+component Foo [2]. Exact objects do not accept extra props. [incompatible-type]
 
    nominal.js:17:1
    17| Foo as React.ComponentType<{foo: number}>; // ERROR
@@ -2361,7 +2363,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- poly.js:13:2
 
 Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in type argument `T` [3].
-[incompatible-cast]
+[incompatible-type]
 
    poly.js:13:2
    13| (x: Poly<string>);
@@ -2418,7 +2420,7 @@ References:
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
 
 Cannot assign `Foo` to `a` because property `x` is missing in object type [1] but exists in props of component Foo [2].
-[prop-missing]
+[incompatible-type]
 
    props_reason.js:6:39
    6| const a: React.ComponentType<{...}> = Foo; // ERROR
@@ -2435,7 +2437,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:8:4
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:8:4
    8|   (foo: empty); // foo is string
@@ -2452,7 +2454,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:9:4
 
-Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:9:4
    9|   (bar: empty); // bar is number
@@ -2470,7 +2472,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
 Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2488,7 +2490,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
 Cannot cast `intrinsicProp.children` to empty because `React.Element` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2506,7 +2508,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
 Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2523,7 +2525,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2540,7 +2542,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2557,7 +2559,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2574,7 +2576,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2591,7 +2593,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    propsof.js:14:2
    14| (intrinsicProp.children: empty); // children is ?React.Node
@@ -2689,7 +2691,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- provider.js:11:6
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    provider.js:11:6
    11|     (x: empty);
@@ -2760,7 +2762,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-type]
 
    refs.js:12:2
    12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2777,7 +2779,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refs.js:12:2
    12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2848,7 +2850,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because in property `current`: [incompatible-cast]
+Cannot cast `Foo` to component because in property `current`: [incompatible-type]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
@@ -2870,7 +2872,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-type]
 
    refs.js:13:2
    13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
@@ -2887,7 +2889,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refs.js:13:2
    13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
@@ -2958,7 +2960,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because null [1] is incompatible with function type [2]. [incompatible-cast]
+Cannot cast `Bar` to component because null [1] is incompatible with function type [2]. [incompatible-type]
 
    refs.js:15:2
    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
@@ -2975,7 +2977,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2]. [incompatible-cast]
+Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2]. [incompatible-type]
 
    refs.js:15:2
    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
@@ -2994,7 +2996,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Bar` to component because object type [1] is incompatible with function type [2]. 
 
-Non-callable objects are not compatible with functions. [incompatible-cast]
+Non-callable objects are not compatible with functions. [incompatible-type]
 
    refs.js:15:2
    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
@@ -3011,7 +3013,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because in the first parameter: [incompatible-cast]
+Cannot cast `Bar` to component because in the first parameter: [incompatible-type]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
@@ -3033,7 +3035,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because: [incompatible-cast]
+Cannot cast `Baz` to component because: [incompatible-type]
  - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
    objects.
  - Or component Reffed [3] is incompatible with string [4] in the first parameter.
@@ -3059,7 +3061,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because: [incompatible-cast]
+Cannot cast `Baz` to component because: [incompatible-type]
  - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
    functions.
  - Or component Reffed [3] is incompatible with string [4] in property `current`.
@@ -3316,7 +3318,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rest_constraints.js:9:4
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    rest_constraints.js:9:4
    9|   (bar: string); // ERROR
@@ -3395,7 +3397,7 @@ optional. [incompatible-type]
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
 
 Cannot create `DestructuredArr` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    rest_constraints.js:22:2
    22| <DestructuredArr />; // ERROR because annot still provides a valid config type
@@ -3413,7 +3415,7 @@ References:
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
 
 Cannot create `DestructuredArr` element because property `foo` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    rest_constraints.js:22:2
    22| <DestructuredArr />; // ERROR because annot still provides a valid config type
@@ -3536,7 +3538,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
 Cannot create `RenamedParams` element because property `baz` is extra in props [1] but missing in props of component
-RenamedParams [2]. Exact objects do not accept extra props. [prop-missing]
+RenamedParams [2]. Exact objects do not accept extra props. [incompatible-type]
 
    signature.js:41:28
    41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -3559,7 +3561,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
 Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in props of
-component RenamedParams [2]. [prop-missing]
+component RenamedParams [2]. [incompatible-type]
 
    signature.js:41:28
    41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -3620,7 +3622,7 @@ be optional. [incompatible-type]
 
 Error ------------------------------------------------------------------------------------------------ signature.js:48:3
 
-Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    signature.js:48:3
    48|   x as number; // ERROR
@@ -3637,7 +3639,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:50:3
 
-Cannot cast `rest` to object type because undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `rest` to object type because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    signature.js:50:3
    50|   rest as {foo: number}; // ERROR, rest is optional in the body, as typed

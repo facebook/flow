@@ -15,7 +15,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- positining.js:43:11
 
 Cannot call `map.set` with `new A()` bound to `value` because `A` [1] is incompatible with `Array` [2].
-[incompatible-call]
+[incompatible-type]
 
    positining.js:43:11
    43|   map.set(new A());

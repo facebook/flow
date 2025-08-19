@@ -30,7 +30,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:7:59
 
 Cannot assign object literal to `o3` because property `y` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    test.js:7:59
    7| var o3: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; ... });

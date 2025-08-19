@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
-Cannot cast `fragment` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `fragment` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:11:1
    11| fragment as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:1
 
-Cannot cast `query` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `query` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:21:1
    21| query as empty; // ERROR

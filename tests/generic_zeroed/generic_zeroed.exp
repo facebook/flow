@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- add1arg.js:4:10
 
-Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incompatible-return]
+Cannot return `"A" + x` because string [1] is incompatible with `S` [2]. [incompatible-type]
 
    add1arg.js:4:10
    4|   return "A" + x;
@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- logic.js:3:15
 
-Cannot return `a && b` because string [1] is incompatible with `A` [2]. [incompatible-return]
+Cannot return `a && b` because string [1] is incompatible with `A` [2]. [incompatible-type]
 
    logic.js:3:15
    3|   return a && b
@@ -31,7 +31,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- logic2.js:3:15
 
-Cannot return `a && b` because mixed [1] is incompatible with `A` [2]. [incompatible-return]
+Cannot return `a && b` because mixed [1] is incompatible with `A` [2]. [incompatible-type]
 
    logic2.js:3:15
    3|   return a && b
@@ -48,7 +48,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ num.js:3:10
 
-Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompatible-return]
+Cannot return `a + b` because number [1] is incompatible with `A` [2]. [incompatible-type]
 
    num.js:3:10
    3|   return a + b
@@ -62,7 +62,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- reduce.js:7:15
 
-Cannot call `nums.reduce` because: [incompatible-call]
+Cannot call `nums.reduce` because: [incompatible-type]
  - Either number [1] is incompatible with `T` [2] in the return value.
  - Or cannot call non-polymorphic function type [3] with type arguments.
 
@@ -87,7 +87,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- wc.js:6:12
 
-Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [incompatible-return]
+Cannot return `"BAD_" + s` because string [1] is incompatible with `S` [2]. [incompatible-type]
 
    wc.js:6:12
    6|     return "BAD_" + s;

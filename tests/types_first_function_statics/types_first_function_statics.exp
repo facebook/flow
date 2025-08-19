@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:5:2
 
-Cannot cast `a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    b.js:5:2
    5| (a.x: string);
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:13:2
 
-Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `poly_a.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    b.js:13:2
    13| (poly_a.x: string);

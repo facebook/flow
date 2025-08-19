@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot call `register` because boolean [1] is incompatible with number [2] in property `foo` of type argument `T`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!
@@ -23,7 +23,7 @@ Error --------------------------------------------------------------------------
 Cannot call `register` because object type [1] is incompatible with number [2] in property `foo` of type argument `T`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!
@@ -44,7 +44,7 @@ Cannot call `register` because read-only array type [1] is incompatible with num
 argument `T`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-call]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    required-positioning.js:18:20
    18| register(() => (x: {foo: number}) => null); // ERROR!
@@ -62,7 +62,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2
 
 Cannot cast object literal to required of `A` because property `x` is missing in object literal [1] but exists in
-`A` [2]. [prop-missing]
+`A` [2]. [incompatible-type]
 
    test.js:9:2
    9| ({}: Required<A>); // ERROR
@@ -77,7 +77,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:9:2
 
 Cannot cast object literal to required of `A` because property `y` is missing in object literal [1] but exists in
-`A` [2]. [prop-missing]
+`A` [2]. [incompatible-type]
 
    test.js:9:2
    9| ({}: Required<A>); // ERROR
@@ -92,7 +92,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
 Cannot cast object literal to required of `A` because property `y` is missing in object literal [1] but exists in
-`A` [2]. [prop-missing]
+`A` [2]. [incompatible-type]
 
    test.js:10:2
    10| ({x: 1}: Required<A>); // ERROR
@@ -107,7 +107,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
 
 Cannot cast object literal to required of `A` because property `x` is missing in object literal [1] but exists in
-`A` [2]. [prop-missing]
+`A` [2]. [incompatible-type]
 
    test.js:11:2
    11| ({y: 1}: Required<A>); // ERROR
@@ -122,7 +122,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:12:6
 
 Cannot cast object literal to required of `A` because undefined [1] is incompatible with number [2] in property `x`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:12:6
    12| ({x: undefined, y: undefined}: Required<A>); // ERROR
@@ -137,7 +137,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:12:20
 
 Cannot cast object literal to required of `A` because undefined [1] is incompatible with number [2] in property `y`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:12:20
    12| ({x: undefined, y: undefined}: Required<A>); // ERROR
@@ -152,7 +152,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot cast object literal to required of `A` because property `extra` is extra in object literal [1] but missing in
-`A` [2]. Exact objects do not accept extra props. [prop-missing]
+`A` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:13:2
    13| ({x: 1, y: 1, extra: 1}: Required<A>); // ERROR
@@ -166,7 +166,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
-Cannot cast `null` to required of undefined because null [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `null` to required of undefined because null [1] is incompatible with undefined [2]. [incompatible-type]
 
    test.js:19:2
    19| (null: Required<void>); // ERROR
@@ -180,7 +180,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:2
 
-Cannot cast `undefined` to required of null because undefined [1] is incompatible with null [2]. [incompatible-cast]
+Cannot cast `undefined` to required of null because undefined [1] is incompatible with null [2]. [incompatible-type]
 
    test.js:23:2
    23| (undefined: Required<null>); // ERROR
@@ -194,7 +194,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:2
 
-Cannot cast object literal to required of nullable `A` because: [incompatible-cast]
+Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `x` is missing in object literal [1] but exists in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
 
@@ -213,7 +213,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:27:2
 
-Cannot cast object literal to required of nullable `A` because: [incompatible-cast]
+Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `y` is missing in object literal [1] but exists in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
 
@@ -232,7 +232,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:2
 
-Cannot cast object literal to required of nullable `A` because: [incompatible-cast]
+Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `x` is missing in object literal [1] but exists in `A` [2].
  - Or object literal [1] is incompatible with null or undefined [3].
 
@@ -251,7 +251,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
-Cannot cast object literal to required of nullable `A` because: [incompatible-cast]
+Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either undefined [1] is incompatible with number [2] in property `x`.
  - Or object literal [3] is incompatible with null or undefined [4].
 
@@ -282,7 +282,7 @@ Cannot instantiate required of number because number [1] is not an object. [not-
 Error ----------------------------------------------------------------------------------------------------- test.js:51:2
 
 Cannot cast object literal to required of `IFace` because property `x` is missing in object literal [1] but exists in
-`IFace` [2]. [prop-missing]
+`IFace` [2]. [incompatible-type]
 
    test.js:51:2
    51| ({}: Required<IFace>); // ERROR
@@ -297,7 +297,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:51:2
 
 Cannot cast object literal to required of `IFace` because property `y` is missing in object literal [1] but exists in
-`IFace` [2]. [prop-missing]
+`IFace` [2]. [incompatible-type]
 
    test.js:51:2
    51| ({}: Required<IFace>); // ERROR
@@ -312,7 +312,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:52:2
 
 Cannot cast object literal to required of `IFace` because property `y` is missing in object literal [1] but exists in
-`IFace` [2]. [prop-missing]
+`IFace` [2]. [incompatible-type]
 
    test.js:52:2
    52| ({x: 1}: Required<IFace>); // ERROR
@@ -327,7 +327,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:53:2
 
 Cannot cast object literal to required of `IFace` because property `x` is missing in object literal [1] but exists in
-`IFace` [2]. [prop-missing]
+`IFace` [2]. [incompatible-type]
 
    test.js:53:2
    53| ({y: 1}: Required<IFace>); // ERROR
@@ -342,7 +342,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:54:6
 
 Cannot cast object literal to required of `IFace` because undefined [1] is incompatible with number [2] in property `x`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:54:6
    54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
@@ -357,7 +357,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:54:20
 
 Cannot cast object literal to required of `IFace` because undefined [1] is incompatible with number [2] in property `y`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:54:20
    54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
@@ -372,7 +372,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:68:2
 
 Cannot cast object literal to required of `JFace` because property `x` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:68:2
    68| ({}: Required<JFace>); // ERROR
@@ -387,7 +387,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:68:2
 
 Cannot cast object literal to required of `JFace` because property `y` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:68:2
    68| ({}: Required<JFace>); // ERROR
@@ -402,7 +402,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:68:2
 
 Cannot cast object literal to required of `JFace` because property `z` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:68:2
    68| ({}: Required<JFace>); // ERROR
@@ -417,7 +417,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:69:2
 
 Cannot cast object literal to required of `JFace` because property `y` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:69:2
    69| ({x: 1}: Required<JFace>); // ERROR
@@ -432,7 +432,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:69:2
 
 Cannot cast object literal to required of `JFace` because property `z` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:69:2
    69| ({x: 1}: Required<JFace>); // ERROR
@@ -447,7 +447,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:70:2
 
 Cannot cast object literal to required of `JFace` because property `z` is missing in object literal [1] but exists in
-`JFace` [2]. [prop-missing]
+`JFace` [2]. [incompatible-type]
 
    test.js:70:2
    70| ({x: 1, y: 1}: Required<JFace>); // ERROR
@@ -462,7 +462,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:71:6
 
 Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `x`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:71:6
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
@@ -477,7 +477,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:71:20
 
 Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `y`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:71:20
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
@@ -492,7 +492,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:71:34
 
 Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `z`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:71:34
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR

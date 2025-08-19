@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- annotations.js:10:3
 
-Cannot cast `o[1]` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[1]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    annotations.js:10:3
    10|   o[1] as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotations.js:11:3
 
-Cannot cast `o['1']` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o['1']` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    annotations.js:11:3
    11|   o['1'] as empty; // ERROR
@@ -83,7 +83,7 @@ References:
 Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
 
 Cannot cast `o2` to object type because boolean [1] is incompatible with boolean literal `true` [2] in the indexer
-property. [incompatible-cast]
+property. [incompatible-type]
 
    non_literal_number.js:22:3
    22|   o2 as {[number]: true}; // OK
@@ -203,7 +203,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
 Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `1`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:20:3
    20|   o as {'1': true, [number]: false}; // OK
@@ -221,7 +221,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
 Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `false` [2] in property `2`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:20:3
    20|   o as {'1': true, [number]: false}; // OK
@@ -239,7 +239,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
 Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `1`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:21:3
    21|   o as {'1': true, [number]: true}; // ERROR
@@ -257,7 +257,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
 Cannot cast `o` to object type because boolean [1] is incompatible with boolean literal `true` [2] in property `2`.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:21:3
    21|   o as {'1': true, [number]: true}; // ERROR
@@ -303,7 +303,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:28:3
 
 Cannot cast `Object.keys(...)` to array type because string literal `1` [1] is incompatible with number [2] in array
-element. [incompatible-cast]
+element. [incompatible-type]
 
    test.js:28:3
    28|   Object.keys(o) as Array<number>; // ERROR
@@ -318,7 +318,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:28:3
 
 Cannot cast `Object.keys(...)` to array type because string literal `2` [1] is incompatible with number [2] in array
-element. [incompatible-cast]
+element. [incompatible-type]
 
    test.js:28:3
    28|   Object.keys(o) as Array<number>; // ERROR
@@ -337,7 +337,7 @@ array element.
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:28:3
    28|   Object.keys(o) as Array<number>; // ERROR
@@ -351,7 +351,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
-Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:42:5
    42|     x as number; // ERROR
@@ -372,7 +372,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
-Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:42:5
    42|     x as number; // ERROR
@@ -393,7 +393,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because string `1` [1] is incompatible with number [2] in type argument `Key`. [incompatible-call]
+Cannot call `f` because string `1` [1] is incompatible with number [2] in type argument `Key`. [incompatible-type]
 
    test.js:47:17
    47|     const x = f(o); // ERROR
@@ -414,7 +414,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because string `2` [1] is incompatible with number [2] in type argument `Key`. [incompatible-call]
+Cannot call `f` because string `2` [1] is incompatible with number [2] in type argument `Key`. [incompatible-type]
 
    test.js:47:17
    47|     const x = f(o); // ERROR
@@ -435,7 +435,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5
 
-Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string `1` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:62:5
    62|     x as number; // ERROR
@@ -452,7 +452,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5
 
-Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string `2` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:62:5
    62|     x as number; // ERROR
@@ -470,7 +470,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
 Cannot cast `o` to object type because boolean [1] is incompatible with string [2] in the indexer property.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:82:3
    82|   o as {+[string]: string}; // ERROR
@@ -488,7 +488,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
 Cannot cast `o` to object type because number [1] is incompatible with string [2] in the indexer property's key.
-[incompatible-cast]
+[incompatible-type]
 
    test.js:82:3
    82|   o as {+[string]: string}; // ERROR
@@ -554,7 +554,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:128:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:128:3
    128|   o[1] as empty; // ERROR
@@ -571,7 +571,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:129:3
 
-Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:129:3
    129|   o['1'] as empty; // ERROR
@@ -588,7 +588,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:141:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:141:3
    141|   o[1] as empty; // ERROR
@@ -605,7 +605,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:3
 
-Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:142:3
    142|   o['1'] as empty; // ERROR
@@ -622,7 +622,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:3
 
-Cannot cast `o[1000]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[1000]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:154:3
    154|   o[1000] as empty; // ERROR
@@ -639,7 +639,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:3
 
-Cannot cast `o[10]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[10]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:157:3
    157|   o[10] as empty; // ERROR
@@ -656,7 +656,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:3
 
-Cannot cast `o[8]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[8]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:160:3
    160|   o[8] as empty; // ERROR
@@ -748,7 +748,7 @@ Unsupported key in object literal. Number literals must not be larger than `Numb
 
 Error ---------------------------------------------------------------------------------------------------- test.js:206:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:206:3
    206|   o[1] as empty; // ERROR
@@ -765,7 +765,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:207:3
 
-Cannot cast `o[9007199254740991]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o[9007199254740991]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:207:3
    207|   o[9007199254740991] as empty; // ERROR

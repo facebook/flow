@@ -4,7 +4,7 @@ A general file tries to import the logical module and expect the more specific t
 
 Error --------------------------------------------------------------------------------------------------- General.js:3:2
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    General.js:3:2
    3| (a: string);
@@ -28,7 +28,7 @@ Remove A.ios.js
 Both iOSOnly and General should error.
 Error --------------------------------------------------------------------------------------------------- General.js:3:2
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    General.js:3:2
    3| (a: string);
@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- iOSOnly.ios.js:3:2
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    iOSOnly.ios.js:3:2
    3| (a: string);
@@ -107,7 +107,7 @@ Add back both A.ios.js and A.js
 Only General should error.
 Error --------------------------------------------------------------------------------------------------- General.js:3:2
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    General.js:3:2
    3| (a: string);

@@ -84,5 +84,5 @@ The first time this is run, the [Flow background process](#toc-run-flow-backgrou
 For the [code above](#toc-write-flow-code), running `flow` will yield:
 
 ```sh
-3:12-3:12: Cannot return `x` because number is incompatible with string. [incompatible-return]
+3:12-3:12: Cannot return `x` because number is incompatible with string. [incompatible-type]
 ```

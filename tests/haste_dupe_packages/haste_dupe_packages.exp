@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:2
 
-Cannot cast `pkg` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `pkg` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:8:2
    8| (pkg: empty);

@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- yuge.js:23:5
 
 Cannot cast empty string to `ErrorCode` because empty string [1] is incompatible with `ErrorCode` [2].
-[incompatible-cast]
+[incompatible-type]
 
    yuge.js:23:5
    23|     '' as ErrorCode; // also, error pos omits this line completely

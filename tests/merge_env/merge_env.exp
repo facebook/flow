@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:12:6
 
 Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:12:6
    12|     (bar: Array<boolean>); // error
@@ -19,7 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:33:6
 
 Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:33:6
    33|     (bar: Array<boolean>); // error
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:54:6
 
 Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:54:6
    54|     (bar: Array<boolean>); // error
@@ -55,7 +55,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:74:6
 
 Cannot cast `bar` to array type because possibly uninitialized variable [1] is incompatible with array type [2].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:74:6
    74|     (bar: Array<boolean>); // error

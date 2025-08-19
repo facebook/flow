@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- both_bounds.js:6:1
 
-Cannot cast `'baz'` to `Kind` because string literal `baz` [1] is incompatible with `Kind` [2]. [incompatible-cast]
+Cannot cast `'baz'` to `Kind` because string literal `baz` [1] is incompatible with `Kind` [2]. [incompatible-type]
 
    both_bounds.js:6:1
    6| 'baz' as Kind; // error
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- both_bounds.js:8:1
 
-Cannot cast `kind` to number because `Kind` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `kind` to number because `Kind` [1] is incompatible with number [2]. [incompatible-type]
 
    both_bounds.js:8:1
    8| kind as number; // error
@@ -32,7 +32,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:12:2
 
 Cannot cast object literal to `Obj` because property `foo` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    both_bounds.js:12:2
    12| ({}) as Obj; // error
@@ -46,7 +46,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:13:1
 
-Cannot cast `1` to `Obj` because number [1] is incompatible with `Obj` [2]. [incompatible-cast]
+Cannot cast `1` to `Obj` because number [1] is incompatible with `Obj` [2]. [incompatible-type]
 
    both_bounds.js:13:1
    13| 1 as Obj; // error
@@ -103,7 +103,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:22:1
 
 Cannot cast `'b'` to `BothBounds` because string literal `b` [1] is incompatible with `BothBounds` [2].
-[incompatible-cast]
+[incompatible-type]
 
    both_bounds.js:22:1
    22| 'b' as BothBounds; // error
@@ -132,7 +132,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
 
-Cannot cast `o` to `A` because: [incompatible-cast]
+Cannot cast `o` to `A` because: [incompatible-type]
  - Either `O` [1] is incompatible with number [2] in property `value`.
  - Or `O` [1] is incompatible with number literal `2` [3] in property `tag`.
 
@@ -154,7 +154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
 
-Cannot cast `o` to `A` because: [incompatible-cast]
+Cannot cast `o` to `A` because: [incompatible-type]
  - Either `O` [1] is incompatible with number literal `1` [2] in property `tag`.
  - Or `O` [1] is incompatible with number [3] in property `value`.
 
@@ -176,7 +176,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
-Cannot return `y` because `SuperType` [1] is incompatible with `SuperOpaque` [2]. [incompatible-return]
+Cannot return `y` because `SuperType` [1] is incompatible with `SuperOpaque` [2]. [incompatible-type]
 
    importtest.js:5:12
    5|     return y;
@@ -193,7 +193,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:13:12
 
-Cannot return `x` because number [1] is incompatible with `Counter` [2]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with `Counter` [2]. [incompatible-type]
 
    importtest.js:13:12
    13|     return x;
@@ -210,7 +210,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:25:12
 
-Cannot return `x` because `PolyGood` [1] is incompatible with `PolyBar` [2]. [incompatible-return]
+Cannot return `x` because `PolyGood` [1] is incompatible with `PolyBar` [2]. [incompatible-type]
 
    importtest.js:25:12
    25|     return x;
@@ -227,7 +227,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:29:12
 
-Cannot return `x` because `PolyGood` [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because `PolyGood` [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
 
    importtest.js:29:12
    29|     return x;
@@ -261,7 +261,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:37:12
 
-Cannot return `x++` because number [1] is incompatible with `SuperType` [2]. [incompatible-return]
+Cannot return `x++` because number [1] is incompatible with `SuperType` [2]. [incompatible-type]
 
    importtest.js:37:12
    37|     return x++; // Error number ~> SuperType
@@ -275,7 +275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:50:12
 
-Cannot return `x + y` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x + y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    importtest.js:50:12
    50|     return x + y;
@@ -359,7 +359,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:65
 
-string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type-arg]
+string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    test.js:25:65
    25| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number

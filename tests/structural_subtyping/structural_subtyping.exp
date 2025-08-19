@@ -51,7 +51,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- class.js:23:34
 
 Cannot assign `new ClassWithXString()` to `testInstance3` because property `y` is missing in `ClassWithXString` [1] but
-exists in `IHasYString` [2]. [prop-missing]
+exists in `IHasYString` [2]. [incompatible-type]
 
    class.js:23:34
    23| var testInstance3: IHasYString = new ClassWithXString(); // Error missing prop
@@ -81,7 +81,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- obj.js:11:30
 
 Cannot assign object literal to `propTest3` because property `x` is missing in object literal [1] but exists in
-`IHasXString` [2]. [prop-missing]
+`IHasXString` [2]. [incompatible-type]
 
    obj.js:11:30
    11| var propTest3: IHasXString = {}; // Property not found
@@ -95,7 +95,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:19:3
 
-Cannot cast `y` to `IHasXString` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
+Cannot cast `y` to `IHasXString` because number [1] is incompatible with string [2] in property `x`. [incompatible-type]
 
    obj.js:19:3
    19|   y as IHasXString; // error: string != number
@@ -113,7 +113,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ optional.js:10:26
 
 Cannot assign object literal to `test2` because property `a` is missing in object literal [1] but exists in
-`HasOptional` [2]. [prop-missing]
+`HasOptional` [2]. [incompatible-type]
 
    optional.js:10:26
    10| var test2: HasOptional = {}; // Error: missing property a

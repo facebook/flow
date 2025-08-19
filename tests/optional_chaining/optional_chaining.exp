@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------- computed_properties.js:12:1
 
-Cannot cast `x1?.['foo']` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.['foo']` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:12:1
    12| x1?.['foo'] as empty;
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:12:1
 
-Cannot cast `x1?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:12:1
    12| x1?.['foo'] as empty;
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:13:1
 
-Cannot cast `x2?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x2?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:13:1
    13| x2?.['foo'] as empty;
@@ -67,7 +67,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:1
 
 Cannot cast `y1?.['bar']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:15:1
    15| y1?.['bar']?.['foo'] as empty;
@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:15:1
 
-Cannot cast `y1?.['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:15:1
    15| y1?.['bar']?.['foo'] as empty;
@@ -131,7 +131,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:16:1
 
-Cannot cast `y2?.['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:16:1
    16| y2?.['bar']?.['foo'] as empty;
@@ -164,7 +164,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:1
 
 Cannot cast `y1?.['baz']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:17:1
    17| y1?.['baz']?.['foo'] as empty;
@@ -182,7 +182,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:1
 
 Cannot cast `y1?.['baz']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:17:1
    17| y1?.['baz']?.['foo'] as empty;
@@ -199,7 +199,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:17:1
 
-Cannot cast `y1?.['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:17:1
    17| y1?.['baz']?.['foo'] as empty;
@@ -232,7 +232,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:1
 
 Cannot cast `y2?.['baz']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:18:1
    18| y2?.['baz']?.['foo'] as empty;
@@ -249,7 +249,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:18:1
 
-Cannot cast `y2?.['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:18:1
    18| y2?.['baz']?.['foo'] as empty;
@@ -267,7 +267,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:20:1
 
 Cannot cast `y1?.['bar']['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:20:1
    20| y1?.['bar']['foo'] as empty;
@@ -284,7 +284,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:20:1
 
-Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:20:1
    20| y1?.['bar']['foo'] as empty;
@@ -316,7 +316,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:21:1
 
-Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:21:1
    21| y2?.['bar']['foo'] as empty;
@@ -334,7 +334,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:1
 
 Cannot cast `y1?.['baz']['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:22:1
    22| y1?.['baz']['foo'] as empty;
@@ -351,7 +351,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:22:1
 
-Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:22:1
    22| y1?.['baz']['foo'] as empty;
@@ -397,7 +397,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:23:1
 
-Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:23:1
    23| y2?.['baz']['foo'] as empty;
@@ -442,7 +442,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:1
 
-Cannot cast `y1['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:25:1
    25| y1['bar']?.['foo'] as empty;
@@ -474,7 +474,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:26:1
 
-Cannot cast `y2['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2['bar']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:26:1
    26| y2['bar']?.['foo'] as empty;
@@ -521,7 +521,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:1
 
 Cannot cast `y1['baz']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:27:1
    27| y1['baz']?.['foo'] as empty;
@@ -538,7 +538,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:1
 
-Cannot cast `y1['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:27:1
    27| y1['baz']?.['foo'] as empty;
@@ -556,7 +556,7 @@ References:
 Error -------------------------------------------------------------------------------------- computed_properties.js:28:1
 
 Cannot cast `y2['baz']?.['foo']` to empty because null or undefined [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    computed_properties.js:28:1
    28| y2['baz']?.['foo'] as empty;
@@ -573,7 +573,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:28:1
 
-Cannot cast `y2['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2['baz']?.['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:28:1
    28| y2['baz']?.['foo'] as empty;
@@ -590,7 +590,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:30:1
 
-Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:30:1
    30| (y1?.['bar'])['foo'] as empty;
@@ -621,7 +621,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:31:1
 
-Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['bar']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:31:1
    31| (y2?.['bar'])['foo'] as empty;
@@ -653,7 +653,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:32:1
 
-Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:32:1
    32| (y1?.['baz'])['foo'] as empty;
@@ -698,7 +698,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:33:1
 
-Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.['baz']['foo']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    computed_properties.js:33:1
    33| (y2?.['baz'])['foo'] as empty;
@@ -855,7 +855,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:1
 
-Cannot cast `a.a` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.a` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    deletion.js:20:1
    20| a.a as empty; // don't refine a.a to definitely exist
@@ -872,7 +872,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:1
 
-Cannot cast `a.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    deletion.js:20:1
    20| a.a as empty; // don't refine a.a to definitely exist
@@ -931,7 +931,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:1
 
-Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    function_calls.js:8:1
    8| x1?.() as empty;
@@ -948,7 +948,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:8:1
 
-Cannot cast `x1?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function_calls.js:8:1
    8| x1?.() as empty;
@@ -965,7 +965,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_calls.js:9:1
 
-Cannot cast `x2?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x2?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    function_calls.js:9:1
    9| x2?.() as empty;
@@ -1079,7 +1079,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:1
 
-Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:9:1
    9| foo?.bar?.() as empty;
@@ -1096,7 +1096,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:1
 
-Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:9:1
    9| foo?.bar?.() as empty;
@@ -1113,7 +1113,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- method_calls.js:9:1
 
-Cannot cast `foo?.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:9:1
    9| foo?.bar?.() as empty;
@@ -1144,7 +1144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:1
 
-Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo.bar?.()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:10:1
    10| foo.bar?.() as empty;
@@ -1161,7 +1161,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:1
 
-Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo.bar?.()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:10:1
    10| foo.bar?.() as empty;
@@ -1192,7 +1192,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:1
 
-Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar()` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:11:1
    11| foo?.bar() as empty;
@@ -1209,7 +1209,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:1
 
-Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:11:1
    11| foo?.bar() as empty;
@@ -1254,7 +1254,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:1
 
-Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo?.bar()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    method_calls.js:12:1
    12| (foo?.bar)() as empty;
@@ -1579,7 +1579,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- private_properties.js:6:5
 
-Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this?.#foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    private_properties.js:6:5
    6|     this?.#foo as empty;
@@ -1611,7 +1611,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:14:5
 
-Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this?.#bar` to empty because `X` [1] is incompatible with empty [2]. [incompatible-type]
 
    private_properties.js:14:5
    14|     this?.#bar as empty;
@@ -1643,7 +1643,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:5
 
-Cannot cast `this?.#baz` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this?.#baz` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    private_properties.js:15:5
    15|     this?.#baz as empty;
@@ -1660,7 +1660,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- private_properties.js:15:5
 
-Cannot cast `this?.#baz` to empty because `X` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `this?.#baz` to empty because `X` [1] is incompatible with empty [2]. [incompatible-type]
 
    private_properties.js:15:5
    15|     this?.#baz as empty;
@@ -1855,7 +1855,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:50:3
 
-Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refinements.js:50:3
    50|   a as {}; // should fail, sanity check
@@ -1875,7 +1875,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:51:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements.js:51:3
    51|   a as null | void; // should fail, sanity check
@@ -2072,7 +2072,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:101:3
 
-Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `a` to object type because null or undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    refinements.js:101:3
    101|   a as {}; // should fail, sanity check
@@ -2092,7 +2092,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:102:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements.js:102:3
    102|   a as null | void; // should fail, sanity check
@@ -2113,7 +2113,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:110:3
 
 Cannot cast `b.x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
+[incompatible-type]
 
    refinements.js:110:3
    110|   b.x as false; // nope
@@ -2186,7 +2186,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:127:3
 
-Cannot cast `b.z.value` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.z.value` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:127:3
    127|   b.z.value as string; // error
@@ -2219,7 +2219,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:134:3
 
 Cannot cast `b.y` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
+[incompatible-type]
 
    refinements.js:134:3
    134|   b.y as false; // nope
@@ -2237,7 +2237,7 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:134:3
 
 Cannot cast `b.y` to boolean literal `false` because undefined [1] is incompatible with boolean literal `false` [2].
-[incompatible-cast]
+[incompatible-type]
 
    refinements.js:134:3
    134|   b.y as false; // nope
@@ -2412,7 +2412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:3
 
-Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:9:3
    9|   t as null | void; // no
@@ -2429,7 +2429,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:10:3
 
-Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    refinements2.js:10:3
    10|   t.a as number; // no for two reasons
@@ -2460,7 +2460,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:13:3
 
-Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:13:3
    13|   t as null | void; // no
@@ -2477,7 +2477,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:14:3
 
-Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `t.a` to number because null [1] is incompatible with number [2]. [incompatible-type]
 
    refinements2.js:14:3
    14|   t.a as number; // no for two reasons
@@ -2508,7 +2508,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:23:3
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-type]
 
    refinements2.js:23:3
    23|   s as S; // no, may be nulled
@@ -2525,7 +2525,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:24:3
    24|   s.a as null | void; // no for two reasons
@@ -2556,7 +2556,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:33:3
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-type]
 
    refinements2.js:33:3
    33|   s as S; // no, may be nulled
@@ -2573,7 +2573,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:34:3
    34|   s.a as null | void; // no for two reasons
@@ -2604,7 +2604,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:37:3
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-type]
 
    refinements2.js:37:3
    37|   s as S; // no, may be nulled
@@ -2621,7 +2621,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:38:3
    38|   s.a as null | void; // no for two reasons
@@ -2652,7 +2652,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:41:3
 
-Cannot cast `s.a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `s.a` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
 
    refinements2.js:41:3
    41|   s.a as number; // no: s.a can be null
@@ -2669,7 +2669,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:45:3
 
-Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-cast]
+Cannot cast `s` to `S` because null or undefined [1] is incompatible with `S` [2]. [incompatible-type]
 
    refinements2.js:45:3
    45|   s as S; // no, may be nulled
@@ -2686,7 +2686,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:46:3
    46|   s.a as null | void; // no for two reasons
@@ -2717,7 +2717,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:59:3
 
-Cannot cast `w` to `W` because null or undefined [1] is incompatible with `W` [2]. [incompatible-cast]
+Cannot cast `w` to `W` because null or undefined [1] is incompatible with `W` [2]. [incompatible-type]
 
    refinements2.js:59:3
    59|   w as W; // no
@@ -2762,7 +2762,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:69:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:69:3
    69|   a as null | void; // nope
@@ -2793,7 +2793,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:75:3
 
-Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:75:3
    75|   b as null | void; // nope
@@ -2824,7 +2824,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:86:3
 
-Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:86:3
    86|   b as null | void; // nope
@@ -2855,7 +2855,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:95:3
 
-Cannot cast `c` to union type because object type [1] is incompatible with union type [2]. [incompatible-cast]
+Cannot cast `c` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
 
    refinements2.js:95:3
    95|   c as null | void; //nope
@@ -2872,7 +2872,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements2.js:102:3
 
-Cannot cast `b1.a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `b1.a` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    refinements2.js:102:3
    102|   b1.a as number; // b1.a may not exist and may not be number
@@ -2889,7 +2889,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:1
 
-Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:12:1
    12| x1?.foo as empty;
@@ -2906,7 +2906,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:12:1
 
-Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:12:1
    12| x1?.foo as empty;
@@ -2923,7 +2923,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:13:1
 
-Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x2?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:13:1
    13| x2?.foo as empty;
@@ -2955,7 +2955,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:1
 
-Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.bar?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:15:1
    15| y1?.bar?.foo as empty;
@@ -2972,7 +2972,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:15:1
 
-Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:15:1
    15| y1?.bar?.foo as empty;
@@ -3019,7 +3019,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:16:1
 
-Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:16:1
    16| y2?.bar?.foo as empty;
@@ -3051,7 +3051,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:1
 
-Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:17:1
    17| y1?.baz?.foo as empty;
@@ -3068,7 +3068,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:1
 
-Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:17:1
    17| y1?.baz?.foo as empty;
@@ -3085,7 +3085,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:17:1
 
-Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:17:1
    17| y1?.baz?.foo as empty;
@@ -3117,7 +3117,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:1
 
-Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:18:1
    18| y2?.baz?.foo as empty;
@@ -3134,7 +3134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:18:1
 
-Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:18:1
    18| y2?.baz?.foo as empty;
@@ -3151,7 +3151,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:20:1
 
-Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.bar.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:20:1
    20| y1?.bar.foo as empty;
@@ -3168,7 +3168,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:20:1
 
-Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:20:1
    20| y1?.bar.foo as empty;
@@ -3200,7 +3200,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:21:1
 
-Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:21:1
    21| y2?.bar.foo as empty;
@@ -3217,7 +3217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:1
 
-Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:22:1
    22| y1?.baz.foo as empty;
@@ -3234,7 +3234,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:1
 
-Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:22:1
    22| y1?.baz.foo as empty;
@@ -3280,7 +3280,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:23:1
 
-Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:23:1
    23| y2?.baz.foo as empty;
@@ -3325,7 +3325,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:25:1
 
-Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:25:1
    25| y1.bar?.foo as empty;
@@ -3357,7 +3357,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:26:1
 
-Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2.bar?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:26:1
    26| y2.bar?.foo as empty;
@@ -3403,7 +3403,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:1
 
-Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:27:1
    27| y1.baz?.foo as empty;
@@ -3420,7 +3420,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:1
 
-Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:27:1
    27| y1.baz?.foo as empty;
@@ -3437,7 +3437,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:28:1
 
-Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2.baz?.foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:28:1
    28| y2.baz?.foo as empty;
@@ -3454,7 +3454,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:28:1
 
-Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2.baz?.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:28:1
    28| y2.baz?.foo as empty;
@@ -3471,7 +3471,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:30:1
 
-Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:30:1
    30| (y1?.bar).foo as empty;
@@ -3502,7 +3502,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:31:1
 
-Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.bar.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:31:1
    31| (y2?.bar).foo as empty;
@@ -3534,7 +3534,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:32:1
 
-Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y1?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:32:1
    32| (y1?.baz).foo as empty;
@@ -3579,7 +3579,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:33:1
 
-Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y2?.baz.foo` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    static_members.js:33:1
    33| (y2?.baz).foo as empty;
@@ -3669,7 +3669,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ super_call.js:4:6
 
-Cannot cast `super()?.a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `super()?.a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    super_call.js:4:6
    4|     (super()?.a: empty); // error

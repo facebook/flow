@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:11:10
 
-Cannot return `x` because number [1] is incompatible with `Queue` [2]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with `Queue` [2]. [incompatible-type]
 
    test.js:11:10
    11|   return x;
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:14:10
 
-Cannot return `q` because `Queue` [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `q` because `Queue` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:14:10
    14|   return q;
@@ -35,7 +35,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:19:19
 
 Cannot call `counter_to_number` with `y` bound to `c` because number [1] is incompatible with `Counter` [2].
-[incompatible-call]
+[incompatible-type]
 
    test.js:19:19
    19| counter_to_number(y); // Error: number ~> Counter
@@ -52,7 +52,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
 
    test.js:28:10
    28|   return x; // Error: string ~> number, number ~> string
@@ -72,7 +72,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:35:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
 
    test.js:35:10
    35|   return x; // Error string ~> number

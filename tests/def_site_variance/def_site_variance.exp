@@ -31,7 +31,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:4
 
 Cannot cast `v1` to `Variance` because `A` [1] is incompatible with `B` [2] in type argument `Out` [3].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:13:4
    13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)
@@ -52,7 +52,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:4
 
 Cannot cast `v1` to `Variance` because `B` [1] is incompatible with `A` [2] in type argument `In` [3].
-[incompatible-cast]
+[incompatible-type]
 
    test.js:13:4
    13|   (v1: Variance<B,A>); // error on both targs (A ~/~> B)

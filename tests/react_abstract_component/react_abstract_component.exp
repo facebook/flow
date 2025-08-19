@@ -32,7 +32,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
 
 Cannot call `foo` with `ref` bound to `a` because `CommonInstance` [1] is incompatible with `Component` [2].
-[incompatible-call]
+[incompatible-type]
 
    strict.js:9:5
    9| foo(ref);

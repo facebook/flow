@@ -58,7 +58,7 @@ Cannot conform to common interface module because string [1] is incompatible wit
 of property `generic1`. 
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type-arg]
+[incompatible-type]
 
    classes.ios.js:73:40
    73| declare export const generic1: Generic<string>; // error
@@ -112,7 +112,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- classes.ios.js:3:22
 
 Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `bar` is missing in `ImplHasExtra` [1] but
-exists in `ImplHasExtra` [2]. [prop-missing]
+exists in `ImplHasExtra` [2]. [incompatible-type]
 
    classes.ios.js:3:22
    3| declare export class ImplHasExtra { // ok
@@ -127,7 +127,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- classes.ios.js:3:22
 
 Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `foo` is missing in `ImplHasExtra` [1] but
-exists in `ImplHasExtra` [2]. [prop-missing]
+exists in `ImplHasExtra` [2]. [incompatible-type]
 
    classes.ios.js:3:22
    3| declare export class ImplHasExtra { // ok

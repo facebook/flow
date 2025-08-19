@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
-[incompatible-cast]
+[incompatible-type]
 
    commonjs.js:4:2
      4| (React.Component: number); // Error
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
 
-Cannot cast object literal to `Node` because: [incompatible-cast]
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -56,7 +56,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
-[incompatible-cast]
+[incompatible-type]
 
    es-default.js:4:2
      4| (React.Component: number); // Error
@@ -73,7 +73,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
 
-Cannot cast object literal to `Node` because: [incompatible-cast]
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -111,7 +111,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
 Cannot cast `React.Component` to number because class `Component` [1] is incompatible with number [2].
-[incompatible-cast]
+[incompatible-type]
 
    es-namespace.js:4:2
      4| (React.Component: number); // Error
@@ -128,7 +128,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
 
-Cannot cast object literal to `Node` because: [incompatible-cast]
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_type_without_import.js:2:2
 
-Cannot cast object literal to `Node` because: [incompatible-cast]
+Cannot cast object literal to `Node` because: [incompatible-type]
  - Either object literal [1] is incompatible with `React.Element` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].

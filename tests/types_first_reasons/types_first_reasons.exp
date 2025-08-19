@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------- destructured_param_default_dep.js:2:3
 
 Cannot call `f` with `0` bound to the first parameter because number [1] is incompatible with object type [2].
-[incompatible-call]
+[incompatible-type]
 
    destructured_param_default_dep.js:2:3
    2| f(0); // error
@@ -44,7 +44,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- mixin_dep.js:4:7
 
-Cannot call `s.has` with `"foo"` bound to `key` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `s.has` with `"foo"` bound to `key` because string [1] is incompatible with number [2]. [incompatible-type]
 
    mixin_dep.js:4:7
    4| s.has("foo"); // Err: string ~> number (on Seq, _not_ IndexedIterable's inherited method)

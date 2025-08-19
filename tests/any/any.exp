@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- propagate.js:10:10
 
-Cannot return `c.bar(...)` because number [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `c.bar(...)` because number [1] is incompatible with string [2]. [incompatible-type]
 
    propagate.js:10:10
    10|   return c.bar(0, y); // should be able to select first case and error
@@ -119,7 +119,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:16:5
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
 
    propagate.js:16:5
    16|     x as boolean;
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:23:5
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
 
    propagate.js:23:5
    23|     x as boolean;

@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ cross_module/app.js:4:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
-property `a`. [incompatible-call]
+property `a`. [incompatible-type]
 
    cross_module/app.js:4:9
    4| app({a: 'foo', b: 2});
@@ -16,7 +16,7 @@ References:
 Error ------------------------------------------------------------------------------------------ cross_module/use.js:3:9
 
 Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
-property `a`. [incompatible-call]
+property `a`. [incompatible-type]
 
    cross_module/use.js:3:9
    3| app({a: 'foo', b: 2});
@@ -96,7 +96,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type.js:12:2
    12| (o1: {p?:T}); // ok
@@ -114,7 +114,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
 Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type.js:14:2
    14| ({}: O1); // error
@@ -128,7 +128,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:16:5
 
-Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:16:5
    16| ({p:y}: O1); // error: y ~> T
@@ -145,7 +145,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:23:2
 
-Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:23:2
    23| (o2: {p:T}); // error: o2.p is optional
@@ -162,7 +162,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:26:5
 
-Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:26:5
    26| ({p:y}: O2); // error: y ~> T
@@ -212,7 +212,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:37:6
 
 Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type.js:37:6
    37| (({}:{}): O4); // error: property `p` not found
@@ -226,7 +226,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:39:5
 
-Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:39:5
    39| ({p:y}: O4); // error: y ~> T
@@ -244,7 +244,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:47:2
 
 Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type.js:47:2
    47| (nil: O5); // error: property `p` not found
@@ -261,7 +261,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:49:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:49:5
    49| ({p:y}: O5); // error: y ~> T
@@ -279,7 +279,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
 Cannot cast object literal to `O5` because property `q` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    type.js:50:2
    50| ({p:x,q:y}: O5); // error: additional property `q` found
@@ -294,7 +294,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- type.js:56:6
 
 Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type.js:56:6
    56| (({}:{}): O6); // error: property `p` not found
@@ -308,7 +308,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:57:5
 
-Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`. [incompatible-type]
 
    type.js:57:5
    57| ({p:x}: O6); // error: x ~> U
@@ -339,7 +339,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:68:2
 
-Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2]. [incompatible-cast]
+Cannot cast `o8.p` to `T` because `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:68:2
    68| (o8.p: T); // error: U ~> T
@@ -359,7 +359,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o9` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type.js:74:2
    74| (o9: {p?:T,q:U});
@@ -415,7 +415,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o14` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type.js:102:2
    102| (o14: {p?:T}); // ok
@@ -432,7 +432,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:105:5
 
-Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type.js:105:5
    105| ({p:y}: O14); // error: U ~> T
@@ -450,7 +450,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- type.js:106:2
 
 Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type.js:106:2
    106| ({}: O14); // error
@@ -465,7 +465,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:2
 
 Cannot cast `o1` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    type_contra.js:6:2
    6| (o1: {p?:T}); // error: unknown ~> T
@@ -482,7 +482,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:7:2
 
-Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-cast]
+Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_contra.js:7:2
    7| (o1.p: T); // errors: undefined ~> T, unknown ~> T
@@ -500,7 +500,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:12:2
 
 Cannot cast `o2` to object type because computed property of unknown type [1] is incompatible with `T` [2] in the
-indexer property. [incompatible-cast]
+indexer property. [incompatible-type]
 
    type_contra.js:12:2
    12| (o2: {[string]:T}); // error: unknown ~> T
@@ -518,7 +518,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:13:2
 
 Cannot cast `o2.p` to `T` because computed property of unknown type [1] is incompatible with `T` [2].
-[incompatible-cast]
+[incompatible-type]
 
    type_contra.js:13:2
    13| (o2.p: T); // errors: unknown ~> T
@@ -536,7 +536,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- type_contra.js:18:2
 
 Cannot cast `o3` to object type because property `p` of unknown type [1] is incompatible with `T` [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    type_contra.js:18:2
    18| (o3: {p:T}); // error: unknown ~> T
@@ -553,7 +553,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:19:2
 
-Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-cast]
+Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_contra.js:19:2
    19| (o3.p: T); // errors: unknown ~> T
@@ -592,7 +592,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:3:2
 
-Cannot cast `42` to `O` because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `42` to `O` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    type_empty.js:3:2
    3| (42: O); // Error: number ~> empty
@@ -606,7 +606,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:7:4
 
-Cannot cast `x` to number because object type [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because object type [1] is incompatible with number [2]. [incompatible-type]
 
    type_empty.js:7:4
    7|   (x: number); // Error: mixed ~> number,
@@ -624,7 +624,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_empty.js:12:6
 
 Cannot call `fn` with object literal bound to the first parameter because object literal [1] is incompatible with
-`{ ...T }` [2]. [incompatible-call]
+`{ ...T }` [2]. [incompatible-type]
 
    type_empty.js:12:6
    12|   fn({}); // Error: object ~> empty
@@ -639,7 +639,7 @@ References:
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:12
 
 Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `p`.
-[incompatible-cast]
+[incompatible-type]
 
    type_generic.js:3:12
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
@@ -654,7 +654,7 @@ References:
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:18
 
 Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `q`.
-[incompatible-cast]
+[incompatible-type]
 
    type_generic.js:3:18
    3| (spread({p:0},{q:0}): {|+p:empty,+q:empty|}); // number ~> empty (x2)
@@ -671,7 +671,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_instance.js:6:2
    6| (o1: {p?:number}); // Error
@@ -688,7 +688,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
 
-Cannot cast `o1` to object type because in property `p`: [incompatible-cast]
+Cannot cast `o1` to object type because in property `p`: [incompatible-type]
  - Either undefined [1] is incompatible with string [2].
  - Or undefined [1] is incompatible with number [3].
 
@@ -716,7 +716,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection.js:9:2
    9| (o1: {p?:T,q?:U}); // ok
@@ -736,7 +736,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `q`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection.js:9:2
    9| (o1: {p?:T,q?:U}); // ok
@@ -756,7 +756,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o2` to object type because undefined [1] is incompatible with `A` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection.js:13:2
    13| (o2: {p?:B}); // ok
@@ -776,7 +776,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o2` to object type because undefined [1] is incompatible with `B` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection.js:13:2
    13| (o2: {p?:B}); // ok
@@ -793,7 +793,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:15:6
 
-Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    type_intersection.js:15:6
    15| ({p: new A}: O2); // error: A ~> B
@@ -810,7 +810,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:5:2
    5| (o1: {p?:T&U}); // ok
@@ -830,7 +830,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with `U` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:5:2
    5| (o1: {p?:T&U}); // ok
@@ -850,7 +850,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o2` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:8:2
    8| (o2: {p?:T&U}); // ok
@@ -870,7 +870,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o2` to object type because undefined [1] is incompatible with `U` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:8:2
    8| (o2: {p?:T&U}); // ok
@@ -890,7 +890,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o3` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:11:2
    11| (o3: {p?:T&U}); // ok
@@ -910,7 +910,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o3` to object type because undefined [1] is incompatible with `U` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:11:2
    11| (o3: {p?:T&U}); // ok
@@ -930,7 +930,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o17` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:53:2
    53| (o17: {p?:T,q?:U}); // ok
@@ -950,7 +950,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o17` to object type because undefined [1] is incompatible with `U` [2] in property `q`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:53:2
    53| (o17: {p?:T,q?:U}); // ok
@@ -970,7 +970,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o18` to object type because undefined [1] is incompatible with `U` [2] in property `q`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:56:2
    56| (o18: {p?:T,q?:U}); // ok
@@ -990,7 +990,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o19` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:59:2
    59| (o19: {p?:T,q?:U}); // ok
@@ -1010,7 +1010,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o21` to object type because undefined [1] is incompatible with `U` [2] in property `q`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_intersection_optional.js:65:2
    65| (o21: {p:T,q?:U}); // ok
@@ -1042,7 +1042,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:2
 
 Cannot cast `o2.someProp` to empty because `void` (due to access of non-existent property `someProp`) [1] is
-incompatible with empty [2]. [incompatible-cast]
+incompatible with empty [2]. [incompatible-type]
 
    type_mixed.js:7:2
    7| (o2.someProp: empty); // Error someProp does not exist
@@ -1070,7 +1070,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:11:2
 
-Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    type_mixed.js:11:2
    11| (o3.a: empty); // Error: number ~> empty
@@ -1087,7 +1087,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:2
 
-Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    type_mixed.js:12:2
    12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -1104,7 +1104,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:2
 
-Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    type_mixed.js:12:2
    12| (o3.b: empty); // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -1152,7 +1152,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to object type because undefined [1] is incompatible with number [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_statics.js:5:2
    5| (o1: {p?:number}); // ok
@@ -1177,7 +1177,7 @@ string literal `foo` [1] is not an object. [not-an-object]
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because: [incompatible-cast]
+Cannot cast `o1` to union type because: [incompatible-type]
  - Either undefined [1] is incompatible with `U` [2] in property `q`. This property is invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `p` is missing in object type [3] but exists in object type [4].
@@ -1203,7 +1203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
-Cannot cast `o1` to union type because: [incompatible-cast]
+Cannot cast `o1` to union type because: [incompatible-type]
  - Either undefined [1] is incompatible with `T` [2] in property `p`. This property is invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `q` is missing in object type [3] but exists in object type [4].
@@ -1314,7 +1314,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:11:2
 
 Cannot cast `o1` to object type because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:11:2
    11| (o1: {p:T}); // error
@@ -1332,7 +1332,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:19:2
 
 Cannot cast `o2` to object type because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:19:2
    19| (o2: {p:T}); // error
@@ -1350,7 +1350,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
 Cannot cast object literal to `O2` because property `p` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    type_void.js:21:2
    21| ({p:x}: O2); // error
@@ -1383,7 +1383,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:27:2
 
 Cannot cast `o3` to object type because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:27:2
    27| (o3: {p:T}); // error
@@ -1401,7 +1401,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:35:2
 
 Cannot cast `o4` to object type because property `p` is missing in object type [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:35:2
    35| (o4: {p:T}); // error
@@ -1419,7 +1419,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
 Cannot cast object literal to `O4` because property `p` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    type_void.js:37:2
    37| ({p:x}: O4); // error
@@ -1436,7 +1436,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o5` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_void.js:41:2
    41| (o5: {p?:T}); // ok
@@ -1454,7 +1454,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
 Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:43:2
    43| ({}: O5); // error
@@ -1468,7 +1468,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:45:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type_void.js:45:5
    45| ({p:y}: O5); // error: y ~> T
@@ -1488,7 +1488,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `o6` to object type because undefined [1] is incompatible with `T` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-cast]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type_void.js:50:2
    50| (o6: {p?:T}); // error, void doesn't overwrite p
@@ -1506,7 +1506,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
 Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    type_void.js:52:2
    52| ({}: O6); // error
@@ -1520,7 +1520,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:54:5
 
-Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-cast]
+Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
 
    type_void.js:54:5
    54| ({p:y}: O6); // error: y ~> T

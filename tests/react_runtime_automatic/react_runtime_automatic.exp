@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
 Cannot create `Component` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact objects
-do not accept extra props. [prop-missing]
+do not accept extra props. [incompatible-type]
 
    test.js:8:12
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -19,7 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    test.js:8:12
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
 
 Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-type argument `P` [3]. [prop-missing]
+type argument `P` [3]. [incompatible-type]
 
    test.js:9:60
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -58,7 +58,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
 
 Cannot assign `<Component />` to `z` because property `foo` is extra in `Props` [1] but missing in object type [2].
-Exact objects do not accept extra props in type argument `P` [3]. [prop-missing]
+Exact objects do not accept extra props in type argument `P` [3]. [incompatible-type]
 
    test.js:9:60
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -79,7 +79,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
 Cannot assign `<Component />` to `z` because property `bar` is extra in object type [1] but missing in `Props` [2].
-Exact objects do not accept extra props in the first parameter of type argument `ElementType` [3]. [prop-missing]
+Exact objects do not accept extra props in the first parameter of type argument `ElementType` [3]. [incompatible-type]
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -100,7 +100,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
 Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-the first parameter of type argument `ElementType` [3]. [prop-missing]
+the first parameter of type argument `ElementType` [3]. [incompatible-type]
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -121,7 +121,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
 Cannot create `Component` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact objects
-do not accept extra props. [prop-missing]
+do not accept extra props. [incompatible-type]
 
    test.js:9:61
    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -139,7 +139,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
 Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    test.js:9:61
    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -157,7 +157,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:14:22
 
 Cannot create `Component2` element because property `bar` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    test.js:14:22
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
@@ -175,7 +175,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:14:22
 
 Cannot create `Component2` element because property `foo` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    test.js:14:22
    14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo

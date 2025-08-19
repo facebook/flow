@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:18:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either object literal [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -78,7 +78,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:20:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -100,7 +100,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:21:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -122,7 +122,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:22:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -144,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:23:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -166,7 +166,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:24:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 
@@ -188,7 +188,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:25:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either no arguments are expected by function type [1].
  - Or no more than 1 argument is expected by function type [2].
  - Or no more than 7 arguments are expected by function type [3].
@@ -211,7 +211,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- date.js:26:5
 
-Cannot call `Date` because: [incompatible-call]
+Cannot call `Date` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or no arguments are expected by function type [3].
 

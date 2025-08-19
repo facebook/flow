@@ -8,7 +8,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:2
 
-Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:14:2
    14| (3: string);

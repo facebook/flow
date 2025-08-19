@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- async.js:10:10
 
-Cannot return `1` because number [1] is incompatible with boolean [2] in type argument `R` [3]. [incompatible-return]
+Cannot return `1` because number [1] is incompatible with boolean [2] in type argument `R` [3]. [incompatible-type]
 
    async.js:10:10
      10|   return 1;  // error, number != boolean
@@ -18,7 +18,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- async.js:29:10
 
 Cannot return `await p` because number [1] is incompatible with boolean [2] in type argument `R` [3].
-[incompatible-return]
+[incompatible-type]
 
    async.js:29:10
      29|   return await p; // error, number != boolean
@@ -39,7 +39,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- async.js:43:29
 
 Cannot expect undefined as the return type of async function because undefined [1] is incompatible with
-implicitly-returned `Promise`. [incompatible-return]
+implicitly-returned `Promise`. [incompatible-type]
 
    43|   static async m(a: mixed): void { await a; } // error, void != Promise<void>
                                    ^^^^ [1]
@@ -83,7 +83,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- async2.js:48:30
 
 Cannot expect undefined as the return type of async function because undefined [1] is incompatible with
-implicitly-returned `Promise`. [incompatible-return]
+implicitly-returned `Promise`. [incompatible-type]
 
    48|   async function voidoid5(): void { // error, void != Promise<void>
                                     ^^^^ [1]
@@ -92,7 +92,7 @@ implicitly-returned `Promise`. [incompatible-return]
 Error -------------------------------------------------------------------------------------------------- async2.js:55:13
 
 Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
-undefined in type argument `R` [2]. [incompatible-return]
+undefined in type argument `R` [2]. [incompatible-type]
 
    async2.js:55:13
      55|   : Promise<number> { // error, number != void
@@ -132,7 +132,7 @@ Cannot use `await P` [1] as a superclass. Only variables and member expressions 
 Error ----------------------------------------------------------------------------------------- async_return_void.js:2:3
 
 Cannot return undefined because undefined [1] is incompatible with string [2] in type argument `R` [3].
-[incompatible-return]
+[incompatible-type]
 
    async_return_void.js:2:3
       2|   return;
@@ -150,7 +150,7 @@ References:
 Error ---------------------------------------------------------------------------------------- async_return_void.js:6:10
 
 Cannot return `undefined` because undefined [1] is incompatible with string [2] in type argument `R` [3].
-[incompatible-return]
+[incompatible-type]
 
    async_return_void.js:6:10
       6|   return undefined;
@@ -168,7 +168,7 @@ References:
 Error --------------------------------------------------------------------------------------- async_return_void.js:11:10
 
 Cannot return `bar()` because undefined [1] is incompatible with string [2] in type argument `R` [3].
-[incompatible-return]
+[incompatible-type]
 
    async_return_void.js:11:10
      11|   return bar();
@@ -213,7 +213,7 @@ Unexpected number, expected the token `,`
 Error ----------------------------------------------------------------------------------------------- generator.js:21:45
 
 Cannot expect `AsyncGenerator` as the return type of async generator function because number [1] is incompatible with
-string [2] in type argument `Yield` [3]. [incompatible-return]
+string [2] in type argument `Yield` [3]. [incompatible-type]
 
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
@@ -230,7 +230,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generator.js:21:30
 
-string [1] is incompatible with number [2] in type argument `Yield` [3]. [incompatible-type-arg]
+string [1] is incompatible with number [2] in type argument `Yield` [3]. [incompatible-type]
 
    generator.js:21:30
      21| async function *genError1(): AsyncGenerator<number, void, void> {

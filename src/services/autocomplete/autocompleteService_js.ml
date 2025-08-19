@@ -91,7 +91,6 @@ module AcCompletion = struct
 end
 
 type ac_options = {
-  error_code_update: bool;
   imports: bool;
   imports_min_characters: int;
   imports_ranked_usage: bool;
@@ -2117,7 +2116,7 @@ let autocomplete_object_key ~typing ~edit_locs ~token ~used_keys ~spreads obj_ty
     AcResult { result = { AcCompletion.items; is_incomplete = false }; errors_to_log }
 
 (* Applicable error codes are those corresponding to errors on the next line *)
-let applicable_error_codes ~loc_of_aloc ~cx ~ac_options comment_loc =
+let applicable_error_codes ~loc_of_aloc ~cx comment_loc =
   let next_line =
     comment_loc |> loc_of_aloc |> Loc.start_loc |> fun loc ->
     Loc.
@@ -2135,9 +2134,7 @@ let applicable_error_codes ~loc_of_aloc ~cx ~ac_options comment_loc =
       (fun err acc ->
         let err =
           err
-          |> Flow_intermediate_error.make_intermediate_error
-               ~loc_of_aloc
-               ~updated_error_code:ac_options.error_code_update
+          |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
           |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root
         in
         let loc = Flow_errors_utils.loc_of_printable_error err in
@@ -2155,12 +2152,12 @@ let has_leading text =
   let before = Base.String.rstrip before ~drop:(fun c -> not (Base.Char.is_whitespace c)) in
   Base.String.exists before ~f:(fun c -> not (Base.Char.is_whitespace c))
 
-let autocomplete_fixme ~loc_of_aloc ~cx ~ac_options ~edit_locs ~token ~text ~loc =
+let autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc =
   if has_leading text then
     (* Don't suggest if there's leading text (the fixme would be invalid) *)
     []
   else
-    let error_codes = applicable_error_codes ~loc_of_aloc ~cx ~ac_options loc in
+    let error_codes = applicable_error_codes ~loc_of_aloc ~cx loc in
     Base.List.map error_codes ~f:(fun error_code ->
         let code_str = Error_codes.string_of_code error_code in
         let name = Printf.sprintf "$FlowFixMe[%s]" code_str in
@@ -2217,15 +2214,13 @@ let autocomplete_jsdoc ~token ~ast ~loc ~canon =
        )
     |> filter_by_token_and_sort token
 
-let autocomplete_comment ~typing ~ac_options ~edit_locs ~trigger_character ~token ~text ~loc =
+let autocomplete_comment ~typing ~edit_locs ~trigger_character ~token ~text ~loc =
   let { loc_of_aloc; cx; ast; canonical = canon; _ } = typing in
   let items =
     match trigger_character with
     | Some "*"
     | None ->
-      let items_fixme =
-        autocomplete_fixme ~loc_of_aloc ~cx ~ac_options ~edit_locs ~token ~text ~loc
-      in
+      let items_fixme = autocomplete_fixme ~loc_of_aloc ~cx ~edit_locs ~token ~text ~loc in
       let items_jsdoc = autocomplete_jsdoc ~token ~ast ~loc ~canon in
       items_fixme @ items_jsdoc
     | _ -> []
@@ -2298,7 +2293,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
       | Ac_type_binding -> AcEmpty "TypeBinding"
       | Ac_ignored -> AcEmpty "Ignored"
       | Ac_comment { text; loc } ->
-        autocomplete_comment ~typing ~ac_options ~edit_locs ~trigger_character ~token ~text ~loc
+        autocomplete_comment ~typing ~edit_locs ~trigger_character ~token ~text ~loc
       | Ac_jsx_text -> AcEmpty "JSXText"
       | Ac_class_key { enclosing_class_t } ->
         (* TODO: include keywords *)

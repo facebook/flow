@@ -57,7 +57,7 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
         Base.Fn.const true
       | Some codes ->
         fun error_message ->
-          (match Error_message.error_code_of_message ~updated_error_code:false error_message with
+          (match Error_message.error_code_of_message error_message with
           | None -> false
           | Some error_code ->
             let error_code_string = Error_codes.string_of_code error_code in

@@ -271,7 +271,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:138:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    138|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
                                     ^^^^^^ [1]
@@ -280,7 +280,7 @@ undefined. [incompatible-return]
 Error --------------------------------------------------------------------------------------------------- test.js:139:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    139|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
                                     ^^^^^^ [1]
@@ -289,7 +289,7 @@ undefined. [incompatible-return]
 Error --------------------------------------------------------------------------------------------------- test.js:140:29
 
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-return]
+undefined. [incompatible-type]
 
    140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error
                                     ^^^^^^ [1]

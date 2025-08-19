@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- forof.js:7:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    forof.js:7:5
    7|     x as string; // Error - number ~> string
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:13:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    forof.js:13:5
    13|     x as string; // Error - number ~> string
@@ -52,7 +52,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:32:5
 
-Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `elem` to number because tuple type [1] is incompatible with number [2]. [incompatible-type]
 
    forof.js:32:5
      32|     elem as number; // Error - tuple ~> number
@@ -69,7 +69,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:38:5
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    forof.js:38:5
    38|     x as number; // Error - string ~> number
@@ -103,7 +103,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:78:3
 
-Cannot cast `x5` to number because boolean [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x5` to number because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    forof.js:78:3
    78|   x5 as number; // error
@@ -120,7 +120,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:79:3
 
-Cannot cast `x5` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x5` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    forof.js:79:3
    79|   x5 as boolean; // error
@@ -137,7 +137,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:80:3
 
-Cannot cast `x5` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x5` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    forof.js:80:3
    80|   x5 as string; //error
@@ -154,7 +154,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:80:3
 
-Cannot cast `x5` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x5` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    forof.js:80:3
    80|   x5 as string; //error

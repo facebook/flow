@@ -30,7 +30,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:2
 
-Cannot cast `a` to object type because number [1] is incompatible with object type [2]. [incompatible-cast]
+Cannot cast `a` to object type because number [1] is incompatible with object type [2]. [incompatible-type]
 
    b.js:6:2
    6| (a: {

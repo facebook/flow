@@ -1477,7 +1477,6 @@ let make_options
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_enums = FlowConfig.enums flowconfig;
-    opt_error_code_migration = FlowConfig.error_code_migration flowconfig;
     opt_estimate_recheck_time =
       Base.Option.first_some
         options_flags.estimate_recheck_time

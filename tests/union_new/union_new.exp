@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
 
 Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    issue-1462-i.js:21:9
    21|   print(val.foo);  // <--- foo could be an array
@@ -18,7 +18,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
-Cannot call `check_fun` with function bound to `_` because: [incompatible-call]
+Cannot call `check_fun` with function bound to `_` because: [incompatible-type]
  - Either string [1] is incompatible with number [2] in the return value.
  - Or number [3] is incompatible with string [4] in the return value.
 
@@ -44,7 +44,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test11.js:12:8
 
 Cannot call `length` with object literal bound to `list` because property `next` is missing in object literal [1] but
-exists in `Cons` [2]. [prop-missing]
+exists in `Cons` [2]. [incompatible-type]
 
    test11.js:12:8
    12| length({ kind: "cons" }); // missing `next`
@@ -59,7 +59,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test11.js:14:8
 
 Cannot call `length` with object literal bound to `list` because object literal [1] is incompatible with `List` [2].
-[incompatible-call]
+[incompatible-type]
 
    test11.js:14:8
    14| length({ kind: "empty" }); // `kind` not found
@@ -73,7 +73,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
-Cannot call `foo` with function bound to `x` because: [incompatible-call]
+Cannot call `foo` with function bound to `x` because: [incompatible-type]
  - Either string [1] is incompatible with boolean [2] in the return value.
  - Or boolean [3] is incompatible with string [4] in the return value.
 
@@ -98,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
 
-Cannot call `bar` with function bound to `x` because: [incompatible-call]
+Cannot call `bar` with function bound to `x` because: [incompatible-type]
  - Either boolean [1] is incompatible with string [2] in the return value.
  - Or string [3] is incompatible with boolean [4] in the return value.
 
@@ -123,7 +123,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([]: Array<empty>).concat([0, 1])[1] as string;
@@ -140,7 +140,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([]: Array<empty>).concat([0, 1])[1] as string;
@@ -204,7 +204,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test26.js:8:1
 
-Cannot call `foo` because: [incompatible-call]
+Cannot call `foo` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or number [3] is incompatible with string [4].
 
@@ -229,7 +229,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test26.js:13:1
 
-Cannot call `foo` because: [incompatible-call]
+Cannot call `foo` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or number [1] is incompatible with string [3].
 
@@ -251,7 +251,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- test26.js:20:14
 
-Cannot call `(new Record()).set` because: [incompatible-call]
+Cannot call `(new Record()).set` because: [incompatible-type]
  - Either string [1] is incompatible with number [2].
  - Or string literal `foo` [3] is incompatible with string literal `bar` [4].
 
@@ -276,7 +276,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test33.js:10:1
 
-Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test33.js:10:1
    10| bar() as string; // error: number ~> string
@@ -293,7 +293,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test34.js:8:5
 
-Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test34.js:8:5
     8|     x.foo as empty; // error: string ~> empty
@@ -310,7 +310,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test35.js:8:1
 
-Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test35.js:8:1
    8| ret as empty; // err, string ~> empty (matched case 2)
@@ -327,7 +327,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
+Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
@@ -344,7 +344,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-cast]
+Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
@@ -362,7 +362,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- test9.js:16:27
 
 Cannot call `square` with `x` bound to `x` because null or undefined [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    test9.js:16:27
    16| foo((x): number => square(x))

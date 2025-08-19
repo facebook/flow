@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- combo.js:3:1
 
 Cannot cast `'bar(--color)'` to `CSSVarInter` because string [1] is incompatible with string prefixed with `var(--` [2].
-[incompatible-cast]
+[incompatible-type]
 
    combo.js:3:1
    3| 'bar(--color)' as CSSVarInter; // ERROR
@@ -16,7 +16,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- combo.js:4:1
 
 Cannot cast `'var(--color'` to `CSSVarInter` because string [1] is incompatible with string suffixed with `)` [2].
-[incompatible-cast]
+[incompatible-type]
 
    combo.js:4:1
    4| 'var(--color' as CSSVarInter; // ERROR
@@ -31,7 +31,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- combo.js:8:1
 
 Cannot cast `'bar(--color)'` to `CSSVarRemainder` because string [1] is incompatible with string prefixed with
-`var(--` [2]. [incompatible-cast]
+`var(--` [2]. [incompatible-type]
 
    combo.js:8:1
    8| 'bar(--color)' as CSSVarRemainder; // ERROR
@@ -46,7 +46,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- combo.js:9:1
 
 Cannot cast `'var(--color'` to `CSSVarRemainder` because string with prefix `var(--` removed [1] is incompatible with
-string suffixed with `)` [2]. [incompatible-cast]
+string suffixed with `)` [2]. [incompatible-type]
 
    combo.js:9:1
    9| 'var(--color' as CSSVarRemainder; // ERROR
@@ -61,7 +61,7 @@ References:
 Error --------------------------------------------------------------------------------------------- import-prefix.js:6:1
 
 Cannot cast `data` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string
-literal `data-` [2]. [incompatible-cast]
+literal `data-` [2]. [incompatible-type]
 
    import-prefix.js:6:1
     6| data as 'data-'; // ERROR
@@ -78,7 +78,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-suffix.js:6:1
 
-Cannot cast `percent` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `percent` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-type]
 
    import-suffix.js:6:1
     6| percent as empty; // ERROR
@@ -96,7 +96,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
 
 Cannot cast `'data'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:6:1
    6| 'data' as DataProp; // ERROR
@@ -111,7 +111,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- prefix.js:7:1
 
 Cannot cast `'x-data-x'` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:7:1
    7| 'x-data-x' as DataProp; // ERROR
@@ -126,7 +126,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- prefix.js:12:3
 
 Cannot cast `x` to `DataProp` because string [1] is incompatible with string prefixed with `data-` [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:12:3
    12|   x as DataProp; // ERROR
@@ -144,7 +144,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- prefix.js:20:3
 
 Cannot cast `x` to string literal `data-` because string prefixed with `data-` [1] is incompatible with string literal
-`data-` [2]. [incompatible-cast]
+`data-` [2]. [incompatible-type]
 
    prefix.js:20:3
    20|   x as 'data-'; // ERROR
@@ -176,7 +176,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- prefix.js:36:3
 
 Cannot cast `x` to key set because string prefixed with `data-` [1] is incompatible with string literal `xxx` [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:36:3
    36|   x as $Keys<{['xxx']: mixed}>; // ERROR
@@ -209,7 +209,7 @@ Cannot use `StringPrefix` because the first type argument must be a string liter
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:55:5
 
-Cannot cast `x` to empty because string prefixed with `data-` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because string prefixed with `data-` [1] is incompatible with empty [2]. [incompatible-type]
 
    prefix.js:55:5
    55|     x as empty; // ERROR
@@ -227,7 +227,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- prefix.js:68:3
 
 Cannot cast `dataProp` to `DataFooProp` because string prefixed with `data-` [1] is incompatible with string prefixed
-with `data-foo-` [2]. [incompatible-cast]
+with `data-foo-` [2]. [incompatible-type]
 
    prefix.js:68:3
    68|   dataProp as DataFooProp; // ERROR
@@ -269,7 +269,7 @@ Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
 Error --------------------------------------------------------------------------------------------------- prefix.js:82:1
 
 Cannot cast `'$'` to `Price` because string with prefix `$` removed [1] is incompatible with union type [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:82:1
    82| '$' as Price; // ERROR
@@ -283,7 +283,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:83:1
 
-Cannot cast `'1'` to `Price` because string [1] is incompatible with string prefixed with `$` [2]. [incompatible-cast]
+Cannot cast `'1'` to `Price` because string [1] is incompatible with string prefixed with `$` [2]. [incompatible-type]
 
    prefix.js:83:1
    83| '1' as Price; // ERROR
@@ -297,7 +297,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:91:3
 
-Cannot cast `x` to union type because: [incompatible-cast]
+Cannot cast `x` to union type because: [incompatible-type]
  - Either string prefixed with `$` [1] is incompatible with string literal `$1` [2].
  - Or string prefixed with `$` [1] is incompatible with string literal `$2` [3].
 
@@ -320,7 +320,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- prefix.js:96:3
 
 Cannot cast `x` to string prefixed with `foo` because string [1] is incompatible with string literal `xxx` [2].
-[incompatible-cast]
+[incompatible-type]
 
    prefix.js:96:3
    96|   x as StringPrefix<'foo', 'xxx'>; // ERROR
@@ -338,7 +338,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- prefix.js:104:3
 
 Cannot cast `x` to string prefixed with `foo` because string literal `bar` [1] is incompatible with string literal
-`xxx` [2]. [incompatible-cast]
+`xxx` [2]. [incompatible-type]
 
    prefix.js:104:3
    104|   x as StringPrefix<'foo', 'xxx'>; // ERROR
@@ -356,7 +356,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- prefix.js:107:3
 
 Cannot cast `x` to string prefixed with `f` because string prefixed with `foo` [1] is incompatible with string prefixed
-with `f` [2]. [incompatible-cast]
+with `f` [2]. [incompatible-type]
 
    prefix.js:107:3
    107|   x as StringPrefix<'f', 'bar'>; // ERROR
@@ -388,7 +388,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- prefix.js:114:3
 
 Cannot cast `x` to string literal `3` because string with prefix `$` removed [1] is incompatible with string literal
-`3` [2]. [incompatible-cast]
+`3` [2]. [incompatible-type]
 
    prefix.js:114:3
    114|   x as "3"; // ERROR
@@ -442,7 +442,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
 Cannot cast empty string to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:6:1
    6| '' as Percent; // ERROR
@@ -457,7 +457,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- suffix.js:7:1
 
 Cannot cast `'%6'` to `Percent` because string [1] is incompatible with string suffixed with `%` [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:7:1
    7| '%6' as Percent; // ERROR
@@ -471,7 +471,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:12:3
 
-Cannot cast `x` to `Percent` because string [1] is incompatible with string suffixed with `%` [2]. [incompatible-cast]
+Cannot cast `x` to `Percent` because string [1] is incompatible with string suffixed with `%` [2]. [incompatible-type]
 
    suffix.js:12:3
    12|   x as Percent; // ERROR
@@ -489,7 +489,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:20:3
 
 Cannot cast `x` to string literal `%` because string suffixed with `%` [1] is incompatible with string literal `%` [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:20:3
    20|   x as '%'; // ERROR
@@ -522,7 +522,7 @@ Cannot use `StringPrefix` because the first type argument must be a string liter
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:39:5
 
-Cannot cast `x` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because string suffixed with `%` [1] is incompatible with empty [2]. [incompatible-type]
 
    suffix.js:39:5
    39|     x as empty; // ERROR
@@ -540,7 +540,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:53:3
 
 Cannot cast `bar` to `FooBar` because string suffixed with `bar` [1] is incompatible with string suffixed with
-`foobar` [2]. [incompatible-cast]
+`foobar` [2]. [incompatible-type]
 
    suffix.js:53:3
    53|   bar as FooBar; // ERROR
@@ -582,7 +582,7 @@ Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
 Error --------------------------------------------------------------------------------------------------- suffix.js:67:1
 
 Cannot cast `'!'` to `Exclamation` because string with suffix `!` removed [1] is incompatible with union type [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:67:1
    67| '!' as Exclamation; // ERROR
@@ -597,7 +597,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:68:1
 
 Cannot cast `'yay'` to `Exclamation` because string [1] is incompatible with string suffixed with `!` [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:68:1
    68| 'yay' as Exclamation; // ERROR
@@ -611,7 +611,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:76:3
 
-Cannot cast `x` to union type because: [incompatible-cast]
+Cannot cast `x` to union type because: [incompatible-type]
  - Either string suffixed with `!` [1] is incompatible with string literal `woo!` [2].
  - Or string suffixed with `!` [1] is incompatible with string literal `yay!` [3].
 
@@ -634,7 +634,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:81:3
 
 Cannot cast `x` to string suffixed with `!` because string [1] is incompatible with string literal `xxx` [2].
-[incompatible-cast]
+[incompatible-type]
 
    suffix.js:81:3
    81|   x as StringSuffix<'!', 'xxx'>; // ERROR
@@ -652,7 +652,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:89:3
 
 Cannot cast `x` to string suffixed with `foo` because string literal `bar` [1] is incompatible with string literal
-`xxx` [2]. [incompatible-cast]
+`xxx` [2]. [incompatible-type]
 
    suffix.js:89:3
    89|   x as StringSuffix<'foo', 'xxx'>; // ERROR
@@ -670,7 +670,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:92:3
 
 Cannot cast `x` to string suffixed with `o` because string suffixed with `foo` [1] is incompatible with string suffixed
-with `o` [2]. [incompatible-cast]
+with `o` [2]. [incompatible-type]
 
    suffix.js:92:3
    92|   x as StringSuffix<'o', 'bar'>; // ERROR
@@ -702,7 +702,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- suffix.js:99:3
 
 Cannot cast `x` to string literal `yay!` because string with suffix `!` removed [1] is incompatible with string literal
-`yay!` [2]. [incompatible-cast]
+`yay!` [2]. [incompatible-type]
 
    suffix.js:99:3
    99|   x as "yay!"; // ERROR

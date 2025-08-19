@@ -2,7 +2,7 @@
 Initial status...with type errors:
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
 
-Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    bar.js:6:10
     6|   return foo.y;
@@ -19,7 +19,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
 
-Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    foo.js:6:10
     6|   return bar.x;
@@ -52,7 +52,7 @@ Found 1 error
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
 
-Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    bar.js:6:10
     6|   return foo.y;
@@ -69,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
 
-Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    foo.js:6:10
     6|   return bar.x;
@@ -121,7 +121,7 @@ Found 3 errors
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
 
-Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    bar.js:6:10
     6|   return foo.y;
@@ -138,7 +138,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
 
-Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    foo.js:6:10
     6|   return bar.x;
@@ -198,7 +198,7 @@ Found 4 errors
 Restore foo.js (same as initial status):
 Error ------------------------------------------------------------------------------------------------------ bar.js:6:10
 
-Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `foo.y` because string [1] is incompatible with number [2]. [incompatible-type]
 
    bar.js:6:10
     6|   return foo.y;
@@ -215,7 +215,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ foo.js:6:10
 
-Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `bar.x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    foo.js:6:10
     6|   return bar.x;

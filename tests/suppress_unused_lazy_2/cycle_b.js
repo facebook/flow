@@ -9,7 +9,7 @@ export type B = string;
 // export a value for cycle_a to use
 export const b: A = 'b';
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 (1: string); // suppressed error
 
 (1: string); // error

@@ -24,7 +24,7 @@ Unreachable code. [unreachable-code]
 
 Error --------------------------------------------------------------------------------------------------- index.js:50:14
 
-Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `c ? 1 : invariant()` because number [1] is incompatible with string [2]. [incompatible-type]
 
    index.js:50:14
    50|   return c ? 1 : invariant(); // Error: number is incompatible with string
@@ -46,7 +46,7 @@ Unreachable code. [unreachable-code]
 
 Error --------------------------------------------------------------------------------------------------- index.js:79:10
 
-Cannot return `c || invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `c || invariant()` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    index.js:79:10
    79|   return c || invariant(); // Error: return incompatible with string
@@ -71,7 +71,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------------- index.js:103:10
 
-Cannot return `c && invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `c && invariant()` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    index.js:103:10
    103|   return c && invariant(); // Error: return incompatible with string
@@ -96,7 +96,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------------- index.js:127:10
 
-Cannot return `c ?? invariant()` because boolean [1] is incompatible with string [2]. [incompatible-return]
+Cannot return `c ?? invariant()` because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    index.js:127:10
    127|   return c ?? invariant(); // Error: return incompatible with string

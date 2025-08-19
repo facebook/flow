@@ -7,7 +7,7 @@
 // $FlowExpectedError
 (3: string);
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 (3: string);
 
 // $FlowFixMe[]

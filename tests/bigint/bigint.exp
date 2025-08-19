@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:20:8
 
-Cannot call `BigInt` with `null` bound to `value` because: [incompatible-call]
+Cannot call `BigInt` with `null` bound to `value` because: [incompatible-type]
  - Either null [1] is incompatible with boolean [2].
  - Or null [1] is incompatible with string [3].
  - Or null [1] is incompatible with number [4].
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:25:6
 
-Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    bigint.js:25:6
    25|     (foo : empty); // error
@@ -102,7 +102,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3
 
 Cannot cast `x` to `typeof b` because bigint literal `0n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:47:3
    47|   x as typeof b; // ERROR typeof b is `1n`
@@ -121,7 +121,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to union type because union type [1] is incompatible with union type [2]. 
 
-Type union type [1] includes members `0n`, `1n` that are not included in type union type [2]. [incompatible-cast]
+Type union type [1] includes members `0n`, `1n` that are not included in type union type [2]. [incompatible-type]
 
    bigint.js:49:3
    49|   x as 2n | 3n; // ERROR
@@ -190,7 +190,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:75:3
 
 Cannot cast `x` to bigint literal `1n` because bigint literal `-1n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:75:3
    75|   x as 1n; // ERROR
@@ -208,7 +208,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:82:3
 
 Cannot cast `x` to bigint literal `1n` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:82:3
    82|   x as 1n; // ERROR
@@ -226,7 +226,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:85:3
 
 Cannot cast `y` to bigint literal `-1n` because bigint literal `2n` [1] is incompatible with bigint literal `-1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:85:3
    85|   y as -1n; // ERROR
@@ -244,7 +244,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:94:3
 
 Cannot cast `x` to bigint literal `1n` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:94:3
    94|   x as 1n; // ERROR
@@ -262,7 +262,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:97:3
 
 Cannot cast `y` to bigint literal `-1n` because bigint literal `-2n` [1] is incompatible with bigint literal `-1n` [2].
-[incompatible-cast]
+[incompatible-type]
 
    bigint.js:97:3
    97|   y as -1n; // ERROR
@@ -279,7 +279,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imported.js:5:2
 
-Cannot cast `x` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    imported.js:5:2
    5| (x : empty); // error
@@ -296,7 +296,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imported.js:8:2
 
-Cannot cast `y` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    imported.js:8:2
    8| (y : empty); // error
@@ -313,7 +313,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:11:2
 
-Cannot cast `z` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `z` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    imported.js:11:2
    11| (z : empty); // error
@@ -330,7 +330,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:14:2
 
-Cannot cast `a` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    imported.js:14:2
    14| (a : empty); // error
@@ -347,7 +347,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:17:2
 
-Cannot cast `c` to empty because bigint [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `c` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
    imported.js:17:2
    17| (c : empty); // error
@@ -477,7 +477,7 @@ Unexpected token ILLEGAL
 Error ------------------------------------------------------------------------------------------------ object_key.js:5:2
 
 Cannot cast object literal to `T` because property `1` is missing in object literal [1] but exists in `T` [2].
-[prop-missing]
+[incompatible-type]
 
    object_key.js:5:2
    5| ({ 1n: "foo" }: T); // error (TODO: non-string literals not supported)
@@ -500,7 +500,7 @@ Unsupported key in object literal. Only identifier, string literal, and number l
 Error ------------------------------------------------------------------------------------------------ object_key.js:6:2
 
 Cannot cast object literal to `T` because property `1` is missing in object literal [1] but exists in `T` [2].
-[prop-missing]
+[incompatible-type]
 
    object_key.js:6:2
    6| ({ 2n: "foo" }: T); // error
@@ -522,7 +522,7 @@ Unsupported key in object literal. Only identifier, string literal, and number l
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `1` [1] is incompatible with `bigints` [2]. [incompatible-return]
+Cannot return `x` because number literal `1` [1] is incompatible with `bigints` [2]. [incompatible-type]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -539,7 +539,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `2` [1] is incompatible with `bigints` [2]. [incompatible-return]
+Cannot return `x` because number literal `2` [1] is incompatible with `bigints` [2]. [incompatible-type]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -556,7 +556,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `1n` [1] is incompatible with `nums` [2]. [incompatible-return]
+Cannot return `x` because bigint literal `1n` [1] is incompatible with `nums` [2]. [incompatible-type]
 
    unions.js:9:10
    9|   return x; // fast path error
@@ -573,7 +573,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `2n` [1] is incompatible with `nums` [2]. [incompatible-return]
+Cannot return `x` because bigint literal `2n` [1] is incompatible with `nums` [2]. [incompatible-type]
 
    unions.js:9:10
    9|   return x; // fast path error

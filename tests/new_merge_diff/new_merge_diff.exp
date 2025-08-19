@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:4:2
 
-Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:4:2
     4| (x1: empty);
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ main.js:4:2
 
-Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    main.js:4:2
     4| (x1: empty);
@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:32:2
 
-Cannot cast `0` to `S4` because: [incompatible-cast]
+Cannot cast `0` to `S4` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with `R` [3].
 
@@ -53,7 +53,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:33:2
 
-Cannot cast `0` to `R4` because number [1] is incompatible with `R` [2]. [incompatible-cast]
+Cannot cast `0` to `R4` because number [1] is incompatible with `R` [2]. [incompatible-type]
 
    main.js:33:2
    33| (0: R4); // error number ~> R (obj)

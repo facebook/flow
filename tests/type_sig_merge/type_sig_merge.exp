@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------- async_void_return-export.js:3:2
 
-Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
 
    async_void_return-export.js:3:2
    3| (f(): empty); // error: Promise ~> empty
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- async_void_return-import.js:3:2
 
-Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `f()` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
 
    async_void_return-import.js:3:2
     3| (f(): empty); // error: Promise ~> empty

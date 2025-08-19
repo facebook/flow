@@ -8,7 +8,7 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------- children_not_added_to_props.js:8:1
 
-Cannot cast `result` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `result` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    children_not_added_to_props.js:8:1
    8| result as string; // error
@@ -219,7 +219,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:44:4
 
-Cannot create `Bar` element because property `x` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `Bar` element because property `x` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    respect_local_scope.js:44:4
    44|   <Bar y="hi" />; // error: missing x

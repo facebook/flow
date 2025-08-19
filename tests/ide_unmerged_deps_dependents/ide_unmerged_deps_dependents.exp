@@ -7,7 +7,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ==== Checking file.js finds errors ====
 Error ------------------------------------------------------------------------------------------------------ file.js:5:2
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    file.js:5:2
    5| (x: number); // error
@@ -32,7 +32,7 @@ Check will skip 0 of 0 files
 ==== force-recheck checks dependent ====
 Error ------------------------------------------------------------------------------------------------- dependent.js:5:2
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    dependent.js:5:2
    5| (123: string); // error
@@ -46,7 +46,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ file.js:5:2
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    file.js:5:2
    5| (x: number); // error

@@ -180,7 +180,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:105:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    Closure.js:105:5
    105|     x as string; // error
@@ -197,7 +197,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:132:3
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    Closure.js:132:3
    132|   x as void; // should error

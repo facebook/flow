@@ -98,7 +98,7 @@ An annotation on `x` is required because Flow cannot infer its type from local c
 
 Error ------------------------------------------------------------------------------------------------ call_rest.js:29:9
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    call_rest.js:29:9
    29|         x as number; // error string ~> number
@@ -115,7 +115,7 @@ References:
 
 Error --------------------------------------------------------------------------------- destructuring_assignment.js:7:12
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:7:12
    7|    (n) => (n: empty), // error: num ~> empty
@@ -132,7 +132,7 @@ References:
 
 Error --------------------------------------------------------------------------------- destructuring_assignment.js:9:15
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:9:15
    9|       (n) => (n: empty), // error: num ~> empty
@@ -149,7 +149,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:11:17
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:11:17
    11|         (n) => (n: empty), // error: num ~> empty
@@ -166,7 +166,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:12:21
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:12:21
    12|         {d: (n) => (n: empty)} // error: num ~> empty
@@ -183,7 +183,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:17:14
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:17:14
    17|   a: (n) => (n: empty), // error: num ~> empty
@@ -200,7 +200,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:18:14
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:18:14
    18|   b: (n) => (n: empty), // error: num ~> empty
@@ -217,7 +217,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:23:19
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:23:19
    23| [...e] = [(n) => (n: empty)]; // error: num ~> empty
@@ -234,7 +234,7 @@ References:
 
 Error -------------------------------------------------------------------------------- destructuring_assignment.js:24:27
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    destructuring_assignment.js:24:27
    24| ({...f} = {hello: (n) => (n: empty)}); // error: num ~> empty
@@ -332,7 +332,7 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:8
 
-Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [prop-missing]
+Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [incompatible-type]
 
    encountered_placeholder_failure.js:27:8
      27| id([...(item) => 1]); // error
@@ -379,10 +379,10 @@ An annotation on `foo` is required because Flow cannot infer its type from local
 Error ----------------------------------------------------------------------------------- error_during_synthesis.js:4:32
 
 Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
-[incompatible-call]
+[incompatible-type]
 
    error_during_synthesis.js:4:32
-   4|   poly((v) => {}, expectString(3)); // Error: incompatible-call, but v can still be contextually typed
+   4|   poly((v) => {}, expectString(3)); // Error: incompatible-type, but v can still be contextually typed
                                      ^ [1]
 
 References:
@@ -401,7 +401,7 @@ Cannot resolve name `THIS_SHOULD_ERROR`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------- immediate_call_expression.js:4:10
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    immediate_call_expression.js:4:10
    4|         (x: string); // error number ~> string
@@ -418,7 +418,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:15:49
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    implicit_instantiation.js:15:49
    15|   const reasonTest: (string) => mixed = (a) => (a: empty); // ok
@@ -451,7 +451,7 @@ References:
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:105:19
 
 Cannot call `f` with empty string bound to the third parameter because string [1] is incompatible with number [2].
-[incompatible-call]
+[incompatible-type]
 
    implicit_instantiation.js:105:19
    105|   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
@@ -465,7 +465,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:147:4
 
-Cannot cast `a` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-cast]
+Cannot cast `a` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-type]
 
    implicit_instantiation.js:147:4
     147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
@@ -485,7 +485,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:148:4
 
-Cannot cast `b` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-cast]
+Cannot cast `b` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-type]
 
    implicit_instantiation.js:148:4
     148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
@@ -505,7 +505,7 @@ References:
 
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:156:48
 
-Cannot cast `value` to empty because object type [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `value` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
    implicit_instantiation.js:156:48
    156|     (value: { elements: Array<string> }) => { (value: empty); }, // error
@@ -543,7 +543,7 @@ References:
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:188:7
 
 Cannot call `foo` with object literal bound to the first parameter because property `bar` is extra in object literal [1]
-but missing in object type [2]. Exact objects do not accept extra props. [prop-missing]
+but missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    implicit_instantiation.js:188:7
    188|   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
@@ -570,7 +570,7 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-
 
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    intersections.js:7:24
    7|   foo('str', (x) => { (x: number); }); // error
@@ -587,7 +587,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- intersections.js:8:3
 
-Cannot call `foo` because: [incompatible-call]
+Cannot call `foo` because: [incompatible-type]
  - Either string literal `a` [1] is incompatible with string literal `boolean` [2].
  - Or string literal `a` [1] is incompatible with string literal `str` [3].
  - Or string literal `a` [1] is incompatible with string literal `num` [4].
@@ -621,7 +621,7 @@ An annotation on `x` is required because Flow cannot infer its type from local c
 
 Error ------------------------------------------------------------------------------------------- intersections.js:20:24
 
-Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-type]
 
    intersections.js:20:24
    20|   foo('obj', (x) => { (x: string); }); // error
@@ -638,7 +638,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- intersections.js:25:24
 
-Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-type]
 
    intersections.js:25:24
    25|   bar('obj', (x) => { (x: string); }); // error
@@ -655,7 +655,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- intersections.js:29:28
 
-Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
 
    intersections.js:29:28
    29|   bak('boolean', (x) => { (x: string); }); // error in cast (ideally would pick the right overload)
@@ -672,7 +672,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- intersections.js:53:28
 
-Cannot cast `tag` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `tag` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    intersections.js:53:28
    53|   tagsList.forEach(tag => (tag: number)); // error: string ~> number
@@ -689,7 +689,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- intersections.js:62:3
 
-Cannot call `overload` because: [incompatible-call]
+Cannot call `overload` because: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or string [3] is incompatible with number [4].
 
@@ -754,7 +754,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 Error ----------------------------------------------------------------------------------------------------- lits.js:52:3
 
 Cannot cast `s2.values()` to `Iterator` because number [1] is incompatible with string [2] in type argument `Yield` [3].
-[incompatible-cast]
+[incompatible-type]
 
    lits.js:52:3
      52|   s2.values() as Iterator<string>; // error number ~> string
@@ -782,7 +782,7 @@ An annotation on destructuring is required because Flow cannot infer its type fr
 
 Error -------------------------------------------------------------------------------------------- param_default.js:2:20
 
-Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    param_default.js:2:20
    2| context = (a) => {(a: number)}; // error: number | void ~> number
@@ -799,7 +799,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- param_default.js:3:21
 
-Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    param_default.js:3:21
    3| context = (a?) => {(a: number)}; // error: number | void ~> number
@@ -816,7 +816,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- param_default.js:3:21
 
-Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
 
    param_default.js:3:21
    3| context = (a?) => {(a: number)}; // error: number | void ~> number
@@ -855,7 +855,7 @@ Cannot resolve name `unbound_type`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------- react_tests.js:19:6
 
-Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `props` to empty because props [1] is incompatible with empty [2]. [incompatible-type]
 
    react_tests.js:19:6
     19|     (props: empty); // error
@@ -872,7 +872,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- react_tests.js:37:24
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    react_tests.js:37:24
    37|     {n => <Child foo={(n: empty)} /> /* ERROR */}
@@ -889,7 +889,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:6:22
 
-Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:6:22
    6|   x.m && x.m(u => { (u: string); }); // error number ~> string
@@ -928,7 +928,7 @@ An annotation on `u` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------- refinements.js:18:17
 
-Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:18:17
    18|     x.m(u => { (u: string); }); // error number ~> string
@@ -945,7 +945,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:25:24
 
-Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:25:24
    25|   x?.m && x?.m(u => { (u: string); }); // error number ~> string
@@ -984,7 +984,7 @@ An annotation on `u` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------- refinements.js:37:18
 
-Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `u` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    refinements.js:37:18
    37|     x?.m(u => { (u: string); }); // error number ~> string
@@ -1001,7 +1001,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:52:43
 
-Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    sentinel_refinements.js:52:43
    52| const e1: F = { __type__: a(), f: (v) => (v: string) }; // error
@@ -1018,7 +1018,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ sentinel_refinements.js:53:38
 
-Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    sentinel_refinements.js:53:38
    53| <CompFProp __type__={a()} f={(v) => (v: string)} />; // error
@@ -1050,7 +1050,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_guard.js:3:4
 
-Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    type_guard.js:3:4
    3|   (y: empty); // error number | string ~> empty
@@ -1067,7 +1067,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_guard.js:3:4
 
-Cannot cast `y` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `y` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    type_guard.js:3:4
    3|   (y: empty); // error number | string ~> empty
@@ -1162,7 +1162,7 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:27:7
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    unions.js:27:7
    27|       x as string;
@@ -1179,7 +1179,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:41:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    unions.js:41:5
    41|     x as string;
@@ -1196,7 +1196,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:49:5
 
-Cannot cast `elem` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `elem` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    unions.js:49:5
    49|     elem as empty; // error number ~> empty
@@ -1213,7 +1213,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:49:5
 
-Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    unions.js:49:5
    49|     elem as empty; // error number ~> empty
@@ -1230,7 +1230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:56:5
 
-Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `elem` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    unions.js:56:5
    56|     elem as empty; // error number ~> empty
@@ -1247,7 +1247,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:62:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    unions.js:62:5
    62|     x as empty; // error number ~> empty

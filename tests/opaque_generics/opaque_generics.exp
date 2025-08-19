@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------- importtest-polarity.js:8:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest-polarity.js:8:12
     8|     return x;
@@ -20,7 +20,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:16:12
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
 
    importtest-polarity.js:16:12
    16|     return x;
@@ -40,7 +40,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:24:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest-polarity.js:24:12
    24|     return x;
@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:28:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest-polarity.js:28:12
    28|     return x;
@@ -80,7 +80,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:37:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `S` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `S` [3]. [incompatible-type]
 
    importtest-polarity.js:37:12
    37|     return x;
@@ -100,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:37:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest-polarity.js:37:12
    37|     return x;
@@ -120,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- importtest-polarity.js:37:12
 
-Cannot return `x` because in type argument `U` [1]: [incompatible-return]
+Cannot return `x` because in type argument `U` [1]: [incompatible-type]
  - Either null [2] is incompatible with number [3].
  - Or null [2] is incompatible with string [4].
 
@@ -145,7 +145,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:5:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest.js:5:12
    5|     return x;
@@ -165,7 +165,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:13:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    importtest.js:13:12
    13|     return x;
@@ -185,7 +185,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:21:12
 
-Cannot return `x` because `Container` [1] is incompatible with `Box` [2]. [incompatible-return]
+Cannot return `x` because `Container` [1] is incompatible with `Box` [2]. [incompatible-type]
 
    importtest.js:21:12
    21|     return x;
@@ -202,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:25:12
 
-Cannot return `x` because `Box` [1] is incompatible with `Container` [2]. [incompatible-return]
+Cannot return `x` because `Box` [1] is incompatible with `Container` [2]. [incompatible-type]
 
    importtest.js:25:12
    25|     return x;
@@ -279,7 +279,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    test.js:5:12
    5|     return x;
@@ -299,7 +299,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:12
 
-Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-return]
+Cannot return `x` because string [1] is incompatible with number [2] in type argument `T` [3]. [incompatible-type]
 
    test.js:13:12
    13|     return x;

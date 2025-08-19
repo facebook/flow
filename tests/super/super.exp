@@ -84,7 +84,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:110:12
 
-Cannot return `false` because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return `false` because boolean [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    constructor.js:110:12
    110|     return false; // error: boolean ~> void
@@ -115,7 +115,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:116:12
 
-Cannot return `x` because boolean [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return `x` because boolean [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    constructor.js:116:12
    116|     return x; // error: boolean ~> void
@@ -133,7 +133,7 @@ References:
 Error -------------------------------------------------------------------------------------------- constructor.js:124:12
 
 Cannot return object literal because object literal [1] is incompatible with constructor void return [2].
-[incompatible-return]
+[incompatible-type]
 
    constructor.js:124:12
    124|     return {foo: 'foo'}; // error: object ~> void
@@ -147,7 +147,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:136:18
 
-Cannot return `this` type because `N_` [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return `this` type because `N_` [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    constructor.js:136:18
    136|   constructor(): this { // error: this ~> void
@@ -161,7 +161,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- constructor.js:143:12
 
-Cannot return `super()` because `N` [1] is incompatible with constructor void return [2]. [incompatible-return]
+Cannot return `super()` because `N` [1] is incompatible with constructor void return [2]. [incompatible-type]
 
    constructor.js:143:12
    143|     return super(); // error: N ~> void
@@ -212,7 +212,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- super.js:10:11
 
-Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    super.js:10:11
    10|     super(x);
@@ -229,7 +229,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- super.js:14:6
 
-Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `super.staticMethod(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    super.js:14:6
    14|     (super.staticMethod('foo'): number); // error, string !~> number
@@ -260,7 +260,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- super.js:19:13
 
-Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `super.f` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    super.js:19:13
    19|     super.f(0);

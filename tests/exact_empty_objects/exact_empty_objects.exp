@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------- defaulting.js:10:4
 
 Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    defaulting.js:10:4
    10|   (a: true); // ERROR
@@ -19,7 +19,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:10:4
 
 Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
-incompatible with boolean literal `true` [2]. [incompatible-cast]
+incompatible with boolean literal `true` [2]. [incompatible-type]
 
    defaulting.js:10:4
    10|   (a: true); // ERROR
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:11:4
 
 Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:11:4
    11|   (a: number); // ERROR
@@ -54,7 +54,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:12:4
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    defaulting.js:12:4
    12|   (a: void); // ERROR
@@ -86,7 +86,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:18:4
 
 Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:18:4
    18|   (prop: number); // ERROR
@@ -104,7 +104,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:28:4
 
 Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    defaulting.js:28:4
    28|   (a: true); // ERROR
@@ -122,7 +122,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:28:4
 
 Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
-incompatible with boolean literal `true` [2]. [incompatible-cast]
+incompatible with boolean literal `true` [2]. [incompatible-type]
 
    defaulting.js:28:4
    28|   (a: true); // ERROR
@@ -140,7 +140,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:29:4
 
 Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:29:4
    29|   (a: number); // ERROR
@@ -157,7 +157,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:30:4
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    defaulting.js:30:4
    30|   (a: void); // ERROR
@@ -189,7 +189,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:36:4
 
 Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:36:4
    36|   (prop: number); // ERROR
@@ -207,7 +207,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:46:4
 
 Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    defaulting.js:46:4
    46|   (a: true); // ERROR
@@ -225,7 +225,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:46:4
 
 Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
-incompatible with boolean literal `true` [2]. [incompatible-cast]
+incompatible with boolean literal `true` [2]. [incompatible-type]
 
    defaulting.js:46:4
    46|   (a: true); // ERROR
@@ -243,7 +243,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:47:4
 
 Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:47:4
    47|   (a: number); // ERROR
@@ -260,7 +260,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:48:4
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    defaulting.js:48:4
    48|   (a: void); // ERROR
@@ -292,7 +292,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:54:4
 
 Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:54:4
    54|   (prop: number); // ERROR
@@ -310,7 +310,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:70:4
 
 Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    defaulting.js:70:4
    70|   (a: true); // ERROR
@@ -328,7 +328,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:70:4
 
 Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
-incompatible with boolean literal `true` [2]. [incompatible-cast]
+incompatible with boolean literal `true` [2]. [incompatible-type]
 
    defaulting.js:70:4
    70|   (a: true); // ERROR
@@ -346,7 +346,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:71:4
 
 Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:71:4
    71|   (a: number); // ERROR
@@ -363,7 +363,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:72:4
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    defaulting.js:72:4
    72|   (a: void); // ERROR
@@ -413,7 +413,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:78:4
 
 Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:78:4
    78|   (prop: number); // ERROR
@@ -431,7 +431,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:94:4
 
 Cannot cast `a` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-cast]
+[incompatible-type]
 
    defaulting.js:94:4
    94|   (a: true); // ERROR
@@ -449,7 +449,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:94:4
 
 Cannot cast `a` to boolean literal `true` because `void` (due to access of non-existent property `prop`) [1] is
-incompatible with boolean literal `true` [2]. [incompatible-cast]
+incompatible with boolean literal `true` [2]. [incompatible-type]
 
    defaulting.js:94:4
    94|   (a: true); // ERROR
@@ -467,7 +467,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- defaulting.js:95:4
 
 Cannot cast `a` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:95:4
    95|   (a: number); // ERROR
@@ -484,7 +484,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:96:4
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
 
    defaulting.js:96:4
    96|   (a: void); // ERROR
@@ -530,7 +530,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- defaulting.js:102:4
 
 Cannot cast `prop` to number because `void` (due to access of non-existent property `prop`) [1] is incompatible with
-number [2]. [incompatible-cast]
+number [2]. [incompatible-type]
 
    defaulting.js:102:4
    102|   (prop: number); // ERROR
@@ -548,7 +548,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:4:2
 
 Cannot cast object literal to object type because property `a` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    test.js:4:2
    4| ({}: {a: number}); // ERROR
@@ -563,7 +563,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
 
 Cannot cast object literal to object type because property `a` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    test.js:5:2
    5| ({}: {a: number, ...}); // ERROR
@@ -578,7 +578,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:8:2
 
 Cannot cast object literal to object type because property `a` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    test.js:8:2
    8| ({}: {a: void}); // ERROR
@@ -678,7 +678,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:19:40
 
 Cannot assign object literal to `spread` because property `b` is missing in object literal [1] but exists in object
-type [2]. [prop-missing]
+type [2]. [incompatible-type]
 
    test.js:19:40
    19| const spread: {a: number, b: string} = {a: 1, ...{}}; // ERROR
@@ -693,7 +693,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:22:3
 
 Cannot call `f` with object literal bound to `a` because property `a` is missing in object literal [1] but exists in
-object type [2]. [prop-missing]
+object type [2]. [incompatible-type]
 
    test.js:22:3
    22| f({}); // ERROR
@@ -707,7 +707,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:4
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:35:4
    35|   (a: empty); // ERROR
@@ -724,7 +724,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:4
 
-Cannot cast `a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
    test.js:35:4
    35|   (a: empty); // ERROR

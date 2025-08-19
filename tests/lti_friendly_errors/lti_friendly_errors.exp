@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------- reason_of_inferred_targs.js:2:2
 
 Cannot cast `p` to `Promise` because mixed (inferred from type parameter's default) [1] is incompatible with string [2]
-in type argument `R` [3]. [incompatible-cast]
+in type argument `R` [3]. [incompatible-type]
 
    reason_of_inferred_targs.js:2:2
       2| (p: Promise<string>); // error
@@ -22,7 +22,7 @@ References:
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:7:18
 
 Cannot cast `s` to string because mixed (inferred from type parameter's bound) [1] is incompatible with string [2].
-[incompatible-cast]
+[incompatible-type]
 
    reason_of_inferred_targs.js:7:18
    7| magicCall1(s => (s: string)); // error
@@ -40,7 +40,7 @@ References:
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:8:18
 
 Cannot cast `s` to string because number (inferred from type parameter's default) [1] is incompatible with string [2].
-[incompatible-cast]
+[incompatible-type]
 
    reason_of_inferred_targs.js:8:18
    8| magicCall2(s => (s: string)); // error

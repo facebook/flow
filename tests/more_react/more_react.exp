@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
 Cannot create `Component2` element because property `bar` and property `foo` are extra in props [1] but missing in
-`Props` [2]. Exact objects do not accept extra props. [prop-missing]
+`Props` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:12:13
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -19,7 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:13:13
 
 Cannot create `Component2` element because property `children` is extra in props [1] but missing in `Props` [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:13:13
    13| const _d = <Component2>{"foo"}</Component2>; //error
@@ -37,7 +37,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:22:13
 
 Cannot create `Component4` element because property `bar` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:22:13
    22| const _g = <Component4 foo={3} bar={3} />; //error
@@ -55,7 +55,7 @@ References:
 Error ------------------------------------------------------------------------------------------ inexact_config.js:23:13
 
 Cannot create `Component4` element because property `foo` is missing in props [1] but exists in object type [2].
-[prop-missing]
+[incompatible-type]
 
    inexact_config.js:23:13
    23| const _h = <Component4></Component4>; //error
@@ -73,7 +73,7 @@ References:
 Error -------------------------------------------------------------------------------------------- inexact_props.js:19:2
 
 Cannot create `B` element because property `z` is extra in props [1] but missing in `Props2` [2]. Exact objects do not
-accept extra props. [prop-missing]
+accept extra props. [incompatible-type]
 
    inexact_props.js:19:2
    19| <B x={4} y={"hello"} z={3}></B>; // error
@@ -108,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
-Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
+Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type]
  - Either `D` [1] is incompatible with `Component` [2].
  - Or class `D` [1] is incompatible with string [3].
 
@@ -147,7 +147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
-Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
+Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type]
  - Either `E` [1] is incompatible with `Component` [2].
  - Or class `E` [1] is incompatible with string [3].
 
@@ -186,7 +186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
-Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type-arg]
+Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type]
  - Either `F` [1] is incompatible with `Component` [2].
  - Or class `F` [1] is incompatible with string [3].
 

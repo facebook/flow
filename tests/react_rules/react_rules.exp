@@ -50,7 +50,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:10:2
 
-Cannot cast `v` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `v` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    dro.js:10:2
    10| (v: empty); //error

@@ -15,7 +15,7 @@ References:
 Error --------------------------------------------------------------------------------------------------------- D.js:8:5
 
 Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
-`x`. [prop-missing]
+`x`. [incompatible-type]
 
    D.js:8:5
    8| x = y;
@@ -33,7 +33,7 @@ References:
 Error --------------------------------------------------------------------------------------------------------- D.js:8:5
 
 Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
-`x`. [prop-missing]
+`x`. [incompatible-type]
 
    D.js:8:5
    8| x = y;

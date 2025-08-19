@@ -202,7 +202,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:9:7
 
-Cannot call `qux` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
+Cannot call `qux` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
 
    optional.js:9:7
    9| qux(0,0,0); // Error, number ~> string
@@ -216,7 +216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:10:11
 
-Cannot call `qux` because number [1] is incompatible with string [2] in index 0. [incompatible-call]
+Cannot call `qux` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
 
    optional.js:10:11
    10| qux(0,...[42, ""]); // Error, number ~> string
@@ -231,7 +231,7 @@ References:
 Error ------------------------------------------------------------------------------------------ optional_param2.js:7:31
 
 Cannot call `i.map` with function bound to `mapper` because undefined [1] is incompatible with number [2] in the return
-value. [incompatible-call]
+value. [incompatible-type]
 
    optional_param2.js:7:31
    7| var j:I<number> = i.map(id => id);
@@ -248,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param4.js:12:5
 
-Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
    optional_param4.js:12:5
    12| foo(true); // ERROR boolean ~> number
@@ -262,7 +262,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_param4.js:13:10
 
-Cannot call `foo` because boolean [1] is incompatible with string [2] in array element. [incompatible-call]
+Cannot call `foo` because boolean [1] is incompatible with string [2] in array element. [incompatible-type]
 
    optional_param4.js:13:10
    13| foo(123, true); // ERROR boolean ~> string

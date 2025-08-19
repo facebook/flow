@@ -73,5 +73,5 @@ type Obj =
 
 declare const obj: Obj
 
-// $FlowFixMe[incompatible-cast]
+// $FlowFixMe[incompatible-type]
 obj as Node;

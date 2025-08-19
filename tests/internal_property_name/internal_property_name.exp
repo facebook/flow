@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ foo.js:6:16
 
 Cannot assign object literal to `x` because property `.baz` is missing in object literal [1] but exists in `Foo` [2].
-[prop-missing]
+[incompatible-type]
 
    foo.js:6:16
                      v

@@ -46,7 +46,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:50:3
 
-Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `o.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:50:3
    50|   o.p as C; // error, C ~> B
@@ -77,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:79:3
 
-Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    dictionary.js:79:3
     79|   o.toString() as boolean; // error: string ~> boolean
@@ -161,7 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:97:3
 
-Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:97:3
    97|   x[0].p as C; // not true
@@ -215,7 +215,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:107:3
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:107:3
    107|   x.p as C; // not true
@@ -382,7 +382,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:156:3
 
-Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:156:3
    156|   x[0].p as C; // not true
@@ -437,7 +437,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:170:3
 
-Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `xc[0].p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:170:3
    170|   xc[0].p as C; // not true
@@ -491,7 +491,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:180:3
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:180:3
    180|   x.p as C; // not true
@@ -545,7 +545,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:194:3
 
-Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `xc.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:194:3
    194|   xc.p as C; // not true
@@ -563,7 +563,7 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:198:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. [prop-missing]
+exists in object type [2] in array element. [incompatible-type]
 
    dictionary.js:198:10
    198|   return x; // error: if allowed, could write {p:X,q:Y} into `x`
@@ -585,7 +585,7 @@ exists in object type [2] in array element.
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[prop-missing]
+[incompatible-type]
 
    dictionary.js:202:10
    202|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
@@ -639,7 +639,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:212:3
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:212:3
    212|   x.p as C; // not true
@@ -693,7 +693,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:222:3
 
-Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-cast]
+Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:222:3
    222|   x.p as C; // not true
@@ -859,7 +859,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:259:10
 
-Cannot return `x` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-return]
+Cannot return `x` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
 
    dictionary.js:259:10
    259|   return x;
@@ -879,7 +879,7 @@ Error --------------------------------------------------------------------------
 Cannot return `x` because `B` [1] is incompatible with `C` [2] in property `p`. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-return]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    dictionary.js:269:10
    269|   return x;
@@ -984,7 +984,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:15:10
 
 Cannot return `x` because number [1] is incompatible with string [2] in the indexer property of array element.
-[incompatible-return]
+[incompatible-type]
 
    incompatible.js:15:10
    15|   return x;
@@ -1002,7 +1002,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:22:10
 
 Cannot return `x` because string [1] is incompatible with number [2] in property `fooBar` of array element.
-[incompatible-return]
+[incompatible-type]
 
    incompatible.js:22:10
    22|   return x;
@@ -1022,7 +1022,7 @@ Error --------------------------------------------------------------------------
 Cannot return `x` because mixed [1] is incompatible with string [2] in property `fooBar` of array element. 
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-return]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    incompatible.js:29:10
    29|   return x; // error: mixed ~> string
@@ -1039,7 +1039,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in property `foo`. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
 
    incompatible.js:42:10
    42|   return x;
@@ -1057,7 +1057,7 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
 Cannot return `x` because an index signature declaring the expected key / value type is missing in object type [1] but
-exists in object type [2] in array element. [prop-missing]
+exists in object type [2] in array element. [incompatible-type]
 
    incompatible.js:47:10
    47|   return x;
@@ -1079,7 +1079,7 @@ exists in object type [2] in array element.
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[prop-missing]
+[incompatible-type]
 
    incompatible.js:52:10
    52|   return x;
@@ -1096,7 +1096,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:60:3
 
-Cannot cast `x.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x.foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    incompatible.js:60:3
    60|   x.foo as string; // error

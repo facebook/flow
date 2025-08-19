@@ -146,7 +146,7 @@ Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
 
-Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    pick.js:9:2
       9| (pickedO1.bar: string); // ERROR bar is optional
@@ -163,7 +163,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:2
 
-Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    pick.js:9:2
    9| (pickedO1.bar: string); // ERROR bar is optional
@@ -209,7 +209,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- record.js:5:2
 
 Cannot cast `exact` to object type because property `bar` is extra in `Record` [1] but missing in object type [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    record.js:5:2
    5| (exact: {foo: number}); // ERROR, mising bar

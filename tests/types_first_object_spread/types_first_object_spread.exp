@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- driver.js:8:2
 
 Cannot cast `b1.x` to string because `void` (due to access of non-existent property `x`) [1] is incompatible with
-string [2]. [incompatible-cast]
+string [2]. [incompatible-type]
 
    driver.js:8:2
    8| (b1.x: string); // Error number ~> string
@@ -15,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- driver.js:8:2
 
-Cannot cast `b1.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b1.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    driver.js:8:2
    8| (b1.x: string); // Error number ~> string
@@ -33,7 +33,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- driver.js:9:2
 
 Cannot cast `b1.y` to string because `void` (due to access of non-existent property `y`) [1] is incompatible with
-string [2]. [incompatible-cast]
+string [2]. [incompatible-type]
 
    driver.js:9:2
    9| (b1.y: string); // Error, y may not exist, number ~> string
@@ -47,7 +47,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- driver.js:9:2
 
-Cannot cast `b1.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b1.y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    driver.js:9:2
    9| (b1.y: string); // Error, y may not exist, number ~> string
@@ -64,7 +64,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:10:2
 
-Cannot cast `b1.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b1.z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    driver.js:10:2
    10| (b1.z: string); // Error, z may not exist, number ~> string
@@ -81,7 +81,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:13:2
 
-Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b2.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    driver.js:13:2
    13| (b2.x: string); // Error number ~> string
@@ -98,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:14:2
 
-Cannot cast `b2.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b2.z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    driver.js:14:2
    14| (b2.z: string); // Error number ~> string
@@ -133,7 +133,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test1.js:5:2
 
-Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test1.js:5:2
    5| (b.x: string); // Error, might not be on b or will be number
@@ -151,7 +151,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test1.js:5:2
 
 Cannot cast `b.x` to string because `void` (due to access of non-existent property `x`) [1] is incompatible with
-string [2]. [incompatible-cast]
+string [2]. [incompatible-type]
 
    test1.js:5:2
    5| (b.x: string); // Error, might not be on b or will be number
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test1.js:6:2
 
-Cannot cast `b.y` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.y` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test1.js:6:2
    6| (b.y: string); // Error, might not be on b or will be number
@@ -183,7 +183,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test1.js:6:2
 
 Cannot cast `b.y` to string because `void` (due to access of non-existent property `y`) [1] is incompatible with
-string [2]. [incompatible-cast]
+string [2]. [incompatible-type]
 
    test1.js:6:2
    6| (b.y: string); // Error, might not be on b or will be number
@@ -197,7 +197,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test1.js:7:2
 
-Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test1.js:7:2
    7| (b.z: string); // Error number ~> string
@@ -214,7 +214,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
 
-Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test2.js:3:2
    3| (b.x: string);
@@ -231,7 +231,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:4:2
 
-Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `b.z` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    test2.js:4:2
    4| (b.z: string);

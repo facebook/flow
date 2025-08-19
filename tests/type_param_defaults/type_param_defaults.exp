@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- classes.js:15:2
 
-Cannot cast `b_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `b_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:15:2
    15| (b_number.p: boolean); // Error number ~> boolean
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:16:2
 
-Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `b_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:16:2
    16| (b_void.p: boolean); // Error void ~> boolean
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:17:2
 
-Cannot cast `b_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `b_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:17:2
    17| (b_default.p: boolean); // Error string ~> boolean
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:17
 
-Cannot instantiate `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type-arg]
+Cannot instantiate `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type]
 
    classes.js:21:17
    21| var c_number: C<number> = new C(123); // Error number ~> ?string
@@ -65,7 +65,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:31
 
-Cannot call `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-call]
+Cannot call `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type]
 
    classes.js:21:31
    21| var c_number: C<number> = new C(123); // Error number ~> ?string
@@ -82,7 +82,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:25:2
 
-Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `c_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:25:2
    25| (c_void.p: boolean); // Error void ~> boolean
@@ -99,7 +99,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:26:2
 
-Cannot cast `c_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `c_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:26:2
    26| (c_default.p: boolean); // Error string ~> boolean
@@ -144,7 +144,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:35:2
 
-Cannot cast `d_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `d_number.p` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:35:2
    35| (d_number.p: boolean); // Error number ~> boolean
@@ -161,7 +161,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:36:2
 
-Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `d_void.p` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:36:2
    36| (d_void.p: boolean); // Error void ~> boolean
@@ -178,7 +178,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:37:2
 
-Cannot cast `d_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `d_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:37:2
    37| (d_default.p: boolean); // Error string ~> boolean
@@ -223,7 +223,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:46:2
 
-Cannot cast `g_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `g_default.p` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
 
    classes.js:46:2
    46| (g_default.p: boolean); // Error string ~> boolean

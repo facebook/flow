@@ -129,7 +129,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error -------------------------------------------------------------------------------------------- imports_tparam.js:8:1
 
-Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-type]
 
    imports_tparam.js:8:1
    8| x as number; // nope

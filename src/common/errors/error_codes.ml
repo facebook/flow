@@ -60,15 +60,10 @@ type error_code =
   | ImplicitInexactObject
   | ImportTypeAsValue
   | ImportValueAsType
-  | IncompatibleCall
-  | IncompatibleCast
   | IncompatibleExact
-  | IncompatibleExtend
   | IncompatibleFunctionIndexer
   | IncompatibleIndexer
-  | IncompatibleReturn
   | IncompatibleType
-  | IncompatibleTypeArg
   | IncompatibleTypeGuard
   | IncompatibleUse
   | IncompatibleVariance
@@ -297,15 +292,10 @@ let string_of_code : error_code -> string = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | ImportTypeAsValue -> "import-type-as-value"
   | ImportValueAsType -> "import-value-as-type"
-  | IncompatibleCall -> "incompatible-call"
-  | IncompatibleCast -> "incompatible-cast"
   | IncompatibleExact -> "incompatible-exact"
-  | IncompatibleExtend -> "incompatible-extend"
   | IncompatibleFunctionIndexer -> "incompatible-function-indexer"
   | IncompatibleIndexer -> "incompatible-indexer"
-  | IncompatibleReturn -> "incompatible-return"
   | IncompatibleType -> "incompatible-type"
-  | IncompatibleTypeArg -> "incompatible-type-arg"
   | IncompatibleTypeGuard -> "incompatible-type-guard"
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"

@@ -161,7 +161,7 @@ export class Visitor {
     };
 
     importDeclaration(stmt: Ast.ImportDeclaration): void {
-      // $FlowFixMe[incompatible-call] TODO
+      // $FlowFixMe[incompatible-type] TODO
       // $FlowFixMe[prop-missing] TODO
       stmt.specifiers.forEach(specifier => this.importSpecifier(specifier));
       this.expression(stmt.source);
@@ -177,7 +177,7 @@ export class Visitor {
     }
 
     exportDefaultDeclaration(stmt: Ast.ExportDefaultDeclaration): void {
-      // $FlowFixMe[incompatible-call] TODO
+      // $FlowFixMe[incompatible-type] TODO
       this.statement(stmt.declaration);
     }
 

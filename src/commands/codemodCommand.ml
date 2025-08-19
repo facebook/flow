@@ -204,42 +204,6 @@ module Annotate_literal_declaration_command = struct
   let command = CommandSpec.command spec main
 end
 
-module Error_code_migration_command = struct
-  let doc = "Migrate error code to the new format."
-
-  let spec =
-    {
-      CommandSpec.name = "error-code-migration";
-      doc;
-      usage =
-        Printf.sprintf
-          "Usage: %s codemod error-code-migration [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
-      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
-    }
-
-  let main codemod_flags () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      module Acc = Error_code_migration.Acc
-
-      type accumulator = Acc.t
-
-      let reporter = string_reporter (module Acc)
-
-      let check_options o = o
-
-      let expand_roots ~env:_ files = files
-
-      let visit =
-        let mapper = Error_code_migration.mapper in
-        Codemod_utils.make_visitor (Codemod_utils.Mapper mapper)
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
 module RemoveReactImportCommand = struct
   let doc = "Remove unnecessary imports of React under react.runtime=automatic."
 
@@ -319,7 +283,6 @@ let command =
         ( Annotate_optional_properties_command.spec.CommandSpec.name,
           Annotate_optional_properties_command.command
         );
-        (Error_code_migration_command.spec.CommandSpec.name, Error_code_migration_command.command);
         (RemoveReactImportCommand.spec.CommandSpec.name, RemoveReactImportCommand.command);
       ]
   in

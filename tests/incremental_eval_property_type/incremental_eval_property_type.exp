@@ -1,7 +1,7 @@
 No errors!
 Error --------------------------------------------------------------------------------------------------------- b.js:6:2
 
-Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `a` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    b.js:6:2
    6| (a: number);

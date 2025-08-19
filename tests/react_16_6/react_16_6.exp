@@ -27,7 +27,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
 Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with `Promise` [2] in
-the return value. [incompatible-call]
+the return value. [incompatible-type]
 
    lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
@@ -51,7 +51,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because class `ClassComponent` [1] is incompatible with
-`Promise` [2] in the return value. [incompatible-call]
+`Promise` [2] in the return value. [incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -77,7 +77,7 @@ Error --------------------------------------------------------------------------
 Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with object type [2] in
 type argument `R` [3] of the return value. 
 
-Functions without statics are not compatible with objects. [incompatible-call]
+Functions without statics are not compatible with objects. [incompatible-type]
 
    lazy.js:11:34
      11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
@@ -102,7 +102,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
 Cannot call `React.lazy` with function bound to `component` because property `default` is missing in statics of
-`ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value. [prop-missing]
+`ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value. [incompatible-type]
 
    lazy.js:12:34
      12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
@@ -127,7 +127,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13
 
 Cannot create `LazyFunctionComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    lazy.js:19:13
    19| const _b = <LazyFunctionComponent />; // Error missing foo
@@ -145,7 +145,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:20:13
 
 Cannot create `LazyFunctionComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    lazy.js:20:13
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
@@ -178,7 +178,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
 
 Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    lazy.js:28:13
    28| const _f = <LazyClassComponent />; // Error missing foo
@@ -196,7 +196,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
 Cannot create `LazyClassComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
@@ -228,7 +228,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lazy_ref.js:22:40
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    lazy_ref.js:22:40
    22|       <Lazy ref={ref => ref && ref.moo(0)} />;
@@ -243,7 +243,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:12:13
 
 Cannot create `MemoComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    memo.js:12:13
    12| const _b = <MemoComponent />; // Error missing foo
@@ -261,7 +261,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:13:13
 
 Cannot create `MemoComponent` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact
-objects do not accept extra props. [prop-missing]
+objects do not accept extra props. [incompatible-type]
 
    memo.js:13:13
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
@@ -294,7 +294,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:19:13
 
 Cannot create `MemoComponentWithEqual` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[prop-missing]
+[incompatible-type]
 
    memo.js:19:13
    19| const _f = <MemoComponentWithEqual />; // Error missing foo
@@ -312,7 +312,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- memo.js:20:13
 
 Cannot create `MemoComponentWithEqual` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [prop-missing]
+Exact objects do not accept extra props. [incompatible-type]
 
    memo.js:20:13
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
@@ -344,7 +344,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:14:42
 
-Cannot call `React.forwardRef` with `Demo` bound to `render` because in the second parameter: [incompatible-call]
+Cannot call `React.forwardRef` with `Demo` bound to `render` because in the second parameter: [incompatible-type]
  - Either property `current` is write-only in object type [1] but readable in object type [2].
  - Or object type [1] is incompatible with function type [3]. Non-callable objects are not compatible with functions.
 
@@ -366,7 +366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    memo_ref.js:18:43
    18|   return <Memo ref={ref => ref && ref.moo(0)} />;

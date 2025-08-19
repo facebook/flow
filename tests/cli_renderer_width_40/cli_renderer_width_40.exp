@@ -2,7 +2,7 @@ Error --------------------- basic.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    basic.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -18,7 +18,7 @@ Error - name/that/gets/very/close.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    name/that/gets/very/close.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -35,7 +35,7 @@ name/that/gets/very/close2.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    name/that/gets/very/close2.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -51,7 +51,7 @@ Error - name_that_gets_very_close.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    name_that_gets_very_close.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -68,7 +68,7 @@ name_that_gets_very_close2.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    name_that_gets_very_close2.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -86,7 +86,7 @@ Cannot cast
 `reallyReallyReallyReallyReallyReallyRea
 llyReallyLongVariableName` to empty
 because number [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    non_breakable_breaks.js:7:2
    7| (reallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
@@ -108,7 +108,7 @@ Cannot cast
 llyReallyReallyReallyReallyReallyReallyR
 eallyReallyReallyLongVariableName` to
 empty because number [1] is incompatible
-with empty [2]. [incompatible-cast]
+with empty [2]. [incompatible-type]
 
    non_breakable_breaks.js:10:2
    10| (reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongVariableName: empty);
@@ -129,7 +129,7 @@ Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijkl`
 to empty because number [1] is
 incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    non_breakable_breaks.js:13:2
    13| (abcdefghijklmnopqrstuvwxyzabcdefghijkl: empty);
@@ -150,7 +150,7 @@ Cannot cast
 `abcdefghijklmnopqrstuvwxyzabcdefghijklm
 ` to empty because number [1] is
 incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    non_breakable_breaks.js:16:2
    16| (abcdefghijklmnopqrstuvwxyzabcdefghijklm: empty);
@@ -170,7 +170,7 @@ Error ----- non_breakable_breaks.js:19:2
 Cannot cast `mnopqrstuvwxyzabcdefghijkl`
 to empty because number [1] is
 incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    non_breakable_breaks.js:19:2
    19| (mnopqrstuvwxyzabcdefghijkl: empty);
@@ -190,7 +190,7 @@ Error ----- non_breakable_breaks.js:22:2
 Cannot cast
 `mnopqrstuvwxyzabcdefghijklm` to empty
 because number [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    non_breakable_breaks.js:22:2
    22| (mnopqrstuvwxyzabcdefghijklm: empty);
@@ -210,7 +210,7 @@ really/long/filename/that/is/much/more/then/40/characters.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    really/long/filename/that/is/much/more/then/40/characters.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -227,7 +227,7 @@ really_long_filename_that_is_much_more_then_40_characters.js:6:2
 
 Cannot cast `null` to empty because
 null [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    really_long_filename_that_is_much_more_then_40_characters.js:6:2
    6| (null: empty); // Error: null ~> empty
@@ -249,7 +249,7 @@ property
 `long.error.message.that.hopefully` of
 index 0 of property `to.be.a.really` of
 index 0 of property `this.is.going`.
-[incompatible-cast]
+[incompatible-type]
 
    wrap.js:21:64
    21|                               {breaks: {on: {multiple: {lines: 42}}}},
@@ -271,7 +271,7 @@ of property
 `long.error.message.that.hopefully` of
 index 0 of property `to.be.a.really` of
 index 0 of property `this.is.going`.
-[incompatible-cast]
+[incompatible-type]
 
    wrap_group.js:21:68
    21|                               {breaks: {on: {multiple: {lines: {a: 1, b: 2}}}}},
@@ -293,7 +293,7 @@ of property
 `long.error.message.that.hopefully` of
 index 0 of property `to.be.a.really` of
 index 0 of property `this.is.going`.
-[incompatible-cast]
+[incompatible-type]
 
    wrap_group.js:21:74
    21|                               {breaks: {on: {multiple: {lines: {a: 1, b: 2}}}}},

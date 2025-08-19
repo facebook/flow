@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- const.js:3:2
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    const.js:3:2
    3| (x: empty); // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- const.js:8:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    const.js:8:4
    8|   (x: string); // ERROR
@@ -70,7 +70,7 @@ Cannot resolve name `y`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------------- import.js:4:2
 
-Cannot cast `s` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `s` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:4:2
    4| (s: empty); // ERROR
@@ -87,7 +87,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
-Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    import.js:7:2
    7| (n: empty); // ERROR
@@ -104,7 +104,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- let.js:3:2
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    let.js:3:2
    3| (x: empty); // ERROR
@@ -121,7 +121,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- let.js:8:4
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    let.js:8:4
    8|   (x: string); // ERROR

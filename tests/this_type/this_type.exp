@@ -337,7 +337,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:8:10
 
 Cannot extend `A1` [1] with `B1` because `B1` [2] is incompatible with `this` [3] in the return value of property `foo`.
-[incompatible-extend]
+[incompatible-type]
 
    import.js:8:10
    8|   foo(): B1 { return new B1(); } // error
@@ -355,7 +355,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
 Cannot extend `A3` [1] with `B3` because `B3` [2] is incompatible with `this` [3] in the return value of property `foo`.
-[incompatible-extend]
+[incompatible-type]
 
    import.js:14:10
    14|   foo(): B3<X> { return new B3(); } // error
@@ -373,7 +373,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:18:23
 
 Cannot call `(new B3<...>()).qux` with `0` bound to `x` because number [1] is incompatible with string [2].
-[incompatible-call]
+[incompatible-type]
 
    import.js:18:23
    18| (new B3<string>().qux(0): string); // error
@@ -388,7 +388,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:21:30
 
 Cannot cast `(new B3<...>()).bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
-[incompatible-cast]
+[incompatible-type]
 
    import.js:21:30
    21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
@@ -405,7 +405,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:2
 
-Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    import.js:22:2
    22| ((new B3(): A2<number>).qux(0): string); // error
@@ -430,7 +430,7 @@ Unexpected use of `this` type. [illegal-this]
 
 Error -------------------------------------------------------------------------------------------------- statics.js:17:2
 
-Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-cast]
+Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    statics.js:17:2
    17| (A.make(): B); // error
@@ -471,7 +471,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:20:10
 
 Cannot extend `Base` [1] with `Override` because `Override` [2] is incompatible with `this` [3] in the return value of
-property `bar`. [incompatible-extend]
+property `bar`. [incompatible-type]
 
    test.js:20:10
    20|   bar(): Override { return new Override; } // error (cf. OK above)
@@ -489,7 +489,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:25:16
 
 Cannot extend `Base` [1] with `Override` because `this` [2] is incompatible with `Base` [3] in the first parameter of
-property `grault`. [incompatible-extend]
+property `grault`. [incompatible-type]
 
    test.js:25:16
    25|   grault(that: this) { } // error, too (only variance error with new-generics)

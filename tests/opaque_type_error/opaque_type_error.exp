@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ importtest.js:6:2
 
-Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2]. [incompatible-cast]
+Cannot cast `3` to `ID` because number [1] is incompatible with `ID` [2]. [incompatible-type]
 
    importtest.js:6:2
    6| (3 : ID); // Error: number ~> ID
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- importtest.js:9:12
 
-Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-type]
 
    importtest.js:9:12
    9|     return x;
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:13:22
 
-Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2]. [incompatible-call]
+Cannot call `Test.hide` with `x` bound to `x` because `ID` [1] is incompatible with number [2]. [incompatible-type]
 
    importtest.js:13:22
    13|     return Test.hide(x); // Error: ID ~> number
@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:17:12
 
-Cannot return `x` because `ID` [1] is incompatible with number [2]. [incompatible-return]
+Cannot return `x` because `ID` [1] is incompatible with number [2]. [incompatible-type]
 
    importtest.js:17:12
    17|     return x; // Error: ID ~> ID2
@@ -65,7 +65,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:21:12
 
-Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with `ID` [2]. [incompatible-type]
 
    importtest.js:21:12
    21|     return x;
@@ -82,7 +82,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
-Cannot cast `"hello"` to `MyNum` because string [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `"hello"` to `MyNum` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:16:2
    16| ("hello": MyNum) // Error: string ~> number

@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
 Cannot cast `extractedModuleInfo` to string because `$Flow$EsmModuleMarkerWrapperInModuleRef` [1] is incompatible with
-string [2]. [incompatible-cast]
+string [2]. [incompatible-type]
 
    test.js:5:1
     5| extractedModuleInfo as string; // error;
@@ -19,7 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
 Cannot cast `extractedModuleInfo` to empty because `$Flow$EsmModuleMarkerWrapperInModuleRef` [1] is incompatible with
-empty [2]. [incompatible-cast]
+empty [2]. [incompatible-type]
 
    test.js:6:1
     6| extractedModuleInfo as empty; // error;

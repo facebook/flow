@@ -263,7 +263,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:76:1
 
-Cannot cast `obj['stringLiteral']` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `obj['stringLiteral']` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    object.js:76:1
    76| obj['stringLiteral'] as string; // err, num !~> string

@@ -47,7 +47,7 @@ Cannot assign `1` to `JSON.parse` because property `parse` is not writable. [can
 
 Error -------------------------------------------------------------------------------------------- json_stringify.js:7:2
 
-Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
 
    json_stringify.js:7:2
       7| (JSON.stringify(bad1): string);
@@ -65,7 +65,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:21:21
 
 Cannot call `Map` with array literal bound to `iterable` because string [1] is incompatible with tuple type [2] in type
-argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
 
    map.js:21:21
      21|     let x = new Map(['foo', 123]); // error
@@ -86,7 +86,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:21:21
 
 Cannot call `Map` with array literal bound to `iterable` because number [1] is incompatible with tuple type [2] in type
-argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
 
    map.js:21:21
      21|     let x = new Map(['foo', 123]); // error
@@ -107,7 +107,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:22:42
 
 Cannot call `Map` with array literal bound to `iterable` because string [1] is incompatible with number [2] in index 0
-of type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+of type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
 
    map.js:22:42
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -128,7 +128,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- map.js:22:42
 
 Cannot call `Map` with array literal bound to `iterable` because number [1] is incompatible with string [2] in index 1
-of type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-call]
+of type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
 
    map.js:22:42
      22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -148,7 +148,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:27:6
 
-Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
    map.js:27:6
      27|     (x.get('foo'): boolean); // error, string | void
@@ -165,7 +165,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:27:6
 
-Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-cast]
+Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
    map.js:27:6
    27|     (x.get('foo'): boolean); // error, string | void
@@ -182,7 +182,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- map.js:28:11
 
-Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-type]
 
    map.js:28:11
    28|     x.get(123); // error, wrong key type
@@ -196,7 +196,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:17:23
 
-Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
+Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either boolean [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or boolean [1] is incompatible with read-only array type [3].
@@ -216,7 +216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
 
-Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
+Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
@@ -236,7 +236,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
 
-Cannot call `WeakRef` because in type argument `T`: [incompatible-call]
+Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either string [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or string [1] is incompatible with read-only array type [3].
@@ -256,7 +256,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:24
 
-Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
@@ -276,7 +276,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:27
 
-Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
@@ -296,7 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:30
 
-Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].
@@ -316,7 +316,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:31:15
 
-Cannot call `WeakSet` because in type argument `T`: [incompatible-call]
+Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or number [1] is incompatible with read-only array type [3].

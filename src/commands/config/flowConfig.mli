@@ -106,8 +106,6 @@ val enable_const_params : config -> bool option
 
 val enums : config -> bool
 
-val error_code_migration : config -> Options.ErrorCodeMigration.t
-
 val estimate_recheck_time : config -> bool option
 
 val exact_by_default : config -> bool option

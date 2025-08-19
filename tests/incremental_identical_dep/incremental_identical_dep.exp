@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ thud.js:3:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    thud.js:3:2
    3| (x: string);
@@ -19,7 +19,7 @@ References:
 Found 1 error
 Error ------------------------------------------------------------------------------------------------------ thud.js:3:2
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    thud.js:3:2
    3| (x: string);

@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:11:32
 
-Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-type]
 
    A.js:11:32
    11| const fooNum: number = str2str(39); // Would not error if using [untyped]!
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- A.js:14:9
 
-Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-call]
+Cannot call `str2str` with `39` bound to `foo` because number [1] is incompatible with string [2]. [incompatible-type]
 
    A.js:14:9
    14| str2str(39);

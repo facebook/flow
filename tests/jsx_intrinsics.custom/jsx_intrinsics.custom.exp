@@ -32,7 +32,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- strings.js:9:2
 
-Cannot create `Div` element because property `id` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `Div` element because property `id` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    strings.js:9:2
    9| <Div />; // This is fine
@@ -102,7 +103,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:13:2
 
-Cannot create `div` element because property `id` is missing in props [1] but exists in object type [2]. [prop-missing]
+Cannot create `div` element because property `id` is missing in props [1] but exists in object type [2].
+[incompatible-type]
 
    strings.js:13:2
    13| <div />; // This is not fine

@@ -30,7 +30,7 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
 Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
-[incompatible-extend]
+[incompatible-type]
 
    libs/imports.js:20:14
    20|         m(): number; // error number <: string
@@ -147,7 +147,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:1
 
-Cannot cast `require(...)` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...)` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    a.js:7:1
    7| require('c') as empty; // error: boolean ~> empty
@@ -205,7 +205,7 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
 Cannot cast `require(...)` to empty because module `contains-unsupported-statements` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    a.js:17:1
    17| require('contains-unsupported-statements') as empty; // error: number ~> empty
@@ -255,7 +255,7 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
 Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
-[incompatible-extend]
+[incompatible-type]
 
    libs/imports.js:20:14
    20|         m(): number; // error number <: string
@@ -372,7 +372,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:7:1
 
-Cannot cast `require(...)` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `require(...)` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    a.js:7:1
    7| require('c') as empty; // error: boolean ~> empty
@@ -430,7 +430,7 @@ Cannot resolve module `non-libdef-declare-module`. [cannot-resolve-module]
 Error -------------------------------------------------------------------------------------------------------- a.js:17:1
 
 Cannot cast `require(...)` to empty because module `contains-unsupported-statements` [1] is incompatible with empty [2].
-[incompatible-cast]
+[incompatible-type]
 
    a.js:17:1
    17| require('contains-unsupported-statements') as empty; // error: number ~> empty

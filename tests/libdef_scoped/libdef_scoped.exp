@@ -30,7 +30,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- bar/test.js:1:1
 
-Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    bar/test.js:1:1
    1| commonValueNoOverride as empty; // error: string ~> empty
@@ -47,7 +47,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- bar/test.js:2:1
 
-Cannot cast `commonValueWithOverride` to empty because boolean [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueWithOverride` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
 
    bar/test.js:2:1
    2| commonValueWithOverride as empty; // error: boolean ~> empty
@@ -72,7 +72,7 @@ Cannot resolve name `fooSpecific`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------------------------- bar/test.js:4:1
 
-Cannot cast `barSpecific` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `barSpecific` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    bar/test.js:4:1
    4| barSpecific as empty; // error: string ~> empty
@@ -89,7 +89,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- common_test.js:1:1
 
-Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    common_test.js:1:1
    1| commonValueNoOverride as empty; // error: string ~> empty
@@ -106,7 +106,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- common_test.js:2:1
 
-Cannot cast `commonValueWithOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueWithOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    common_test.js:2:1
    2| commonValueWithOverride as empty; // error: string ~> empty
@@ -139,7 +139,7 @@ Cannot resolve name `barSpecific`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------------------------- foo/test.js:1:1
 
-Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueNoOverride` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    foo/test.js:1:1
    1| commonValueNoOverride as empty; // error: string ~> empty
@@ -156,7 +156,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- foo/test.js:2:1
 
-Cannot cast `commonValueWithOverride` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `commonValueWithOverride` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    foo/test.js:2:1
    2| commonValueWithOverride as empty; // error: number ~> empty
@@ -173,7 +173,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- foo/test.js:3:1
 
-Cannot cast `fooSpecific` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+Cannot cast `fooSpecific` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    foo/test.js:3:1
    3| fooSpecific as empty; // error: number ~> empty
