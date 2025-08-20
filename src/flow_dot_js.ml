@@ -149,7 +149,7 @@ let stub_metadata ~root ~checked =
     root;
     strict_es6_import_export = false;
     strip_root = true;
-    suppress_types = SSet.of_list ["$FlowFixMe"; "$FlowIssue"; "$FlowIgnore"; "$FlowExpectedError"];
+    suppress_types = SSet.of_list ["$FlowFixMe"];
     ts_syntax = true;
     assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;
