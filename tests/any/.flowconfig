@@ -1,5 +1,2 @@
 [options]
 all=false
-
-suppress_type=$FlowIssue
-suppress_type=$FlowFixMe

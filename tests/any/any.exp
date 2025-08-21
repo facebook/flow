@@ -75,31 +75,6 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- flowissue.js:14:27
-
-Cannot resolve name `nnumber`. [cannot-resolve-name]
-
-   14| function baz(x:$FlowIssue<nnumber>): $FlowIssue<number> { return x; }
-                                 ^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- flowissue.js:17:16
-
-Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2]. [incompatible-type]
-
-   flowissue.js:17:16
-   17| var y:string = bar(0);
-                      ^^^^^^
-
-References:
-   flowissue.js:10:28
-   10| function bar(x:$FlowIssue):mixed { return x; }
-                                  ^^^^^ [1]
-   flowissue.js:17:7
-   17| var y:string = bar(0);
-             ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- propagate.js:10:10
 
 Cannot return `c.bar(...)` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -152,4 +127,4 @@ References:
 
 
 
-Found 10 errors
+Found 8 errors

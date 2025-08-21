@@ -10,7 +10,6 @@
 all=false
 exact_by_default=false
 no_flowlib=false
-suppress_type=$FlowExpectedError
 include_warnings=true
 enums=true
 

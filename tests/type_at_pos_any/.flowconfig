@@ -3,4 +3,3 @@
 
 [options]
 all=true
-suppress_type=$Broken
