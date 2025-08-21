@@ -416,32 +416,19 @@ end
 (* Builtin types *)
 
 module Builtins = struct
-  let suppress_name lint_severities suppress_types preference =
+  let flowfixme_ty lint_severities =
     if LintSettings.get_value Lints.UnclearType lint_severities = Severity.Err then
-      if SSet.mem preference suppress_types then
-        Some preference
-      else
-        SSet.choose_opt suppress_types
+      Ty.Generic
+        (Ty_symbol.builtin_symbol (Reason.OrdinaryName "$FlowFixMe"), Ty.TypeAliasKind, None)
     else
-      None
-
-  let flowfixme_generic_ty ~preference lint_severities suppress_types =
-    match suppress_name lint_severities suppress_types preference with
-    | Some name ->
-      Ty.Generic (Ty_symbol.builtin_symbol (Reason.OrdinaryName name), Ty.TypeAliasKind, None)
-    | None -> Ty.Any (Ty.Annotated ALoc.none)
-
-  let flowfixme_ty = flowfixme_generic_ty ~preference:"$FlowFixMe"
-
-  let flowfixme_empty_ty = flowfixme_generic_ty ~preference:"$FlowFixMeEmpty"
+      Ty.Any (Ty.Annotated ALoc.none)
 
   let empty = Ty.Bot Ty.EmptyType
 
-  let flowfixme_ty_default = flowfixme_ty LintSettings.empty_severities SSet.empty
+  let flowfixme_ty_default = Ty.Any (Ty.Annotated ALoc.none)
 
-  let flowfixme_ast ~exact_by_default ~lint_severities ~suppress_types =
-    flowfixme_ty lint_severities suppress_types
-    |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
+  let flowfixme_ast ~exact_by_default ~lint_severities =
+    flowfixme_ty lint_severities |> Ty_serializer.type_ { Ty_serializer.exact_by_default }
 end
 
 (* Validation *)
@@ -870,7 +857,7 @@ class type_normalization_hardcoded_fixes_mapper
   ~file_sig
   ~typed_ast
   ~lint_severities
-  ~suppress_types
+  ~allow_dollar_flowfixme
   ~imports_react
   ~generalize_maybe
   ~generalize_react_mixed_element
@@ -879,7 +866,11 @@ class type_normalization_hardcoded_fixes_mapper
   object (this)
     inherit stylize_ty_mapper ~imports_react () as super
 
-    val sanitized_any = Builtins.flowfixme_ty lint_severities suppress_types
+    val sanitized_any =
+      if allow_dollar_flowfixme then
+        Builtins.flowfixme_ty lint_severities
+      else
+        Builtins.flowfixme_ty_default
 
     method! on_Union env _ from_bounds ty1 ty2 tys =
       (* The following moves the `any` component of a union to the beginning of the
@@ -1124,7 +1115,7 @@ class type_normalization_hardcoded_fixes_mapper
        * `empty` remain as is. *)
       | Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper) ->
         add_warning loc Warning.Empty_NoUpper;
-        Builtins.flowfixme_empty_ty lint_severities suppress_types
+        sanitized_any
       | Ty.Bot Ty.EmptyType ->
         (* `empty` annotations remain *)
         t
@@ -1253,7 +1244,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
       ~generalize_react_mixed_element
       ~merge_arrays
       ~lint_severities
-      ~suppress_types
+      ~allow_dollar_flowfixme
       ~imports_react
       acc
       loc
@@ -1268,7 +1259,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
         ~file_sig
         ~typed_ast
         ~lint_severities
-        ~suppress_types
+        ~allow_dollar_flowfixme
         ~imports_react
         ~generalize_maybe
         ~generalize_react_mixed_element

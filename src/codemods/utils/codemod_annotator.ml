@@ -131,7 +131,6 @@ module Make (Extra : BASE_STATS) = struct
     ~max_type_size
     ~merge_arrays
     ?(exact_by_default = Options.exact_by_default cctx.Codemod_context.Typed.options)
-    ?(suppress_types = Options.suppress_types cctx.Codemod_context.Typed.options)
     ?(casting_syntax = Options.casting_syntax cctx.Codemod_context.Typed.options)
     ?(imports_react =
       Insert_type_imports.ImportsHelper.imports_react cctx.Codemod_context.Typed.file_sig)
@@ -164,7 +163,7 @@ module Make (Extra : BASE_STATS) = struct
               ~file_sig
               ~typed_ast
               ~lint_severities
-              ~suppress_types
+              ~allow_dollar_flowfixme:true
               ~imports_react
               ~generalize_maybe
               ~generalize_react_mixed_element
@@ -206,7 +205,7 @@ module Make (Extra : BASE_STATS) = struct
               ~file_sig
               ~typed_ast
               ~lint_severities
-              ~suppress_types
+              ~allow_dollar_flowfixme:true
               ~imports_react
               ~generalize_maybe
               ~generalize_react_mixed_element

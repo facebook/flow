@@ -132,7 +132,7 @@ let serialize
       ~file_sig
       ~typed_ast
       ~lint_severities:LintSettings.empty_severities
-      ~suppress_types:SSet.empty (* Make autofix insert any *)
+      ~allow_dollar_flowfixme:false (* Make autofix insert any *)
       ~imports_react
       ~generalize_maybe:true
       ~generalize_react_mixed_element:true

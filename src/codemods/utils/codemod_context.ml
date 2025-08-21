@@ -61,9 +61,8 @@ module Typed = struct
 
   let flowfixme_ast ~lint_severities ccx =
     let { options; _ } = ccx in
-    let suppress_types = Options.suppress_types options in
     let exact_by_default = Options.exact_by_default options in
-    Insert_type_utils.Builtins.flowfixme_ast ~lint_severities ~suppress_types ~exact_by_default
+    Insert_type_utils.Builtins.flowfixme_ast ~lint_severities ~exact_by_default
 end
 
 module Untyped = struct
