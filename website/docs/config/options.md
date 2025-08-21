@@ -369,7 +369,7 @@ relay_integration.excludes=<PROJECT_ROOT>/dirA
 relay_integration.excludes=<PROJECT_ROOT>/dirB
 ```
 
-### suppress_type {#toc-suppress-type}
+### suppress_type <UntilVersion version="0.279" /> {#toc-suppress-type}
 
 Type: `string`
 
@@ -399,6 +399,12 @@ const myBoolean: $FlowTODO = 1 + 1;
 ```
 
 > **Note:** You can specify `suppress_type` multiple times.
+
+You can achieve the same effect by adding the following to your global library definition:
+
+```
+type $FlowTODO = any;
+```
 
 ### traces {#toc-traces}
 

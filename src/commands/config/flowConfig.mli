@@ -286,8 +286,6 @@ val strict_es6_import_export : config -> bool
 
 val strict_mode : config -> StrictModeSettings.t
 
-val suppress_types : config -> SSet.t
-
 val ts_syntax : config -> bool
 
 val assert_operator : config -> Options.AssertOperator.t

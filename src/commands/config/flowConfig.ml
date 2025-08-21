@@ -150,7 +150,6 @@ module Opts = struct
     shm_heap_size: int;
     supported_operating_systems: Options.supported_os list;
     strict_es6_import_export: bool;
-    suppress_types: SSet.t;
     ts_syntax: bool;
     assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
@@ -302,7 +301,6 @@ module Opts = struct
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
       supported_operating_systems = [];
-      suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
       type_expansion_recursion_limit = 3;
@@ -997,12 +995,6 @@ module Opts = struct
   let strict_es6_import_export_parser =
     boolean (fun opts v -> Ok { opts with strict_es6_import_export = v })
 
-  let suppress_types_parser =
-    string
-      ~init:(fun opts -> { opts with suppress_types = SSet.empty })
-      ~multiple:true
-      (fun opts v -> Ok { opts with suppress_types = SSet.add v opts.suppress_types })
-
   let unsuppressable_error_codes_parser =
     string
       ~init:(fun opts -> { opts with unsuppressable_error_codes = SSet.empty })
@@ -1289,7 +1281,6 @@ module Opts = struct
       );
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
-      ("suppress_type", suppress_types_parser);
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
@@ -2153,8 +2144,6 @@ let supported_operating_systems c = c.options.Opts.supported_operating_systems
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 
 let strict_mode c = c.strict_mode
-
-let suppress_types c = c.options.Opts.suppress_types
 
 let ts_syntax c = c.options.Opts.ts_syntax
 

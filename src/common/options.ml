@@ -193,7 +193,6 @@ type t = {
   opt_strict_es6_import_export: bool;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
-  opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_assert_operator: AssertOperator.t;
@@ -419,7 +418,7 @@ let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
 let strict_mode opts = opts.opt_strict_mode
 
-let suppress_types opts = opts.opt_suppress_types
+let suppress_types _opts = SSet.singleton "$FlowFixMe"
 
 let temp_dir opts = opts.opt_temp_dir
 
