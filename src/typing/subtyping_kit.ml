@@ -62,12 +62,31 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let upol = Property.polarity_of_property_type up in
     (propref, (lpol, upol))
 
-  let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) propref = function
+  let rec_flow_p
+      cx
+      ?trace
+      ~use_op
+      ~lower_upper_subtyping_obj_ts
+      ~upper_object_reason
+      ?(report_polarity = true)
+      propref = function
     (* unification cases *)
     | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
         OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
       ) ->
-      unify_opt cx ?trace ~use_op lt ut;
+      let unify_cause =
+        match lower_upper_subtyping_obj_ts with
+        | None -> UnifyCause.Uncategorized
+        | Some (lower_obj_t, upper_obj_t) ->
+          let property_name =
+            match propref with
+            | Named { name; _ } -> Some (Reason.display_string_of_name name)
+            | Computed _ -> None
+          in
+          UnifyCause.MutableProperty
+            { lower_obj_t; upper_obj_t; upper_object_reason; property_name }
+      in
+      unify_opt cx ?trace ~use_op ~unify_cause lt ut;
       []
     (* directional cases *)
     | (lp, up) ->
@@ -115,7 +134,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     if impl2 then
       rec_flow_t cx trace ~use_op (t1, t2)
     else
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
@@ -185,6 +204,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ~trace
             ~report_polarity:false
             ~use_op:use_op_k
+            ~lower_upper_subtyping_obj_ts:
+              (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+            ~upper_object_reason:ureason
             (Computed uk)
             ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
               OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
@@ -203,6 +225,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
             cx
             ~trace
             ~use_op:use_op_v
+            ~lower_upper_subtyping_obj_ts:
+              (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+            ~upper_object_reason:ureason
             (Computed uv)
             ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
               OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
@@ -299,6 +324,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   cx
                   ~trace
                   ~use_op
+                  ~lower_upper_subtyping_obj_ts:
+                    (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+                  ~upper_object_reason:ureason
                   propref
                   ( Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro),
                     Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
@@ -331,7 +359,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   err_acc
                 | _ -> err_acc
               else
-                let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+                let errs =
+                  rec_flow_p
+                    cx
+                    ~trace
+                    ~use_op
+                    ~lower_upper_subtyping_obj_ts:
+                      (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+                    ~upper_object_reason:ureason
+                    propref
+                    (lp, up)
+                in
                 Base.List.rev_append errs err_acc
             in
             (match up with
@@ -458,7 +496,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
             let propref =
               mk_named_prop ~reason:(replace_desc_reason (RProperty (Some name)) lreason) name
             in
-            let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+            let errs =
+              rec_flow_p
+                cx
+                ~trace
+                ~use_op
+                ~lower_upper_subtyping_obj_ts:
+                  (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+                ~upper_object_reason:ureason
+                propref
+                (lp, up)
+            in
             add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
         end
       in
@@ -555,7 +603,17 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let name = OrdinaryName name in
           let reason_prop = replace_desc_reason (RProperty (Some name)) lreason in
           let propref = mk_named_prop ~reason:reason_prop name in
-          let errs = rec_flow_p cx ~trace ~use_op propref (lp, up) in
+          let errs =
+            rec_flow_p
+              cx
+              ~trace
+              ~use_op
+              ~lower_upper_subtyping_obj_ts:
+                (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+              ~upper_object_reason:ureason
+              propref
+              (lp, up)
+          in
           add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
       | _ -> ()));
 
@@ -592,11 +650,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
      in which case covariant typing is sound (since no alias
      will break if the subtyped child value is replaced by a
      non-subtyped value *)
-  let flow_to_mutable_child cx trace use_op fresh t1 t2 =
+  let flow_to_mutable_child cx trace ~use_op ~unify_cause ~fresh t1 t2 =
     if fresh then
       rec_flow cx trace (t1, UseT (use_op, t2))
     else
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause t1 t2
 
   (* Subtyping of arrays is complicated by tuples. Currently, there are three
      different kinds of types, all encoded by arrays:
@@ -641,24 +699,31 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
      * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
   *)
-  let rec array_flow cx trace use_op lit1 r1 ?(index = 0) = function
+  let rec array_flow cx trace use_op lit1 r1 r2 ?(index = 0) = function
     (* empty array / array literal / tuple flowing to array / array literal /
        tuple (includes several cases, analyzed below) *)
     | ([], e1, _, e2) ->
       (* if lower bound is an empty array / array literal *)
       if index = 0 then
         (* general element1 = general element2 *)
-        flow_to_mutable_child cx trace use_op lit1 e1 e2
+        flow_to_mutable_child
+          cx
+          trace
+          ~use_op
+          ~unify_cause:(UnifyCause.MutableArray { upper_array_reason = r2 })
+          ~fresh:lit1
+          e1
+          e2
     (* otherwise, lower bound is an empty tuple (nothing to do) *)
     (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
     | (_, e1, [], e2) ->
       (* general element1 < general element2 *)
-      flow_to_mutable_child cx trace use_op lit1 e1 e2
+      flow_to_mutable_child cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized ~fresh:lit1 e1 e2
     (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
     | (t1 :: ts1, e1, t2 :: ts2, e2) ->
       (* specific element1 = specific element2 *)
-      flow_to_mutable_child cx trace use_op lit1 t1 t2;
-      array_flow cx trace use_op lit1 r1 ~index:(index + 1) (ts1, e1, ts2, e2)
+      flow_to_mutable_child cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized ~fresh:lit1 t1 t2;
+      array_flow cx trace use_op lit1 r1 r2 ~index:(index + 1) (ts1, e1, ts2, e2)
 
   let take_n_from_set n set =
     let exception Done in
@@ -913,6 +978,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_unify
           cx
           trace
+          ~unify_cause:UnifyCause.Uncategorized
           ~use_op:
             (Frame
                ( OpaqueTypeLowerBoundCompatibility
@@ -927,6 +993,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         rec_unify
           cx
           trace
+          ~unify_cause:UnifyCause.Uncategorized
           ~use_op:
             (Frame
                ( OpaqueTypeUpperBoundCompatibility
@@ -1945,7 +2012,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   )
               in
               let errs =
-                rec_flow_p cx ~trace ~use_op propref (Property.type_ lp, Property.type_ up)
+                rec_flow_p
+                  cx
+                  ~trace
+                  ~use_op
+                  ~lower_upper_subtyping_obj_ts:(Some (l, u))
+                  ~upper_object_reason:ureason
+                  propref
+                  (Property.type_ lp, Property.type_ up)
               in
               Base.List.rev_append errs acc
             | _ ->
@@ -2057,7 +2131,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> tuple_ts_of_elements elements)
           tv2
       in
-      array_flow cx trace use_op lit1 r1 (ts1, t1, ts2, t2)
+      array_flow cx trace use_op lit1 r1 r2 (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
     | ( DefT
           ( r1,
@@ -2158,7 +2232,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           | (_, Polarity.Positive) ->
             rec_flow_t cx trace ~use_op (t1, t2)
           | (_, Polarity.Negative) -> rec_flow_t cx trace ~use_op (t2, t1)
-          | (_, Polarity.Neutral) -> rec_unify cx trace ~use_op t1 t2
+          | (_, Polarity.Neutral) ->
+            rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
         in
         iter2opt
           (fun t1 t2 ->
@@ -2650,6 +2725,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         )
 
   let rec_flow_p cx ?trace ~use_op ?(report_polarity = true) lreason ureason propref p =
-    let errs = rec_flow_p cx ?trace ~use_op ~report_polarity propref p in
+    let errs =
+      rec_flow_p
+        cx
+        ?trace
+        ~use_op
+        ~lower_upper_subtyping_obj_ts:None
+        ~upper_object_reason:ureason
+        ~report_polarity
+        propref
+        p
+    in
     add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs
 end

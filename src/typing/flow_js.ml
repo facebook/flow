@@ -156,7 +156,8 @@ struct
 
     let is_subtype = FlowJs.rec_flow_t
 
-    let unify cx trace ~use_op (t1, t2) = FlowJs.rec_unify cx trace ~use_op ~unify_any:true t1 t2
+    let unify cx trace ~use_op (t1, t2) =
+      FlowJs.rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized ~unify_any:true t1 t2
 
     let reposition = FlowJs.reposition ?desc:None ?annot_loc:None
   end
@@ -754,7 +755,13 @@ struct
             )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
-          rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout_tvar)
+          rec_unify
+            cx
+            trace
+            ~use_op:unknown_use
+            ~unify_cause:UnifyCause.Uncategorized
+            (UnionT (reason, rep))
+            (OpenT tout_tvar)
         | (_, OptionalIndexedAccessT { use_op; reason; index; tout_tvar })
           when match l with
                | IntersectionT _ -> false
@@ -1384,7 +1391,7 @@ struct
               type_t_kind
               l
           in
-          rec_unify cx trace ~use_op t tout
+          rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t tout
         (**********************)
         (*    opaque types    *)
         (**********************)
@@ -2810,6 +2817,7 @@ struct
                 cx
                 trace
                 ~use_op:implements_use_op
+                ~unify_cause:UnifyCause.Uncategorized
                 (inst_type_to_obj_type reason inst)
                 (inst_type_to_obj_type reason_u inst_super);
               (* We need to ensure that the shape of the class statics match. *)
@@ -2825,6 +2833,7 @@ struct
                 cx
                 trace
                 ~use_op:implements_use_op
+                ~unify_cause:UnifyCause.Uncategorized
                 (spread_of reason static)
                 (spread_of reason_u static_super);
               (* We need to ensure that the classes have the same nominal hierarchy *)
@@ -4845,7 +4854,15 @@ struct
 
           begin
             match t_opt with
-            | Some (not_found, t) -> rec_unify cx trace ~use_op ~unify_any:true t not_found
+            | Some (not_found, t) ->
+              rec_unify
+                cx
+                trace
+                ~use_op
+                ~unify_cause:UnifyCause.Uncategorized
+                ~unify_any:true
+                t
+                not_found
             | None -> ()
           end
         (* SuperT only involves non-strict lookups *)
@@ -5644,7 +5661,8 @@ struct
     in
     covariant ~use_op return_t
 
-  and invariant_any_propagation_flow cx trace ~use_op any t = rec_unify cx trace ~use_op any t
+  and invariant_any_propagation_flow cx trace ~use_op any t =
+    rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized any t
 
   and any_prop_call_prop cx ~use_op ~covariant_flow = function
     | None -> ()
@@ -5998,7 +6016,7 @@ struct
         match polarity with
         | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
         | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-        | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2)
+        | Polarity.Neutral -> rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2)
       targs1
       targs2
 
@@ -7650,25 +7668,25 @@ struct
     | (Resolved t1, Resolved t2) ->
       (* replace node first, in case rec_unify recurses back to these tvars *)
       node1 := Goto { parent = id2 };
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
     | (Resolved t1, FullyResolved s2) ->
       let t2 = Context.force_fully_resolved_tvar cx s2 in
       (* replace node first, in case rec_unify recurses back to these tvars *)
       node1 := Goto { parent = id2 };
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
     | (FullyResolved s1, FullyResolved s2) ->
       let t1 = Context.force_fully_resolved_tvar cx s1 in
       let t2 = Context.force_fully_resolved_tvar cx s2 in
       (* replace node first, in case rec_unify recurses back to these tvars *)
       node1 := Goto { parent = id2 };
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
     | (FullyResolved s1, Resolved t2) ->
       let t1 = Context.force_fully_resolved_tvar cx s1 in
       (* prefer fully resolved roots to resolved roots *)
       root2.constraints <- root1.constraints;
       (* replace node first, in case rec_unify recurses back to these tvars *)
       node1 := Goto { parent = id2 };
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
 
   (** Unify two type variables. This involves finding their roots, and making one
     point to the other. Ranks are used to keep chains short. *)
@@ -7695,8 +7713,15 @@ struct
       root.constraints <- Resolved t;
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
       edges_and_flows_from_t cx trace ~new_use_op:use_op ~opt:true t (id, bounds)
-    | Resolved t_ -> rec_unify cx trace ~use_op t_ t
-    | FullyResolved s -> rec_unify cx trace ~use_op (Context.force_fully_resolved_tvar cx s) t
+    | Resolved t_ -> rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t_ t
+    | FullyResolved s ->
+      rec_unify
+        cx
+        trace
+        ~use_op
+        ~unify_cause:UnifyCause.Uncategorized
+        (Context.force_fully_resolved_tvar cx s)
+        t
 
   (******************)
 
@@ -7718,7 +7743,7 @@ struct
     | AnyT _ -> unify_any
     | _ -> true
 
-  and __unify cx ~use_op ~unify_any t1 t2 trace =
+  and __unify cx ~use_op ~unify_cause ~unify_any t1 t2 trace =
     print_unify_types_if_verbose cx trace (t1, t2);
     (* If the type is the same type or we have already seen this type pair in our
      * cache then do not continue. *)
@@ -7727,7 +7752,67 @@ struct
     else (
       (* limit recursion depth *)
       RecursionCheck.check cx trace;
-      __unify_inner cx ~use_op ~unify_any t1 t2 trace
+
+      if
+        Context.enable_invariant_subtyping_error_message_improvement cx
+        && unify_cause <> UnifyCause.Uncategorized
+        && (not (Speculation.speculating cx))
+        && (not (TvarVisitors.has_unresolved_tvars cx t1))
+        && not (TvarVisitors.has_unresolved_tvars cx t2)
+      then
+        try SpeculationKit.try_unify cx trace t1 use_op t2 with
+        | Flow_js_utils.SpeculationSingletonError _ ->
+          let genv = Ty_normalizer_debug.mk_default_genv ~cx in
+          let type_to_desc t =
+            match Ty_normalizer_debug.from_type genv t with
+            | Error _ -> Error (desc_of_t t)
+            | Ok elt ->
+              (match Ty_utils.typify_elt elt with
+              | None -> Error (desc_of_t t)
+              | Some t -> Ok t)
+          in
+          let explanation =
+            let open Flow_intermediate_error_types in
+            match unify_cause with
+            | UnifyCause.MutableArray { upper_array_reason } ->
+              Some (ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason })
+            | UnifyCause.MutableProperty
+                { lower_obj_t; upper_obj_t; upper_object_reason; property_name } ->
+              let lower_obj_desc = type_to_desc lower_obj_t in
+              let upper_obj_desc = type_to_desc upper_obj_t in
+              let lower_obj_loc = loc_of_t lower_obj_t in
+              let upper_obj_loc = loc_of_t upper_obj_t in
+              Some
+                (ExplanationInvariantSubtypingDueToMutableProperty
+                   {
+                     lower_obj_loc;
+                     upper_obj_loc;
+                     lower_obj_desc;
+                     upper_obj_desc;
+                     upper_object_reason;
+                     property_name;
+                   }
+                )
+            | UnifyCause.Uncategorized -> None
+          in
+          let lower_desc = type_to_desc t1 in
+          let upper_desc = type_to_desc t2 in
+          let lower_loc =
+            match t1 with
+            | OpenT (r, id) ->
+              (match merge_tvar_opt cx r id with
+              | Some t -> loc_of_t t
+              | None -> loc_of_reason r)
+            | _ -> loc_of_t t1
+          in
+          let upper_loc = loc_of_t t2 in
+          add_output
+            cx
+            (Error_message.EInvariantSubtypingWithUseOp
+               { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+            )
+      else
+        __unify_inner cx ~use_op ~unify_any t1 t2 trace
     )
 
   (** Should only be called by __unify *)
@@ -7818,7 +7903,7 @@ struct
                      use_op;
                    }
                 );
-            rec_unify cx trace ~use_op t1 t2;
+            rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2;
             n := !n + 1
           | _ -> ())
         (elements1, elements2)
@@ -7848,12 +7933,14 @@ struct
             trace
             lk
             uk
+            ~unify_cause:UnifyCause.Uncategorized
             ~use_op:(Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op));
           rec_unify
             cx
             trace
             lv
             uv
+            ~unify_cause:UnifyCause.Uncategorized
             ~use_op:
               (Frame
                  (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
@@ -7909,18 +7996,26 @@ struct
         cx
         trace
         ~use_op
+        ~unify_cause:UnifyCause.Uncategorized
         (subtype_this_of_function funtype1)
         (subtype_this_of_function funtype2);
       List.iter2
-        (fun (_, t1) (_, t2) -> rec_unify cx trace ~use_op t1 t2)
+        (fun (_, t1) (_, t2) ->
+          rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2)
         funtype1.params
         funtype2.params;
-      rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
+      rec_unify
+        cx
+        trace
+        ~use_op
+        ~unify_cause:UnifyCause.Uncategorized
+        funtype1.return_t
+        funtype2.return_t
     | ( TypeAppT { reason = _; use_op = _; type_ = c1; targs = ts1; from_value = fv1; use_desc = _ },
         TypeAppT { reason = _; use_op = _; type_ = c2; targs = ts2; from_value = fv2; use_desc = _ }
       )
       when c1 = c2 && List.length ts1 = List.length ts2 && fv1 = fv2 ->
-      List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
+      List.iter2 (rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized) ts1 ts2
     | (AnnotT (_, OpenT (_, id1), _), AnnotT (_, OpenT (_, id2), _)) -> begin
       (* It is tempting to unify the tvars here, but that would be problematic. These tvars should
          eventually resolve to the type definitions that these annotations reference. By unifying
@@ -7970,14 +8065,14 @@ struct
     | ( Field { type_ = t1; polarity = Polarity.Neutral; _ },
         Field { type_ = t2; polarity = Polarity.Neutral; _ }
       ) ->
-      rec_unify cx trace ~use_op t1 t2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
     | _ ->
       (* Otherwise, unify read/write sides separately. *)
       (match (Property.read_t p1, Property.read_t p2) with
-      | (Some t1, Some t2) -> rec_unify cx trace ~use_op t1 t2
+      | (Some t1, Some t2) -> rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
       | _ -> ());
       (match (Property.write_t p1, Property.write_t p2) with
-      | (Some t1, Some t2) -> rec_unify cx trace ~use_op t1 t2
+      | (Some t1, Some t2) -> rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
       | _ -> ());
 
       (* Error if polarity is not compatible both ways. *)
@@ -8044,14 +8139,16 @@ struct
   and array_unify cx trace ~use_op = function
     | ([], e1, [], e2) ->
       (* general element1 = general element2 *)
-      rec_unify cx trace ~use_op e1 e2
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized e1 e2
     | (ts1, _, [], e2)
     | ([], e2, ts1, _) ->
       (* specific element1 = general element2 *)
-      List.iter (fun t1 -> rec_unify cx trace ~use_op t1 e2) ts1
+      List.iter
+        (fun t1 -> rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 e2)
+        ts1
     | (t1 :: ts1, e1, t2 :: ts2, e2) ->
       (* specific element1 = specific element2 *)
-      rec_unify cx trace ~use_op t1 t2;
+      rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2;
       array_unify cx trace ~use_op (ts1, e1, ts2, e2)
 
   (*******************************************************************)
@@ -9171,21 +9268,21 @@ struct
 
   (* Wrapper functions around __unify that manage traces. Use these functions for
      all recursive calls in the implementation of __unify. *)
-  and rec_unify cx trace ~use_op ?(unify_any = false) t1 t2 =
-    __unify cx ~use_op ~unify_any t1 t2 (DepthTrace.rec_trace trace)
+  and rec_unify cx trace ~use_op ~unify_cause ?(unify_any = false) t1 t2 =
+    __unify cx ~use_op ~unify_any ~unify_cause t1 t2 (DepthTrace.rec_trace trace)
 
-  and unify_opt cx ?trace ~use_op ?(unify_any = false) t1 t2 =
+  and unify_opt cx ?trace ~use_op ~unify_cause ?(unify_any = false) t1 t2 =
     let trace =
       match trace with
       | None -> DepthTrace.unit_trace
       | Some trace -> DepthTrace.rec_trace trace
     in
-    __unify cx ~use_op ~unify_any t1 t2 trace
+    __unify cx ~use_op ~unify_cause ~unify_any t1 t2 trace
 
   (* Externally visible function for unification. *)
   (* Calls internal entry point and traps runaway recursion. *)
-  and unify cx ?(use_op = unknown_use) t1 t2 =
-    try unify_opt cx ~use_op ~unify_any:true t1 t2 with
+  and unify cx ?(use_op = unknown_use) ~unify_cause t1 t2 =
+    try unify_opt cx ~use_op ~unify_cause ~unify_any:true t1 t2 with
     | RecursionCheck.LimitExceeded ->
       (* log and continue *)
       let reasons = FlowError.ordered_reasons (reason_of_t t1, reason_of_t t2) in
@@ -9225,7 +9322,8 @@ struct
               match polarity with
               | Polarity.Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
               | Polarity.Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-              | Polarity.Neutral -> rec_unify cx trace ~use_op t1 t2
+              | Polarity.Neutral ->
+                rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
             in
             match (default, targs) with
             | (None, []) ->
@@ -9345,6 +9443,8 @@ let get_builtin_react_type cx reason ?use_desc purpose =
 let reposition_reason cx reason ?use_desc t = reposition_reason cx reason ?use_desc t
 
 let filter_optional cx reason opt_t = filter_optional cx reason opt_t
+
+let unify cx ?use_op t1 t2 = unify cx ?use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
 
 let reposition cx loc t = reposition cx loc ?desc:None ?annot_loc:None t
 

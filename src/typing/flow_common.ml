@@ -41,17 +41,20 @@ module type BASE = sig
     Context.t ->
     Type.DepthTrace.t ->
     use_op:Type.use_op ->
+    unify_cause:Type.UnifyCause.t ->
     ?unify_any:bool ->
     Type.t ->
     Type.t ->
     unit
 
-  val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
+  val unify :
+    Context.t -> ?use_op:Type.use_op -> unify_cause:Type.UnifyCause.t -> Type.t -> Type.t -> unit
 
   val unify_opt :
     Context.t ->
     ?trace:Type.DepthTrace.t ->
     use_op:Type.use_op ->
+    unify_cause:Type.UnifyCause.t ->
     ?unify_any:bool ->
     Type.t ->
     Type.t ->

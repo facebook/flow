@@ -213,6 +213,15 @@ type 'loc explanation =
       casting_syntax: Options.CastingSyntax.t;
     }
   | ExplanationFunctionsWithStaticsToObject
+  | ExplanationInvariantSubtypingDueToMutableArray of { upper_array_reason: 'loc virtual_reason }
+  | ExplanationInvariantSubtypingDueToMutableProperty of {
+      lower_obj_loc: 'loc;
+      upper_obj_loc: 'loc;
+      lower_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_object_reason: 'loc virtual_reason;
+      property_name: string option;
+    }
   | ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping
@@ -655,6 +664,12 @@ type 'loc message =
   | MessageIncompatibleGeneral of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleDueToInvariantSubtyping of {
+      lower_loc: 'loc;
+      upper_loc: 'loc;
+      lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_desc: (Ty.t, 'loc virtual_reason_desc) result;
     }
   | MessageIncompatibleMappedTypeKey of {
       source_type: 'loc virtual_reason;

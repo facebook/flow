@@ -1622,6 +1622,19 @@ let dump_error_message =
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
+    | EInvariantSubtypingWithUseOp
+        { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation = _ } ->
+      let string_of_desc = function
+        | Ok ty -> Ty.show ty
+        | Error desc -> Reason.string_of_desc desc
+      in
+      spf
+        "EInvariantSubtypingWithUseOp { lower_loc = %s; upper_loc = %s; lower_desc = %s; upper_desc = %s; use_op = %s }"
+        (string_of_aloc lower_loc)
+        (string_of_aloc upper_loc)
+        (string_of_desc lower_desc)
+        (string_of_desc upper_desc)
+        (string_of_use_op use_op)
     | EUnsupportedImplements reason -> spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
     | ENotAReactComponent { reason; use_op } ->
       spf

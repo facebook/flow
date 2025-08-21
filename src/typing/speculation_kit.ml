@@ -41,6 +41,8 @@ module type OUTPUT = sig
    *)
   val try_singleton_throw_on_failure :
     Context.t -> Type.DepthTrace.t -> Type.t -> Type.use_t -> unit
+
+  val try_unify : Context.t -> Type.DepthTrace.t -> Type.t -> Type.use_op -> Type.t -> unit
 end
 
 module Make (Flow : INPUT) : OUTPUT = struct
@@ -61,6 +63,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         use_t: Type.use_t;
       }
     | SingletonCase of Type.t * Type.use_t
+    | SingletonUnifyCase of Type.t * Type.use_op * Type.t
     | CustomCases of {
         use_op: use_op option;
         no_match_error_loc: ALoc.t;
@@ -123,6 +126,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
   type case_spec =
     | CustomCase of (unit -> unit)
     | FlowCase of Type.t * Type.use_t
+    | UnifyCase of Type.t * Type.use_op * Type.t
 
   (** Entry points into the process of trying different branches of union and
       intersection types.
@@ -200,6 +204,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   and try_singleton_throw_on_failure cx trace t u =
     speculative_matches cx trace (SingletonCase (t, u))
+
+  and try_unify cx trace t1 use_op t2 =
+    speculative_matches cx trace (SingletonUnifyCase (t1, use_op, t2))
 
   (************************)
   (* Speculative matching *)
@@ -280,6 +287,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               ) ->
             CallInformationForSynthesisLogging { lhs_t; call_callee_hint_ref }
           | FlowCase _
+          | UnifyCase _
           | CustomCase _ ->
             NoInformationForSynthesisLogging
         in
@@ -289,6 +297,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           speculative_match cx { speculation_id; case } (fun () ->
               match case_spec with
               | FlowCase (l, u) -> rec_flow cx trace (l, u)
+              | UnifyCase (t1, use_op, t2) ->
+                rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized t1 t2
               | CustomCase f -> f ()
           )
         in
@@ -316,7 +326,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (Error_message.EUnionSpeculationFailed
              { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches = msgs }
           )
-      | SingletonCase _ ->
+      | SingletonCase _
+      | SingletonUnifyCase _ ->
         (match msgs with
         | [msg] -> raise (SpeculationSingletonError msg)
         | _ ->
@@ -373,6 +384,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ls
     | SingletonCase (l, u) ->
       [(0, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))]
+    | SingletonUnifyCase (t1, use_op, t2) -> [(0, UnifyCase (t1, Op (Speculation use_op), t2))]
     | CustomCases { use_op = _; no_match_error_loc = _; cases } ->
       Base.List.mapi cases ~f:(fun i f -> (i, CustomCase f))
 
@@ -477,7 +489,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       result
     | IntersectionCases _
     | CustomCases _
-    | SingletonCase _ ->
+    | SingletonCase _
+    | SingletonUnifyCase _ ->
       false
 
   and shortcut_enum cx trace reason_op use_op l rep =

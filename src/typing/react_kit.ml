@@ -366,7 +366,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         match pole with
         | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
         | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)
-        | Polarity.Neutral -> rec_unify cx trace ~use_op tout config
+        | Polarity.Neutral ->
+          rec_unify cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized tout config
       end
     | _ ->
       let reason_component = reason_of_t component in

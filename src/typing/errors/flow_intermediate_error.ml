@@ -896,6 +896,18 @@ let rec make_intermediate_error :
         | _ -> make_error lower (MessageIncompatibleGeneral { lower; upper })
       end)
   in
+  (* An error between two incompatible types due to invariant subtyping.
+   *
+   * This is a specialization of mk_incompatible_use_error. *)
+  let mk_incompatible_invariant_subtyping_error
+      ?additional_explanation ~lower_loc ~upper_loc ~lower_desc ~upper_desc use_op =
+    let make_error loc message =
+      mk_use_op_error loc use_op ?explanation:additional_explanation message
+    in
+    make_error
+      lower_loc
+      (MessageIncompatibleDueToInvariantSubtyping { lower_loc; upper_loc; lower_desc; upper_desc })
+  in
   let mk_prop_missing_in_lookup_error loc prop lower use_op suggestion reason_indexer =
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
     mk_use_op_error
@@ -1018,8 +1030,19 @@ let rec make_intermediate_error :
       mk_prop_polarity_mismatch_error reason_lower reason_upper props use_op
     | (None, IncompatibleUse { loc; upper_kind; reason_lower; reason_upper; use_op }) ->
       mk_incompatible_use_error loc upper_kind reason_lower reason_upper use_op
-    | (None, Incompatible { reason_lower; reason_upper; use_op; explanation }) ->
+    | (None, IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation }) ->
       mk_incompatible_error ?additional_explanation:explanation reason_lower reason_upper use_op
+    | ( None,
+        IncompatibleInvariantSubtyping
+          { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+      ) ->
+      mk_incompatible_invariant_subtyping_error
+        ?additional_explanation:explanation
+        ~lower_loc
+        ~upper_loc
+        ~lower_desc
+        ~upper_desc
+        use_op
     | ( None,
         IncompatibleEnum
           { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
@@ -1063,6 +1086,20 @@ let to_printable_error :
   let no_desc_ref = Flow_errors_utils.Friendly.no_desc_ref_map loc_of_aloc in
   let hardcoded_string_desc_ref desc loc =
     Flow_errors_utils.Friendly.hardcoded_string_desc_ref desc (loc_of_aloc loc)
+  in
+  let ref_of_ty_or_desc loc desc =
+    match desc with
+    | Ok ty ->
+      let ty_str = Ty_printer.string_of_t_single_line ~ts_syntax:true ty in
+      let ty_str =
+        if Base.String.length ty_str > 100 then
+          String.sub ty_str 0 100 ^ "..."
+        else
+          ty_str
+      in
+      let desc = spf "`%s`" ty_str in
+      hardcoded_string_desc_ref desc loc
+    | Error desc -> ref (mk_reason desc loc)
   in
   let desc = Friendly.desc_of_reason_desc in
   let msg_export prefix export_name =
@@ -1130,6 +1167,50 @@ let to_printable_error :
         text " or a reference to a component-syntax component";
       ]
     | ExplanationIncompatibleReactDeepReadOnly -> [text "Consider using "; code "React.Immutable<>"]
+    | ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason } ->
+      [
+        text "The above-mentioned two types must be the same because arrays are invariantly typed. ";
+        text "If you do not want this behavior, make ";
+        ref upper_array_reason;
+        text " a ";
+        code "$ReadOnlyArray";
+        text ". ";
+        text "See ";
+        text
+          "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
+      ]
+    | ExplanationInvariantSubtypingDueToMutableProperty
+        {
+          lower_obj_loc;
+          upper_obj_loc;
+          lower_obj_desc;
+          upper_obj_desc;
+          upper_object_reason;
+          property_name;
+        } ->
+      let prop =
+        match property_name with
+        | None -> [text "the indexer"]
+        | Some name -> [text "property "; code name]
+      in
+      [text "The above-mentioned two types must be the same because "]
+      @ prop
+      @ [
+          text " is invariantly typed. To fix the error,\n- Either make ";
+          ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+          text " and ";
+          ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+          text " exactly the same\n- Or make ";
+        ]
+      @ prop
+      @ [
+          text " in ";
+          ref upper_object_reason;
+          text " readonly. ";
+          text "See ";
+          text
+            "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
+        ]
     | ExplanationTypeGuardCompatibility ->
       [text "A user defined type guard needs to be compatible with its parameter's type"]
     | ExplanationTypeGuardPositiveConsistency
@@ -2877,6 +2958,12 @@ let to_printable_error :
       ]
     | MessageIncompatibleGeneral { lower; upper } ->
       [ref lower; text " is incompatible with "; ref upper]
+    | MessageIncompatibleDueToInvariantSubtyping { lower_loc; upper_loc; lower_desc; upper_desc } ->
+      [
+        ref_of_ty_or_desc lower_loc lower_desc;
+        text " is not exactly the same as ";
+        ref_of_ty_or_desc upper_loc upper_desc;
+      ]
     | MessageIncompatibleMappedTypeKey { source_type; mapped_type } ->
       [
         ref source_type;

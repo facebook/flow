@@ -3672,6 +3672,18 @@ module AConstraint = struct
     | Annot_op d -> d.dependents <- f d.dependents
 end
 
+module UnifyCause = struct
+  type t =
+    | MutableArray of { upper_array_reason: Reason.t }
+    | MutableProperty of {
+        lower_obj_t: TypeTerm.t;
+        upper_obj_t: TypeTerm.t;
+        upper_object_reason: Reason.t;
+        property_name: string option;
+      }
+    | Uncategorized
+end
+
 module TypeContext = struct
   type t = {
     (* map from tvar ids to nodes (type info structures) *)

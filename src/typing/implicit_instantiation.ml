@@ -1558,7 +1558,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
           let generalized' =
             Instantiation_utils.ImplicitTypeArgument.mk_targ cx tparam reason_op reason_tapp
           in
-          FlowJs.rec_unify cx trace ~use_op ~unify_any:true generalized generalized';
+          FlowJs.rec_unify
+            cx
+            trace
+            ~use_op
+            ~unify_cause:UnifyCause.Uncategorized
+            ~unify_any:true
+            generalized
+            generalized';
           { Generalized_targ.tparam; inferred; generalized = generalized' })
         subst_map
     in

@@ -170,7 +170,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let return trace cx use_op options t tout =
         match options with
         | ReactConfigMerge Polarity.Neutral ->
-          rec_unify cx trace ~use_op:(use_op Polarity.Neutral) t tout
+          rec_unify
+            cx
+            trace
+            ~use_op:(use_op Polarity.Neutral)
+            ~unify_cause:UnifyCause.Uncategorized
+            t
+            tout
         | ReactConfigMerge Polarity.Negative ->
           rec_flow_t cx trace ~use_op:(use_op Polarity.Negative) (tout, t)
         | ReactConfigMerge Polarity.Positive ->

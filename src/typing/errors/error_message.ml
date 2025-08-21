@@ -355,6 +355,14 @@ and 'loc t' =
       reason_upper: 'loc virtual_reason;
       explanation: 'loc explanation option;
     }
+  | EInvariantSubtypingWithUseOp of {
+      use_op: 'loc virtual_use_op;
+      lower_loc: 'loc;
+      upper_loc: 'loc;
+      lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      explanation: 'loc explanation option;
+    }
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
       reason: 'loc virtual_reason;
@@ -879,6 +887,27 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
   | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
+  | ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason } ->
+    ExplanationInvariantSubtypingDueToMutableArray
+      { upper_array_reason = map_reason upper_array_reason }
+  | ExplanationInvariantSubtypingDueToMutableProperty
+      {
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        upper_object_reason;
+        property_name;
+      } ->
+    ExplanationInvariantSubtypingDueToMutableProperty
+      {
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_obj_desc;
+        upper_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_obj_desc;
+        upper_object_reason = map_reason upper_object_reason;
+        property_name;
+      }
   | ExplanationMultiplatform -> ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
@@ -1131,6 +1160,17 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
+        explanation = Base.Option.map ~f:(map_loc_of_explanation f) explanation;
+      }
+  | EInvariantSubtypingWithUseOp
+      { use_op; lower_loc; lower_desc; upper_loc; upper_desc; explanation } ->
+    EInvariantSubtypingWithUseOp
+      {
+        use_op = map_use_op use_op;
+        lower_loc = f lower_loc;
+        lower_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_desc;
+        upper_loc = f upper_loc;
+        upper_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_desc;
         explanation = Base.Option.map ~f:(map_loc_of_explanation f) explanation;
       }
   | ENotAReactComponent { reason; use_op } ->
@@ -1695,6 +1735,7 @@ let util_use_op_of_msg nope util = function
   | EFunctionIncompatibleWithIndexer (_, use_op) -> util use_op
   | EInvalidObjectKit { use_op; _ } -> util use_op
   | EIncompatibleWithUseOp { use_op; _ } -> util use_op
+  | EInvariantSubtypingWithUseOp { use_op; _ } -> util use_op
   | EEnumIncompatible { use_op; _ } -> util use_op
   | ENotAReactComponent { use_op; _ } -> util use_op
   | EFunctionCallExtraArg (_, _, _, use_op) -> util use_op
@@ -2139,6 +2180,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EFunctionCallExtraArg _
   | ENotAReactComponent _
   | EIncompatibleWithUseOp _
+  | EInvariantSubtypingWithUseOp _
   | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
@@ -2337,9 +2379,17 @@ type 'loc friendly_message_recipe =
       use_op: 'loc Type.virtual_use_op;
       branches: 'loc t' list;
     }
-  | Incompatible of {
+  | IncompatibleSubtyping of {
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+      explanation: 'loc explanation option;
+    }
+  | IncompatibleInvariantSubtyping of {
+      lower_loc: 'loc;
+      upper_loc: 'loc;
+      lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_desc: (Ty.t, 'loc virtual_reason_desc) result;
       use_op: 'loc Type.virtual_use_op;
       explanation: 'loc explanation option;
     }
@@ -2402,7 +2452,7 @@ let friendly_message_of_msg = function
     Speculation { loc; use_op = Base.Option.value ~default:unknown_use use_op; branches }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     if branches = [] then
-      Incompatible { reason_lower; reason_upper; use_op; explanation = None }
+      IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation = None }
     else
       Speculation { loc = loc_of_reason reason_upper; use_op; branches }
   | EIncompatibleProp { prop; reason_prop; reason_obj; special = _; use_op } ->
@@ -2474,13 +2524,13 @@ let friendly_message_of_msg = function
     Normal (MessageAnyValueUsedAsType (desc_of_reason reason_use))
   | EValueUsedAsType { reason_use } -> Normal (MessageValueUsedAsType (desc_of_reason reason_use))
   | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
+    IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedNumberLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
+    IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedBooleanLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
+    IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation = None }
   | EExpectedBigIntLit { reason_lower; reason_upper; use_op } ->
-    Incompatible { reason_lower; reason_upper; use_op; explanation = None }
+    IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation = None }
   | EPropNotFoundInLookup { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
     PropMissingInLookup
       {
@@ -2837,7 +2887,11 @@ let friendly_message_of_msg = function
     Normal (MessageCannotAddComputedPropertyDueToPotentialOverwrite { key_loc; overwritten_locs })
   | EInvalidLHSInAssignment _ -> Normal MessageCannotAssignToInvalidLHS
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation } ->
-    Incompatible { reason_lower; reason_upper; use_op; explanation }
+    IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation }
+  | EInvariantSubtypingWithUseOp
+      { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
+    IncompatibleInvariantSubtyping
+      { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
   | EUnsupportedImplements reason ->
     Normal (MessageCannotImplementNonInterface (desc_of_reason reason))
   | ENotAReactComponent { reason; use_op } ->
@@ -3406,7 +3460,8 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithExact (_, _, UnexpectedIndexer) -> Some IncompatibleIndexer
   | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EEnumIncompatible { use_op; _ }
-  | EIncompatibleWithUseOp { use_op; _ } ->
+  | EIncompatibleWithUseOp { use_op; _ }
+  | EInvariantSubtypingWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
