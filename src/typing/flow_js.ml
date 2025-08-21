@@ -7762,7 +7762,11 @@ struct
       then
         try SpeculationKit.try_unify cx trace t1 use_op t2 with
         | Flow_js_utils.SpeculationSingletonError _ ->
-          let genv = Ty_normalizer_no_flow.mk_default_genv ~cx in
+          let genv =
+            Ty_normalizer_no_flow.mk_default_genv
+              ~options:Ty_normalizer_env.{ default_options with optimize_types = false }
+              cx
+          in
           let type_to_desc t =
             match Ty_normalizer_no_flow.from_type genv t with
             | Error _ -> Error (desc_of_t t)

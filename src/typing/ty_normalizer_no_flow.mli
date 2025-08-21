@@ -9,7 +9,7 @@ open Ty_normalizer_env
 
 val from_type : genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result
 
-val mk_default_genv : cx:Context.t -> genv
+val mk_default_genv : ?options:Ty_normalizer_env.options -> Context.t -> genv
 
 (**
  * A debugging facility for getting quick string representations of Type.t.

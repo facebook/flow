@@ -48,18 +48,17 @@ let mk_genv ~options ~cx ~typed_ast_opt ~file_sig =
   in
   { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names }
 
-let mk_default_genv ~cx =
+let mk_default_genv ?(options = Ty_normalizer_env.default_options) cx =
   let typed_ast =
     ( ALoc.none,
       { Flow_ast.Program.statements = []; interpreter = None; comments = None; all_comments = [] }
     )
   in
   let file_sig = File_sig.empty in
-  let options = Ty_normalizer_env.default_options in
   mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
 
 let debug_string_of_t cx t =
-  let genv = mk_default_genv ~cx in
+  let genv = mk_default_genv cx in
   match from_type genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
   | Ok elt ->
