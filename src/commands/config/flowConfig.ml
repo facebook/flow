@@ -60,6 +60,7 @@ module Opts = struct
     constant_condition_function_includes: string list;
     invalid_comparison_general_includes: string list;
     invalid_comparison_null_check_includes: string list;
+    invariant_subtyping_error_message_improvement: bool;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -211,6 +212,7 @@ module Opts = struct
       constant_condition_function_includes = [];
       invalid_comparison_general_includes = [];
       invalid_comparison_null_check_includes = [];
+      invariant_subtyping_error_message_improvement = false;
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1152,6 +1154,9 @@ module Opts = struct
               })
       );
       ("experimental.error_code_migration", enum [("new", ())] (fun opts _v -> Ok opts));
+      ( "experimental.invariant_subtyping_error_message_improvement",
+        boolean (fun opts v -> Ok { opts with invariant_subtyping_error_message_improvement = v })
+      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -2092,6 +2097,9 @@ let constant_condition_function_includes c = c.options.Opts.constant_condition_f
 let invalid_comparison_general_includes c = c.options.Opts.invalid_comparison_general_includes
 
 let invalid_comparison_null_check_includes c = c.options.Opts.invalid_comparison_null_check_includes
+
+let invariant_subtyping_error_message_improvement c =
+  c.options.Opts.invariant_subtyping_error_message_improvement
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 

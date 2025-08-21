@@ -53,6 +53,7 @@ type metadata = {
   constant_condition_function_includes: string list;
   invalid_comparison_general_includes: string list;
   invalid_comparison_null_check_includes: string list;
+  invariant_subtyping_error_message_improvement: bool;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -313,6 +314,8 @@ let metadata_of_options options =
     constant_condition_function_includes = Options.constant_condition_function_includes options;
     invalid_comparison_general_includes = Options.invalid_comparison_general_includes options;
     invalid_comparison_null_check_includes = Options.invalid_comparison_null_check_includes options;
+    invariant_subtyping_error_message_improvement =
+      Options.invariant_subtyping_error_message_improvement options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -605,6 +608,9 @@ let enable_invalid_comparison_null_check cx =
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+
+let enable_invariant_subtyping_error_message_improvement cx =
+  cx.metadata.invariant_subtyping_error_message_improvement
 
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration

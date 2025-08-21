@@ -170,6 +170,7 @@ type t = {
   opt_constant_condition_function_includes: string list;
   opt_invalid_comparison_general_includes: string list;
   opt_invalid_comparison_null_check_includes: string list;
+  opt_invariant_subtyping_error_message_improvement: bool;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -281,6 +282,9 @@ let constant_condition_null_void_includes opts = opts.opt_constant_condition_nul
 let invalid_comparison_general_includes opts = opts.opt_invalid_comparison_general_includes
 
 let invalid_comparison_null_check_includes opts = opts.opt_invalid_comparison_null_check_includes
+
+let invariant_subtyping_error_message_improvement opts =
+  opts.opt_invariant_subtyping_error_message_improvement
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 
