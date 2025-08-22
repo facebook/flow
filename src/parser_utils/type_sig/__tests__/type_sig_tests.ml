@@ -200,7 +200,6 @@ let parse_options ~module_ref_prefix =
   Some { default_parse_options with components = true; enums = true; module_ref_prefix }
 
 let sig_options
-    ?(suppress_types = SSet.empty)
     ?(munge = false)
     ?(facebook_keyMirror = false)
     ?facebook_fbt
@@ -217,8 +216,7 @@ let sig_options
     ?(locs_to_dirtify = [])
     () =
   {
-    Type_sig_options.suppress_types;
-    munge;
+    Type_sig_options.munge;
     facebook_keyMirror;
     facebook_fbt;
     max_literal_len;

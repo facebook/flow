@@ -192,8 +192,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let t_out = Tast_utils.error_mapper#type_ t_in |> snd in
     ((loc, AnyT.at (AnyError None) loc), t_out)
 
-  let is_suppress_type cx type_name = SSet.mem type_name (Context.suppress_types cx)
-
   let check_type_arg_arity cx loc t_ast params n f =
     match params with
     | None ->
@@ -720,12 +718,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             Flow_js_utils.add_output cx (Error_message.EUnexpectedThisType loc);
             Tast_utils.error_mapper#type_ t_ast
           )
-        (* TODO move these to type aliases once optional type args
-           work properly in type aliases: #7007731 *)
-        | type_name when is_suppress_type cx type_name ->
-          (* Optional type params are info-only, validated then forgotten. *)
-          let (_, targs) = convert_type_params () in
-          reconstruct_ast (AnyT.at AnnotatedAny loc) targs
         (* in-scope type vars *)
         | _ when Subst_name.Map.mem (Subst_name.Name name) tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->

@@ -2433,7 +2433,6 @@ and maybe_special_generic opts scope tbls xs loc g =
 and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   let open Ast.Type.TypeArgs in
   function
-  | name when SSet.mem name opts.suppress_types -> Annot (Any loc)
   | name when SSet.mem name xs ->
     (* TODO: error if targs <> None *)
     Annot (Bound { ref_loc; name })

@@ -6,7 +6,6 @@
  *)
 
 type t = {
-  suppress_types: SSet.t;
   munge: bool;
   facebook_keyMirror: bool;
   facebook_fbt: string option;
@@ -52,7 +51,6 @@ let of_options options docblock locs_to_dirtify file =
     relay_integration_module_prefix;
     locs_to_dirtify;
     hook_compatibility = Options.hook_compatibility_in_file options file;
-    suppress_types = Options.suppress_types options;
     facebook_fbt = Options.facebook_fbt options;
     max_literal_len = Options.max_literal_length options;
     exact_by_default = Options.exact_by_default options;
@@ -74,7 +72,6 @@ let builtin_options options =
     facebook_keyMirror;
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
-    suppress_types = Options.suppress_types options;
     facebook_fbt = Options.facebook_fbt options;
     max_literal_len = Options.max_literal_length options;
     exact_by_default = Options.exact_by_default options;

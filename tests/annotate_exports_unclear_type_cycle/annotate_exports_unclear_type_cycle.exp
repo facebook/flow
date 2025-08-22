@@ -8,7 +8,7 @@ import {f} from './cycle2';
 
 declare export function g(): any;
 
-export default f() as any; // any okay
+export default f() as $FlowFixMe; // annotated with $FlowFixMe because f has an annotated $FlowFixMe return
 
 >>> ./cycle2.js
 // @flow strict-local
@@ -35,7 +35,7 @@ import {g} from './other_cycle1';
 
 declare export function f(): any;
 
-export default g() as any; // any okay
+export default g() as $FlowFixMe; // annotated with $FlowFixMe because g has an annotated $FlowFixMe return
 
 >>> Launching report...
 
@@ -73,7 +73,7 @@ import {f} from './cycle2';
 
 declare export function g(): any;
 
-export default f() as any; // any okay
+export default f() as $FlowFixMe; // annotated with $FlowFixMe because f has an annotated $FlowFixMe return
 
 >>> ./cycle2.js
 // @flow strict-local
@@ -100,7 +100,7 @@ import {g} from './other_cycle1';
 
 declare export function f(): any;
 
-export default g() as any; // any okay
+export default g() as $FlowFixMe; // annotated with $FlowFixMe because g has an annotated $FlowFixMe return
 
 
 === Diff between codemod-ed & autofix-ed ===

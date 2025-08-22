@@ -130,7 +130,6 @@ type metadata = {
   root: File_path.t;
   strict_es6_import_export: bool;
   strip_root: bool;
-  suppress_types: SSet.t;
   ts_syntax: bool;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
@@ -310,8 +309,6 @@ val should_ignore_non_literal_requires : t -> bool
 val should_munge_underscores : t -> bool
 
 val should_strip_root : t -> bool
-
-val suppress_types : t -> SSet.t
 
 val ts_syntax : t -> bool
 

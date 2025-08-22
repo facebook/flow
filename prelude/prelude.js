@@ -98,3 +98,9 @@ declare module 'react' {
   type Node = any;
   type RefSetter<T> = any;
 }
+
+/**
+ * You can use this type instead of `any` to avoid triggering `unclear-type` error.
+ * However, it's still a clear signal that you should use a better type.
+ */
+type $FlowFixMe = any;

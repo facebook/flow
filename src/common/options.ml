@@ -418,8 +418,6 @@ let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
 let strict_mode opts = opts.opt_strict_mode
 
-let suppress_types _opts = SSet.singleton "$FlowFixMe"
-
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax

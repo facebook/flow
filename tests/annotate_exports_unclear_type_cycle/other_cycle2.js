@@ -4,4 +4,4 @@ import {g} from './other_cycle1';
 
 declare export function f(): any;
 
-export default g(); // any okay
+export default g(); // annotated with $FlowFixMe because g has an annotated $FlowFixMe return

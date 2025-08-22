@@ -69,7 +69,6 @@ let load_lib_files files =
       facebook_keyMirror = false;
       enable_relay_integration = false;
       relay_integration_module_prefix = None;
-      suppress_types = SSet.empty;
       facebook_fbt = None;
       max_literal_len = 100;
       exact_by_default = true;
@@ -150,7 +149,6 @@ let stub_metadata ~root ~checked =
     root;
     strict_es6_import_export = false;
     strip_root = true;
-    suppress_types = SSet.of_list ["$FlowFixMe"];
     ts_syntax = true;
     assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;

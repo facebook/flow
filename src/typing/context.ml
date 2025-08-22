@@ -80,7 +80,6 @@ type metadata = {
   root: File_path.t;
   strict_es6_import_export: bool;
   strip_root: bool;
-  suppress_types: SSet.t;
   ts_syntax: bool;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
@@ -345,7 +344,6 @@ let metadata_of_options options =
     root = Options.root options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strip_root = Options.should_strip_root options;
-    suppress_types = Options.suppress_types options;
     ts_syntax = Options.ts_syntax options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
@@ -727,8 +725,6 @@ let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requi
 let should_munge_underscores cx = cx.metadata.munge_underscores
 
 let should_strip_root cx = cx.metadata.strip_root
-
-let suppress_types cx = cx.metadata.suppress_types
 
 let ts_syntax cx = cx.metadata.ts_syntax
 
