@@ -1292,22 +1292,6 @@ module Opts = struct
           (fun opts v ->
             Ok { opts with supported_operating_systems = v :: opts.supported_operating_systems })
       );
-      ( "unsupported.windows",
-        boolean (fun opts v ->
-            if Sys.win32 && v then
-              Error "Windows is not supported under this flowconfig."
-            else
-              Ok opts
-        )
-      );
-      ( "unsuppported.windows",
-        boolean (fun opts v ->
-            if Sys.win32 && v then
-              Error "Windows is not supported under this flowconfig."
-            else
-              Ok opts
-        )
-      );
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("vpn_less", boolean (fun opts v -> Ok { opts with vpn_less = v }));
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
