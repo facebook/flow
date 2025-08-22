@@ -13,7 +13,8 @@ open Insert_type_utils
 
 (* Adding annotation to the object declaration can be potentially helpful, if there is an error
    * at the reference location of the object literal declaration. *)
-let compute_annotation_sites_for_potential_fixes ~reader cx ast =
+let compute_annotation_sites_for_potential_fixes ~require_suppression_with_error_code ~reader cx ast
+    =
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   let (errors, _warnings, suppressions) =
     Error_suppressions.filter_lints
@@ -27,6 +28,7 @@ let compute_annotation_sites_for_potential_fixes ~reader cx ast =
     Error_suppressions.filter_suppressed_errors
       ~root:(Context.root cx)
       ~file_options:(Some (Context.file_options cx))
+      ~require_suppression_with_error_code
       ~unsuppressable_error_codes:SSet.empty
       ~loc_of_aloc
       suppressions
@@ -201,6 +203,8 @@ let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
     method! program prog =
       let (annotation_sites_, type_error_count_) =
         compute_annotation_sites_for_potential_fixes
+          ~require_suppression_with_error_code:
+            (Options.require_suppression_with_error_code cctx.Codemod_context.Typed.options)
           ~reader:cctx.Codemod_context.Typed.reader
           cctx.Codemod_context.Typed.cx
           prog

@@ -144,6 +144,7 @@ module Opts = struct
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
     relay_integration_module_prefix_includes: string list;
+    require_suppression_with_error_code: bool;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_hash_table_pow: int;
@@ -295,6 +296,7 @@ module Opts = struct
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
+      require_suppression_with_error_code = false;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
       shm_hash_table_pow = 19;
@@ -1161,6 +1163,9 @@ module Opts = struct
       );
       ( "experimental.projects.strict_boundary.import_pattern_opt_outs",
         projects_strict_boundary_import_pattern_opt_outs_parser
+      );
+      ( "experimental.require_suppression_with_error_code",
+        boolean (fun opts v -> Ok { opts with require_suppression_with_error_code = v })
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.assert_operator", assert_operator_parser);
@@ -2112,6 +2117,8 @@ let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_
 
 let relay_integration_module_prefix_includes c =
   c.options.Opts.relay_integration_module_prefix_includes
+
+let require_suppression_with_error_code c = c.options.Opts.require_suppression_with_error_code
 
 let required_version c = c.version
 

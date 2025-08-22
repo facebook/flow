@@ -124,6 +124,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~require_suppression_with_error_code:(Options.require_suppression_with_error_code options)
       ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions
@@ -136,6 +137,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     Error_suppressions.filter_suppressed_errors
       ~root
       ~file_options
+      ~require_suppression_with_error_code:(Options.require_suppression_with_error_code options)
       ~unsuppressable_error_codes
       ~loc_of_aloc
       suppressions

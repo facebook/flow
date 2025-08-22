@@ -276,6 +276,7 @@ let in_declarations ~file_options loc =
 let check
     ~root
     ~file_options
+    ~require_suppression_with_error_code
     ~unsuppressable_error_codes
     (err : 'loc Flow_intermediate_error_types.intermediate_error)
     (suppressions : t)
@@ -287,7 +288,7 @@ let check
         let kind =
           if SSet.mem string_code unsuppressable_error_codes then
             ErrorCodeUnsuppressable
-          else if Error_codes.require_specific code then
+          else if require_suppression_with_error_code || Error_codes.require_specific code then
             ErrorCodeRequireSpecific
           else
             ErrorCodeGeneral
@@ -330,12 +331,28 @@ let universally_suppressed_codes map =
     CodeLocSet.empty
 
 let filter_suppressed_errors
-    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =
+    ~root
+    ~file_options
+    ~require_suppression_with_error_code
+    ~unsuppressable_error_codes
+    ~loc_of_aloc
+    suppressions
+    errors
+    ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
       let error = Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error in
-      match check ~root ~file_options ~unsuppressable_error_codes error suppressions unused with
+      match
+        check
+          ~root
+          ~file_options
+          ~require_suppression_with_error_code
+          ~unsuppressable_error_codes
+          error
+          suppressions
+          unused
+      with
       | None -> acc
       | Some (severity, used, unused) ->
         (match severity with
