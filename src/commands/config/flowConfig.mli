@@ -230,6 +230,8 @@ val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
 
+val only_support_flow_fixme_and_expected_error : config -> bool
+
 val opaque_type_new_bound_syntax : config -> bool
 
 val pattern_matching : config -> bool option

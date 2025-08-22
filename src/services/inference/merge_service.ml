@@ -389,6 +389,8 @@ let merge_component ~mutator ~options ~for_find_all_refs ~reader component =
           in
           let (_, suppressions, _) =
             Type_inference_js.scan_for_suppressions
+              ~only_support_flow_fixme_and_expected_error:
+                (Options.only_support_flow_fixme_and_expected_error options)
               ~in_libdef:false
               lint_severities
               [(file, comments)]
@@ -428,7 +430,16 @@ let mk_check_file options ~reader ~master_cx ~find_ref_request () =
         Parsing_heaps.Mutator_reader.get_resolved_modules_unsafe ~reader Fun.id file parse
       in
       let (cx, typed_ast, find_ref_result) =
-        check_file file resolved_modules ast file_sig docblock aloc_table find_ref_request
+        check_file
+          ~only_support_flow_fixme_and_expected_error:
+            (Options.only_support_flow_fixme_and_expected_error options)
+          file
+          resolved_modules
+          ast
+          file_sig
+          docblock
+          aloc_table
+          find_ref_request
       in
       let coverage = Coverage.file_coverage ~cx typed_ast in
       let errors = Context.errors cx in
@@ -508,7 +519,16 @@ let check_contents_context ~reader options master_cx file ast docblock file_sig 
     Check_service.mk_check_file ~reader ~options ~master_cx ~cache:check_contents_cache ()
   in
   let (cx, tast, _) =
-    check_file file resolved_modules ast file_sig docblock aloc_table FindRefsTypes.empty_request
+    check_file
+      ~only_support_flow_fixme_and_expected_error:
+        (Options.only_support_flow_fixme_and_expected_error options)
+      file
+      resolved_modules
+      ast
+      file_sig
+      docblock
+      aloc_table
+      FindRefsTypes.empty_request
   in
   (cx, tast)
 

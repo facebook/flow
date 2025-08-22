@@ -24,7 +24,7 @@ module NameDefOrdering = Name_def_ordering.Make (Context) (Flow_js_utils)
    This logic produces a set of error codes associated with the location of the
    bottom suppression in the stack *)
 
-let scan_for_error_suppressions acc errs comments =
+let scan_for_error_suppressions ~only_support_flow_fixme_and_expected_error acc errs comments =
   let open Suppression_comments in
   let open Loc in
   (* If multiple comments are stacked together, we join them into a codeset positioned on the
@@ -32,7 +32,7 @@ let scan_for_error_suppressions acc errs comments =
   let (supps, errs) =
     Base.List.fold_left comments ~init:([], errs) ~f:(fun (supps, errs) comment ->
         let (loc, { Ast.Comment.text; _ }) = comment in
-        match (should_suppress text loc, supps) with
+        match (should_suppress ~only_support_flow_fixme_and_expected_error text loc, supps) with
         | (Error (), _) -> (supps, Error_message.EMalformedCode (ALoc.of_loc loc) :: errs)
         | (Ok None, _) -> (supps, errs)
         | (Ok (Some (Specific _ as codes)), (prev_loc, (Specific _ as prev_codes)) :: supps)
@@ -334,7 +334,8 @@ let scan_for_lint_suppressions =
         (Utils_js.FilenameMap.add file_key severity_cover severity_covers, acc, errs)
     )
 
-let scan_for_suppressions ~in_libdef lint_severities file_keys_with_comments =
+let scan_for_suppressions
+    ~only_support_flow_fixme_and_expected_error ~in_libdef lint_severities file_keys_with_comments =
   let file_keys_with_comments =
     Base.List.map file_keys_with_comments ~f:(fun (file, comments) ->
         (file, List.sort (fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2) comments)
@@ -342,7 +343,11 @@ let scan_for_suppressions ~in_libdef lint_severities file_keys_with_comments =
   in
   let acc = Error_suppressions.empty in
   let (acc, errs) =
-    scan_for_error_suppressions acc [] (Base.List.bind file_keys_with_comments ~f:snd)
+    scan_for_error_suppressions
+      ~only_support_flow_fixme_and_expected_error
+      acc
+      []
+      (Base.List.bind file_keys_with_comments ~f:snd)
   in
   scan_for_lint_suppressions ~in_libdef lint_severities acc errs file_keys_with_comments
 
@@ -401,7 +406,14 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
     Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv))
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
+let infer_ast
+    ~only_support_flow_fixme_and_expected_error
+    ~lint_severities
+    cx
+    filename
+    metadata
+    loc_comments
+    aloc_ast =
   assert (Context.is_checked cx);
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
   initialize_env cx aloc_ast;
@@ -411,7 +423,11 @@ let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
   in
   Merge_js.post_merge_checks cx aloc_ast tast metadata;
   let (severity_cover, suppressions, suppression_errors) =
-    scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
+    scan_for_suppressions
+      ~only_support_flow_fixme_and_expected_error
+      ~in_libdef:false
+      lint_severities
+      [(filename, loc_comments)]
   in
   Context.add_severity_covers cx severity_cover;
   Context.add_error_suppressions cx suppressions;
@@ -538,14 +554,25 @@ class lib_def_loc_mapper_and_validator cx =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
-let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
+let infer_lib_file
+    ~only_support_flow_fixme_and_expected_error
+    ~lint_severities
+    cx
+    file_key
+    metadata
+    loc_comments
+    aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
   let exclude_syms = cx |> Context.builtins |> Builtins.builtin_ordinary_name_set in
   initialize_env ~exclude_syms cx filtered_aloc_ast;
   let (severity_cover, suppressions, suppression_errors) =
-    scan_for_suppressions ~in_libdef:true lint_severities [(file_key, loc_comments)]
+    scan_for_suppressions
+      ~only_support_flow_fixme_and_expected_error
+      ~in_libdef:true
+      lint_severities
+      [(file_key, loc_comments)]
   in
   let typed_statements = Statement.statement_list cx statements in
   let tast =
@@ -558,8 +585,29 @@ let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
   Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
   tast
 
-let infer_file ~lint_severities cx file_key metadata all_comments aloc_ast =
+let infer_file
+    ~only_support_flow_fixme_and_expected_error
+    ~lint_severities
+    cx
+    file_key
+    metadata
+    all_comments
+    aloc_ast =
   if File_key.is_lib_file file_key then
-    infer_lib_file ~lint_severities cx file_key metadata all_comments aloc_ast
+    infer_lib_file
+      ~only_support_flow_fixme_and_expected_error
+      ~lint_severities
+      cx
+      file_key
+      metadata
+      all_comments
+      aloc_ast
   else
-    infer_ast ~lint_severities cx file_key metadata all_comments aloc_ast
+    infer_ast
+      ~only_support_flow_fixme_and_expected_error
+      ~lint_severities
+      cx
+      file_key
+      metadata
+      all_comments
+      aloc_ast

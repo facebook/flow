@@ -169,6 +169,7 @@ let typed_ast_of_ast cx ast =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   Type_inference_js.infer_ast
+    ~only_support_flow_fixme_and_expected_error:true
     ~lint_severities:LintSettings.empty_severities
     cx
     dummy_filename
