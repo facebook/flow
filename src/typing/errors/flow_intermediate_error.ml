@@ -1196,13 +1196,33 @@ let to_printable_error :
       in
       [text "The above-mentioned two types must be the same because "]
       @ prop
-      @ [
-          text " is invariantly typed. To fix the error,\n- Either make ";
-          ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
-          text " and ";
-          ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
-          text " exactly the same\n- Or make ";
-        ]
+      @ [text " is invariantly typed. To fix the error,\n- Either "]
+      @ (match (lower_obj_desc, upper_obj_desc) with
+        | (Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc), Ok _)
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc lower_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+          ]
+        | (Ok _, Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc))
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc upper_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+          ]
+        | _ ->
+          [
+            text "make ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+            text " and ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+            text " exactly the same";
+          ])
+      @ [text "\n- Or make "]
       @ prop
       @ [
           text " in ";

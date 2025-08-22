@@ -7768,12 +7768,41 @@ struct
               cx
           in
           let type_to_desc t =
-            match Ty_normalizer_no_flow.from_type genv t with
-            | Error _ -> Error (desc_of_t t)
-            | Ok elt ->
-              (match Ty_utils.typify_elt elt with
-              | None -> Error (desc_of_t t)
-              | Some t -> Ok t)
+            let desc = desc_of_t t in
+            match desc with
+            | RArrayLit
+            | RArrayLit_UNSOUND
+            | RObjectLit
+            | RObjectLit_UNSOUND ->
+              (* For these descriptions, the normalized types can be huge,
+               * but the reason description can be quite simple.
+               * It's also guaranteed to be in one place,
+               * instead of spreading across multiple places due to implicit instantiation. *)
+              Error desc
+            | _ ->
+              (* Why do we try to use the printed types? For these non-leaf-node types, it's
+               * reference locations can be spread across multiple locations, but the reason infra
+               * can only point code reference to one place, instead of multiple places that
+               * contribute to the composition of a type.
+               *
+               * e.g.
+               * ```
+               * declare function f<T>(x: T): Array<T>;
+               * //                           ^^^^^^^^
+               * const x = f(1);
+               * //          ^
+               * ```
+               *
+               * To fully describe the type of `x`, we need to point to multiple locations, which
+               * is not well supported by the reason infra. So we use the printed types instead.
+               * The location might still be non-ideal, but at least the description makes sense.
+               *)
+              (match Ty_normalizer_no_flow.from_type genv t with
+              | Error _ -> Error desc
+              | Ok elt ->
+                (match Ty_utils.typify_elt elt with
+                | None -> Error desc
+                | Some t -> Ok t))
           in
           let explanation =
             let open Flow_intermediate_error_types in
@@ -7784,8 +7813,8 @@ struct
                 { lower_obj_t; upper_obj_t; upper_object_reason; property_name } ->
               let lower_obj_desc = type_to_desc lower_obj_t in
               let upper_obj_desc = type_to_desc upper_obj_t in
-              let lower_obj_loc = loc_of_t lower_obj_t in
-              let upper_obj_loc = loc_of_t upper_obj_t in
+              let lower_obj_loc = reason_of_t lower_obj_t |> def_loc_of_reason in
+              let upper_obj_loc = reason_of_t upper_obj_t |> def_loc_of_reason in
               Some
                 (ExplanationInvariantSubtypingDueToMutableProperty
                    {
