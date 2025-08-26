@@ -3512,7 +3512,12 @@ let error_code_of_message err : error_code option =
   | EPrivateLookupFailed _ -> Some Error_codes.PropMissing
   | EStrUtilTypeNonLiteralArg _ -> Some InvalidTypeArg
   | EPropNotFoundInLookup { use_op; _ } ->
-    react_rule_of_use_op use_op ~default:Error_codes.PropMissing
+    let default =
+      match use_op with
+      | Op (GetExport _) -> Error_codes.MissingExport
+      | _ -> Error_codes.PropMissing
+    in
+    react_rule_of_use_op use_op ~default
   | EPropNotFoundInSubtyping { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EPropsExtraAgainstExactObject { use_op; _ } ->

@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:12
 
-Cannot get `esmodule.default` because property `default` is missing in module `./esmodule` [1]. [prop-missing]
+Cannot get `esmodule.default` because property `default` is missing in module `./esmodule` [1]. [missing-export]
 
    test.js:5:12
    5|   esmodule.default; // error

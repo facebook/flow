@@ -543,6 +543,7 @@ let rec make_intermediate_error :
       | Op (FunImplicitReturn { upper; fn; _ }) ->
         root loc frames upper (RootCannotExpectImplicitReturn { upper = desc upper; fn = desc fn })
       | Op (GeneratorYield { value }) -> root loc frames value (RootCannotYield (desc value))
+      | Op (GetExport prop) -> root loc frames prop (RootCannotGetProp (desc prop))
       | Op (GetProperty prop) -> root loc frames prop (RootCannotGetProp (desc prop))
       | Op (IndexedTypeAccess { _object; index }) ->
         root loc frames index (RootCannotAccessIndex { index = desc index; object_ = desc _object })

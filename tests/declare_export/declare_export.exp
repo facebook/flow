@@ -378,7 +378,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- es6modules.js:88:11
 
 Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in module `./CommonJS_Named` [1].
-[prop-missing]
+[missing-export]
 
    es6modules.js:88:11
    88| CJS_Named.doesntExist; // Error: doesntExist isn't a property
@@ -702,7 +702,7 @@ References:
 Error --------------------------------------------------------------------------------------------- es6modules.js:171:40
 
 Cannot get `require(...).doesntExist` because property `doesntExist` is missing in module
-`./ES6_Default_AnonFunction2` [1]. [prop-missing]
+`./ES6_Default_AnonFunction2` [1]. [missing-export]
 
    es6modules.js:171:40
    171| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export

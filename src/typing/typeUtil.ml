@@ -374,6 +374,7 @@ let rec mod_loc_of_virtual_use_op f =
     | FunImplicitReturn { fn; upper; type_guard } ->
       FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper; type_guard }
     | GeneratorYield { value } -> GeneratorYield { value = mod_reason value }
+    | GetExport reason -> GetExport (mod_reason reason)
     | GetProperty reason -> GetProperty (mod_reason reason)
     | IndexedTypeAccess { _object; index } ->
       IndexedTypeAccess { _object = mod_reason _object; index = mod_reason index }

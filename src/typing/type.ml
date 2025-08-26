@@ -404,6 +404,7 @@ module rec TypeTerm : sig
         type_guard: bool;
       }
     | GeneratorYield of { value: 'loc virtual_reason }
+    | GetExport of 'loc virtual_reason
     | GetProperty of 'loc virtual_reason
     | IndexedTypeAccess of {
         _object: 'loc virtual_reason;
@@ -4092,6 +4093,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | FunImplicitReturn _ -> "FunImplicitReturn"
   | FunReturnStatement _ -> "FunReturnStatement"
   | GeneratorYield _ -> "GeneratorYield"
+  | GetExport _ -> "GetExport"
   | GetProperty _ -> "GetProperty"
   | IndexedTypeAccess _ -> "IndexedTypeAccess"
   | InferBoundCompatibilityCheck _ -> "InferBoundCompatibilityCheck"

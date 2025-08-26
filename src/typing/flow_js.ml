@@ -1377,6 +1377,35 @@ struct
                 }
             )
         (* unwrap namespace type into object type, drop all information about types in the namespace *)
+        | ( NamespaceT { namespace_symbol; values_type; types_tmap = _ },
+            GetPropT
+              {
+                use_op = Op (GetProperty prop_reason);
+                reason;
+                id;
+                from_annot;
+                skip_optional;
+                propref;
+                tout;
+                hint;
+              }
+          )
+          when FlowSymbol.(kind_of_symbol namespace_symbol = SymbolModule) ->
+          let u =
+            GetPropT
+              {
+                use_op = Op (GetExport prop_reason);
+                reason;
+                id;
+                from_annot;
+                skip_optional;
+                propref;
+                tout;
+                hint;
+              }
+          in
+          rec_flow cx trace (values_type, u)
+        (* unwrap namespace type into object type, drop all information about types in the namespace *)
         | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
           rec_flow cx trace (values_type, u)
         (***************************************)
@@ -7346,6 +7375,7 @@ struct
               | DeleteProperty _
               | FunImplicitReturn _
               | FunReturnStatement _
+              | GetExport _
               | GetProperty _
               | IndexedTypeAccess _
               | InferBoundCompatibilityCheck _
