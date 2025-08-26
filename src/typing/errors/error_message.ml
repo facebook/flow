@@ -887,9 +887,17 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
   | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
-  | ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason } ->
+  | ExplanationInvariantSubtypingDueToMutableArray
+      { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
+    ->
     ExplanationInvariantSubtypingDueToMutableArray
-      { upper_array_reason = map_reason upper_array_reason }
+      {
+        lower_array_loc = f lower_array_loc;
+        upper_array_loc = f upper_array_loc;
+        lower_array_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_array_desc;
+        upper_array_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_array_desc;
+        upper_array_reason = map_reason upper_array_reason;
+      }
   | ExplanationInvariantSubtypingDueToMutableProperty
       {
         lower_obj_loc;

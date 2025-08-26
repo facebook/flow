@@ -3674,7 +3674,11 @@ end
 
 module UnifyCause = struct
   type t =
-    | MutableArray of { upper_array_reason: Reason.t }
+    | MutableArray of {
+        lower_array_t: TypeTerm.t;
+        upper_array_t: TypeTerm.t;
+        upper_array_reason: Reason.t;
+      }
     | MutableProperty of {
         lower_obj_t: TypeTerm.t;
         upper_obj_t: TypeTerm.t;

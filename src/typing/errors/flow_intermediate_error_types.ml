@@ -213,7 +213,13 @@ type 'loc explanation =
       casting_syntax: Options.CastingSyntax.t;
     }
   | ExplanationFunctionsWithStaticsToObject
-  | ExplanationInvariantSubtypingDueToMutableArray of { upper_array_reason: 'loc virtual_reason }
+  | ExplanationInvariantSubtypingDueToMutableArray of {
+      lower_array_loc: 'loc;
+      upper_array_loc: 'loc;
+      lower_array_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_array_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_array_reason: 'loc virtual_reason;
+    }
   | ExplanationInvariantSubtypingDueToMutableProperty of {
       lower_obj_loc: 'loc;
       upper_obj_loc: 'loc;

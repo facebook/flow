@@ -7807,8 +7807,21 @@ struct
           let explanation =
             let open Flow_intermediate_error_types in
             match unify_cause with
-            | UnifyCause.MutableArray { upper_array_reason } ->
-              Some (ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason })
+            | UnifyCause.MutableArray { lower_array_t; upper_array_t; upper_array_reason } ->
+              let lower_array_desc = type_to_desc lower_array_t in
+              let upper_array_desc = type_to_desc upper_array_t in
+              let lower_array_loc = reason_of_t lower_array_t |> def_loc_of_reason in
+              let upper_array_loc = reason_of_t upper_array_t |> def_loc_of_reason in
+              Some
+                (ExplanationInvariantSubtypingDueToMutableArray
+                   {
+                     lower_array_loc;
+                     upper_array_loc;
+                     lower_array_desc;
+                     upper_array_desc;
+                     upper_array_reason;
+                   }
+                )
             | UnifyCause.MutableProperty
                 { lower_obj_t; upper_obj_t; upper_object_reason; property_name } ->
               let lower_obj_desc = type_to_desc lower_obj_t in

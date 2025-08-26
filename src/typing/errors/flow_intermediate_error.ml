@@ -1168,18 +1168,48 @@ let to_printable_error :
         text " or a reference to a component-syntax component";
       ]
     | ExplanationIncompatibleReactDeepReadOnly -> [text "Consider using "; code "React.Immutable<>"]
-    | ExplanationInvariantSubtypingDueToMutableArray { upper_array_reason } ->
+    | ExplanationInvariantSubtypingDueToMutableArray
+        { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
+      ->
       [
         text "The above-mentioned two types must be the same because arrays are invariantly typed. ";
-        text "If you do not want this behavior, make ";
-        ref upper_array_reason;
-        text " a ";
-        code "$ReadOnlyArray";
-        text ". ";
-        text "See ";
-        text
-          "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
+        text "To fix the error,\n- Either ";
       ]
+      @ (match (lower_array_desc, upper_array_desc) with
+        | (Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc), Ok _)
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc lower_array_loc);
+            text " with ";
+            ref_of_ty_or_desc upper_array_loc upper_array_desc;
+          ]
+        | (Ok _, Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc))
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc upper_array_loc);
+            text " with ";
+            ref_of_ty_or_desc lower_array_loc lower_array_desc;
+          ]
+        | _ ->
+          [
+            text "make ";
+            ref_of_ty_or_desc lower_array_loc lower_array_desc;
+            text " and ";
+            ref_of_ty_or_desc upper_array_loc upper_array_desc;
+            text " exactly the same";
+          ])
+      @ [
+          text "\n- Or make ";
+          ref upper_array_reason;
+          text " a ";
+          code "$ReadOnlyArray";
+          text ".\n";
+          text "See ";
+          text
+            "https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number";
+        ]
     | ExplanationInvariantSubtypingDueToMutableProperty
         {
           lower_obj_loc;

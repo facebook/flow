@@ -699,7 +699,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
      * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
   *)
-  let rec array_flow cx trace use_op lit1 r1 r2 ?(index = 0) = function
+  let rec array_flow cx trace use_op lit1 r1 r2 ?(index = 0) (l, u) = function
     (* empty array / array literal / tuple flowing to array / array literal /
        tuple (includes several cases, analyzed below) *)
     | ([], e1, _, e2) ->
@@ -710,7 +710,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
           cx
           trace
           ~use_op
-          ~unify_cause:(UnifyCause.MutableArray { upper_array_reason = r2 })
+          ~unify_cause:
+            (UnifyCause.MutableArray
+               { lower_array_t = l; upper_array_t = u; upper_array_reason = r2 }
+            )
           ~fresh:lit1
           e1
           e2
@@ -718,12 +721,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
     | (_, e1, [], e2) ->
       (* general element1 < general element2 *)
-      flow_to_mutable_child cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized ~fresh:lit1 e1 e2
+      flow_to_mutable_child
+        cx
+        trace
+        ~use_op
+        ~unify_cause:
+          (UnifyCause.MutableArray { lower_array_t = l; upper_array_t = u; upper_array_reason = r2 })
+        ~fresh:lit1
+        e1
+        e2
     (* non-empty array literal / tuple ~> non-empty array literal / tuple *)
     | (t1 :: ts1, e1, t2 :: ts2, e2) ->
       (* specific element1 = specific element2 *)
       flow_to_mutable_child cx trace ~use_op ~unify_cause:UnifyCause.Uncategorized ~fresh:lit1 t1 t2;
-      array_flow cx trace use_op lit1 r1 r2 ~index:(index + 1) (ts1, e1, ts2, e2)
+      array_flow cx trace use_op lit1 r1 r2 ~index:(index + 1) (l, u) (ts1, e1, ts2, e2)
 
   let take_n_from_set n set =
     let exception Done in
@@ -2131,7 +2142,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ~f:(fun (TupleView { elements; arity = _; inexact = _ }) -> tuple_ts_of_elements elements)
           tv2
       in
-      array_flow cx trace use_op lit1 r1 r2 (ts1, t1, ts2, t2)
+      array_flow cx trace use_op lit1 r1 r2 (l, u) (ts1, t1, ts2, t2)
     (* Tuples can flow to tuples with the same arity *)
     | ( DefT
           ( r1,
