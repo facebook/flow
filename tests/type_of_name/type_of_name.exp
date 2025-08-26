@@ -1,0 +1,286 @@
+=== Basic types ===
+Found exact match 'myString' defined at basic.js:4:7,4:14 with type `string` 
+Found exact match 'myNumber' defined at basic.js:5:7,5:14 with type `number` 
+Found exact match 'myBoolean' defined at basic.js:6:7,6:15 with type `boolean` 
+Found exact match 'myArray' defined at basic.js:7:7,7:13 with type `Array<number>` 
+Found exact match 'myObject' defined at basic.js:8:7,8:14 with type `{x: number, y: string}` 
+
+=== Functions ===
+Found exact match 'myFunction' defined at basic.js:11:10,11:19 with type `(param: boolean) => string` 
+Found exact match 'arrowFunc' defined at basic.js:15:7,15:15 with type `(input: number) => number` 
+Found exact match 'param' defined at basic.js:11:21,11:25 with type `boolean` 
+
+=== Classes ===
+Found exact match 'MyClass' defined at basic.js:18:7,18:13 with type `class MyClass` 
+where
+'MyClass' is defined at basic.js:18:7-13
+
+Found exact match 'instance' defined at basic.js:30:7,30:14 with type `MyClass` 
+where
+'MyClass' is defined at basic.js:18:7-13
+
+Found exact match 'methodName' defined at basic.js:25:3,25:12 with type `() => number` 
+
+=== Type aliases ===
+Found exact match 'MyType' defined at basic.js:33:6,33:11 with type `type MyType = {bar: number, foo: string}` 
+where
+'MyType' is defined at basic.js:33:6-11
+
+Found exact match 'typeVar' defined at basic.js:34:7,34:13 with type `MyType` 
+where
+'MyType' is defined at basic.js:33:6-11
+
+
+=== Destructuring ===
+Found exact match 'destructuredX' defined at basic.js:37:11,37:23 with type `number` 
+Found exact match 'destructuredY' defined at basic.js:37:29,37:41 with type `string` 
+
+=== Error cases (muted output) ===
+
+=== React Components ===
+Found exact match 'BasicComponent' defined at react.js:7:11,7:24 with type `component BasicComponent(count: number, title: string)` 
+where
+'BasicComponent' is defined at react.js:7:1-54
+
+Found exact match 'OptionalProps' defined at react.js:12:11,12:23 with type `component OptionalProps(optional?: number, required: string)` 
+where
+'OptionalProps' is defined at react.js:12:1-60
+
+Found exact match 'GenericComponent' defined at react.js:17:11,17:26 with type `component GenericComponent<T>(data: T, formatter: (T) => string)` 
+where
+'GenericComponent' is defined at react.js:17:1-64
+
+Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number)` 
+where
+'InexactRest' is defined at react.js:22:1-63
+
+Found exact match 'IndexedRest' defined at react.js:27:11,27:21 with type `component IndexedRest(foo: number)` 
+where
+'IndexedRest' is defined at react.js:27:1-68
+
+Found exact match 'NamedProps' defined at react.js:32:11,32:20 with type `component NamedProps("aria-label": string, "data-id": string)` 
+where
+'NamedProps' is defined at react.js:32:1-84
+
+Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
+where
+'UserCard' is defined at react.js:37:1-43
+'UserCardProps' is defined at types.js:4:6-18
+
+Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
+where
+'DataDisplay' is defined at react.js:49:1-55
+'DataDisplayProps' is defined at types.js:12:6-21
+
+Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type `component ProductItem(...ProductItemProps)` 
+where
+'ProductItem' is defined at react.js:59:1-49
+'ProductItemProps' is defined at types.js:19:6-21
+
+Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
+```
+component UserProfile(
+  ...{...UserCardProps, +className: string, +showActions?: boolean}
+)
+```
+where
+'UserCardProps' is defined at types.js:4:6-18
+'UserProfile' is defined at react.js:71:1,75:1
+
+Found exact match 'NotificationWithDocblock' defined at react.js:96:11,96:34 with type
+```
+component NotificationWithDocblock(
+  message: string,
+  onDismiss?: () => void,
+  severity?: "info" | "warning" | "error" | "success"
+)
+```
+where
+'NotificationWithDocblock' is defined at react.js:96:1,100:1
+
+and documentation:
+
+ A component that displays a notification message.
+
+
+=== React Components (--hide-references) ===
+Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
+Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
+
+=== React Components (--expand-component-props) ===
+Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
+where
+'UserCard' is defined at react.js:37:1-43
+
+Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(data: T, formatter: (T) => string, showLabel?: boolean)` 
+where
+'DataDisplay' is defined at react.js:49:1-55
+
+Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type
+```
+component ProductItem(
+  category?: string,
+  id: string,
+  inStock: boolean,
+  price: number,
+  title: string
+)
+```
+where
+'ProductItem' is defined at react.js:59:1-49
+
+Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
+```
+component UserProfile(
+  age?: number,
+  className: string,
+  email: string,
+  isActive: boolean,
+  name: string,
+  showActions?: boolean
+)
+```
+where
+'UserProfile' is defined at react.js:71:1,75:1
+
+
+=== React Components in empty file ===
+Found exact match 'BasicComponent' defined at react.js:7:1,7:54 with type `component BasicComponent(count: number, title: string)` 
+where
+'BasicComponent' is defined at react.js:7:1-54
+
+Found exact match 'OptionalProps' defined at react.js:12:1,12:60 with type `component OptionalProps(optional?: number, required: string)` 
+where
+'OptionalProps' is defined at react.js:12:1-60
+
+Found exact match 'GenericComponent' defined at react.js:17:1,17:64 with type `component GenericComponent<T>(data: T, formatter: (T) => string)` 
+where
+'GenericComponent' is defined at react.js:17:1-64
+
+Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number)` 
+where
+'InexactRest' is defined at react.js:22:1-63
+
+Found exact match 'IndexedRest' defined at react.js:27:1,27:68 with type `component IndexedRest(foo: number)` 
+where
+'IndexedRest' is defined at react.js:27:1-68
+
+Found exact match 'NamedProps' defined at react.js:32:1,32:84 with type `component NamedProps("aria-label": string, "data-id": string)` 
+where
+'NamedProps' is defined at react.js:32:1-84
+
+Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:6,4:18 with type
+```
+type UserCardProps = {
+  age?: number,
+  email: string,
+  isActive: boolean,
+  name: string
+}
+```
+where
+'UserCardProps' is defined at types.js:4:6-18
+
+Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:6,12:21 with type
+```
+type DataDisplayProps<T> = {
+  data: T,
+  formatter: (T) => string,
+  showLabel?: boolean
+}
+```
+where
+'DataDisplayProps' is defined at types.js:12:6-21
+
+Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:6,19:21 with type
+```
+type ProductItemProps = {
+  category?: string,
+  id: string,
+  inStock: boolean,
+  price: number,
+  title: string
+}
+```
+where
+'ProductItemProps' is defined at types.js:19:6-21
+
+Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
+```
+component UserProfile(
+  ...{...UserCardProps, +className: string, +showActions?: boolean}
+)
+```
+where
+'UserCardProps' is defined at types.js:4:6-18
+'UserProfile' is defined at react.js:71:1,75:1
+
+Found exact match 'NotificationWithDocblock' defined at react.js:96:1,100:1 with type
+```
+component NotificationWithDocblock(
+  message: string,
+  onDismiss?: () => void,
+  severity?: "info" | "warning" | "error" | "success"
+)
+```
+where
+'NotificationWithDocblock' is defined at react.js:96:1,100:1
+
+and documentation:
+
+ A component that displays a notification message.
+
+Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:6,4:18 with type
+```
+type UserCardProps = {
+  age?: number,
+  email: string,
+  isActive: boolean,
+  name: string
+}
+```
+where
+'UserCardProps' is defined at types.js:4:6-18
+
+Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:6,12:21 with type
+```
+type DataDisplayProps<T> = {
+  data: T,
+  formatter: (T) => string,
+  showLabel?: boolean
+}
+```
+where
+'DataDisplayProps' is defined at types.js:12:6-21
+
+Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:6,19:21 with type
+```
+type ProductItemProps = {
+  category?: string,
+  id: string,
+  inStock: boolean,
+  price: number,
+  title: string
+}
+```
+where
+'ProductItemProps' is defined at types.js:19:6-21
+
+Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
+```
+component UserProfile(
+  age?: number,
+  className: string,
+  email: string,
+  isActive: boolean,
+  name: string,
+  showActions?: boolean
+)
+```
+where
+'UserProfile' is defined at react.js:71:1,75:1
+
+Found exact match 'Array' defined at empty_file.js:1:13,1:17 with type `class Array<T>` 
+where
+'Array' is defined at [LIB] prelude.js:30:15-19
+

@@ -35,6 +35,18 @@ module Inlay_hint_options = struct
   }
 end
 
+module Type_of_name_options = struct
+  type t = {
+    input: File_input.t;
+    name: string;
+    verbose: Verbose.t option;
+    wait_for_recheck: bool option;
+    expand_component_props: bool;
+    exact_match_only: bool;
+    strip_root: File_path.t option;
+  }
+end
+
 module Code_action = struct
   type t =
     | SourceAddMissingImports
@@ -122,6 +134,7 @@ module Request = struct
       }
     | INFER_TYPE of Infer_type_options.t
     | INLAY_HINT of Inlay_hint_options.t
+    | TYPE_OF_NAME of Type_of_name_options.t
     | INSERT_TYPE of {
         input: File_input.t;
         target: Loc.t;
@@ -190,6 +203,8 @@ module Request = struct
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INLAY_HINT { Inlay_hint_options.input; _ } ->
       Printf.sprintf "inlay-hint %s" (File_input.filename_of_file_input input)
+    | TYPE_OF_NAME { Type_of_name_options.input; name; _ } ->
+      Printf.sprintf "type-of-name %s %s" (File_input.filename_of_file_input input) name
     | INSERT_TYPE { input; target; _ } ->
       Loc.(
         Printf.sprintf
@@ -292,6 +307,18 @@ module Response = struct
 
   type get_def_response = (Loc.t list, string) result
 
+  module InferTypeOfName = struct
+    type t = {
+      loc: Loc.t;
+      actual_name: string;
+      type_: string;
+      refs: (string * Loc.t) list option;
+      documentation: string option;
+    }
+  end
+
+  type infer_type_of_name_response = (InferTypeOfName.t, string) result
+
   module InferType = struct
     type friendly_response = {
       type_str: string;
@@ -365,6 +392,7 @@ module Response = struct
     | GET_DEF of get_def_response
     | INFER_TYPE of infer_type_response
     | INLAY_HINT of InlayHint.response
+    | TYPE_OF_NAME of infer_type_of_name_response
     | INSERT_TYPE of insert_type_response
     | RAGE of rage_response
     | STATUS of {
@@ -390,6 +418,7 @@ module Response = struct
     | GET_DEF _ -> "get_def response"
     | INFER_TYPE _ -> "infer_type response"
     | INLAY_HINT _ -> "inlay_hint response"
+    | TYPE_OF_NAME _ -> "type_of_name response"
     | INSERT_TYPE _ -> "insert_type response"
     | RAGE _ -> "rage response"
     | STATUS _ -> "status response"

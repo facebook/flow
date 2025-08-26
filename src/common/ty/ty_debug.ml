@@ -888,3 +888,5 @@ module M = Make (struct
 end)
 
 let dump_t_EXPOSES_ABSTRACT_LOCS = M.dump_t
+
+let dump_elt_EXPOSES_ABSTRACT_LOCS = M.dump_elt

@@ -11,6 +11,7 @@ type evaluate_type_destructors_mode =
   | EvaluateNone
   | EvaluateAll
   | EvaluateSome
+  | EvaluateCustom of (Type.destructor -> bool)
 
 type options = {
   (* If this flag is set to `true` then the normalizer will attempt to reuse the

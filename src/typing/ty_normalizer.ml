@@ -381,6 +381,7 @@ module Make (I : INPUT) : S = struct
     match Env.evaluate_type_destructors env with
     | Env.EvaluateNone -> false
     | Env.EvaluateSome -> false
+    | Env.EvaluateCustom _ -> false
     | Env.EvaluateAll -> true
 
   (* Sometimes, we need to inspect Type.t so that we can avoid doing the work of
@@ -496,6 +497,7 @@ module Make (I : INPUT) : S = struct
         | ReactElementConfigType ->
           false)
       )
+    | Env.EvaluateCustom f -> f d
     | Env.EvaluateAll ->
       (match d with
       | T.ReactDRO _

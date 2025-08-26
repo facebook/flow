@@ -1,0 +1,6 @@
+(library
+ (name flow_service_type_of_name)
+ (wrapped false)
+ (libraries flow_service_inference)
+ (preprocess
+  (pps ppx_let)))

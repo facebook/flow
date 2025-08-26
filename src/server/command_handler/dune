@@ -18,7 +18,8 @@
   flow_service_jsx
   flow_service_saved_state_fetcher
   flow_service_type_info
+  flow_service_type_of_name
   flow_typing
   flow_code_action)
  (preprocess
-  (pps lwt_ppx)))
+  (pps lwt_ppx ppx_let)))

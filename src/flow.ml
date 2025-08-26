@@ -44,6 +44,7 @@ end = struct
       StartCommand.command;
       StopCommand.command;
       TypeAtPosCommand.command;
+      TypeOfNameCommand.command;
       VersionCommand.command;
     ]
     @ Extra_commands.extra_commands ()

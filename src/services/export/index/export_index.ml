@@ -20,6 +20,11 @@ type source =
   | File_key of File_key.t
 [@@deriving show]
 
+let show_source = function
+  | Global -> "Global"
+  | Builtin s -> Format.sprintf "Builtin %s" (Flow_import_specifier.show_userland s)
+  | File_key f -> Format.sprintf "%s" (File_key.to_string f)
+
 (** Custom ordering where the "kind" (LibFile vs SourceFile vs JsonFile, etc) does
     not matter, and we compare filenames without extensions, so that something like
     [Foo.example.js] sorts _after_ [Foo.js] even though [e] comes before [j]; the

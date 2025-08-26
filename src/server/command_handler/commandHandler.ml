@@ -925,6 +925,44 @@ let infer_type
         in
         (Ok response, Some (Hh_json.JSON_Object json_props)))
 
+let type_of_name
+    ~(options : Options.t)
+    ~(reader : Parsing_heaps.Reader.reader)
+    ~(env : ServerEnv.env)
+    ~(profiling : Profiling_js.running)
+    ~type_parse_artifacts_cache
+    input : ServerProt.Response.infer_type_of_name_response =
+  let { ServerProt.Type_of_name_options.input = file_input; verbose; _ } = input in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed e) -> Error e
+  | Error (Skipped reason) -> Error ("file skipped: " ^ reason)
+  | Ok (file_key, content) ->
+    let options = { options with Options.opt_verbose = verbose } in
+    let (file_artifacts_result, _did_hit_cache) =
+      let parse_result = lazy (Type_contents.parse_contents ~options ~profiling content file_key) in
+      type_parse_artifacts_with_cache
+        ~options
+        ~profiling
+        ~type_parse_artifacts_cache
+        env.master_cx
+        file_key
+        parse_result
+    in
+    begin
+      match file_artifacts_result with
+      | Error _parse_errors -> Error "Cannot parse"
+      | Ok check_result ->
+        Type_of_name.type_of_name
+          ~doc_at_loc:documentation_at_loc
+          ~options
+          ~reader
+          ~env
+          ~profiling
+          file_key
+          input
+          check_result
+    end
+
 let inlay_hint
     ~(options : Options.t)
     ~(reader : Parsing_heaps.Reader.reader)
@@ -1755,6 +1793,14 @@ let handle_infer_type ~options ~reader ~profiling ~env input =
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
+let handle_type_of_name ~options ~reader ~profiling ~env input =
+  let (result, json_data) =
+    try_with_json (fun () ->
+        (type_of_name ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input, None)
+    )
+  in
+  Lwt.return (ServerProt.Response.TYPE_OF_NAME result, json_data)
+
 let handle_inlay_hint ~options ~reader ~profiling ~env input =
   let (result, json_data) =
     try_with_json (fun () ->
@@ -2109,6 +2155,11 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck:input.ServerProt.Inlay_hint_options.wait_for_recheck
       ~options
       (handle_inlay_hint ~options ~reader input)
+  | ServerProt.Request.TYPE_OF_NAME input ->
+    mk_parallelizable
+      ~wait_for_recheck:input.ServerProt.Type_of_name_options.wait_for_recheck
+      ~options
+      (handle_type_of_name ~options ~reader input)
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
