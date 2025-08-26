@@ -657,7 +657,8 @@ let check_file ~options ~env ~profiling ~force file_input =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, line, col) =
+let get_def_of_check_result ~reader ~profiling ?file_content ~check_result ~purpose (file, line, col)
+    =
   Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
       let ( Parse_artifacts { ast; file_sig; parse_errors; _ },
@@ -669,6 +670,7 @@ let get_def_of_check_result ~reader ~profiling ~check_result ~purpose (file, lin
         ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
         ~cx
         ~file_sig
+        ?file_content
         ~ast
         ~available_ast:(Typed_ast_utils.Typed_ast typed_ast)
         ~purpose
@@ -1349,6 +1351,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
           ~reader
           ~profiling
           ~check_result
+          ~file_content:content
           ~purpose:Get_def_types.Purpose.GoToDefinition
           (file_key, line, col)
       in

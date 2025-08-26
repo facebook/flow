@@ -19,6 +19,7 @@ val get_def :
   loc_of_aloc:(ALoc.t -> Loc.t) ->
   cx:Context.t ->
   file_sig:File_sig.t ->
+  ?file_content:string ->
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   available_ast:Typed_ast_utils.available_ast ->
   purpose:Get_def_types.Purpose.t ->

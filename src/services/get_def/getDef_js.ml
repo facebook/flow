@@ -123,7 +123,9 @@ module Depth = struct
     depth.results <- Loc_collections.LocMap.add loc result results
 end
 
-let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_loc =
+exception FoundTokenAtRequestLoc of Token.t
+
+let get_def ~loc_of_aloc ~cx ~file_sig ?file_content ~ast ~available_ast ~purpose requested_loc =
   let require_loc_map = File_sig.require_loc_map file_sig in
   let scope_info =
     Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
@@ -211,7 +213,37 @@ let get_def ~loc_of_aloc ~cx ~file_sig ~ast ~available_ast ~purpose requested_lo
           | Error msg -> Def_error msg
         end
         | Empty msg -> Bad_loc msg
-        | LocNotFound -> Bad_loc "not found"
+        | LocNotFound ->
+          let token_at_req_loc =
+            match file_content with
+            | None -> None
+            | Some file_content ->
+              let token_sink =
+                Some
+                  (fun { Parser_env.token_loc; token; _ } ->
+                    if Loc.contains token_loc req_loc then raise (FoundTokenAtRequestLoc token))
+              in
+              (try
+                 ignore
+                 @@ Parser_flow.program_file
+                      ~token_sink
+                      ~fail:false
+                      ~parse_options:(Some Parser_env.permissive_parse_options)
+                      file_content
+                      (Some (Context.file cx));
+                 None
+               with
+              | FoundTokenAtRequestLoc token -> Some token)
+          in
+          (match token_at_req_loc with
+          | Some token ->
+            Bad_loc
+              (Utils_js.spf
+                 "unsupported token: %s (%s)"
+                 (Token.token_to_string token)
+                 (Token.value_of_token token)
+              )
+          | None -> Bad_loc "not found")
         | InternalError err -> Def_error (Get_def_process_location.show_internal_error err)
       in
       Depth.cache_result req_loc result depth;
