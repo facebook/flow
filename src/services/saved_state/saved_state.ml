@@ -697,7 +697,10 @@ end = struct
       let flowconfig_name = Options.flowconfig_name options in
       FlowConfig.get_hash @@ Server_files_js.config_file flowconfig_name @@ Options.root options
     in
-    if flowconfig_hash <> current_flowconfig_hash then (
+    if
+      (not (Options.saved_state_skip_version_check options))
+      && flowconfig_hash <> current_flowconfig_hash
+    then (
       Hh_logger.error
         "Invalid saved state: .flowconfig has changed since this saved state was generated.";
       raise (Invalid_saved_state Flowconfig_mismatch)
