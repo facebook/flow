@@ -3,3 +3,4 @@ all=true
 no_flowlib=false
 experimental.natural_inference.local_object_literals.followup_fix=true
 experimental.natural_inference.local_object_literals.followup_fix.excludes=<PROJECT_ROOT>/excluded.js
+experimental.invariant_subtyping_error_message_improvement=true

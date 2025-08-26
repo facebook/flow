@@ -4,7 +4,7 @@ Cannot cast `foo` to object type because property `bar` is missing in object lit
 [incompatible-type]
 
    enforced.js:2:1
-   2| foo as {bar?: string}; // error
+   2| foo as {bar?: string}; // error. TODO: should show error with suggestions
       ^^^
 
 References:
@@ -12,15 +12,18 @@ References:
    1| const foo = {};
                   ^^ [1]
    enforced.js:2:8
-   2| foo as {bar?: string}; // error
+   2| foo as {bar?: string}; // error. TODO: should show error with suggestions
              ^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- enforced.js:5:1
 
-Cannot cast `bar` to object type because string [1] is incompatible with number [2] in property `baz`. 
+Cannot cast `bar` to object type because `number` [1] is not exactly the same as `string | number` [2] in property
+`baz`. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because property `baz` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{baz: string | number}` [4]
+- Or make property `baz` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    enforced.js:5:1
@@ -28,13 +31,40 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
       ^^^
 
 References:
-   enforced.js:5:14
-   5| bar as {baz: string | number}; // error
-                   ^^^^^^ [1]
    enforced.js:4:19
    4| const bar = {baz: 1};
-                        ^ [2]
+                        ^ [1]
+   enforced.js:5:14
+   5| bar as {baz: string | number}; // error
+                   ^^^^^^^^^^^^^^^ [2]
+   enforced.js:4:13
+   4| const bar = {baz: 1};
+                  ^^^^^^^^ [3]
+   enforced.js:5:8
+   5| bar as {baz: string | number}; // error
+             ^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------------------- enforced.js:8:1
+
+Cannot cast `bazArray` to array type because string [1] is incompatible with number [2] in property `baz` of array
+element. 
+
+This property is invariantly typed. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   enforced.js:8:1
+   8| bazArray as Array<{baz: string | number}>; // error. TODO: should show error with suggestions
+      ^^^^^^^^
+
+References:
+   enforced.js:8:25
+   8| bazArray as Array<{baz: string | number}>; // error. TODO: should show error with suggestions
+                              ^^^^^^ [1]
+   enforced.js:7:25
+   7| const bazArray = [{baz: 1}];
+                              ^ [2]
 
 
 
-Found 2 errors
+Found 3 errors
