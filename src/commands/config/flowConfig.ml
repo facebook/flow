@@ -148,6 +148,7 @@ module Opts = struct
     require_suppression_with_error_code: bool;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
+    saved_state_skip_version_check: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     supported_operating_systems: Options.supported_os list;
@@ -301,6 +302,7 @@ module Opts = struct
       require_suppression_with_error_code = false;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
+      saved_state_skip_version_check = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
@@ -1277,6 +1279,9 @@ module Opts = struct
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.allow_reinit", saved_state_allow_reinit_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
+      ( "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+        boolean (fun opts v -> Ok { opts with saved_state_skip_version_check = v })
+      );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
       ( "server.max_workers.down_scaling_factor",
         uint (fun opts v -> Ok { opts with max_workers_down_scaling_factor = v })
@@ -2133,6 +2138,8 @@ let required_version c = c.version
 let root_name c = c.options.Opts.root_name
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
+
+let saved_state_skip_version_check c = c.options.Opts.saved_state_skip_version_check
 
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 

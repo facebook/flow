@@ -1503,7 +1503,9 @@ let make_options
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
-    opt_saved_state_skip_version_check = saved_state_options_flags.saved_state_skip_version_check;
+    opt_saved_state_skip_version_check =
+      saved_state_options_flags.saved_state_skip_version_check
+      || FlowConfig.saved_state_skip_version_check flowconfig;
     opt_saved_state_verify = saved_state_options_flags.saved_state_verify;
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
