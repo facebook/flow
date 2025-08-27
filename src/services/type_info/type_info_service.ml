@@ -166,9 +166,9 @@ let batched_type_at_pos_from_special_comments
 
 let dump_types ~evaluate_type_destructors ~for_tool cx file_sig typed_ast =
   (* Print type using Flow type syntax *)
-  if for_tool then
-    Query_types.dump_types_for_tool cx typed_ast
-  else
+  match for_tool with
+  | Some depth -> Query_types.dump_types_for_tool cx typed_ast depth
+  | None ->
     let exact_by_default = Context.exact_by_default cx in
     let printer =
       Ty_printer.string_of_elt_single_line ~exact_by_default ~ts_syntax:(Context.ts_syntax cx)

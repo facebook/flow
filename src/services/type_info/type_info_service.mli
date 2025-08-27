@@ -42,7 +42,7 @@ val batched_type_at_pos_from_special_comments :
 
 val dump_types :
   evaluate_type_destructors:Ty_normalizer_env.evaluate_type_destructors_mode ->
-  for_tool:bool ->
+  for_tool:int option ->
   Context.t ->
   File_sig.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->

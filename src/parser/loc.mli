@@ -74,3 +74,5 @@ val start_loc : t -> t
 
 (* Produces a location at the end of the input location *)
 val end_loc : t -> t
+
+val update_source : (File_key.t option -> File_key.t option) -> t -> t

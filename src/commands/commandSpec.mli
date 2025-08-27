@@ -17,6 +17,7 @@ module ArgSpec : sig
     | Arg_List
     | Arg_Rest
     | Arg_Command
+    | Maybe_Arg
 
   type flag_metadata = {
     doc: string;
@@ -61,6 +62,8 @@ module ArgSpec : sig
   val delimited : string -> 'a option flag_t -> 'a list option flag_t
 
   val key_value : string -> 'a option flag_t * 'b flag_t -> ('a * 'b) option flag_t
+
+  val optional_value_with_default : default:'a -> 'a option flag_t -> 'a option flag_t
 end
 
 type ('a, 'b) builder_t = {

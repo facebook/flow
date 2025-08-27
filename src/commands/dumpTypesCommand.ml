@@ -37,7 +37,7 @@ let spec =
              "--evaluate-type-destructors"
              truthy
              ~doc:"Use the result of type destructor evaluation if available"
-        |> flag "--for-tool" truthy ~doc:""
+        |> flag "--for-tool" (optional_value_with_default ~default:10 int) ~doc:""
         |> anon "file" (optional string)
       );
   }

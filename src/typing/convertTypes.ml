@@ -106,163 +106,160 @@ let rec funtype_to_json cx depth (funtype : funtype) : json =
 (* Forward declarations for recursive types *)
 and type_to_json : Context.t -> int -> t -> json =
  fun cx depth t ->
-  match t with
-  | OpenT _ ->
-    if depth <= 0 then
-      json_with_type "Open" []
-    else
+  if depth < 0 then
+    JSON_String "<recursion>"
+  else
+    match t with
+    | OpenT _ ->
       let t = Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t in
       type_to_json cx (depth - 1) t
-  | DefT (r, def_t) ->
-    json_with_type
-      "Def"
-      [
-        ("def", def_t_to_json cx depth def_t);
-        ( "def_loc",
-          Reason.def_loc_of_reason r
-          |> ALoc.update_source (Base.Option.map ~f:(File_key.map Filename.basename))
-          |> ALoc.to_loc_with_tables (Context.aloc_tables cx)
-          |> Reason.json_of_loc ~offset_table:None
-        );
-      ]
-  | EvalT (t, defer_use_t, _) ->
-    json_with_type
-      "Eval"
-      [
-        ("type", type_to_json cx (depth - 1) t);
-        ( "destructor",
-          match defer_use_t with
-          | TypeDestructorT (_, _, destructor) -> json_of_destructor cx depth destructor
-        );
-      ]
-  | GenericT { reason = _; name; bound; no_infer; id = _ } ->
-    json_with_type
-      "Generic"
-      [
-        ("name", JSON_String (Subst_name.string_of_subst_name name));
-        ("bound", type_to_json cx (depth - 1) bound);
-        ("no_infer", JSON_Bool no_infer);
-      ]
-  | ThisInstanceT (_, instance_t, is_this, name) ->
-    json_with_type
-      "ThisInstance"
-      [
-        ("instance", json_of_instance_t cx depth instance_t);
-        ("is_this", JSON_Bool is_this);
-        ("name", JSON_String (Subst_name.string_of_subst_name name));
-      ]
-  | ThisTypeAppT (_, t1, t2, t_list_opt) ->
-    let fields = [("t1", type_to_json cx (depth - 1) t1); ("t2", type_to_json cx (depth - 1) t2)] in
-    let fields =
-      match t_list_opt with
-      | None -> fields
-      | Some t_list ->
-        fields @ [("t_list", JSON_Array (List.map (type_to_json cx (depth - 1)) t_list))]
-    in
-    json_with_type "ThisTypeApp" fields
-  | TypeAppT { reason = _; use_op = _; type_; targs; from_value; use_desc } ->
-    json_with_type
-      "TypeApp"
-      [
-        ("type", type_to_json cx (depth - 1) type_);
-        ("targs", JSON_Array (List.map (type_to_json cx (depth - 1)) targs));
-        ("from_value", JSON_Bool from_value);
-        ("use_desc", JSON_Bool use_desc);
-      ]
-  | FunProtoT _ -> json_with_type "FunProto" []
-  | ObjProtoT _ -> json_with_type "ObjProto" []
-  | NullProtoT _ -> json_with_type "NullProto" []
-  | FunProtoBindT _ -> json_with_type "FunProtoBind" []
-  | IntersectionT (_, inter_rep) ->
-    let members = InterRep.members inter_rep in
-    json_with_type
-      "Intersection"
-      [("members", JSON_Array (List.map (type_to_json cx (depth - 1)) members))]
-  | UnionT (_, union_rep) ->
-    let members = UnionRep.members union_rep in
-    json_with_type
-      "Union"
-      [("members", JSON_Array (List.map (type_to_json cx (depth - 1)) members))]
-  | MaybeT (_, t) -> json_with_type "Maybe" [("type", type_to_json cx (depth - 1) t)]
-  | OptionalT { reason = _; type_; use_desc } ->
-    json_with_type
-      "Optional"
-      [("type", type_to_json cx (depth - 1) type_); ("use_desc", JSON_Bool use_desc)]
-  | KeysT (_, t) -> json_with_type "Keys" [("type", type_to_json cx (depth - 1) t)]
-  | AnnotT (_, t, use_desc) ->
-    json_with_type
-      "Annot"
-      [("type", type_to_json cx (depth - 1) t); ("use_desc", JSON_Bool use_desc)]
-  | OpaqueT (_, opaquetype) ->
-    json_with_type
-      "Opaque"
-      [
-        ( "opaquetype",
-          JSON_Object
-            [
-              ("opaque_id", JSON_String (Opaque.string_of_id opaquetype.opaque_id));
-              ( "underlying_t",
-                match opaquetype.underlying_t with
-                | None -> JSON_Null
-                | Some t -> type_to_json cx (depth - 1) t
-              );
-              ( "super_t",
-                match opaquetype.upper_t with
-                | None -> JSON_Null
-                | Some t -> type_to_json cx (depth - 1) t
-              );
-              ( "sub_t",
-                match opaquetype.lower_t with
-                | None -> JSON_Null
-                | Some t -> type_to_json cx (depth - 1) t
-              );
-              ( "opaque_type_args",
-                JSON_Array
-                  (List.map
-                     (fun (name, _, t, polarity) ->
-                       JSON_Object
-                         [
-                           ("name", JSON_String (Subst_name.string_of_subst_name name));
-                           ("type", type_to_json cx (depth - 1) t);
-                           ( "polarity",
-                             JSON_String
-                               (match polarity with
-                               | Polarity.Positive -> "positive"
-                               | Polarity.Negative -> "negative"
-                               | Polarity.Neutral -> "neutral")
-                           );
-                         ])
-                     opaquetype.opaque_type_args
-                  )
-              );
-              ("opaque_name", JSON_String opaquetype.opaque_name);
-            ]
-        );
-      ]
-  | NamespaceT namespace_t ->
-    json_with_type
-      "Namespace"
-      [
-        ( "namespace_symbol",
-          JSON_Object
-            [("symbol", JSON_String (FlowSymbol.name_of_symbol namespace_t.namespace_symbol))]
-        );
-        ("values_type", type_to_json cx (depth - 1) namespace_t.values_type);
-        ("types_tmap", json_of_property_map cx depth namespace_t.types_tmap);
-      ]
-  | AnyT _ -> json_with_type "Any" []
-  | StrUtilT { reason = _; op; remainder } ->
-    let fields =
-      match op with
-      | StrPrefix s -> [("op", JSON_String "StrPrefix"); ("prefix", JSON_String s)]
-      | StrSuffix s -> [("op", JSON_String "StrSuffix"); ("suffix", JSON_String s)]
-    in
-    let fields =
-      match remainder with
-      | None -> fields
-      | Some t -> fields @ [("remainder", type_to_json cx (depth - 1) t)]
-    in
-    json_with_type "StrUtil" fields
+    | DefT (r, def_t) ->
+      json_with_type
+        "Def"
+        [
+          ("def", def_t_to_json cx depth def_t);
+          ("reason", JSON_String (Reason.string_of_reason r ~strip_root:(Some (Context.root cx))));
+        ]
+    | EvalT (t, defer_use_t, _) ->
+      json_with_type
+        "Eval"
+        [
+          ("type", type_to_json cx (depth - 1) t);
+          ( "destructor",
+            match defer_use_t with
+            | TypeDestructorT (_, _, destructor) -> json_of_destructor cx depth destructor
+          );
+        ]
+    | GenericT { reason = _; name; bound; no_infer; id = _ } ->
+      json_with_type
+        "Generic"
+        [
+          ("name", JSON_String (Subst_name.string_of_subst_name name));
+          ("bound", type_to_json cx (depth - 1) bound);
+          ("no_infer", JSON_Bool no_infer);
+        ]
+    | ThisInstanceT (_, instance_t, is_this, name) ->
+      json_with_type
+        "ThisInstance"
+        [
+          ("instance", json_of_instance_t cx depth instance_t);
+          ("is_this", JSON_Bool is_this);
+          ("name", JSON_String (Subst_name.string_of_subst_name name));
+        ]
+    | ThisTypeAppT (_, t1, t2, t_list_opt) ->
+      let fields =
+        [("t1", type_to_json cx (depth - 1) t1); ("t2", type_to_json cx (depth - 1) t2)]
+      in
+      let fields =
+        match t_list_opt with
+        | None -> fields
+        | Some t_list ->
+          fields @ [("t_list", JSON_Array (List.map (type_to_json cx (depth - 1)) t_list))]
+      in
+      json_with_type "ThisTypeApp" fields
+    | TypeAppT { reason = _; use_op = _; type_; targs; from_value; use_desc } ->
+      json_with_type
+        "TypeApp"
+        [
+          ("type", type_to_json cx (depth - 1) type_);
+          ("targs", JSON_Array (List.map (type_to_json cx (depth - 1)) targs));
+          ("from_value", JSON_Bool from_value);
+          ("use_desc", JSON_Bool use_desc);
+        ]
+    | FunProtoT _ -> json_with_type "FunProto" []
+    | ObjProtoT _ -> json_with_type "ObjProto" []
+    | NullProtoT _ -> json_with_type "NullProto" []
+    | FunProtoBindT _ -> json_with_type "FunProtoBind" []
+    | IntersectionT (_, inter_rep) ->
+      let members = InterRep.members inter_rep in
+      json_with_type
+        "Intersection"
+        [("members", JSON_Array (List.map (type_to_json cx (depth - 1)) members))]
+    | UnionT (_, union_rep) ->
+      let members = UnionRep.members union_rep in
+      json_with_type
+        "Union"
+        [("members", JSON_Array (List.map (type_to_json cx (depth - 1)) members))]
+    | MaybeT (_, t) -> json_with_type "Maybe" [("type", type_to_json cx (depth - 1) t)]
+    | OptionalT { reason = _; type_; use_desc } ->
+      json_with_type
+        "Optional"
+        [("type", type_to_json cx (depth - 1) type_); ("use_desc", JSON_Bool use_desc)]
+    | KeysT (_, t) -> json_with_type "Keys" [("type", type_to_json cx (depth - 1) t)]
+    | AnnotT (_, t, use_desc) ->
+      json_with_type
+        "Annot"
+        [("type", type_to_json cx (depth - 1) t); ("use_desc", JSON_Bool use_desc)]
+    | OpaqueT (_, opaquetype) ->
+      json_with_type
+        "Opaque"
+        [
+          ( "opaquetype",
+            JSON_Object
+              [
+                ("opaque_id", JSON_String (Opaque.string_of_id opaquetype.opaque_id));
+                ( "underlying_t",
+                  match opaquetype.underlying_t with
+                  | None -> JSON_Null
+                  | Some t -> type_to_json cx (depth - 1) t
+                );
+                ( "super_t",
+                  match opaquetype.upper_t with
+                  | None -> JSON_Null
+                  | Some t -> type_to_json cx (depth - 1) t
+                );
+                ( "sub_t",
+                  match opaquetype.lower_t with
+                  | None -> JSON_Null
+                  | Some t -> type_to_json cx (depth - 1) t
+                );
+                ( "opaque_type_args",
+                  JSON_Array
+                    (List.map
+                       (fun (name, _, t, polarity) ->
+                         JSON_Object
+                           [
+                             ("name", JSON_String (Subst_name.string_of_subst_name name));
+                             ("type", type_to_json cx (depth - 1) t);
+                             ( "polarity",
+                               JSON_String
+                                 (match polarity with
+                                 | Polarity.Positive -> "positive"
+                                 | Polarity.Negative -> "negative"
+                                 | Polarity.Neutral -> "neutral")
+                             );
+                           ])
+                       opaquetype.opaque_type_args
+                    )
+                );
+                ("opaque_name", JSON_String opaquetype.opaque_name);
+              ]
+          );
+        ]
+    | NamespaceT namespace_t ->
+      json_with_type
+        "Namespace"
+        [
+          ( "namespace_symbol",
+            JSON_Object
+              [("symbol", JSON_String (FlowSymbol.name_of_symbol namespace_t.namespace_symbol))]
+          );
+          ("values_type", type_to_json cx (depth - 1) namespace_t.values_type);
+          ("types_tmap", json_of_property_map cx depth namespace_t.types_tmap);
+        ]
+    | AnyT _ -> json_with_type "Any" []
+    | StrUtilT { reason = _; op; remainder } ->
+      let fields =
+        match op with
+        | StrPrefix s -> [("op", JSON_String "StrPrefix"); ("prefix", JSON_String s)]
+        | StrSuffix s -> [("op", JSON_String "StrSuffix"); ("suffix", JSON_String s)]
+      in
+      let fields =
+        match remainder with
+        | None -> fields
+        | Some t -> fields @ [("remainder", type_to_json cx (depth - 1) t)]
+      in
+      json_with_type "StrUtil" fields
 
 (* Convert typeparams to JSON *)
 and json_of_typeparams cx depth tparams =

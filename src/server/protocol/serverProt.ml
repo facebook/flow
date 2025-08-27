@@ -106,7 +106,7 @@ module Request = struct
     | DUMP_TYPES of {
         input: File_input.t;
         evaluate_type_destructors: bool;
-        for_tool: bool;
+        for_tool: int option;
         wait_for_recheck: bool option;
       }
     | FIND_MODULE of {

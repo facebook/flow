@@ -24,6 +24,7 @@ module ArgSpec = struct
     | Arg_List  (** --foo a b c: consumes until another arg is found *)
     | Arg_Rest  (** consumes a '--' and all remaining args *)
     | Arg_Command  (** consumes a subcommand *)
+    | Maybe_Arg  (** --foo=value or --foo: consumes one arg if present *)
 
   (* consumes all the remaining args verbatim, to pass to a subcommand *)
 
@@ -334,6 +335,30 @@ module ArgSpec = struct
       arg = Arg;
     }
 
+  let optional_value_with_default ~default p =
+    {
+      parse =
+        (fun ~name -> function
+          | None -> None
+          | Some [] -> Some default
+          | value ->
+            (match p.parse ~name value with
+            | None ->
+              raise
+                (Failed_to_parse
+                   {
+                     arg = name;
+                     msg = "Wrong type for required argument";
+                     details =
+                       (match value with
+                       | Some [x] -> Some ("got " ^ x)
+                       | _ -> None);
+                   }
+                )
+            | Some result -> Some result));
+      arg = Maybe_Arg;
+    }
+
   let help_flag =
     SMap.empty |> SMap.add "--help" { doc = "This list of options"; env = None; arg_count = Truthy }
 
@@ -488,6 +513,20 @@ and parse_flag values spec arg args =
       let (value_list, args) = consume_args args in
       let values = SMap.add arg value_list values in
       parse values spec args
+    | ArgSpec.Maybe_Arg -> begin
+      match args with
+      | [] ->
+        let values = SMap.add arg [] values in
+        parse values spec args
+      | value :: args ->
+        let (values, args) =
+          if is_arg value then
+            (SMap.add arg [] values, value :: args)
+          else
+            (SMap.add arg [value] values, args)
+        in
+        parse values spec args
+    end
     | ArgSpec.Arg_Rest -> failwith "Not supported"
     | ArgSpec.Arg_Command -> failwith "Not supported"
   with
@@ -517,6 +556,7 @@ and parse_anon values spec arg args =
     parse values spec []
   | Some (_, ArgSpec.Truthy) -> assert false
   | Some (_, ArgSpec.No_Arg) -> assert false
+  | Some (_, ArgSpec.Maybe_Arg) -> assert false
   | None -> raise (Failed_to_parse { arg; msg = "Unexpected argument"; details = None })
 
 let init_from_env spec =
