@@ -1,3 +1,15 @@
+### 0.280.0
+
+Likely to cause new Flow errors:
+* Accessing missing exports on namespaced import will now trigger `missing-export` error instead of `prop-missing` error. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSZkYvIkAAIAFRS1lSgBKrGUUpglHSUoA5FFlFqANwAHSgyuiVnw+AAygBRADCiutABV8ABJAByjutirdAEEADKW-AAEQA8vg3SHnQBVG34EOK-AATRDUfwAHUXX6-fgAELW-AAMRdDqD+qlAHpy1KimyKghFgzJVKTBrKLwpbMGnAIPlBh2NYxFjWSHXm9RecbciAGiYR9Akhl7CYQAKgA))
+* The only supported `suppress_type` `$FlowFixMe` is now just a type alias of `any`. For most of the code, there will be no functional differences. However, you might see new errors if you have any local definitions of `$FlowFixMe`, or you used the undocumented `$FlowFixMe<arbitrary type arguments>`.
+* Support for `suppress_type` config has been removed. The only supported `supress_type` now is `$FlowFixMe`. If you want other variants, you can add
+```
+type MySuppressType = any
+```
+in your global library definitions.
+* Many subtyping type errors' error codes have been standardized into `incompatible-type`, so some previously suppressed errors will reappear until you change the suppression error code into `incompatible-type`. The change was announced in the previous version, with option to enable it via `experimental.error_code_migration=new`. Now the only valid option to `experimental.error_code_migration` is `new`. You can run `flow codemod error-code-migration --write .` with the previous version of Flow to help migrate, since the codemod is removed in this version.
+
 ### 0.279.0
 
 New Features:
