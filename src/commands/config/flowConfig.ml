@@ -1151,7 +1151,6 @@ module Opts = struct
                   v :: opts.invalid_comparison_null_check_includes;
               })
       );
-      ("experimental.error_code_migration", enum [("new", ())] (fun opts _v -> Ok opts));
       ( "experimental.invariant_subtyping_error_message_improvement",
         boolean (fun opts v -> Ok { opts with invariant_subtyping_error_message_improvement = v })
       );
