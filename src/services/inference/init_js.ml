@@ -72,8 +72,6 @@ let load_lib_files ~ccx ~options ~reader files =
         in
         let (severity_cover, suppressions, suppression_errors) =
           Type_inference_js.scan_for_suppressions
-            ~only_support_flow_fixme_and_expected_error:
-              (Options.only_support_flow_fixme_and_expected_error options)
             ~in_libdef:true
             (Options.lint_severities options)
             (Base.List.map ordered_asts ~f:(fun (_, ast) ->

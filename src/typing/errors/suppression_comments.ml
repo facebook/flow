@@ -72,16 +72,11 @@ let is_valid_code_char c =
 
 (* lowercase letters*)
 
-let should_suppress ~only_support_flow_fixme_and_expected_error comment loc =
+let should_suppress comment loc =
   let (comment, is_suppressor) =
     consume_tokens [" "; "\n"; "\t"; "\r"; "*"] comment
     |> fst
-    |> consume_tokens
-         ( if only_support_flow_fixme_and_expected_error then
-           ["$FlowFixMe"; "$FlowExpectedError"]
-         else
-           ["$FlowFixMe"; "$FlowIssue"; "$FlowExpectedError"; "$FlowIgnore"]
-         )
+    |> consume_tokens ["$FlowFixMe"; "$FlowExpectedError"]
   in
   if not is_suppressor then
     Ok None

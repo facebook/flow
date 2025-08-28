@@ -162,7 +162,6 @@ type t = {
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
-  opt_only_support_flow_fixme_and_expected_error: bool;
   opt_opaque_type_new_bound_syntax: bool;
   opt_pattern_matching_includes: string list;
   opt_constant_condition: bool;
@@ -368,9 +367,6 @@ let node_package_export_conditions opts = opts.opt_node_package_export_condition
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
-
-let only_support_flow_fixme_and_expected_error opts =
-  opts.opt_only_support_flow_fixme_and_expected_error
 
 let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
 

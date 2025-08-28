@@ -287,16 +287,7 @@ let infer_and_merge ~root filename js_config_object docblock ast file_sig =
   let (cx, metadata, comments, ast, lint_severities) =
     init_infer_and_merge ~root filename js_config_object docblock ast file_sig
   in
-  let typed_ast =
-    Type_inference_js.infer_ast
-      ~only_support_flow_fixme_and_expected_error:false
-      cx
-      filename
-      metadata
-      comments
-      ast
-      ~lint_severities
-  in
+  let typed_ast = Type_inference_js.infer_ast cx filename metadata comments ast ~lint_severities in
   (cx, typed_ast)
 
 let ac_infer ~root filename js_config_object docblock ast file_sig =

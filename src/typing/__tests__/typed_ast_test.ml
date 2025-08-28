@@ -126,7 +126,6 @@ let before_and_after_stmts file_name =
       metadata
       []
       (Ast_loc_utils.loc_to_aloc_mapper#program ast)
-      ~only_support_flow_fixme_and_expected_error:true
       ~lint_severities:LintSettings.empty_severities
   in
   (stmts, t_stmts)

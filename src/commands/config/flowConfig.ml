@@ -125,7 +125,6 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: (string option * string) list;
-    only_support_flow_fixme_and_expected_error: bool;
     opaque_type_new_bound_syntax: bool;
     pattern_matching: bool option;
     pattern_matching_includes: string list;
@@ -279,7 +278,6 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [(None, "")];
-      only_support_flow_fixme_and_expected_error = false;
       pattern_matching = None;
       pattern_matching_includes = [];
       opaque_type_new_bound_syntax = false;
@@ -1155,7 +1153,12 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with invariant_subtyping_error_message_improvement = v })
       );
       ( "experimental.only_support_flow_fixme_and_expected_error",
-        boolean (fun opts v -> Ok { opts with only_support_flow_fixme_and_expected_error = v })
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error "experimental.only_support_flow_fixme_and_expected_error cannot be disabled."
+        )
       );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
@@ -2089,9 +2092,6 @@ let invalid_comparison_null_check_includes c = c.options.Opts.invalid_comparison
 
 let invariant_subtyping_error_message_improvement c =
   c.options.Opts.invariant_subtyping_error_message_improvement
-
-let only_support_flow_fixme_and_expected_error c =
-  c.options.Opts.only_support_flow_fixme_and_expected_error
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 

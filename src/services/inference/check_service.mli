@@ -8,7 +8,6 @@
 type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 type check_file =
-  only_support_flow_fixme_and_expected_error:bool ->
   File_key.t ->
   resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->

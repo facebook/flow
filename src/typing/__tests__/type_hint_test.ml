@@ -213,14 +213,7 @@ end = struct
     let lint_severities =
       Merge_js.get_lint_severities metadata StrictModeSettings.empty LintSettings.empty_severities
     in
-    Type_inference_js.infer_ast
-      ~only_support_flow_fixme_and_expected_error:true
-      ~lint_severities
-      cx
-      dummy_filename
-      metadata
-      []
-      ast
+    Type_inference_js.infer_ast ~lint_severities cx dummy_filename metadata [] ast
 
   let get_type_of_last_expression cx content =
     let (_, { Flow_ast.Program.statements; _ }) = get_typed_ast cx content in

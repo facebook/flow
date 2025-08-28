@@ -10,7 +10,6 @@ module ConsGen = Annotation_inference.ConsGen
 type resolved_module = Parsing_heaps.dependency_addr Parsing_heaps.resolved_module'
 
 type check_file =
-  only_support_flow_fixme_and_expected_error:bool ->
   File_key.t ->
   resolved_module Flow_import_specifier.Map.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
@@ -325,15 +324,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
     in
     Lazy.force file_rec
   in
-  let check_file
-      ~only_support_flow_fixme_and_expected_error
-      file_key
-      resolved_modules
-      ast
-      file_sig
-      docblock
-      aloc_table
-      find_ref_request =
+  let check_file file_key resolved_modules ast file_sig docblock aloc_table find_ref_request =
     let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     let ccx = Context.make_ccx () in
@@ -352,14 +343,7 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
-          Type_inference_js.infer_file
-            cx
-            file_key
-            metadata
-            comments
-            aloc_ast
-            ~only_support_flow_fixme_and_expected_error
-            ~lint_severities)
+          Type_inference_js.infer_file cx file_key metadata comments aloc_ast ~lint_severities)
     in
     let find_refs_result =
       FindRefs_js.local_refs_of_find_ref_request
