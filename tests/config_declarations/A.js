@@ -1,7 +1,7 @@
 // $FlowFixMe[incompatible-type]
 var test1: string = 123; // This error should be suppressed
 
-// $FlowIssue[incompatible-type]
+// $FlowFixMe[incompatible-type]
 var test2: string = 123; // This error should be suppressed
 
 function getNum() {
@@ -11,7 +11,7 @@ function getNum() {
 // $FlowFixMe[incompatible-type] This was the second loc in the error
 var test3: string = getNum(); // This error should be suppressed
 
-// $FlowFixMe Error unused suppression
+// $FlowFixMe[incompatible-type] Error unused suppression
 
 var test4: string = 123; // This error is NOT silenced
 

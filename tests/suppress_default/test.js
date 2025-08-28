@@ -1,29 +1,23 @@
-//$FlowFixMe
+//$FlowFixMe[incompatible-type]
 (3 : string);  // no error
 
-//$FlowExpectedError
+//$FlowExpectedError[incompatible-type]
 (3 : string);  // no error
 
-//$FlowIssue
+/* $FlowFixMe[incompatible-type] */
 (3 : string);  // no error
 
-/* $FlowFixMe */
+/** $FlowFixMe[incompatible-type] */
 (3 : string);  // no error
 
-/* $FlowIgnore */
-(3 : string);  // no error
-
-/** $FlowFixMe */
-(3 : string);  // no error
-
-// $FlowFixMe
+// $FlowFixMe[incompatible-type]
 (3 : string);  // no error
 
 /**
- * $FlowFixMe - this is
+ * $FlowFixMe[incompatible-type] - this is
  * a multiline comment
  */
 (3 : string); // no error
 
-// text before suppressor does not work $FlowFixMe
+// text before suppressor does not work $FlowFixMe[incompatible-type]
 (3 : string);  // error

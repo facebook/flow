@@ -16,7 +16,7 @@ function bar() {
   }
 
   if (value instanceof ImmutableSet) {
-    /* $FlowExpectedError This is an expected error in constrained-writes/ssa env mode
+    /* $FlowExpectedError[incompatible-type] This is an expected error in constrained-writes/ssa env mode
      * Modifying this file to not be an error anymore in those modes cancels out
      * its ability to track a potential regression (see D6231177) in the non-ssa env
      * mode. This regression is not common and it's also not clear how to trigger

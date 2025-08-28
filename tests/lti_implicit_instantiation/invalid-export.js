@@ -3,5 +3,5 @@
 
 export opaque type store<T> = mixed;
 
-// $FlowFixMe
+// $FlowFixMe[type-as-value]
 exports.store = store

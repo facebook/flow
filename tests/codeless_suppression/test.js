@@ -1,6 +1,3 @@
-// $FlowIssue
-(3: string);
-
 // $FlowFixMe
 (3: string);
 

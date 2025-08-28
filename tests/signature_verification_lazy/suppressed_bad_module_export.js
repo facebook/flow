@@ -1,6 +1,6 @@
 // @flow
 
 function foo() {
-  // $FlowFixMe
+  // $FlowFixMe[invalid-export]
   const x = module.exports;
 }

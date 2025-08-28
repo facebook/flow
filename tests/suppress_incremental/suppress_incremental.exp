@@ -27,7 +27,7 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
-   3| // $FlowIssue[incompatible-type]
+   3| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

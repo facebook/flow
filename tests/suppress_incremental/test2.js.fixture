@@ -1,4 +1,4 @@
 // @flow
 
-// $FlowIssue[incompatible-type]
+// $FlowFixMe[incompatible-type]
 (123: string);
