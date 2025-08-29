@@ -9,6 +9,7 @@ import DocCardList from '@theme/DocCardList';
 
 <DocCardList items={[
   {type: 'link', label: 'Babel', href: '/en/docs/tools/babel'},
+  {type: 'link', label: 'Prettier', href: '/en/docs/tools/prettier'},
   {type: 'link', label: 'ESLint', href: '/en/docs/tools/eslint'},
   {type: 'link', label: 'flow-remove-types', href: '/en/docs/tools/flow-remove-types'},
 ]} />

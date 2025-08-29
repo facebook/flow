@@ -163,7 +163,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Tools',
-      items: ['tools/babel', 'tools/eslint', 'tools/flow-remove-types'],
+      items: [
+        'tools/babel',
+        'tools/prettier',
+        'tools/eslint',
+        'tools/flow-remove-types',
+      ],
     },
     {
       type: 'category',

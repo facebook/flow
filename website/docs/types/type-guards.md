@@ -343,7 +343,7 @@ To use type guards, you need to upgrade your infrastructure so that it supports 
   * 0.209.1. Between v0.209.1 to v0.211.1, you need to explicitly enable it in your .flowconfig, under the `[options]` heading, add `type_guards=true`.
   * One-sided type guards are available as of version 0.237.0 with the option `one_sided_type_guards=true`, and are enabled by default as of v0.239.0.
   * `this` type guards are available as of version 0.261.0 with the option `this_type_guards=true`, and are enabled by default as of v0.269.0.
-- `prettier`: 3. `this` type guards require version 3.5 or later.
+- `prettier`: 3. `this` type guards require version 3.5 or later. See [these instructions](../../tools/prettier/) for installing prettier.
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../../tools/babel/) for setup instructions.
   * `this` type guards require hermes-parser version 0.26 or later.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../../tools/eslint/) for setup instructions.
