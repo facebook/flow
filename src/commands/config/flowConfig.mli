@@ -270,8 +270,6 @@ val relay_integration_module_prefix : config -> string option
 
 val relay_integration_module_prefix_includes : config -> string list
 
-val require_suppression_with_error_code : config -> bool
-
 val required_version : config -> string option
 
 val root_name : config -> string option

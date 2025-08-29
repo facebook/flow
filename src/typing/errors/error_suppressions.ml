@@ -231,7 +231,6 @@ let remove_lint_suppression_from_map loc (suppressions_map : t) =
 type error_code_kind =
   | ErrorCodeUnsuppressable
   | ErrorCodeRequireSpecific
-  | ErrorCodeGeneral
 
 let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
@@ -239,21 +238,12 @@ let check_loc suppressions specific_codes (result, (unused : t)) loc =
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
   let suppression_applies codes2 =
     match codes2 with
-    | All _ ->
-      CodeMap.for_all
-        (fun _code -> function
-          | ErrorCodeUnsuppressable
-          | ErrorCodeRequireSpecific ->
-            false
-          | ErrorCodeGeneral -> true)
-        specific_codes
+    | All _ -> false
     | Specific specific_codes2 ->
       CodeMap.for_all
         (fun code -> function
           | ErrorCodeUnsuppressable -> false
-          | ErrorCodeRequireSpecific
-          | ErrorCodeGeneral ->
-            CodeSet.mem code specific_codes2)
+          | ErrorCodeRequireSpecific -> CodeSet.mem code specific_codes2)
         specific_codes
   in
   match suppression_at_loc loc suppressions with
@@ -276,7 +266,6 @@ let in_declarations ~file_options loc =
 let check
     ~root
     ~file_options
-    ~require_suppression_with_error_code
     ~unsuppressable_error_codes
     (err : 'loc Flow_intermediate_error_types.intermediate_error)
     (suppressions : t)
@@ -288,10 +277,8 @@ let check
         let kind =
           if SSet.mem string_code unsuppressable_error_codes then
             ErrorCodeUnsuppressable
-          else if require_suppression_with_error_code || Error_codes.require_specific code then
-            ErrorCodeRequireSpecific
           else
-            ErrorCodeGeneral
+            ErrorCodeRequireSpecific
         in
         CodeMap.singleton (string_code, loc) kind
     )
@@ -331,28 +318,12 @@ let universally_suppressed_codes map =
     CodeLocSet.empty
 
 let filter_suppressed_errors
-    ~root
-    ~file_options
-    ~require_suppression_with_error_code
-    ~unsuppressable_error_codes
-    ~loc_of_aloc
-    suppressions
-    errors
-    ~unused =
+    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
       let error = Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error in
-      match
-        check
-          ~root
-          ~file_options
-          ~require_suppression_with_error_code
-          ~unsuppressable_error_codes
-          error
-          suppressions
-          unused
-      with
+      match check ~root ~file_options ~unsuppressable_error_codes error suppressions unused with
       | None -> acc
       | Some (severity, used, unused) ->
         (match severity with

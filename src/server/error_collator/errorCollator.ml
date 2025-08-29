@@ -100,8 +100,6 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
           Error_suppressions.filter_suppressed_errors
             ~root
             ~file_options
-            ~require_suppression_with_error_code:
-              (Options.require_suppression_with_error_code options)
             ~unsuppressable_error_codes
             ~loc_of_aloc
             suppressions
@@ -125,7 +123,6 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
-        ~require_suppression_with_error_code:(Options.require_suppression_with_error_code options)
         ~unsuppressable_error_codes
         ~loc_of_aloc
         (* Use all_suppressions here to account for misplaced errors. *)

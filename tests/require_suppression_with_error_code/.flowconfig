@@ -1,3 +1,0 @@
-[options]
-all=true
-experimental.require_suppression_with_error_code=true

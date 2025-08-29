@@ -229,8 +229,6 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
           Error_suppressions.filter_suppressed_errors
             ~root:(Context.root cx)
             ~file_options:None
-            ~require_suppression_with_error_code:
-              (Options.require_suppression_with_error_code cctx.Codemod_context.Typed.options)
             ~unsuppressable_error_codes
             ~loc_of_aloc
             suppressions

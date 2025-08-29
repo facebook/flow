@@ -340,7 +340,6 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options
-        ~require_suppression_with_error_code:(Options.require_suppression_with_error_code options)
         ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions
@@ -351,7 +350,6 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
       Error_suppressions.filter_suppressed_errors
         ~root
         ~file_options:None
-        ~require_suppression_with_error_code:(Options.require_suppression_with_error_code options)
         ~unsuppressable_error_codes
         ~loc_of_aloc
         suppressions

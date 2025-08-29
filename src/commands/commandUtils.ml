@@ -1550,8 +1550,6 @@ let make_options
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.relay_integration_module_prefix_includes flowconfig);
-    opt_require_suppression_with_error_code =
-      FlowConfig.require_suppression_with_error_code flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
     opt_slow_to_check_logging = options_flags.slow_to_check_logging;

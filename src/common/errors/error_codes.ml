@@ -217,25 +217,6 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UnusedPromise -> UnusedPromise
   | Lints.LibdefOverride -> LibdefOverride
 
-let require_specific : error_code -> bool = function
-  | InvalidRendersTypeArgument
-  | LibdefOverride
-  | ReactRuleUnsafeMutation
-  | ReactRuleHookConditional
-  | ReactRuleHookDefinitelyNotInComponentOrHook
-  | ReactRuleHookMixedWithNonHoook
-  | ReactRuleHookMutation
-  | ReactRuleHookNamingConvention
-  | ReactRuleHookNonHookSyntax
-  | ReactRuleHookIncompatible
-  | ReactRuleImmutableIncompatible
-  | ReactRuleHook
-  | ReactRuleRef
-  | ReactRuleCallComponent
-  | UndocumentedFeature ->
-    true
-  | _ -> false
-
 let string_of_code : error_code -> string = function
   | ReactRuleUnsafeMutation -> "react-rule-unsafe-mutation"
   | ReactRuleHookConditional -> "react-rule-hook-conditional"

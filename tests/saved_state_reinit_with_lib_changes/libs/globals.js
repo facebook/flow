@@ -1,4 +1,4 @@
 // @flow
 
-// $FlowFixMe
+// $FlowFixMe[cannot-resolve-name]
 declare var Foo: BADDD;

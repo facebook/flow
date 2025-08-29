@@ -20,8 +20,7 @@ let y : number | { x : number }  = 1;
 //$FlowFixMe[incompatible-type] unused
 //$FlowFixMe[incompatible-type] unused
 //$FlowFixMe[prop-missing] unused
-// $FlowExpectedError
-(y.x : string);
+(y.x : string); // error not suppressed, missing code
 
 
 //$FlowFixMe unused

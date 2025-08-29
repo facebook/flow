@@ -83,6 +83,14 @@ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-se
                        ^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- libs/missing_name.js:11:6
+
+Cannot resolve name `R`. [cannot-resolve-name]
+
+   11|   r: R;  // error missing code
+            ^
+
+
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:13:6
 
 Cannot resolve name `S`. [cannot-resolve-name]
@@ -221,7 +229,7 @@ References:
 
 
 
-Found 22 errors
+Found 23 errors
 
 ============================================
 With warnings:
@@ -306,6 +314,14 @@ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-se
 
    3| /* flowlint-line unknown rule:off */ // unknown rule
                        ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- libs/missing_name.js:11:6
+
+Cannot resolve name `R`. [cannot-resolve-name]
+
+   11|   r: R;  // error missing code
+            ^
 
 
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:13:6
@@ -447,11 +463,11 @@ References:
 
 Warning -------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[cannot-resolve-name]`
+Unused suppression comment.
 
    10|   // $FlowFixMe
          ^^^^^^^^^^^^^
 
 
 
-Found 22 errors and 1 warning
+Found 23 errors and 1 warning

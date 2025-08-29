@@ -5,21 +5,21 @@ let x : number = 1;
 (x : string); // error correctly
 
 //$FlowFixMe
-(x : string); // error suppressed
+(x : string); // error not suppressed, missing code
 
 //$FlowFixMe[]
 (x : string); // error not suppressed, malformed code
 
 // $FlowFixMe
-(x : string); // error suppressed
+(x : string); // error not suppressed, missing code
 
 /*
 
 $FlowFixMe*/
-(x: string); // error suppressed
+(x: string); // error not suppressed, missing code
 
 //$FlowFixMe arithmetic isn't parsed as an error code
-(x : string); // error suppressed
+(x : string); // error not suppressed, missing code
 
 //$FlowFixMe[incompatible-type] asdfasdf
 (x : string); // error suppressed
@@ -40,7 +40,7 @@ let y : number | { x : number }  = 1;
 (y.x : string); // both errors appear
 
 // $FlowFixMe
-(y.x : string); // no errors
+(y.x : string); // errors not suppressed, missing code
 
 //$FlowFixMe[incompatible-type]
 (y.x : string); // only the property access shows up
@@ -89,7 +89,7 @@ $FlowFixMe[incompatible-type]
 let z : number = 3;
 
 //$FlowFixMe
-(z : string | boolean); // suppressed
+(z : string | boolean); // errors not suppressed, missing code
 
 //$FlowFixMe[incompatible-type]
 (z : string | boolean); // suppressed
@@ -101,7 +101,7 @@ let z : number = 3;
 declare function foo (string) : void;
 
 // $FlowFixMe
-foo(3, 4); // no error
+foo(3, 4); // error not suppressed, missing code
 
 // $FlowFixMe[incompatible-type]
 // $FlowFixMe[extra-arg]
@@ -119,7 +119,7 @@ declare var any: any;
 ((any: {} & number): {bar:string}); // error
 
 // $FlowFixMe
-((any: {} & number): {bar:string});  // no error
+((any: {} & number): {bar:string});  // error not suppressed, missing code
 
 // $FlowFixMe[incompatible-type]
 ((any: {} & number): {bar:string});  // no error

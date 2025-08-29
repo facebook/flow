@@ -2,5 +2,5 @@
 
 import {f} from "./dep";
 
-// $FlowFixMe
+// $FlowFixMe[incompatible-type]
 f(0);

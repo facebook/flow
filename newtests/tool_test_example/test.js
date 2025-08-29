@@ -76,7 +76,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
   // use another file as the flowconfig.
   test('flowconfig', [
     addCode(`
-      // $FlowFixMe - This is enabled in other_flowconfig
+      // $FlowFixMe[incompatible-type] - This is enabled in other_flowconfig
       ("not a number": number)
     `).noNewErrors(),
   ]).flowConfig('other_flowconfig'),

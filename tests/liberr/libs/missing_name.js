@@ -8,7 +8,7 @@ declare class C {
   q: Q; // error is suppressed
 
   // $FlowFixMe
-  r: R;  // warning missing code
+  r: R;  // error missing code
 
   s: S; // error, S is not defined
 
