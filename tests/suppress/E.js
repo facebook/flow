@@ -5,5 +5,5 @@
 // Note: this test assumes that sketchy-null-string is never explicitly enabled
 
 declare var x: ?string;
-// $FlowFixMe - this is unused because sketchy-null-string is off
+// $FlowFixMe[sketchy-null-string] - this is unused because sketchy-null-string is off
 if (x) {}

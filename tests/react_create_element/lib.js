@@ -19,7 +19,6 @@ type CheckedReactElement<
   // _Validation is never going to be constrained, so it will always take the default.
   // Then we can force it to be compatible with the expected config with the type parameter bound check.
   // The check will fail under the generic version, so we suppress
-  // $FlowFixMe
   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
 > =
   ExactReactElement_DEPRECATED<Comp>;

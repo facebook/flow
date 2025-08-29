@@ -2,4 +2,4 @@
 
 export function foo(x: string) {}
 
-// $FlowFixMe - Unused suppression
+// $FlowFixMe[random] - Unused suppression

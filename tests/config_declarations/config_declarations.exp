@@ -12,36 +12,36 @@ References:
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- D.js:8:5
+Error --------------------------------------------------------------------------------------------------------- D.js:7:5
 
 Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
 `x`. [incompatible-type]
 
-   D.js:8:5
-   8| x = y;
+   D.js:7:5
+   7| x = y;
           ^
 
 References:
    D.js:2:6
    2|   x: { foo: string }
            ^^^^^^^^^^^^^^^ [1]
-   D.js:6:6
-   6|   x: { bar: number }
+   D.js:5:6
+   5|   x: { bar: number }
            ^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------------- D.js:8:5
+Error --------------------------------------------------------------------------------------------------------- D.js:7:5
 
 Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
 `x`. [incompatible-type]
 
-   D.js:8:5
-   8| x = y;
+   D.js:7:5
+   7| x = y;
           ^
 
 References:
-   D.js:6:6
-   6|   x: { bar: number }
+   D.js:5:6
+   5|   x: { bar: number }
            ^^^^^^^^^^^^^^^ [1]
    D.js:2:6
    2|   x: { foo: string }
@@ -60,17 +60,9 @@ Warning ------------------------------------------------------------------------
 
 Unused suppression comment.
 
-   1| // $FlowFixMe
-      ^^^^^^^^^^^^^
-
-
-Warning ------------------------------------------------------------------------------------------------------- D.js:5:3
-
-Unused suppression comment.
-
-   5|   // $FlowFixMe - this location is only mentioned in the extra section
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   1| // $FlowFixMe[incompatible-type]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 3 errors and 3 warnings
+Found 3 errors and 2 warnings
