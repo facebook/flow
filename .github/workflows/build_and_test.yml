@@ -268,7 +268,6 @@ jobs:
       shell: pwsh
     - name: Init opam
       run: opam init --bare --disable-sandboxing --no-setup --yes --cygwin-internal-install
-      shell: C:\cygwin\bin\bash.exe '{0}'
       env:
         PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Create opam switch
