@@ -258,6 +258,8 @@ jobs:
       OPAMDOWNLOADJOBS: 1
     steps:
     - uses: actions/checkout@v3.6.0
+      with:
+        set-safe-directory: false
     - name: Install dependencies
       run: |
         choco install --no-progress -y --source https://chocolatey.org/api/v2/ 7zip
