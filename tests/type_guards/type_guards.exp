@@ -1904,7 +1904,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
 
-Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot cast `x` to `B` because `number` [1] is not exactly the same as `string` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `A` [3] and `B` [4] exactly the same
+- Or make property `foo` in `B` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    refinement.js:61:8
    61|       (x: B); // error A ~> B
@@ -1917,12 +1922,25 @@ References:
    refinement.js:54:29
    54|   type B = { tag: 'B', foo: string };
                                    ^^^^^^ [2]
+   refinement.js:53:12
+   53|   type A = { tag: 'A', foo: number };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   refinement.js:54:12
+   54|   type B = { tag: 'B', foo: string };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   refinement.js:61:11
+   61|       (x: B); // error A ~> B
+                 ^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
 
-Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag`.
-[incompatible-type]
+Cannot cast `x` to `B` because `"A"` [1] is not exactly the same as `"B"` [2] in property `tag`. 
+
+The above-mentioned two types must be the same because property `tag` is invariantly typed. To fix the error,
+- Either make `A` [3] and `B` [4] exactly the same
+- Or make property `tag` in `B` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    refinement.js:61:8
    61|       (x: B); // error A ~> B
@@ -1935,6 +1953,15 @@ References:
    refinement.js:54:19
    54|   type B = { tag: 'B', foo: string };
                          ^^^ [2]
+   refinement.js:53:12
+   53|   type A = { tag: 'A', foo: number };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   refinement.js:54:12
+   54|   type B = { tag: 'B', foo: string };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   refinement.js:61:11
+   61|       (x: B); // error A ~> B
+                 ^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:72:8
@@ -2885,7 +2912,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:10
 
-Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element.
+Cannot return `f` because `(x: mixed) => x is C` [1] is not exactly the same as `(x: mixed) => x is A` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<(x: mixed) => x is C>` [3] and `Array<(x: mixed) => x is A>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    subtyping.js:66:10
@@ -2893,17 +2926,29 @@ Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predi
                 ^
 
 References:
-   subtyping.js:65:92
+   subtyping.js:65:43
    65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                                                                                  ^ [1]
-   subtyping.js:65:62
+                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:65:73
    65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                                                    ^ [2]
+                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   subtyping.js:65:37
+   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:65:67
+   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:70:10
 
-Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate of array element.
+Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is B` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is B>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    subtyping.js:70:10
@@ -2911,17 +2956,29 @@ Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predi
                 ^
 
 References:
-   subtyping.js:69:62
+   subtyping.js:69:43
    69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                                                    ^ [1]
-   subtyping.js:69:92
+                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:69:73
    69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                                                                                  ^ [2]
+                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   subtyping.js:69:37
+   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:69:67
+   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:74:10
 
-Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate of array element.
+Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is C` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is C>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    subtyping.js:74:10
@@ -2929,33 +2986,48 @@ Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predi
                 ^
 
 References:
-   subtyping.js:73:62
+   subtyping.js:73:43
    73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                                                    ^ [1]
-   subtyping.js:73:92
+                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:73:73
    73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                                                                                  ^ [2]
+                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   subtyping.js:73:37
+   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:73:67
+   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:82:10
 
-Cannot return `f` because one-sided type guard [1] is incompatible with default type guard [2] in array element. 
+Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => implies x is A` [2] in
+array element. 
 
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[function-predicate]
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => implies x is A>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    subtyping.js:82:10
    82|   return f; // error
                 ^
 
 References:
-   subtyping.js:81:95
+   subtyping.js:81:51
    81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                                                                     ^^^^^^^^^^^^^^ [1]
-   subtyping.js:81:65
+                                                         ^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:81:81
    81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                                       ^^^^^^ [2]
+                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   subtyping.js:81:45
+   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:81:75
+   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:19:39
@@ -3602,10 +3674,15 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
-Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. 
+Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
+array element. 
 
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+A user defined type guard needs to be compatible with its parameter's type.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type-guard]
 
    type_guard_compatibility.js:19:59
    19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
@@ -3618,6 +3695,9 @@ References:
    type_guard_compatibility.js:19:43
    19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
                                                  ^ [3]
+   type_guard_compatibility.js:19:37
+   19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
+                                           ^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:27:33
@@ -3638,10 +3718,15 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
-Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. 
+Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
+array element. 
 
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+A user defined type guard needs to be compatible with its parameter's type.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type-guard]
 
    type_guard_compatibility.js:29:54
    29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
@@ -3654,14 +3739,22 @@ References:
    type_guard_compatibility.js:29:36
    29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
                                           ^ [3]
+   type_guard_compatibility.js:29:30
+   29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                    ^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
-Cannot use array type [1] as type prediate for parameter `x` because mixed [2] is incompatible with `X` [3] in array
-element. 
+Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
+array element. 
 
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+A user defined type guard needs to be compatible with its parameter's type.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type-guard]
 
    type_guard_compatibility.js:30:54
    30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
@@ -3674,6 +3767,9 @@ References:
    type_guard_compatibility.js:30:36
    30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
                                           ^ [3]
+   type_guard_compatibility.js:30:30
+   30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X
+                                    ^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- unbound.js:1:23

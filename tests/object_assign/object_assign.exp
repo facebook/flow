@@ -191,8 +191,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because number [1] is incompatible with string [2] in
-the indexer property. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because `?string` [1] is not exactly the same as
+`?number` [2] in the indexer property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[string]: ?string}` [3] and `{[string]: ?number}` [4] exactly the same
+- Or make the indexer in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    maybe.js:12:34
                                         v----------------------
@@ -203,12 +208,51 @@ the indexer property. [incompatible-type]
            ^
 
 References:
-   maybe.js:3:21
-    3|   int: ?{[string]: ?number, ...},
-                           ^^^^^^ [1]
-   maybe.js:2:24
+   maybe.js:2:23
     2|   string: ?{[string]: ?string, ...},
-                              ^^^^^^ [2]
+                             ^^^^^^^ [1]
+   maybe.js:3:20
+    3|   int: ?{[string]: ?number, ...},
+                          ^^^^^^^ [2]
+   maybe.js:2:12
+    2|   string: ?{[string]: ?string, ...},
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   maybe.js:3:9
+    3|   int: ?{[string]: ?number, ...},
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
+
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because `?number` [1] is not exactly the same as
+`?string` [2] in the indexer property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[string]: ?number}` [3] and `{[string]: ?string}` [4] exactly the same
+- Or make the indexer in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   maybe.js:12:34
+                                        v----------------------
+   12|     target[annotationTypeName] = Object.assign( // error
+   13|       target[annotationTypeName],
+   14|       source[annotationTypeName],
+   15|     );
+           ^
+
+References:
+   maybe.js:3:20
+    3|   int: ?{[string]: ?number, ...},
+                          ^^^^^^^ [1]
+   maybe.js:2:23
+    2|   string: ?{[string]: ?string, ...},
+                             ^^^^^^^ [2]
+   maybe.js:3:9
+    3|   int: ?{[string]: ?number, ...},
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   maybe.js:2:12
+    2|   string: ?{[string]: ?string, ...},
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
@@ -286,8 +330,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:5:28
 
-Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-type]
+Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as
+`void | number` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    spread.js:5:28
    5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
@@ -297,12 +346,23 @@ References:
    spread.js:5:61
    5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
                                                                   ^^^^^^ [2]
+   spread.js:5:21
+   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
+                          ^^^^^^^^^^^^^^ [3]
+   spread.js:5:53
+   5| (Object.assign(({}: {foo?: string}), ...arrOfObjs): { foo?: number}); // Error: string ~> number
+                                                          ^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:28
 
-Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
-[incompatible-type]
+Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as
+`void | number` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    spread.js:6:28
    6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
@@ -312,12 +372,23 @@ References:
    spread.js:6:63
    6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
                                                                     ^^^^^^ [2]
+   spread.js:6:21
+   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
+                          ^^^^^^^^^^^^^^ [3]
+   spread.js:6:55
+   6| (Object.assign(({}: {foo?: string}), ...roArrOfObjs): { foo?: number}); // Error: string ~> number
+                                                            ^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- spread.js:7:42
 
-Cannot cast `Object.assign(...)` to object type because number [1] is incompatible with boolean [2] in property `bar`.
-[incompatible-type]
+Cannot cast `Object.assign(...)` to object type because `void | number` [1] is not exactly the same as
+`void | boolean` [2] in property `bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make `{bar?: number, foo?: string}` [3] and `{bar?: boolean, foo?: string}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    spread.js:7:42
    7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
@@ -327,12 +398,23 @@ References:
    spread.js:7:83
    7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
                                                                                         ^^^^^^^ [2]
+   spread.js:7:21
+   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   spread.js:7:61
+   7| (Object.assign(({}: {foo?: string, bar?: number}), ...tup): { foo?: string, bar?: boolean}); // Error: number ~> boolean
+                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- spread.js:10:25
 
-Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with boolean literal `true` [2] in
-property `b`. [incompatible-type]
+Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as `void | true` [2]
+in property `b`. 
+
+The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
+- Either make `{a?: number, b?: string, c?: boolean}` [3] and `{a?: number, b?: true, c?: boolean}` [4] exactly the same
+- Or make property `b` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    spread.js:10:25
    10|   ({}: {a?: number, b?: string, c?: boolean}),
@@ -342,7 +424,13 @@ References:
    spread.js:13:21
    13| ): {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
                            ^^^^ [2]
+   spread.js:10:8
+   10|   ({}: {a?: number, b?: string, c?: boolean}),
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   spread.js:13:4
+   13| ): {a?: number, b?: true, c?: boolean}); // Error: 'foo' => true
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 
-Found 21 errors
+Found 22 errors

@@ -18,8 +18,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type-decls-neg.js:29:3
 
-Cannot cast `data` to `SystemData` because string literal `user` [1] is incompatible with string literal `system` [2] in
-property `kind`. [incompatible-type]
+Cannot cast `data` to `SystemData` because `"user"` [1] is not exactly the same as `"system"` [2] in property `kind`. 
+
+The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
+- Either make `UserData` [3] and `SystemData` [4] exactly the same
+- Or make property `kind` in `SystemData` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    type-decls-neg.js:29:3
    29|   data as SystemData;
@@ -32,6 +36,25 @@ References:
    type-decls-neg.js:17:9
    17|   kind: 'system',
                ^^^^^^^^ [2]
+   type-decls-neg.js:8:17
+                       v
+    8| type UserData = {
+    9|   id: string,
+   10|   name: string,
+   11|   kind: 'user',
+   12| };
+       ^ [3]
+   type-decls-neg.js:14:19
+                         v
+   14| type SystemData = {
+   15|   id: string,
+   16|   name: string,
+   17|   kind: 'system',
+   18| };
+       ^ [4]
+   type-decls-neg.js:29:11
+   29|   data as SystemData;
+                 ^^^^^^^^^^ [5]
 
 
 

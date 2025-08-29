@@ -73,8 +73,12 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:80
 
-Cannot assign object literal to `o7` because number [1] is incompatible with string [2] in property `y`.
-[incompatible-type]
+Cannot assign object literal to `o7` because `number` [1] is not exactly the same as `string` [2] in property `y`. 
+
+The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
+- Either make `{[_: any]: number, x: number}` [3] and `{x: number, y?: string, ...}` [4] exactly the same
+- Or make property `y` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:19:80
    19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
@@ -84,6 +88,12 @@ References:
    test.js:19:26
    19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
                                 ^^^^^^ [2]
+   test.js:19:59
+   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:19:9
+   19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 

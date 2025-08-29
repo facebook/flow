@@ -212,7 +212,7 @@ module Opts = struct
       constant_condition_function_includes = [];
       invalid_comparison_general_includes = [];
       invalid_comparison_null_check_includes = [];
-      invariant_subtyping_error_message_improvement = false;
+      invariant_subtyping_error_message_improvement = true;
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1148,7 +1148,12 @@ module Opts = struct
               })
       );
       ( "experimental.invariant_subtyping_error_message_improvement",
-        boolean (fun opts v -> Ok { opts with invariant_subtyping_error_message_improvement = v })
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error "experimental.invariant_subtyping_error_message_improvement cannot be disabled."
+        )
       );
       ( "experimental.only_support_flow_fixme_and_expected_error",
         boolean (fun opts v ->

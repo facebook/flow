@@ -2433,8 +2433,14 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ variance.js:43:15
 
-Cannot call `f` with `n` bound to the first parameter because tuple element at index `0` is read-only in tuple type [1]
-but writable in tuple type [2] in array element. [incompatible-variance]
+Cannot call `f` with `n` bound to the first parameter because `readonly [n: number]` [1] is not exactly the same as
+`[number]` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<readonly [n: number]>` [3] and `Array<[number]>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    variance.js:43:15
    43| const res = f(n); // ERROR
@@ -2447,6 +2453,12 @@ References:
    variance.js:41:29
    41| declare function f<K>(Array<[K]>): K;
                                    ^^^ [2]
+   variance.js:42:16
+   42| declare var n: Array<[+n: number]>;
+                      ^^^^^^^^^^^^^^^^^^^ [3]
+   variance.js:41:23
+   41| declare function f<K>(Array<[K]>): K;
+                             ^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:45:2

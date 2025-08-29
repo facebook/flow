@@ -335,7 +335,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:18:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `a`. [incompatible-type]
+Cannot cast `any` to `Foo` because `string` [1] is not exactly the same as indexed access [2] in property `a`. 
+
+The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
+- Either make `{a: string, b: string}` [3] and mapped type [4] exactly the same
+- Or make property `a` in `IdentityMap` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    identity.js:18:6
    18|   a: string, // Error: string ~> number
@@ -345,11 +350,29 @@ References:
    identity.js:3:40
     3| type IdentityMap<O> = {[K in keyof O]: O[K]};
                                               ^^^^ [2]
+   identity.js:17:8
+              v
+   17| ((any: {
+   18|   a: string, // Error: string ~> number
+   19|   b: string, // Error: string ~> number
+   20| }): Foo);
+       ^ [3]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [4]
+   identity.js:20:5
+   20| }): Foo);
+           ^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:19:6
 
-Cannot cast `any` to `Foo` because string [1] is incompatible with number [2] in property `b`. [incompatible-type]
+Cannot cast `any` to `Foo` because `string` [1] is not exactly the same as indexed access [2] in property `b`. 
+
+The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
+- Either make `{a: string, b: string}` [3] and mapped type [4] exactly the same
+- Or make property `b` in `IdentityMap` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    identity.js:19:6
    19|   b: string, // Error: string ~> number
@@ -359,6 +382,19 @@ References:
    identity.js:3:40
     3| type IdentityMap<O> = {[K in keyof O]: O[K]};
                                               ^^^^ [2]
+   identity.js:17:8
+              v
+   17| ((any: {
+   18|   a: string, // Error: string ~> number
+   19|   b: string, // Error: string ~> number
+   20| }): Foo);
+       ^ [3]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [4]
+   identity.js:20:5
+   20| }): Foo);
+           ^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:22:7
@@ -423,7 +459,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `a`. [incompatible-type]
+Cannot cast `foo` to object type because indexed access [1] is not exactly the same as `string` [2] in property `a`. 
+
+The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{a: string, b: string}` [4] exactly the same
+- Or make property `a` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    identity.js:31:2
    31| (foo: {
@@ -436,11 +477,26 @@ References:
    identity.js:32:6
    32|   a: string, // Error: number ~> string
             ^^^^^^ [2]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   identity.js:31:7
+             v
+   31| (foo: {
+   32|   a: string, // Error: number ~> string
+   33|   b: string, // Error: number ~> string
+   34| });
+       ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:2
 
-Cannot cast `foo` to object type because number [1] is incompatible with string [2] in property `b`. [incompatible-type]
+Cannot cast `foo` to object type because indexed access [1] is not exactly the same as `string` [2] in property `b`. 
+
+The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{a: string, b: string}` [4] exactly the same
+- Or make property `b` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    identity.js:31:2
    31| (foo: {
@@ -453,6 +509,16 @@ References:
    identity.js:33:6
    33|   b: string, // Error: number ~> string
             ^^^^^^ [2]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   identity.js:31:7
+             v
+   31| (foo: {
+   32|   a: string, // Error: number ~> string
+   33|   b: string, // Error: number ~> string
+   34| });
+       ^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:36:2
@@ -911,44 +977,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
-Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
+Cannot cast `mapped` to object type because optional `$ElementType` [1] is not exactly the same as `empty` [2] in
+property `bar`. 
 
-   import.js:18:4
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
-
-References:
-   export.js:1:30
-    1| type O = {foo: number, bar?: string, +baz: boolean};
-                                    ^^^^^^ [1]
-   import.js:18:30
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                    ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- import.js:18:4
-
-Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
-
-   import.js:18:4
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
-
-References:
-   export.js:1:30
-    1| type O = {foo: number, bar?: string, +baz: boolean};
-                                    ^^^^^^ [1]
-   import.js:18:30
-   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                    ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- import.js:18:4
-
-Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -961,6 +996,12 @@ References:
    import.js:18:30
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
+   export.js:3:24
+    3| export type MappedO = {[key in keyof O]: O[key]};
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   import.js:18:12
+   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
@@ -983,20 +1024,31 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
-Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-type]
+Cannot cast `mapped` to object type because `$ElementType` [1] is not exactly the same as `empty` [2] in property `foo`.
+
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    import.js:18:4
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   export.js:1:16
-    1| type O = {foo: number, bar?: string, +baz: boolean};
-                      ^^^^^^ [1]
+   export.js:3:42
+    3| export type MappedO = {[key in keyof O]: O[key]};
+                                                ^^^^^^ [1]
    import.js:18:18
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                         ^^^^^ [2]
+   export.js:3:24
+    3| export type MappedO = {[key in keyof O]: O[key]};
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   import.js:18:12
+   18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:19:10
@@ -1041,8 +1093,13 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
-Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
+Cannot cast `mapped` to object type because optional `$ElementType` [1] is not exactly the same as `empty` [2] in
+property `bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
@@ -1055,42 +1112,12 @@ References:
    import.js:47:30
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                                     ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- import.js:47:4
-
-Cannot cast `mapped` to object type because string [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
-
-   import.js:47:4
+   export.js:7:42
+    7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   import.js:47:12
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
-
-References:
-   import.js:40:30
-   40| type O = {foo: number, bar?: string, +baz: boolean};
-                                    ^^^^^^ [1]
-   import.js:47:30
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                    ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- import.js:47:4
-
-Cannot cast `mapped` to object type because undefined [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
-
-   import.js:47:4
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-          ^^^^^^
-
-References:
-   import.js:40:30
-   40| type O = {foo: number, bar?: string, +baz: boolean};
-                                    ^^^^^^ [1]
-   import.js:47:30
-   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
-                                    ^^^^^ [2]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
@@ -1113,20 +1140,31 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
-Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-type]
+Cannot cast `mapped` to object type because `$ElementType` [1] is not exactly the same as `empty` [2] in property `foo`.
+
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    import.js:47:4
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
           ^^^^^^
 
 References:
-   import.js:40:16
-   40| type O = {foo: number, bar?: string, +baz: boolean};
-                      ^^^^^^ [1]
+   export.js:7:60
+    7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
+                                                                  ^^^^^^ [1]
    import.js:47:18
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                         ^^^^^ [2]
+   export.js:7:42
+    7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   import.js:47:12
+   47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:48:10
@@ -1589,8 +1627,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
 
-Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
+Cannot cast `mapped` to object type because number [1] is not exactly the same as `empty` [2] in property `bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: empty, foo: empty}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:12:4
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
@@ -1603,12 +1645,22 @@ References:
    non_homomorphic.js:12:30
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
                                     ^^^^^ [2]
+   non_homomorphic.js:4:17
+    4|   type Mapped = {[key in Keys]: number};
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:12:12
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:12:4
 
-Cannot cast `mapped` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-type]
+Cannot cast `mapped` to object type because number [1] is not exactly the same as `empty` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: empty, foo: empty}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:12:4
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
@@ -1621,12 +1673,23 @@ References:
    non_homomorphic.js:12:18
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
                         ^^^^^ [2]
+   non_homomorphic.js:4:17
+    4|   type Mapped = {[key in Keys]: number};
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:12:12
+   12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
+                  ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
-Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in property `foo`.
-[incompatible-type]
+Cannot cast `withLeftovers` to object type because number [1] is not exactly the same as `string` [2] in property `foo`.
+
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:21:4
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
@@ -1639,12 +1702,23 @@ References:
    non_homomorphic.js:21:43
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
                                                  ^^^^^^ [2]
+   non_homomorphic.js:18:24
+   18|   type WithLeftovers = {[key in 'foo' | number]: number};
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:21:19
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
-Cannot cast `withLeftovers` to object type because number [1] is incompatible with string [2] in the indexer property.
-[incompatible-type]
+Cannot cast `withLeftovers` to object type because number [1] is not exactly the same as `string` [2] in the indexer
+property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
+- Or make the indexer in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:21:4
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
@@ -1657,6 +1731,12 @@ References:
    non_homomorphic.js:21:30
    21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
                                     ^^^^^^ [2]
+   non_homomorphic.js:18:24
+   18|   type WithLeftovers = {[key in 'foo' | number]: number};
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:21:19
+   21|   (withLeftovers: {[number]: string, foo: string}); // ERROR 2x
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------- non_homomorphic.js:28:27
@@ -1676,8 +1756,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
-Cannot cast `keyMirroredObject` to object type because string literal `bar` [1] is incompatible with string literal
-`baz` [2] in property `bar`. [incompatible-type]
+Cannot cast `keyMirroredObject` to object type because `key` [1] is not exactly the same as `"baz"` [2] in property
+`bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: "baz", baz: "foo", foo: "bar"}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1690,12 +1775,23 @@ References:
    non_homomorphic.js:40:41
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                                ^^^^^ [2]
+   non_homomorphic.js:35:62
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                    ^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:40:23
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
-Cannot cast `keyMirroredObject` to object type because string literal `baz` [1] is incompatible with string literal
-`foo` [2] in property `baz`. [incompatible-type]
+Cannot cast `keyMirroredObject` to object type because `key` [1] is not exactly the same as `"foo"` [2] in property
+`baz`. 
+
+The above-mentioned two types must be the same because property `baz` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: "baz", baz: "foo", foo: "bar"}` [4] exactly the same
+- Or make property `baz` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1708,12 +1804,23 @@ References:
    non_homomorphic.js:40:53
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                                            ^^^^^ [2]
+   non_homomorphic.js:35:62
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                    ^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:40:23
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:40:4
 
-Cannot cast `keyMirroredObject` to object type because string literal `foo` [1] is incompatible with string literal
-`bar` [2] in property `foo`. [incompatible-type]
+Cannot cast `keyMirroredObject` to object type because `key` [1] is not exactly the same as `"bar"` [2] in property
+`foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: "baz", baz: "foo", foo: "bar"}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:40:4
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
@@ -1726,6 +1833,12 @@ References:
    non_homomorphic.js:40:29
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                                    ^^^^^ [2]
+   non_homomorphic.js:35:62
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                    ^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:40:23
+   40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
@@ -1748,8 +1861,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
-Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `bar`.
-[incompatible-type]
+Cannot cast `noContext` to object type because number [1] is not exactly the same as `empty` [2] in property `bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: empty, baz: number, foo: empty}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:48:4
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
@@ -1762,12 +1879,22 @@ References:
    non_homomorphic.js:48:33
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                                        ^^^^^ [2]
+   non_homomorphic.js:45:89
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                               ^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:48:15
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
 
-Cannot cast `noContext` to object type because number [1] is incompatible with empty [2] in property `foo`.
-[incompatible-type]
+Cannot cast `noContext` to object type because number [1] is not exactly the same as `empty` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar: empty, baz: number, foo: empty}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    non_homomorphic.js:48:4
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
@@ -1780,6 +1907,12 @@ References:
    non_homomorphic.js:48:21
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                            ^^^^^ [2]
+   non_homomorphic.js:45:89
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                               ^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:48:15
+   48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
@@ -1835,8 +1968,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
-Cannot cast `preserve` to object type because string [1] is incompatible with number [2] in property `bar`.
-[incompatible-type]
+Cannot cast `preserve` to object type because optional indexed access [1] is not exactly the same as `void | number` [2]
+in property `bar`. 
+
+The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar?: number, foo: string}` [4] exactly the same
+- Or make property `bar` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
@@ -1849,32 +1987,23 @@ References:
    optionality.js:9:34
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
                                        ^^^^^^ [2]
+   optionality.js:5:19
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   optionality.js:9:14
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
 
-Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `bar`. 
+Cannot cast `preserve` to object type because indexed access [1] is not exactly the same as `string` [2] in property
+`foo`. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{bar?: number, foo: string}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   optionality.js:9:4
-   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
-         ^^^^^^^^
-
-References:
-   optionality.js:9:34
-   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
-                                       ^^^^^^ [1]
-   optionality.js:1:30
-   1| type O = {foo: number, bar?: string};
-                                   ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- optionality.js:9:4
-
-Cannot cast `preserve` to object type because number [1] is incompatible with string [2] in property `foo`.
-[incompatible-type]
 
    optionality.js:9:4
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
@@ -1887,6 +2016,12 @@ References:
    optionality.js:9:20
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
                          ^^^^^^ [2]
+   optionality.js:5:19
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   optionality.js:9:14
+   9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- optionality.js:13:10
@@ -2261,44 +2396,83 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
-Cannot cast `badVal` to `Mapped` because string [1] is incompatible with number [2] in property `foo.contents`.
-[incompatible-type]
+Cannot cast `badVal` to `Mapped` because `{contents: string}` [1] is not exactly the same as `Box` [2] in property
+`foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `{foo: {contents: string}}` [3] and mapped type [4] exactly the same
+- Or make property `foo` in `Mapped` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:45:4
    45|   (badVal: Mapped<O>); // ERROR
           ^^^^^^
 
 References:
-   test.js:44:42
+   test.js:44:31
    44|   declare const badVal: {foo: {contents: string}};
-                                                ^^^^^^ [1]
-   test.js:1:18
-    1| type O = {| foo: number |}
-                        ^^^^^^ [2]
+                                     ^^^^^^^^^^^^^^^^^^ [1]
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [2]
+   test.js:44:25
+   44|   declare const badVal: {foo: {contents: string}};
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:13:49
+                                                       v
+   13| type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
+   14|   [key in keyof O]: Box<O[key]>,
+   15| };
+       ^ [4]
+   test.js:45:12
+   45|   (badVal: Mapped<O>); // ERROR
+                  ^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:4
 
-Cannot cast `badA` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
-element. [incompatible-type]
+Cannot cast `badA` to `Mapped` because `{contents: string}` [1] is not exactly the same as `Box` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{contents: string}>` [3] and array type [4] exactly the same
+- Or make array type [5] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:59:4
    59|   (badA: Mapped<Arr>); // ERROR
           ^^^^
 
 References:
-   test.js:53:40
+   test.js:53:29
    53|   declare const badA: Array<{contents: string}>;
-                                              ^^^^^^ [1]
-   test.js:2:18
-    2| type Arr = Array<number>;
-                        ^^^^^^ [2]
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [2]
+   test.js:53:23
+   53|   declare const badA: Array<{contents: string}>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:13:49
+                                                       v
+   13| type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
+   14|   [key in keyof O]: Box<O[key]>,
+   15| };
+       ^ [4]
+   test.js:59:10
+   59|   (badA: Mapped<Arr>); // ERROR
+                ^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:4
 
-Cannot cast `badB` to `Mapped` because string [1] is incompatible with number [2] in property `contents` of array
-element. [incompatible-type]
+Cannot cast `badB` to `Mapped` because `string` [1] is not exactly the same as `ROArr[number]` [2] in property
+`contents` of array element. 
+
+The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
+- Either make `{contents: string}` [3] and `{contents: ROArr[number]}` [4] exactly the same
+- Or make property `contents` in `Box` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:60:4
    60|   (badB: Mapped<ROArr>); // ERROR
@@ -2308,16 +2482,28 @@ References:
    test.js:54:49
    54|   declare const badB: $ReadOnlyArray<{contents: string}>;
                                                        ^^^^^^ [1]
-   test.js:3:29
-    3| type ROArr = $ReadOnlyArray<number>;
-                                   ^^^^^^ [2]
+   test.js:14:25
+   14|   [key in keyof O]: Box<O[key]>,
+                               ^^^^^^ [2]
+   test.js:54:38
+   54|   declare const badB: $ReadOnlyArray<{contents: string}>;
+                                            ^^^^^^^^^^^^^^^^^^ [3]
+   test.js:5:15
+    5| type Box<T> = {contents: T};
+                     ^^^^^^^^^^^^^ [4]
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `badC` to `Mapped` because undefined [1] is incompatible with string [2] in property `contents` of index 1. 
+Cannot cast `badC` to `Mapped` because `string` [1] is not exactly the same as `Tuple[1]` [2] in property `contents` of
+index 1. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
+- Either make `{contents: string}` [3] and `{contents: Tuple[1]}` [4] exactly the same
+- Or make property `contents` in `Box` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:61:4
@@ -2325,12 +2511,21 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^^
 
 References:
-   test.js:4:31
-    4| type Tuple = [a: number, +b?: string];
-                                     ^^^^^^ [1]
    test.js:55:62
    55|   declare const badC: [a: {contents: number}, +b: {contents: string}];
-                                                                    ^^^^^^ [2]
+                                                                    ^^^^^^ [1]
+   test.js:14:25
+   14|   [key in keyof O]: Box<O[key]>,
+                               ^^^^^^ [2]
+   test.js:55:51
+   55|   declare const badC: [a: {contents: number}, +b: {contents: string}];
+                                                         ^^^^^^^^^^^^^^^^^^ [3]
+   test.js:5:15
+    5| type Box<T> = {contents: T};
+                     ^^^^^^^^^^^^^ [4]
+   test.js:14:21
+   14|   [key in keyof O]: Box<O[key]>,
+                           ^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:5
@@ -2483,22 +2678,36 @@ References:
                             ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:131:28
+Error ---------------------------------------------------------------------------------------------------- test.js:132:4
 
-Cannot instantiate `MappedConstrained` because number [1] is incompatible with string [2] in type argument `T`.
-[incompatible-type]
+Cannot cast `constrained` to object type because `ConstrainedBox` [1] is not exactly the same as
+`{contents: number}` [2] in property `foo`. 
 
-   test.js:131:28
-   131|   declare var constrained: MappedConstrained<O>; // ERROR HERE, NOT IN DEFINITION OF MAPPEDCONSTRAINED
-                                   ^^^^^^^^^^^^^^^^^^^^
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make mapped type [3] and `{foo: {contents: number}}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   test.js:132:4
+   132|   (constrained: {foo: {contents: number}}); // OK
+           ^^^^^^^^^^^
 
 References:
-   test.js:1:18
-     1| type O = {| foo: number |}
-                         ^^^^^^ [1]
-   test.js:126:26
-   126|   type ConstrainedBox<T: string> = Box<T>;
-                                 ^^^^^^ [2]
+   test.js:128:23
+   128|     [key in keyof O]: ConstrainedBox<O[key]>,
+                              ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:132:23
+   132|   (constrained: {foo: {contents: number}}); // OK
+                              ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:127:38
+                                             v
+   127|   type MappedConstrained<O: {...}> = {
+   128|     [key in keyof O]: ConstrainedBox<O[key]>,
+   129|   };
+          ^ [3]
+   test.js:132:17
+   132|   (constrained: {foo: {contents: number}}); // OK
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:138:35
@@ -2575,7 +2784,7 @@ References:
 
 
 
-Found 166 errors
+Found 161 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

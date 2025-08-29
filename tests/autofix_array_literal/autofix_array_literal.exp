@@ -53,8 +53,14 @@ module.exports = foo;
 > flow status
 Error -------------------------------------------------------------------------------------------------------- a.js:14:2
 
-Cannot cast `foo()` to array type because inexact object type [1] is incompatible with exact `Exact` [2] in array
-element. [incompatible-exact]
+Cannot cast `foo()` to array type because `{data: string, type: string, ...}` [1] is not exactly the same as `Exact` [2]
+in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    a.js:14:2
    14| (foo(): Array<Exact>);
@@ -67,12 +73,24 @@ References:
    a.js:14:15
    14| (foo(): Array<Exact>);
                      ^^^^^ [2]
+   a.js:6:17
+    6| function foo(): Array<{ data: string, type: string, ... }> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   a.js:14:9
+   14| (foo(): Array<Exact>);
+               ^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------------- c.js:13:2
 
-Cannot cast `foo()` to array type because inexact object type [1] is incompatible with exact `Exact` [2] in array
-element. [incompatible-exact]
+Cannot cast `foo()` to array type because `{data: string, type: string, ...}` [1] is not exactly the same as `Exact` [2]
+in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    c.js:13:2
    13| (foo(): Array<Exact>);
@@ -85,6 +103,12 @@ References:
    c.js:13:15
    13| (foo(): Array<Exact>);
                      ^^^^^ [2]
+   c.js:6:17
+    6| function foo(): Array<{ data: string, type: string, ... }> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   c.js:13:9
+   13| (foo(): Array<Exact>);
+               ^^^^^^^^^^^^ [4]
 
 
 

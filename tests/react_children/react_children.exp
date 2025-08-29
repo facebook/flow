@@ -1,38 +1,31 @@
 Error ------------------------------------------------------------------------------------------------------ api.js:14:4
 
-Cannot call `na` with `Children.map(...)` bound to `x` because number [1] is incompatible with string [2] in array
-element. 
+Cannot call `na` with `Children.map(...)` bound to `x` because `$NonMaybeType<string>` [1] is not exactly the same as
+`number` [2] in array element. 
 
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<$NonMaybeType<string>>` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    api.js:14:4
-   14| na(Children.map(a, (x: string) => x as string)); // Error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    14| na(Children.map(a, (x: string) => x as string)); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:734:16
+   734|       ): Array<$NonMaybeType<U>>,
+                       ^^^^^^^^^^^^^^^^ [1]
    api.js:33:22
-   33| function na(x: Array<number>) {}
-                            ^^^^^^ [1]
-   api.js:14:40
-   14| na(Children.map(a, (x: string) => x as string)); // Error
-                                              ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- api.js:14:40
-
-Cannot call `na` with `Children.map(...)` bound to `x` because string [1] is incompatible with number [2] in array
-element. [incompatible-type]
-
-   api.js:14:40
-   14| na(Children.map(a, (x: string) => x as string)); // Error
-                                              ^^^^^^ [1]
-
-References:
-   api.js:33:22
-   33| function na(x: Array<number>) {}
-                            ^^^^^^ [2]
+    33| function na(x: Array<number>) {}
+                             ^^^^^^ [2]
+   <BUILTINS>/react.js:734:10
+   734|       ): Array<$NonMaybeType<U>>,
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   api.js:33:16
+    33| function na(x: Array<number>) {}
+                       ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:24
@@ -67,39 +60,32 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:15:4
 
-Cannot call `sa` with `Children.map(...)` bound to `x` because string [1] is incompatible with number [2] in array
-element. 
+Cannot call `sa` with `Children.map(...)` bound to `x` because `$NonMaybeType<number>` [1] is not exactly the same as
+`string` [2] in array element. 
 
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<$NonMaybeType<number>>` [3] and `Array<string>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    api.js:15:4
-   15| sa(Children.map(a, (x: number) => x as number)); // Error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    15| sa(Children.map(a, (x: number) => x as number)); // Error
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/react.js:734:16
+   734|       ): Array<$NonMaybeType<U>>,
+                       ^^^^^^^^^^^^^^^^ [1]
    api.js:34:22
-   34| function sa(x: Array<string>) {}
-                            ^^^^^^ [1]
-   api.js:15:40
-   15| sa(Children.map(a, (x: number) => x as number)); // Error
-                                              ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- api.js:15:40
-
-Cannot call `sa` with `Children.map(...)` bound to `x` because number [1] is incompatible with string [2] in array
-element. [incompatible-type]
-
-   api.js:15:40
-   15| sa(Children.map(a, (x: number) => x as number)); // Error
-                                              ^^^^^^ [1]
-
-References:
-   api.js:34:22
-   34| function sa(x: Array<string>) {}
-                            ^^^^^^ [2]
+    34| function sa(x: Array<string>) {}
+                             ^^^^^^ [2]
+   <BUILTINS>/react.js:734:10
+   734|       ): Array<$NonMaybeType<U>>,
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   api.js:34:16
+    34| function sa(x: Array<string>) {}
+                       ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- api.js:17:25
@@ -248,63 +234,32 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:28:4
 
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because number [1] is incompatible with string [2] in array
-element. [incompatible-type]
+Cannot call `sa` with `Children.toArray(...)` bound to `x` because `$NonMaybeType<?number>` [1] is not exactly the same
+as `string` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<$NonMaybeType<?number>>` [3] and `Array<string>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    api.js:28:4
-   28| sa(Children.toArray(a)); // Error
-          ^^^^^^^^^^^^^^^^^^^
+    28| sa(Children.toArray(a)); // Error
+           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   api.js:5:25
-    5| const a: ChildrenArray<?number> = [
-                               ^^^^^^ [1]
+   <BUILTINS>/react.js:742:53
+   742|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
+                                                            ^^^^^^^^^^^^^^^^ [1]
    api.js:34:22
-   34| function sa(x: Array<string>) {}
-                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ api.js:28:4
-
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because in array element: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with number [3].
-
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-
-   api.js:28:4
-   28| sa(Children.toArray(a)); // Error
-          ^^^^^^^^^^^^^^^^^^^
-
-References:
-   api.js:34:22
-   34| function sa(x: Array<string>) {}
-                            ^^^^^^ [1]
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
-                ^^^^^^^^^^^^^^^^^^^^^^ [2]
-   api.js:5:25
-    5| const a: ChildrenArray<?number> = [
-                               ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- api.js:28:21
-
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because number [1] is incompatible with string [2] in array
-element. [incompatible-type]
-
-   api.js:28:21
-   28| sa(Children.toArray(a)); // Error
-                           ^
-
-References:
-   api.js:5:10
-    5| const a: ChildrenArray<?number> = [
-                ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   api.js:34:22
-   34| function sa(x: Array<string>) {}
-                            ^^^^^^ [2]
+    34| function sa(x: Array<string>) {}
+                             ^^^^^^ [2]
+   <BUILTINS>/react.js:742:47
+   742|       toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   api.js:34:16
+    34| function sa(x: Array<string>) {}
+                       ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
@@ -1827,7 +1782,7 @@ References:
 
 
 
-Found 105 errors
+Found 101 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -128,10 +128,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- subtyping.js:5:4
 
-Cannot cast `arr` to array type because `Animal` [1] is incompatible with `Dog` [2] in array element. 
+Cannot cast `arr` to array type because `Dog` [1] is not exactly the same as `Animal` [2] in array element. 
 
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Dog>` [3] and `Array<Animal>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    subtyping.js:5:4
@@ -139,48 +141,77 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-
          ^^^
 
 References:
-   subtyping.js:5:15
-   5|   (arr: Array<Animal>); // error
-                    ^^^^^^ [1]
    subtyping.js:4:28
    4|   declare const arr: Array<Dog>;
-                                 ^^^ [2]
+                                 ^^^ [1]
+   subtyping.js:5:15
+   5|   (arr: Array<Animal>); // error
+                    ^^^^^^ [2]
+   subtyping.js:4:22
+   4|   declare const arr: Array<Dog>;
+                           ^^^^^^^^^^ [3]
+   subtyping.js:5:9
+   5|   (arr: Array<Animal>); // error
+              ^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:10:4
 
-Cannot cast `arr` to array type because property `foo` is missing in object type [1] but exists in object type [2] in
-array element. [incompatible-type]
+Cannot cast `arr` to array type because `{foo: string, ...}` [1] is not exactly the same as `{...}` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{foo: string, ...}>` [3] and `Array<{...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    subtyping.js:10:4
    10|   (arr: Array<{...}>); // error
           ^^^
 
 References:
-   subtyping.js:10:15
-   10|   (arr: Array<{...}>); // error
-                     ^^^^^ [1]
    subtyping.js:9:28
     9|   declare const arr: Array<{foo: string, ...}>;
-                                  ^^^^^^^^^^^^^^^^^^ [2]
+                                  ^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:10:15
+   10|   (arr: Array<{...}>); // error
+                     ^^^^^ [2]
+   subtyping.js:9:22
+    9|   declare const arr: Array<{foo: string, ...}>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:10:9
+   10|   (arr: Array<{...}>); // error
+               ^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:15:4
 
-Cannot cast `arr` to array type because property `foo` is missing in object type [1] but exists in object type [2] in
-array element. [incompatible-type]
+Cannot cast `arr` to array type because `{foo: string}` [1] is not exactly the same as `{}` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{foo: string}>` [3] and `Array<{}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    subtyping.js:15:4
    15|   (arr: Array<{}>); // error
           ^^^
 
 References:
-   subtyping.js:15:15
-   15|   (arr: Array<{}>); // error
-                     ^^ [1]
    subtyping.js:14:28
    14|   declare const arr: Array<{foo: string}>;
-                                  ^^^^^^^^^^^^^ [2]
+                                  ^^^^^^^^^^^^^ [1]
+   subtyping.js:15:15
+   15|   (arr: Array<{}>); // error
+                     ^^ [2]
+   subtyping.js:14:22
+   14|   declare const arr: Array<{foo: string}>;
+                            ^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:15:9
+   15|   (arr: Array<{}>); // error
+               ^^^^^^^^^ [4]
 
 
 

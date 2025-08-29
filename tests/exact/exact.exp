@@ -33,7 +33,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_continues.js:3:12
 
-Cannot cast `any` to object type because number [1] is incompatible with string [2] in property `p`. [incompatible-type]
+Cannot cast `any` to object type because `number` [1] is not exactly the same as `string` [2] in property `p`. 
+
+The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
+- Either make `{p: number, ...}` [3] and `{p: string}` [4] exactly the same
+- Or make property `p` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    error_continues.js:3:12
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
@@ -43,6 +48,12 @@ References:
    error_continues.js:3:27
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
                                 ^^^^^^ [2]
+   error_continues.js:3:8
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+             ^^^^^^^^^^^ [3]
+   error_continues.js:3:22
+   3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
+                           ^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- exact_basics.js:49:20
@@ -636,8 +647,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
 
-Cannot assign `a` to `b` because inexact object type [1] is incompatible with exact object type [2] in property `p`.
-[incompatible-exact]
+Cannot assign `a` to `b` because `{q: null, ...}` [1] is not exactly the same as `{q: null}` [2] in property `p`. 
+
+The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
+- Either make `{p: {q: null, ...}, ...}` [3] and `{p: {q: null}, ...}` [4] exactly the same
+- Or make property `p` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    use_ops.js:2:31
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
@@ -650,6 +665,12 @@ References:
    use_ops.js:2:13
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
                   ^^^^^^^^^^^^^ [2]
+   use_ops.js:1:16
+   1| declare var a: { p: { q: null } };
+                     ^^^^^^^^^^^^^^^^^^ [3]
+   use_ops.js:2:8
+   2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p
+             ^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:6:3

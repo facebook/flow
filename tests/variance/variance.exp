@@ -72,9 +72,11 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `rwB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. 
+Cannot cast `rwB` to `RWA` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
+- Either make `RWB` [3] and `RWA` [4] exactly the same
+- Or make property `p` in `RWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:61:4
@@ -82,19 +84,30 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^
 
 References:
-   test.js:6:16
-    6| type RWA = {p: A}
-                      ^ [1]
    test.js:9:16
     9| type RWB = {p: B}
+                      ^ [1]
+   test.js:6:16
+    6| type RWA = {p: A}
                       ^ [2]
+   test.js:9:12
+    9| type RWB = {p: B}
+                  ^^^^^^ [3]
+   test.js:6:12
+    6| type RWA = {p: A}
+                  ^^^^^^ [4]
+   test.js:61:9
+   61|   (rwB: RWA); // error
+               ^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
 
-Cannot cast `drwB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. 
+Cannot cast `drwB` to `dRWA` because `B` [1] is not exactly the same as `A` [2] in the indexer property. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `dRWB` [3] and `dRWA` [4] exactly the same
+- Or make the indexer in `dRWA` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:62:4
@@ -102,12 +115,21 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^^
 
 References:
-   test.js:23:24
-   23| type dRWA = {[string]: A};
-                              ^ [1]
    test.js:26:24
    26| type dRWB = {[string]: B};
+                              ^ [1]
+   test.js:23:24
+   23| type dRWA = {[string]: A};
                               ^ [2]
+   test.js:26:13
+   26| type dRWB = {[string]: B};
+                   ^^^^^^^^^^^^^ [3]
+   test.js:23:13
+   23| type dRWA = {[string]: A};
+                   ^^^^^^^^^^^^^ [4]
+   test.js:62:10
+   62|   (drwB: dRWA); // error
+                ^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:4
@@ -458,7 +480,12 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:150:4
 
-Cannot cast `rwA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `rwA` to `RWB` because `A` [1] is not exactly the same as `B` [2] in property `p`. 
+
+The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
+- Either make `RWA` [3] and `RWB` [4] exactly the same
+- Or make property `p` in `RWB` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:150:4
    150|   (rwA: RWB); // error
@@ -471,11 +498,25 @@ References:
    test.js:9:16
      9| type RWB = {p: B}
                        ^ [2]
+   test.js:6:12
+     6| type RWA = {p: A}
+                   ^^^^^^ [3]
+   test.js:9:12
+     9| type RWB = {p: B}
+                   ^^^^^^ [4]
+   test.js:150:9
+   150|   (rwA: RWB); // error
+                ^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:151:4
 
-Cannot cast `drwA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `drwA` to `dRWB` because `A` [1] is not exactly the same as `B` [2] in the indexer property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `dRWA` [3] and `dRWB` [4] exactly the same
+- Or make the indexer in `dRWB` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:151:4
    151|   (drwA: dRWB); // error
@@ -488,6 +529,15 @@ References:
    test.js:26:24
     26| type dRWB = {[string]: B};
                                ^ [2]
+   test.js:23:13
+    23| type dRWA = {[string]: A};
+                    ^^^^^^^^^^^^^ [3]
+   test.js:26:13
+    26| type dRWB = {[string]: B};
+                    ^^^^^^^^^^^^^ [4]
+   test.js:151:10
+   151|   (drwA: dRWB); // error
+                 ^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:4
@@ -766,8 +816,14 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
-Cannot cast array literal to array type because property `p` is read-only in object type [1] but writable in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:207:18
    207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
@@ -777,12 +833,24 @@ References:
    test.js:207:38
    207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
                                              ^^^^^^^^^ [2]
+   test.js:207:12
+   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^^ [3]
+   test.js:207:32
+   207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
+                                       ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
-Cannot cast array literal to array type because property `p` is write-only in object type [1] but readable in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:209:18
    209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
@@ -792,12 +860,24 @@ References:
    test.js:209:38
    209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
                                              ^^^^^^^^^ [2]
+   test.js:209:12
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^^ [3]
+   test.js:209:32
+   209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
+                                       ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
 
-Cannot cast array literal to array type because property `p` is writable in object type [1] but read-only in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:211:18
    211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
@@ -807,12 +887,24 @@ References:
    test.js:211:37
    211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
                                             ^^^^^^^^^^ [2]
+   test.js:211:12
+   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^ [3]
+   test.js:211:31
+   211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
+                                      ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
-Cannot cast array literal to array type because property `p` is write-only in object type [1] but read-only in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in
+array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:215:18
    215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
@@ -822,12 +914,24 @@ References:
    test.js:215:38
    215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
                                              ^^^^^^^^^^ [2]
+   test.js:215:12
+   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^^ [3]
+   test.js:215:32
+   215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
+                                       ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
 
-Cannot cast array literal to array type because property `p` is readable in object type [1] but write-only in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:217:18
    217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
@@ -837,12 +941,24 @@ References:
    test.js:217:37
    217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
                                             ^^^^^^^^^^ [2]
+   test.js:217:12
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^ [3]
+   test.js:217:31
+   217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
+                                      ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
 
-Cannot cast array literal to array type because property `p` is read-only in object type [1] but write-only in object
-type [2] in array element. [incompatible-variance]
+Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in
+array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    test.js:219:18
    219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
@@ -852,6 +968,12 @@ References:
    test.js:219:38
    219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
                                              ^^^^^^^^^^ [2]
+   test.js:219:12
+   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+                   ^^^^^^^^^^^^^^^^^ [3]
+   test.js:219:32
+   219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error
+                                       ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:230:3

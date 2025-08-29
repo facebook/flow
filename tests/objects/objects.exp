@@ -1,25 +1,12 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
-Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
-`x`. [incompatible-type]
+Cannot assign `y` to `x` because `{bar: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
+property `x`. 
 
-   compatibility.js:3:9
-   3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
-              ^
-
-References:
-   compatibility.js:2:20
-   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                         ^^^^^^^^^^^^^^^ [1]
-   compatibility.js:2:47
-   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
-                                                    ^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
-
-Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
-`x`. [incompatible-type]
+The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
+- Either make `{x: {bar: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
+- Or make property `x` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -32,11 +19,22 @@ References:
    compatibility.js:2:20
    2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
                          ^^^^^^^^^^^^^^^ [2]
+   compatibility.js:2:42
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                                               ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   compatibility.js:2:15
+   2|   function(x: { x: { foo: string } }, y: { x: { bar: number } }) {
+                    ^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- compatibility.js:7:9
 
-Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot assign `y` to `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`. 
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `{foo: number, ...}` [3] and `{foo: string, ...}` [4] exactly the same
+- Or make property `foo` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    compatibility.js:7:9
    7|     x = y; // 2 errors: string !~> number; number !~> string
@@ -49,23 +47,41 @@ References:
    compatibility.js:6:22
    6|   function(x: { foo: string }, y: { foo: number }) {
                            ^^^^^^ [2]
+   compatibility.js:6:35
+   6|   function(x: { foo: string }, y: { foo: number }) {
+                                        ^^^^^^^^^^^^^^^ [3]
+   compatibility.js:6:15
+   6|   function(x: { foo: string }, y: { foo: number }) {
+                    ^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:11:9
 
-Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`. [incompatible-type]
+Cannot assign `y` to `x` because `{foo: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
+property `x`. 
+
+The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
+- Either make `{x: {foo: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
+- Or make property `x` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    compatibility.js:11:9
    11|     x = y; // 2 errors: string !~> number; number !~> string
                ^
 
 References:
-   compatibility.js:10:54
+   compatibility.js:10:47
    10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                                            ^^^^^^ [1]
-   compatibility.js:10:27
+                                                     ^^^^^^^^^^^^^^^ [1]
+   compatibility.js:10:20
    10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
-                                 ^^^^^^ [2]
+                          ^^^^^^^^^^^^^^^ [2]
+   compatibility.js:10:42
+   10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                                                ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   compatibility.js:10:15
+   10|   function(x: { x: { foo: string } }, y: { x: { foo: number } }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:15:9
@@ -87,19 +103,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
 
-Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`. [incompatible-type]
+Cannot assign `y` to `x` because `{+foo: number, ...}` [1] is not exactly the same as `{+foo: string, ...}` [2] in
+property `x`. 
+
+The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
+- Either make `{x: {+foo: number, ...}, ...}` [3] and `{x: {+foo: string, ...}, ...}` [4] exactly the same
+- Or make property `x` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    compatibility.js:19:9
    19|     x = y; // 2 errors: string !~> number; number !~> string
                ^
 
 References:
-   compatibility.js:18:56
+   compatibility.js:18:48
    18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                                              ^^^^^^ [1]
-   compatibility.js:18:28
+                                                      ^^^^^^^^^^^^^^^^ [1]
+   compatibility.js:18:20
    18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
-                                  ^^^^^^ [2]
+                          ^^^^^^^^^^^^^^^^ [2]
+   compatibility.js:18:43
+   18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   compatibility.js:18:15
+   18|   function(x: { x: { +foo: string } }, y: { x: { +foo: number } }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
@@ -121,19 +149,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
 
-Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `x.foo`. [incompatible-type]
+Cannot assign `y` to `x` because `{-foo: number, ...}` [1] is not exactly the same as `{-foo: string, ...}` [2] in
+property `x`. 
+
+The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
+- Either make `{x: {-foo: number, ...}, ...}` [3] and `{x: {-foo: string, ...}, ...}` [4] exactly the same
+- Or make property `x` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    compatibility.js:27:9
    27|     x = y; // 2 errors: string !~> number; number !~> string
                ^
 
 References:
-   compatibility.js:26:56
+   compatibility.js:26:48
    26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                                              ^^^^^^ [1]
-   compatibility.js:26:28
+                                                      ^^^^^^^^^^^^^^^^ [1]
+   compatibility.js:26:20
    26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
-                                  ^^^^^^ [2]
+                          ^^^^^^^^^^^^^^^^ [2]
+   compatibility.js:26:43
+   26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   compatibility.js:26:15
+   26|   function(x: { x: { -foo: string } }, y: { x: { -foo: number } }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:10:1
@@ -382,4 +422,4 @@ References:
 
 
 
-Found 24 errors
+Found 23 errors

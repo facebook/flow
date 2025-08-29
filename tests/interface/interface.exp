@@ -167,9 +167,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:64:4
 
-Cannot cast `x` to `Invariant` because string [1] is incompatible with number [2] in the indexer property. 
+Cannot cast `x` to `Invariant` because `number` [1] is not exactly the same as `number | string` [2] in the indexer
+property. 
 
-This property is invariantly typed. See
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[Keys]: number}` [3] and `{[Keys]: number | string}` [4] exactly the same
+- Or make the indexer in `Invariant` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    indexer.js:64:4
@@ -177,12 +180,21 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^
 
 References:
-   indexer.js:27:20
-   27|   [Keys]: number | string;
-                          ^^^^^^ [1]
    indexer.js:63:29
    63|   declare const x: {[Keys]: number};
-                                   ^^^^^^ [2]
+                                   ^^^^^^ [1]
+   indexer.js:27:11
+   27|   [Keys]: number | string;
+                 ^^^^^^^^^^^^^^^ [2]
+   indexer.js:63:20
+   63|   declare const x: {[Keys]: number};
+                          ^^^^^^^^^^^^^^^^ [3]
+   indexer.js:26:11
+   26| interface Invariant {
+                 ^^^^^^^^^ [4]
+   indexer.js:64:7
+   64|   (x: Invariant); // ERROR
+             ^^^^^^^^^ [5]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:70:4
@@ -207,20 +219,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:77:4
 
-Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
-[incompatible-type]
+Cannot cast `x` to interface type because `number | string` [1] is not exactly the same as `number` [2] in the indexer
+property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[Keys]: number | string}` [3] and `{[Keys]: number}` [4] exactly the same
+- Or make the indexer in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    indexer.js:77:4
    77|   (x: interface {[Keys]: number}); // ERROR
           ^
 
 References:
-   indexer.js:76:38
+   indexer.js:76:29
    76|   declare const x: {[Keys]: number | string};
-                                            ^^^^^^ [1]
+                                   ^^^^^^^^^^^^^^^ [1]
    indexer.js:77:26
    77|   (x: interface {[Keys]: number}); // ERROR
                                 ^^^^^^ [2]
+   indexer.js:76:20
+   76|   declare const x: {[Keys]: number | string};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   indexer.js:77:7
+   77|   (x: interface {[Keys]: number}); // ERROR
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:78:4
@@ -637,8 +660,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:43:2
 
-Cannot cast `o3` to interface type because number [1] is incompatible with boolean [2] in the indexer property.
-[incompatible-type]
+Cannot cast `o3` to interface type because `number` [1] is not exactly the same as `boolean` [2] in the indexer
+property. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[string]: number}` [3] and `{[string]: boolean}` [4] exactly the same
+- Or make the indexer in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:43:2
    43| (o3 : interface {[string] : boolean}); // error
@@ -651,6 +679,12 @@ References:
    interface.js:43:29
    43| (o3 : interface {[string] : boolean}); // error
                                    ^^^^^^^ [2]
+   interface.js:41:18
+   41| declare var o3 : {[string] : number};
+                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:43:7
+   43| (o3 : interface {[string] : boolean}); // error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:44:7
@@ -670,8 +704,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:46:2
 
-Cannot cast `o3` to interface type because string [1] is incompatible with number [2] in the indexer property's key.
-[incompatible-type]
+Cannot cast `o3` to interface type because `string` [1] is not exactly the same as `number` [2] in the indexer
+property's key. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[string]: number}` [3] and `{[number]: number}` [4] exactly the same
+- Or make the indexer in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:46:2
    46| (o3: interface {[number] : number}); // error
@@ -684,6 +723,12 @@ References:
    interface.js:46:18
    46| (o3: interface {[number] : number}); // error
                         ^^^^^^ [2]
+   interface.js:41:18
+   41| declare var o3 : {[string] : number};
+                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:46:6
+   46| (o3: interface {[number] : number}); // error
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:47:2
@@ -707,26 +752,42 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:51:2
 
-Cannot cast `o4` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
-property's key. [incompatible-type]
+Cannot cast `o4` to interface type because `"asdf"` [1] is not exactly the same as `string` [2] in the indexer
+property's key. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{["asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
+- Or make the indexer in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:51:2
    51| (o4 : interface {[string] : number}); // error
         ^^
 
 References:
-   interface.js:51:19
-   51| (o4 : interface {[string] : number}); // error
-                         ^^^^^^ [1]
    interface.js:49:20
    49| declare var o4 : {["asdf"] : number};
-                          ^^^^^^ [2]
+                          ^^^^^^ [1]
+   interface.js:51:19
+   51| (o4 : interface {[string] : number}); // error
+                         ^^^^^^ [2]
+   interface.js:49:18
+   49| declare var o4 : {["asdf"] : number};
+                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:51:7
+   51| (o4 : interface {[string] : number}); // error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ interface.js:59:2
 
-Cannot cast `o6` to interface type because string [1] is incompatible with string literal `asdf` [2] in the indexer
-property's key. [incompatible-type]
+Cannot cast `o6` to interface type because `string` [1] is not exactly the same as `"asdf"` [2] in the indexer
+property's key. 
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either make `{[string]: number}` [3] and `{["asdf"]: number}` [4] exactly the same
+- Or make the indexer in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:59:2
    59| (o6 : interface {["asdf"] : number}); // error
@@ -739,6 +800,12 @@ References:
    interface.js:59:19
    59| (o6 : interface {["asdf"] : number}); // error
                          ^^^^^^ [2]
+   interface.js:57:18
+   57| declare var o6 : {[string] : number};
+                        ^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:59:7
+   59| (o6 : interface {["asdf"] : number}); // error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:1:2

@@ -34,65 +34,61 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:13:24
 
-Cannot assign `a.reverse()` to `e` because number [1] is incompatible with string [2] in array element.
+Cannot assign `a.reverse()` to `e` because `number` [1] is not exactly the same as `string` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<number>` [3] and `Array<string>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    array_lib.js:13:24
-   13| var e: Array<string> = a.reverse();
-                              ^^^^^^^^^^^
+     13| var e: Array<string> = a.reverse();
+                                ^^^^^^^^^^^
 
 References:
    array_lib.js:4:10
-    4| var a = [0];
-                ^ [1]
+      4| var a = [0];
+                  ^ [1]
    array_lib.js:13:14
-   13| var e: Array<string> = a.reverse();
-                    ^^^^^^ [2]
+     13| var e: Array<string> = a.reverse();
+                      ^^^^^^ [2]
+   <BUILTINS>/core.js:1091:16
+   1091|     reverse(): Array<T>;
+                        ^^^^^^^^ [3]
+   array_lib.js:13:8
+     13| var e: Array<string> = a.reverse();
+                ^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:26:33
+Error ----------------------------------------------------------------------------------------------- array_lib.js:26:24
 
-Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
+Cannot assign `h.concat(...)` to `n` because `number | "a" | "b" | "c"` [1] is not exactly the same as `number` [2] in
+array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<number | "a" | "b" | "c">` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
-   array_lib.js:26:33
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                       ^^^ [1]
+   array_lib.js:26:24
+    26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                               ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:721:66
+   721|     concat<S = T>(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
+                                                                         ^^^^^ [1]
    array_lib.js:26:14
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- array_lib.js:26:38
-
-Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
-[incompatible-type]
-
-   array_lib.js:26:38
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                            ^^^ [1]
-
-References:
-   array_lib.js:26:14
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- array_lib.js:26:43
-
-Cannot assign `h.concat(...)` to `n` because string [1] is incompatible with number [2] in array element.
-[incompatible-type]
-
-   array_lib.js:26:43
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                                                 ^^^ [1]
-
-References:
-   array_lib.js:26:14
-   26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
-                    ^^^^^^ [2]
+    26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+                     ^^^^^^ [2]
+   <BUILTINS>/core.js:721:60
+   721|     concat<S = T>(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
+                                                                   ^^^^^^^^^^^^ [3]
+   array_lib.js:26:8
+    26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
+               ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:58:29
@@ -131,7 +127,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
 
-Cannot cast `Array.from(...)` to array type because string [1] is incompatible with empty [2] in array element.
+Cannot cast `Array.from(...)` to array type because `string` [1] is not exactly the same as `empty` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<string>` [3] and `Array<empty>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    array_lib.js:71:3
@@ -145,6 +147,12 @@ References:
    array_lib.js:71:31
      71|   Array.from('abcd') as Array<empty>; // ERROR
                                        ^^^^^ [2]
+   <BUILTINS>/core.js:1144:31
+   1144|     static from(str: string): Array<string>;
+                                       ^^^^^^^^^^^^^ [3]
+   array_lib.js:71:25
+     71|   Array.from('abcd') as Array<empty>; // ERROR
+                                 ^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:57
@@ -248,20 +256,32 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:3:34
 
-Cannot assign `arr1.flat()` to `result1_1` because number [1] is incompatible with string [2] in array element.
+Cannot assign `arr1.flat()` to `result1_1` because `number extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly
+the same as `string` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<number extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:3:34
-   3| const result1_1: Array<string> = arr1.flat(); // Error
-                                       ^^^^^^^^^^^
+     3| const result1_1: Array<string> = arr1.flat(); // Error
+                                         ^^^^^^^^^^^
 
 References:
-   flat.js:1:15
-   1| const arr1 = [1];
-                    ^ [1]
+   <BUILTINS>/core.js:856:34
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:3:24
-   3| const result1_1: Array<string> = arr1.flat(); // Error
-                             ^^^^^^ [2]
+     3| const result1_1: Array<string> = arr1.flat(); // Error
+                               ^^^^^^ [2]
+   <BUILTINS>/core.js:856:28
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   flat.js:3:18
+     3| const result1_1: Array<string> = arr1.flat(); // Error
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:43
@@ -284,79 +304,136 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:9:34
 
-Cannot assign `arr2.flat()` to `result2_1` because number [1] is incompatible with string [2] in array element.
+Cannot assign `arr2.flat()` to `result2_1` because `Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not
+exactly the same as `string` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
+same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:9:34
-   9| const result2_1: Array<string> = arr2.flat(); // Error
-                                       ^^^^^^^^^^^
+     9| const result2_1: Array<string> = arr2.flat(); // Error
+                                         ^^^^^^^^^^^
 
 References:
-   flat.js:7:25
-   7| const arr2: Array<Array<number>> = [[1]];
-                              ^^^^^^ [1]
+   <BUILTINS>/core.js:856:34
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:9:24
-   9| const result2_1: Array<string> = arr2.flat(); // Error
-                             ^^^^^^ [2]
+     9| const result2_1: Array<string> = arr2.flat(); // Error
+                               ^^^^^^ [2]
+   <BUILTINS>/core.js:856:28
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   flat.js:9:18
+     9| const result2_1: Array<string> = arr2.flat(); // Error
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:11:34
 
-Cannot assign `arr2.flat(...)` to `result2_3` because array type [1] is incompatible with number [2] in array element.
+Cannot assign `arr2.flat(...)` to `result2_3` because `Array<number>` [1] is not exactly the same as `number` [2] in
+array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Array<number>>` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:11:34
-   11| const result2_3: Array<number> = arr2.flat(0); // Error
-                                        ^^^^^^^^^^^^
+    11| const result2_3: Array<number> = arr2.flat(0); // Error
+                                         ^^^^^^^^^^^^
 
 References:
    flat.js:7:19
-    7| const arr2: Array<Array<number>> = [[1]];
-                         ^^^^^^^^^^^^^ [1]
+     7| const arr2: Array<Array<number>> = [[1]];
+                          ^^^^^^^^^^^^^ [1]
    flat.js:11:24
-   11| const result2_3: Array<number> = arr2.flat(0); // Error
-                              ^^^^^^ [2]
+    11| const result2_3: Array<number> = arr2.flat(0); // Error
+                               ^^^^^^ [2]
+   <BUILTINS>/core.js:849:21
+   849|     flat(depth: 0): Array<T>;
+                            ^^^^^^^^ [3]
+   flat.js:11:18
+    11| const result2_3: Array<number> = arr2.flat(0); // Error
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:13:34
 
-Cannot assign `arr2.flat(...)` to `result2_5` because number [1] is incompatible with string [2] in array element.
+Cannot assign `arr2.flat(...)` to `result2_5` because `Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not
+exactly the same as `string` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
+same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:13:34
-   13| const result2_5: Array<string> = arr2.flat(1); // Error
-                                        ^^^^^^^^^^^^
+    13| const result2_5: Array<string> = arr2.flat(1); // Error
+                                         ^^^^^^^^^^^^
 
 References:
-   flat.js:7:25
-    7| const arr2: Array<Array<number>> = [[1]];
-                               ^^^^^^ [1]
+   <BUILTINS>/core.js:856:34
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:13:24
-   13| const result2_5: Array<string> = arr2.flat(1); // Error
-                              ^^^^^^ [2]
+    13| const result2_5: Array<string> = arr2.flat(1); // Error
+                               ^^^^^^ [2]
+   <BUILTINS>/core.js:856:28
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   flat.js:13:18
+    13| const result2_5: Array<string> = arr2.flat(1); // Error
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:17:34
 
-Cannot assign `arr3.flat()` to `result3_1` because array type [1] is incompatible with number [2] in array element.
+Cannot assign `arr3.flat()` to `result3_1` because `Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T` [1] is
+not exactly the same as `number` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<number>` [4] exactly
+the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:17:34
-   17| const result3_1: Array<number> = arr3.flat(); // Error
-                                        ^^^^^^^^^^^
+    17| const result3_1: Array<number> = arr3.flat(); // Error
+                                         ^^^^^^^^^^^
 
 References:
-   flat.js:15:25
-   15| const arr3: Array<Array<Array<number>>> = [[[1]]];
-                               ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:856:34
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:17:24
-   17| const result3_1: Array<number> = arr3.flat(); // Error
-                              ^^^^^^ [2]
+    17| const result3_1: Array<number> = arr3.flat(); // Error
+                               ^^^^^^ [2]
+   <BUILTINS>/core.js:856:28
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   flat.js:17:18
+    17| const result3_1: Array<number> = arr3.flat(); // Error
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:20:34
 
-Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible with number [2] in array element.
+Cannot assign `arr3.flat(...)` to `result3_2` because `mixed` [1] is not exactly the same as `number` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:20:34
@@ -370,11 +447,23 @@ References:
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
                                ^^^^^^ [2]
+   <BUILTINS>/core.js:863:26
+   863|     flat(depth: number): Array<mixed>;
+                                 ^^^^^^^^^^^^ [3]
+   flat.js:20:18
+    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:25:34
 
-Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible with number [2] in array element.
+Cannot assign `arr2.flat(...)` to `result2_6` because `mixed` [1] is not exactly the same as `number` [2] in array
+element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:25:34
@@ -388,67 +477,44 @@ References:
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
                                ^^^^^^ [2]
+   <BUILTINS>/core.js:863:26
+   863|     flat(depth: number): Array<mixed>;
+                                 ^^^^^^^^^^^^ [3]
+   flat.js:25:18
+    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                         ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
 
-Cannot assign `arr4.flat()` to `result4_1` because number [1] is incompatible with array type [2] in array element.
+Cannot assign `arr4.flat()` to `result4_1` because
+`(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `Array<number>` [2] in
+array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T>` [3] and
+`Array<Array<number>>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    flat.js:30:41
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                                               ^^^^^^^^^^^
+    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                                                ^^^^^^^^^^^
 
 References:
-   flat.js:28:15
-   28| const arr4 = [1, [2]];
-                     ^ [1]
+   <BUILTINS>/core.js:856:34
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:30:24
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                              ^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
-
-Cannot assign `arr4.flat()` to `result4_1` because number [1] is incompatible with array type [2] in array element.
-[incompatible-type]
-
-   flat.js:30:41
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                                               ^^^^^^^^^^^
-
-References:
-   flat.js:28:19
-   28| const arr4 = [1, [2]];
-                         ^ [1]
-   flat.js:30:24
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                              ^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
-
-Cannot assign `arr4.flat()` to `result4_1` because in array element: [incompatible-type]
- - Either array type [1] is incompatible with number [2].
- - Or array type [1] is incompatible with number [3].
-
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-
-   flat.js:30:41
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                                               ^^^^^^^^^^^
-
-References:
-   flat.js:30:24
-   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                              ^^^^^^^^^^^^^ [1]
-   flat.js:28:15
-   28| const arr4 = [1, [2]];
-                     ^ [2]
-   flat.js:28:19
-   28| const arr4 = [1, [2]];
-                         ^ [3]
+    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                               ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:856:28
+   856|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   flat.js:30:18
+    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                         ^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:3
@@ -468,4 +534,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 29 errors
+Found 25 errors

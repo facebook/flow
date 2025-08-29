@@ -374,7 +374,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:32:18
 
-Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: boolean, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    class_method.js:32:18
    32| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
@@ -384,6 +389,12 @@ References:
    class_method.js:9:46
     9|   static staticMethod(this: interface {prop: boolean}): string {
                                                     ^^^^^^^ [2]
+   class_method.js:32:10
+   32| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   class_method.js:9:29
+    9|   static staticMethod(this: interface {prop: boolean}): string {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:34:10
@@ -403,7 +414,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:39:18
 
-Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: boolean, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    class_method.js:39:18
    39| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
@@ -413,6 +429,12 @@ References:
    class_method.js:13:50
    13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                         ^^^^^^^ [2]
+   class_method.js:39:10
+   39| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   class_method.js:13:33
+   13|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:41:10
@@ -432,7 +454,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:46:19
 
-Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: boolean, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    class_method.js:46:19
    46| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
@@ -442,6 +469,12 @@ References:
    class_method.js:17:63
    17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
                                                                      ^^^^^^^ [2]
+   class_method.js:46:11
+   46| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   class_method.js:17:46
+   17|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:48:11
@@ -858,7 +891,12 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:24:18
 
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: number, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    declare_class_method.js:24:18
    24| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
@@ -868,6 +906,12 @@ References:
    declare_class_method.js:7:46
     7|   static staticMethod(this: interface {prop: number}): string;
                                                     ^^^^^^ [2]
+   declare_class_method.js:24:10
+   24| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   declare_class_method.js:7:29
+    7|   static staticMethod(this: interface {prop: number}): string;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:26:10
@@ -887,7 +931,12 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:31:18
 
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: number, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    declare_class_method.js:31:18
    31| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
@@ -897,6 +946,12 @@ References:
    declare_class_method.js:9:49
     9|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                                        ^^^^^^ [2]
+   declare_class_method.js:31:10
+   31| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   declare_class_method.js:9:32
+    9|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:33:10
@@ -916,7 +971,12 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:38:19
 
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: number, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    declare_class_method.js:38:19
    38| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
@@ -926,6 +986,12 @@ References:
    declare_class_method.js:11:62
    11|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
                                                                     ^^^^^^ [2]
+   declare_class_method.js:38:11
+   38| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   declare_class_method.js:11:45
+   11|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:40:11
@@ -1481,7 +1547,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- interface.js:21:18
 
-Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-type]
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+
+The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{prop: number, ...}` [4]
+- Or make property `prop` in interface type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    interface.js:21:18
    21| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number
@@ -1491,6 +1562,12 @@ References:
    interface.js:6:49
     6|   propUnboundNonMethod: (this: interface {prop: number}) => string;
                                                        ^^^^^^ [2]
+   interface.js:21:10
+   21| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   interface.js:6:32
+    6|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:23:10

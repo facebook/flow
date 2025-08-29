@@ -14,26 +14,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- D.js:7:5
 
-Cannot assign `y` to `x` because property `bar` is missing in object type [1] but exists in object type [2] in property
-`x`. [incompatible-type]
+Cannot assign `y` to `x` because `{bar: number}` [1] is not exactly the same as `{foo: string}` [2] in property `x`. 
 
-   D.js:7:5
-   7| x = y;
-          ^
-
-References:
-   D.js:2:6
-   2|   x: { foo: string }
-           ^^^^^^^^^^^^^^^ [1]
-   D.js:5:6
-   5|   x: { bar: number }
-           ^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------------- D.js:7:5
-
-Cannot assign `y` to `x` because property `foo` is missing in object type [1] but exists in object type [2] in property
-`x`. [incompatible-type]
+The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
+- Either make `{x: {bar: number}}` [3] and `{x: {foo: string}}` [4] exactly the same
+- Or make property `x` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    D.js:7:5
    7| x = y;
@@ -46,6 +32,18 @@ References:
    D.js:2:6
    2|   x: { foo: string }
            ^^^^^^^^^^^^^^^ [2]
+   D.js:4:16
+                     v
+   4| declare var y: {
+   5|   x: { bar: number }
+   6| };
+      ^ [3]
+   D.js:1:16
+                     v
+   1| declare var x: {
+   2|   x: { foo: string }
+   3| };
+      ^ [4]
 
 
 Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
@@ -65,4 +63,4 @@ Unused suppression comment.
 
 
 
-Found 3 errors and 2 warnings
+Found 2 errors and 2 warnings

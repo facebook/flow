@@ -777,92 +777,114 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:172:3
 
-Cannot cast `obj1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 1}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    imported.js:172:3
    172|   obj1 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   imported.js:171:21
+   171|   const obj1 = { f: n0 ?? one };
+                            ^^^^^^^^^ [1]
    imported.js:172:15
    172|   obj1 as {f: 1}; // error number ~> 1
                       ^ [2]
+   imported.js:171:16
+   171|   const obj1 = { f: n0 ?? one };
+                       ^^^^^^^^^^^^^^^^ [3]
+   imported.js:172:11
+   172|   obj1 as {f: 1}; // error number ~> 1
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
-Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
-`f`. [incompatible-type]
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 2}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    imported.js:173:3
    173|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   imported.js:169:20
-   169|   declare var n0: ?1;
-                           ^ [1]
+   imported.js:171:21
+   171|   const obj1 = { f: n0 ?? one };
+                            ^^^^^^^^^ [1]
    imported.js:173:15
    173|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ imported.js:173:3
-
-Cannot cast `obj1` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
-[incompatible-type]
-
-   imported.js:173:3
+   imported.js:171:16
+   171|   const obj1 = { f: n0 ?? one };
+                       ^^^^^^^^^^^^^^^^ [3]
+   imported.js:173:11
    173|   obj1 as {f: 2}; // error number ~> 2
-          ^^^^
-
-References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
-   imported.js:173:15
-   173|   obj1 as {f: 2}; // error number ~> 2
-                      ^ [2]
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:178:3
 
-Cannot cast `obj2` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 1}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    imported.js:178:3
    178|   obj2 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   imported.js:177:21
+   177|   const obj2 = { f: one ?? n0 };
+                            ^^^ [1]
    imported.js:178:15
    178|   obj2 as {f: 1}; // error number ~> 1
                       ^ [2]
+   imported.js:177:16
+   177|   const obj2 = { f: one ?? n0 };
+                       ^^^^^^^^^^^^^^^^ [3]
+   imported.js:178:11
+   178|   obj2 as {f: 1}; // error number ~> 1
+                  ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ imported.js:179:3
 
-Cannot cast `obj2` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 2}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    imported.js:179:3
    179|   obj2 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   imported.js:177:21
+   177|   const obj2 = { f: one ?? n0 };
+                            ^^^ [1]
    imported.js:179:15
    179|   obj2 as {f: 2}; // error number ~> 2
                       ^ [2]
+   imported.js:177:16
+   177|   const obj2 = { f: one ?? n0 };
+                       ^^^^^^^^^^^^^^^^ [3]
+   imported.js:179:11
+   179|   obj2 as {f: 2}; // error number ~> 2
+                  ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- imported.js:205:11
@@ -1906,92 +1928,114 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:167:3
 
-Cannot cast `obj1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 1}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    local.js:167:3
    167|   obj1 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   local.js:166:21
+   166|   const obj1 = { f: n0 ?? one };
+                            ^^^^^^^^^ [1]
    local.js:167:15
    167|   obj1 as {f: 1}; // error number ~> 1
                       ^ [2]
+   local.js:166:16
+   166|   const obj1 = { f: n0 ?? one };
+                       ^^^^^^^^^^^^^^^^ [3]
+   local.js:167:11
+   167|   obj1 as {f: 1}; // error number ~> 1
+                  ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
-Cannot cast `obj1` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 2}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    local.js:168:3
    168|   obj1 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   local.js:166:21
+   166|   const obj1 = { f: n0 ?? one };
+                            ^^^^^^^^^ [1]
    local.js:168:15
    168|   obj1 as {f: 2}; // error number ~> 2
                       ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:168:3
-
-Cannot cast `obj1` to object type because number literal `1` [1] is incompatible with number literal `2` [2] in property
-`f`. [incompatible-type]
-
-   local.js:168:3
+   local.js:166:16
+   166|   const obj1 = { f: n0 ?? one };
+                       ^^^^^^^^^^^^^^^^ [3]
+   local.js:168:11
    168|   obj1 as {f: 2}; // error number ~> 2
-          ^^^^
-
-References:
-   local.js:164:20
-   164|   declare var n0: ?1;
-                           ^ [1]
-   local.js:168:15
-   168|   obj1 as {f: 2}; // error number ~> 2
-                      ^ [2]
+                  ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:173:3
 
-Cannot cast `obj2` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 1}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    local.js:173:3
    173|   obj2 as {f: 1}; // error number ~> 1
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   local.js:172:21
+   172|   const obj2 = { f: one ?? n0 };
+                            ^^^ [1]
    local.js:173:15
    173|   obj2 as {f: 1}; // error number ~> 1
                       ^ [2]
+   local.js:172:16
+   172|   const obj2 = { f: one ?? n0 };
+                       ^^^^^^^^^^^^^^^^ [3]
+   local.js:173:11
+   173|   obj2 as {f: 1}; // error number ~> 1
+                  ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:174:3
 
-Cannot cast `obj2` to object type because number [1] is incompatible with number literal `2` [2] in property `f`.
-[incompatible-type]
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{f: 2}` [4]
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    local.js:174:3
    174|   obj2 as {f: 2}; // error number ~> 2
           ^^^^
 
 References:
-   local.js:5:20
-     5| export const one = 1;
-                           ^ [1]
+   local.js:172:21
+   172|   const obj2 = { f: one ?? n0 };
+                            ^^^ [1]
    local.js:174:15
    174|   obj2 as {f: 2}; // error number ~> 2
                       ^ [2]
+   local.js:172:16
+   172|   const obj2 = { f: one ?? n0 };
+                       ^^^^^^^^^^^^^^^^ [3]
+   local.js:174:11
+   174|   obj2 as {f: 2}; // error number ~> 2
+                  ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:192:3
@@ -2829,7 +2873,7 @@ References:
 
 
 
-Found 169 errors
+Found 167 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

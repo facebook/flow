@@ -25,10 +25,12 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
-Cannot return `x` because mixed [1] is incompatible with unknown element of empty array [2] in array element. 
+Cannot return `x` because `empty` [1] is not exactly the same as `T` [2] in array element. 
 
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<empty>` [1] and `Array<T>` [3] exactly the same
+- Or make array type [3] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 [incompatible-type]
 
    poly.js:10:38
@@ -36,12 +38,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-
                                             ^
 
 References:
-   poly.js:10:26
-   10| function foo5<T>():Array<T> { return x; }
-                                ^ [1]
    poly.js:9:5
     9| var x = [];
-           ^ [2]
+           ^ [1]
+   poly.js:10:26
+   10| function foo5<T>():Array<T> { return x; }
+                                ^ [2]
+   poly.js:10:20
+   10| function foo5<T>():Array<T> { return x; }
+                          ^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:20:34

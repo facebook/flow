@@ -1,19 +1,31 @@
 Error --------------------------------------------------------------------------------------------------- arrays.js:8:14
 
-Cannot call `noop` with `new_arr` bound to `arr` because null or undefined [1] is incompatible with string [2] in array
-element of array element. [incompatible-type]
+Cannot call `noop` with `new_arr` bound to `arr` because `$NonMaybeType<Array<?string>>` [1] is not exactly the same as
+`Array<string>` [2] in array element. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<$NonMaybeType<Array<?string>>>` [3] and `Array<Array<string>>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
 
    arrays.js:8:14
-   8| noop<string>(new_arr);
-                   ^^^^^^^
+     8| noop<string>(new_arr);
+                     ^^^^^^^
 
 References:
-   arrays.js:4:31
-   4| declare var arr : Array<Array<?string>>;
-                                    ^^^^^^^ [1]
-   arrays.js:8:6
-   8| noop<string>(new_arr);
-           ^^^^^^ [2]
+   <BUILTINS>/core.js:990:47
+   990|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                                                      ^^^^^^^^^^^^^^^^ [1]
+   arrays.js:3:35
+     3| declare var noop : <T>(arr: Array<Array<T>>) => void;
+                                          ^^^^^^^^ [2]
+   <BUILTINS>/core.js:990:41
+   990|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   arrays.js:3:29
+     3| declare var noop : <T>(arr: Array<Array<T>>) => void;
+                                    ^^^^^^^^^^^^^^^ [4]
 
 
 

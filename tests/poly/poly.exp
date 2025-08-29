@@ -480,8 +480,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because string [1] is incompatible with `T` [2] in property `a` of the return value.
-[incompatible-type]
+Cannot return `f` because `S` [1] is not exactly the same as `T` [2] in property `a` of the return value. 
+
+The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
+- Either make `{a: S, b: T}` [3] and `{a: T, b: S}` [4] exactly the same
+- Or make property `a` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    subtyping.js:73:51
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
@@ -494,32 +498,22 @@ References:
    subtyping.js:73:38
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                                             ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
-
-Cannot return `f` because number [1] is incompatible with `S` [2] in property `a` of the return value. 
-
-This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
-
-References:
-   subtyping.js:73:38
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                            ^ [1]
-   subtyping.js:72:38
+   subtyping.js:72:33
    72| (f: <S: string, T: number>() => { a: S, b: T })
-                                            ^ [2]
+                                       ^^^^^^^^^^^^^^ [3]
+   subtyping.js:73:33
+   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+                                       ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because number [1] is incompatible with `S` [2] in property `b` of the return value.
-[incompatible-type]
+Cannot return `f` because `T` [1] is not exactly the same as `S` [2] in property `b` of the return value. 
+
+The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
+- Either make `{a: S, b: T}` [3] and `{a: T, b: S}` [4] exactly the same
+- Or make property `b` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    subtyping.js:73:51
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
@@ -532,26 +526,12 @@ References:
    subtyping.js:73:44
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                                                   ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
-
-Cannot return `f` because string [1] is incompatible with `T` [2] in property `b` of the return value. 
-
-This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   subtyping.js:73:51
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                         ^
-
-References:
-   subtyping.js:73:44
-   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
-                                                  ^ [1]
-   subtyping.js:72:44
+   subtyping.js:72:33
    72| (f: <S: string, T: number>() => { a: S, b: T })
-                                                  ^ [2]
+                                       ^^^^^^^^^^^^^^ [3]
+   subtyping.js:73:33
+   73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+                                       ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
@@ -659,4 +639,4 @@ References:
 
 
 
-Found 39 errors
+Found 37 errors
