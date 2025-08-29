@@ -33,7 +33,9 @@ let scan_for_error_suppressions acc errs comments =
     Base.List.fold_left comments ~init:([], errs) ~f:(fun (supps, errs) comment ->
         let (loc, { Ast.Comment.text; _ }) = comment in
         match (should_suppress text loc, supps) with
-        | (Error (), _) -> (supps, Error_message.EMalformedCode (ALoc.of_loc loc) :: errs)
+        | (Error MalformedCode, _) -> (supps, Error_message.EMalformedCode (ALoc.of_loc loc) :: errs)
+        | (Error MissingCode, _) ->
+          (supps, Error_message.ECodelessSuppression (ALoc.of_loc loc) :: errs)
         | (Ok None, _) -> (supps, errs)
         | (Ok (Some (Specific _ as codes)), (prev_loc, (Specific _ as prev_codes)) :: supps)
           when loc.start.line = prev_loc._end.line + 1 ->

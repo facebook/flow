@@ -3838,10 +3838,10 @@ let to_printable_error :
         code "$FlowFixMe[<CODE>]";
         text ".";
       ]
-    | MessageSuppressionMissingCode c ->
+    | MessageSuppressionMissingCode ->
       [
         text "Suppression is missing a code. Please update this suppression to use an error code: ";
-        code ("$FlowFixMe[" ^ c ^ "]");
+        code "$FlowFixMe[<CODE>]";
       ]
     | MessageThisInComponent component_loc ->
       [

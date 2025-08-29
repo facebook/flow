@@ -13,16 +13,16 @@ References:
             ^^^^^^ [2]
 
 
-Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Unused suppression comment.
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 1 error and 1 warning
+Found 2 errors
 
 
 With --include-suppressed
@@ -54,16 +54,16 @@ References:
             ^^^^^^ [2]
 
 
-Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Unused suppression comment.
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 2 errors and 1 warning
+Found 3 errors
 
 
 JSON without --include-suppressed
@@ -152,12 +152,12 @@ JSON without --include-suppressed
     },
     {
       "kind":"infer",
-      "level":"warning",
+      "level":"error",
       "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Unused suppression comment.",
+          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -265,12 +265,12 @@ JSON with --include-suppressed
     },
     {
       "kind":"infer",
-      "level":"warning",
+      "level":"error",
       "suppressions":[],
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Unused suppression comment.",
+          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -396,16 +396,16 @@ References:
             ^^^^^^ [2]
 
 
-Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Unused suppression comment.
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 1 error and 1 warning
+Found 2 errors
 
 
 Server with --include-suppressed
@@ -437,14 +437,14 @@ References:
             ^^^^^^ [2]
 
 
-Warning ---------------------------------------------------------------------------------------------------- test.js:8:1
+Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Unused suppression comment.
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 2 errors and 1 warning
+Found 3 errors
 

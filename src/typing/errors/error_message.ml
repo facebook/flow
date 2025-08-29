@@ -403,7 +403,7 @@ and 'loc t' =
   | EUnsafeGettersSetters of 'loc
   | EUnsafeObjectAssign of 'loc
   | EUnusedSuppression of 'loc
-  | ECodelessSuppression of 'loc * string
+  | ECodelessSuppression of 'loc
   | ELintSetting of 'loc * LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
@@ -1357,7 +1357,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
   | EUnsafeObjectAssign loc -> EUnsafeObjectAssign (f loc)
   | EUnusedSuppression loc -> EUnusedSuppression (f loc)
-  | ECodelessSuppression (loc, c) -> ECodelessSuppression (f loc, c)
+  | ECodelessSuppression loc -> ECodelessSuppression (f loc)
   | ELintSetting (loc, err) -> ELintSetting (f loc, err)
   | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
     ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc }
@@ -2066,7 +2066,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnnecessaryInvariant (loc, _)
   | EUnnecessaryDeclareTypeOnlyExport loc
   | EUnusedSuppression loc
-  | ECodelessSuppression (loc, _)
+  | ECodelessSuppression loc
   | EDocblockError (loc, _)
   | EImplicitInexactObject loc
   | EReactIntrinsicOverlap { def = loc; _ }
@@ -2943,7 +2943,7 @@ let friendly_message_of_msg = function
   | EUnsafeGettersSetters _ -> Normal MessageUnsafeGetterSetter
   | EUnsafeObjectAssign _ -> Normal MessageUnsafeObjectAssign
   | EUnusedSuppression _ -> Normal MessageUnusedSuppression
-  | ECodelessSuppression (_, c) -> Normal (MessageSuppressionMissingCode c)
+  | ECodelessSuppression _ -> Normal MessageSuppressionMissingCode
   | ELintSetting (_, kind) -> Normal (MessageInvalidLintSettings kind)
   | ESketchyNullLint { kind; loc = _; falsy_loc; null_loc } ->
     Normal (MessageSketchyNullCheck { kind; falsy_loc; null_loc })

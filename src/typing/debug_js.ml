@@ -1695,7 +1695,7 @@ let dump_error_message =
     | EUnsafeGettersSetters loc -> spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EUnsafeObjectAssign loc -> spf "EUnsafeObjectAssign (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc -> spf "EUnusedSuppression (%s)" (string_of_aloc loc)
-    | ECodelessSuppression (loc, c) -> spf "ECodelessSuppression (%s, %s)" (string_of_aloc loc) c
+    | ECodelessSuppression loc -> spf "ECodelessSuppression (%s)" (string_of_aloc loc)
     | ELintSetting (loc, kind) ->
       LintSettings.(
         let kind_str =

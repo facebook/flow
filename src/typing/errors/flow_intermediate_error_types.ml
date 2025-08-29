@@ -883,7 +883,7 @@ type 'loc message =
       null_loc: 'loc;
     }
   | MessageSuppressionMalformedCode
-  | MessageSuppressionMissingCode of string
+  | MessageSuppressionMissingCode
   | MessageThisInComponent of 'loc
   | MessageThisInExportedFunction
   | MessageThisSuperInObject of 'loc virtual_reason * This_finder.kind

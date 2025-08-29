@@ -601,6 +601,14 @@ References:
                    ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ call.js:4:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+
+   4| // $FlowFixMe
+      ^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ call.js:5:1
 
 Cannot call component Foo [1] because React components cannot be called. Use JSX instead.
@@ -3700,7 +3708,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 239 errors
+Found 240 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

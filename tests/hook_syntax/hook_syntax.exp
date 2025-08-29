@@ -1307,6 +1307,14 @@ References:
               ^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------ require_specific_suppression.js:5:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+
+   5| // $FlowFixMe
+      ^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------ require_specific_suppression.js:6:1
 
 Cannot cast `useH` to function type because function [1] is a React hook but function type [2] is not a hook. 
@@ -2641,4 +2649,4 @@ References:
 
 
 
-Found 170 errors
+Found 171 errors

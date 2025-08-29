@@ -46,27 +46,7 @@ let add_suppression_warnings root checked unused warnings =
       all_locs
       warnings
   in
-  Error_suppressions.CodeLocSet.fold
-    (fun (code, loc) warnings ->
-      let source_file =
-        match Loc.source loc with
-        | Some x -> x
-        | None -> File_key.SourceFile "-"
-      in
-      let err =
-        Error_message.ECodelessSuppression (loc, code)
-        |> Flow_error.error_of_msg ~source_file
-        |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
-        |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
-      in
-      let file_warnings =
-        FilenameMap.find_opt source_file warnings
-        |> Base.Option.value ~default:ConcreteLocPrintableErrorSet.empty
-        |> ConcreteLocPrintableErrorSet.add err
-      in
-      FilenameMap.add source_file file_warnings warnings)
-    (Error_suppressions.universally_suppressed_codes unused)
-    warnings
+  warnings
 
 let collate_duplicate_providers ~update root =
   let pos = Loc.{ line = 1; column = 0 } in

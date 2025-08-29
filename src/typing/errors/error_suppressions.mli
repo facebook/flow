@@ -28,8 +28,6 @@ val update_suppressions : t -> t -> t
 
 val all_unused_locs : t -> Loc_collections.LocSet.t
 
-val universally_suppressed_codes : t -> CodeLocSet.t
-
 val filter_suppressed_errors :
   root:File_path.t ->
   file_options:Files.options option ->

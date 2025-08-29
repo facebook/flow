@@ -72,6 +72,10 @@ let is_valid_code_char c =
 
 (* lowercase letters*)
 
+type bad_suppression_kind =
+  | MissingCode
+  | MalformedCode
+
 let should_suppress comment loc =
   let (comment, is_suppressor) =
     consume_tokens [" "; "\n"; "\t"; "\r"; "*"] comment
@@ -84,18 +88,18 @@ let should_suppress comment loc =
     let (comment, has_preceding_spaces) = consume_tokens [" "; "\n"; "\t"; "\r"] comment in
     let (comment, has_code) = consume_token "[" comment in
     if not has_code then
-      Ok (Some (All loc))
+      Error MissingCode
     else
       match Base.String.index comment ']' with
       | None -> Ok (Some (All loc)) (* Not a code if the bracket is not terminated *)
-      | Some 0 -> Error () (* $FlowFixMe[] is not a real code *)
+      | Some 0 -> Error MalformedCode (* $FlowFixMe[] is not a real code *)
       | Some index ->
         (* //$FlowFixMe [code] is invalid *)
         if has_preceding_spaces then
-          Error ()
+          Error MalformedCode
         else
           let code = Base.String.prefix comment index in
           if Base.String.for_all ~f:is_valid_code_char code then
             Ok (Some (Specific (CodeSet.singleton (code, loc))))
           else
-            Error ()
+            Error MalformedCode

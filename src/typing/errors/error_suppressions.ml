@@ -52,8 +52,6 @@ module FileSuppressions : sig
   val suppression_at_loc : Loc.t -> t -> (LocSet.t * applicable_codes) option
 
   val all_unused_locs : t -> LocSet.t
-
-  val universally_suppressed_codes : t -> CodeLocSet.t
 end = struct
   type error_suppressions = (LocSet.t * applicable_codes) SpanMap.t
 
@@ -98,11 +96,6 @@ end = struct
         LocSet.union locs acc)
       suppressions
       lint_suppressions
-
-  let universally_suppressed_codes { used_universal_suppressions; _ } =
-    used_universal_suppressions
-    |> SpanMap.values
-    |> List.fold_left CodeLocSet.union CodeLocSet.empty
 
   let remove loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
     let supp_at_loc = SpanMap.find_opt loc suppressions in
@@ -310,12 +303,6 @@ let all_unused_locs map =
     (fun _k v acc -> LocSet.union acc (FileSuppressions.all_unused_locs v))
     map
     LocSet.empty
-
-let universally_suppressed_codes map =
-  FilenameMap.fold
-    (fun _k v acc -> CodeLocSet.union acc (FileSuppressions.universally_suppressed_codes v))
-    map
-    CodeLocSet.empty
 
 let filter_suppressed_errors
     ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =

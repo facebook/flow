@@ -1,3 +1,11 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+
+   1| // $FlowFixMe
+      ^^^^^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:2:2
 
 Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -10,6 +18,14 @@ References:
    test.js:2:5
    2| (3: string); // not suppressed due to missing code
           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+
+   4| // $FlowExpectedError
+      ^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
@@ -62,6 +78,14 @@ References:
            ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:18:1
+
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+
+   18| // $FlowFixMe
+       ^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:19:2
 
 Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -94,4 +118,4 @@ References:
 
 
 
-Found 7 errors
+Found 10 errors
