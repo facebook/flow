@@ -45,6 +45,10 @@ pattern-object.js:6:5
 Flags: --pretty
 {"result":[]}
 
+pattern-object-rest.js:5:10
+Flags: --pretty
+{"result":[{"name":"bar","type":"number"},{"name":"foo","type":"string"}]}
+
 pattern-member.js:6:6
 Flags: --pretty
 {

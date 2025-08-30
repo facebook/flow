@@ -1301,15 +1301,24 @@ module Make
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, invalid_syntax_list) =
           Base.List.fold cases ~init:([], []) ~f:(fun (cases_acc, invalid_syntax_acc) case ->
-              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
-                  =
+              let ( case_loc,
+                    {
+                      Flow_ast.Match.Case.pattern;
+                      body;
+                      guard;
+                      comments;
+                      invalid_syntax;
+                      case_match_root_loc;
+                    }
+                  ) =
                 case
               in
               let pattern =
                 Match_pattern.pattern
                   cx
-                  ( case_loc,
-                    Flow_ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc)
+                  ( case_match_root_loc,
+                    Flow_ast.Expression.Identifier
+                      (Flow_ast_utils.match_root_ident case_match_root_loc)
                   )
                   pattern
                   ~on_identifier:(fun ~encl_ctx cx ->
@@ -1329,7 +1338,16 @@ module Make
               | (loc, _) -> Flow.add_output cx (Error_message.EMatchStatementInvalidBody { loc }));
               let body = statement cx body in
               let case =
-                (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+                ( case_loc,
+                  {
+                    Flow_ast.Match.Case.pattern;
+                    body;
+                    guard;
+                    comments;
+                    invalid_syntax;
+                    case_match_root_loc;
+                  }
+                )
               in
               (case :: cases_acc, invalid_syntax :: invalid_syntax_acc)
           )
@@ -3051,14 +3069,24 @@ module Make
             cases
             ~init:([], [], true, [])
             ~f:(fun (cases, ts, all_throws, invalid_syntax_acc) case ->
-              let (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
-                  =
+              let ( case_loc,
+                    {
+                      Flow_ast.Match.Case.pattern;
+                      body;
+                      guard;
+                      comments;
+                      invalid_syntax;
+                      case_match_root_loc;
+                    }
+                  ) =
                 case
               in
               let pattern =
                 Match_pattern.pattern
                   cx
-                  (case_loc, Identifier (Flow_ast_utils.match_root_ident case_loc))
+                  ( case_match_root_loc,
+                    Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
+                  )
                   pattern
                   ~on_identifier:(fun ~encl_ctx cx ->
                     identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx })
@@ -3086,7 +3114,16 @@ module Make
                 )
               in
               let case_ast =
-                (case_loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+                ( case_loc,
+                  {
+                    Flow_ast.Match.Case.pattern;
+                    body;
+                    guard;
+                    comments;
+                    invalid_syntax;
+                    case_match_root_loc;
+                  }
+                )
               in
               let throws = guard_throws || body_throws in
               let all_throws = all_throws && throws in

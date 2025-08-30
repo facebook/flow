@@ -1457,6 +1457,7 @@ module Expression
   and match_expression env ~match_keyword_loc ~leading ~arg =
     let case env =
       let leading = Peek.comments env in
+      let case_match_root_loc = Peek.loc env |> Loc.start_loc in
       let invalid_prefix_case =
         if Peek.token env = T_CASE then (
           let loc = Peek.loc env in
@@ -1508,7 +1509,7 @@ module Expression
           invalid_suffix_semicolon;
         }
       in
-      { Match.Case.pattern; body; guard; comments; invalid_syntax }
+      { Match.Case.pattern; body; guard; comments; invalid_syntax; case_match_root_loc }
     in
     let rec case_list env acc =
       match Peek.token env with

@@ -3592,6 +3592,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       guard = guard1;
       comments = comments1;
       invalid_syntax = invalid_syntax1;
+      case_match_root_loc = _;
     } =
       c1
     in
@@ -3601,6 +3602,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       guard = guard2;
       comments = comments2;
       invalid_syntax = invalid_syntax2;
+      case_match_root_loc = _;
     } =
       c2
     in
@@ -3636,6 +3638,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       guard = guard1;
       comments = comments1;
       invalid_syntax = invalid_syntax1;
+      case_match_root_loc = _;
     } =
       c1
     in
@@ -3645,6 +3648,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       guard = guard2;
       comments = comments2;
       invalid_syntax = invalid_syntax2;
+      case_match_root_loc = _;
     } =
       c2
     in

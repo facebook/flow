@@ -105,6 +105,7 @@ class mapper target_loc ~kind =
                   guard = None;
                   comments = None;
                   invalid_syntax = empty_invalid_case_syntax;
+                  case_match_root_loc = Loc.none;
                 }
               )
           )
@@ -133,6 +134,7 @@ class mapper target_loc ~kind =
                   guard = None;
                   comments = None;
                   invalid_syntax = empty_invalid_case_syntax;
+                  case_match_root_loc = Loc.none;
                 }
               )
           )
@@ -243,10 +245,14 @@ class mapper target_loc ~kind =
           let { arg; cases; match_keyword_loc; comments } = x in
           let cases =
             Base.List.map cases ~f:(fun case ->
-                let (loc, { Case.pattern; body; guard; comments; invalid_syntax }) = case in
+                let ( loc,
+                      { Case.pattern; body; guard; comments; invalid_syntax; case_match_root_loc }
+                    ) =
+                  case
+                in
                 if is_invalid_case_syntax invalid_syntax then
                   let invalid_syntax = empty_invalid_case_syntax in
-                  (loc, { Case.pattern; body; guard; comments; invalid_syntax })
+                  (loc, { Case.pattern; body; guard; comments; invalid_syntax; case_match_root_loc })
                 else
                   case
             )
@@ -277,7 +283,7 @@ class mapper target_loc ~kind =
 
     method! match_case ~on_case_body case =
       let open Flow_ast.Match.Case in
-      let (loc, { pattern; body; guard; comments; invalid_syntax }) = case in
+      let (loc, { pattern; body; guard; comments; invalid_syntax; case_match_root_loc }) = case in
       let case =
         if
           kind = InvalidCaseSyntax
@@ -285,7 +291,7 @@ class mapper target_loc ~kind =
           && is_invalid_case_syntax invalid_syntax
         then
           let invalid_syntax = empty_invalid_case_syntax in
-          (loc, { pattern; body; guard; comments; invalid_syntax })
+          (loc, { pattern; body; guard; comments; invalid_syntax; case_match_root_loc })
         else
           case
       in

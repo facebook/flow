@@ -2115,18 +2115,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           ('N, 'U, 'BNU) Ast.Match.Case.t' =
       fun ~on_case_body case ->
         let open Ast.Match.Case in
-        let { pattern; body; guard; comments; invalid_syntax } = case in
+        let { pattern; body; guard; comments; invalid_syntax; case_match_root_loc } = case in
         let pattern' = this#match_pattern pattern in
         let guard' = Option.map ~f:this#expression guard in
         let body' = on_case_body body in
         let comments' = this#syntax_opt comments in
         let invalid_syntax' = this#match_case_invalid_syntax invalid_syntax in
+        let case_match_root_loc' = this#on_loc_annot case_match_root_loc in
         {
           pattern = pattern';
           body = body';
           guard = guard';
           comments = comments';
           invalid_syntax = invalid_syntax';
+          case_match_root_loc = case_match_root_loc';
         }
 
     method match_case_invalid_syntax (x : 'M Ast.Match.Case.InvalidSyntax.t)

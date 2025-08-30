@@ -295,7 +295,8 @@ struct
                ~kind:Ast.Variable.Const
                (Flow_ast_utils.match_root_ident match_keyword_loc);
           Base.List.iter cases ~f:(fun (case_loc, case) ->
-              ignore @@ this#identifier (Flow_ast_utils.match_root_ident case_loc);
+              let { Ast.Match.Case.case_match_root_loc; _ } = case in
+              ignore @@ this#identifier (Flow_ast_utils.match_root_ident case_match_root_loc);
               ignore @@ super#match_case ~on_case_body (case_loc, case)
           );
           ignore @@ this#identifier (Flow_ast_utils.match_root_ident match_keyword_loc);

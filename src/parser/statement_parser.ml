@@ -593,6 +593,7 @@ module Statement
     let open Match in
     let case env =
       let leading = Peek.comments env in
+      let case_match_root_loc = Peek.loc env |> Loc.start_loc in
       let invalid_prefix_case =
         if Peek.token env = T_CASE then (
           let loc = Peek.loc env in
@@ -632,7 +633,7 @@ module Statement
           invalid_suffix_semicolon = None;
         }
       in
-      { Case.pattern; body; guard; comments; invalid_syntax }
+      { Case.pattern; body; guard; comments; invalid_syntax; case_match_root_loc }
     in
     let rec case_list env acc =
       match Peek.token env with

@@ -3008,7 +3008,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             PartialEnvSnapshot.t * PartialEnvSnapshot.t * AbruptCompletion.t option =
         fun ~on_case_body case ->
           let open Flow_ast.Match.Case in
-          let (case_loc, { pattern; body; guard; comments = _; invalid_syntax = _ }) = case in
+          let ( case_loc,
+                { pattern; body; guard; case_match_root_loc; comments = _; invalid_syntax = _ }
+              ) =
+            case
+          in
           let env0 = this#env_snapshot in
           let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
           let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
@@ -3016,7 +3020,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             this#with_bindings ~lexical:true case_loc bindings (fun _ ->
                 this#push_refinement_scope empty_refinements;
                 let arg =
-                  (case_loc, Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_loc))
+                  ( case_match_root_loc,
+                    Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
+                  )
                 in
                 this#visit_match_pattern ~arg pattern;
                 let test_refinements = this#peek_new_refinements () in
@@ -3024,7 +3030,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 | Some refined_value ->
                   let values =
                     L.LMap.add
-                      case_loc
+                      case_match_root_loc
                       {
                         def_loc = None;
                         value = refined_value;

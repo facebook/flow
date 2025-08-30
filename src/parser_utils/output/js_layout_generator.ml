@@ -3384,8 +3384,18 @@ and match_case :
       on_case_body:(opts:opts -> 'B -> Layout.layout_node) ->
       ('loc, 'loc, 'B) Ast.Match.Case.t ->
       Layout.layout_node =
- fun ~opts ~on_case_body (loc, { Ast.Match.Case.pattern; body; guard; comments; invalid_syntax = _ })
-     ->
+ fun ~opts
+     ~on_case_body
+     ( loc,
+       {
+         Ast.Match.Case.pattern;
+         body;
+         guard;
+         comments;
+         invalid_syntax = _;
+         case_match_root_loc = _;
+       }
+     ) ->
   layout_node_with_comments_opt
     loc
     comments

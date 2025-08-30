@@ -252,6 +252,7 @@ let convert_switch loc switch =
                 guard = None;
                 comments;
                 invalid_syntax = Autofix_match_syntax.empty_invalid_case_syntax;
+                case_match_root_loc = Loc.none;
               }
             )
           in
@@ -271,7 +272,16 @@ let convert_switch loc switch =
       (* We can turn this into a return of a match expression. *)
       let match_cases =
         Base.List.rev_map match_cases_rev ~f:(fun case ->
-            let (loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax }) =
+            let ( loc,
+                  {
+                    Flow_ast.Match.Case.pattern;
+                    body;
+                    guard;
+                    comments;
+                    invalid_syntax;
+                    case_match_root_loc;
+                  }
+                ) =
               case
             in
             let body =
@@ -282,7 +292,16 @@ let convert_switch loc switch =
                 expr
               | _ -> raise UnableToConvertSwitch
             in
-            (loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+            ( loc,
+              {
+                Flow_ast.Match.Case.pattern;
+                body;
+                guard;
+                comments;
+                invalid_syntax;
+                case_match_root_loc;
+              }
+            )
         )
       in
       let match_expr =
@@ -304,7 +323,16 @@ let convert_switch loc switch =
       (* We can turn this into an assign of a match expression. *)
       let match_cases =
         Base.List.rev_map match_cases_rev ~f:(fun case ->
-            let (loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax }) =
+            let ( loc,
+                  {
+                    Flow_ast.Match.Case.pattern;
+                    body;
+                    guard;
+                    comments;
+                    invalid_syntax;
+                    case_match_root_loc;
+                  }
+                ) =
               case
             in
             let body =
@@ -325,7 +353,16 @@ let convert_switch loc switch =
                 expr
               | _ -> raise UnableToConvertSwitch
             in
-            (loc, { Flow_ast.Match.Case.pattern; body; guard; comments; invalid_syntax })
+            ( loc,
+              {
+                Flow_ast.Match.Case.pattern;
+                body;
+                guard;
+                comments;
+                invalid_syntax;
+                case_match_root_loc;
+              }
+            )
         )
       in
       let match_expr =

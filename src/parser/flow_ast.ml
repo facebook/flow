@@ -1959,6 +1959,7 @@ and Match : sig
       guard: ('M, 'T) Expression.t option;
       comments: ('M, unit) Syntax.t option;
       invalid_syntax: 'M InvalidSyntax.t;
+      case_match_root_loc: 'M;
     }
     [@@deriving show]
   end
