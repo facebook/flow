@@ -1,5 +1,5 @@
 //@flow
-let foo = {foo: 3};
+let foo = {foo: 3} as {foo: number, ...};
 
 const f1 = () => {foo = {...foo, foo1: 3}};
 const f2 = () => {foo = {...foo, foo2: 3}};

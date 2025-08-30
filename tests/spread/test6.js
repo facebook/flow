@@ -8,7 +8,7 @@ var p = {
   foo: 'bar'
 };
 (p: {foo: string; abc: string}); // error, p doesn't have `abc` yet
-p = {...p, abc: 'def'};
+p = {...p, abc: 'def'}; // error, p doesn't have `abc` yet
 (p: {foo: string; abc: string});
 
 var q = {

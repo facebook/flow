@@ -1,3 +1,24 @@
+Error ------------------------------------------------------------------------------------------------------- b.js:13:17
+
+Cannot assign object literal to `data` because property `z` is extra in object literal [1] but missing in object
+literal [2]. Exact objects do not accept extra props. 
+
+All writes to `data` must be compatible with the type of its initializer [3]. Add an annotation to `data` [3] if a
+different type is desired. [incompatible-type]
+
+   b.js:13:17
+   13|   if (b) data = { x: 0, z: 0 }; // constrained write error
+                       ^^^^^^^^^^^^^^ [1]
+
+References:
+   b.js:12:14
+   12|   var data = { x: 0 };
+                    ^^^^^^^^ [2]
+   b.js:12:7
+   12|   var data = { x: 0 };
+             ^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------------- b.js:19:12
 
 Cannot call `o['fun']` with `data` bound to `data` because property `x` is missing in object literal [1] but exists in
@@ -49,4 +70,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors

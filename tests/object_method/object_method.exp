@@ -75,8 +75,8 @@ References:
    14| }
        ^ [1]
    test2.js:3:18
-    3| function f(this: {p: mixed}) {
-                        ^^^^^^^^^^ [2]
+    3| function f(this: {+p: mixed}) {
+                        ^^^^^^^^^^^ [2]
 
 
 

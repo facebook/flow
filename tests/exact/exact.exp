@@ -136,6 +136,42 @@ Cannot create exact type from `PersonPred` [1]. [invalid-exact]
                                                            ^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- literal.js:3:7
+
+Cannot assign `p` to `o.p` because inexact object type [1] is incompatible with exact object literal [2].
+[incompatible-exact]
+
+   literal.js:3:7
+   3| o.p = p; // error
+            ^
+
+References:
+   literal.js:2:8
+   2| var p: { q: number, r: number } = { q: 1, r: 2 };
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   literal.js:1:14
+   1| var o = { p: { q: 0 } };
+                   ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- literal.js:3:7
+
+Cannot assign `p` to `o.p` because property `r` is extra in object type [1] but missing in object literal [2]. Exact
+objects do not accept extra props. [incompatible-type]
+
+   literal.js:3:7
+   3| o.p = p; // error
+            ^
+
+References:
+   literal.js:2:8
+   2| var p: { q: number, r: number } = { q: 1, r: 2 };
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   literal.js:1:14
+   1| var o = { p: { q: 0 } };
+                   ^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- multiple_props.js:10:1
 
 Cannot cast `foo` to object type because property `a`, property `b`, property `c`, property `d`, and 2 others are extra
@@ -692,4 +728,4 @@ References:
 
 
 
-Found 45 errors
+Found 47 errors

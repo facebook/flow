@@ -10,7 +10,7 @@ const o = {
 
 function test1(b: boolean) {
   var data = { x: 0 };
-  if (b) data = { x: 0, z: 0 };
+  if (b) data = { x: 0, z: 0 }; // constrained write error
   o['fun'](data); // no error
 }
 /*The error position for this one is ok.*/
