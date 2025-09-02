@@ -271,24 +271,13 @@ jobs:
         opam-pin: false 
     - name: Build flow.exe
       run: >-
-        cd $(realpath ${GITHUB_WORKSPACE});
-        echo $(opam env);
-        eval $(opam env);
         make bin/flow.exe dist/flow.zip;
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe;
         cp dist/flow.zip dist/flow-win64.zip
-      shell: D:\cygwin\bin\bash.exe -leo pipefail '{0}'
-      env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - name: Build parser test runner
       run: >-
-        cd $(realpath ${GITHUB_WORKSPACE}) ;
-        eval $(opam env) ;
         dune build src/parser/test/run_tests.exe ;
         cp _build/default/src/parser/test/run_tests.exe bin/win64/run_parser_tests.exe
-      shell: D:\cygwin\bin\bash.exe -leo pipefail '{0}'
-      env:
-        PATH: /usr/local/bin:/usr/bin:/cygdrive/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_win_bin
