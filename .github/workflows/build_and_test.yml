@@ -269,13 +269,12 @@ jobs:
         ocaml-compiler: 5
         opam-disable-sandboxing: true
         opam-pin: false
-    - name: Create opam switch
+    - name: Install opam dependencies
       run: opam install . --deps-only
     - name: Build flow.exe
       run: >-
-        opam exec -- make bin/flow.exe dist/flow.zip;
+        opam exec -- make bin/flow.exe dist/flow/flow.exe
         mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe;
-        cp dist/flow.zip dist/flow-win64.zip
     - name: Build parser test runner
       run: >-
         opam exec -- dune build src/parser/test/run_tests.exe ;
@@ -286,6 +285,10 @@ jobs:
         path: |
           bin/win64/flow.exe
           bin/win64/run_parser_tests.exe
+    - name: Build flow.zip
+      run: >-
+        cd dist && 7zip -r flow.zip flow/flow.exe
+        cp dist/flow.zip dist/flow-win64.zip
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_win_dist
