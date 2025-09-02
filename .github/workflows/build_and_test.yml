@@ -268,7 +268,9 @@ jobs:
       with:
         ocaml-compiler: 5
         opam-disable-sandboxing: true
-        opam-pin: false 
+        opam-pin: false
+    - name: Create opam switch
+      run: opam exec -- make deps
     - name: Build flow.exe
       run: >-
         opam exec -- make bin/flow.exe dist/flow.zip;
