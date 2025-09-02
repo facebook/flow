@@ -267,8 +267,8 @@ jobs:
       uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: 5
-    - name: Create opam switch
-      run: make deps   
+        opam-disable-sandboxing: true
+        opam-pin: false 
     - name: Build flow.exe
       run: >-
         cd $(realpath ${GITHUB_WORKSPACE});
