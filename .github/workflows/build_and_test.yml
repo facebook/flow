@@ -270,7 +270,7 @@ jobs:
         opam-disable-sandboxing: true
         opam-pin: false
     - name: Create opam switch
-      run: opam exec -- make deps
+      run: opam install . --deps-only
     - name: Build flow.exe
       run: >-
         opam exec -- make bin/flow.exe dist/flow.zip;
