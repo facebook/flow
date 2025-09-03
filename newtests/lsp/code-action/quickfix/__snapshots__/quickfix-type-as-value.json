@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert type import of `Component` to value import",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/type-as-value.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 0
+                },
+                "end": {
+                  "line": 2,
+                  "character": 37
+                }
+              },
+              "newText": "import { Component } from \"react\";"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_type_to_value_import",
+          "Convert type import of `Component` to value import"
+        ]
+      }
+    }
+  ]
+}

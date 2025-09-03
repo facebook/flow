@@ -15,6 +15,7 @@ let tests =
   "code_action"
   >::: [
          Autofix_imports_tests.tests;
+         Autofix_type_to_value_import_tests.tests;
          Code_action_service_tests.tests;
          Insert_type_utils_tests.tests;
          Refactor_extract_tests.tests;

@@ -534,6 +534,36 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for type-as-value errors', [
+      addFile('type-as-value.js.ignored', 'type-as-value.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/type-as-value.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 1,
+          },
+          end: {
+            line: 3,
+            character: 2,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(__dirname, '__snapshots__', 'quickfix-type-as-value.json'),
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
     test('provide quickfix for ClassObject errors', [
       addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
       lspStartAndConnect(),

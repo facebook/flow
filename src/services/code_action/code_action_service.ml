@@ -1101,6 +1101,21 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.(EBindingError (ETypeInValuePosition { name; _ }, error_loc, _, _)) ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let transform ~cx:_ ~file_sig:_ ~ast ~typed_ast:_ loc =
+        Autofix_type_to_value_import.convert_type_to_value_import ast loc
+      in
+      [
+        {
+          title = Utils_js.spf "Convert type import of `%s` to value import" name;
+          diagnostic_title = "convert_type_to_value_import";
+          transform;
+          target_loc = error_loc;
+        };
+      ]
+    else
+      []
   | Error_message.EMatchInvalidObjectShorthand { loc = error_loc; name } ->
     if loc_opt_intersects ~error_loc ~loc then
       [

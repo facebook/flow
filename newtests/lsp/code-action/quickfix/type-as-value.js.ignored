@@ -1,0 +1,4 @@
+// @flow
+
+import type {Component} from 'react';
+Component;
