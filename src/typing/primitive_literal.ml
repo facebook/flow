@@ -148,8 +148,28 @@ class literal_type_mapper ~singleton_action =
     method! type_ cx map_cx t =
       match t with
       | OpenT _ -> super#type_ cx map_cx t
-      | DefT (r, ArrT _) when is_literal_array_reason r -> super#type_ cx map_cx t
-      | DefT (r, ObjT _) when is_literal_object_reason r -> super#type_ cx map_cx t
+      | DefT (r, ArrT _) when is_literal_array_reason r ->
+        let t =
+          if
+            Context.natural_inference_array_object_literal_implicit_instantiation_fix cx
+            && Reason.desc_of_reason r = RArrayLit_UNSOUND
+          then
+            TypeUtil.mod_reason_of_t (Reason.replace_desc_new_reason RArrayLit) t
+          else
+            t
+        in
+        super#type_ cx map_cx t
+      | DefT (r, ObjT _) when is_literal_object_reason r ->
+        let t =
+          if
+            Context.natural_inference_array_object_literal_implicit_instantiation_fix cx
+            && Reason.desc_of_reason r = RObjectLit_UNSOUND
+          then
+            TypeUtil.mod_reason_of_t (Reason.replace_desc_new_reason RObjectLit) t
+          else
+            t
+        in
+        super#type_ cx map_cx t
       | DefT (r, FunT _) when is_literal_function_reason r -> super#type_ cx map_cx t
       | TypeAppT { type_; _ } when is_builtin_promise cx type_ ->
         (* async expressions will wrap result in Promise<>, so we need to descend here *)
