@@ -24,7 +24,7 @@ let metadata =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    casting_syntax = Options.CastingSyntax.Colon;
+    casting_syntax = Options.CastingSyntax.Both;
     component_syntax = true;
     hook_compatibility_excludes = [];
     hook_compatibility_includes = [];

@@ -31,7 +31,7 @@ let stub_metadata ~root ~checked =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    casting_syntax = Options.CastingSyntax.Colon;
+    casting_syntax = Options.CastingSyntax.Both;
     component_syntax = false;
     hook_compatibility_excludes = [];
     hook_compatibility_includes = [];

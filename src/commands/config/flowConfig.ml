@@ -447,11 +447,7 @@ module Opts = struct
 
   let casting_syntax_parser =
     enum
-      [
-        ("colon", Options.CastingSyntax.Colon);
-        ("as", Options.CastingSyntax.As);
-        ("both", Options.CastingSyntax.Both);
-      ]
+      [("as", Options.CastingSyntax.As); ("both", Options.CastingSyntax.Both)]
       (fun opts v -> Ok { opts with casting_syntax = Some v })
 
   let channel_mode_parser ~enabled =

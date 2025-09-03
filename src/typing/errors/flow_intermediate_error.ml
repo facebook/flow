@@ -1311,7 +1311,6 @@ let to_printable_error :
       let example =
         let open Options.CastingSyntax in
         match casting_syntax with
-        | Colon -> spf "(<expr>: %s)" representation_type
         | Both
         | As ->
           spf "<expr> as %s" representation_type

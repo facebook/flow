@@ -17,7 +17,6 @@ class mapper ~enabled_casting_syntax target_loc kind =
       | As
       | Both ->
         Ast_builder.Expressions.as_expression ?comments expression annot
-      | Colon -> Ast_builder.Expressions.typecast ?comments expression annot
 
     method! expression e =
       let open Flow_ast.Expression in
@@ -25,18 +24,11 @@ class mapper ~enabled_casting_syntax target_loc kind =
       | (loc, TypeCast { TypeCast.expression; annot = (_, annot); comments })
         when kind = `ColonCast && this#is_target loc ->
         this#build_cast ?comments expression annot
-      | (loc, AsExpression { AsExpression.expression; annot = (_, annot); comments })
-        when kind = `AsExpression && this#is_target loc ->
-        this#build_cast ?comments expression annot
       | (loc, TSSatisfies { TSSatisfies.expression; annot = (_, annot); comments })
         when kind = `SatisfiesExpression && this#is_target loc ->
         this#build_cast ?comments expression annot
       | _ -> super#expression e
   end
-
-let convert_as_expression ~enabled_casting_syntax ast loc =
-  let mapper = new mapper ~enabled_casting_syntax loc `AsExpression in
-  mapper#program ast
 
 let convert_satisfies_expression ~enabled_casting_syntax ast loc =
   let mapper = new mapper ~enabled_casting_syntax loc `SatisfiesExpression in

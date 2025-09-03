@@ -346,7 +346,6 @@ class mapper ~strict ~synth_type ~casting_syntax target =
           let open Options.CastingSyntax in
           match (synth_type l, casting_syntax) with
           | (Error _, _) -> super#expression e
-          | (Ok annot, Colon) -> (l, TypeCast TypeCast.{ expression = e; annot; comments = None })
           | (Ok annot, As)
           | (Ok annot, Both) ->
             (l, AsExpression AsExpression.{ expression = e; annot; comments = None })

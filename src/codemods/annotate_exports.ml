@@ -236,11 +236,6 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
           let annot = (Loc.none, flowfixme_ast) in
           let open Options.CastingSyntax in
           match casting_syntax with
-          | Colon ->
-            ( loc,
-              Ast.Expression.TypeCast
-                { Ast.Expression.TypeCast.expression = e; annot; comments = None }
-            )
           | As
           | Both ->
             ( loc,

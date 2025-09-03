@@ -5,12 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val convert_as_expression :
-  enabled_casting_syntax:Options.CastingSyntax.t ->
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
-  Loc.t ->
-  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
-
 val convert_satisfies_expression :
   enabled_casting_syntax:Options.CastingSyntax.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->

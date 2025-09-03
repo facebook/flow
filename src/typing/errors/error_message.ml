@@ -2367,7 +2367,6 @@ let type_casting_examples enabled_casting_syntax =
   let example_colon = "(<expr>: <type>)" in
   let open Options.CastingSyntax in
   match enabled_casting_syntax with
-  | Colon -> (example_colon, example_as)
   | Both
   | As ->
     (example_as, example_colon)

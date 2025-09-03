@@ -3085,14 +3085,11 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
     let open Options.CastingSyntax in
     (match opts.casting_syntax with
-    | Colon
-    | Both ->
-      annot opts scope tbls SSet.empty t
+    | Both -> annot opts scope tbls SSet.empty t
     | As -> Annot (Any loc))
   | E.AsExpression { E.AsExpression.expression = _; annot = (_, t); comments = _ } ->
     let open Options.CastingSyntax in
     (match opts.casting_syntax with
-    | Colon -> Annot (Any loc)
     | As
     | Both ->
       annot opts scope tbls SSet.empty t)

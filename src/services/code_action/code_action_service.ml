@@ -920,7 +920,6 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
         | As
         | Both ->
           "Convert to `as` expression `<expr> as <type>`"
-        | Colon -> "Convert to type cast `(<expr>: <type>)`"
       in
       [
         {
@@ -970,11 +969,6 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
           ( "Convert to `as` expression `<expr> as <type>`",
             "convert_colon_cast",
             Autofix_casting_syntax.convert_colon_cast
-          )
-        | Colon ->
-          ( "Convert to type cast `(<expr>: <type>)`",
-            "convert_as_expression",
-            Autofix_casting_syntax.convert_as_expression
           )
       in
       [

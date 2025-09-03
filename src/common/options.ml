@@ -97,7 +97,6 @@ type log_saving = {
 
 module CastingSyntax = struct
   type t =
-    | Colon
     | As
     | Both
 end

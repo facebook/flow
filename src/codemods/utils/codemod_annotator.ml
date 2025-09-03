@@ -310,7 +310,6 @@ module Make (Extra : BASE_STATS) = struct
           this#annotate_node loc ty (fun annot ->
               let open Options.CastingSyntax in
               match casting_syntax with
-              | Colon -> (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None })
               | As
               | Both ->
                 (expr_loc, AsExpression AsExpression.{ expression; annot; comments = None })
