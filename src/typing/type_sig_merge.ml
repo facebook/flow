@@ -1344,7 +1344,7 @@ and merge_interface_prop ?(is_static = false) env file = function
     let merge_method fn_loc def =
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
-      merge_fun ~is_method:true ~is_static ~is_declare_or_intf:true env file reason def statics
+      merge_fun ~is_method:true ~is_static env file reason def statics
     in
     let finish = function
       | (t, []) -> t
@@ -1643,7 +1643,6 @@ and merge_fun_statics env file reason statics =
 and merge_fun
     ?(is_method = false)
     ?(is_static = false)
-    ?(is_declare_or_intf = false)
     env
     file
     reason
@@ -1687,7 +1686,7 @@ and merge_fun
           if name <> "this" && Base.List.for_all params ~f:(fun (pname, _) -> pname <> Some name)
           then
             None
-          else if name = "this" && ((not is_method) || is_static || not is_declare_or_intf) then
+          else if name = "this" && ((not is_method) || is_static) then
             None
           else
             let reason = Reason.mk_reason Reason.RTypeGuard loc in
@@ -1938,7 +1937,7 @@ let merge_declare_fun file defs =
       (fun (_, fn_loc, def) ->
         let reason = Reason.(mk_reason RFunctionType fn_loc) in
         let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason SMap.empty in
-        merge_fun ~is_declare_or_intf:true (mk_merge_env SMap.empty) file reason def statics)
+        merge_fun (mk_merge_env SMap.empty) file reason def statics)
       defs
   in
   match ts with

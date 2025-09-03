@@ -240,7 +240,7 @@ function test5() {
 
   declare var e: EImported;
   if (e.isF()) {
-    e as FImported; // error this type guard is on a regular class
+    e as FImported; // okay this type guard is still recorded in regular class
   } else {
     e as EImported;
     e as FImported; // error

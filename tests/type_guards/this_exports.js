@@ -11,7 +11,7 @@ declare export class C extends B {}
 declare export class D {}
 
 export class E {
-  isF(): this is F { // error
+  isF(): this is F { // error due to consistency check, but type guard recorded
     return true;
   }
 }
