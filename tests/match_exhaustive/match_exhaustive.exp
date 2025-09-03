@@ -567,13 +567,13 @@ References:
            ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:40:3
+Error ---------------------------------------------------------------------------------------------------- enums.js:45:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match unknown
 members of enum `E` [1]. [match-not-exhaustive]
 
-   enums.js:40:3
-   40|   match (x) { // ERROR: missing wildcard for unknown members
+   enums.js:45:3
+   45|   match (x) { // ERROR: missing wildcard for unknown members
          ^^^^^
 
 References:
@@ -582,82 +582,129 @@ References:
                           ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:61:3
+Error ---------------------------------------------------------------------------------------------------- enums.js:58:3
+
+The match wildcard [1] does not check for missing enum member `E.B`, because the `require-explicit-enum-checks` lint has
+been enabled. To fix, add cases covering those enum members. [require-explicit-enum-checks]
+
+   enums.js:58:3
+   58|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   enums.js:60:5
+   60|     _ => {}
+           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:70:3
+
+The match wildcard [1] does not check for missing enum members `D.M` and `D.N`, because the
+`require-explicit-enum-checks` lint has been enabled. To fix, add cases covering those enum members.
+[require-explicit-enum-checks]
+
+   enums.js:70:3
+   70|   match (y) { // ERROR
+         ^^^^^
+
+References:
+   enums.js:71:5
+   71|     _ => {}
+           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:70:3
+
+The match wildcard [1] does not check for missing enum members `E.A` and `E.B`, because the
+`require-explicit-enum-checks` lint has been enabled. To fix, add cases covering those enum members.
+[require-explicit-enum-checks]
+
+   enums.js:70:3
+   70|   match (y) { // ERROR
+         ^^^^^
+
+References:
+   enums.js:71:5
+   71|     _ => {}
+           ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- enums.js:90:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `E.B` to match member B of
 enum `E` [1]. [match-not-exhaustive]
 
-   enums.js:61:3
-   61|   match (x) { // ERROR: missing `E.B`
+   enums.js:90:3
+   90|   match (x) { // ERROR: missing `E.B`
          ^^^^^
 
 References:
-   enums.js:50:5
-   50|     B,
+   enums.js:79:5
+   79|     B,
            ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:66:3
+Error ---------------------------------------------------------------------------------------------------- enums.js:95:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match null
 or undefined [1]. [match-not-exhaustive]
 
-   enums.js:66:3
-   66|   match (x) { // ERROR: missing `undefined`
+   enums.js:95:3
+   95|   match (x) { // ERROR: missing `undefined`
          ^^^^^
 
 References:
-   enums.js:53:20
-   53|   declare const x: ?E;
+   enums.js:82:20
+   82|   declare const x: ?E;
                           ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:85:7
+Error --------------------------------------------------------------------------------------------------- enums.js:114:7
 
 Cannot access `XXX` because `XXX` is not a member of enum `E` [1]. [invalid-enum-access]
 
-   enums.js:85:7
-   85|     E.XXX => {} // ERROR: invalid enum access
-             ^^^
+   enums.js:114:7
+   114|     E.XXX => {} // ERROR: invalid enum access
+              ^^^
 
 References:
-   enums.js:75:8
-   75|   enum E {
-              ^ [1]
+   enums.js:104:8
+   104|   enum E {
+               ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:98:3
+Error --------------------------------------------------------------------------------------------------- enums.js:127:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `E.A` to match member A of enum `E` [1]
 - `E.B` to match member B of enum `E` [2] [match-not-exhaustive]
 
-   enums.js:98:3
-   98|   match (x) { // ERROR
-         ^^^^^
+   enums.js:127:3
+   127|   match (x) { // ERROR
+          ^^^^^
 
 References:
-   enums.js:92:5
-   92|     A,
-           ^ [1]
-   enums.js:93:5
-   93|     B,
-           ^ [2]
+   enums.js:121:5
+   121|     A,
+            ^ [1]
+   enums.js:122:5
+   122|     B,
+            ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- enums.js:99:5
+Error --------------------------------------------------------------------------------------------------- enums.js:128:5
 
 Invalid enum member check at match pattern. The format must be dot-access of a member of `E` [1]. For example `E.A`.
 [match-invalid-pattern]
 
-   enums.js:99:5
-   99|     x => {} // ERROR
-           ^
+   enums.js:128:5
+   128|     x => {} // ERROR
+            ^
 
 References:
-   enums.js:96:20
-   96|   declare const x: E;
-                          ^ [1]
+   enums.js:125:20
+   125|   declare const x: E;
+                           ^ [1]
 
 
 Error ---------------------------------------------------------------------------------- exhaustive-error-message.js:7:3
@@ -2346,4 +2393,4 @@ References:
 
 
 
-Found 171 errors
+Found 174 errors

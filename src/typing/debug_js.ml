@@ -2005,6 +2005,11 @@ let dump_error_message =
         "EMatchNonExhaustiveObjectPattern (%s) (%s)"
         (string_of_aloc loc)
         (Base.Option.value_map ~default:"" ~f:(dump_reason cx) rest)
+    | EMatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members = _ } ->
+      spf
+        "EMatchNonExplicitEnumCheck (%s) (%s)"
+        (string_of_aloc loc)
+        (dump_reason cx wildcard_reason)
     | EMatchInvalidGuardedWildcard loc ->
       spf "EMatchInvalidGuardedWildcard (%s)" (string_of_aloc loc)
     | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->

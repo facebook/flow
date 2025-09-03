@@ -688,6 +688,11 @@ and 'loc t' =
       rest: 'loc virtual_reason option;
       missing_props: string list;
     }
+  | EMatchNonExplicitEnumCheck of {
+      loc: 'loc;
+      wildcard_reason: 'loc virtual_reason;
+      unchecked_members: string list;
+    }
   | EMatchInvalidGuardedWildcard of 'loc
   | EMatchInvalidIdentOrMemberPattern of {
       loc: 'loc;
@@ -1663,6 +1668,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props } ->
     EMatchNonExhaustiveObjectPattern
       { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props }
+  | EMatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members } ->
+    EMatchNonExplicitEnumCheck
+      { loc = f loc; wildcard_reason = map_reason wildcard_reason; unchecked_members }
   | EMatchInvalidGuardedWildcard loc -> EMatchInvalidGuardedWildcard (f loc)
   | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
     EMatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
@@ -1928,6 +1936,7 @@ let util_use_op_of_msg nope util = function
   | EMatchNotExhaustive _
   | EMatchUnusedPattern _
   | EMatchNonExhaustiveObjectPattern _
+  | EMatchNonExplicitEnumCheck _
   | EMatchInvalidGuardedWildcard _
   | EMatchInvalidIdentOrMemberPattern _
   | EMatchInvalidBindingKind _
@@ -2164,6 +2173,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnusedPromise { loc; _ } -> Some loc
   | EMatchNotExhaustive { loc; _ } -> Some loc
   | EMatchNonExhaustiveObjectPattern { loc; _ } -> Some loc
+  | EMatchNonExplicitEnumCheck { loc; _ } -> Some loc
   | EMatchInvalidBindingKind { loc; _ } -> Some loc
   | EMatchInvalidObjectPropertyLiteral { loc } -> Some loc
   | EMatchInvalidUnaryZero { loc } -> Some loc
@@ -2251,6 +2261,7 @@ let kind_of_msg =
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EEnumNotAllChecked { default_case_loc = Some _; _ } ->
       LintError Lints.RequireExplicitEnumSwitchCases
+    | EMatchNonExplicitEnumCheck _ -> LintError Lints.RequireExplicitEnumChecks
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
@@ -3244,6 +3255,8 @@ let friendly_message_of_msg = function
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
   | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
     Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props })
+  | EMatchNonExplicitEnumCheck { loc = _; wildcard_reason; unchecked_members } ->
+    Normal (MessageMatchNonExplicitEnumCheck { wildcard_reason; unchecked_members })
   | EMatchInvalidGuardedWildcard _ -> Normal MessageMatchInvalidGuardedWildcard
   | EMatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
     Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
@@ -3285,6 +3298,7 @@ let defered_in_speculation = function
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EEnumNotAllChecked { default_case_loc = Some _; _ }
+  | EMatchNonExplicitEnumCheck _
   | EUninitializedInstanceProperty _
   | ETrivialRecursiveDefinition _
   | EAnyValueUsedAsType _
@@ -3649,6 +3663,7 @@ let error_code_of_message err : error_code option =
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
   | EMatchNotExhaustive _ -> Some MatchNotExhaustive
   | EMatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
+  | EMatchNonExplicitEnumCheck _ -> Some RequireExplicitEnumChecks
   | EMatchUnusedPattern _ -> Some MatchUnusedPattern
   | EMatchInvalidGuardedWildcard _ -> Some MatchNotExhaustive
   | EMatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern

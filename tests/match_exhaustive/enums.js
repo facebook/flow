@@ -37,9 +37,38 @@
     _ => {}
   }
 
+  match (x) { // OK
+    E.A => {}
+    _ => {}
+  }
+
   match (x) { // ERROR: missing wildcard for unknown members
     E.A => {}
     E.B => {}
+  }
+
+  // flowlint-next-line require-explicit-enum-checks:error
+  match (x) { // OK
+    E.A => {}
+    E.B => {}
+    _ => {}
+  }
+
+  // flowlint-next-line require-explicit-enum-checks:error
+  match (x) { // ERROR
+    E.A => {}
+    _ => {}
+  }
+
+  enum D {
+    M,
+    N,
+    ...
+  }
+  declare const y: E | D;
+  // flowlint-next-line require-explicit-enum-checks:error
+  match (y) { // ERROR
+    _ => {}
   }
 }
 

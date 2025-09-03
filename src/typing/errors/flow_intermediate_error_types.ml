@@ -987,6 +987,10 @@ type 'loc message =
       rest: 'loc virtual_reason option;
       missing_props: string list;
     }
+  | MessageMatchNonExplicitEnumCheck of {
+      wildcard_reason: 'loc virtual_reason;
+      unchecked_members: string list;
+    }
   | MessageMatchInvalidGuardedWildcard
   | MessageMatchInvalidIdentOrMemberPattern of { type_reason: 'loc virtual_reason }
   | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }

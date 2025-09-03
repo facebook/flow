@@ -4486,6 +4486,24 @@ let to_printable_error :
         msg @ [code "..."; text " to the end of the pattern to match all other properties."]
       in
       prefix @ suffix
+    | MessageMatchNonExplicitEnumCheck { wildcard_reason; unchecked_members } ->
+      let unchecked_members =
+        Base.List.map unchecked_members ~f:(fun enum_member -> [code enum_member])
+        |> Flow_errors_utils.Friendly.conjunction_concat ~limit:5
+      in
+      [text "The "; ref wildcard_reason; text " does not check for missing enum "]
+      @ ( if Base.List.length unchecked_members > 1 then
+          [text "members "]
+        else
+          [text "member "]
+        )
+      @ unchecked_members
+      @ [
+          text ", because the ";
+          code (Lints.string_of_kind Lints.RequireExplicitEnumChecks);
+          text " lint has been enabled. ";
+          text "To fix, add cases covering those enum members.";
+        ]
     | MessageMatchInvalidGuardedWildcard ->
       [
         text "Cannot have a wildcard which is guarded using an ";

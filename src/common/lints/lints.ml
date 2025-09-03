@@ -43,6 +43,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
+  | RequireExplicitEnumChecks
   | RequireExplicitEnumSwitchCases
   | DefaultImportAccess
   | InvalidImportStarUse
@@ -93,6 +94,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
+  | RequireExplicitEnumChecks -> "require-explicit-enum-checks"
   | RequireExplicitEnumSwitchCases -> "require-explicit-enum-switch-cases"
   | DefaultImportAccess -> "default-import-access"
   | InvalidImportStarUse -> "invalid-import-star-use"
@@ -140,6 +142,7 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
+  | "require-explicit-enum-checks" -> Some [RequireExplicitEnumChecks]
   | "require-explicit-enum-switch-cases" -> Some [RequireExplicitEnumSwitchCases]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "default-import-access" -> Some [DefaultImportAccess]

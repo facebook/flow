@@ -1045,6 +1045,7 @@ and ValueUnion : sig
     tuples: ValueObject.t list;
     arrays: ValueObject.t list;
     objects: ValueObject.t list;
+    enum_unknown_members: (Reason.t * LeafSet.t) list;
     inexhaustible: Type.t list;
   }
 
@@ -1063,16 +1064,26 @@ end = struct
     tuples: ValueObject.t list;
     arrays: ValueObject.t list;
     objects: ValueObject.t list;
+    enum_unknown_members: (Reason.t * LeafSet.t) list;
     inexhaustible: Type.t list;
   }
 
-  let empty = { leafs = LeafSet.empty; tuples = []; arrays = []; objects = []; inexhaustible = [] }
+  let empty =
+    {
+      leafs = LeafSet.empty;
+      tuples = [];
+      arrays = [];
+      objects = [];
+      enum_unknown_members = [];
+      inexhaustible = [];
+    }
 
-  let is_empty { leafs; tuples; arrays; objects; inexhaustible } =
+  let is_empty { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
     LeafSet.is_empty leafs
     && Base.List.is_empty tuples
     && Base.List.is_empty arrays
     && Base.List.is_empty objects
+    && Base.List.is_empty enum_unknown_members
     && Base.List.is_empty inexhaustible
 
   let rec of_type' (cx : Context.t) (value_union : t) (t : Type.t) : t =
@@ -1093,11 +1104,11 @@ end = struct
          )
     in
     Base.List.fold ts ~init:value_union ~f:(fun value_union t ->
-        let { leafs; tuples; arrays; objects; inexhaustible } = value_union in
+        let { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } = value_union in
         match t with
         | Type.DefT (enum_reason, Type.EnumValueT (Type.ConcreteEnum enum_info)) ->
           let { Type.members; has_unknown_members; _ } = enum_info in
-          let leafs =
+          let enum_leafs =
             SMap.fold
               (fun member_name loc leafs ->
                 let reason =
@@ -1107,22 +1118,20 @@ end = struct
                 in
                 LeafSet.add (reason, Leaf.EnumMemberC { Leaf.member_name; enum_info }) leafs)
               members
-              leafs
+              LeafSet.empty
           in
-          let inexhaustible =
+          let enum_unknown_members =
             if has_unknown_members then
-              let t =
-                TypeUtil.mod_reason_of_t
-                  (Reason.replace_desc_reason
-                     (Reason.REnumUnknownMembers (Reason.desc_of_reason enum_reason))
-                  )
-                  t
+              let reason =
+                Reason.replace_desc_reason
+                  (Reason.REnumUnknownMembers (Reason.desc_of_reason enum_reason))
+                  enum_reason
               in
-              t :: inexhaustible
+              (reason, enum_leafs) :: enum_unknown_members
             else
-              inexhaustible
+              enum_unknown_members
           in
-          { value_union with leafs; inexhaustible }
+          { value_union with leafs = LeafSet.union leafs enum_leafs; enum_unknown_members }
         | Type.DefT (reason, Type.SingletonBoolT { value; _ }) ->
           let leafs = LeafSet.add (reason, Leaf.BoolC value) leafs in
           { value_union with leafs }
@@ -1329,7 +1338,9 @@ end = struct
     | _ -> None
 
   and of_type cx t =
-    let { leafs; tuples; arrays; objects; inexhaustible } = of_type' cx empty t in
+    let { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
+      of_type' cx empty t
+    in
     (* The list members of the `ValueUnion` are accumulated in reverse order,
        put them back in their original order. *)
     {
@@ -1337,10 +1348,11 @@ end = struct
       tuples = Base.List.rev tuples;
       arrays = Base.List.rev arrays;
       objects = Base.List.rev objects;
+      enum_unknown_members = Base.List.rev enum_unknown_members;
       inexhaustible = Base.List.rev inexhaustible;
     }
 
-  let to_pattern { leafs; tuples; arrays; objects; inexhaustible } =
+  let to_pattern { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
     let (tuples_exact, tuples_inexact) =
       tuples
       |> Base.List.map ~f:ValueObject.to_pattern
@@ -1394,9 +1406,10 @@ end = struct
       |> Base.List.mapi ~f:(fun i x -> (i, x))
     in
     let wildcard =
-      match inexhaustible with
-      | [] -> None
-      | first_t :: _ -> Some (TypeUtil.reason_of_t first_t)
+      match (inexhaustible, enum_unknown_members) with
+      | ([], []) -> None
+      | (first_t :: _, _) -> Some (TypeUtil.reason_of_t first_t)
+      | (_, (reason, _) :: _) -> Some reason
     in
     { PatternUnion.empty with PatternUnion.leafs; tuples_exact; tuples_inexact; objects; wildcard }
 end
@@ -1449,6 +1462,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
     tuples = value_tuples;
     arrays;
     objects = value_objects;
+    enum_unknown_members;
     inexhaustible;
   } =
     value_union
@@ -1551,6 +1565,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
       tuples = tuples_left;
       arrays = arrays_left;
       objects = objects_left;
+      enum_unknown_members;
       inexhaustible;
     }
   in
@@ -1579,6 +1594,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
         tuples = tuples_matched;
         arrays = arrays_matched;
         objects = objects_matched;
+        enum_unknown_members = [];
         inexhaustible = [];
       }
     in
@@ -1940,11 +1956,31 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
 let analyze cx ~match_loc patterns arg_t =
   let pattern_union = PatternUnion.of_patterns_ast cx patterns in
   let value_union = ValueUnion.of_type cx arg_t in
-  let { value_left; used_pattern_locs; value_matched = _ } =
+  let { value_left; used_pattern_locs; value_matched } =
     filter_values_by_patterns cx ~value_union ~pattern_union
   in
-  ( if not @@ ValueUnion.is_empty value_left then
-    let { ValueUnion.leafs; tuples; arrays; objects; inexhaustible } = value_left in
+  ( if ValueUnion.is_empty value_left then
+    let { ValueUnion.enum_unknown_members; _ } = value_matched in
+    let { PatternUnion.leafs = pattern_leafs; wildcard; _ } = pattern_union in
+    Base.Option.iter wildcard ~f:(fun wildcard_reason ->
+        Base.List.iter enum_unknown_members ~f:(fun (_, enum_leafs) ->
+            if not @@ LeafSet.subset enum_leafs pattern_leafs then
+              let unchecked_members =
+                LeafSet.diff enum_leafs pattern_leafs
+                |> LeafSet.elements
+                |> Base.List.map ~f:(fun (_, leaf) -> Leaf.to_string leaf)
+              in
+              Flow_js.add_output
+                cx
+                (Error_message.EMatchNonExplicitEnumCheck
+                   { loc = match_loc; wildcard_reason; unchecked_members }
+                )
+        )
+    )
+  else
+    let { ValueUnion.leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
+      value_left
+    in
     let (examples_rev, asts_rev) =
       LeafSet.elements leafs
       |> Base.List.fold ~init:([], []) ~f:(fun (examples_rev, asts_rev) (reason, leaf) ->
@@ -2024,20 +2060,27 @@ let analyze cx ~match_loc patterns arg_t =
              ((example, ReasonSet.elements reasons) :: examples_rev, ast :: asts_rev)
          )
     in
-    let (examples_rev, asts_rev) =
-      match inexhaustible with
-      | [] -> (examples_rev, asts_rev)
-      | first_t :: _ ->
-        let pattern = wildcard_pattern (TypeUtil.reason_of_t first_t) in
-        ( ( PatternUnion.to_string pattern,
-            Base.List.fold inexhaustible ~init:ReasonSet.empty ~f:(fun acc t ->
-                ReasonSet.add (TypeUtil.reason_of_t t) acc
-            )
-            |> ReasonSet.elements
+    let wildcard_example reason =
+      let pattern = wildcard_pattern reason in
+      ( ( PatternUnion.to_string pattern,
+          Base.List.fold inexhaustible ~init:ReasonSet.empty ~f:(fun acc t ->
+              ReasonSet.add (TypeUtil.reason_of_t t) acc
           )
-          :: examples_rev,
-          lazy (PatternUnion.to_ast pattern) :: asts_rev
+          |> (fun init ->
+               Base.List.fold enum_unknown_members ~init ~f:(fun acc (reason, _) ->
+                   ReasonSet.add reason acc
+               ))
+          |> ReasonSet.elements
         )
+        :: examples_rev,
+        lazy (PatternUnion.to_ast pattern) :: asts_rev
+      )
+    in
+    let (examples_rev, asts_rev) =
+      match (inexhaustible, enum_unknown_members) with
+      | ([], []) -> (examples_rev, asts_rev)
+      | (first_t :: _, _) -> wildcard_example (TypeUtil.reason_of_t first_t)
+      | (_, (reason, _) :: _) -> wildcard_example reason
     in
     let examples = Base.List.rev examples_rev in
     let asts =
