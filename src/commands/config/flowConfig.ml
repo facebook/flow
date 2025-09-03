@@ -116,8 +116,6 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_object_literal_followup_fix: bool;
-    natural_inference_object_literal_followup_fix_excludes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -268,8 +266,6 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
-      natural_inference_object_literal_followup_fix = true;
-      natural_inference_object_literal_followup_fix_excludes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -1249,20 +1245,13 @@ module Opts = struct
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
       ( "experimental.natural_inference.local_object_literals.followup_fix",
-        boolean (fun opts v -> Ok { opts with natural_inference_object_literal_followup_fix = v })
-      );
-      ( "experimental.natural_inference.local_object_literals.followup_fix.excludes",
-        string
-          ~init:(fun opts ->
-            { opts with natural_inference_object_literal_followup_fix_excludes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                natural_inference_object_literal_followup_fix_excludes =
-                  v :: opts.natural_inference_object_literal_followup_fix_excludes;
-              })
+        boolean (fun opts v ->
+            if v then
+              Ok opts
+            else
+              Error
+                "experimental.natural_inference.local_object_literals.followup_fix cannot be disabled."
+        )
       );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
@@ -2060,12 +2049,6 @@ let multi_platform_ambient_supports_platform_project_overrides c =
   c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
 
 let munge_underscores c = c.options.Opts.munge_underscores
-
-let natural_inference_object_literal_followup_fix c =
-  c.options.Opts.natural_inference_object_literal_followup_fix
-
-let natural_inference_object_literal_followup_fix_excludes c =
-  c.options.Opts.natural_inference_object_literal_followup_fix_excludes
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

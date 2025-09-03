@@ -155,8 +155,6 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_natural_inference_object_literal_followup_fix: bool;
-  opt_natural_inference_object_literal_followup_fix_excludes: Str.regexp list;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
@@ -350,12 +348,6 @@ let module_name_mappers opts = opts.opt_module_name_mappers
 let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
-
-let natural_inference_object_literal_followup_fix opts =
-  opts.opt_natural_inference_object_literal_followup_fix
-
-let natural_inference_object_literal_followup_fix_excludes opts =
-  opts.opt_natural_inference_object_literal_followup_fix_excludes
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 
