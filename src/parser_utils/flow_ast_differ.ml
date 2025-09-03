@@ -180,6 +180,7 @@ let list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_result list op
 type expression_node_parent =
   | StatementParentOfExpression of (Loc.t, Loc.t) Flow_ast.Statement.t
   | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | ClassExtends
   | SlotParentOfExpression (* Any slot that does not require expression to be parenthesized. *)
   | SpreadParentOfExpression
   | MatchExpressionCaseBodyParentOfExpression
@@ -1262,7 +1263,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let { expr = expr1; targs = targs1; comments = comments1 } = extends1 in
     let { expr = expr2; targs = targs2; comments = comments2 } = extends2 in
     let expr_diff =
-      diff_if_changed (expression ~parent:SlotParentOfExpression) expr1 expr2 |> Base.Option.return
+      diff_if_changed (expression ~parent:ClassExtends) expr1 expr2 |> Base.Option.return
     in
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
     let comments_diff = syntax_opt loc comments1 comments2 in

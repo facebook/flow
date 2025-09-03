@@ -54,7 +54,7 @@ let layout_of_node ~opts = function
     | (_, Flow_ast.Expression.Sequence _) ->
       Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
     | _ -> Js_layout_generator.expression ~opts expr)
-  | Expression (expr, _) ->
+  | Expression (expr, (ExpressionParentOfExpression _ | ClassExtends | SpreadParentOfExpression)) ->
     (* TODO use expression context for printing to insert parens when actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
   | Pattern pat -> Js_layout_generator.pattern ~opts pat

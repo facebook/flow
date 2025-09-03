@@ -23,6 +23,7 @@ type 'a changes = 'a change list [@@deriving show]
 type expression_node_parent =
   | StatementParentOfExpression of (Loc.t, Loc.t) Flow_ast.Statement.t
   | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | ClassExtends
   | SlotParentOfExpression (* Any slot that does not require expression to be parenthesized. *)
   | SpreadParentOfExpression
   | MatchExpressionCaseBodyParentOfExpression
