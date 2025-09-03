@@ -190,7 +190,11 @@ module Annotate_literal_declaration_command = struct
 
       let reporter = string_reporter (module Acc)
 
-      let check_options o = o
+      let check_options o =
+        {
+          o with
+          Options.opt_natural_inference_array_object_literal_implicit_instantiation_fix = true;
+        }
 
       let expand_roots ~env:_ files = files
 

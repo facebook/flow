@@ -114,6 +114,8 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
+  natural_inference_array_object_literal_implicit_instantiation_fix: bool;
+  natural_inference_array_object_literal_implicit_instantiation_fix_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
@@ -347,6 +349,8 @@ val slow_to_check_logging : t -> Slow_to_check_logging.t
 val max_workers : t -> int
 
 val missing_module_generators : t -> (Str.regexp * string) list
+
+val natural_inference_array_object_literal_implicit_instantiation_fix : t -> bool
 
 val no_unchecked_indexed_access : t -> bool
 
