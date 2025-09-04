@@ -7784,8 +7784,7 @@ struct
       RecursionCheck.check cx trace;
 
       if
-        Context.enable_invariant_subtyping_error_message_improvement cx
-        && unify_cause <> UnifyCause.Uncategorized
+        unify_cause <> UnifyCause.Uncategorized
         && (not (Speculation.speculating cx))
         && (not (TvarVisitors.has_unresolved_tvars cx t1))
         && not (TvarVisitors.has_unresolved_tvars cx t2)
