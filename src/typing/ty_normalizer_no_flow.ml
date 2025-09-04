@@ -66,3 +66,45 @@ let debug_string_of_t cx t =
       ~exact_by_default:true
       ~ts_syntax:(Context.ts_syntax cx)
       elt
+
+let type_to_desc_for_invariant_subtyping_error cx =
+  let genv =
+    mk_default_genv ~options:Ty_normalizer_env.{ default_options with optimize_types = false } cx
+  in
+  fun t ->
+    let desc = TypeUtil.desc_of_t t in
+    let open Reason in
+    match desc with
+    | RArrayLit
+    | RArrayLit_UNSOUND
+    | RObjectLit
+    | RObjectLit_UNSOUND ->
+      (* For these descriptions, the normalized types can be huge,
+       * but the reason description can be quite simple.
+       * It's also guaranteed to be in one place,
+       * instead of spreading across multiple places due to implicit instantiation. *)
+      Error desc
+    | _ ->
+      (* Why do we try to use the printed types? For these non-leaf-node types, it's
+       * reference locations can be spread across multiple locations, but the reason infra
+       * can only point code reference to one place, instead of multiple places that
+       * contribute to the composition of a type.
+       *
+       * e.g.
+       * ```
+       * declare function f<T>(x: T): Array<T>;
+       * //                           ^^^^^^^^
+       * const x = f(1);
+       * //          ^
+       * ```
+       *
+       * To fully describe the type of `x`, we need to point to multiple locations, which
+       * is not well supported by the reason infra. So we use the printed types instead.
+       * The location might still be non-ideal, but at least the description makes sense.
+       *)
+      (match from_type genv t with
+      | Error _ -> Error desc
+      | Ok elt ->
+        (match Ty_utils.typify_elt elt with
+        | None -> Error desc
+        | Some t -> Ok t))
