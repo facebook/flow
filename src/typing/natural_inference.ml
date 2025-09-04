@@ -175,11 +175,6 @@ class literal_type_mapper ~singleton_action =
         (* async expressions will wrap result in Promise<>, so we need to descend here *)
         super#type_ cx map_cx t
       | UnionT (r, rep) when is_literal_union r rep -> super#type_ cx map_cx t
-      | IntersectionT (_, rep)
-        when match InterRep.inter_kind rep with
-             | InterRep.ImplicitInstiationKind -> true
-             | InterRep.UnknownKind -> false ->
-        super#type_ cx map_cx t
       | DefT (r, SingletonStrT { from_annot = false; value }) -> singleton_str t r value
       | DefT (r, SingletonNumT { from_annot = false; value }) -> singleton_num t r value
       | DefT (r, SingletonBoolT { from_annot = false; value }) -> singleton_bool t r value

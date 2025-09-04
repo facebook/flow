@@ -296,19 +296,7 @@ let rec dump_t_ (depth, tvars) cx t =
         t
     | MaybeT (_, arg) -> p ~extra:(kid arg) t
     | IntersectionT (_, rep) ->
-      let kind_str =
-        match InterRep.inter_kind rep with
-        | InterRep.ImplicitInstiationKind -> "ImplicitInstiationKind"
-        | InterRep.UnknownKind -> "UnknownKind"
-      in
-      p
-        ~extra:
-          (spf
-             "(kind=%s)[%s]"
-             kind_str
-             (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))
-          )
-        t
+      p ~extra:(spf "[%s]" (String.concat "; " (Base.List.map ~f:kid (InterRep.members rep)))) t
     | UnionT (_, rep) ->
       let kind_str =
         match UnionRep.union_kind rep with
