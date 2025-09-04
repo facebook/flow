@@ -407,9 +407,9 @@ let synth_type
         type_loc
   in
   let t =
-    Primitive_literal.convert_literal_type
+    Natural_inference.convert_literal_type
       cx
-      ~singleton_action:(fun _ -> Primitive_literal.DoNotKeep)
+      ~singleton_action:(fun _ -> Natural_inference.DoNotKeep)
       t
   in
   let elt = normalize ~cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc t in

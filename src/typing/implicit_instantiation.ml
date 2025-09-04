@@ -43,11 +43,11 @@ let generalize_singletons cx ~call_loc ~has_syntactic_hint t =
       if Context.is_primitive_literal_checked cx loc then
         (* Keep singleton types that are checked against other precise types, which
          * is recorded by calling `Flow_js_utils.update_lit_type_from_annot`. *)
-        Primitive_literal.KeepAsIs
+        Natural_inference.KeepAsIs
       else
-        Primitive_literal.DoNotKeep
+        Natural_inference.DoNotKeep
     in
-    Primitive_literal.convert_implicit_instantiation_literal_type cx ~singleton_action t
+    Natural_inference.convert_implicit_instantiation_literal_type cx ~singleton_action t
 
 module Inferred_targ = struct
   type t = {
@@ -1132,7 +1132,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             when tparam.is_const ->
             (* Adjust 'const' type parameters. Keeping container reasons for
              * compatibility with existing code. *)
-            Primitive_literal.convert_literal_type_to_const ~loc_range:call_loc cx inferred
+            Natural_inference.convert_literal_type_to_const ~loc_range:call_loc cx inferred
           | _ ->
             (* Prevent leaking of precise singleton types *)
             generalize_singletons cx ~call_loc ~has_syntactic_hint inferred

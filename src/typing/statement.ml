@@ -65,7 +65,7 @@ module Make
 
   let empty_seen_names = { static_names = SMap.empty; instance_names = SMap.empty }
 
-  let empty_syntactic_flags = Primitive_literal.empty_syntactic_flags
+  let empty_syntactic_flags = Natural_inference.empty_syntactic_flags
 
   module ObjectExpressionAcc = struct
     type element =
@@ -761,7 +761,7 @@ module Make
   let identifier_ cx syntactic_flags name loc =
     let get_checking_mode_type () =
       let t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
-      let t = Primitive_literal.try_generalize cx syntactic_flags loc t in
+      let t = Natural_inference.try_generalize cx syntactic_flags loc t in
       (* We want to make sure that the reason description for the type we return
        * is always `RIdentifier name`. *)
       match (desc_of_t t, t) with
@@ -789,7 +789,7 @@ module Make
     t
 
   let string_literal_value cx syntactic_flags loc value =
-    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     if Type_inference_hooks_js.dispatch_literal_hook cx loc then
       let (_, lazy_hint) = Type_env.get_hint cx loc in
       let hint = lazy_hint (mk_reason RString loc) ~expected_only:false in
@@ -807,13 +807,13 @@ module Make
         let reason = mk_annot_reason RString loc in
         DefT (reason, StrGeneralT AnyLiteral)
       in
-      Primitive_literal.adjust_precision cx syntactic_flags ~precise ~general loc
+      Natural_inference.adjust_precision cx syntactic_flags ~precise ~general loc
 
   let string_literal cx syntactic_flags loc { Ast.StringLiteral.value; _ } =
     string_literal_value cx syntactic_flags loc value
 
   let boolean_literal cx syntactic_flags loc { Ast.BooleanLiteral.value; _ } =
-    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBooleanLit value) loc in
       DefT (reason, SingletonBoolT { from_annot = true; value })
@@ -823,12 +823,12 @@ module Make
         DefT (reason, SingletonBoolT { from_annot = false; value })
       in
       let general () = DefT (mk_annot_reason RBoolean loc, BoolGeneralT) in
-      Primitive_literal.adjust_precision cx syntactic_flags ~precise ~general loc
+      Natural_inference.adjust_precision cx syntactic_flags ~precise ~general loc
 
   let null_literal loc = NullT.at loc
 
   let number_literal cx syntactic_flags loc { Ast.NumberLiteral.value; raw; _ } =
-    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RNumberLit raw) loc in
       DefT (reason, SingletonNumT { from_annot = true; value = (value, raw) })
@@ -838,10 +838,10 @@ module Make
         DefT (reason, SingletonNumT { from_annot = false; value = (value, raw) })
       in
       let general () = DefT (mk_annot_reason RNumber loc, NumGeneralT AnyLiteral) in
-      Primitive_literal.adjust_precision cx syntactic_flags ~precise ~general loc
+      Natural_inference.adjust_precision cx syntactic_flags ~precise ~general loc
 
   let bigint_literal cx syntactic_flags loc { Ast.BigIntLiteral.value; raw; _ } =
-    let { Primitive_literal.as_const; frozen; _ } = syntactic_flags in
+    let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     if as_const || frozen = FrozenProp then
       let reason = mk_annot_reason (RBigIntLit raw) loc in
       DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
@@ -851,7 +851,7 @@ module Make
         DefT (reason, SingletonBigIntT { from_annot = true; value = (value, raw) })
       in
       let general () = DefT (mk_annot_reason RBigInt loc, BigIntGeneralT AnyLiteral) in
-      Primitive_literal.adjust_precision cx syntactic_flags ~precise ~general loc
+      Natural_inference.adjust_precision cx syntactic_flags ~precise ~general loc
 
   let regexp_literal cx loc =
     let reason = mk_annot_reason RRegExp loc in
@@ -893,7 +893,7 @@ module Make
       | Unary { Unary.operator = Unary.Minus; argument = (_, NumberLiteral _); _ }
       | TemplateLiteral _ ->
         false
-      | Identifier _ -> not (Primitive_literal.is_generalization_candidate cx t)
+      | Identifier _ -> not (Natural_inference.is_generalization_candidate cx t)
       | _ -> true
     then
       Flow.add_output
@@ -1322,7 +1322,7 @@ module Make
                   )
                   pattern
                   ~on_identifier:(fun ~encl_ctx cx ->
-                    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx })
+                    identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx })
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -2577,7 +2577,7 @@ module Make
   and object_ cx ~frozen ~as_const ~has_hint loc props =
     let open Ast.Expression.Object in
     error_on_this_uses_in_object_methods cx props;
-    let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+    let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
     let reason = Reason.mk_obj_lit_reason ~as_const ~frozen ~use_unsound_fallback:has_hint loc in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -2921,7 +2921,7 @@ module Make
           node
         | None ->
           let syntactic_flags =
-            Primitive_literal.mk_syntactic_flags ?encl_ctx ?decl ~as_const ~frozen ~has_hint ()
+            Natural_inference.mk_syntactic_flags ?encl_ctx ?decl ~as_const ~frozen ~has_hint ()
           in
           let res = expression_ cx syntactic_flags loc e in
           if Context.typing_mode cx = Context.CheckingMode then begin
@@ -2953,7 +2953,7 @@ module Make
   and super_ cx loc = Type_env.var_ref cx (OrdinaryName "super") loc
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
-    let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in
+    let { Natural_inference.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in
     let ex = (loc, e) in
     let open Ast.Expression in
     match e with
@@ -3054,7 +3054,7 @@ module Make
       ) else
         let reason = mk_reason RMatch loc in
         let arg = expression cx ~as_const:true arg in
-        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+        let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
         let ((_, arg_t), _) = arg in
         Type_env.init_const cx ~use_op:unknown_use arg_t match_keyword_loc;
         let (cases_rev, ts_rev, all_throws, invalid_syntax_list) =
@@ -3082,7 +3082,7 @@ module Make
                   )
                   pattern
                   ~on_identifier:(fun ~encl_ctx cx ->
-                    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx })
+                    identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx })
                   ~on_expression:expression
                   ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
                     init_var kind cx ~use_op t name_loc;
@@ -3175,7 +3175,7 @@ module Make
         let arrtype = ArrayAT { elem_t; tuple_view = Some empty_tuple_view; react_dro = None } in
         ((loc, DefT (reason, ArrT arrtype)), Array { Array.elements = []; comments })
       | elems ->
-        let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+        let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
         let reason =
           if as_const then
             mk_reason RConstArrayLit loc
@@ -3395,7 +3395,7 @@ module Make
       subscript ~encl_ctx cx ex
     | OptionalCall _ -> subscript ~encl_ctx cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
-      let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+      let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
       let reason = mk_reason RConditional loc in
       let test = condition ~encl_ctx:OtherTestContext cx test in
       let ((((_, t1), _) as consequent), then_throws) =
@@ -5176,7 +5176,7 @@ module Make
 
   (* traverse a unary expression, return result type *)
   and unary cx syntactic_flags loc =
-    let { Primitive_literal.encl_ctx; decl; as_const; frozen; has_hint; _ } = syntactic_flags in
+    let { Natural_inference.encl_ctx; decl; as_const; frozen; has_hint; _ } = syntactic_flags in
     let open Ast.Expression.Unary in
     function
     | { operator = Not; argument; comments } ->
@@ -5198,7 +5198,7 @@ module Make
         { operator = Plus; argument; comments }
       )
     | { operator = Minus; argument; comments } ->
-      let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+      let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
       let (((_, argt), _) as argument) =
         expression cx ~encl_ctx ?decl ~has_hint ~as_const ~frozen argument
       in
@@ -5414,8 +5414,8 @@ module Make
 
   and logical cx syntactic_flags loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
-    let { Primitive_literal.encl_ctx; has_hint; decl; _ } = syntactic_flags in
-    let has_hint = lazy (Lazy.force has_hint || Primitive_literal.loc_has_hint cx loc) in
+    let { Natural_inference.encl_ctx; has_hint; decl; _ } = syntactic_flags in
+    let has_hint = lazy (Lazy.force has_hint || Natural_inference.loc_has_hint cx loc) in
     (* With logical operators the LHS is always evaluated. So if the LHS throws, the whole
      * expression throws. To model this we do not catch abnormal exceptions on the LHS.
      * As such, we only analyze the RHS expression if the LHS does not throw.
@@ -5474,7 +5474,7 @@ module Make
           { operator = NullishCoalesce; left; right; comments }
         )
     in
-    let t = Primitive_literal.try_generalize cx syntactic_flags loc t in
+    let t = Natural_inference.try_generalize cx syntactic_flags loc t in
     (t, op)
 
   and assignment_lhs cx patt =
@@ -6170,7 +6170,7 @@ module Make
           let c =
             if name = String.capitalize_ascii name then
               let syntactic_flags =
-                Primitive_literal.mk_syntactic_flags ~encl_ctx:JsxTitleNameContext ()
+                Natural_inference.mk_syntactic_flags ~encl_ctx:JsxTitleNameContext ()
               in
               identifier cx syntactic_flags (mk_ident ~comments:None name) loc
             else begin
@@ -6366,7 +6366,7 @@ module Make
               (* <element name="literal" /> *)
               | Some (Attribute.StringLiteral (loc, lit)) ->
                 let syntactic_flags =
-                  Primitive_literal.mk_syntactic_flags ~encl_ctx:JsxAttrOrChildrenContext ()
+                  Natural_inference.mk_syntactic_flags ~encl_ctx:JsxAttrOrChildrenContext ()
                 in
                 let t = string_literal cx syntactic_flags loc lit in
                 (t, Some (Attribute.StringLiteral ((loc, t), lit)))
@@ -9031,17 +9031,17 @@ module Make
     expression ?encl_ctx ?decl ?as_const ~frozen:NotFrozen cx (loc, e)
 
   let identifier ~encl_ctx cx id loc =
-    identifier cx { empty_syntactic_flags with Primitive_literal.encl_ctx } id loc
+    identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx } id loc
 
   let string_literal cx ~encl_ctx loc v =
-    string_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
+    string_literal cx { empty_syntactic_flags with Natural_inference.encl_ctx } loc v
 
   let number_literal cx ~encl_ctx loc v =
-    number_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
+    number_literal cx { empty_syntactic_flags with Natural_inference.encl_ctx } loc v
 
   let boolean_literal cx ~encl_ctx loc v =
-    boolean_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
+    boolean_literal cx { empty_syntactic_flags with Natural_inference.encl_ctx } loc v
 
   let bigint_literal cx ~encl_ctx loc v =
-    bigint_literal cx { empty_syntactic_flags with Primitive_literal.encl_ctx } loc v
+    bigint_literal cx { empty_syntactic_flags with Natural_inference.encl_ctx } loc v
 end
