@@ -1,3 +1,26 @@
+### 0.281.0
+
+Breaking Changes:
+* Support for the `casting_syntax=colon` is removed. This means that the [as casting syntax](https://flow.org/en/docs/types/casting/#toc-type-cast-expression-syntax) is always enabled.
+* `experimental.error_code_migration` config option is removed. In the previously version, the only allowed value was `new`.
+
+Likely to cause new Flow errors:
+* We have fixed more source of object literal unsoundness. More errors will be exposed. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIYMQJQBeCXATCUZASgDkqoFAG4ADqwGWshVKlX2UxQBASgA+EuEIhuWolAHoHRLZg04BB8oNrRAJSZKLzeN6AO6+6i88T8BomEjuqBJDL2EwgAVAA))
+* For most of the common invariant subtyping errors (arrays, objects with mutable fields), we will now emit a single subtyping error with explanation how to fix. Error locations might change. See https://flow.org/en/docs/lang/variance/#toc-invariance to learn more about variance of types
+* Suppressions without error code will now be an error instead of a warning.
+* Suppressions without error code will no longer apply. You can download and use [this script](https://github.com/facebook/flow/blob/7551ae4431f17b0ed93657ed7b3c73d7e8654486/scripts/add-specific-error-code.js#L12) to automatically migrate most of the suppressions.
+* Only `$FlowFixMe` and `$FlowExpectedError` are supported suppression comments. Existing `$FlowIgnore` and `$FlowIssue` will no longer suppress anything.
+
+New Features:
+* Added a Flow lint `require-explicit-enum-checks` which works like `require-explicit-enum-switch-cases` but for `match`.
+
+Notable bug fixes:
+* Various codemods will now insert parentheses around expressions in class extends if they are changed. Previously, it might result in invalid code like `class Foo extends myExpr() as Bar`
+* Fixes an inconsistency in recording the this-type guard on a regular (non-`declare`) method in the same vs different files.
+
+IDE:
+* Added a quickfix to convert type to value imports on type-as-value errors.
+
 ### 0.280.0
 
 Likely to cause new Flow errors:
