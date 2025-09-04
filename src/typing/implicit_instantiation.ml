@@ -235,10 +235,10 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Some t -> UpperT t
       | None -> UpperEmpty
     in
-    let merge_lower_or_upper_bounds r t =
+    let merge_lower_or_upper_bounds t =
       match merge_lower_bounds cx t with
       | Some t -> UpperT t
-      | None -> merge_upper_bounds cx seen r t
+      | None -> merge_upper_bounds cx seen t
     in
     let bind_use_t_result ~f = function
       | UpperEmpty -> UpperEmpty
@@ -246,7 +246,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | UpperT t -> f t
     in
     match u with
-    | UseT (_, (OpenT (r, _) as t)) -> merge_upper_bounds cx seen r t
+    | UseT (_, (OpenT _ as t)) -> merge_upper_bounds cx seen t
     | EvalTypeDestructorT { reason = r; destructor; tout; _ } ->
       (match destructor with
       | PropertyType _
@@ -259,7 +259,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | MappedType _ (* TODO: Mapped Type reversals *) ->
         UpperEmpty
       | EnumType ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun tout ->
                Tvar.mk_no_wrap_where cx r (fun t' ->
                    Flow.flow
@@ -280,7 +280,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            )
       | ReactElementPropsType
       | ReactElementConfigType ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun config ->
                let react_node =
                  Flow.get_builtin_react_type
@@ -302,14 +302,14 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  )
            )
       | RestType (_, t_rest) ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun tout ->
                reverse_obj_kit_rest cx r t_rest tout
                |> merge_lower_bounds cx
                |> use_t_result_of_t_option
            )
       | NonMaybeType ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun t -> UpperT (MaybeT (r, t)))
       | ExactType
       | ReadOnlyType
@@ -317,9 +317,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | MakeHooklike
       | PartialType
       | RequiredType ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
       | ReactCheckComponentConfig pmap ->
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun t ->
                reverse_component_check_config cx r pmap t
                |> merge_lower_bounds cx
@@ -329,7 +329,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         let acc_elements =
           Base.Option.value_map ~f:(fun x -> [Object.Spread.InlineSlice x]) ~default:[] head_slice
         in
-        merge_lower_or_upper_bounds r (OpenT tout)
+        merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun t ->
                reverse_obj_spread cx r todo_rev acc_elements t
                |> merge_lower_bounds cx
@@ -347,7 +347,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
         (match (unresolved, Base.List.exists ~f:is_spread resolved_rev) with
         | ([], false) when not inexact ->
           let n = List.length resolved_rev in
-          merge_lower_or_upper_bounds r (OpenT tout)
+          merge_lower_or_upper_bounds (OpenT tout)
           |> bind_use_t_result ~f:(fun t ->
                  Tvar.mk_where cx reason_spread (fun t' ->
                      Flow.flow cx (t, ArrRestT (unknown_use, reason_spread, n, t'))
@@ -359,10 +359,10 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | UseT (_, t) -> UpperT t
     | ArrRestT (_, _, i, tout) ->
       (match get_t cx tout with
-      | DefT (r, ArrT (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
-        identity_reverse_upper_bound cx seen tvar r tout
-      | DefT (r, ArrT (ArrayAT { tuple_view = Some _; _ } | TupleAT _)) when i = 0 ->
-        identity_reverse_upper_bound cx seen tvar r tout
+      | DefT (_, ArrT (ArrayAT { tuple_view = None; _ } | ROArrayAT _)) ->
+        identity_reverse_upper_bound cx seen tvar tout
+      | DefT (_, ArrT (ArrayAT { tuple_view = Some _; _ } | TupleAT _)) when i = 0 ->
+        identity_reverse_upper_bound cx seen tvar tout
       | _ -> UpperEmpty)
     (* Call related upper bounds are ignored because there is not enough info to reverse. *)
     | BindT _
@@ -427,8 +427,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ExtractReactRefT _
     | SealGenericT _ ->
       UpperNonT u
-    | DeepReadOnlyT (((r, _) as tout), _) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
-    | HooklikeT ((r, _) as tout) -> identity_reverse_upper_bound cx seen tvar r (OpenT tout)
+    | DeepReadOnlyT (tout, _) -> identity_reverse_upper_bound cx seen tvar (OpenT tout)
+    | HooklikeT tout -> identity_reverse_upper_bound cx seen tvar (OpenT tout)
     | ReposLowerT { use_t; _ } -> t_of_use_t cx seen tvar use_t
     | ReposUseT (_, _, _use_op, t) ->
       Flow.flow_t cx (t, tvar);
@@ -465,9 +465,9 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Object.ObjectRep
       | Object.ReactConfig { ref_manipulation = Object.ReactConfig.FilterRef; _ }
       | Object.ReactConfig { ref_manipulation = Object.ReactConfig.KeepRef; _ } ->
-        identity_reverse_upper_bound cx seen tvar r tout
+        identity_reverse_upper_bound cx seen tvar tout
       | Object.ReactConfig { ref_manipulation = Object.ReactConfig.AddRef ref_t; _ } ->
-        let solution = merge_upper_bounds cx seen r tout in
+        let solution = merge_upper_bounds cx seen tout in
         (match solution with
         | UpperEmpty -> UpperEmpty
         | UpperNonT u -> UpperNonT u
@@ -490,7 +490,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             Flow.flow_t cx (reversed, tvar);
             UpperT reversed))
       | Object.ReactCheckComponentConfig pmap ->
-        let solution = merge_upper_bounds cx seen r tout in
+        let solution = merge_upper_bounds cx seen tout in
         (match solution with
         | UpperEmpty -> UpperEmpty
         | UpperNonT u -> UpperNonT u
@@ -502,7 +502,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             UpperT reversed))
       | Object.ObjectMap _ -> UpperEmpty (* TODO: reverse mapped types *)
       | Object.Spread (_, { Object.Spread.todo_rev; acc; _ }) ->
-        let solution = merge_upper_bounds cx seen r tout in
+        let solution = merge_upper_bounds cx seen tout in
         (match solution with
         | UpperEmpty -> UpperEmpty
         | UpperNonT u -> UpperNonT u
@@ -513,7 +513,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
             Flow.flow_t cx (reversed, tvar);
             UpperT reversed))
       | Object.Rest (_, Object.Rest.One t_rest) ->
-        merge_upper_bounds cx seen r tout
+        merge_upper_bounds cx seen tout
         |> bind_use_t_result ~f:(fun t ->
                match reverse_obj_kit_rest cx r t_rest t |> merge_lower_bounds cx with
                | None -> UpperEmpty
@@ -523,8 +523,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            )
       | Object.Rest (_, Object.Rest.Done _) -> UpperNonT u)
 
-  and identity_reverse_upper_bound cx seen tvar r tout =
-    let solution = merge_upper_bounds cx seen r tout in
+  and identity_reverse_upper_bound cx seen tvar tout =
+    let solution = merge_upper_bounds cx seen tout in
     (match solution with
     | UpperT t -> Flow.flow_t cx (t, tvar)
     | _ -> ());
@@ -708,7 +708,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
            rest_param
         )
 
-  and merge_upper_bounds cx seen upper_r tvar =
+  and merge_upper_bounds cx seen tvar =
     let filter_placeholder t =
       if Flow_js_utils.TvarVisitors.has_placeholders cx t then
         UpperEmpty
@@ -737,48 +737,20 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  | (UpperEmpty, UpperT t) -> filter_placeholder t
                  | (UpperT _, UpperT t) when Flow_js_utils.TvarVisitors.has_placeholders cx t -> acc
                  | (UpperT t', UpperT t) ->
-                   (match (t', t) with
-                   | (IntersectionT (_, rep1), IntersectionT (_, rep2)) ->
-                     UpperT
-                       (IntersectionT
-                          ( upper_r,
-                            InterRep.append
-                              ~kind:InterRep.ImplicitInstiationKind
-                              (InterRep.members rep2)
-                              rep1
-                          )
-                       )
-                   | (_, IntersectionT (_, rep)) ->
-                     if Base.List.mem (InterRep.members rep) t' ~equal then
-                       UpperT t
-                     else
-                       UpperT
-                         (IntersectionT
-                            (upper_r, InterRep.append ~kind:InterRep.ImplicitInstiationKind [t'] rep)
-                         )
-                   | (IntersectionT (_, rep), _) ->
-                     if Base.List.mem (InterRep.members rep) t ~equal then
-                       UpperT t'
-                     else
-                       UpperT
-                         (IntersectionT
-                            (upper_r, InterRep.append ~kind:InterRep.ImplicitInstiationKind [t] rep)
-                         )
-                   | (t', t) ->
-                     if equal t' t then
-                       UpperT t
-                     else if
-                       TypeUtil.quick_subtype t t'
-                       || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t t'
-                     then
-                       UpperT t
-                     else if
-                       TypeUtil.quick_subtype t' t
-                       || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t' t
-                     then
-                       UpperT t'
-                     else
-                       UpperT t')
+                   if equal t' t then
+                     UpperT t
+                   else if
+                     TypeUtil.quick_subtype t t'
+                     || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t t'
+                   then
+                     UpperT t
+                   else if
+                     TypeUtil.quick_subtype t' t
+                     || speculative_subtyping_succeeds cx DepthTrace.dummy_trace unknown_use t' t
+                   then
+                     UpperT t'
+                   else
+                     UpperT t'
                  | (UpperT _, UpperEmpty) -> acc
                  | (UpperEmpty, UpperEmpty) -> acc)
                UpperEmpty)
@@ -849,7 +821,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       ?(on_upper_empty = on_missing_bounds ~use_op ~default_bound)
       tparam_binder_reason
       instantiation_reason =
-    let upper_t = merge_upper_bounds cx ISet.empty tparam_binder_reason tvar in
+    let upper_t = merge_upper_bounds cx ISet.empty tvar in
     match upper_t with
     | UpperEmpty -> on_upper_empty cx tparam ~tparam_binder_reason ~instantiation_reason
     | UpperNonT u ->
