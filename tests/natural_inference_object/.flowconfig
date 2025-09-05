@@ -1,4 +1,3 @@
 [options]
 all=true
 no_flowlib=false
-experimental.invariant_subtyping_error_message_improvement=true

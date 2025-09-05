@@ -1143,22 +1143,6 @@ module Opts = struct
                   v :: opts.invalid_comparison_null_check_includes;
               })
       );
-      ( "experimental.invariant_subtyping_error_message_improvement",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error "experimental.invariant_subtyping_error_message_improvement cannot be disabled."
-        )
-      );
-      ( "experimental.only_support_flow_fixme_and_expected_error",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error "experimental.only_support_flow_fixme_and_expected_error cannot be disabled."
-        )
-      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -1171,14 +1155,6 @@ module Opts = struct
       );
       ( "experimental.projects.strict_boundary.import_pattern_opt_outs",
         projects_strict_boundary_import_pattern_opt_outs_parser
-      );
-      ( "experimental.require_suppression_with_error_code",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error "experimental.require_suppression_with_error_code cannot be disabled."
-        )
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.assert_operator", assert_operator_parser);
@@ -1225,15 +1201,6 @@ module Opts = struct
       ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
-      ( "module.system.haste.module_ref_prefix.standard_cjs_esm_interop",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error
-                "module.system.haste.module_ref_prefix.standard_cjs_esm_interop cannot be disabled."
-        )
-      );
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
       ("module.system.haste.paths.includes", haste_paths_includes_parser);
       ("module.system.node.allow_root_relative", node_resolver_allow_root_relative_parser);
@@ -1244,15 +1211,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.local_object_literals.followup_fix",
-        boolean (fun opts v ->
-            if v then
-              Ok opts
-            else
-              Error
-                "experimental.natural_inference.local_object_literals.followup_fix cannot be disabled."
-        )
-      );
       ( "experimental.natural_inference.array_object_literals.implicit_instantiation_fix",
         boolean (fun opts v ->
             Ok { opts with natural_inference_array_object_literal_implicit_instantiation_fix = v }
