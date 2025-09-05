@@ -1421,6 +1421,11 @@ let make_options
         (FlowConfig.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
            flowconfig
         );
+    opt_natural_inference_jsx_literal = FlowConfig.natural_inference_jsx_literal flowconfig;
+    opt_natural_inference_jsx_literal_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.natural_inference_jsx_literal_excludes flowconfig);
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
     opt_temp_dir;

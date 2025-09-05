@@ -118,6 +118,8 @@ module Opts = struct
     munge_underscores: bool;
     natural_inference_array_object_literal_implicit_instantiation_fix: bool;
     natural_inference_array_object_literal_implicit_instantiation_fix_excludes: string list;
+    natural_inference_jsx_literal: bool;
+    natural_inference_jsx_literal_excludes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -270,6 +272,8 @@ module Opts = struct
       munge_underscores = false;
       natural_inference_array_object_literal_implicit_instantiation_fix = false;
       natural_inference_array_object_literal_implicit_instantiation_fix_excludes = [];
+      natural_inference_jsx_literal = false;
+      natural_inference_jsx_literal_excludes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -1233,6 +1237,21 @@ module Opts = struct
                   :: opts.natural_inference_array_object_literal_implicit_instantiation_fix_excludes;
               })
       );
+      ( "experimental.natural_inference.jsx_literal",
+        boolean (fun opts v -> Ok { opts with natural_inference_jsx_literal = v })
+      );
+      ( "experimental.natural_inference.jsx_literal.excludes",
+        string
+          ~init:(fun opts -> { opts with natural_inference_jsx_literal_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                natural_inference_jsx_literal_excludes =
+                  v :: opts.natural_inference_jsx_literal_excludes;
+              })
+      );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
@@ -2035,6 +2054,10 @@ let natural_inference_array_object_literal_implicit_instantiation_fix c =
 
 let natural_inference_array_object_literal_implicit_instantiation_fix_excludes c =
   c.options.Opts.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
+
+let natural_inference_jsx_literal c = c.options.Opts.natural_inference_jsx_literal
+
+let natural_inference_jsx_literal_excludes c = c.options.Opts.natural_inference_jsx_literal_excludes
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

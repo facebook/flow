@@ -66,6 +66,8 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   natural_inference_array_object_literal_implicit_instantiation_fix: bool;
   natural_inference_array_object_literal_implicit_instantiation_fix_excludes: Str.regexp list;
+  natural_inference_jsx_literal: bool;
+  natural_inference_jsx_literal_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
@@ -329,6 +331,8 @@ let metadata_of_options options =
       Options.natural_inference_array_object_literal_implicit_instantiation_fix options;
     natural_inference_array_object_literal_implicit_instantiation_fix_excludes =
       Options.natural_inference_array_object_literal_implicit_instantiation_fix_excludes options;
+    natural_inference_jsx_literal = Options.natural_inference_jsx_literal options;
+    natural_inference_jsx_literal_excludes = Options.natural_inference_jsx_literal_excludes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     opaque_type_new_bound_syntax = Options.opaque_type_new_bound_syntax options;
     projects_options = Options.projects_options options;
@@ -789,6 +793,10 @@ let natural_inference_array_object_literal_implicit_instantiation_fix cx =
           cx
           cx.metadata.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
        )
+
+let natural_inference_jsx_literal cx =
+  cx.metadata.natural_inference_jsx_literal
+  && not (in_dirlist cx cx.metadata.natural_inference_jsx_literal_excludes)
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

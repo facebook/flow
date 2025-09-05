@@ -219,6 +219,10 @@ val natural_inference_array_object_literal_implicit_instantiation_fix : config -
 val natural_inference_array_object_literal_implicit_instantiation_fix_excludes :
   config -> string list
 
+val natural_inference_jsx_literal : config -> bool
+
+val natural_inference_jsx_literal_excludes : config -> string list
+
 val no_flowlib : config -> bool
 
 val no_unchecked_indexed_access : config -> bool
