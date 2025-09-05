@@ -527,7 +527,7 @@ References:
 Error ------------------------------------------------------------------------------------------ function_lower.js:17:10
 
 All branches are incompatible: [incompatible-type]
- - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
+ - Either class `NotAComponent` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
@@ -540,8 +540,8 @@ References:
    14| class NotAComponent {}
              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -553,7 +553,7 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:20:1
 
 Cannot cast `NotAFunctionComponent` to component because: [incompatible-type]
- - Either class `NotAComponent` [1] is incompatible with `React.Element` [2].
+ - Either class `NotAComponent` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
@@ -566,8 +566,8 @@ References:
    14| class NotAComponent {}
              ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]

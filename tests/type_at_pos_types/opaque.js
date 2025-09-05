@@ -66,7 +66,7 @@ declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
 const x = Object.keys(opaqueDict)[0];
 //    ^?
 
-// React$Element
+// ExactReactElement_DEPRECATED
 import * as React from "react";
 type Props = { prop: string, ... };
 class MonoComponent extends React.Component<Props> {}

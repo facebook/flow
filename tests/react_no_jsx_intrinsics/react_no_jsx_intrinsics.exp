@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot resolve name `React$Element`. [cannot-resolve-name]
+Cannot resolve name `ExactReactElement_DEPRECATED`. [cannot-resolve-name]
 
    3| <div />;
       ^^^^^^^

@@ -139,9 +139,9 @@ References:
    createElement_invalid_implicit.js:2:43
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
                                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
@@ -165,9 +165,9 @@ References:
    createElement_invalid_implicit.js:7:43
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
                                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
@@ -213,9 +213,9 @@ References:
    createElement_invalid_implicit.js:12:43
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
                                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
@@ -502,9 +502,9 @@ References:
    element_with_component_type.js:3:35
     3| class Foo extends React.Component<{a: number}> {}
                                          ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
@@ -523,9 +523,9 @@ References:
    element_with_component_type.js:6:66
     6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
                                                                         ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8

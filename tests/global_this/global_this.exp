@@ -70,7 +70,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Cannot cast `Array` to `Node` because: [incompatible-type]
- - Either class `Array` [1] is incompatible with `React.Element` [2].
+ - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Array` [1] but exists in `$Iterable` [4].
 
@@ -83,8 +83,8 @@ References:
    951| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
    <BUILTINS>/react.js:21:5
-    21|   | React$Element<any>
-            ^^^^^^^^^^^^^^^^^^ [2]
+    21|   | ExactReactElement_DEPRECATED<any>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
     22|   | React$Portal
             ^^^^^^^^^^^^ [3]

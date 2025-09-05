@@ -355,9 +355,9 @@ References:
    test.js:34:89
    34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
                                                                                                ^^^^^^^ [4]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [5]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:8
@@ -383,14 +383,15 @@ References:
    test.js:35:89
    35| (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
                                                                                                ^^^^^^^ [4]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [5]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:36:42
 
-Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1]. [prop-missing]
+Cannot get `React.createElement(...).nope` because property `nope` is missing in `ExactReactElement_DEPRECATED` [1].
+[prop-missing]
 
    test.js:36:42
    36| React.createElement(A, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.
@@ -404,7 +405,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:37:42
 
-Cannot get `React.createElement(...).nope` because property `nope` is missing in `React.Element` [1]. [prop-missing]
+Cannot get `React.createElement(...).nope` because property `nope` is missing in `ExactReactElement_DEPRECATED` [1].
+[prop-missing]
 
    test.js:37:42
    37| React.createElement(B, {foo: 1, bar: 2}).nope; // Error: `nope` does not exist.

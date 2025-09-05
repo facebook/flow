@@ -265,7 +265,7 @@ References:
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
 
 Cannot create `builtin` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -275,8 +275,8 @@ Cannot create `builtin` element because in property `children`: [incompatible-ty
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -342,7 +342,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ component.js:41:4
 
 Cannot create `MyComponent` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -352,8 +352,8 @@ Cannot create `MyComponent` element because in property `children`: [incompatibl
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -1037,7 +1037,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2] in array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Or children array [3] is incompatible with `ExactReactElement_DEPRECATED` [4].
 
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
@@ -1059,7 +1059,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2] in array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Or children array [3] is incompatible with `ExactReactElement_DEPRECATED` [4].
 
    tabs.js:31:9
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
@@ -1081,7 +1081,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2] in array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Or children array [3] is incompatible with `ExactReactElement_DEPRECATED` [4].
 
    tabs.js:32:9
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
@@ -1116,9 +1116,9 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    tabs.js:16:5
    16|   | boolean
            ^^^^^^^ [5]
@@ -1141,9 +1141,9 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                ^^^^^^^^^ [4]
@@ -1175,9 +1175,9 @@ References:
    tabs.js:10:7
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    tabs.js:73:3
    73|   <NotTab/>
          ^^^^^^^^^ [4]
@@ -1642,7 +1642,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:32:4
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with boolean [3].
 
    view.js:32:4
@@ -1662,7 +1662,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2].
- - Or string [1] is incompatible with `React.Element` [3].
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:35:7
    35| <View>Hello, world!</View>; // Error: Strings are not allowed as children.
@@ -1681,7 +1681,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2].
- - Or string [1] is incompatible with `React.Element` [3].
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:36:8
    36| <View>{'Hello, world!'}</View>; // Error: Strings are not allowed as children.
@@ -1700,7 +1700,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with `React.Element` [3].
+ - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:37:8
    37| <View>{42}</View>; // Error: Numbers are not allowed as children.
@@ -1719,7 +1719,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in array element.
- - Or children array [3] is incompatible with `React.Element` [4].
+ - Or children array [3] is incompatible with `ExactReactElement_DEPRECATED` [4].
 
    view.js:38:7
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
@@ -1741,7 +1741,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either string [1] is incompatible with boolean [2] in array element.
- - Or string [1] is incompatible with `React.Element` [3] in array element.
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
 
    view.js:39:8
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
@@ -1763,7 +1763,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in array element.
- - Or number [1] is incompatible with `React.Element` [3] in array element.
+ - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
 
    view.js:40:8
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.

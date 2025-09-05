@@ -169,7 +169,7 @@ Flags: --pretty
     {"name":"Key","type":"type Key = React$Key"},
     {
       "name":"MixedElement",
-      "type":"type MixedElement = React$Element<React$ElementType>"
+      "type":"type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>"
     },
     {"name":"Node","type":"type Node = React$Node"},
     {"name":"Portal","type":"type Portal = React$Portal"},
@@ -179,7 +179,7 @@ Flags: --pretty
     },
     {
       "name":"PropsOf",
-      "type":"type PropsOf<E: string | MixedElement | React$RendersExactly<React$ElementType>> = E extends React$Element<infer C> ? React$ElementConfig<C> : E extends React$RendersExactly<infer C> ? React$ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
+      "type":"type PropsOf<E: string | MixedElement | React$RendersExactly<React$ElementType>> = E extends ExactReactElement_DEPRECATED<infer C> ? React$ElementConfig<C> : E extends React$RendersExactly<infer C> ? React$ElementConfig<C> : E extends string ? $JSXIntrinsics[E][\"props\"] : empty"
     },
     {
       "name":"ReactSetStateFunction",
@@ -188,7 +188,7 @@ Flags: --pretty
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
       "name":"RefOf",
-      "type":"type RefOf<E: string | MixedElement | React$RendersExactly<React$ElementType>> = E extends React$Element<infer C> ? React$ElementRef<C> : E extends React$RendersExactly<infer C> ? React$ElementRef<C> : E extends string ? $JSXIntrinsics[E][\"instance\"] : empty"
+      "type":"type RefOf<E: string | MixedElement | React$RendersExactly<React$ElementType>> = E extends ExactReactElement_DEPRECATED<infer C> ? React$ElementRef<C> : E extends React$RendersExactly<infer C> ? React$ElementRef<C> : E extends string ? $JSXIntrinsics[E][\"instance\"] : empty"
     },
     {"name":"RefSetter","type":"type RefSetter<-T> = React$RefSetter<T>"}
   ]

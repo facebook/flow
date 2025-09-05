@@ -14,9 +14,9 @@ References:
    main.js:4:7
     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
              ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:3
@@ -35,9 +35,9 @@ References:
    main.js:10:59
    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
                                                                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -59,9 +59,9 @@ References:
    <BUILTINS>/react.js:611:29
    611|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -83,9 +83,9 @@ References:
    <BUILTINS>/react.js:611:29
    611|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [4]
 
 
 

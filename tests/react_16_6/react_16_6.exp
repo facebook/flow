@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ Suspense.js:10:23
 
 Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
- - Either function [1] is incompatible with `React.Element` [2].
+ - Either function [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
@@ -14,8 +14,8 @@ References:
     5| function Loading() {
        ^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]

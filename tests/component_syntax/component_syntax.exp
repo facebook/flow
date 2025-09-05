@@ -643,8 +643,8 @@ References:
 
 Error ------------------------------------------------------------------------------- component_in_type_position.js:6:22
 
-Cannot assign `<Foo />` to `fooElem` because `React.Element` [1] is incompatible with `React.RendersExactly` [2].
-[incompatible-type]
+Cannot assign `<Foo />` to `fooElem` because `ExactReactElement_DEPRECATED` [1] is incompatible with
+`React.RendersExactly` [2]. [incompatible-type]
 
    component_in_type_position.js:6:22
    6| const fooElem: Foo = <Foo />; // ERROR
@@ -672,9 +672,9 @@ References:
    component_in_type_position.js:12:25
    12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                ^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ------------------------------------------------------------------------------ component_in_type_position.js:13:20
@@ -1916,15 +1916,15 @@ References:
    import_component_in_type_position.js:13:31
    13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                      ^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:18:2
 
-Cannot cast `<Bar />` to `Foo` because `React.Element` [1] is incompatible with `React.RendersExactly` [2].
-[incompatible-type]
+Cannot cast `<Bar />` to `Foo` because `ExactReactElement_DEPRECATED` [1] is incompatible with
+`React.RendersExactly` [2]. [incompatible-type]
 
    import_component_in_type_position.js:18:2
    18| (<Bar />) as Foo; // ERROR
@@ -1938,7 +1938,8 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:21:1
 
-Cannot cast `aliasedFoo` to number because `React.Element` [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `aliasedFoo` to number because `ExactReactElement_DEPRECATED` [1] is incompatible with number [2].
+[incompatible-type]
 
    import_component_in_type_position.js:21:1
    21| aliasedFoo as number; // ERROR
@@ -2497,7 +2498,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:2
 
-Cannot cast `intrinsicProp.children` to empty because `React.Element` [1] is incompatible with empty [2].
+Cannot cast `intrinsicProp.children` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
 [incompatible-type]
 
    propsof.js:14:2

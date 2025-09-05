@@ -12,7 +12,7 @@ declare type React$Node =
   | boolean
   | number
   | string
-  | React$Element<any>
+  | ExactReactElement_DEPRECATED<any>
   | React$Portal
   | FbtElement
   | FbtString

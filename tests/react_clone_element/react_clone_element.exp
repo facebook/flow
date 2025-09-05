@@ -12,8 +12,8 @@ Cannot call `React.cloneElement` because: [incompatible-type]
 
 References:
    <BUILTINS>/react.js:164:6
-             v-----------------------------------------------
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+             v--------------------------------------------------------------
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
    165|     element: E,
    166|     props?: ?Partial<$JSXIntrinsics[C]['props']>,
    167|     ...children: $ReadOnlyArray<React$Node>
@@ -23,23 +23,23 @@ References:
     19| React.cloneElement(); // Error: Needs a minimum of two arguments.
         ^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:6
-             v-----------------------------------------------------------
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+             v--------------------------------------------------------------------------
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    170|     element: E,
    171|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    172|   ) => E)
           -----^ [3]
    <BUILTINS>/react.js:173:6
-             v-----------------------------------------------------------
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+             v--------------------------------------------------------------------------
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    174|     element: E,
    175|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    176|     children: NoInfer<Props>['children']
    177|   ) => E)
           -----^ [4]
    <BUILTINS>/react.js:178:6
-             v-----------------------------------------------------------
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+             v--------------------------------------------------------------------------
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    179|     element: E,
    180|     props: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    181|     firstChild: NoInfer<Props>['children'][0],
@@ -52,10 +52,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either string [1] is incompatible with `React.Element` [2].
- - Or string [1] is incompatible with `React.Element` [3].
- - Or string [1] is incompatible with `React.Element` [4].
- - Or string [1] is incompatible with `React.Element` [5].
+ - Either string [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
+ - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
 
    test.js:20:7
     20| React.cloneElement('nope'); // Error: Not a valid element type.
@@ -66,26 +66,26 @@ References:
     20| React.cloneElement('nope'); // Error: Not a valid element type.
                            ^^^^^^ [1]
    <BUILTINS>/react.js:164:36
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                                           ^^^^^^^^^^^^^^^^ [2]
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:41
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:173:41
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:178:41
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
- - Or object literal [1] is incompatible with `React.Element` [3].
- - Or object literal [1] is incompatible with `React.Element` [4].
- - Or object literal [1] is incompatible with `React.Element` [5].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
 
    test.js:21:7
     21| React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -96,22 +96,22 @@ References:
     21| React.cloneElement({ type: any }); // Error: Not a valid element type.
                            ^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:164:36
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                                           ^^^^^^^^^^^^^^^^ [2]
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:41
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:173:41
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:178:41
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:8
 
-Cannot call `React.cloneElement` because `A` [1] is incompatible with `B` [2] in type argument `C` [3].
+Cannot call `React.cloneElement` because `A` [1] is incompatible with `B` [2] in type argument `ElementType` [3].
 [incompatible-type]
 
    test.js:25:8
@@ -125,9 +125,9 @@ References:
    test.js:25:60
    25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
                                                                   ^ [2]
-   <BUILTINS>/react.js:87:44
-   87| declare type ExactReactElement_DEPRECATED<+C, +P = React$ElementProps<C>> = React$Element<C, P>;
-                                                  ^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
@@ -148,9 +148,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:31:23
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                                ^^^^^^^^^^^^^^^^ [4]
@@ -176,9 +176,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:32:29
      32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
                                      ^^^ [4]
@@ -204,9 +204,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:38:29
      38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
                                      ^^^ [4]
@@ -232,9 +232,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:44:34
      44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
                                           ^^^^ [4]
@@ -260,12 +260,12 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:169:6
-              v-----------------------------------------------------------
-    169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+              v--------------------------------------------------------------------------
+    169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
     170|     element: E,
     171|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
     172|   ) => E)
@@ -287,14 +287,14 @@ References:
     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                     ^^^^^^^^ [1]
    <BUILTINS>/react.js:164:10
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:169:6
-             v-----------------------------------------------------------
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+             v--------------------------------------------------------------------------
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    170|     element: E,
    171|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    172|   ) => E)
@@ -316,14 +316,14 @@ References:
     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
                                                     ^^^^^^^^ [1]
    <BUILTINS>/react.js:164:10
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:169:6
-             v-----------------------------------------------------------
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+             v--------------------------------------------------------------------------
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
    170|     element: E,
    171|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React$RefSetter<React$ElementRef<NoInfer<C>>>|}>>,
    172|   ) => E)
@@ -347,9 +347,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:54:34
      54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
                                           ^^ [4]
@@ -375,9 +375,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:56:27
      56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
                                    ^^ [4]
@@ -401,11 +401,11 @@ References:
     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                     ^^^^^^^^ [1]
    <BUILTINS>/react.js:164:10
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
    test.js:57:34
     57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
                                          ^^ [4]
@@ -429,11 +429,11 @@ References:
     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
                                                     ^^^^^^^^ [1]
    <BUILTINS>/react.js:164:10
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
    test.js:58:29
     58| React.cloneElement(d, null, 42); // Error: `children` is an array.
                                     ^^ [4]
@@ -459,9 +459,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:70:40
      70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
                                                 ^^^^^ [4]
@@ -488,9 +488,9 @@ References:
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    test.js:76:27
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                    ^^^^^^^^^^^^^^^^ [4]
@@ -512,23 +512,23 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:987:39
-   987|     type MixedElement = React$Element<React$ElementType>;
-                                              ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:987:54
+   987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+                                                             ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:164:10
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-    58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                           ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:169:17
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:173:17
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/react.js:178:17
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                         ^^^^^^^^^^^^^^^^^^^ [6]
 
 
@@ -545,33 +545,33 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                  ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:987:39
-    987|     type MixedElement = React$Element<React$ElementType>;
-                                               ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:987:54
+    987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+                                                              ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:1019:4
    1019|   [string]: {
             ^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-     58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                            ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:169:17
-    169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+    169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                          ^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:173:17
-    173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+    173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                          ^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/react.js:178:17
-    178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
+    178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
                          ^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either undefined [1] is incompatible with `React.Element` [2].
- - Or undefined [1] is incompatible with `React.Element` [3].
- - Or undefined [1] is incompatible with `React.Element` [4].
- - Or undefined [1] is incompatible with `React.Element` [5].
+ - Either undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
 
    test.js:99:9
     99|   React.cloneElement(el); // ERROR
@@ -582,26 +582,26 @@ References:
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:164:36
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                                           ^^^^^^^^^^^^^^^^ [2]
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:41
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:173:41
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:178:41
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:100:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either undefined [1] is incompatible with `React.Element` [2].
- - Or undefined [1] is incompatible with `React.Element` [3].
- - Or undefined [1] is incompatible with `React.Element` [4].
- - Or undefined [1] is incompatible with `React.Element` [5].
+ - Either undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
+ - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
 
    test.js:100:9
    100|   React.cloneElement(el, {}); // ERROR
@@ -612,17 +612,17 @@ References:
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:164:36
-   164|   & (<C: $Keys<$JSXIntrinsics>, E: React$Element<C>>(
-                                           ^^^^^^^^^^^^^^^^ [2]
+   164|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:169:41
-   169|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   169|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:173:41
-   173|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   173|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:178:41
-   178|   & (<Props, C: component(...empty), E: React$Element<C, Props>>(
-                                                ^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   178|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 

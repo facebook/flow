@@ -50,9 +50,9 @@ References:
    test.js:5:28
     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
@@ -71,9 +71,9 @@ References:
    test.js:5:28
     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
@@ -92,9 +92,9 @@ References:
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
@@ -113,9 +113,9 @@ References:
    test.js:4:27
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61

@@ -120,8 +120,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- interop.js:6:25
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    interop.js:6:25
    6| component Bar() renders ExactReactElement_DEPRECATED<typeof Foo> { // invalid-render, turned into any
@@ -135,8 +135,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- interop.js:10:22
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    interop.js:10:22
    10| (<Bar />) as renders ExactReactElement_DEPRECATED<typeof Foo>; // invalid-render, so RHS becomes any
@@ -150,8 +150,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- interop.js:21:32
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    interop.js:21:32
    21| function RendersBaz(): renders ExactReactElement_DEPRECATED<typeof Baz> { // invalid-render
@@ -165,8 +165,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- interop.js:27:33
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    interop.js:27:33
    27| function LongerChain(): renders ExactReactElement_DEPRECATED<typeof RendersBaz> { // invalid-render
@@ -181,7 +181,7 @@ References:
 Error --------------------------------------------------------------------------- no_any_with_renders_react_node.js:5:10
 
 Cannot return `Bar` because: [incompatible-type]
- - Either class `Bar` [1] is incompatible with `React.Element` [2].
+ - Either class `Bar` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or class `Bar` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Bar` [1] but exists in `$Iterable` [4].
 
@@ -194,8 +194,8 @@ References:
     3| class Bar {}
              ^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -206,8 +206,8 @@ References:
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:1
 
-Cannot cast `x` to `ExactReactElement_DEPRECATED` because object type [1] is incompatible with `React.Element` [2].
-[incompatible-type]
+Cannot cast `x` to `ExactReactElement_DEPRECATED` because object type [1] is incompatible with
+`ExactReactElement_DEPRECATED` [2]. [incompatible-type]
 
    no_spoofing_element_types.js:3:1
    3| x as ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
@@ -224,8 +224,8 @@ References:
 
 Error -------------------------------------------------------------------------------- no_spoofing_element_types.js:4:14
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function [2] is not a component-syntax component. [invalid-render]
 
    no_spoofing_element_types.js:4:14
    4| x as renders ExactReactElement_DEPRECATED<typeof Foo>; // invalid-render makes RHS any
@@ -699,17 +699,17 @@ renders. If you want to express the idea of rendering zero or one item, please u
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:5:28
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:5:28
     5| component BarBad() renders React$Node { /* invalid-render */ return null; }
                                   ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:21:19
-   21|   | React$Element<any>
-                         ^^^ [2]
+   <BUILTINS>/react.js:21:34
+   21|   | ExactReactElement_DEPRECATED<any>
+                                        ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:5:28
@@ -756,17 +756,17 @@ Cannot use string [1] as the type argument of renders type. [invalid-render]
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:20:36
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:20:36
    20| declare const rendersNode: renders React$Node; // invalid-render
                                           ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:21:19
-   21|   | React$Element<any>
-                         ^^^ [2]
+   <BUILTINS>/react.js:21:34
+   21|   | ExactReactElement_DEPRECATED<any>
+                                        ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:20:36
@@ -813,17 +813,17 @@ Cannot use string [1] as the type argument of renders type. [invalid-render]
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:37:26
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:37:26
    37|   rendersNode as renders React$Node; // type checks, but invalid-render
                                 ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:21:19
-   21|   | React$Element<any>
-                         ^^^ [2]
+   <BUILTINS>/react.js:21:34
+   21|   | ExactReactElement_DEPRECATED<any>
+                                        ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:37:26
@@ -973,17 +973,17 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:60:25
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but string [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but string [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:60:25
     60|   rendersFoo as renders React.MixedElement; // type checks, but invalid-render
                                 ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:133:37
-   133|   type MixedElement = React$Element<React$ElementType>;
-                                            ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:133:52
+   133|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+                                                           ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- renders_to_renders.js:62:3
@@ -1160,8 +1160,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:104:16
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
    renders_to_renders.js:104:16
    104|   x as renders typeof x; // type checks, but invalid-render
@@ -1175,8 +1175,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:107:3
 
-Cannot cast `mixedElement` to renders union type because `React.Element` [1] does not render union type [2].
-[incompatible-type]
+Cannot cast `mixedElement` to renders union type because `ExactReactElement_DEPRECATED` [1] does not render union
+type [2]. [incompatible-type]
 
    renders_to_renders.js:107:3
    107|   mixedElement as renders (
@@ -1197,7 +1197,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:118:3
 
-Cannot cast `rendersFooOrBar` to empty because `React.Element` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `rendersFooOrBar` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
+[incompatible-type]
 
    renders_to_renders.js:118:3
    118|   rendersFooOrBar as empty; // ERROR
@@ -1233,7 +1234,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:125:19
 
-Cannot get `rendersFooOrBar.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
+Cannot get `rendersFooOrBar.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1].
+[prop-missing]
 
    renders_to_renders.js:125:19
    125|   rendersFooOrBar.props; // ERROR
@@ -1275,7 +1277,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
 
-Cannot get `rendersNode.props` because property `props` is missing in `Number` [1]. [prop-missing]
+Cannot get `rendersNode.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1]. [prop-missing]
 
    renders_to_renders.js:126:15
    126|   rendersNode.props; // ERROR
@@ -1289,7 +1291,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:126:15
 
-Cannot get `rendersNode.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
+Cannot get `rendersNode.props` because property `props` is missing in `Number` [1]. [prop-missing]
 
    renders_to_renders.js:126:15
    126|   rendersNode.props; // ERROR
@@ -1359,7 +1361,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:132:3
 
-Cannot cast `rendersBaz` to empty because `React.Element` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `rendersBaz` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
+[incompatible-type]
 
    renders_to_renders.js:132:3
    132|   rendersBaz as empty; // ERROR
@@ -1376,7 +1379,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:133:14
 
-Cannot get `rendersBaz.props` because property `props` is missing in `React.Element` [1]. [prop-missing]
+Cannot get `rendersBaz.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1]. [prop-missing]
 
    renders_to_renders.js:133:14
    133|   rendersBaz.props; // ERROR
@@ -1659,8 +1662,8 @@ Cannot use object type [1] as the type argument of renders type. [invalid-render
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:17:22
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but string literal `svg` [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but string literal `svg` [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:17:22
    17| type RBad0 = renders ExactReactElement_DEPRECATED<'svg'>; // error
@@ -1674,8 +1677,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:18:22
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:18:22
    18| type RBad1 = renders ExactReactElement_DEPRECATED<typeof Baz>; // error
@@ -1689,8 +1692,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:19:22
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but class `Boz` [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but class `Boz` [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:19:22
    19| type RBad2 = renders ExactReactElement_DEPRECATED<typeof Boz>; // error
@@ -1712,17 +1715,17 @@ Cannot use number literal `1` [1] as the type argument of renders type. [invalid
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but explicit 'any' [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:21:22
    21| type RBad4 = renders React$Node; // error
                             ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:21:19
-   21|   | React$Element<any>
-                         ^^^ [2]
+   <BUILTINS>/react.js:21:34
+   21|   | ExactReactElement_DEPRECATED<any>
+                                        ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:21:22
@@ -1777,8 +1780,8 @@ Cannot use `Error` [1] as the type argument of renders type. [invalid-render]
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:23:35
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:23:35
    23| type RBad6 = component () renders ExactReactElement_DEPRECATED<typeof Baz>; // error
@@ -1792,8 +1795,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:26:41
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:26:41
    26| component BadComponentRenders() renders ExactReactElement_DEPRECATED<typeof Baz> {return <Baz />} // error
@@ -1808,7 +1811,7 @@ References:
 Error ----------------------------------------------------------------------------------- validation/validation.js:31:65
 
 Cannot use renders? `T` [1] as a render type because: [incompatible-type]
- - Either `Error` [2] is incompatible with `React.Element` [3].
+ - Either `Error` [2] is incompatible with `ExactReactElement_DEPRECATED` [3].
  - Or `Error` [2] is incompatible with `React.Portal` [4].
  - Or property `@@iterator` is missing in `Error` [2] but exists in `$Iterable` [5].
 
@@ -1823,8 +1826,8 @@ References:
    31| component BannedGenericRenders1<T: Error>(children: T) renders? T { return children } // error
                                                               ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [3]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [4]
@@ -1922,8 +1925,8 @@ please use `renders*` instead. [invalid-render]
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:42:25
 
-Cannot use `React.Element` [1] as the type argument of renders type. Only elements of a component-syntax components can
-appear in renders but function type [2] is not a component-syntax component. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. Only elements of a component-syntax
+components can appear in renders but function type [2] is not a component-syntax component. [invalid-render]
 
    validation/validation.js:42:25
    42| type BadUnion = renders ExactReactElement_DEPRECATED<typeof Bar | typeof Baz>; // error
@@ -1937,8 +1940,9 @@ References:
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:44:39
 
-Cannot use `React.Element` [1] as the type argument of renders type. You can only use an element of `AbstractComponent`
-when the third type argument is a render type and implicit 'any' [2] is not a render type. [invalid-render]
+Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. You can only use an element of
+`AbstractComponent` when the third type argument is a render type and implicit 'any' [2] is not a render type.
+[invalid-render]
 
    validation/validation.js:44:39
    44| type BadStructuralComponent = renders ExactReactElement_DEPRECATED<component() renders number>; // error

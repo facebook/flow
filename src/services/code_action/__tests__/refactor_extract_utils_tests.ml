@@ -140,7 +140,7 @@ let dummy_context () =
          "React$CreateElement"
          (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
-         "React$Element"
+         "ExactReactElement_DEPRECATED"
          (lazy (ALoc.none, Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName))))
     |> SMap.add
          "React$Key"

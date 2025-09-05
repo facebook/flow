@@ -274,9 +274,9 @@ References:
    wiki_examples.js:12:28
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                   ^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -301,9 +301,9 @@ References:
    wiki_examples.js:12:28
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                   ^^^^^ [2]
-   <BUILTINS>/react.js:58:69
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                           ^ [3]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                          ^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -328,9 +328,9 @@ References:
    wiki_examples.js:18:32
    18|   declare var OtherComponent: (OtherProps) => React.Node;
                                       ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -355,9 +355,9 @@ References:
    wiki_examples.js:18:32
    18|   declare var OtherComponent: (OtherProps) => React.Node;
                                       ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -382,9 +382,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -409,9 +409,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -436,9 +436,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -463,9 +463,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -490,9 +490,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -517,9 +517,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]
@@ -544,9 +544,9 @@ References:
    wiki_examples.js:12:47
    12|   let Component = ({prop}: Props) => { return <>{prop}</> }
                                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:58:36
-   58| declare opaque type React$Element<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
    wiki_examples.js:14:7
    14|   let element = <Component {...props} />
              ^^^^^^^ [4]

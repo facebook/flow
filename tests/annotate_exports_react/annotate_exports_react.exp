@@ -18,7 +18,7 @@ module.exports = (): React.MixedElement => {
 
 const React = require('react');
 
-declare var div: React$Element<'div'>;
+declare var div: ExactReactElement_DEPRECATED<'div'>;
 module.exports = (): React.MixedElement => div;
 
 >>> ./element-no-react-star-import.js
@@ -141,7 +141,7 @@ module.exports = (): React.MixedElement => {
 
 const React = require('react');
 
-declare var div: React$Element<'div'>;
+declare var div: ExactReactElement_DEPRECATED<'div'>;
 module.exports = (): React.MixedElement => div;
 
 >>> ./element-no-react-star-import.js

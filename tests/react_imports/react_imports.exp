@@ -19,7 +19,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- commonjs.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -29,8 +29,8 @@ Cannot cast object literal to `Node` because: [incompatible-type]
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -74,7 +74,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ es-default.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -84,8 +84,8 @@ Cannot cast object literal to `Node` because: [incompatible-type]
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -129,7 +129,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:6:2
 
 Cannot cast object literal to `Node` because: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -139,8 +139,8 @@ Cannot cast object literal to `Node` because: [incompatible-type]
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]
@@ -166,7 +166,7 @@ References:
 Error ----------------------------------------------------------------------------------- use_type_without_import.js:2:2
 
 Cannot cast object literal to `Node` because: [incompatible-type]
- - Either object literal [1] is incompatible with `React.Element` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -176,8 +176,8 @@ Cannot cast object literal to `Node` because: [incompatible-type]
 
 References:
    <BUILTINS>/react.js:21:5
-   21|   | React$Element<any>
-           ^^^^^^^^^^^^^^^^^^ [2]
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
            ^^^^^^^^^^^^ [3]

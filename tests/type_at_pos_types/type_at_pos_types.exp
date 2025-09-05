@@ -567,20 +567,20 @@ OpaqueKeyWithSupertype1
 opaque.js:66:7,66:7
 
 At opaque.js:73:7
-React$Element<typeof MonoComponent, Props>
+ExactReactElement_DEPRECATED<typeof MonoComponent, Props>
 
+'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
 'MonoComponent' defined at opaque.js:72:6
 'Props' defined at opaque.js:71:5
-'React$Element' defined at (lib) react.js:58:20
 
 opaque.js:73:7,73:17
 
 At opaque.js:77:7
-React$Element<typeof PolyComponent, PolyProps<string>>
+ExactReactElement_DEPRECATED<typeof PolyComponent, PolyProps<string>>
 
+'ExactReactElement_DEPRECATED' defined at opaque.js:77:20
 'PolyComponent' defined at opaque.js:76:6
 'PolyProps' defined at opaque.js:75:5
-'React$Element' defined at opaque.js:77:20
 
 opaque.js:77:7,77:17
 
@@ -676,16 +676,16 @@ Mono
 subst.js:21:7,21:8
 
 At subst.js:25:7
-React$Element<any, any>
+ExactReactElement_DEPRECATED<any, any>
 
-'React$Element' defined at subst.js:25:20
+'ExactReactElement_DEPRECATED' defined at subst.js:25:20
 
 subst.js:25:7,25:8
 
 At subst.js:27:7
-React$Element<any, any>
+ExactReactElement_DEPRECATED<any, any>
 
-'React$Element' defined at (lib) react.js:58:20
+'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
 
 subst.js:27:7,27:8
 

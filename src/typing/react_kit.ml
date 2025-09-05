@@ -744,7 +744,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           cx
           elem_reason
           ~use_desc:true
-          "React$Element"
+          "ExactReactElement_DEPRECATED"
           [component; Tvar.mk_where cx reason_op props_to_tout]
       in
       (* Concretize to an ObjT so that we can asssociate the monomorphized component with the props id *)

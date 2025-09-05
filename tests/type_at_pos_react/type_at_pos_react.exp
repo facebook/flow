@@ -11,7 +11,7 @@ lazy_ref.js:19:9 = Promise<
   {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
 >
 
-'ExactReactElement_DEPRECATED' defined at (lib) react.js:87:13
+'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
 'Node' defined at (lib) react.js:268:22
 'Promise' defined at (lib) core.js:2148:14
 'Props' defined at exports-component.js:5:5

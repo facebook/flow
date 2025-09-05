@@ -910,7 +910,7 @@ let is_builtin_class_id class_ref class_id cx =
 let is_builtin_iterable_class_id class_id cx = is_builtin_class_id "$Iterable" class_id cx
 
 let builtin_react_element_opaque_id cx =
-  match Context.builtin_type_opt cx "React$Element" with
+  match Context.builtin_type_opt cx "ExactReactElement_DEPRECATED" with
   | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
     begin

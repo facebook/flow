@@ -1126,7 +1126,7 @@ class type_normalization_hardcoded_fixes_mapper
       (* E.g. React$Element<'div'> will become React.MixedElement *)
       | Ty.Generic
           ( ( {
-                Ty.sym_name = Reason.OrdinaryName ("React$Element" | "ExactReactElement_DEPRECATED");
+                Ty.sym_name = Reason.OrdinaryName "ExactReactElement_DEPRECATED";
                 sym_provenance = Ty_symbol.Library _;
                 sym_def_loc;
                 _;
@@ -1144,7 +1144,7 @@ class type_normalization_hardcoded_fixes_mapper
          a local scope (e.g. that of a function) which would make the annotation ill-formed. *)
       | Ty.Generic
           ( ( {
-                Ty.sym_name = Reason.OrdinaryName ("React$Element" | "ExactReactElement_DEPRECATED");
+                Ty.sym_name = Reason.OrdinaryName "ExactReactElement_DEPRECATED";
                 sym_provenance = Ty_symbol.Library _;
                 sym_def_loc;
                 _;
