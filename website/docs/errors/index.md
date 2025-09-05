@@ -24,31 +24,36 @@ comments look like the following:
 A suppressor can be one of the following:
 - `$FlowFixMe`: for type errors that you intend to fix later
 - `$FlowExpectedError`: for a location where you expect Flow to produce a type error (for instance, when performing an invalid type cast).
+
+<details>
+  <summary>Removed suppressors</summary>
+
 - `$FlowIssue` <UntilVersion version="0.280" />: for a type error that you suspect is an issue with Flow
 - `$FlowIgnore` <UntilVersion version="0.280" />: for locations where you want Flow to ignore your code
+</details>
 
 Note that all of the suppressors behave identically; we simply recommend using them as described here for your own ease of reference.
 
-The `<CODE>` portion of a suppression is optional for most of [error codes](#toc-making-suppressions-more-granular-with-error-codes). Some error codes cannot be suppressed without specific-error code (e.g. `react-rule` related ones). When an error code is included, it specifies which error code the suppression affects.
+The `<CODE>` portion of a suppression is required. It specifies which error code the suppression affects.
 
 Some examples of suppression comments:
 
 ```
-// $FlowFixMe
+// $FlowFixMe[incompatible-type]
 
-// $FlowIssue[incompatible-type]
+// $FlowExpectedError[incompatible-type]
 
-/* $FlowIgnore[prop-missing] some other text here */
+/* $FlowFixMe[prop-missing] some other text here */
 
-/* $FlowFixMe[incompatible-type] this
+/* $FlowExpectedError[incompatible-type] this
     is a multi-line
     comment */
 
-{ /* $FlowIssue this is how you suppress errors inside JSX */ }
+{ /* $FlowExpectedError[cannot-resolve-name] this is how you suppress errors inside JSX */ }
 ```
 
 In order to be a valid suppression comment, there are also some conditions that must be true:
-- No text can precede the suppressor, or come between the suppressor and the code. For example: `// some text then $FlowFixMe` is not a valid suppression, nor is `// $FlowIssue some text [incompatible-type]` or ` //$FlowFixMe [prop-missing]` (note the space here!).
+- No text can precede the suppressor, or come between the suppressor and the code. For example: `// some text then $FlowFixMe` is not a valid suppression, nor is `// $FlowExpectedError some text [incompatible-type]` or ` //$FlowFixMe [prop-missing]` (note the space here!).
 - Suppressions must be on the line immediately before the error they suppress, otherwise they will not apply.
 
 ### Making Suppressions More Granular with Error Codes {#toc-making-suppressions-more-granular-with-error-codes}
