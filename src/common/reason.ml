@@ -1504,7 +1504,7 @@ let invalidate_rtype_alias = function
 let react_element_desc_of_component_reason reason =
   match desc_of_reason reason with
   | RComponent name -> RReactElement { name_opt = Some name; from_component_syntax = true }
-  | _ -> RType (OrdinaryName "React$Element")
+  | _ -> RReactElement { name_opt = None; from_component_syntax = false }
 
 let range_string_of_loc ~strip_root loc =
   Loc.(

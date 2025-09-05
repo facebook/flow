@@ -46,7 +46,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
 
-Cannot instantiate `React.Element` because in type argument `ElementType`: [incompatible-type]
+Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
  - Either number [1] is incompatible with string [2].
  - Or number [1] is incompatible with component [3].
 

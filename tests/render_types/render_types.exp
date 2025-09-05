@@ -293,8 +293,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- poly_component_type.js:8:1
 
-Cannot cast `el` to renders `NotAButton` because `React.Element` [1] does not render `NotAButton` [2].
-[incompatible-type]
+Cannot cast `el` to renders `NotAButton` because React element [1] does not render `NotAButton` [2]. [incompatible-type]
 
    poly_component_type.js:8:1
    8| el as renders NotAButton; // ERROR
@@ -308,7 +307,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- poly_component_type.js:15:1
 
-Cannot cast `<Poly2 />` to renders? `NotAButton` because `React.Element` [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to renders? `NotAButton` because React element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
    poly_component_type.js:15:1
@@ -323,7 +322,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- poly_component_type.js:17:1
 
-Cannot cast `<Poly2 />` to renders* `NotAButton` because `React.Element` [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to renders* `NotAButton` because React element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
    poly_component_type.js:17:1
@@ -1399,7 +1398,7 @@ Cannot use string literal `div` [1] as the type argument of renders type. [inval
 
 Error ------------------------------------------------------------------------------------------------------- svg.js:9:1
 
-Cannot cast `<div />` to renders string literal `svg` because `React.Element` [1] does not render string literal
+Cannot cast `<div />` to renders string literal `svg` because React element [1] does not render string literal
 `svg` [2]. [incompatible-type]
 
    svg.js:9:1
@@ -1414,7 +1413,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:10:1
 
-Cannot cast `<div />` to renders? string literal `svg` because `React.Element` [1] does not render string literal
+Cannot cast `<div />` to renders? string literal `svg` because React element [1] does not render string literal
 `svg` [2]. [incompatible-type]
 
    svg.js:10:1
@@ -1429,7 +1428,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ svg.js:11:1
 
-Cannot cast `<div />` to renders* string literal `svg` because `React.Element` [1] does not render string literal
+Cannot cast `<div />` to renders* string literal `svg` because React element [1] does not render string literal
 `svg` [2]. [incompatible-type]
 
    svg.js:11:1

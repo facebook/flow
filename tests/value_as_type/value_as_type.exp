@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- test1.js:13:45
 
 Cannot create `HocChild` element because in property `ref`: [incompatible-type]
- - Either `React.Element` [1] is incompatible with mixed [2] in the first parameter.
+ - Either React element [1] is incompatible with mixed [2] in the first parameter.
  - Or property `_handleChild` [3] is incompatible with object type [4]. Functions without statics are not compatible
    with objects.
 
