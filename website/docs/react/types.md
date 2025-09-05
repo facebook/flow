@@ -11,11 +11,21 @@ examples for how/where to use them.
 These types are all exported as named type exports from the `react` module. If
 you want to access them as members on the `React` object (e.g.
 [`React.Node`](#toc-react-node)) and
-you are importing React as an ES module then you should import `React` as a
-namespace:
+you are importing React as an ES module then you can import `React` either as a
+namespace or as a default import:
 
-```js
+```js flow-check
 import * as React from 'react';
+
+<div /> as React.MixedElement; // OK
+1 as React.MixedElement; // Error
+```
+
+```js flow-check
+import React from 'react';
+
+<div /> as React.MixedElement; // OK
+1 as React.MixedElement; // Error
 ```
 
 If you are using CommonJS you can also require React:
@@ -37,26 +47,6 @@ with:
 ```js
 import * as React from 'react';
 ```
-
-> **Note:** While importing React with a default import works:
->
-> ```
-> import React from 'react';
-> ```
->
-> You will have access to all of the values that React exports, but you will
-> **not** have access to the types documented below! This is because Flow will
-> not add types to a default export since the default export could be any value
-> (like a number). Flow will add exported named types to an ES namespace object
-> which you can get with `import * as React from 'react'` since Flow knows if
-> you export a value with the same name as an exported type.
->
-> Again, if you import React with: `import React from 'react'` you will be able
-> to access `React.Component`, `React.createElement()`, `React.Children`, and
-> other JavaScript *values*. However, you will not be able to access
-> [`React.Node`](#toc-react-node), [`React.ChildrenArray`](#toc-react-childrenarray) or
-> other Flow *types*. You will need to use a named type import like:
-> `import type {Node} from 'react'` in addition to your default import.
 
 ## `React.Node` {#toc-react-node}
 
