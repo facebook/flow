@@ -103,6 +103,7 @@ let stub_metadata ~root ~checked =
     automatic_require_default = false;
     babel_loose_array_spread = false;
     casting_syntax = Options.CastingSyntax.Both;
+    casting_syntax_only_support_as_excludes = [];
     component_syntax = true;
     hook_compatibility = true;
     hook_compatibility_includes = [];

@@ -36,6 +36,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
+  casting_syntax_only_support_as_excludes: Str.regexp list;
   component_syntax: bool;
   hook_compatibility_excludes: Str.regexp list;
   hook_compatibility_includes: Str.regexp list;
@@ -297,6 +298,8 @@ let metadata_of_options options =
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     casting_syntax = Options.casting_syntax options;
+    casting_syntax_only_support_as_excludes =
+      Options.casting_syntax_only_support_as_excludes options;
     component_syntax = Options.component_syntax options;
     hook_compatibility_excludes = Options.hook_compatibility_excludes options;
     hook_compatibility_includes = Options.hook_compatibility_includes options;
@@ -532,7 +535,14 @@ let builtin_type_opt cx n = Builtins.get_builtin_type_opt (builtins cx) n
 
 let builtin_module_opt cx = Builtins.get_builtin_module_opt (builtins cx)
 
-let casting_syntax cx = cx.metadata.casting_syntax
+let casting_syntax cx =
+  match cx.metadata.casting_syntax with
+  | Options.CastingSyntax.Both -> Options.CastingSyntax.Both
+  | Options.CastingSyntax.As ->
+    if in_dirlist cx cx.metadata.casting_syntax_only_support_as_excludes then
+      Options.CastingSyntax.Both
+    else
+      Options.CastingSyntax.As
 
 let component_syntax cx = cx.metadata.component_syntax || File_key.is_lib_file cx.file
 

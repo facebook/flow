@@ -110,6 +110,7 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_casting_syntax: CastingSyntax.t;
+  opt_casting_syntax_only_support_as_excludes: Str.regexp list;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
   opt_hook_compatibility_includes: Str.regexp list;
@@ -224,6 +225,8 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let casting_syntax opts = opts.opt_casting_syntax
+
+let casting_syntax_only_support_as_excludes opts = opts.opt_casting_syntax_only_support_as_excludes
 
 let channel_mode opts = opts.opt_channel_mode
 

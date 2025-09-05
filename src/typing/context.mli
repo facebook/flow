@@ -86,6 +86,7 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   casting_syntax: Options.CastingSyntax.t;
+  casting_syntax_only_support_as_excludes: Str.regexp list;
   component_syntax: bool;
   hook_compatibility_excludes: Str.regexp list;
   hook_compatibility_includes: Str.regexp list;

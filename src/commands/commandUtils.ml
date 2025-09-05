@@ -1403,6 +1403,10 @@ let make_options
       Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
     opt_casting_syntax =
       Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
+    opt_casting_syntax_only_support_as_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.casting_syntax_only_support_as_excludes flowconfig);
     opt_wait_for_recheck;
     opt_vpn_less;
     opt_quiet = options_flags.Options_flags.quiet;

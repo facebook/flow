@@ -44,6 +44,19 @@ let of_options options docblock locs_to_dirtify file =
       file
       relay_integration_module_prefix
   in
+  let casting_syntax =
+    match Options.casting_syntax options with
+    | Options.CastingSyntax.Both -> Options.CastingSyntax.Both
+    | Options.CastingSyntax.As ->
+      (match Options.casting_syntax_only_support_as_excludes options with
+      | [] -> Options.CastingSyntax.As
+      | dirs ->
+        let normalized_filename = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
+        if List.exists (fun r -> Str.string_match r normalized_filename 0) dirs then
+          Options.CastingSyntax.Both
+        else
+          Options.CastingSyntax.As)
+  in
   {
     munge;
     facebook_keyMirror;
@@ -59,7 +72,7 @@ let of_options options docblock locs_to_dirtify file =
     component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = Options.ts_syntax options;
     for_builtins = false;
-    casting_syntax = Options.casting_syntax options;
+    casting_syntax;
   }
 
 let builtin_options options =

@@ -52,6 +52,7 @@ module Opts = struct
     babel_loose_array_spread: bool option;
     ban_spread_key_props: bool option;
     casting_syntax: Options.CastingSyntax.t option;
+    casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
     constant_condition: bool option;
@@ -207,6 +208,7 @@ module Opts = struct
       ban_spread_key_props = None;
       channel_mode = None;
       casting_syntax = None;
+      casting_syntax_only_support_as_excludes = [];
       component_syntax = false;
       constant_condition = Some false;
       constant_condition_boolean_literal_includes = [];
@@ -1049,6 +1051,18 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
+      ( "experimental.casting_syntax.only_support_as.excludes",
+        string
+          ~init:(fun opts -> { opts with casting_syntax_only_support_as_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                casting_syntax_only_support_as_excludes =
+                  v :: opts.casting_syntax_only_support_as_excludes;
+              })
+      );
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
@@ -1930,6 +1944,9 @@ let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
 
 let casting_syntax c = c.options.Opts.casting_syntax
+
+let casting_syntax_only_support_as_excludes c =
+  c.options.Opts.casting_syntax_only_support_as_excludes
 
 let channel_mode c = c.options.Opts.channel_mode
 

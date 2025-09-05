@@ -1,3 +1,4 @@
 [options]
 casting_syntax=as
+experimental.casting_syntax.only_support_as.excludes=<PROJECT_ROOT>/excluded.js
 all=true
