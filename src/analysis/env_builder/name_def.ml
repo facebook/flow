@@ -640,7 +640,8 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
             | Flow_ast.Expression.CallTypeArg.Implicit _ -> false
             )
       | None -> false)
-    | Ast.Expression.JSXElement _ ->
+    | Ast.Expression.JSXElement _
+    | Ast.Expression.JSXFragment _ ->
       (* Implicit instantiation might happen in these nodes, and we might have underconstrained targs. *)
       false
     | Ast.Expression.Match { Ast.Match.cases; _ } ->
@@ -661,7 +662,6 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
     | Ast.Expression.Binary _
     | Ast.Expression.Class _
     | Ast.Expression.Import _
-    | Ast.Expression.JSXFragment _
     | Ast.Expression.MetaProperty _
     | Ast.Expression.Member _
     | Ast.Expression.OptionalMember _
