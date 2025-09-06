@@ -3618,10 +3618,12 @@ module Make
       in
       ((loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions; comments })
     | JSXElement e ->
-      let (t, e) = jsx cx loc e in
+      let should_generalize = lazy (should_generalize_jsx cx ~has_hint ~as_const loc) in
+      let (t, e) = jsx cx ~should_generalize loc e in
       ((loc, t), JSXElement e)
     | JSXFragment f ->
-      let (t, f) = jsx_fragment cx loc f in
+      let should_generalize = lazy (should_generalize_jsx cx ~has_hint ~as_const loc) in
+      let (t, f) = jsx_fragment cx ~should_generalize loc f in
       ((loc, t), JSXFragment f)
     | Class c ->
       let class_loc = loc in
@@ -6026,7 +6028,16 @@ module Make
       in
       (unresolved_params, (children_loc, children'))
 
-  and jsx cx expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
+  and should_generalize_jsx cx ~has_hint ~as_const jsx_loc =
+    if Context.natural_inference_jsx_literal cx then
+      if as_const then
+        false
+      else
+        not (Lazy.force has_hint || Natural_inference.loc_has_hint cx jsx_loc)
+    else
+      false
+
+  and jsx cx ~should_generalize expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
     let open Ast.JSX in
     let { opening_element; children; closing_element; comments } = e in
     let (children_loc, _) = children in
@@ -6037,12 +6048,13 @@ module Make
       | _ -> (open_, open_, open_)
     in
     let (t, opening_element, children, closing_element) =
-      jsx_title cx opening_element children closing_element locs
+      jsx_title cx ~should_generalize opening_element children closing_element locs
     in
     Tvar_resolver.resolve cx t;
     (t, { opening_element; children; closing_element; comments })
 
-  and jsx_fragment cx expr_loc fragment : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
+  and jsx_fragment cx ~should_generalize expr_loc fragment :
+      Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
     let open Ast.JSX in
     let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
     let (loc_children, _) = frag_children in
@@ -6098,6 +6110,7 @@ module Make
         cx
         ~loc_element:expr_loc
         ~loc_children
+        ~should_generalize
         "React.Fragment"
         fragment_t
         None
@@ -6107,7 +6120,7 @@ module Make
     Tvar_resolver.resolve cx t;
     (t, { frag_opening_element; frag_children; frag_closing_element; frag_comments })
 
-  and jsx_title cx opening_element children closing_element locs =
+  and jsx_title cx ~should_generalize opening_element children closing_element locs =
     let open Ast.JSX in
     let (loc_element, loc_opening, loc_children) = locs in
     let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
@@ -6197,7 +6210,16 @@ module Make
             match Context.jsx cx with
             | Options.Jsx_react ->
               let (loc_element, _loc_opening, loc_children) = locs in
-              react_jsx_desugar cx name ~loc_element ~loc_children c targs_opt o unresolved_params
+              react_jsx_desugar
+                cx
+                name
+                ~loc_element
+                ~loc_children
+                ~should_generalize
+                c
+                targs_opt
+                o
+                unresolved_params
             | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
               non_react_jsx_desugar
                 cx
@@ -6234,7 +6256,16 @@ module Make
             children
         in
         let (t, _) =
-          react_jsx_desugar cx ~loc_element ~loc_children name c targs_opt o unresolved_params
+          react_jsx_desugar
+            cx
+            ~loc_element
+            ~loc_children
+            ~should_generalize
+            name
+            c
+            targs_opt
+            o
+            unresolved_params
         in
         let member' =
           match expression_to_jsx_title_member m_loc m_expr' with
@@ -6497,7 +6528,8 @@ module Make
       loc_children
       (jsx_normalize_children_prop cx loc_children children)
 
-  and react_jsx_desugar cx name ~loc_element ~loc_children component_t targs_opt props children =
+  and react_jsx_desugar
+      cx name ~should_generalize ~loc_element ~loc_children component_t targs_opt props children =
     let return_hint = Type_env.get_hint cx loc_element in
     let reason =
       mk_reason
@@ -6556,6 +6588,7 @@ module Make
                     jsx_props = props;
                     tout;
                     targs = targs_opt;
+                    should_generalize = Lazy.force should_generalize;
                     return_hint;
                     record_monomorphized_result = false;
                     inferred_targs = None;
@@ -6694,11 +6727,11 @@ module Make
     let open Ast.JSX in
     match child with
     | Element e ->
-      let (t, e) = jsx cx loc e in
+      let (t, e) = jsx cx ~should_generalize:(lazy false) loc e in
       let reason = mk_reason RJSXChild loc in
       (Some (UnresolvedArg (mk_tuple_element reason t, None)), ((loc, t), Element e))
     | Fragment f ->
-      let (t, f) = jsx_fragment cx loc f in
+      let (t, f) = jsx_fragment cx ~should_generalize:(lazy false) loc f in
       let reason = mk_reason RJSXChild loc in
       (Some (UnresolvedArg (mk_tuple_element reason t, None)), ((loc, t), Fragment f))
     | ExpressionContainer ec ->

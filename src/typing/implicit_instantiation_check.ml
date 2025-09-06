@@ -16,6 +16,7 @@ type operation =
       component: Type.t;
       jsx_props: Type.t;
       targs: Type.targ list option;
+      should_generalize: bool;
     }
 
 type t = {
@@ -30,5 +31,9 @@ let of_call lhs poly_t use_op reason funcalltype =
 let of_ctor lhs poly_t use_op reason_op targs args =
   { lhs; poly_t; operation = (use_op, reason_op, Constructor (targs, args)) }
 
-let of_react_jsx lhs poly_t use_op reason_op ~component ~jsx_props ~targs =
-  { lhs; poly_t; operation = (use_op, reason_op, ReactJSX { component; targs; jsx_props }) }
+let of_react_jsx lhs poly_t use_op reason_op ~component ~jsx_props ~targs ~should_generalize =
+  {
+    lhs;
+    poly_t;
+    operation = (use_op, reason_op, ReactJSX { component; targs; jsx_props; should_generalize });
+  }

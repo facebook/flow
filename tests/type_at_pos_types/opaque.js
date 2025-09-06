@@ -76,3 +76,6 @@ type PolyProps<T> = { prop: T, ... };
 class PolyComponent<T> extends React.Component<PolyProps<T>> {}
 const polyElement = <PolyComponent prop={""}/>;
 //    ^?
+
+const conditionalJsx = true ? <div /> : <span />;
+//    ^?

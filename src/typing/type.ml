@@ -3119,6 +3119,7 @@ and React : sig
         jsx_props: TypeTerm.t;
         tout: TypeTerm.t_out;
         targs: TypeTerm.targ list option;
+        should_generalize: bool;
         return_hint: TypeTerm.lazy_hint_t;
         record_monomorphized_result: bool;
         inferred_targs: (TypeTerm.t * Subst_name.Name.t) list option;

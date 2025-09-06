@@ -41,6 +41,7 @@ end
 
 module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
+  module RendersKit = Renders_kit.Make (Flow)
 
   let err_incompatible cx ~use_op reason tool =
     let err =
@@ -611,7 +612,13 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       )
     in
     let create_element
-        component jsx_props record_monomorphized_result inferred_targs specialized_component tout =
+        component
+        jsx_props
+        should_generalize
+        record_monomorphized_result
+        inferred_targs
+        specialized_component
+        tout =
       let use_op =
         (* Why do we try to remove the OpaqueTypeUpperBound frame here?
          * The frame will be added when we unwrap the opaque type bound of `React$CreateElement`.
@@ -815,6 +822,30 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             specialized_component
         | _ -> ()
       in
+      let elem =
+        if should_generalize then
+          match RendersKit.try_synthesize_render_type cx ~drop_renders_any:false elem with
+          | None ->
+            get_builtin_react_type
+              cx
+              ~trace
+              ~use_desc:true
+              (replace_desc_reason (RType (OrdinaryName "React.MixedElement")) elem_reason)
+              Flow_intermediate_error_types.ReactModuleForReactMixedElementType
+          | Some (renders_variant, ts) ->
+            DefT
+              ( elem_reason,
+                RendersT
+                  (StructuralRenders
+                     {
+                       renders_variant;
+                       renders_structural_type = TypeUtil.union_of_ts elem_reason ts;
+                     }
+                  )
+              )
+        else
+          elem
+      in
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
@@ -865,6 +896,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           jsx_props;
           tout;
           targs = _;
+          should_generalize;
           return_hint = _;
           record_monomorphized_result;
           inferred_targs;
@@ -873,6 +905,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       create_element
         component
         jsx_props
+        should_generalize
         record_monomorphized_result
         inferred_targs
         specialized_component

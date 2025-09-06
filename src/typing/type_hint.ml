@@ -270,6 +270,7 @@ and instantiate_component cx opts component instantiation_hint =
         ~component
         ~jsx_props:(Lazy.force jsx_props_and_children)
         ~targs:(Lazy.force jsx_targs)
+        ~should_generalize:false
     in
     let subst_map =
       Context.run_in_implicit_instantiation_mode cx (fun () ->
