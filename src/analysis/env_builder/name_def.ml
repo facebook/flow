@@ -3265,7 +3265,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           let acc = mk_value match_root in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
-          run_opt this#expression guard;
+          Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
           (* We use best-effort value hints for cases other than the current case.
              Hints are ordered as the cases are in source, top to bottom. *)
           let value_hints = value_hints |> IMap.remove i |> IMap.values |> List.rev in
@@ -3291,7 +3291,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           let acc = mk_value match_root in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
-          run_opt this#expression guard;
+          Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
           run this#statement body
       );
       x

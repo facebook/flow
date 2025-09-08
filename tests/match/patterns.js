@@ -84,6 +84,21 @@
     _ => 0,
   };
 }
+{
+  declare const x: {type: 'foo', n: number} | {type: 'bar', s: string};
+
+  match (0) { // OK
+    0 if (x.type === 'foo') => {
+      x as {type: 'foo', n: number};
+    }
+    _ => {}
+  }
+
+  const e = match (0) { // OK
+    0 if (x.type === 'foo') => x as {type: 'foo', n: number},
+    _ => x,
+  };
+}
 
 // As pattern
 {
