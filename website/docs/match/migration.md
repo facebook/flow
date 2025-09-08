@@ -145,7 +145,7 @@ const a =
 const b = match (obj) {
   {type: 'a', const foo} => foo,
   {type: 'b', const bar} => bar.length,
-  null => {}
+  null => 0,
 };
 ```
 
