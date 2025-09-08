@@ -192,8 +192,8 @@ References:
    misc.js:5:32
       5| export const c = {['a' + 'b']: 42};
                                         ^^ [1]
-   <BUILTINS>/core.js:1912:5
-   1912|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:1932:5
+   1932|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

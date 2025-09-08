@@ -22,8 +22,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                             ^^^
 
 References:
-   <BUILTINS>/core.js:2106:19
-   2106| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2126:19
+   2126| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    arr_rest.js:9:16
       9| const [...y] = new Set() // still error
@@ -339,8 +339,8 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
                 ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1911:11
-   1911| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1931:11
+   1931| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -493,8 +493,8 @@ References:
    implicit_instantiation.js:147:11
     147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:2106:19
-   2106| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2126:19
+   2126| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 
@@ -513,8 +513,8 @@ References:
    implicit_instantiation.js:148:11
     148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:2106:19
-   2106| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2126:19
+   2126| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 
@@ -769,8 +769,8 @@ References:
    lits.js:52:27
      52|   s2.values() as Iterator<string>; // error number ~> string
                                    ^^^^^^ [2]
-   <BUILTINS>/core.js:1805:25
-   1805| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+   <BUILTINS>/core.js:1825:25
+   1825| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
                                  ^^^^^ [3]
 
 
@@ -1041,13 +1041,13 @@ Cannot get `(thumbnails ?? []).filter` because property `filter` [1] cannot be u
 defined. [method-unbinding]
 
    type_filter_union.js:9:50
-     9| const loadedThumbnailsCount = (thumbnails ?? []).filter;
-                                                         ^^^^^^ [1]
+      9| const loadedThumbnailsCount = (thumbnails ?? []).filter;
+                                                          ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:990:5
-   990|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1000:5
+   1000|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ type_guard.js:3:4

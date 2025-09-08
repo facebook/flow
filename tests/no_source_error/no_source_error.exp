@@ -5,22 +5,22 @@ Cannot call `x.filter` because: [incompatible-type]
  - Or function type [3] is incompatible with class `Boolean` [4].
 
    no_source.js:16:7
-    16|     x.filter(this.z);
-              ^^^^^^
+     16|     x.filter(this.z);
+               ^^^^^^
 
 References:
    no_source.js:15:20
-    15|     const x: Array<Foo> = [];
-                           ^^^ [1]
+     15|     const x: Array<Foo> = [];
+                            ^^^ [1]
    no_source.js:13:12
-    13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
-                   ^^^^^^^ [2]
+     13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
+                    ^^^^^^^ [2]
    no_source.js:13:8
-    13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
-               ^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:990:24
-   990|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                               ^^^^^^^^^^^^^^ [4]
+     13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
+                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1000:24
+   1000|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                                ^^^^^^^^^^^^^^ [4]
 
 
 

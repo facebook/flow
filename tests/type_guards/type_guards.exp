@@ -1489,8 +1489,8 @@ Error --------------------------------------------------------------------------
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1925:40
-   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1945:40
+   1945| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1504,8 +1504,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1911:11
-   1911| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1931:11
+   1931| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -1518,8 +1518,8 @@ Cannot return `(typeof x) == "number"` because `$Generator` [1] is incompatible 
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1925:40
-   1925| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1945:40
+   1945| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
@@ -1560,8 +1560,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2148:15
-   2148| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2168:15
+   2168| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error
