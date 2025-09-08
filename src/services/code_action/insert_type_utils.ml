@@ -555,7 +555,7 @@ class mapper_type_printing_hardcoded_fixes =
 let patch_up_type_ast = (new mapper_type_printing_hardcoded_fixes)#type_
 
 (* Apply stylistic changes to react types *)
-class patch_up_react_mapper ?(imports_react = false) () =
+class patch_up_react_mapper () =
   object (this)
     inherit [_] Ty.endo_ty as super
 
@@ -568,9 +568,10 @@ class patch_up_react_mapper ?(imports_react = false) () =
           ( ( {
                 Ty.sym_name =
                   Reason.OrdinaryName
-                    ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
-                      | "Context" | "Element" | "MixedElement" | "ElementConfig" | "ElementProps"
-                      | "ElementRef" | "ElementType" | "Key" | "Node" | "Portal" | "Ref" ) as name
+                    ( ( "ChildrenArray" | "ComponentType" | "Context" | "MixedElement"
+                      | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType" | "Key"
+                      | "Node" | "Portal" | "RefObject" | "RefSetter" | "PropsOf" | "PropOf"
+                      | "RefOf" ) as name
                     );
                 sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
                 sym_def_loc;
@@ -582,12 +583,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
           )
         when is_react_loc sym_def_loc ->
         let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t loc)) args_opt in
-        let symbol =
-          if imports_react then
-            { symbol with Ty.sym_name = Reason.OrdinaryName ("React." ^ name) }
-          else
-            { symbol with Ty.sym_provenance = Ty.Remote { Ty.imported_as = None } }
-        in
+        let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName ("React." ^ name) } in
         Ty.Generic (symbol, kind, args_opt)
       | _ -> super#on_t loc t
 
@@ -603,9 +599,9 @@ type partition_acc = {
   others: Ty.t list;
 }
 
-class stylize_ty_mapper ?(imports_react = false) () =
+class stylize_ty_mapper () =
   object
-    inherit patch_up_react_mapper ~imports_react () as super
+    inherit patch_up_react_mapper () as super
 
     (* remove literals when the base type is in the union, and simplify true | false to bool *)
     (* These simplifications should always be sound *)
@@ -858,13 +854,12 @@ class type_normalization_hardcoded_fixes_mapper
   ~typed_ast
   ~lint_severities
   ~allow_dollar_flowfixme
-  ~imports_react
   ~generalize_maybe
   ~generalize_react_mixed_element
   ~add_warning =
   let metadata = Context.metadata cx in
   object (this)
-    inherit stylize_ty_mapper ~imports_react () as super
+    inherit stylize_ty_mapper () as super
 
     val sanitized_any =
       if allow_dollar_flowfixme then
@@ -1245,7 +1240,6 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
       ~merge_arrays
       ~lint_severities
       ~allow_dollar_flowfixme
-      ~imports_react
       acc
       loc
       t =
@@ -1260,7 +1254,6 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
         ~typed_ast
         ~lint_severities
         ~allow_dollar_flowfixme
-        ~imports_react
         ~generalize_maybe
         ~generalize_react_mixed_element
         ~add_warning

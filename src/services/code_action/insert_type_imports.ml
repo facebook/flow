@@ -255,8 +255,6 @@ module ImportsHelper : sig
 
          method to_import_bindings : (string * Autofix_imports.bindings) list
        end
-
-  val imports_react : File_sig.t -> bool
 end = struct
   (* A structure holding information about the import of a Remote symbol.
    *
@@ -767,36 +765,4 @@ end = struct
         in
         bindings
     end
-
-  exception Found_react_import
-
-  let imports_react =
-    File_sig.(
-      let from_binding binding =
-        match binding with
-        | BindIdent (_, "React") -> raise Found_react_import
-        | BindIdent _
-        | BindNamed _ ->
-          ()
-        (* React should be top-level, not destructured *)
-      in
-      let from_bindings bindings_opt = Base.Option.iter ~f:from_binding bindings_opt in
-      let from_require require =
-        match require with
-        | Require { source = _; require_loc = _; bindings; prefix = _ } -> from_bindings bindings
-        | Import { ns = Some (_, "React"); _ } -> raise Found_react_import
-        | Import _
-        | ImportDynamic _
-        | Import0 _
-        | ImportSyntheticUserland _
-        | ImportSyntheticHaste _
-        | ExportFrom _ ->
-          ()
-      in
-      let from_requires requires = List.iter from_require requires in
-      fun file_sig ->
-        match from_requires (File_sig.requires file_sig) with
-        | exception Found_react_import -> true
-        | _ -> false
-    )
 end

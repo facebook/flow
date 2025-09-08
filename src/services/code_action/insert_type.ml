@@ -115,15 +115,7 @@ let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
 let serialize
-    ~cx
-    ~loc_of_aloc
-    ~get_ast_from_shared_mem
-    ~file_sig
-    ~typed_ast
-    ?(imports_react = false)
-    ~exact_by_default
-    loc
-    ty =
+    ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast ~exact_by_default loc ty =
   let mapper =
     new Utils.type_normalization_hardcoded_fixes_mapper
       ~cx
@@ -133,7 +125,6 @@ let serialize
       ~typed_ast
       ~lint_severities:LintSettings.empty_severities
       ~allow_dollar_flowfixme:false (* Make autofix insert any *)
-      ~imports_react
       ~generalize_maybe:true
       ~generalize_react_mixed_element:true
       ~add_warning:(fun _ _ -> ()
@@ -386,7 +377,6 @@ let synth_type
     type_loc
     t =
   let exact_by_default = Context.exact_by_default cx in
-  let imports_react = ImportsHelper.imports_react file_sig in
   let process ty =
     match Utils.Validator.validate_type ~size_limit ~loc_of_aloc:ALoc.to_loc_exn ty with
     | (_, error :: _) ->
@@ -436,7 +426,6 @@ let synth_type
           ~get_ast_from_shared_mem
           ~file_sig
           ~typed_ast
-          ~imports_react
           ~exact_by_default
           type_loc
           import_fixed_ty

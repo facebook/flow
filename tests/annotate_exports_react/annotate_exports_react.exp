@@ -36,14 +36,13 @@ export default (): React.MixedElement => {
 >>> ./no-import.js
 // @flow
 
-import type { ComponentType } from "react";
-import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
+import type { ComponentType } from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
-export function my_foo(): ComponentType<any> {
+export function my_foo(): React.ComponentType<any> {
   return foo();
 }
-export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
+export function my_bar(): ComponentType<any> {
   return bar();
 }
 
@@ -162,7 +161,7 @@ export default (): React.MixedElement => {
 import type { ComponentType } from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
-export function my_foo(): ComponentType<any> {
+export function my_foo(): React.ComponentType<any> {
   return foo();
 }
 export function my_bar(): ComponentType<any> {
@@ -221,17 +220,6 @@ export function foo(): {
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./no-import.js
-3,4c3
-< import type { ComponentType } from "react";
-< import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
----
-> import type { ComponentType } from "./fake-react";import { foo } from "./lib";
-10c9
-< export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
----
-> export function my_bar(): ComponentType<any> {
-
 >>> ./qualified.js
 9c9
 < module.exports = (): {|
