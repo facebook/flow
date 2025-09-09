@@ -293,11 +293,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
-    let (invariant_subtyping_failed_prop_names, polarity_mismatch_errs) =
+    let (invariant_subtyping_failed_prop_names, lhs_missing_props, polarity_mismatch_errs) =
       Context.fold_props
         cx
         uflds
-        (fun name up (invariant_subtyping_failed_prop_names, polarity_mismatch_errs) ->
+        (fun name
+             up
+             ( (invariant_subtyping_failed_prop_names, lhs_missing_props, polarity_mismatch_errs) as
+             acc
+             ) ->
           let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
           let propref = mk_named_prop ~reason:reason_prop name in
           let use_op' = use_op in
@@ -315,8 +319,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   cx
                   trace
                   (mod_t (Some name) ldro lt, UseT (use_op, mod_t (Some name) udro ut));
-                (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
-              | _ -> (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
+                acc
+              | _ -> acc
             else
               (* prop from aliased LB *)
               let (invariant_subtyping_failed_prop_names, additional_polarity_mismatch_errs) =
@@ -359,6 +363,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   )
               in
               ( invariant_subtyping_failed_prop_names,
+                lhs_missing_props,
                 Base.List.rev_append additional_polarity_mismatch_errs polarity_mismatch_errs
               )
           | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
@@ -413,10 +418,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
                    && not (Context.in_implicit_instantiation cx) ->
               if speculative_subtyping_succeeds cx (type_of_key_name cx name reason_prop) key then
                 ( invariant_subtyping_failed_prop_names,
+                  lhs_missing_props,
                   subtype_against_indexer polarity_mismatch_errs ()
                 )
               else
-                (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
+                acc
             | _ ->
               rec_flow
                 cx
@@ -428,13 +434,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     )
                 );
               ( invariant_subtyping_failed_prop_names,
+                lhs_missing_props,
                 subtype_against_indexer polarity_mismatch_errs ()
               ))
           | _ ->
             (* property doesn't exist in inflowing type *)
             (match up with
-            | Field { type_ = OptionalT _; _ } when lit ->
-              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
+            | Field { type_ = OptionalT _; _ } when lit -> acc
             | Field { type_ = OptionalT _ as type_; polarity = Polarity.Positive; _ }
               when Obj_type.is_exact lflags.obj_kind ->
               rec_flow
@@ -461,40 +467,60 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       ignore_dicts = false;
                     }
                 );
-              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
+              acc
             | _ ->
               (* look up the property in the prototype *)
-              let lookup_kind =
-                match ldict with
-                | None -> Strict lreason
-                | _ -> NonstrictReturning (None, None)
+              let specialized_proto_lookup_failure () =
+                ( invariant_subtyping_failed_prop_names,
+                  (name, up) :: lhs_missing_props,
+                  polarity_mismatch_errs
+                )
               in
-              rec_flow
-                cx
-                trace
-                ( lproto,
-                  LookupT
-                    {
-                      reason = ureason;
-                      lookup_kind;
-                      try_ts_on_failure = [];
-                      propref;
-                      lookup_action =
-                        LookupPropForSubtyping
-                          {
-                            use_op = use_op';
-                            prop = Property.type_ up;
-                            prop_name = name;
-                            reason_lower = lreason;
-                            reason_upper = ureason;
-                          };
-                      method_accessible = true;
-                      ids = None;
-                      ignore_dicts = false;
-                    }
-                );
-              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)))
-        ([], [])
+              (match (lproto, ldict) with
+              (* In the following cases, the lookup will certainly fail.
+               * However, we don't want to fail it property by property. Instead, we can combine
+               * multiple failure together to provide a much better error message.
+               *
+               * This corresponds to the most common case like
+               * - `{}` ~> `{foo: string}`
+               * - `{}` ~> `{foo?: string}`
+               * so it's worth specializing *)
+              | (ObjProtoT _, None) when not (is_object_prototype_method name) ->
+                specialized_proto_lookup_failure ()
+              | (FunProtoT _, None) when not (is_function_prototype name) ->
+                specialized_proto_lookup_failure ()
+              | _ ->
+                let lookup_kind =
+                  match ldict with
+                  | None -> Strict lreason
+                  | _ -> NonstrictReturning (None, None)
+                in
+                rec_flow
+                  cx
+                  trace
+                  ( lproto,
+                    LookupT
+                      {
+                        reason = ureason;
+                        lookup_kind;
+                        try_ts_on_failure = [];
+                        propref;
+                        lookup_action =
+                          LookupPropForSubtyping
+                            {
+                              use_op = use_op';
+                              prop = Property.type_ up;
+                              prop_name = name;
+                              reason_lower = lreason;
+                              reason_upper = ureason;
+                            };
+                        method_accessible = true;
+                        ids = None;
+                        ignore_dicts = false;
+                      }
+                  );
+                acc)))
+        ([], [], [])
     in
     let () =
       match List.rev invariant_subtyping_failed_prop_names with
@@ -584,6 +610,32 @@ module Make (Flow : INPUT) : OUTPUT = struct
                explanation = Some explanation;
              }
           )
+    in
+    let () =
+      Base.List.iter (List.rev lhs_missing_props) ~f:(fun (name, up) ->
+          let error_message =
+            Error_message.EPropNotFoundInSubtyping
+              {
+                prop_name = Some name;
+                suggestion = None;
+                reason_lower = lreason;
+                reason_upper = ureason;
+                use_op;
+              }
+          in
+          add_output cx error_message;
+          let any = AnyT.error_of_kind UnresolvedName ureason in
+          match Property.type_ up with
+          | OrdinaryField { type_ = ut; polarity = Polarity.Neutral } ->
+            unify_opt cx ~trace ~use_op ~unify_cause:UnifyCause.Uncategorized any ut
+          | up ->
+            Base.Option.iter (Property.read_t_of_property_type up) ~f:(fun ut ->
+                flow_opt cx ~trace (any, UseT (use_op, ut))
+            );
+            Base.Option.iter (Property.write_t_of_property_type up) ~f:(fun ut ->
+                flow_opt cx ~trace (ut, UseT (use_op, any))
+            )
+      )
     in
     add_output_prop_polarity_mismatch cx use_op (lreason, ureason) polarity_mismatch_errs;
 
