@@ -94,8 +94,8 @@ References:
     548|           ...
     549|         }>,
                  ^ [2]
-   <BUILTINS>/core.js:2168:24
-   2168| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2175:24
+   2175| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 
@@ -119,8 +119,8 @@ References:
     548|           ...
     549|         }>,
                  ^ [2]
-   <BUILTINS>/core.js:2168:24
-   2168| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2175:24
+   2175| declare class Promise<+R = mixed> {
                                 ^ [3]
 
 

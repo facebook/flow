@@ -28,5 +28,35 @@ References:
                   ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:29:43
 
-Found 2 errors
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test.js:29:43
+   29|         bad (x: number) : ReadOnlyWeakSet<T> { // Error: T in invariant position
+                                                 ^
+
+References:
+   test.js:28:16
+   28|     class Foo<+T: {}> {
+                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:43
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test.js:35:43
+   35|         bad (x: number) : ReadOnlyWeakSet<T> {// Error: T in invariant position
+                                                 ^
+
+References:
+   test.js:34:16
+   34|     class Baz<-T: {}> {
+                      ^ [1]
+
+
+
+Found 4 errors

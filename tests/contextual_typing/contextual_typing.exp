@@ -22,8 +22,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                             ^^^
 
 References:
-   <BUILTINS>/core.js:2126:19
-   2126| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2129:19
+   2129| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    arr_rest.js:9:16
       9| const [...y] = new Set() // still error
@@ -493,8 +493,8 @@ References:
    implicit_instantiation.js:147:11
     147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:2126:19
-   2126| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2129:19
+   2129| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 
@@ -513,8 +513,8 @@ References:
    implicit_instantiation.js:148:11
     148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
                    ^^^^^ [2]
-   <BUILTINS>/core.js:2126:19
-   2126| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2129:19
+   2129| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [3]
 
 

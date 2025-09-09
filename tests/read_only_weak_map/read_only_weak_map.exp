@@ -43,5 +43,50 @@ References:
                           ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:42:43
 
-Found 3 errors
+Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   test.js:42:43
+   42|         bad (x: number) : ReadOnlyWeakMap<K, V> { // Error: K in invariant position
+                                                 ^
+
+References:
+   test.js:41:17
+   41|     class FooK<+K: {}, V> {
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:54:43
+
+Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test.js:54:43
+   54|         bad (x: number) : ReadOnlyWeakMap<K, V> {// Error: K in covariant position
+                                                 ^
+
+References:
+   test.js:53:17
+   53|     class BazK<-K: {}, V> {
+                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:60:46
+
+Cannot use `V` [1] in an output position because `V` [1] is expected to occur only in input positions.
+[incompatible-variance]
+
+   test.js:60:46
+   60|         bad (x: number) : ReadOnlyWeakMap<K, V> {// Error: V in covariant position
+                                                    ^
+
+References:
+   test.js:59:24
+   59|     class BazV<K: {}, -V> {
+                              ^ [1]
+
+
+
+Found 6 errors

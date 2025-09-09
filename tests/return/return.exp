@@ -40,8 +40,8 @@ undefined in type argument `R` [2]. [incompatible-type]
                                       ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2168:24
-   2168| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2175:24
+   2175| declare class Promise<+R = mixed> {
                                 ^ [2]
 
 
