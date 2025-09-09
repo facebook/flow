@@ -293,11 +293,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | None -> ());
 
     (* Properties in u must either exist in l, or match l's indexer. *)
-    let errs =
+    let (invariant_subtyping_failed_prop_names, polarity_mismatch_errs) =
       Context.fold_props
         cx
         uflds
-        (fun name up acc ->
+        (fun name up (invariant_subtyping_failed_prop_names, polarity_mismatch_errs) ->
           let reason_prop = replace_desc_reason (RProperty (Some name)) ureason in
           let propref = mk_named_prop ~reason:reason_prop name in
           let use_op' = use_op in
@@ -315,26 +315,54 @@ module Make (Flow : INPUT) : OUTPUT = struct
                   cx
                   trace
                   (mod_t (Some name) ldro lt, UseT (use_op, mod_t (Some name) udro ut));
-                acc
-              | _ -> acc
+                (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
+              | _ -> (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
             else
               (* prop from aliased LB *)
-              let errs =
-                rec_flow_p
-                  cx
-                  ~trace
-                  ~use_op
-                  ~lower_upper_subtyping_obj_ts:
-                    (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
-                  ~upper_object_reason:ureason
-                  propref
+              let (invariant_subtyping_failed_prop_names, additional_polarity_mismatch_errs) =
+                match
                   ( Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro),
                     Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
                   )
+                with
+                | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
+                    OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
+                  )
+                  when Context.enable_invariant_subtyping_error_message_improvement cx
+                       && (not (Speculation.speculating cx))
+                       && (not (TvarVisitors.has_unresolved_tvars cx lt))
+                       && not (TvarVisitors.has_unresolved_tvars cx ut) ->
+                  let invariant_subtyping_failed_prop_names =
+                    if
+                      try
+                        SpeculationKit.try_unify cx trace lt use_op ut;
+                        false
+                      with
+                      | Flow_js_utils.SpeculationSingletonError _ -> true
+                    then
+                      (name, lt, ut) :: invariant_subtyping_failed_prop_names
+                    else
+                      invariant_subtyping_failed_prop_names
+                  in
+                  (invariant_subtyping_failed_prop_names, [])
+                | (lp, up) ->
+                  ( invariant_subtyping_failed_prop_names,
+                    rec_flow_p
+                      cx
+                      ~trace
+                      ~use_op
+                      ~lower_upper_subtyping_obj_ts:
+                        (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
+                      ~upper_object_reason:ureason
+                      propref
+                      (lp, up)
+                  )
               in
-              Base.List.rev_append errs acc
+              ( invariant_subtyping_failed_prop_names,
+                Base.List.rev_append additional_polarity_mismatch_errs polarity_mismatch_errs
+              )
           | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
-            let subtype_against_indexer err_acc () =
+            let subtype_against_indexer polarity_mismatch_errs_acc () =
               let lp =
                 OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
               in
@@ -356,10 +384,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 with
                 | (Some lt, Some ut) ->
                   rec_flow cx trace (lt, UseT (use_op, ut));
-                  err_acc
-                | _ -> err_acc
+                  polarity_mismatch_errs_acc
+                | _ -> polarity_mismatch_errs_acc
               else
-                let errs =
+                let additional_polarity_mismatch_errs =
                   rec_flow_p
                     cx
                     ~trace
@@ -370,7 +398,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     propref
                     (lp, up)
                 in
-                Base.List.rev_append errs err_acc
+                Base.List.rev_append additional_polarity_mismatch_errs polarity_mismatch_errs_acc
             in
             (match up with
             (* If the upper property is optional and readonly (or this is a lit check) then we only
@@ -384,9 +412,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
               when (lit || polarity = Polarity.Positive)
                    && not (Context.in_implicit_instantiation cx) ->
               if speculative_subtyping_succeeds cx (type_of_key_name cx name reason_prop) key then
-                subtype_against_indexer acc ()
+                ( invariant_subtyping_failed_prop_names,
+                  subtype_against_indexer polarity_mismatch_errs ()
+                )
               else
-                acc
+                (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
             | _ ->
               rec_flow
                 cx
@@ -397,11 +427,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       key
                     )
                 );
-              subtype_against_indexer acc ())
+              ( invariant_subtyping_failed_prop_names,
+                subtype_against_indexer polarity_mismatch_errs ()
+              ))
           | _ ->
             (* property doesn't exist in inflowing type *)
             (match up with
-            | Field { type_ = OptionalT _; _ } when lit -> acc
+            | Field { type_ = OptionalT _; _ } when lit ->
+              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
             | Field { type_ = OptionalT _ as type_; polarity = Polarity.Positive; _ }
               when Obj_type.is_exact lflags.obj_kind ->
               rec_flow
@@ -428,7 +461,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       ignore_dicts = false;
                     }
                 );
-              acc
+              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)
             | _ ->
               (* look up the property in the prototype *)
               let lookup_kind =
@@ -460,10 +493,99 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       ignore_dicts = false;
                     }
                 );
-              acc))
-        []
+              (invariant_subtyping_failed_prop_names, polarity_mismatch_errs)))
+        ([], [])
     in
-    add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs;
+    let () =
+      match List.rev invariant_subtyping_failed_prop_names with
+      | [] -> ()
+      | [(name, l_prop_t, u_prop_t)] ->
+        let type_to_desc = Ty_normalizer_no_flow.type_to_desc_for_invariant_subtyping_error cx in
+        let lower_loc =
+          match l_prop_t with
+          | OpenT (r, id) ->
+            (match merge_tvar_opt cx r id with
+            | Some t -> loc_of_t t
+            | None -> loc_of_reason r)
+          | _ -> loc_of_t l_prop_t
+        in
+        let upper_loc = loc_of_t u_prop_t in
+        let explanation =
+          Some
+            (Flow_intermediate_error_types.ExplanationInvariantSubtypingDueToMutableProperty
+               {
+                 lower_obj_loc = def_loc_of_reason lreason;
+                 upper_obj_loc = def_loc_of_reason ureason;
+                 lower_obj_desc = type_to_desc (DefT (lreason, ObjT l_obj));
+                 upper_obj_desc = type_to_desc (DefT (ureason, ObjT u_obj));
+                 upper_object_reason = ureason;
+                 property_name = Some (Reason.display_string_of_name name);
+               }
+            )
+        in
+        let use_op =
+          Frame
+            (PropertyCompatibility { prop = Some name; lower = lreason; upper = ureason }, use_op)
+        in
+        add_output
+          cx
+          (Error_message.EInvariantSubtypingWithUseOp
+             {
+               sub_component = None;
+               lower_loc;
+               upper_loc;
+               lower_desc = type_to_desc l_prop_t;
+               upper_desc = type_to_desc u_prop_t;
+               use_op;
+               explanation;
+             }
+          )
+      | properties ->
+        let type_to_desc = Ty_normalizer_no_flow.type_to_desc_for_invariant_subtyping_error cx in
+        let t1 = DefT (lreason, ObjT l_obj) in
+        let t2 = DefT (ureason, ObjT u_obj) in
+        let lower_desc = type_to_desc t1 in
+        let upper_desc = type_to_desc t2 in
+        let lower_loc =
+          match t1 with
+          | OpenT (r, id) ->
+            (match merge_tvar_opt cx r id with
+            | Some t -> loc_of_t t
+            | None -> loc_of_reason r)
+          | _ -> loc_of_t t1
+        in
+        let upper_loc = loc_of_t t2 in
+        let properties = List.map (fun (p, _, _) -> p) properties in
+        let explanation =
+          Flow_intermediate_error_types.ExplanationInvariantSubtypingDueToMutableProperties
+            {
+              lower_obj_loc = lower_loc;
+              upper_obj_loc = upper_loc;
+              lower_obj_desc = lower_desc;
+              upper_obj_desc = upper_desc;
+              upper_object_reason = ureason;
+              properties;
+            }
+        in
+        add_output
+          cx
+          (Error_message.EInvariantSubtypingWithUseOp
+             {
+               sub_component =
+                 Some
+                   (Flow_intermediate_error_types.SubComponentOfInvariantSubtypingError.ObjectProps
+                      properties
+                   );
+               lower_loc;
+               upper_loc;
+               lower_desc;
+               upper_desc;
+               use_op;
+               explanation = Some explanation;
+             }
+          )
+    in
+    add_output_prop_polarity_mismatch cx use_op (lreason, ureason) polarity_mismatch_errs;
 
     (* Any properties in l but not u must match indexer *)
     (match udict with

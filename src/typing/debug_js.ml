@@ -1612,7 +1612,8 @@ let dump_error_message =
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
     | EInvariantSubtypingWithUseOp
-        { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation = _ } ->
+        { sub_component = _; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation = _ }
+      ->
       let string_of_desc = function
         | Ok ty -> Ty.show ty
         | Error desc -> Reason.string_of_desc desc

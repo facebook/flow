@@ -1904,64 +1904,22 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
 
-Cannot cast `x` to `B` because `number` [1] is not exactly the same as `string` [2] in property `foo`. 
+Cannot cast `x` to `B` because properties `foo` and `tag` of `A` [1] are not exactly the same as those of `B` [2]. 
 
-The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
-- Either make `A` [3] and `B` [4] exactly the same
-- Or make property `foo` in `B` [5] readonly. See
+The above-mentioned two types must be the same because properties `foo` and `tag` are invariantly typed. To fix the
+error,
+- Either make `A` [1] and `B` [2] exactly the same
+- Or make properties `foo` and `tag` in `B` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    refinement.js:61:8
    61|       (x: B); // error A ~> B
-              ^
+              ^ [1]
 
 References:
-   refinement.js:53:29
-   53|   type A = { tag: 'A', foo: number };
-                                   ^^^^^^ [1]
-   refinement.js:54:29
-   54|   type B = { tag: 'B', foo: string };
-                                   ^^^^^^ [2]
-   refinement.js:53:12
-   53|   type A = { tag: 'A', foo: number };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   refinement.js:54:12
-   54|   type B = { tag: 'B', foo: string };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    refinement.js:61:11
    61|       (x: B); // error A ~> B
-                 ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
-
-Cannot cast `x` to `B` because `"A"` [1] is not exactly the same as `"B"` [2] in property `tag`. 
-
-The above-mentioned two types must be the same because property `tag` is invariantly typed. To fix the error,
-- Either make `A` [3] and `B` [4] exactly the same
-- Or make property `tag` in `B` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   refinement.js:61:8
-   61|       (x: B); // error A ~> B
-              ^
-
-References:
-   refinement.js:53:19
-   53|   type A = { tag: 'A', foo: number };
-                         ^^^ [1]
-   refinement.js:54:19
-   54|   type B = { tag: 'B', foo: string };
-                         ^^^ [2]
-   refinement.js:53:12
-   53|   type A = { tag: 'A', foo: number };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   refinement.js:54:12
-   54|   type B = { tag: 'B', foo: string };
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   refinement.js:61:11
-   61|       (x: B); // error A ~> B
-                 ^ [5]
+                 ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:72:8
@@ -3796,7 +3754,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 220 errors
+Found 219 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

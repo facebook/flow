@@ -901,13 +901,15 @@ let rec make_intermediate_error :
    *
    * This is a specialization of mk_incompatible_use_error. *)
   let mk_incompatible_invariant_subtyping_error
-      ?additional_explanation ~lower_loc ~upper_loc ~lower_desc ~upper_desc use_op =
+      ?additional_explanation ~sub_component ~lower_loc ~upper_loc ~lower_desc ~upper_desc use_op =
     let make_error loc message =
       mk_use_op_error loc use_op ?explanation:additional_explanation message
     in
     make_error
       lower_loc
-      (MessageIncompatibleDueToInvariantSubtyping { lower_loc; upper_loc; lower_desc; upper_desc })
+      (MessageIncompatibleDueToInvariantSubtyping
+         { sub_component; lower_loc; upper_loc; lower_desc; upper_desc }
+      )
   in
   let mk_prop_missing_in_lookup_error loc prop lower use_op suggestion reason_indexer =
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
@@ -1035,10 +1037,11 @@ let rec make_intermediate_error :
       mk_incompatible_error ?additional_explanation:explanation reason_lower reason_upper use_op
     | ( None,
         IncompatibleInvariantSubtyping
-          { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+          { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
       ) ->
       mk_incompatible_invariant_subtyping_error
         ?additional_explanation:explanation
+        ~sub_component
         ~lower_loc
         ~upper_loc
         ~lower_desc
@@ -1255,6 +1258,59 @@ let to_printable_error :
           ])
       @ [text "\n- Or make "]
       @ prop
+      @ [
+          text " in ";
+          ref upper_object_reason;
+          text " readonly. ";
+          text "See ";
+          text
+            "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
+        ]
+    | ExplanationInvariantSubtypingDueToMutableProperties
+        {
+          lower_obj_loc;
+          upper_obj_loc;
+          lower_obj_desc;
+          upper_obj_desc;
+          upper_object_reason;
+          properties;
+        } ->
+      let props_msg =
+        text "properties "
+        :: (Base.List.map properties ~f:(fun prop -> [code (display_string_of_name prop)])
+           |> Flow_errors_utils.Friendly.conjunction_concat
+           )
+      in
+      [text "The above-mentioned two types must be the same because "]
+      @ props_msg
+      @ [text " are invariantly typed. To fix the error,\n- Either "]
+      @ (match (lower_obj_desc, upper_obj_desc) with
+        | (Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc), Ok _)
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc lower_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+          ]
+        | (Ok _, Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc))
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc upper_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+          ]
+        | _ ->
+          [
+            text "make ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+            text " and ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+            text " exactly the same";
+          ])
+      @ [text "\n- Or make "]
+      @ props_msg
       @ [
           text " in ";
           ref upper_object_reason;
@@ -3009,12 +3065,26 @@ let to_printable_error :
       ]
     | MessageIncompatibleGeneral { lower; upper } ->
       [ref lower; text " is incompatible with "; ref upper]
-    | MessageIncompatibleDueToInvariantSubtyping { lower_loc; upper_loc; lower_desc; upper_desc } ->
-      [
-        ref_of_ty_or_desc lower_loc lower_desc;
-        text " is not exactly the same as ";
-        ref_of_ty_or_desc upper_loc upper_desc;
-      ]
+    | MessageIncompatibleDueToInvariantSubtyping
+        { sub_component; lower_loc; upper_loc; lower_desc; upper_desc } ->
+      (match sub_component with
+      | None ->
+        [
+          ref_of_ty_or_desc lower_loc lower_desc;
+          text " is not exactly the same as ";
+          ref_of_ty_or_desc upper_loc upper_desc;
+        ]
+      | Some (SubComponentOfInvariantSubtypingError.ObjectProps props) ->
+        text "properties "
+        :: (Base.List.map props ~f:(fun prop -> [code (display_string_of_name prop)])
+           |> Flow_errors_utils.Friendly.conjunction_concat
+           )
+        @ [
+            text " of ";
+            ref_of_ty_or_desc lower_loc lower_desc;
+            text " are not exactly the same as those of ";
+            ref_of_ty_or_desc upper_loc upper_desc;
+          ])
     | MessageIncompatibleMappedTypeKey { source_type; mapped_type } ->
       [
         ref source_type;

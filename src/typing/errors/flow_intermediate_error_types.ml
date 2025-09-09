@@ -98,6 +98,10 @@ type unsupported_syntax =
   | DeclareGlobal
   | NonnullAssertion
 
+module SubComponentOfInvariantSubtypingError = struct
+  type t = ObjectProps of name list
+end
+
 type 'loc match_invalid_case_syntax =
   | InvalidMatchCaseMultiple of {
       invalid_prefix_case_locs: 'loc list;
@@ -227,6 +231,14 @@ type 'loc explanation =
       upper_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
       upper_object_reason: 'loc virtual_reason;
       property_name: string option;
+    }
+  | ExplanationInvariantSubtypingDueToMutableProperties of {
+      lower_obj_loc: 'loc;
+      upper_obj_loc: 'loc;
+      lower_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_object_reason: 'loc virtual_reason;
+      properties: name list;
     }
   | ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction
@@ -672,6 +684,7 @@ type 'loc message =
       upper: 'loc virtual_reason;
     }
   | MessageIncompatibleDueToInvariantSubtyping of {
+      sub_component: SubComponentOfInvariantSubtypingError.t option;
       lower_loc: 'loc;
       upper_loc: 'loc;
       lower_desc: (Ty.t, 'loc virtual_reason_desc) result;

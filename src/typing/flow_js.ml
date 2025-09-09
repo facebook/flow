@@ -7855,7 +7855,15 @@ struct
           add_output
             cx
             (Error_message.EInvariantSubtypingWithUseOp
-               { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+               {
+                 sub_component = None;
+                 lower_loc;
+                 upper_loc;
+                 lower_desc;
+                 upper_desc;
+                 use_op;
+                 explanation;
+               }
             )
       else
         __unify_inner cx ~use_op ~unify_any t1 t2 trace

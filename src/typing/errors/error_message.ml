@@ -356,6 +356,7 @@ and 'loc t' =
       explanation: 'loc explanation option;
     }
   | EInvariantSubtypingWithUseOp of {
+      sub_component: SubComponentOfInvariantSubtypingError.t option;
       use_op: 'loc virtual_use_op;
       lower_loc: 'loc;
       upper_loc: 'loc;
@@ -921,6 +922,24 @@ let map_loc_of_explanation (f : 'a -> 'b) =
         upper_object_reason = map_reason upper_object_reason;
         property_name;
       }
+  | ExplanationInvariantSubtypingDueToMutableProperties
+      {
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        upper_object_reason;
+        properties;
+      } ->
+    ExplanationInvariantSubtypingDueToMutableProperties
+      {
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_obj_desc;
+        upper_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_obj_desc;
+        upper_object_reason = map_reason upper_object_reason;
+        properties;
+      }
   | ExplanationMultiplatform -> ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
@@ -1176,9 +1195,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         explanation = Base.Option.map ~f:(map_loc_of_explanation f) explanation;
       }
   | EInvariantSubtypingWithUseOp
-      { use_op; lower_loc; lower_desc; upper_loc; upper_desc; explanation } ->
+      { sub_component; use_op; lower_loc; lower_desc; upper_loc; upper_desc; explanation } ->
     EInvariantSubtypingWithUseOp
       {
+        sub_component;
         use_op = map_use_op use_op;
         lower_loc = f lower_loc;
         lower_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_desc;
@@ -2404,6 +2424,7 @@ type 'loc friendly_message_recipe =
       explanation: 'loc explanation option;
     }
   | IncompatibleInvariantSubtyping of {
+      sub_component: SubComponentOfInvariantSubtypingError.t option;
       lower_loc: 'loc;
       upper_loc: 'loc;
       lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
@@ -2907,9 +2928,9 @@ let friendly_message_of_msg = function
   | EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation } ->
     IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation }
   | EInvariantSubtypingWithUseOp
-      { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
+      { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
     IncompatibleInvariantSubtyping
-      { lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+      { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
   | EUnsupportedImplements reason ->
     Normal (MessageCannotImplementNonInterface (desc_of_reason reason))
   | ENotAReactComponent { reason; use_op } ->

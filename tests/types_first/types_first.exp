@@ -140,158 +140,42 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:2
 
-Cannot cast `o` to `O` because `number` [1] is not exactly the same as `string` [2] in property `x`. 
+Cannot cast `o` to `O` because properties `x` and `y` of object literal [1] are not exactly the same as those of
+`O` [2]. 
 
-The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `O` [4]
-- Or make property `x` in `O` [5] readonly. See
+The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
+- Either annotate object literal [1] with `O` [2]
+- Or make properties `x` and `y` in `O` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:10:2
    10| (o: O); // error: number (property x) <~/~> string
-        ^
+        ^ [1]
 
 References:
-   import-value3.js:3:6
-    3|   x: 0,
-            ^ [1]
-   import-type5.js:4:6
-    4|   x: string;
-            ^^^^^^ [2]
-   import-value3.js:2:12
-                  v
-    2| const o2 = {
-    3|   x: 0,
-    4|   y: o1,
-    5| };
-       ^ [3]
-   import-type5.js:3:17
-                       v----------------------------------
-    3| export type O = { // mutually recursive object type
-    4|   x: string;
-    5|   y: T;
-    6| }
-       ^ [4]
    test.js:10:5
    10| (o: O); // error: number (property x) <~/~> string
-           ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:10:2
-
-Cannot cast `o` to `O` because `{x: number, y: any}` [1] is not exactly the same as `T` [2] in property `y`. 
-
-The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `O` [4]
-- Or make property `y` in `O` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   test.js:10:2
-   10| (o: O); // error: number (property x) <~/~> string
-        ^
-
-References:
-   import-value3.js:1:17
-    1| declare var o1: typeof o2;
-                       ^^^^^^^^^ [1]
-   import-type5.js:5:6
-    5|   y: T;
-            ^ [2]
-   import-value3.js:2:12
-                  v
-    2| const o2 = {
-    3|   x: 0,
-    4|   y: o1,
-    5| };
-       ^ [3]
-   import-type5.js:3:17
-                       v----------------------------------
-    3| export type O = { // mutually recursive object type
-    4|   x: string;
-    5|   y: T;
-    6| }
-       ^ [4]
-   test.js:10:5
-   10| (o: O); // error: number (property x) <~/~> string
-           ^ [5]
+           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
 
-Cannot cast `o.y` to `O` because `number` [1] is not exactly the same as `string` [2] in property `x`. 
+Cannot cast `o.y` to `O` because properties `x` and `y` of object literal [1] are not exactly the same as those of
+`O` [2]. 
 
-The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `O` [4]
-- Or make property `x` in `O` [5] readonly. See
+The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
+- Either annotate object literal [1] with `O` [2]
+- Or make properties `x` and `y` in `O` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    test.js:11:2
    11| (o.y: O); // error: number (property x) <~/~> string
-        ^^^
+        ^^^ [1]
 
 References:
-   import-value3.js:3:6
-    3|   x: 0,
-            ^ [1]
-   import-type5.js:4:6
-    4|   x: string;
-            ^^^^^^ [2]
-   import-value3.js:2:12
-                  v
-    2| const o2 = {
-    3|   x: 0,
-    4|   y: o1,
-    5| };
-       ^ [3]
-   import-type5.js:3:17
-                       v----------------------------------
-    3| export type O = { // mutually recursive object type
-    4|   x: string;
-    5|   y: T;
-    6| }
-       ^ [4]
    test.js:11:7
    11| (o.y: O); // error: number (property x) <~/~> string
-             ^ [5]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:11:2
-
-Cannot cast `o.y` to `O` because `{x: number, y: any}` [1] is not exactly the same as `T` [2] in property `y`. 
-
-The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `O` [4]
-- Or make property `y` in `O` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
-
-   test.js:11:2
-   11| (o.y: O); // error: number (property x) <~/~> string
-        ^^^
-
-References:
-   import-value3.js:1:17
-    1| declare var o1: typeof o2;
-                       ^^^^^^^^^ [1]
-   import-type5.js:5:6
-    5|   y: T;
-            ^ [2]
-   import-value3.js:2:12
-                  v
-    2| const o2 = {
-    3|   x: 0,
-    4|   y: o1,
-    5| };
-       ^ [3]
-   import-type5.js:3:17
-                       v----------------------------------
-    3| export type O = { // mutually recursive object type
-    4|   x: string;
-    5|   y: T;
-    6| }
-       ^ [4]
-   test.js:11:7
-   11| (o.y: O); // error: number (property x) <~/~> string
-             ^ [5]
+             ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:24
@@ -385,4 +269,4 @@ References:
 
 
 
-Found 20 errors
+Found 18 errors
