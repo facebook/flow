@@ -933,7 +933,7 @@ References:
 
 Error --------------------------------------------------------------------------- renders_implicit_instantiation.js:13:1
 
-Cannot cast `C` to component because component B [1] does not render `A2` [2]. [incompatible-type]
+Cannot cast `C` to component because `B` element [1] does not render `A2` [2]. [incompatible-type]
 
    renders_implicit_instantiation.js:13:1
    13| C as component() renders? A2; // error: renders? A2 ~> renders? A

@@ -829,8 +829,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             get_builtin_react_type
               cx
               ~trace
-              ~use_desc:true
-              (replace_desc_reason (RType (OrdinaryName "React.MixedElement")) elem_reason)
+              elem_reason
               Flow_intermediate_error_types.ReactModuleForReactMixedElementType
           | Some (renders_variant, ts) ->
             DefT

@@ -1981,7 +1981,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let rendersl =
         match component_kind with
         | Nominal (renders_id, renders_name, _) ->
-          let reason = update_desc_reason (fun desc -> RRenderType desc) reasonl in
+          let reason =
+            replace_desc_reason
+              (RRenderType
+                 (RReactElement
+                    { name_opt = Some (OrdinaryName renders_name); from_component_syntax = true }
+                 )
+              )
+              reasonl
+          in
           DefT
             ( reason,
               RendersT (NominalRenders { renders_id; renders_name; renders_super = rendersl })

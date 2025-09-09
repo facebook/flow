@@ -2327,16 +2327,19 @@ end = struct
           );
         Error (AnyT.error reason)
     in
-    let (name, import_kind) =
+    let (name, reason, import_kind) =
       match purpose with
-      | Flow_intermediate_error_types.ReactModuleForJSXFragment -> ("Fragment", ImportValue)
-      | Flow_intermediate_error_types.ReactModuleForReactClassComponent -> ("Component", ImportValue)
+      | Flow_intermediate_error_types.ReactModuleForJSXFragment ->
+        ("Fragment", mk_reason (RIdentifier (OrdinaryName "Fragment")) loc, ImportValue)
+      | Flow_intermediate_error_types.ReactModuleForReactClassComponent ->
+        ("Component", mk_reason (RIdentifier (OrdinaryName "Component")) loc, ImportValue)
       | Flow_intermediate_error_types.ReactModuleForReactMixedElementType ->
-        ("MixedElement", ImportType)
-      | Flow_intermediate_error_types.ReactModuleForReactNodeType -> ("Node", ImportType)
-      | Flow_intermediate_error_types.ReactModuleForReactRefSetterType -> ("RefSetter", ImportType)
+        ("MixedElement", mk_reason (RType (OrdinaryName "React.MixedElement")) loc, ImportType)
+      | Flow_intermediate_error_types.ReactModuleForReactNodeType ->
+        ("Node", mk_reason (RType (OrdinaryName "React.Node")) loc, ImportType)
+      | Flow_intermediate_error_types.ReactModuleForReactRefSetterType ->
+        ("RefSetter", mk_reason (RType (OrdinaryName "React.RefSetter")) loc, ImportType)
     in
-    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
     get_imported_type
       cx
       ~singleton_concretize_type_for_imports_exports
