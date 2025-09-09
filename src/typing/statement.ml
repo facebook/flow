@@ -894,6 +894,11 @@ module Make
       | TemplateLiteral _ ->
         false
       | Identifier _ -> not (Natural_inference.is_generalization_candidate cx t)
+      | JSXElement _
+      | JSXFragment _ ->
+        (match Context.jsx cx with
+        | Options.Jsx_react -> not (Context.natural_inference_jsx_literal cx)
+        | Options.Jsx_pragma _ -> true)
       | _ -> true
     then
       Flow.add_output

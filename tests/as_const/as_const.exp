@@ -1134,6 +1134,79 @@ initialized with primitive literals. [unsupported-syntax]
        ^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
+
+Cannot cast `b` to `ExactReactElement_DEPRECATED` because component [1] is incompatible with string literal `div` [2] in
+type argument `ElementType` [3]. [incompatible-type]
+
+   jsx.js:5:1
+     5| b as ExactReactElement_DEPRECATED<'div'>; // error
+        ^
+
+References:
+   <BUILTINS>/react.js:987:54
+   987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+                                                             ^^^^^^^^^^^^^^^^^ [1]
+   jsx.js:5:35
+     5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                          ^^^^^ [2]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
+
+Cannot cast `b` to `ExactReactElement_DEPRECATED` because string literal `div` [1] is incompatible with string [2] in
+type argument `ElementType` [3]. [incompatible-type]
+
+   jsx.js:5:1
+     5| b as ExactReactElement_DEPRECATED<'div'>; // error
+        ^
+
+References:
+   jsx.js:5:35
+     5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                          ^^^^^ [1]
+   <BUILTINS>/react.js:987:54
+   987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+                                                             ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:58:51
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                          ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- jsx.js:6:1
+
+Cannot cast `a` to empty because React element [1] is incompatible with empty [2]. [incompatible-type]
+
+   jsx.js:6:1
+   6| a as empty; // error
+      ^ [1]
+
+References:
+   jsx.js:6:6
+   6| a as empty; // error
+           ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- jsx.js:7:1
+
+Cannot cast `b` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2]. [incompatible-type]
+
+   jsx.js:7:1
+   7| b as empty; // error
+      ^
+
+References:
+   jsx.js:2:11
+   2| const b = <div />; // generalized to React.MixedElement
+                ^^^^^^^ [1]
+   jsx.js:7:6
+   7| b as empty; // error
+           ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- object.js:23:3
 
 Cannot cast `obj1` to object type because property `f` is read-only in const object literal [1] but writable in object
@@ -1669,4 +1742,4 @@ References:
 
 
 
-Found 107 errors
+Found 111 errors
