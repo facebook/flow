@@ -17,6 +17,39 @@ module.exports = (suite(
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
+    test('provide quickfix through annotation for invariant subtyping errors', [
+      addFile(
+        'add-annotation-for-invariant-subtyping-error.js.ignored',
+        'add-annotation-for-invariant-subtyping-error.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js',
+        },
+        range: {
+          start: {
+            line: 5,
+            character: 1,
+          },
+          end: {
+            line: 5,
+            character: 2,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-add-annotation-for-invariant-subtyping-error.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide quickfix for adding optional chaining', [
       addFile('add-optional-chaining.js.ignored', 'add-optional-chaining.js'),
       lspStartAndConnect(),

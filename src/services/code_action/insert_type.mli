@@ -105,6 +105,21 @@ val insert_type_t :
   Type.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
+val insert_type_ty :
+  cx:Context.t ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  get_haste_module_info:(File_key.t -> Haste_module_info.t option) ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
+  file_sig:File_sig.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  strict:bool ->
+  ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+  Loc.t ->
+  Ty.t ->
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
 val mk_diff :
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->

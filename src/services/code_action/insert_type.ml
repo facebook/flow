@@ -491,21 +491,16 @@ let add_imports remote_converter stmts =
   let new_imports = remote_converter#to_import_stmts () in
   add_statement_after_directive_and_type_imports stmts new_imports
 
-let insert_type_
+let insert_type_custom_synth_type
     ~cx
     ~loc_of_aloc
-    ~get_ast_from_shared_mem
     ~get_haste_module_info
     ~get_type_sig
-    ~file_sig
-    ~typed_ast
-    ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
+    ~synth_type
     ?remote_converter
     ast
-    target
-    loc_to_type =
+    target =
   let file =
     match target.Loc.source with
     | Some source -> source
@@ -527,7 +522,29 @@ let insert_type_
       in
       (rc, add_imports rc)
   in
-  let synth_type location =
+  let casting_syntax = Context.casting_syntax cx in
+  let synth_type = synth_type ~remote_converter in
+  let mapper = new mapper ~strict ~synth_type ~casting_syntax target in
+  let (loc, ast') = mapper#program ast in
+  let statements = maybe_add_imports ast'.Flow_ast.Program.statements in
+  (loc, { ast' with Flow_ast.Program.statements })
+
+let insert_type_
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_module_info
+    ~get_type_sig
+    ~file_sig
+    ~typed_ast
+    ~omit_targ_defaults
+    ~strict
+    ~ambiguity_strategy
+    ?remote_converter
+    ast
+    target
+    loc_to_type =
+  let synth_type ~remote_converter location =
     synth_type
       ~cx
       ~loc_of_aloc
@@ -540,11 +557,16 @@ let insert_type_
       location
       (loc_to_type location)
   in
-  let casting_syntax = Context.casting_syntax cx in
-  let mapper = new mapper ~strict ~synth_type ~casting_syntax target in
-  let (loc, ast') = mapper#program ast in
-  let statements = maybe_add_imports ast'.Flow_ast.Program.statements in
-  (loc, { ast' with Flow_ast.Program.statements })
+  insert_type_custom_synth_type
+    ~cx
+    ~loc_of_aloc
+    ~get_haste_module_info
+    ~get_type_sig
+    ~strict
+    ~synth_type
+    ?remote_converter
+    ast
+    target
 
 let insert_type
     ~cx
@@ -607,6 +629,50 @@ let insert_type_t
     target
     (fun _loc -> type_t
   )
+
+let insert_type_ty
+    ~cx
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~get_haste_module_info
+    ~get_type_sig
+    ~file_sig
+    ~typed_ast
+    ~strict
+    ?remote_converter
+    ast
+    target
+    ty =
+  insert_type_custom_synth_type
+    ~cx
+    ~loc_of_aloc
+    ~get_haste_module_info
+    ~get_type_sig
+    ~strict
+    ?remote_converter
+    ~synth_type:(fun ~remote_converter loc ->
+      let import_fixed_ty =
+        match remote_converter#type_ ty with
+        | Ok ty -> ty
+        | Error e ->
+          (* TODO: surface these errors to user *)
+          Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
+          ty
+      in
+      let ast =
+        serialize
+          ~cx
+          ~loc_of_aloc
+          ~get_ast_from_shared_mem
+          ~file_sig
+          ~typed_ast
+          ~exact_by_default:(Context.exact_by_default cx)
+          loc
+          import_fixed_ty
+      in
+      Ok (loc, ast))
+    ast
+    target
 
 let mk_diff ast new_ast = Flow_ast_differ.program ast new_ast
 

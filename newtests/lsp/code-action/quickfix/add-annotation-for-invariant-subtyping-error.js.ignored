@@ -1,0 +1,6 @@
+// @flow
+
+type A = {v: string | number};
+
+const foo = {v: ''};
+foo as A;

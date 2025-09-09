@@ -650,7 +650,13 @@ let loc_opt_intersects ~loc ~error_loc =
   | None -> true
   | Some loc -> Loc.intersects error_loc loc
 
-let ast_transforms_of_error ~loc_of_aloc ?loc = function
+let ast_transforms_of_error
+    ~loc_of_aloc
+    ?lazy_error_loc
+    ?(get_ast_from_shared_mem = (fun _ -> None))
+    ?(get_haste_module_info = (fun _ -> None))
+    ?(get_type_sig = (fun _ -> None))
+    ?loc = function
   | Error_message.EDeprecatedBool error_loc ->
     if loc_opt_intersects ~error_loc ~loc then
       [
@@ -1279,6 +1285,74 @@ let ast_transforms_of_error ~loc_of_aloc ?loc = function
       ]
     else
       []
+  | Error_message.EInvariantSubtypingWithUseOp
+      {
+        explanation =
+          Some
+            Flow_intermediate_error_types.(
+              ( ExplanationInvariantSubtypingDueToMutableArray
+                  {
+                    lower_array_loc = lower_loc;
+                    lower_array_desc = Error lower_desc;
+                    upper_array_desc = Ok upper_ty;
+                    _;
+                  }
+              | ExplanationInvariantSubtypingDueToMutableProperty
+                  {
+                    lower_obj_loc = lower_loc;
+                    lower_obj_desc = Error lower_desc;
+                    upper_obj_desc = Ok upper_ty;
+                    _;
+                  } ));
+        _;
+      }
+    when match lower_desc with
+         | Reason.RObjectLit
+         | Reason.RObjectLit_UNSOUND
+         | Reason.RArrayLit
+         | Reason.RArrayLit_UNSOUND ->
+           true
+         | _ -> false ->
+    let error_loc_opt =
+      match lazy_error_loc with
+      | Some (lazy error_loc) when loc_opt_intersects ~error_loc ~loc -> Some error_loc
+      | _ ->
+        if loc_opt_intersects ~error_loc:lower_loc ~loc then
+          Some lower_loc
+        else
+          None
+    in
+    (match error_loc_opt with
+    | None -> []
+    | Some _ ->
+      let transform ~cx ~file_sig ~ast ~typed_ast _ =
+        let ast' =
+          Insert_type.insert_type_ty
+            ~cx
+            ~loc_of_aloc
+            ~get_ast_from_shared_mem
+            ~get_haste_module_info
+            ~get_type_sig
+            ~file_sig
+            ~typed_ast
+            ~strict:false
+            ast
+            lower_loc
+            upper_ty
+        in
+        if ast == ast' then
+          None
+        else
+          Some ast'
+      in
+      [
+        {
+          title = "Add suggested annotation to the literal";
+          diagnostic_title = "fix_invariant_subtyping_error_with_annot";
+          transform;
+          target_loc = lower_loc;
+        };
+      ])
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissingInLookup
@@ -1324,6 +1398,7 @@ let code_actions_of_errors
     ~loc_of_aloc
     ~get_ast_from_shared_mem
     ~module_system_info
+    ~get_type_sig
     ~cx
     ~file_sig
     ~env
@@ -1369,7 +1444,22 @@ let code_actions_of_errors
         in
         let quick_fix_actions =
           if include_quick_fixes then
-            ast_transforms_of_error ~loc_of_aloc ~loc error_message
+            let lazy_error_loc =
+              lazy
+                (let { Flow_intermediate_error_types.loc; _ } =
+                   Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error
+                 in
+                 loc
+                )
+            in
+            ast_transforms_of_error
+              ~loc_of_aloc
+              ~loc
+              ~lazy_error_loc
+              ~get_ast_from_shared_mem
+              ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
+              ~get_type_sig
+              error_message
             |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
                    autofix_in_upstream_file
                      ~cx
@@ -1638,6 +1728,7 @@ let code_actions_at_loc
       ~loc_of_aloc
       ~get_ast_from_shared_mem
       ~module_system_info
+      ~get_type_sig
       ~cx
       ~file_sig
       ~env
@@ -2012,3 +2103,10 @@ let organize_imports ~options ~ast =
     Autofix_imports.organize_imports ~options:opts ast |> flow_loc_patch_to_lsp_edits
   in
   edits
+
+let ast_transforms_of_error =
+  ast_transforms_of_error
+    ?lazy_error_loc:None
+    ?get_ast_from_shared_mem:None
+    ?get_haste_module_info:None
+    ?get_type_sig:None
