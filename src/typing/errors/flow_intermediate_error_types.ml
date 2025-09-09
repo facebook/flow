@@ -243,6 +243,11 @@ type 'loc explanation =
   | ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping
+  | ExplanationPropertyMissingDueToNeutralOptionalProperty of {
+      props_plural: bool;
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
   | ExplanationReactComponentPropsDeepReadOnly of 'loc
   | ExplanationReactComponentRefRequirement
   | ExplanationReactHookArgsDeepReadOnly of 'loc
@@ -857,6 +862,11 @@ type 'loc message =
       prop: string option;
       suggestion: string option;
       reason_indexer: 'loc virtual_reason option;
+    }
+  | MessagePropsMissing of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+      props: string Nel.t;
     }
   | MessagePropPolarityMismatch of {
       lower: 'loc virtual_reason;

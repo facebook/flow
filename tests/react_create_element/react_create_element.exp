@@ -190,26 +190,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:28:7
-   28| React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:28:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:28:7
    28| React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
@@ -226,26 +208,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:29:7
-   29| React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:29:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:29:7
    29| React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
@@ -262,26 +226,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:30:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:30:7
-   30| React.createElement(A, null); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:30:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:30:7
    30| React.createElement(A, null); // Error: `foo` and `bar` are missing.
@@ -298,26 +244,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:31:7
-   31| React.createElement(B, null); // Error: `foo` and `bar` are missing.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:31:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:31:7
    31| React.createElement(B, null); // Error: `foo` and `bar` are missing.
@@ -420,26 +348,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:38:7
-   38| React.createElement(A); // Error: Missing `foo` and `bar`.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:38:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:38:7
    38| React.createElement(A); // Error: Missing `foo` and `bar`.
@@ -456,26 +366,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:7
 
-Cannot call `React.createElement` because property `bar` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
-
-   test.js:39:7
-   39| React.createElement(B); // Error: Missing `foo` and `bar`.
-             ^^^^^^^^^^^^^
-
-References:
-   lib.js:22:42
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lib.js:22:20
-   22|   _ValidatedProps: ExpectedProps<Comp> = PropsFromPropsArgAndChildrenArg<Props, Children>
-                          ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:39:7
-
-Cannot call `React.createElement` because property `foo` is missing in object type [1] but exists in `ExpectedProps` [2]
-in type argument `_ValidatedProps`. [incompatible-type]
+Cannot call `React.createElement` because properties `bar` and `foo` are missing in object type [1] but exist in
+`ExpectedProps` [2] in type argument `_ValidatedProps`. [incompatible-type]
 
    test.js:39:7
    39| React.createElement(B); // Error: Missing `foo` and `bar`.
@@ -1657,7 +1549,7 @@ References:
 
 
 
-Found 89 errors
+Found 83 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

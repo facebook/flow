@@ -1,7 +1,11 @@
 Error -------------------------------------------------------------------------------------------------- enforced.js:2:1
 
-Cannot cast `foo` to object type because property `bar` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast `foo` to object type because property `bar` is missing in object literal [1] but exists in object type [2]. 
+
+This optional property of object type [2] is invariantly typed. To fix,
+- Either annotate object literal [1] with the type of object type [2]
+- Or make this optional property readonly in object type [2]
+See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
    enforced.js:2:1
    2| foo as {bar?: string}; // error. TODO: should show error with suggestions

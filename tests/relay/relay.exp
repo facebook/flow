@@ -151,26 +151,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
-Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[incompatible-type]
-
-   main.js:18:2
-   18| <Profile />; // Error: Missing user and foo
-        ^^^^^^^
-
-References:
-   main.js:18:1
-   18| <Profile />; // Error: Missing user and foo
-       ^^^^^^^^^^^ [1]
-   Profile.js:40:3
-   40|   GetPropFragmentRef<Props>,
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- main.js:18:2
-
-Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[incompatible-type]
+Cannot create `Profile` element because properties `foo` and `user` are missing in props [1] but exist in
+`GetPropFragmentRef` [2]. [incompatible-type]
 
    main.js:18:2
    18| <Profile />; // Error: Missing user and foo
@@ -460,7 +442,7 @@ References:
 
 
 
-Found 28 errors
+Found 27 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

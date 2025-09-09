@@ -1,23 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:16:2
 
-Cannot create `X` element because property `x` is missing in props [1] but exists in `Props1` [2]. [incompatible-type]
-
-   test.js:16:2
-   16| <X />;
-        ^
-
-References:
-   test.js:16:1
-   16| <X />;
-       ^^^^^ [1]
-   test.js:15:33
-   15| class X extends React.Component<Props1<mixed>> {}
-                                       ^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:16:2
-
-Cannot create `X` element because property `y` is missing in props [1] but exists in `Props1` [2]. [incompatible-type]
+Cannot create `X` element because properties `x` and `y` are missing in props [1] but exist in `Props1` [2].
+[incompatible-type]
 
    test.js:16:2
    16| <X />;
@@ -33,4 +17,4 @@ References:
 
 
 
-Found 2 errors
+Found 1 error

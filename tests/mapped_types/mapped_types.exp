@@ -359,23 +359,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:22:7
 
-Cannot cast object literal to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
-[incompatible-type]
-
-   identity.js:22:7
-   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-             ^^ [1]
-
-References:
-   identity.js:22:12
-   22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
-                  ^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- identity.js:22:7
-
-Cannot cast object literal to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
-[incompatible-type]
+Cannot cast object literal to `Foo` because properties `a` and `b` are missing in object type [1] but exist in
+`IdentityMap` [2]. [incompatible-type]
 
    identity.js:22:7
    22| (({}: {}): Foo); // Error: `a` and `b` are not defined.
@@ -389,22 +374,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:24:8
 
-Cannot cast `any` to `Foo` because property `a` is missing in object type [1] but exists in `IdentityMap` [2].
-[incompatible-type]
-
-   identity.js:24:8
-   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
-              ^^ [1]
-
-References:
-   identity.js:24:13
-   24| ((any: {}): Foo); // Error: `a` and `b` are not defined.
-                   ^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- identity.js:24:8
-
-Cannot cast `any` to `Foo` because property `b` is missing in object type [1] but exists in `IdentityMap` [2].
+Cannot cast `any` to `Foo` because properties `a` and `b` are missing in object type [1] but exist in `IdentityMap` [2].
 [incompatible-type]
 
    identity.js:24:8
@@ -2457,7 +2427,7 @@ References:
 
 
 
-Found 152 errors
+Found 150 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -3405,26 +3405,8 @@ optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
 
-Cannot create `DestructuredArr` element because property `bar` is missing in props [1] but exists in object type [2].
-[incompatible-type]
-
-   rest_constraints.js:22:2
-   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
-        ^^^^^^^^^^^^^^^
-
-References:
-   rest_constraints.js:22:1
-   22| <DestructuredArr />; // ERROR because annot still provides a valid config type
-       ^^^^^^^^^^^^^^^^^^^ [1]
-   rest_constraints.js:13:42
-   13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
-
-Cannot create `DestructuredArr` element because property `foo` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `DestructuredArr` element because properties `bar` and `foo` are missing in props [1] but exist in object
+type [2]. [incompatible-type]
 
    rest_constraints.js:22:2
    22| <DestructuredArr />; // ERROR because annot still provides a valid config type
@@ -3709,7 +3691,7 @@ Strict mode function may not have duplicate parameter names
 
 
 
-Found 240 errors
+Found 239 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

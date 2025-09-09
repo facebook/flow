@@ -90,6 +90,13 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       suggestion: string option;
     }
+  | EPropsNotFoundInSubtyping of {
+      prop_names: name Nel.t;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+      due_to_neutral_optional_property: bool;
+    }
   | EPropsExtraAgainstExactObject of {
       prop_names: name Nel.t;
       reason_l_obj: 'loc virtual_reason;
@@ -943,6 +950,9 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationMultiplatform -> ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
+  | ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper } ->
+    ExplanationPropertyMissingDueToNeutralOptionalProperty
+      { props_plural; lower = map_reason lower; upper = map_reason upper }
   | ExplanationReactComponentPropsDeepReadOnly loc ->
     ExplanationReactComponentPropsDeepReadOnly (f loc)
   | ExplanationReactComponentRefRequirement -> ExplanationReactComponentRefRequirement
@@ -1066,6 +1076,16 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
         suggestion;
+      }
+  | EPropsNotFoundInSubtyping
+      { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+    EPropsNotFoundInSubtyping
+      {
+        prop_names;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
+        due_to_neutral_optional_property;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     EPropsExtraAgainstExactObject
@@ -1751,6 +1771,7 @@ let util_use_op_of_msg nope util = function
   | EExpectedBigIntLit { use_op; _ } -> util use_op
   | EPropNotFoundInLookup { use_op; _ } -> util use_op
   | EPropNotFoundInSubtyping { use_op; _ } -> util use_op
+  | EPropsNotFoundInSubtyping { use_op; _ } -> util use_op
   | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
   | EIndexerCheckFailed { use_op; _ } -> util use_op
   | EPropNotReadable { use_op; _ } -> util use_op
@@ -2240,6 +2261,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropNotWritable _
   | EPropNotFoundInLookup _
   | EPropNotFoundInSubtyping _
+  | EPropsNotFoundInSubtyping _
   | EPropsExtraAgainstExactObject _
   | EIndexerCheckFailed _
   | EExpectedBooleanLit _
@@ -2457,6 +2479,13 @@ type 'loc friendly_message_recipe =
       reason_indexer: 'loc Reason.virtual_reason option;
       use_op: 'loc Type.virtual_use_op;
     }
+  | PropsMissingInSubtyping of {
+      props: string Nel.t;
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      use_op: 'loc Type.virtual_use_op;
+      due_to_neutral_optional_property: bool;
+    }
   | PropsExtraAgainstExactObject of {
       props: string Nel.t;
       reason_l_obj: 'loc Reason.virtual_reason;
@@ -2589,6 +2618,16 @@ let friendly_message_of_msg = function
         reason_upper;
         reason_indexer = None;
         use_op;
+      }
+  | EPropsNotFoundInSubtyping
+      { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+    PropsMissingInSubtyping
+      {
+        props = Nel.map display_string_of_name prop_names;
+        reason_lower;
+        reason_upper;
+        use_op;
+        due_to_neutral_optional_property;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     PropsExtraAgainstExactObject
@@ -3552,8 +3591,8 @@ let error_code_of_message err : error_code option =
       | _ -> Error_codes.PropMissing
     in
     react_rule_of_use_op use_op ~default
-  | EPropNotFoundInSubtyping { use_op; _ } ->
-    react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
+  | EPropNotFoundInSubtyping { use_op; _ }
+  | EPropsNotFoundInSubtyping { use_op; _ }
   | EPropsExtraAgainstExactObject { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EIndexerCheckFailed { use_op; _ } ->

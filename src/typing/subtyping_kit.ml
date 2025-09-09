@@ -612,30 +612,84 @@ module Make (Flow : INPUT) : OUTPUT = struct
           )
     in
     let () =
-      Base.List.iter (List.rev lhs_missing_props) ~f:(fun (name, up) ->
-          let error_message =
-            Error_message.EPropNotFoundInSubtyping
-              {
-                prop_name = Some name;
-                suggestion = None;
-                reason_lower = lreason;
-                reason_upper = ureason;
-                use_op;
-              }
-          in
-          add_output cx error_message;
-          let any = AnyT.error_of_kind UnresolvedName ureason in
-          match Property.type_ up with
-          | OrdinaryField { type_ = ut; polarity = Polarity.Neutral } ->
-            unify_opt cx ~trace ~use_op ~unify_cause:UnifyCause.Uncategorized any ut
-          | up ->
-            Base.Option.iter (Property.read_t_of_property_type up) ~f:(fun ut ->
-                flow_opt cx ~trace (any, UseT (use_op, ut))
-            );
-            Base.Option.iter (Property.write_t_of_property_type up) ~f:(fun ut ->
-                flow_opt cx ~trace (ut, UseT (use_op, any))
-            )
-      )
+      if Context.enable_invariant_subtyping_error_message_improvement cx then (
+        let (regular_missing, rhs_neutral_optional, ups_to_flow_any) =
+          Base.List.fold
+            lhs_missing_props
+            ~init:([], [], [])
+            ~f:(fun (regular_missing, rhs_neutral_optional, ups_to_flow_any) (name, up) ->
+              match up with
+              | Field { type_ = OptionalT _; polarity = Polarity.Neutral; _ } ->
+                (regular_missing, name :: rhs_neutral_optional, up :: ups_to_flow_any)
+              | _ -> (name :: regular_missing, rhs_neutral_optional, up :: ups_to_flow_any)
+          )
+        in
+        Base.Option.iter (Nel.of_list regular_missing) ~f:(fun props ->
+            let error_message =
+              Error_message.EPropsNotFoundInSubtyping
+                {
+                  prop_names = props;
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  use_op;
+                  due_to_neutral_optional_property = false;
+                }
+            in
+            add_output cx error_message;
+            ()
+        );
+        Base.Option.iter (Nel.of_list rhs_neutral_optional) ~f:(fun props ->
+            let error_message =
+              Error_message.EPropsNotFoundInSubtyping
+                {
+                  prop_names = props;
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  use_op;
+                  due_to_neutral_optional_property = true;
+                }
+            in
+            add_output cx error_message;
+            ()
+        );
+        Base.List.iter ups_to_flow_any ~f:(fun up ->
+            let any = AnyT.error_of_kind UnresolvedName ureason in
+            match Property.type_ up with
+            | OrdinaryField { type_ = ut; polarity = Polarity.Neutral } ->
+              unify_opt cx ~trace ~use_op ~unify_cause:UnifyCause.Uncategorized any ut
+            | up ->
+              Base.Option.iter (Property.read_t_of_property_type up) ~f:(fun ut ->
+                  flow_opt cx ~trace (any, UseT (use_op, ut))
+              );
+              Base.Option.iter (Property.write_t_of_property_type up) ~f:(fun ut ->
+                  flow_opt cx ~trace (ut, UseT (use_op, any))
+              )
+        )
+      ) else
+        Base.List.iter (List.rev lhs_missing_props) ~f:(fun (name, up) ->
+            let error_message =
+              Error_message.EPropNotFoundInSubtyping
+                {
+                  prop_name = Some name;
+                  suggestion = None;
+                  reason_lower = lreason;
+                  reason_upper = ureason;
+                  use_op;
+                }
+            in
+            add_output cx error_message;
+            let any = AnyT.error_of_kind UnresolvedName ureason in
+            match Property.type_ up with
+            | OrdinaryField { type_ = ut; polarity = Polarity.Neutral } ->
+              unify_opt cx ~trace ~use_op ~unify_cause:UnifyCause.Uncategorized any ut
+            | up ->
+              Base.Option.iter (Property.read_t_of_property_type up) ~f:(fun ut ->
+                  flow_opt cx ~trace (any, UseT (use_op, ut))
+              );
+              Base.Option.iter (Property.write_t_of_property_type up) ~f:(fun ut ->
+                  flow_opt cx ~trace (ut, UseT (use_op, any))
+              )
+        )
     in
     add_output_prop_polarity_mismatch cx use_op (lreason, ureason) polarity_mismatch_errs;
 

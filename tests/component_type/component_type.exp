@@ -79,26 +79,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
 
-Cannot cast `ComponentNarrower` to component because property `bar` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
-
-   classes_lower.js:17:1
-   17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
-       ^^^^^^^^^^^^^^^^^
-
-References:
-   classes_lower.js:17:62
-   17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
-                                                                    ^^^^^ [1]
-   classes_lower.js:11:49
-   11| class ComponentNarrower extends React.Component<{foo: number, bar: number, ...}> {
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
-
-Cannot cast `ComponentNarrower` to component because property `foo` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `ComponentNarrower` to component because properties `bar` and `foo` are missing in object type [1] but exist
+in object type [2]. [incompatible-type]
 
    classes_lower.js:17:1
    17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
@@ -214,25 +196,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
 
-Cannot cast `x` to `NotTheRightConfig` because property `baz` is missing in `Config` [1] but exists in
-`NotTheRightConfig` [2]. [incompatible-type]
-
-   config_HOC.js:10:1
-   10| x as NotTheRightConfig; // Error, configs don't match
-       ^
-
-References:
-   config_HOC.js:7:16
-    7| declare var x: Config;
-                      ^^^^^^ [1]
-   config_HOC.js:10:6
-   10| x as NotTheRightConfig; // Error, configs don't match
-            ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
-
-Cannot cast `x` to `NotTheRightConfig` because property `qux` is missing in `Config` [1] but exists in
+Cannot cast `x` to `NotTheRightConfig` because properties `baz` and `qux` are missing in `Config` [1] but exist in
 `NotTheRightConfig` [2]. [incompatible-type]
 
    config_HOC.js:10:1
@@ -995,7 +959,7 @@ expression. [signature-verification-failure]
 
 
 
-Found 54 errors
+Found 52 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -926,6 +926,23 @@ let rec make_intermediate_error :
       use_op
       (MessagePropMissing { lower; upper = Some upper; prop; suggestion; reason_indexer })
   in
+  let mk_props_missing_in_subtyping_error ~due_to_neutral_optional_property props lower upper use_op
+      =
+    let loc = loc_of_reason lower in
+    let lower = mod_lower_reason_according_to_use_ops lower use_op in
+    let explanation =
+      if due_to_neutral_optional_property then
+        let props_plural =
+          match props with
+          | (_, []) -> false
+          | (_, _ :: _) -> true
+        in
+        Some (ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper })
+      else
+        None
+    in
+    mk_use_op_error loc use_op ?explanation (MessagePropsMissing { lower; upper; props })
+  in
   (* An error that occurs when some arbitrary "use" is incompatible with the
    * "lower" type. The use_op describes the path which we followed to find this
    * incompatibility.
@@ -1021,6 +1038,16 @@ let rec make_intermediate_error :
         reason_lower
         reason_upper
         reason_indexer
+        use_op
+    | ( None,
+        PropsMissingInSubtyping
+          { props; reason_lower; reason_upper; use_op; due_to_neutral_optional_property }
+      ) ->
+      mk_props_missing_in_subtyping_error
+        ~due_to_neutral_optional_property
+        props
+        reason_lower
+        reason_upper
         use_op
     | ( None,
         PropsExtraAgainstExactObject { props; reason_l_obj = lower; reason_r_obj = upper; use_op }
@@ -1163,6 +1190,31 @@ let to_printable_error :
         text
           "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
       ]
+    | ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper } ->
+      ( if props_plural then
+        [text "These optional properties of "; ref upper; text " are"]
+      else
+        [text "This optional property of "; ref upper; text " is"]
+      )
+      @ [text " invariantly typed. To fix,\n- Either "]
+      @ (match desc_of_reason lower with
+        | RObjectLit
+        | RObjectLit_UNSOUND ->
+          [text "annotate "; ref lower; text " with the type of "; ref upper]
+        | _ -> [text "make "; ref lower; text " and "; ref upper; text " exactly the same"])
+      @ [text "\n- Or make "]
+      @ ( if props_plural then
+          [text "these optional properties"]
+        else
+          [text "this optional property"]
+        )
+      @ [
+          text " readonly in ";
+          ref upper;
+          text "\nSee ";
+          text
+            "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
+        ]
     | ExplanationReactComponentRefRequirement ->
       [text "The "; code "ref"; text " parameter must be a subtype of "; code "React.RefSetter"]
     | ExplanationRenderTypeRequirement ->
@@ -3743,6 +3795,22 @@ let to_printable_error :
         (match prop with
         | None when is_nullish_reason lower -> [ref lower; text " does not have properties"]
         | _ -> prop_message @ suggestion @ [text " is missing in "; ref lower]))
+    | MessagePropsMissing { lower; upper; props } ->
+      (match props with
+      | (prop, []) ->
+        [
+          text "property ";
+          code prop;
+          text " is missing in ";
+          ref lower;
+          text " but exists in ";
+          ref upper;
+        ]
+      | _ ->
+        [text "properties "]
+        @ Flow_errors_utils.Friendly.conjunction_concat
+            (Base.List.map (Nel.to_list props) ~f:(fun p -> [code p]))
+        @ [text " are missing in "; ref lower; text " but exist in "; ref upper])
     | MessagePropPolarityMismatch { lower; upper; props } ->
       let f (prop, lpole, upole) =
         let expected = polarity_explanation (lpole, upole) in

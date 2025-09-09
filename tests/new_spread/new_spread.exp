@@ -1158,7 +1158,11 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to union type because: [incompatible-type]
  - Either undefined [1] is incompatible with `U` [2] in property `q`. This property is invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
- - Or property `p` is missing in object type [3] but exists in object type [4].
+ - Or property `p` is missing in object type [3] but exists in object type [4]. This optional property of object
+   type [4] is invariantly typed. To fix,
+   - Either make object type [3] and object type [4] exactly the same
+   - Or make this optional property readonly in object type [4]
+   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1184,7 +1188,11 @@ Error --------------------------------------------------------------------------
 Cannot cast `o1` to union type because: [incompatible-type]
  - Either undefined [1] is incompatible with `T` [2] in property `p`. This property is invariantly typed. See
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
- - Or property `q` is missing in object type [3] but exists in object type [4].
+ - Or property `q` is missing in object type [3] but exists in object type [4]. This optional property of object
+   type [4] is invariantly typed. To fix,
+   - Either make object type [3] and object type [4] exactly the same
+   - Or make this optional property readonly in object type [4]
+   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok

@@ -72,6 +72,42 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because properties `k` and `v` are missing in
+`A` [1] but exist in `B` [2]. [incompatible-type]
+
+   issue6155.js:15:39
+   15|     return (type) => cases[type.kind](type);
+                                             ^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
+
+Cannot call `cases[type.kind]` with `type` bound to the first parameter because properties `k` and `v` are missing in
+`C` [1] but exist in `B` [2]. [incompatible-type]
+
+   issue6155.js:15:39
+   15|     return (type) => cases[type.kind](type);
+                                             ^^^^
+
+References:
+   issue6155.js:14:44
+   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
+                                                  ^^^^ [1]
+   issue6155.js:10:9
+   10|     b: (B) => R,
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
+
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `e` is missing in `B` [1] but
 exists in `A` [2]. [incompatible-type]
 
@@ -103,78 +139,6 @@ References:
                                                   ^^^^ [1]
    issue6155.js:9:9
     9|     a: (A) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `A` [1] but
-exists in `B` [2]. [incompatible-type]
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `k` is missing in `C` [1] but
-exists in `B` [2]. [incompatible-type]
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `A` [1] but
-exists in `B` [2]. [incompatible-type]
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
-               ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
-
-Cannot call `cases[type.kind]` with `type` bound to the first parameter because property `v` is missing in `C` [1] but
-exists in `B` [2]. [incompatible-type]
-
-   issue6155.js:15:39
-   15|     return (type) => cases[type.kind](type);
-                                             ^^^^
-
-References:
-   issue6155.js:14:44
-   14| function matcher<R>(cases: TypeCases<R>): (Type) => R {
-                                                  ^^^^ [1]
-   issue6155.js:10:9
-   10|     b: (B) => R,
                ^ [2]
 
 
@@ -600,4 +564,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 36 errors
+Found 34 errors

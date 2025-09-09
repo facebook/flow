@@ -1232,6 +1232,15 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
+    | EPropsNotFoundInSubtyping
+        { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+      spf
+        "EPropsNotFoundInSubtyping ([%s], %s, %s, %s, due_to_neutral_optional_property=%b)"
+        (Nel.map display_string_of_name prop_names |> Nel.to_list |> Base.String.concat ~sep:",")
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
+        due_to_neutral_optional_property
     | EIndexerCheckFailed { prop_name = prop; reason_lower; reason_upper; reason_indexer; use_op }
       ->
       spf
