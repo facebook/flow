@@ -1290,25 +1290,25 @@ let ast_transforms_of_error
         explanation =
           Some
             Flow_intermediate_error_types.(
-              ( ExplanationInvariantSubtypingDueToMutableArray
+              ( LazyExplanationInvariantSubtypingDueToMutableArray
                   {
                     lower_array_loc = lower_loc;
-                    lower_array_desc = Error lower_desc;
-                    upper_array_desc = Ok upper_ty;
+                    lower_array_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                    upper_array_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
                   }
-              | ExplanationInvariantSubtypingDueToMutableProperty
+              | LazyExplanationInvariantSubtypingDueToMutableProperty
                   {
                     lower_obj_loc = lower_loc;
-                    lower_obj_desc = Error lower_desc;
-                    upper_obj_desc = Ok upper_ty;
+                    lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                    upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
                   }
-              | ExplanationInvariantSubtypingDueToMutableProperties
+              | LazyExplanationInvariantSubtypingDueToMutableProperties
                   {
                     lower_obj_loc = lower_loc;
-                    lower_obj_desc = Error lower_desc;
-                    upper_obj_desc = Ok upper_ty;
+                    lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                    upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
                   } ));
         _;

@@ -343,7 +343,14 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
         ~loc_of_aloc:(Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader)
         ~f:(fun () ->
           let lint_severities = get_lint_severities metadata options in
-          Type_inference_js.infer_file cx file_key metadata comments aloc_ast ~lint_severities)
+          Type_inference_js.infer_file
+            cx
+            file_key
+            file_sig
+            metadata
+            comments
+            aloc_ast
+            ~lint_severities)
     in
     let find_refs_result =
       FindRefs_js.local_refs_of_find_ref_request

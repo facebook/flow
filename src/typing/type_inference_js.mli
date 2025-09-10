@@ -21,6 +21,7 @@ val infer_ast :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   File_key.t ->
+  File_sig.t ->
   Context.metadata ->
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
@@ -30,6 +31,7 @@ val infer_file :
   lint_severities:Severity.severity LintSettings.t ->
   Context.t ->
   File_key.t ->
+  File_sig.t ->
   Context.metadata ->
   Loc.t Flow_ast.Comment.t list ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->

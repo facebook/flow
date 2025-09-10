@@ -167,7 +167,7 @@ module Inference = struct
       (loc, mem)
 end
 
-class process_request_searcher cx ~from_trigger_character ~cursor =
+class process_request_searcher cx file_sig ~from_trigger_character ~cursor =
   object (this)
     inherit
       [ALoc.t, ALoc.t, ALoc.t, ALoc.t, string] Typed_ast_finder.type_parameter_mapper_generic as super
@@ -224,7 +224,7 @@ class process_request_searcher cx ~from_trigger_character ~cursor =
           let metadata = Context.metadata cx in
           (* We need to also run post-inference checks since some errors are
            * raised there. *)
-          Merge_js.post_merge_checks cx ast tast metadata
+          Merge_js.post_merge_checks cx file_sig ast tast metadata
       )
 
     method private type_from_enclosing_node loc =
@@ -1015,9 +1015,9 @@ let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor a
 
 let autocomplete_jsx ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
-let process_location cx ~trigger_character ~cursor aloc_ast =
+let process_location cx file_sig ~trigger_character ~cursor aloc_ast =
   let from_trigger_character = trigger_character <> None in
-  let searcher = new process_request_searcher cx ~from_trigger_character ~cursor in
+  let searcher = new process_request_searcher cx file_sig ~from_trigger_character ~cursor in
   match searcher#program aloc_ast with
   | exception Found f -> Ok (Some f)
   | exception Internal_exn err -> Error err

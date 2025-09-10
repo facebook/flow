@@ -526,7 +526,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       match List.rev invariant_subtyping_failed_prop_names with
       | [] -> ()
       | [(name, l_prop_t, u_prop_t)] ->
-        let type_to_desc = Ty_normalizer_no_flow.type_to_desc_for_invariant_subtyping_error cx in
         let lower_loc =
           match l_prop_t with
           | OpenT (r, id) ->
@@ -538,15 +537,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let upper_loc = loc_of_t u_prop_t in
         let explanation =
           Some
-            (Flow_intermediate_error_types.ExplanationInvariantSubtypingDueToMutableProperty
-               {
-                 lower_obj_loc = def_loc_of_reason lreason;
-                 upper_obj_loc = def_loc_of_reason ureason;
-                 lower_obj_desc = type_to_desc (DefT (lreason, ObjT l_obj));
-                 upper_obj_desc = type_to_desc (DefT (ureason, ObjT u_obj));
-                 upper_object_reason = ureason;
-                 property_name = Some (Reason.display_string_of_name name);
-               }
+            Flow_intermediate_error_types.(
+              LazyExplanationInvariantSubtypingDueToMutableProperty
+                {
+                  lower_obj_loc = def_loc_of_reason lreason;
+                  upper_obj_loc = def_loc_of_reason ureason;
+                  lower_obj_desc = TypeOrTypeDesc.Type (DefT (lreason, ObjT l_obj));
+                  upper_obj_desc = TypeOrTypeDesc.Type (DefT (ureason, ObjT u_obj));
+                  upper_object_reason = ureason;
+                  property_name = Some (Reason.display_string_of_name name);
+                }
             )
         in
         let use_op =
@@ -555,23 +555,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         add_output
           cx
-          (Error_message.EInvariantSubtypingWithUseOp
-             {
-               sub_component = None;
-               lower_loc;
-               upper_loc;
-               lower_desc = type_to_desc l_prop_t;
-               upper_desc = type_to_desc u_prop_t;
-               use_op;
-               explanation;
-             }
+          Flow_intermediate_error_types.(
+            Error_message.EInvariantSubtypingWithUseOp
+              {
+                sub_component = None;
+                lower_loc;
+                upper_loc;
+                lower_desc = TypeOrTypeDesc.Type l_prop_t;
+                upper_desc = TypeOrTypeDesc.Type u_prop_t;
+                use_op;
+                explanation;
+              }
           )
       | properties ->
-        let type_to_desc = Ty_normalizer_no_flow.type_to_desc_for_invariant_subtyping_error cx in
         let t1 = DefT (lreason, ObjT l_obj) in
         let t2 = DefT (ureason, ObjT u_obj) in
-        let lower_desc = type_to_desc t1 in
-        let upper_desc = type_to_desc t2 in
         let lower_loc =
           match t1 with
           | OpenT (r, id) ->
@@ -582,13 +580,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         let upper_loc = loc_of_t t2 in
         let properties = List.map (fun (p, _, _) -> p) properties in
+        let open Flow_intermediate_error_types in
         let explanation =
-          Flow_intermediate_error_types.ExplanationInvariantSubtypingDueToMutableProperties
+          LazyExplanationInvariantSubtypingDueToMutableProperties
             {
               lower_obj_loc = lower_loc;
               upper_obj_loc = upper_loc;
-              lower_obj_desc = lower_desc;
-              upper_obj_desc = upper_desc;
+              lower_obj_desc = TypeOrTypeDesc.Type t1;
+              upper_obj_desc = TypeOrTypeDesc.Type t2;
               upper_object_reason = ureason;
               properties;
             }
@@ -604,8 +603,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                    );
                lower_loc;
                upper_loc;
-               lower_desc;
-               upper_desc;
+               lower_desc = TypeOrTypeDesc.Type t1;
+               upper_desc = TypeOrTypeDesc.Type t2;
                use_op;
                explanation = Some explanation;
              }

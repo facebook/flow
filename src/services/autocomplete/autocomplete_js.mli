@@ -68,6 +68,7 @@ type process_location_result = {
 
 val process_location :
   Context.t ->
+  File_sig.t ->
   trigger_character:string option ->
   cursor:Loc.t ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->

@@ -7803,17 +7803,16 @@ struct
       then
         try SpeculationKit.try_unify cx trace t1 use_op t2 with
         | Flow_js_utils.SpeculationSingletonError _ ->
-          let type_to_desc = Ty_normalizer_no_flow.type_to_desc_for_invariant_subtyping_error cx in
           let explanation =
             let open Flow_intermediate_error_types in
             match unify_cause with
             | UnifyCause.MutableArray { lower_array_t; upper_array_t; upper_array_reason } ->
-              let lower_array_desc = type_to_desc lower_array_t in
-              let upper_array_desc = type_to_desc upper_array_t in
+              let lower_array_desc = TypeOrTypeDesc.Type lower_array_t in
+              let upper_array_desc = TypeOrTypeDesc.Type upper_array_t in
               let lower_array_loc = reason_of_t lower_array_t |> def_loc_of_reason in
               let upper_array_loc = reason_of_t upper_array_t |> def_loc_of_reason in
               Some
-                (ExplanationInvariantSubtypingDueToMutableArray
+                (LazyExplanationInvariantSubtypingDueToMutableArray
                    {
                      lower_array_loc;
                      upper_array_loc;
@@ -7824,12 +7823,12 @@ struct
                 )
             | UnifyCause.MutableProperty
                 { lower_obj_t; upper_obj_t; upper_object_reason; property_name } ->
-              let lower_obj_desc = type_to_desc lower_obj_t in
-              let upper_obj_desc = type_to_desc upper_obj_t in
+              let lower_obj_desc = TypeOrTypeDesc.Type lower_obj_t in
+              let upper_obj_desc = TypeOrTypeDesc.Type upper_obj_t in
               let lower_obj_loc = reason_of_t lower_obj_t |> def_loc_of_reason in
               let upper_obj_loc = reason_of_t upper_obj_t |> def_loc_of_reason in
               Some
-                (ExplanationInvariantSubtypingDueToMutableProperty
+                (LazyExplanationInvariantSubtypingDueToMutableProperty
                    {
                      lower_obj_loc;
                      upper_obj_loc;
@@ -7841,8 +7840,8 @@ struct
                 )
             | UnifyCause.Uncategorized -> None
           in
-          let lower_desc = type_to_desc t1 in
-          let upper_desc = type_to_desc t2 in
+          let lower_desc = Flow_intermediate_error_types.TypeOrTypeDesc.Type t1 in
+          let upper_desc = Flow_intermediate_error_types.TypeOrTypeDesc.Type t2 in
           let lower_loc =
             match t1 with
             | OpenT (r, id) ->

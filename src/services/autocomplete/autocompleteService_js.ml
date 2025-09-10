@@ -2250,7 +2250,16 @@ let string_of_autocomplete_type ac_type =
   | Ac_jsx_attribute _ -> "Acjsx"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
-  let { layout_options; loc_of_aloc; cx; aloc_ast; norm_genv = genv; canonical = canon; _ } =
+  let {
+    layout_options;
+    loc_of_aloc;
+    cx;
+    file_sig;
+    aloc_ast;
+    norm_genv = genv;
+    canonical = canon;
+    _;
+  } =
     typing
   in
   let open Autocomplete_js in
@@ -2259,7 +2268,7 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
   let canon_cursor =
     Base.Option.value_map ~default:cursor ~f:Autocomplete_sigil.Canonical.cursor canon
   in
-  match process_location cx ~trigger_character ~cursor:canon_cursor aloc_ast with
+  match process_location cx file_sig ~trigger_character ~cursor:canon_cursor aloc_ast with
   | Error err -> (None, None, "None", AcFatalError err)
   | Ok None ->
     let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
