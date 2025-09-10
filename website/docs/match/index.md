@@ -45,6 +45,23 @@ const e = match (<arg>) {
 
 The guard applies to the entire pattern, including ["or" patterns](./patterns#or-patterns), e.g. `1 | 2 if (cond)` will first match if the value is `1 | 2`, and then finally succeed if `cond` is also true. Guarded cases do not count toward [exhaustiveness checks](#exhaustive-checking), since they may or may not match based on the condition.
 
+You can initialize two or more variables using a `match`:
+```js
+// Using a tuple:
+const [color, size] = match (status) {
+  Status.Active => ['green', 2],
+  Status.Paused => ['yellow', 1],
+  Status.Off => ['red', 0],
+};
+
+// Using an object (especially useful for more than two variables):
+const {color, size} = match (status) {
+  Status.Active => {color: 'green', size: 2},
+  Status.Paused => {color: 'yellow', size: 1},
+  Status.Off => {color: 'red', size: 0},
+};
+```
+
 Match expressions cannot be used in an expression statement position, as that is reserved for match statements.
 
 ```js

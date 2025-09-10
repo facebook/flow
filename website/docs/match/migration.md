@@ -120,8 +120,43 @@ const colorSchemeStyles = match (colorScheme) {
   'light' => colorSchemeLight,
   'unset' => colorSchemeDefault,
 };
-
 ```
+
+You can replace multiple assignments with a single match expression:
+```js
+// Before
+let color;
+let size;
+switch (status) {
+  case Status.Active:
+    color = 'green';
+    size = 2;
+    break;
+  case Status.Paused:
+    color = 'yellow';
+    size = 1;
+    break;
+  case Status.Off:
+    color = 'red';
+    size = 0;
+    break;
+}
+
+// After (using a tuple):
+const [color, size] = match (status) {
+  Status.Active => ['green', 2],
+  Status.Paused => ['yellow', 1],
+  Status.Off => ['red', 0],
+};
+
+// After (using an object):
+const {color, size} = match (status) {
+  Status.Active => {color: 'green', size: 2},
+  Status.Paused => {color: 'yellow', size: 1},
+  Status.Off => {color: 'red', size: 0},
+};
+```
+Using an object is more verbose, but may be more readable, especially if dealing with more than two variables.
 
 ## Replacing conditional ternary expressions
 
