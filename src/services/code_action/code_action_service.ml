@@ -1303,6 +1303,13 @@ let ast_transforms_of_error
                     lower_obj_desc = Error lower_desc;
                     upper_obj_desc = Ok upper_ty;
                     _;
+                  }
+              | ExplanationInvariantSubtypingDueToMutableProperties
+                  {
+                    lower_obj_loc = lower_loc;
+                    lower_obj_desc = Error lower_desc;
+                    upper_obj_desc = Ok upper_ty;
+                    _;
                   } ));
         _;
       }
