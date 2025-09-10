@@ -169,7 +169,7 @@ The enum is not enumerable or iterable itself (e.g. a for-in/for-of loop over th
 
 You can convert the iterable into an `Array` using: `Array.from(Status.members())`.
 You can make use of [`Array.from`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)'s second argument to map over the values at
-the same time you construct the array: e.g. 
+the same time you construct the array: e.g.
 
 ```js
 const buttonArray = Array.from(
@@ -365,7 +365,7 @@ enum Status {
 }
 ```
 
-Then a `default` is always required when switching over the enum. The `default` checks for "unknown" members you haven't explicitly listed.
+Then a `default` is always required when switching over the enum, and a wildcard `_` is always required when using a [`match`](../../match). The `default`/`_` checks for "unknown" members you haven't explicitly listed.
 
 ```js
 switch (status) {
@@ -378,15 +378,25 @@ switch (status) {
   default:
     // Checks for members not explicitly listed
 }
+
+match (status) {
+  Status.Active => {}
+  Status.Paused => {}
+  Status.Off => {}
+  _ => {
+    // Checks for members not explicitly listed
+  }
+}
 ```
 
-You can use the `require-explicit-enum-switch-cases` [Flow Lint](../../linting/flowlint-comments/) to require that all known members are explicitly listed as cases. For example:
+You can use the `require-explicit-enum-switch-cases` [Flow Lint](../../linting/flowlint-comments/) for `switch` or the `require-explicit-enum-checks` lint for `match` to require that all known members are explicitly listed as cases. For example:
 
 ```js flow-check
 enum Status {
   Active = 1,
   Paused = 2,
   Off = 3,
+  ...
 }
 const status: Status = Status.Active;
 
@@ -399,10 +409,25 @@ switch (status) {
   default:
     break;
 }
+
+// flowlint-next-line require-explicit-enum-checks:error
+match (status) {
+  Status.Active => {}
+  Status.Paused => {}
+  _ => {}
+}
 ```
 
 You can fix if by doing:
-```js
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+  ...
+}
+const status: Status = Status.Active;
+
 // flowlint-next-line require-explicit-enum-switch-cases:error
 switch (status) {
   case Status.Active:
@@ -414,14 +439,21 @@ switch (status) {
   default:
     break;
 }
+
+// flowlint-next-line require-explicit-enum-checks:error
+match (status) {
+  Status.Active => {}
+  Status.Paused => {}
+  Status.Off => {} // Added the missing `Status.Off` case
+  _ => {}
+}
 ```
-The `require-explicit-enum-switch-cases` lint is not one to enable globally, but rather on a per-`switch` basis when you want the behavior.
-With normal enums, for each `switch` statement on it, you can either provide a `default` or not, and thus decide if you want to require each case explicitly listed or not.
-Similarly for Flow Enums with unknown members, you can also enable this lint on a per-switch basis.
+The `require-explicit-enum-switch-cases`/`require-explicit-enum-checks` lints are not enabled globally, but rather on a per-`switch`/`match` basis when you want the behavior.
+With normal enums, for each `switch` statement or `match`, you can either provide a `default`/`_` or not, and thus decide if you want to require each case explicitly listed or not.
+Similarly for Flow Enums with unknown members, you can also enable this lint on a per-`switch`/`match` basis.
 
-The lint works for switches of regular Flow Enum types as well.
+The `require-explicit-enum-switch-cases` lint works for switches of regular Flow Enum types as well.
 It in effect bans the usage of `default` in that `switch` statement, by requiring the explicit listing of all enum members as cases.
-
 
 ### Mapping enums to other values {#toc-mapping-enums-to-other-values}
 There are a variety of reasons you may want to map an enum value to another value, e.g. a label, icon, element, and so on.
