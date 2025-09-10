@@ -1568,6 +1568,30 @@ let check_assert_operator cx tast =
   in
   if Context.assert_operator_enabled cx then ignore (checker#program tast : (_, _) Ast.Program.t)
 
+let convert_type_to_type_desc_in_errors cx file_sig typed_ast =
+  let convert_type_to_type_desc =
+    let genv =
+      Ty_normalizer_flow.mk_genv
+        ~options:
+          Ty_normalizer_env.
+            {
+              default_options with
+              evaluate_type_destructors = EvaluateNone;
+              optimize_types = false;
+            }
+        ~cx
+        ~typed_ast_opt:(Some typed_ast)
+        ~file_sig
+    in
+    let open Flow_intermediate_error_types in
+    Flow_error.convert_type_to_type_desc (function
+        | TypeOrTypeDesc.Type t ->
+          TypeOrTypeDesc.TypeDesc (Ty_normalizer_no_flow.type_to_desc_for_errors ~genv t)
+        | TypeOrTypeDesc.TypeDesc d -> TypeOrTypeDesc.TypeDesc d
+        )
+  in
+  Context.reset_errors cx (Context.errors cx |> Flow_error.ErrorSet.map convert_type_to_type_desc)
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -1585,7 +1609,7 @@ let get_lint_severities metadata strict_mode lint_severities =
  * means we can complain about things that either haven't happened yet, or
  * which require complete knowledge of tvar bounds.
  *)
-let post_merge_checks cx ast tast metadata =
+let post_merge_checks cx file_sig ast tast metadata =
   force_lazy_tvars cx;
   check_react_rules cx tast;
   if not (Context.is_lib_file cx) then (
@@ -1619,7 +1643,8 @@ let post_merge_checks cx ast tast metadata =
   check_spread_prop_keys cx tast;
   check_match_exhaustiveness cx tast;
   check_assert_operator cx tast;
-  emit_refinement_information_as_errors cx
+  emit_refinement_information_as_errors cx;
+  convert_type_to_type_desc_in_errors cx file_sig tast
 
 (* Check will lazily create types for the checked file's dependencies. These
  * types are created in the dependency's context and need to be copied into the

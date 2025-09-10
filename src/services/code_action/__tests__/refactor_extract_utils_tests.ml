@@ -175,6 +175,7 @@ let typed_ast_of_ast cx ast =
     ~lint_severities:LintSettings.empty_severities
     cx
     dummy_filename
+    File_sig.empty
     (Context.metadata cx)
     comments
     aloc_ast

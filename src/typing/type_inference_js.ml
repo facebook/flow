@@ -403,7 +403,7 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
     Flow_js.add_output cx Error_message.(EInternal (loc, EnvInvariant inv))
 
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
+let infer_ast ~lint_severities cx filename file_sig metadata loc_comments aloc_ast =
   assert (Context.is_checked cx);
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
   initialize_env cx aloc_ast;
@@ -411,7 +411,7 @@ let infer_ast ~lint_severities cx filename metadata loc_comments aloc_ast =
   let tast =
     (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
   in
-  Merge_js.post_merge_checks cx aloc_ast tast metadata;
+  Merge_js.post_merge_checks cx file_sig aloc_ast tast metadata;
   let (severity_cover, suppressions, suppression_errors) =
     scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
   in
@@ -540,7 +540,7 @@ class lib_def_loc_mapper_and_validator cx =
    a) symbols from prior library loads are suppressed if found,
    b) bindings are added as properties to the builtin object
 *)
-let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
+let infer_lib_file ~lint_severities cx file_key file_sig metadata loc_comments aloc_ast =
   let validator_visitor = new lib_def_loc_mapper_and_validator cx in
   let filtered_aloc_ast = validator_visitor#program aloc_ast in
   let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
@@ -553,15 +553,15 @@ let infer_lib_file ~lint_severities cx file_key metadata loc_comments aloc_ast =
   let tast =
     (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
   in
-  Merge_js.post_merge_checks cx aloc_ast tast metadata;
+  Merge_js.post_merge_checks cx file_sig aloc_ast tast metadata;
   Context.add_severity_covers cx severity_cover;
   Context.add_error_suppressions cx suppressions;
   List.iter (Flow_js.add_output cx) suppression_errors;
   Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
   tast
 
-let infer_file ~lint_severities cx file_key metadata all_comments aloc_ast =
+let infer_file ~lint_severities cx file_key file_sig metadata all_comments aloc_ast =
   if File_key.is_lib_file file_key then
-    infer_lib_file ~lint_severities cx file_key metadata all_comments aloc_ast
+    infer_lib_file ~lint_severities cx file_key file_sig metadata all_comments aloc_ast
   else
-    infer_ast ~lint_severities cx file_key metadata all_comments aloc_ast
+    infer_ast ~lint_severities cx file_key file_sig metadata all_comments aloc_ast

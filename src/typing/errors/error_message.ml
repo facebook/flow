@@ -367,9 +367,9 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       lower_loc: 'loc;
       upper_loc: 'loc;
-      lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
-      upper_desc: (Ty.t, 'loc virtual_reason_desc) result;
-      explanation: 'loc explanation option;
+      lower_desc: 'loc TypeOrTypeDesc.t;
+      upper_desc: 'loc TypeOrTypeDesc.t;
+      explanation: 'loc explanation_with_lazy_parts option;
     }
   | EUnsupportedImplements of 'loc virtual_reason
   | ENotAReactComponent of {
@@ -889,6 +889,57 @@ let map_loc_of_invalid_render_type_kind f = function
   | InvalidRendersGenericT -> InvalidRendersGenericT
   | UncategorizedInvalidRenders -> UncategorizedInvalidRenders
 
+let map_loc_of_lazy_explanation (f : 'a -> 'b) =
+  let map_reason = Reason.map_reason_locs f in
+  function
+  | LazyExplanationInvariantSubtypingDueToMutableArray
+      { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
+    ->
+    LazyExplanationInvariantSubtypingDueToMutableArray
+      {
+        lower_array_loc = f lower_array_loc;
+        upper_array_loc = f upper_array_loc;
+        lower_array_desc = TypeOrTypeDesc.map_loc f lower_array_desc;
+        upper_array_desc = TypeOrTypeDesc.map_loc f upper_array_desc;
+        upper_array_reason = map_reason upper_array_reason;
+      }
+  | LazyExplanationInvariantSubtypingDueToMutableProperty
+      {
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        upper_object_reason;
+        property_name;
+      } ->
+    LazyExplanationInvariantSubtypingDueToMutableProperty
+      {
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = TypeOrTypeDesc.map_loc f lower_obj_desc;
+        upper_obj_desc = TypeOrTypeDesc.map_loc f upper_obj_desc;
+        upper_object_reason = map_reason upper_object_reason;
+        property_name;
+      }
+  | LazyExplanationInvariantSubtypingDueToMutableProperties
+      {
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        upper_object_reason;
+        properties;
+      } ->
+    LazyExplanationInvariantSubtypingDueToMutableProperties
+      {
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = TypeOrTypeDesc.map_loc f lower_obj_desc;
+        upper_obj_desc = TypeOrTypeDesc.map_loc f upper_obj_desc;
+        upper_object_reason = map_reason upper_object_reason;
+        properties;
+      }
+
 let map_loc_of_explanation (f : 'a -> 'b) =
   let map_reason = Reason.map_reason_locs f in
   function
@@ -1221,10 +1272,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         sub_component;
         use_op = map_use_op use_op;
         lower_loc = f lower_loc;
-        lower_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_desc;
+        lower_desc = TypeOrTypeDesc.map_loc f lower_desc;
         upper_loc = f upper_loc;
-        upper_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_desc;
-        explanation = Base.Option.map ~f:(map_loc_of_explanation f) explanation;
+        upper_desc = TypeOrTypeDesc.map_loc f upper_desc;
+        explanation = Base.Option.map ~f:(map_loc_of_lazy_explanation f) explanation;
       }
   | ENotAReactComponent { reason; use_op } ->
     ENotAReactComponent { reason = map_reason reason; use_op = map_use_op use_op }
@@ -1754,6 +1805,89 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | ETemporaryHardcodedErrorForPrototyping (r, s) ->
     ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
+
+let convert_type_to_type_desc ~f = function
+  | EInvariantSubtypingWithUseOp
+      { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
+    let explanation =
+      match explanation with
+      | None -> None
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableArray
+            {
+              lower_array_loc;
+              upper_array_loc;
+              lower_array_desc;
+              upper_array_desc;
+              upper_array_reason;
+            }
+            ) ->
+        Some
+          (LazyExplanationInvariantSubtypingDueToMutableArray
+             {
+               lower_array_loc;
+               upper_array_loc;
+               lower_array_desc = f lower_array_desc;
+               upper_array_desc = f upper_array_desc;
+               upper_array_reason;
+             }
+          )
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperty
+            {
+              lower_obj_loc;
+              upper_obj_loc;
+              lower_obj_desc;
+              upper_obj_desc;
+              upper_object_reason;
+              property_name;
+            }
+            ) ->
+        Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperty
+             {
+               lower_obj_loc;
+               upper_obj_loc;
+               lower_obj_desc = f lower_obj_desc;
+               upper_obj_desc = f upper_obj_desc;
+               upper_object_reason;
+               property_name;
+             }
+          )
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperties
+            {
+              lower_obj_loc;
+              upper_obj_loc;
+              lower_obj_desc;
+              upper_obj_desc;
+              upper_object_reason;
+              properties;
+            }
+            ) ->
+        Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperties
+             {
+               lower_obj_loc;
+               upper_obj_loc;
+               lower_obj_desc = f lower_obj_desc;
+               upper_obj_desc = f upper_obj_desc;
+               upper_object_reason;
+               properties;
+             }
+          )
+    in
+    EInvariantSubtypingWithUseOp
+      {
+        sub_component;
+        lower_loc;
+        upper_loc;
+        lower_desc = f lower_desc;
+        upper_desc = f upper_desc;
+        use_op;
+        explanation;
+      }
+  | e -> e
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -2968,8 +3102,89 @@ let friendly_message_of_msg = function
     IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation }
   | EInvariantSubtypingWithUseOp
       { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
+    let expect_type_desc = function
+      | TypeOrTypeDesc.Type _ ->
+        failwith "At this point, we should no longer have TypeOrTypeDesc.Type"
+      | TypeOrTypeDesc.TypeDesc desc -> desc
+    in
+    let explanation =
+      match explanation with
+      | None -> None
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableArray
+            {
+              lower_array_loc;
+              upper_array_loc;
+              lower_array_desc;
+              upper_array_desc;
+              upper_array_reason;
+            }
+            ) ->
+        Some
+          (ExplanationInvariantSubtypingDueToMutableArray
+             {
+               lower_array_loc;
+               upper_array_loc;
+               lower_array_desc = expect_type_desc lower_array_desc;
+               upper_array_desc = expect_type_desc upper_array_desc;
+               upper_array_reason;
+             }
+          )
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperty
+            {
+              lower_obj_loc;
+              upper_obj_loc;
+              lower_obj_desc;
+              upper_obj_desc;
+              upper_object_reason;
+              property_name;
+            }
+            ) ->
+        Some
+          (ExplanationInvariantSubtypingDueToMutableProperty
+             {
+               lower_obj_loc;
+               upper_obj_loc;
+               lower_obj_desc = expect_type_desc lower_obj_desc;
+               upper_obj_desc = expect_type_desc upper_obj_desc;
+               upper_object_reason;
+               property_name;
+             }
+          )
+      | Some
+          (LazyExplanationInvariantSubtypingDueToMutableProperties
+            {
+              lower_obj_loc;
+              upper_obj_loc;
+              lower_obj_desc;
+              upper_obj_desc;
+              upper_object_reason;
+              properties;
+            }
+            ) ->
+        Some
+          (ExplanationInvariantSubtypingDueToMutableProperties
+             {
+               lower_obj_loc;
+               upper_obj_loc;
+               lower_obj_desc = expect_type_desc lower_obj_desc;
+               upper_obj_desc = expect_type_desc upper_obj_desc;
+               upper_object_reason;
+               properties;
+             }
+          )
+    in
     IncompatibleInvariantSubtyping
-      { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation }
+      {
+        sub_component;
+        lower_loc;
+        upper_loc;
+        lower_desc = expect_type_desc lower_desc;
+        upper_desc = expect_type_desc upper_desc;
+        use_op;
+        explanation;
+      }
   | EUnsupportedImplements reason ->
     Normal (MessageCannotImplementNonInterface (desc_of_reason reason))
   | ENotAReactComponent { reason; use_op } ->

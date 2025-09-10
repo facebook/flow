@@ -7,6 +7,7 @@
 
 val post_merge_checks :
   Context.t ->
+  File_sig.t ->
   (ALoc.t, ALoc.t) Flow_ast.Program.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   Context.metadata ->

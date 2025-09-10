@@ -17,5 +17,4 @@ val mk_default_genv : ?options:Ty_normalizer_env.options -> Context.t -> genv
  *)
 val debug_string_of_t : Context.t -> Type.t -> string
 
-val type_to_desc_for_invariant_subtyping_error :
-  Context.t -> Type.t -> (Ty.t, Reason.reason_desc) result
+val type_to_desc_for_errors : genv:genv -> Type.t -> (Ty.t, Reason.reason_desc) result

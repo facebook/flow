@@ -26,6 +26,9 @@ let source_file { source_file; _ } = source_file
 let map_loc_of_error f { loc; msg; source_file } =
   { loc = Base.Option.map ~f loc; msg = map_loc_of_error_message f msg; source_file }
 
+let convert_type_to_type_desc f { loc; msg; source_file } =
+  { loc; msg = convert_type_to_type_desc ~f msg; source_file }
+
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
 module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struct
