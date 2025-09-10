@@ -201,7 +201,7 @@ The first call of any of those methods will create this cached map.
 ### Exhaustively checking enums with a `switch` {#toc-exhaustively-checking-enums-with-a-switch}
 When checking an enum value in a `switch` statement, we enforce that you check against all possible enum members, and don’t include redundant cases.
 This helps ensure you consider all possibilities when writing code that uses enums. It especially helps with refactoring when adding or removing members,
-by pointing out the different places you need to update.
+by pointing out the different places you need to update. If you have [match](../../match) enabled, use `match` expressions and statements instead of `switch` statements.
 
 ```js
 const status: Status = ...;
@@ -350,8 +350,52 @@ switch (status) {
 ```
 If you didn't add blocks in this example, the two declarations of `const x` would conflict and result in an error.
 
-Enums are not checked exhaustively in `if` statements or other contexts other than `switch` statements.
+Enums are not checked exhaustively in `if` statements, or other contexts other than `switch` statements and `match` expressions/statements.
 
+### Exhaustively checking enums with a `match`
+All values are exhaustively checked in a [match](../../match), including Flow Enums:
+
+```js
+const status: Status = ...;
+
+match (status) { // Good, all members checked
+  Status.Active => {}
+  Status.Paused => {}
+  Status.Off => {}
+}
+```
+
+You can use a [wildcard](../../match/patterns/#wildcard-patterns) `_` to match all members not checked so far:
+```js
+match (status) {
+  Status.Active => {}
+  _ => {} // When `Status.Paused` or `Status.Off`
+}
+```
+
+You can check [multiple](../../match/patterns/#or-patterns) enum members in one `match` case:
+```js
+match (status) {
+  Status.Active | Status.Paused => {}
+  Status.Off => {}
+}
+```
+
+You must match against all of the members of the enum (or supply a wildcard `_` case):
+```js flow-check
+enum Status {
+  Active = 1,
+  Paused = 2,
+  Off = 3,
+}
+const status: Status = Status.Active;
+
+// Error: you haven't checked 'Status.Off' in the match
+match (status) {
+  Status.Active => {}
+  Status.Paused => {}
+}
+```
 
 ### Exhaustive checking with unknown members {#toc-exhaustive-checking-with-unknown-members}
 If your enum has [unknown members](../defining-enums/#toc-flow-enums-with-unknown-members) (specified with the `...`), e.g.
@@ -458,7 +502,7 @@ It in effect bans the usage of `default` in that `switch` statement, by requirin
 ### Mapping enums to other values {#toc-mapping-enums-to-other-values}
 There are a variety of reasons you may want to map an enum value to another value, e.g. a label, icon, element, and so on.
 
-With previous patterns, it was common to use object literals for this purpose, however with Flow Enums we prefer functions which contain a switch, which we can exhaustively check.
+With previous patterns, it was common to use object literals for this purpose, however with Flow Enums we prefer functions which contain a switch, or better yet [match](../../match) expressions if enabled, as we can exhaustively check these.
 
 Instead of:
 ```js
@@ -471,7 +515,14 @@ const icon = STATUS_ICON[status];
 ```
 
 Which doesn't actually guarantee that we are mapping each `Status` to some value, use:
-```js
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+declare const status: Status;
+
 function getStatusIcon(status: Status): string {
   switch (status) {
     case Status.Active:
@@ -485,7 +536,23 @@ function getStatusIcon(status: Status): string {
 const icon = getStatusIcon(status);
 ```
 
-In the future if you add or remove an enum member, Flow will tell you to update the switch as well so it's always accurate.
+Or with `match`:
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+declare const status: Status;
+
+const icon = match(status) {
+  Status.Active => 'green-checkmark',
+  Status.Paused => 'grey-pause',
+  Status.Off => 'red-x',
+};
+```
+
+In the future if you add or remove an enum member, Flow will tell you to update the `switch` or `match` as well so it's always accurate.
 
 If you actually want a dictionary which is not exhaustive, you can use a [`Map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map):
 ```js
