@@ -34,7 +34,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 [incompatible-variance]
 
    test.js:29:43
-   29|         bad (x: number) : ReadOnlyWeakSet<T> { // Error: T in invariant position
+   29|         bad (x: number) : ReadonlyWeakSet<T> { // Error: T in invariant position
                                                  ^
 
 References:
@@ -49,7 +49,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 [incompatible-variance]
 
    test.js:35:43
-   35|         bad (x: number) : ReadOnlyWeakSet<T> {// Error: T in invariant position
+   35|         bad (x: number) : ReadonlyWeakSet<T> {// Error: T in invariant position
                                                  ^
 
 References:
