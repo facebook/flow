@@ -80,6 +80,7 @@ let stub_metadata ~root ~checked =
     strict_es6_import_export = false;
     strip_root = true;
     ts_syntax = true;
+    ts_utility_syntax = true;
     assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;

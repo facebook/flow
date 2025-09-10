@@ -84,6 +84,7 @@ type metadata = {
   strict_es6_import_export: bool;
   strip_root: bool;
   ts_syntax: bool;
+  ts_utility_syntax: bool;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
@@ -352,6 +353,7 @@ let metadata_of_options options =
     strict_es6_import_export = Options.strict_es6_import_export options;
     strip_root = Options.should_strip_root options;
     ts_syntax = Options.ts_syntax options;
+    ts_utility_syntax = Options.ts_utility_syntax options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
@@ -741,6 +743,8 @@ let should_munge_underscores cx = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 
 let ts_syntax cx = cx.metadata.ts_syntax
+
+let ts_utility_syntax cx = cx.metadata.ts_utility_syntax
 
 let assert_operator_enabled cx = Options.AssertOperator.usable cx.metadata.assert_operator
 

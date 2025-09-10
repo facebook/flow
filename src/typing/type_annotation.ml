@@ -366,7 +366,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       | `Boolean -> ());
       ((loc, BoolModuleT.at loc), t_ast)
     | (loc, (Unknown _ as t_ast)) ->
-      if not (Context.ts_syntax env.cx) then
+      if not (Context.ts_syntax env.cx || Context.ts_utility_syntax env.cx) then
         Flow_js_utils.add_output
           env.cx
           (Error_message.ETSSyntax { kind = Error_message.TSUnknown; loc });
@@ -1158,7 +1158,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         (* TS Types *)
         | "Readonly" ->
-          if Context.ts_syntax cx then
+          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
                 let (ts, targs) = convert_type_params () in
                 let t = List.hd ts in
@@ -1176,7 +1176,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               )
               t_ast
         | "ReadonlyArray" ->
-          if Context.ts_syntax cx then
+          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
                 let (elemts, targs) = convert_type_params () in
                 let elemt = List.hd elemts in
@@ -1192,7 +1192,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                  { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyArray }
               )
               t_ast
-        | "ReadonlyMap" when not (Context.ts_syntax cx) ->
+        | "ReadonlyMap" when not (Context.ts_syntax cx || Context.ts_utility_syntax cx) ->
           error_type
             cx
             loc
@@ -1200,7 +1200,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                { loc; kind = Flow_intermediate_error_types.IncorrectType.TSReadonlyMap }
             )
             t_ast
-        | "ReadonlySet" when not (Context.ts_syntax cx) ->
+        | "ReadonlySet" when not (Context.ts_syntax cx || Context.ts_utility_syntax cx) ->
           error_type
             cx
             loc
@@ -1209,7 +1209,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             )
             t_ast
         | "NonNullable" ->
-          if Context.ts_syntax cx then
+          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
             check_type_arg_arity cx loc t_ast targs 1 (fun () ->
                 let (ts, targs) = convert_type_params () in
                 let t = List.hd ts in
