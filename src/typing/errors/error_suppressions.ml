@@ -111,25 +111,6 @@ end = struct
             SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
           in
           (SpanMap.add orig_loc (locs, Specific new_codes) suppressions, used_universal_suppressions)
-      | Some (_, All l) ->
-        let universal =
-          CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, l)) codes CodeLocSet.empty
-        in
-        let old_universal =
-          SpanMap.find_opt loc used_universal_suppressions
-          |> Base.Option.value ~default:CodeLocSet.empty
-        in
-        let universal = CodeLocSet.union universal old_universal in
-        let orig_loc =
-          (* We don't want to overwrite the original location with one that falls inside it *)
-          SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
-        in
-        let used_universal_suppressions =
-          SpanMap.add orig_loc universal used_universal_suppressions
-        in
-        (* Using a univeral suppression to suppress a single code should remove it from the map, but
-           we need to mark the codes it suppressed in the past *)
-        (SpanMap.remove loc suppressions, used_universal_suppressions)
       | None -> begin
         match SpanMap.find_opt loc used_universal_suppressions with
         | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
@@ -229,15 +210,12 @@ let check_loc suppressions specific_codes (result, (unused : t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   let specific_codes_set = lazy (specific_codes |> CodeMap.keys |> CodeSet.of_list) in
-  let suppression_applies codes2 =
-    match codes2 with
-    | All _ -> false
-    | Specific specific_codes2 ->
-      CodeMap.for_all
-        (fun code -> function
-          | ErrorCodeUnsuppressable -> false
-          | ErrorCodeRequireSpecific -> CodeSet.mem code specific_codes2)
-        specific_codes
+  let suppression_applies (Specific specific_codes2) =
+    CodeMap.for_all
+      (fun code -> function
+        | ErrorCodeUnsuppressable -> false
+        | ErrorCodeRequireSpecific -> CodeSet.mem code specific_codes2)
+      specific_codes
   in
   match suppression_at_loc loc suppressions with
   | Some (locs, codes') when suppression_applies codes' ->

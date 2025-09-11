@@ -25,19 +25,13 @@ module CodeSet : Flow_set.S with type elt = string * Loc.t = Flow_set.Make (Code
 
 module CodeMap : Flow_map.S with type key = string * Loc.t = Flow_map.Make (CodeWithLocOrd)
 
-type applicable_codes =
-  | All of Loc.t
-  | Specific of CodeSet.t
+type applicable_codes = Specific of CodeSet.t
 
 let locs_of_applicable_codes = function
-  | All loc -> [loc]
   | Specific codes -> CodeSet.elements codes |> List.map snd
 
 let join_applicable_codes c1 c2 =
   match (c1, c2) with
-  | (All loc, _)
-  | (_, All loc) ->
-    All loc
   | (Specific c1, Specific c2) -> Specific (CodeSet.union c1 c2)
 
 let consume_token token str =
