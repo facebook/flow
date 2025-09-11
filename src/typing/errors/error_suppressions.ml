@@ -57,21 +57,15 @@ end = struct
 
   type t = {
     suppressions: error_suppressions;
-    used_universal_suppressions: CodeLocSet.t SpanMap.t;
     lint_suppressions: LocSet.t;
   }
 
-  let empty =
-    {
-      suppressions = SpanMap.empty;
-      used_universal_suppressions = SpanMap.empty;
-      lint_suppressions = LocSet.empty;
-    }
+  let empty = { suppressions = SpanMap.empty; lint_suppressions = LocSet.empty }
 
   let is_empty { suppressions; lint_suppressions; _ } =
     SpanMap.is_empty suppressions && LocSet.is_empty lint_suppressions
 
-  let add loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
+  let add loc codes { suppressions; lint_suppressions } =
     let suppression_loc =
       Loc.(
         let start = { line = loc._end.line + 1; column = 0 } in
@@ -87,7 +81,7 @@ end = struct
         ~combine:(fun (set1, codes1) (set2, codes2) ->
           (LocSet.union set1 set2, join_applicable_codes codes1 codes2))
     in
-    { suppressions; lint_suppressions; used_universal_suppressions }
+    { suppressions; lint_suppressions }
 
   let all_unused_locs { suppressions; lint_suppressions; _ } =
     SpanMap.fold
@@ -97,43 +91,29 @@ end = struct
       suppressions
       lint_suppressions
 
-  let remove loc codes { suppressions; lint_suppressions; used_universal_suppressions } =
+  let remove loc codes { suppressions; lint_suppressions } =
     let supp_at_loc = SpanMap.find_opt loc suppressions in
-    let (suppressions, used_universal_suppressions) =
+    let suppressions =
       match supp_at_loc with
       | Some (locs, Specific codes') when CodeSet.subset codes codes' ->
         let new_codes = CodeSet.diff codes' codes in
         if CodeSet.is_empty new_codes then
-          (SpanMap.remove loc suppressions, used_universal_suppressions)
+          SpanMap.remove loc suppressions
         else
           let orig_loc =
             (* We don't want to overwrite the original location with one that falls inside it *)
             SpanMap.keys suppressions |> Base.List.find_exn ~f:(fun k -> Loc.span_compare k loc = 0)
           in
-          (SpanMap.add orig_loc (locs, Specific new_codes) suppressions, used_universal_suppressions)
-      | None -> begin
-        match SpanMap.find_opt loc used_universal_suppressions with
-        | None -> (SpanMap.remove loc suppressions, used_universal_suppressions)
-        | Some old_universal ->
-          let supp_loc = CodeLocSet.choose old_universal |> snd in
-          let universal =
-            CodeSet.fold (fun (code, _) -> CodeLocSet.add (code, supp_loc)) codes old_universal
-          in
-          let used_universal_suppressions =
-            SpanMap.add supp_loc universal used_universal_suppressions
-          in
-          (SpanMap.remove loc suppressions, used_universal_suppressions)
-      end
-      | _ -> (suppressions, used_universal_suppressions)
+          SpanMap.add orig_loc (locs, Specific new_codes) suppressions
+      | None -> SpanMap.remove loc suppressions
+      | _ -> suppressions
     in
-    { suppressions; lint_suppressions; used_universal_suppressions }
+    { suppressions; lint_suppressions }
 
   let union a b =
     {
       suppressions = SpanMap.union a.suppressions b.suppressions;
       lint_suppressions = LocSet.union a.lint_suppressions b.lint_suppressions;
-      used_universal_suppressions =
-        SpanMap.union a.used_universal_suppressions b.used_universal_suppressions;
     }
 
   let add_lint_suppression lint_suppression t =
