@@ -118,6 +118,191 @@ References:
                                                     ^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ function_typeof.js:46:1
+
+Cannot cast `r1` to function type because number [1] is incompatible with string [2] in the return value.
+[incompatible-type]
+
+   function_typeof.js:46:1
+   46| r1 as (x: number) => string; // error
+       ^^
+
+References:
+   function_typeof.js:35:32
+   35| export function r1(x: number): typeof x { return x; }
+                                      ^^^^^^^^ [1]
+   function_typeof.js:46:22
+   46| r1 as (x: number) => string; // error
+                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:49:1
+
+Cannot cast `r2` to function type because number [1] is incompatible with string [2] in the return value.
+[incompatible-type]
+
+   function_typeof.js:49:1
+   49| r2 as (x: {f: number}) => string; // error
+       ^^
+
+References:
+   function_typeof.js:36:37
+   36| export function r2(x: {f: number}): typeof x.f { return x.f; }
+                                           ^^^^^^^^^^ [1]
+   function_typeof.js:49:27
+   49| r2 as (x: {f: number}) => string; // error
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:54:1
+
+Cannot cast `r4` to function type because mixed [1] is incompatible with empty [2] in the return value.
+[incompatible-type]
+
+   function_typeof.js:54:1
+   54| r4 as <X>(x: X) => empty // error
+       ^^
+
+References:
+   function_typeof.js:38:30
+   38| export function r4<X>(x: X): typeof x { return x; }
+                                    ^^^^^^^^ [1]
+   function_typeof.js:54:20
+   54| r4 as <X>(x: X) => empty // error
+                          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:57:1
+
+Cannot cast `r5` to function type because `X` [1] is not exactly the same as `empty` [2] in property `f` of the return
+value. 
+
+The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
+- Either make `{f: X}` [3] and `{f: empty}` [4] exactly the same
+- Or make property `f` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   function_typeof.js:57:1
+   57| r5 as <X>(x: X) => {f: empty}; // error
+       ^^
+
+References:
+   function_typeof.js:39:33
+   39| export function r5<X>(x: X): {f:typeof x} { return {f: x}; }
+                                       ^^^^^^^^ [1]
+   function_typeof.js:57:24
+   57| r5 as <X>(x: X) => {f: empty}; // error
+                              ^^^^^ [2]
+   function_typeof.js:39:30
+   39| export function r5<X>(x: X): {f:typeof x} { return {f: x}; }
+                                    ^^^^^^^^^^^^ [3]
+   function_typeof.js:57:20
+   57| r5 as <X>(x: X) => {f: empty}; // error
+                          ^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:60:1
+
+Cannot cast `r6` to function type because number [1] is incompatible with string [2] in the return value.
+[incompatible-type]
+
+   function_typeof.js:60:1
+   60| r6 as <X: {f: number}>(x: X) => string; // error
+       ^^
+
+References:
+   function_typeof.js:40:43
+   40| export function r6<X: {f: number}>(x: X): typeof x.f { return x.f; }
+                                                 ^^^^^^^^^^ [1]
+   function_typeof.js:60:33
+   60| r6 as <X: {f: number}>(x: X) => string; // error
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:63:1
+
+Cannot cast `r7` to function type because mixed [1] is incompatible with empty [2] in the return value.
+[incompatible-type]
+
+   function_typeof.js:63:1
+   63| r7 as <V, X: {f: V}>(x: X) => empty; // error
+       ^^
+
+References:
+   function_typeof.js:41:41
+   41| export function r7<V, X: {f: V}>(x: X): typeof x.f { return x.f; }
+                                               ^^^^^^^^^^ [1]
+   function_typeof.js:63:31
+   63| r7 as <V, X: {f: V}>(x: X) => empty; // error
+                                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:66:1
+
+Cannot cast `r8` to function type because `X` [1] is not exactly the same as `empty` [2] in array element of the return
+value. 
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<X>` [3] and `Array<empty>` [4] exactly the same
+- Or make array type [4] a `$ReadOnlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+[incompatible-type]
+
+   function_typeof.js:66:1
+   66| r8 as <X>(...x: Array<X>) => Array<empty>; // error
+       ^^
+
+References:
+   function_typeof.js:42:35
+   42| export function r8<X>(...x: Array<X>): typeof x { return x; }
+                                         ^ [1]
+   function_typeof.js:66:36
+   66| r8 as <X>(...x: Array<X>) => Array<empty>; // error
+                                          ^^^^^ [2]
+   function_typeof.js:42:29
+   42| export function r8<X>(...x: Array<X>): typeof x { return x; }
+                                   ^^^^^^^^ [3]
+   function_typeof.js:66:30
+   66| r8 as <X>(...x: Array<X>) => Array<empty>; // error
+                                    ^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:70:5
+
+Cannot cast `x9_1` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   function_typeof.js:70:5
+   70|     x9_1 as 1; // error 2 ~> 1
+           ^^^^
+
+References:
+   function_typeof.js:43:61
+   43| export function r9(b: boolean): typeof b extends true ? 1 : 2 { return 2; }
+                                                                   ^ [1]
+   function_typeof.js:70:13
+   70|     x9_1 as 1; // error 2 ~> 1
+                   ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:73:5
+
+Cannot cast `x9_2` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   function_typeof.js:73:5
+   73|     x9_2 as 1; // error 2 ~> 1
+           ^^^^
+
+References:
+   function_typeof.js:43:61
+   43| export function r9(b: boolean): typeof b extends true ? 1 : 2 { return 2; }
+                                                                   ^ [1]
+   function_typeof.js:73:13
+   73|     x9_2 as 1; // error 2 ~> 1
+                   ^ [2]
+
+
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:20:7
 
 Cannot call `f2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -214,6 +399,42 @@ References:
    function_typeof.js:12:46
    12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
                                                     ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- function_typeof_import.js:63:5
+
+Cannot cast `x9_1` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   function_typeof_import.js:63:5
+   63|     x9_1 as 2; // TODO okay
+           ^^^^
+
+References:
+   function_typeof.js:43:57
+   43| export function r9(b: boolean): typeof b extends true ? 1 : 2 { return 2; }
+                                                               ^ [1]
+   function_typeof_import.js:63:13
+   63|     x9_1 as 2; // TODO okay
+                   ^ [2]
+
+
+Error ----------------------------------------------------------------------------------- function_typeof_import.js:66:5
+
+Cannot cast `x9_2` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   function_typeof_import.js:66:5
+   66|     x9_2 as 2; // TODO okay
+           ^^^^
+
+References:
+   function_typeof.js:43:57
+   43| export function r9(b: boolean): typeof b extends true ? 1 : 2 { return 2; }
+                                                               ^ [1]
+   function_typeof_import.js:66:13
+   66|     x9_2 as 2; // TODO okay
+                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- maybe.js:9:2
@@ -608,4 +829,4 @@ Cannot instantiate `typeof EscapedGenericExported.x` because empty [1] is not a 
 
 
 
-Found 42 errors
+Found 53 errors
