@@ -164,6 +164,7 @@ module Eval = struct
       so, for [var x = y], returns [Some y]; for all other definitions, returns [None]. *)
   and def type_sig seen : 'loc packed_def -> 'loc evaled = function
     | Variable { def; name; _ } -> packed ~name type_sig seen def
+    | Parameter { def; name; _ } -> packed ~name type_sig seen def
     | TypeAlias { body; name; _ } -> packed ~name type_sig seen body
     | ClassBinding { name; _ } -> ClassDecl name
     | DeclareClassBinding { name; _ } -> ClassDecl name
@@ -432,7 +433,8 @@ let add_global =
   fun global_sig name index acc ->
     let def = local_def_of_index global_sig index in
     match def with
-    | Type_sig.Variable _ ->
+    | Type_sig.Variable _
+    | Type_sig.Parameter _ ->
       add_named_type acc name (Eval.def global_sig empty_seen def) |> add_named name
     | Type_sig.FunBinding _
     | Type_sig.DeclareFun _

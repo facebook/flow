@@ -63,7 +63,9 @@ let def_reason = function
     Reason.(mk_reason (RComponent (OrdinaryName name)) fn_loc)
   | DisabledComponentBinding { id_loc; name } ->
     Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-  | Variable { id_loc; name; _ } -> Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+  | Variable { id_loc; name; _ }
+  | Parameter { id_loc; name; _ } ->
+    Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | DisabledEnumBinding { id_loc; name; _ }
   | EnumBinding { id_loc; name; _ } ->
     Reason.(mk_reason (REnum { name = Some name }) id_loc)
@@ -1973,6 +1975,11 @@ let merge_def ~const_decl file reason = function
     merge_component (mk_merge_env SMap.empty) file reason def (Some (id_loc, name))
   | Variable { id_loc = _; name; def } ->
     merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
+  | Parameter { id_loc = _; name; def; tparams } ->
+    let t (env, _targs) =
+      merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) env file def
+    in
+    merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->
     Type.AnyT.error reason

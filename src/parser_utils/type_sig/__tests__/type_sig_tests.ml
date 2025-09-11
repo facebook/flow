@@ -523,6 +523,54 @@ let%expect_test "export_function_reference_check2" =
        (Signature_error.ExpectedAnnotation ([1:23], Expected_annotation_sort.FunctionReturn)))
   |}]
 
+let%expect_test "export_function_generic_typeof" =
+  print_sig {|
+    export function b<X>(x: X, y: typeof x): void { }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"b"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-17];
+         name = "b"; async = false; generator = false;
+         fn_loc = [1:7-45];
+         def =
+         FunSig {
+           tparams =
+           (Poly ([1:17-20],
+              TParam {name_loc = [1:18-19];
+                name = "X"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false},
+              []));
+           params =
+           [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [1:24-25]; name = "X"})};
+             FunParam {name = (Some "y");
+               t =
+               (Annot
+                  Typeof {loc = [1:30-38];
+                    qname = ["x"]; t = (Ref LocalRef {ref_loc = [1:37-38]; index = 1});
+                    targs = None})}
+             ];
+           rest_param = None; this_param = None;
+           return = (Annot (Void [1:41-45]));
+           type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}}
+    1. Parameter {id_loc = [1:21-22];
+         name = "x"; def = (Annot Bound {ref_loc = [1:24-25]; name = "X"});
+         tparams =
+         (Poly ([1:17-20],
+            TParam {name_loc = [1:18-19];
+              name = "X"; polarity = Polarity.Neutral;
+              bound = None; default = None;
+              is_const = false},
+            []))}
+  |}]
+
 let%expect_test "function_param_optional" =
   print_sig {|
     export default function(p?: string): void {};
@@ -664,20 +712,22 @@ let%expect_test "function_param_typeof_reference" =
 
     Local defs:
     0. Variable {id_loc = [1:14-17]; name = "bar"; def = (Annot (String [1:19-25]))}
-    1. Variable {id_loc = [2:24-27];
+    1. Parameter {id_loc = [2:24-27];
          name = "bar";
          def =
          (Annot
             Typeof {loc = [2:29-39];
               qname = ["bar"]; t = (Ref LocalRef {ref_loc = [2:36-39]; index = 0});
-              targs = None})}
-    2. Variable {id_loc = [2:41-44];
+              targs = None});
+         tparams = Mono}
+    2. Parameter {id_loc = [2:41-44];
          name = "baz";
          def =
          (Annot
             Typeof {loc = [2:46-56];
               qname = ["bar"]; t = (Ref LocalRef {ref_loc = [2:53-56]; index = 1});
-              targs = None})}
+              targs = None});
+         tparams = Mono}
 
   |}]
 
