@@ -298,6 +298,11 @@ and pack_local_binding cx = function
     let id_loc = pack_loc id_loc in
     let def = pack_parsed cx (Lazy.force def) in
     Variable { id_loc; name; def }
+  | P.ParamBinding { id_loc; name; def; tparams } ->
+    let id_loc = pack_loc id_loc in
+    let def = pack_parsed cx (Lazy.force def) in
+    let tparams = pack_tparams cx tparams in
+    Parameter { id_loc; name; def; tparams }
   | P.ConstRefBinding { id_loc; name; ref } ->
     let id_loc = pack_loc id_loc in
     let def = Ref (pack_ref ~type_ref:false ref) in

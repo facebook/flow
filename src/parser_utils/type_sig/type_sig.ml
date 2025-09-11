@@ -340,6 +340,12 @@ type ('loc, 'a) def =
       name: string;
       def: 'a;
     }
+  | Parameter of {
+      id_loc: 'loc;
+      name: string;
+      def: 'a;
+      tparams: ('loc, 'a) tparams;
+    }
   | EnumBinding of {
       id_loc: 'loc;
       name: string;
@@ -373,6 +379,7 @@ let def_id_loc = function
   | DisabledComponentBinding { id_loc; _ }
   | Variable { id_loc; _ } ->
     id_loc
+  | Parameter { id_loc; _ } -> id_loc
   | EnumBinding { id_loc; _ } -> id_loc
   | DisabledEnumBinding { id_loc; _ } -> id_loc
   | NamespaceBinding { id_loc; _ } -> id_loc
@@ -387,7 +394,8 @@ let def_name = function
   | DeclareFun { name; _ }
   | ComponentBinding { name; _ }
   | DisabledComponentBinding { name; _ }
-  | Variable { name; _ } ->
+  | Variable { name; _ }
+  | Parameter { name; _ } ->
     name
   | EnumBinding { name; _ } -> name
   | DisabledEnumBinding { name; _ } -> name

@@ -1,3 +1,221 @@
+Error ------------------------------------------------------------------------------------------ function_typeof.js:5:30
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   5| export function f1(x: typeof x) {} // error - unbound x
+                                   ^
+
+
+Error ------------------------------------------------------------------------------------------ function_typeof.js:18:7
+
+Cannot call `f2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof.js:18:7
+   18| f2(1, 'a'); // error
+             ^^^ [1]
+
+References:
+   function_typeof.js:6:34
+    6| export function f2(x: number, y: typeof x) {}
+                                        ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:21:12
+
+Cannot call `f3` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof.js:21:12
+   21| f3({f: 1}, 'a'); // error
+                  ^^^ [1]
+
+References:
+   function_typeof.js:7:39
+    7| export function f3(x: {f: number}, y: typeof x.f) {}
+                                             ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:24:20
+
+Cannot call `f4` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+
+   function_typeof.js:24:20
+   24| f4({f: [1, 2, 3]}, '1'); // error
+                          ^^^ [1]
+
+References:
+   function_typeof.js:8:33
+    8| export function f4(x: {f: Array<number>}, ...y: typeof x.f) {}
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:26:10
+
+Cannot call `poly1` with `2` bound to `y` because number [1] is incompatible with `X` [2]. [incompatible-type]
+
+   function_typeof.js:26:10
+   26| poly1(1, 2); // TODO okay
+                ^ [1]
+
+References:
+   function_typeof.js:10:35
+   10| export function poly1<X>(x: X, y: typeof x) {}
+                                         ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:27:10
+
+Cannot call `poly1` with `'a'` bound to `y` because string [1] is incompatible with `X` [2]. [incompatible-type]
+
+   function_typeof.js:27:10
+   27| poly1(1, 'a'); // error (TODO string ~> number)
+                ^^^ [1]
+
+References:
+   function_typeof.js:10:35
+   10| export function poly1<X>(x: X, y: typeof x) {}
+                                         ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:30:15
+
+Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof.js:30:15
+   30| poly2({f: 1}, 'a'); // error string ~> number
+                     ^^^ [1]
+
+References:
+   function_typeof.js:11:48
+   11| export function poly2<X: {f: number}>(x: X, y: typeof x.f) {}
+                                                      ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:32:15
+
+Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible with `V` [2]. [incompatible-type]
+
+   function_typeof.js:32:15
+   32| poly3({f: 1}, 3); // TODO okay
+                     ^ [1]
+
+References:
+   function_typeof.js:12:46
+   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
+                                                    ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- function_typeof.js:33:15
+
+Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible with `V` [2]. [incompatible-type]
+
+   function_typeof.js:33:15
+   33| poly3({f: 1}, 'a'); // error (TODO string ~> number)
+                     ^^^ [1]
+
+References:
+   function_typeof.js:12:46
+   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
+                                                    ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- function_typeof_import.js:20:7
+
+Cannot call `f2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof_import.js:20:7
+   20| f2(1, 'a'); // error
+             ^^^ [1]
+
+References:
+   function_typeof.js:6:34
+    6| export function f2(x: number, y: typeof x) {}
+                                        ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:23:12
+
+Cannot call `f3` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof_import.js:23:12
+   23| f3({f: 1}, 'a'); // error
+                  ^^^ [1]
+
+References:
+   function_typeof.js:7:39
+    7| export function f3(x: {f: number}, y: typeof x.f) {}
+                                             ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:28:10
+
+Cannot call `poly1` with `2` bound to `y` because number [1] is incompatible with `X` [2]. [incompatible-type]
+
+   function_typeof_import.js:28:10
+   28| poly1(1, 2); // TODO okay
+                ^ [1]
+
+References:
+   function_typeof.js:10:23
+   10| export function poly1<X>(x: X, y: typeof x) {}
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:29:10
+
+Cannot call `poly1` with `'a'` bound to `y` because string [1] is incompatible with `X` [2]. [incompatible-type]
+
+   function_typeof_import.js:29:10
+   29| poly1(1, 'a'); // error (TODO string ~> number)
+                ^^^ [1]
+
+References:
+   function_typeof.js:10:23
+   10| export function poly1<X>(x: X, y: typeof x) {}
+                             ^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:32:15
+
+Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   function_typeof_import.js:32:15
+   32| poly2({f: 1}, 'a'); // error string ~> number
+                     ^^^ [1]
+
+References:
+   function_typeof.js:11:48
+   11| export function poly2<X: {f: number}>(x: X, y: typeof x.f) {}
+                                                      ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:34:15
+
+Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible with `V` [2]. [incompatible-type]
+
+   function_typeof_import.js:34:15
+   34| poly3({f: 1}, 3); // TODO okay
+                     ^ [1]
+
+References:
+   function_typeof.js:12:46
+   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
+                                                    ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- function_typeof_import.js:35:15
+
+Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible with `V` [2]. [incompatible-type]
+
+   function_typeof_import.js:35:15
+   35| poly3({f: 1}, 'a'); // error (TODO string ~> number)
+                     ^^^ [1]
+
+References:
+   function_typeof.js:12:46
+   12| export function poly3<V, X: {f: V}>(x: X, y: typeof x.f) {}
+                                                    ^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- maybe.js:9:2
 
 Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -390,4 +608,4 @@ Cannot instantiate `typeof EscapedGenericExported.x` because empty [1] is not a 
 
 
 
-Found 26 errors
+Found 42 errors

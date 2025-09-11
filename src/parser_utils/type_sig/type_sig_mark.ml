@@ -86,6 +86,9 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
   | P.LetConstBinding { id_loc; name = _; def } ->
     mark_loc ~visit_loc id_loc;
     mark_parsed ~locs_to_dirtify ~visit_loc (Lazy.force def)
+  | P.ParamBinding { id_loc; name = _; def; tparams = _ } ->
+    mark_loc ~visit_loc id_loc;
+    mark_parsed ~locs_to_dirtify ~visit_loc (Lazy.force def)
   | P.ConstRefBinding { id_loc; name = _; ref } ->
     mark_loc ~visit_loc id_loc;
     resolve_value_ref ~locs_to_dirtify ~visit_loc ref

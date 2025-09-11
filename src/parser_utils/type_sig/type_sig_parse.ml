@@ -189,6 +189,12 @@ and 'loc local_binding =
       name: string;
       def: 'loc parsed Lazy.t;
     }
+  | ParamBinding of {
+      id_loc: 'loc loc_node;
+      name: string;
+      def: 'loc parsed Lazy.t;
+      tparams: ('loc loc_node, 'loc parsed) tparams;
+    }
   | ConstRefBinding of {
       id_loc: 'loc loc_node;
       name: string;
@@ -342,6 +348,7 @@ let loc_of_binding = function
     | VarBinding { id_loc; _ }
     | LetConstBinding { id_loc; _ }
     | ConstRefBinding { id_loc; _ }
+    | ParamBinding { id_loc; _ }
     | ConstFunBinding { id_loc; _ }
     | ClassBinding { id_loc; _ }
     | DeclareClassBinding { id_loc; _ }
@@ -610,6 +617,7 @@ module Scope = struct
     | LetConstBinding _
     | ConstFunBinding _
     | ConstRefBinding _
+    | ParamBinding _
     | FunBinding _
     | DeclareFunBinding _
     | ComponentBinding _
@@ -890,6 +898,9 @@ module Scope = struct
   let bind_var scope tbls kind id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (value_binding kind id_loc name def)
 
+  let bind_param scope tbls id_loc name def tparams =
+    bind_local ~type_only:false scope tbls name id_loc (ParamBinding { id_loc; name; def; tparams })
+
   let bind_const scope tbls id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (LetConstBinding { id_loc; name; def })
 
@@ -937,6 +948,7 @@ module Scope = struct
       | TypeBinding _
       | VarBinding _
       | LetConstBinding _
+      | ParamBinding _
       | ClassBinding _
       | DeclareClassBinding _
       | DeclareFunBinding _
@@ -1085,6 +1097,7 @@ module Scope = struct
                   (match Local_defs.value node with
                   | VarBinding _
                   | LetConstBinding _
+                  | ParamBinding _
                   | ConstRefBinding _
                   | ConstFunBinding _
                   | ClassBinding _
@@ -1108,6 +1121,7 @@ module Scope = struct
                   (match Local_defs.value node with
                   | VarBinding _
                   | LetConstBinding _
+                  | ParamBinding _
                   | ConstRefBinding _
                   | ConstFunBinding _
                   | ClassBinding _
@@ -1142,6 +1156,7 @@ module Scope = struct
             (match local_binding with
             | VarBinding { id_loc; _ }
             | LetConstBinding { id_loc; _ }
+            | ParamBinding { id_loc; _ }
             | ConstRefBinding { id_loc; _ }
             | ConstFunBinding { id_loc; _ }
             | ClassBinding { id_loc; _ }
@@ -1168,6 +1183,7 @@ module Scope = struct
             (match local_binding with
             | VarBinding _
             | LetConstBinding _
+            | ParamBinding _
             | ConstRefBinding _
             | ConstFunBinding _
             | ClassBinding _
@@ -3447,7 +3463,7 @@ and member =
   in
   (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
-and param opts scope tbls xs loc patt ~bind_names default =
+and param opts scope tbls (xs, tparams) loc patt ~bind_names default =
   let module P = Ast.Pattern in
   match patt with
   | P.Identifier { P.Identifier.name = id; annot = t; optional } ->
@@ -3478,7 +3494,7 @@ and param opts scope tbls xs loc patt ~bind_names default =
     let scope =
       if bind_names then (
         let scope = Scope.push_lex scope in
-        Scope.bind_var scope tbls Ast.Variable.Let loc name (lazy name_t) ignore2;
+        Scope.bind_param scope tbls loc name (lazy name_t) tparams ignore2;
         scope
       ) else
         scope
@@ -3639,7 +3655,7 @@ and function_def_helper =
     in
     let (xs, tparams) = tparams opts scope tbls xs tps in
     let this_param = this_param opts scope tbls xs this_ in
-    let params = params opts scope tbls xs [] ps in
+    let params = params opts scope tbls (xs, tparams) [] ps in
     let rest_param =
       match rp with
       | Some (param_loc, { F.RestParam.argument = (_, p); comments = _ }) ->
@@ -3714,7 +3730,7 @@ and component_def =
     in
     let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let loc = push_loc tbls loc in
-    let params = params opts scope tbls xs [] ps in
+    let params = params opts scope tbls (xs, tparams) [] ps in
     let rest_param =
       match rp with
       | Some (param_loc, { C.RestParam.argument = (_, p); comments = _ }) ->
