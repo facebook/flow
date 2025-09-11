@@ -625,7 +625,8 @@ let rec string_of_desc = function
     | Some name -> spf "enum `%s`" name
     | None -> "enum")
   | REnumMember { enum; member_name } -> spf "member %s of enum %s" member_name (string_of_desc enum)
-  | REnumUnknownMembers enum -> spf "unknown members of enum %s" (string_of_desc enum)
+  | REnumUnknownMembers enum ->
+    spf "the unknown members of enum %s (specified using `...`)" (string_of_desc enum)
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RImplicitInstantiation -> "implicit instantiation"

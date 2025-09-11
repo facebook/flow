@@ -569,8 +569,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:45:3
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match unknown
-members of enum `E` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match the unknown
+members of enum `E` (specified using `...`) [1]. [match-not-exhaustive]
 
    enums.js:45:3
    45|   match (x) { // ERROR: missing wildcard for unknown members
