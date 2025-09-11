@@ -3543,7 +3543,7 @@ and param opts scope tbls (xs, tparams) loc patt ~bind_names default =
     (None, scope, t)
   | P.Expression _ -> failwith "unexpected expression pattern"
 
-and rest_param opts scope tbls xs param_loc p =
+and rest_param opts scope tbls (xs, tparams) param_loc ~bind_names p =
   let module P = Ast.Pattern in
   match p with
   | P.Identifier { P.Identifier.name = (id_loc, _) as id; annot = t; optional = _ } ->
@@ -3560,7 +3560,15 @@ and rest_param opts scope tbls xs param_loc p =
         xs
         t
     in
-    Some (name, loc, t)
+    let scope =
+      if bind_names then (
+        let scope = Scope.push_lex scope in
+        Scope.bind_param scope tbls loc (id_name id) (lazy t) tparams ignore2;
+        scope
+      ) else
+        scope
+    in
+    (Some (name, loc, t), scope)
   | P.Object { P.Object.annot = t; _ } ->
     let loc = push_loc tbls param_loc in
     let t =
@@ -3573,7 +3581,7 @@ and rest_param opts scope tbls xs param_loc p =
         xs
         t
     in
-    Some (None, loc, t)
+    (Some (None, loc, t), scope)
   | P.Array { P.Array.annot = t; _ } ->
     let loc = push_loc tbls param_loc in
     let t =
@@ -3586,13 +3594,13 @@ and rest_param opts scope tbls xs param_loc p =
         xs
         t
     in
-    Some (None, loc, t)
-  | P.Expression _ -> None
+    (Some (None, loc, t), scope)
+  | P.Expression _ -> (None, scope)
 
 and function_def_helper =
   let module F = Ast.Function in
   let rec params opts scope tbls xs acc = function
-    | [] -> List.rev acc
+    | [] -> (List.rev acc, scope)
     | p :: ps ->
       let (loc, { F.Param.argument = (_, patt); default }) = p in
       let (name, scope, t) = param opts scope tbls xs loc patt ~bind_names:true default in
@@ -3655,13 +3663,13 @@ and function_def_helper =
     in
     let (xs, tparams) = tparams opts scope tbls xs tps in
     let this_param = this_param opts scope tbls xs this_ in
-    let params = params opts scope tbls (xs, tparams) [] ps in
-    let rest_param =
+    let (params, scope) = params opts scope tbls (xs, tparams) [] ps in
+    let (rest_param, scope) =
       match rp with
       | Some (param_loc, { F.RestParam.argument = (_, p); comments = _ }) ->
-        let rp = rest_param opts scope tbls xs param_loc p in
-        Base.Option.map ~f:(fun (name, loc, t) -> FunRestParam { name; loc; t }) rp
-      | None -> None
+        let (rp, scope) = rest_param opts scope tbls (xs, tparams) param_loc ~bind_names:true p in
+        (Base.Option.map ~f:(fun (name, loc, t) -> FunRestParam { name; loc; t }) rp, scope)
+      | None -> (None, scope)
     in
     let (return, type_guard_opt) =
       return opts scope tbls xs ~async ~generator ~constructor body r
@@ -3734,7 +3742,7 @@ and component_def =
     let rest_param =
       match rp with
       | Some (param_loc, { C.RestParam.argument = (_, p); comments = _ }) ->
-        let rp = rest_param opts scope tbls xs param_loc p in
+        let (rp, _scope) = rest_param opts scope tbls (xs, tparams) param_loc ~bind_names:false p in
         Base.Option.map ~f:(fun (_, _, t) -> ComponentRestParam { t }) rp
       | None -> None
     in

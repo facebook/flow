@@ -23,7 +23,7 @@ f3({f: 1}, 2); // okay
 f3({f: 1}, 'a'); // error
 
 f4({f: [1, 2, 3]}, 4, 5, 6);
-f4({f: [1, 2, 3]}, '1'); // TODO error
+f4({f: [1, 2, 3]}, '1'); // error
 
 poly1(1, 2); // TODO okay
 poly1(1, 'a'); // error (TODO string ~> number)
@@ -35,10 +35,10 @@ poly3({f: 1}, 3); // TODO okay
 poly3({f: 1}, 'a'); // error (TODO string ~> number)
 
 r1 as (x: number) => number; // ok
-r1 as (x: number) => string; // TODO error
+r1 as (x: number) => string; // error
 
 r2 as (x: {f: number}) => number; // ok
-r2 as (x: {f: number}) => string; // TODO error
+r2 as (x: {f: number}) => string; // error
 
 r3 as (...x: Array<number>) => Array<number>; // ok
 
@@ -46,22 +46,22 @@ r4 as <X>(x: X) => X; // ok
 r4 as <X>(x: X) => empty // TODO error
 
 r5 as <X>(x: X) => {f: X}; // ok
-r5 as <X>(x: X) => {f: empty}; // TODO error
+r5 as <X>(x: X) => {f: empty}; // error
 
 r6 as <X: {f: number}>(x: X) => number; // ok
-r6 as <X: {f: number}>(x: X) => string; // TODO error
+r6 as <X: {f: number}>(x: X) => string; // error
 
 r7 as <V, X: {f: V}>(x: X) => V; // ok
-r7 as <V, X: {f: V}>(x: X) => empty; // TODO error
+r7 as <V, X: {f: V}>(x: X) => empty; // error
 
 r8 as <X>(...x: Array<X>) => Array<X>; // ok
 r8 as <X>(...x: Array<X>) => Array<empty>; // TODO error
 
 {
     const x9_1 = r9(true); // inferred as 2
-    x9_1 as 1; // TODO error 2 ~> 1
-    x9_1 as 2; // TODO okay
+    x9_1 as 1; // error 2 ~> 1
+    x9_1 as 2; // okay
     const x9_2 = r9(false); // inferred as 2
-    x9_2 as 1; // TODO error 2 ~> 1
-    x9_2 as 2; // TODO okay
+    x9_2 as 1; // error 2 ~> 1
+    x9_2 as 2; // okay
 }

@@ -571,6 +571,82 @@ let%expect_test "export_function_generic_typeof" =
             []))}
   |}]
 
+let%expect_test "export_function_typeof_return" =
+  print_sig {|
+    export function a(b: string, c: string): typeof b { return b; }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"a"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-17];
+         name = "a"; async = false; generator = false;
+         fn_loc = [1:7-49];
+         def =
+         FunSig {tparams = Mono;
+           params =
+           [FunParam {name = (Some "b"); t = (Annot (String [1:21-27]))};
+             FunParam {name = (Some "c"); t = (Annot (String [1:32-38]))}];
+           rest_param = None; this_param = None;
+           return =
+           (Annot
+              Typeof {loc = [1:41-49];
+                qname = ["b"]; t = (Ref LocalRef {ref_loc = [1:48-49]; index = 1});
+                targs = None});
+           type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}}
+    1. Parameter {id_loc = [1:18-19]; name = "b"; def = (Annot (String [1:21-27])); tparams = Mono}
+    |}]
+
+let%expect_test "export_function_generic_typeof_return" =
+  print_sig {|
+    export function b<X>(x: X): typeof x { return x; }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"b"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. FunBinding {id_loc = [1:16-17];
+         name = "b"; async = false; generator = false;
+         fn_loc = [1:7-36];
+         def =
+         FunSig {
+           tparams =
+           (Poly ([1:17-20],
+              TParam {name_loc = [1:18-19];
+                name = "X"; polarity = Polarity.Neutral;
+                bound = None; default = None;
+                is_const = false},
+              []));
+           params =
+           [FunParam {name = (Some "x"); t = (Annot Bound {ref_loc = [1:24-25]; name = "X"})}];
+           rest_param = None; this_param = None;
+           return =
+           (Annot
+              Typeof {loc = [1:28-36];
+                qname = ["x"]; t = (Ref LocalRef {ref_loc = [1:35-36]; index = 1});
+                targs = None});
+           type_guard = None; effect_ = ArbitraryEffect};
+         statics = {}}
+    1. Parameter {id_loc = [1:21-22];
+         name = "x"; def = (Annot Bound {ref_loc = [1:24-25]; name = "X"});
+         tparams =
+         (Poly ([1:17-20],
+            TParam {name_loc = [1:18-19];
+              name = "X"; polarity = Polarity.Neutral;
+              bound = None; default = None;
+              is_const = false},
+            []))}
+  |}]
+
 let%expect_test "function_param_optional" =
   print_sig {|
     export default function(p?: string): void {};
