@@ -135,6 +135,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
+  deprecated_utilities: string list;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
@@ -317,6 +318,8 @@ val should_strip_root : t -> bool
 val ts_syntax : t -> bool
 
 val ts_utility_syntax : t -> bool
+
+val is_utility_type_deprecated : t -> string -> bool
 
 val assert_operator_enabled : t -> bool
 

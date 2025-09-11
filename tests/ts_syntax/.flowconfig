@@ -5,3 +5,4 @@ unused_ts_shim.js
 all=true
 no_flowlib=false
 experimental.ts_utility_syntax=true
+experimental.deprecated_utilities.includes=$ReadOnlyArray
