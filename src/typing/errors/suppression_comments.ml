@@ -91,7 +91,7 @@ let should_suppress comment loc =
       Error MissingCode
     else
       match Base.String.index comment ']' with
-      | None -> Ok (Some (All loc)) (* Not a code if the bracket is not terminated *)
+      | None -> Error MalformedCode (* Not a code if the bracket is not terminated *)
       | Some 0 -> Error MalformedCode (* $FlowFixMe[] is not a real code *)
       | Some index ->
         (* //$FlowFixMe [code] is invalid *)
