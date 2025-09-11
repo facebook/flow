@@ -105,6 +105,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     val mutable require_declarator_info = None
 
+    val mutable in_graphql_tagged_literal = false
+
     val mutable available_private_names : ALoc.t SMap.t = SMap.empty
 
     val mutable found_loc_ = LocNotFound
@@ -693,9 +695,30 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
       if covers_target loc then this#found_empty "comment";
       c
 
+    method! tagged_template expr =
+      let open Ast.Expression.TaggedTemplate in
+      let { tag; quasi = (quasi_loc, _); comments = _ } = expr in
+      match tag with
+      | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
+        when covers_target quasi_loc ->
+        let saved = in_graphql_tagged_literal in
+        in_graphql_tagged_literal <- true;
+        let expr' = super#tagged_template expr in
+        in_graphql_tagged_literal <- saved;
+        expr'
+      | _ -> super#tagged_template expr
+
     method! template_literal_element e =
       let (loc, _) = e in
-      if covers_target loc then this#found_empty "template";
+      ( if covers_target loc then
+        let kind =
+          if in_graphql_tagged_literal then
+            "template(graphql)"
+          else
+            "template"
+        in
+        this#found_empty kind
+      );
       e
 
     method! jsx_attribute_value_literal lit =
