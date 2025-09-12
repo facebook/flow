@@ -1,1 +1,1 @@
-type T = $NonMaybeType<mixed>; // ERROR
+type T = $NonMaybeType<?number>; // ERROR

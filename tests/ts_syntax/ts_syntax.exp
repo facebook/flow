@@ -386,8 +386,8 @@ Error --------------------------------------------------------------------------
 
 The utility type `$NonMaybeType` is deprecated, use `NonNullable` instead. [deprecated-utility]
 
-   1| type T = $NonMaybeType<mixed>; // ERROR
-               ^^^^^^^^^^^^^^^^^^^^
+   1| type T = $NonMaybeType<?number>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------- deprecated/readonly.js:1:10
@@ -434,6 +434,22 @@ References:
    deprecated/readonlymap.js:2:10
    2| const x: T = 3; // ERROR
                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- deprecated/unknown.js:1:10
+
+The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utility]
+
+   1| type T = mixed; // ERROR
+               ^^^^^
+
+
+Error --------------------------------------------------------------------------------------- deprecated/unknown.js:3:10
+
+The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utility]
+
+   3| const x: mixed = 1; // ERROR
+               ^^^^^
 
 
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
@@ -642,4 +658,4 @@ types. [ts-syntax]
 
 
 
-Found 77 errors
+Found 79 errors
