@@ -299,7 +299,7 @@ val ts_syntax : config -> bool
 
 val ts_utility_syntax : config -> bool
 
-val deprecated_utilities : config -> string list
+val deprecated_utilities : config -> string list SMap.t
 
 val assert_operator : config -> Options.AssertOperator.t
 

@@ -1567,7 +1567,10 @@ let make_options
     opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
-    opt_deprecated_utilities = FlowConfig.deprecated_utilities flowconfig;
+    opt_deprecated_utilities =
+      SMap.map
+        (Base.List.map ~f:(Files.expand_project_root_token ~root))
+        (FlowConfig.deprecated_utilities flowconfig);
     opt_assert_operator = FlowConfig.assert_operator flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
     opt_automatic_require_default =

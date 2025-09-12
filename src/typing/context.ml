@@ -85,7 +85,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
-  deprecated_utilities: string list;
+  deprecated_utilities: string list SMap.t;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
@@ -626,7 +626,12 @@ let enable_invalid_comparison_null_check cx =
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let is_utility_type_deprecated cx t =
-  List.exists (fun t' -> t = t') cx.metadata.deprecated_utilities
+  match SMap.find_opt t cx.metadata.deprecated_utilities with
+  | None -> false
+  | Some dirs ->
+    let filename = File_key.to_string (file cx) in
+    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let enable_invariant_subtyping_error_message_improvement cx =
   cx.metadata.invariant_subtyping_error_message_improvement

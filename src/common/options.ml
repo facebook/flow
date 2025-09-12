@@ -198,7 +198,7 @@ type t = {
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_ts_utility_syntax: bool;
-  opt_deprecated_utilities: string list;
+  opt_deprecated_utilities: string list SMap.t;
   opt_assert_operator: AssertOperator.t;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
