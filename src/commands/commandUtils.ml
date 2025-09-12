@@ -1390,6 +1390,11 @@ let make_options
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = File_path.to_string temp_dir in
+  let flowlib_dir =
+    match Flowlib.libdir ~no_flowlib:options_flags.no_flowlib temp_dir with
+    | Flowlib.Prelude path -> path
+    | Flowlib.Flowlib path -> path
+  in
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
     Options.opt_flowconfig_name = flowconfig_name;
@@ -1569,7 +1574,12 @@ let make_options
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
     opt_deprecated_utilities =
       SMap.map
-        (Base.List.map ~f:(Files.expand_project_root_token ~root))
+        (Base.List.map ~f:(fun s ->
+             s
+             |> Files.expand_project_root_token ~root
+             |> Files.expand_builtin_root_token ~flowlib_dir
+         )
+        )
         (FlowConfig.deprecated_utilities flowconfig);
     opt_assert_operator = FlowConfig.assert_operator flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;

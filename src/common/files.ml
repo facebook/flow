@@ -541,6 +541,8 @@ let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
+let builtin_root_token = Str.regexp_string "<BUILTIN>"
+
 let dir_filter_of_options (options : options) f =
   let can_prune =
     (* for now, we can prune if there are no negations, and if none of the ignores
@@ -970,3 +972,7 @@ let canonicalize_filenames ~cwd ~handle_imaginary filenames =
 let expand_project_root_token ~root =
   let root = File_path.to_string root |> Sys_utils.normalize_filename_dir_sep in
   (fun str -> str |> Str.split_delim project_root_token |> String.concat root)
+
+let expand_builtin_root_token ~flowlib_dir =
+  let flowlib_dir_str = File_path.to_string flowlib_dir |> Sys_utils.normalize_filename_dir_sep in
+  (fun str -> str |> Str.split_delim builtin_root_token |> String.concat flowlib_dir_str)

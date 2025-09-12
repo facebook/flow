@@ -6,3 +6,4 @@ all=true
 no_flowlib=false
 experimental.ts_utility_syntax=true
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>'
+experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTIN>'
