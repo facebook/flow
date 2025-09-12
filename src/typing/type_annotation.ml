@@ -1317,6 +1317,18 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               )
           end;
           local_generic_type ()
+        | "$ReadOnlySet" ->
+          if
+            Context.is_utility_type_deprecated env.cx "$ReadOnlySet"
+            && Context.ts_utility_syntax env.cx
+          then begin
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.DollarReadOnlySet }
+              )
+          end;
+          local_generic_type ()
         (* other applications with id as head expr *)
         | _ -> local_generic_type ()
       end

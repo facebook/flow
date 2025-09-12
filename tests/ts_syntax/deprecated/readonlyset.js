@@ -1,1 +1,1 @@
-type T = $ReadOnlySet<number>; // OK
+type T = $ReadOnlySet<number>; // ERROR
