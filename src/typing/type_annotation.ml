@@ -807,6 +807,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
         | "$ReadOnlyArray" ->
+          if Context.is_utility_type_deprecated cx "$ReadOnlyArray" then begin
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.DollarReadOnlyArray }
+              )
+          end;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
               let elemt = List.hd elemts in

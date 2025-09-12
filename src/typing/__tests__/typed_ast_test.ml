@@ -74,6 +74,7 @@ let metadata =
     strip_root = true;
     ts_syntax = true;
     ts_utility_syntax = true;
+    deprecated_utilities = [];
     assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;

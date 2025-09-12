@@ -85,6 +85,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
+  deprecated_utilities: string list;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
@@ -354,6 +355,7 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     ts_syntax = Options.ts_syntax options;
     ts_utility_syntax = Options.ts_utility_syntax options;
+    deprecated_utilities = Options.deprecated_utilities options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
     use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
@@ -622,6 +624,9 @@ let enable_invalid_comparison_null_check cx =
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+
+let is_utility_type_deprecated cx t =
+  List.exists (fun t' -> t = t') cx.metadata.deprecated_utilities
 
 let enable_invariant_subtyping_error_message_improvement cx =
   cx.metadata.invariant_subtyping_error_message_improvement

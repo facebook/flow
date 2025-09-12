@@ -156,6 +156,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     ts_syntax: bool;
     ts_utility_syntax: bool;
+    deprecated_utilities: string list;
     assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
@@ -313,6 +314,7 @@ module Opts = struct
       assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
       ts_utility_syntax = false;
+      deprecated_utilities = [];
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
@@ -1184,6 +1186,12 @@ module Opts = struct
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.ts_utility_syntax",
         boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
+      );
+      ( "experimental.deprecated_utilities.includes",
+        string
+          ~init:(fun opts -> { opts with deprecated_utilities = [] })
+          ~multiple:true
+          (fun opts v -> Ok { opts with deprecated_utilities = v :: opts.deprecated_utilities })
       );
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
@@ -2173,6 +2181,8 @@ let strict_mode c = c.strict_mode
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
+
+let deprecated_utilities c = c.options.Opts.deprecated_utilities
 
 let assert_operator c = c.options.Opts.assert_operator
 
