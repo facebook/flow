@@ -390,6 +390,30 @@ The utility type `$NonMaybeType` is deprecated, use `NonNullable` instead. [depr
                ^^^^^^^^^^^^^^^^^^^^
 
 
+Error -------------------------------------------------------------------------------------- deprecated/readonly.js:1:10
+
+The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
+
+   1| type T = $ReadOnly<{a: string}>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:1:10
+
+The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
+
+   1| type A = $ReadOnly<[string, number]>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:2:10
+
+The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
+
+   2| type B = $ReadOnly<[number]>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------- deprecated/readonlyarray.js:1:10
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
@@ -618,4 +642,4 @@ types. [ts-syntax]
 
 
 
-Found 74 errors
+Found 77 errors
