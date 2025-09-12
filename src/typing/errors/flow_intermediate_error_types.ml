@@ -145,6 +145,14 @@ module IncorrectType = struct
     | TSReadonlyMap
     | TSReadonlySet
     | TSNonNullable
+    | DollarNoneMaybeType
+    | DollarReadOnly
+    | DollarReadOnlyArray
+    | DollarReadOnlyMap
+    | DollarReadOnlySet
+    | DollarReadOnlyWeakMap
+    | DollarReadOnlyWeakSet
+    | Mixed
 
   let incorrect_of_kind = function
     | Partial -> "$Partial"
@@ -154,6 +162,14 @@ module IncorrectType = struct
     | TSReadonlyMap -> "ReadonlyMap"
     | TSReadonlySet -> "ReadonlySet"
     | TSNonNullable -> "NonNullable"
+    | DollarNoneMaybeType -> "$NonMaybeType"
+    | DollarReadOnly -> "$ReadOnly"
+    | DollarReadOnlyArray -> "$ReadOnlyArray"
+    | DollarReadOnlyMap -> "$ReadOnlyMap"
+    | DollarReadOnlySet -> "$ReadOnlySet"
+    | DollarReadOnlyWeakMap -> "$ReadOnlyWeakMap"
+    | DollarReadOnlyWeakSet -> "$ReadOnlyWeakSet"
+    | Mixed -> "mixed"
 
   let replacement_of_kind = function
     | Partial -> "Partial"
@@ -163,6 +179,14 @@ module IncorrectType = struct
     | TSReadonlyMap -> "$ReadOnlyMap"
     | TSReadonlySet -> "$ReadOnlySet"
     | TSNonNullable -> "$NonMaybeType"
+    | DollarNoneMaybeType -> "NonNullable"
+    | DollarReadOnly -> "Readonly"
+    | DollarReadOnlyArray -> "ReadonlyArray"
+    | DollarReadOnlyMap -> "ReadonlyMap"
+    | DollarReadOnlySet -> "ReadonlySet"
+    | DollarReadOnlyWeakMap -> "ReadonlyWeakMap"
+    | DollarReadOnlyWeakSet -> "ReadonlyWeakSet"
+    | Mixed -> "unknown"
 
   type error_type =
     | DeprecatedUtility
@@ -170,7 +194,15 @@ module IncorrectType = struct
 
   let error_type_of_kind = function
     | Partial
-    | Shape ->
+    | Shape
+    | DollarNoneMaybeType
+    | DollarReadOnly
+    | DollarReadOnlyArray
+    | DollarReadOnlyMap
+    | DollarReadOnlySet
+    | DollarReadOnlyWeakMap
+    | DollarReadOnlyWeakSet
+    | Mixed ->
       DeprecatedUtility
     | TSReadonly
     | TSReadonlyArray
