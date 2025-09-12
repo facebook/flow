@@ -156,7 +156,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     ts_syntax: bool;
     ts_utility_syntax: bool;
-    deprecated_utilities: string list;
+    deprecated_utilities: string list SMap.t;
     assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
@@ -314,7 +314,7 @@ module Opts = struct
       assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
       ts_utility_syntax = false;
-      deprecated_utilities = [];
+      deprecated_utilities = SMap.empty;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
@@ -1187,11 +1187,20 @@ module Opts = struct
       ( "experimental.ts_utility_syntax",
         boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
       );
-      ( "experimental.deprecated_utilities.includes",
-        string
-          ~init:(fun opts -> { opts with deprecated_utilities = [] })
+      ( "experimental.deprecated_utilities",
+        mapping
           ~multiple:true
-          (fun opts v -> Ok { opts with deprecated_utilities = v :: opts.deprecated_utilities })
+          (fun v -> Ok v)
+          (fun opts (utility, directory) ->
+            let updated_map =
+              SMap.update
+                utility
+                (function
+                  | None -> Some [directory]
+                  | Some existing_dirs -> Some (directory :: existing_dirs))
+                opts.deprecated_utilities
+            in
+            Ok { opts with deprecated_utilities = updated_map })
       );
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })

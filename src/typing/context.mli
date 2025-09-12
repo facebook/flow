@@ -135,7 +135,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
-  deprecated_utilities: string list;
+  deprecated_utilities: string list SMap.t;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
