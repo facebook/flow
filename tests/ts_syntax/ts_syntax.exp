@@ -422,6 +422,14 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                ^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:1:10
+
+The utility type `$ReadOnlyMap` is deprecated, use `ReadonlyMap` instead. [deprecated-utility]
+
+   1| type T = $ReadOnlyMap<string, number>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:2:14
 
 Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
@@ -658,4 +666,4 @@ types. [ts-syntax]
 
 
 
-Found 79 errors
+Found 80 errors
