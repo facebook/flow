@@ -1,3 +1,17 @@
+### 0.282.0
+
+Likely to cause new Flow errors:
+* Multiple object property invariant subtyping errors on the same object will be combined into one error. Some error locations might be moved.
+
+Notable bug fixes:
+* Fixes crash happening on exported functions with signatures of the form `<X>(x: X, y: typeof x): T`
+
+IDE:
+* We now provide a best effort quickfix for some invariant subtyping errors.
+
+Library Definitions:
+* `Array.find` can now return a more precise value if the predicate is inferred to be a type guard. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSGieVGwAAIJWypQBBKBmbhS4ACgA6UHFuElMp1coAIhAEFKFAstSQFUqMrhVRqtXMdSwZdB7FKqJRkArqHQADyK5W4AB8AG5NbY3WxjQB5OFSgC87uoVngWoAFA0E0GpZmKvZgZCIDApUaEABKMNQAD0ValdfrUoAelKAAosBpwCD5QZSgAGAZtUoAPjmIHA2L3eFKoBAAO590vD0fj3ua3IgBomEidqBJDL2EwgAVAA)
+
 ### 0.281.0
 
 Breaking Changes:
