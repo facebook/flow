@@ -145,7 +145,7 @@ module IncorrectType = struct
     | TSReadonlyMap
     | TSReadonlySet
     | TSNonNullable
-    | DollarNoneMaybeType
+    | DollarNonMaybeType
     | DollarReadOnly
     | DollarReadOnlyArray
     | DollarReadOnlyMap
@@ -162,7 +162,7 @@ module IncorrectType = struct
     | TSReadonlyMap -> "ReadonlyMap"
     | TSReadonlySet -> "ReadonlySet"
     | TSNonNullable -> "NonNullable"
-    | DollarNoneMaybeType -> "$NonMaybeType"
+    | DollarNonMaybeType -> "$NonMaybeType"
     | DollarReadOnly -> "$ReadOnly"
     | DollarReadOnlyArray -> "$ReadOnlyArray"
     | DollarReadOnlyMap -> "$ReadOnlyMap"
@@ -179,7 +179,7 @@ module IncorrectType = struct
     | TSReadonlyMap -> "$ReadOnlyMap"
     | TSReadonlySet -> "$ReadOnlySet"
     | TSNonNullable -> "$NonMaybeType"
-    | DollarNoneMaybeType -> "NonNullable"
+    | DollarNonMaybeType -> "NonNullable"
     | DollarReadOnly -> "Readonly"
     | DollarReadOnlyArray -> "ReadonlyArray"
     | DollarReadOnlyMap -> "ReadonlyMap"
@@ -195,7 +195,7 @@ module IncorrectType = struct
   let error_type_of_kind = function
     | Partial
     | Shape
-    | DollarNoneMaybeType
+    | DollarNonMaybeType
     | DollarReadOnly
     | DollarReadOnlyArray
     | DollarReadOnlyMap

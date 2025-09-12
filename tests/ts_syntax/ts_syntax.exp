@@ -382,6 +382,14 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------- deprecated/nonMaybeType.js:1:10
+
+The utility type `$NonMaybeType` is deprecated, use `NonNullable` instead. [deprecated-utility]
+
+   1| type T = $NonMaybeType<mixed>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------- deprecated/readonlyarray.js:1:10
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
@@ -610,4 +618,4 @@ types. [ts-syntax]
 
 
 
-Found 73 errors
+Found 74 errors
