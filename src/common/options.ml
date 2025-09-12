@@ -197,6 +197,7 @@ type t = {
   opt_strip_root: bool;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
+  opt_ts_utility_syntax: bool;
   opt_assert_operator: AssertOperator.t;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
@@ -429,6 +430,8 @@ let strict_mode opts = opts.opt_strict_mode
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
+
+let ts_utility_syntax opts = opts.opt_ts_utility_syntax
 
 let assert_operator opts = opts.opt_assert_operator
 

@@ -297,6 +297,8 @@ val strict_mode : config -> StrictModeSettings.t
 
 val ts_syntax : config -> bool
 
+val ts_utility_syntax : config -> bool
+
 val assert_operator : config -> Options.AssertOperator.t
 
 val type_expansion_recursion_limit : config -> int

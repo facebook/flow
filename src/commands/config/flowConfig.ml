@@ -155,6 +155,7 @@ module Opts = struct
     supported_operating_systems: Options.supported_os list;
     strict_es6_import_export: bool;
     ts_syntax: bool;
+    ts_utility_syntax: bool;
     assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
@@ -311,6 +312,7 @@ module Opts = struct
       supported_operating_systems = [];
       assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
+      ts_utility_syntax = false;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
@@ -1180,6 +1182,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
       );
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ( "experimental.ts_utility_syntax",
+        boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
+      );
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
       );
@@ -2166,6 +2171,8 @@ let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 let strict_mode c = c.strict_mode
 
 let ts_syntax c = c.options.Opts.ts_syntax
+
+let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
 
 let assert_operator c = c.options.Opts.assert_operator
 

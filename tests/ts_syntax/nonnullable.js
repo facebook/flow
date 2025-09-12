@@ -1,1 +1,1 @@
-type T = NonNullable<mixed>; // ERROR
+type T = NonNullable<mixed>; // OK

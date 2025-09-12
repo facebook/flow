@@ -1,1 +1,1 @@
-type T = ReadonlySet<number>; // ERROR
+type T = ReadonlySet<number>; // OK

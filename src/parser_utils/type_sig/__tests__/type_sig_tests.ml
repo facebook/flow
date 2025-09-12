@@ -208,6 +208,7 @@ let sig_options
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
     ?(enable_ts_syntax = true)
+    ?(enable_ts_utility_syntax = true)
     ?(hook_compatibility = true)
     ?(enable_relay_integration = false)
     ?(casting_syntax = Options.CastingSyntax.Both)
@@ -225,6 +226,7 @@ let sig_options
     enable_component_syntax;
     component_syntax_enabled_in_config = true;
     enable_ts_syntax;
+    enable_ts_utility_syntax;
     hook_compatibility;
     enable_relay_integration;
     casting_syntax;

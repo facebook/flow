@@ -1,1 +1,1 @@
-type T = Readonly<{a: string}>; // ERROR
+type T = Readonly<{a: string}>; // OK

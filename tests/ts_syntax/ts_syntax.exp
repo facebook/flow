@@ -64,22 +64,6 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
                ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- nonnullable.js:1:10
-
-The equivalent of TypeScript's `NonNullable` type in Flow is `$NonMaybeType`. [ts-syntax]
-
-   1| type T = NonNullable<mixed>; // ERROR
-               ^^^^^^^^^^^^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- readonly.js:1:10
-
-The equivalent of TypeScript's `Readonly` type in Flow is `$ReadOnly`. [ts-syntax]
-
-   1| type T = Readonly<{a: string}>; // ERROR
-               ^^^^^^^^^^^^^^^^^^^^^
-
-
 Error -------------------------------------------------------------------------------------------- readonly_type.js:1:10
 
 The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `$ReadOnly<[T, S]>`. [ts-syntax]
@@ -141,28 +125,18 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
          ^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- readonlyarray.js:1:10
+Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
-The equivalent of TypeScript's `ReadonlyArray` type in Flow is `$ReadOnlyArray`. [ts-syntax]
+Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
 
-   1| type T = ReadonlyArray<number>; // ERROR
-               ^^^^^^^^^^^^^^^^^^^^^
+   readonlymap.js:2:14
+   2| const x: T = 3; // ERROR
+                   ^ [1]
 
-
-Error ---------------------------------------------------------------------------------------------- readonlymap.js:1:10
-
-The equivalent of TypeScript's `ReadonlyMap` type in Flow is `$ReadOnlyMap`. [ts-syntax]
-
-   1| type T = ReadonlyMap<string, number>; // ERROR
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- readonlyset.js:1:10
-
-The equivalent of TypeScript's `ReadonlySet` type in Flow is `$ReadOnlySet`. [ts-syntax]
-
-   1| type T = ReadonlySet<number>; // ERROR
-               ^^^^^^^^^^^^^^^^^^^
+References:
+   readonlymap.js:2:10
+   2| const x: T = 3; // ERROR
+               ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
@@ -229,21 +203,5 @@ types. [ts-syntax]
                ^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- unknown.js:1:10
 
-The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
-
-   1| type T = unknown; // ERROR
-               ^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------- unknown.js:3:10
-
-The equivalent of TypeScript's `unknown` type in Flow is `mixed`. [ts-syntax]
-
-   3| const x: unknown = 1; // ERROR
-               ^^^^^^^
-
-
-
-Found 29 errors
+Found 23 errors

@@ -134,6 +134,7 @@ type metadata = {
   strict_es6_import_export: bool;
   strip_root: bool;
   ts_syntax: bool;
+  ts_utility_syntax: bool;
   assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
@@ -314,6 +315,8 @@ val should_munge_underscores : t -> bool
 val should_strip_root : t -> bool
 
 val ts_syntax : t -> bool
+
+val ts_utility_syntax : t -> bool
 
 val assert_operator_enabled : t -> bool
 

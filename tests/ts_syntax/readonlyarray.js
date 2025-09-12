@@ -1,1 +1,1 @@
-type T = ReadonlyArray<number>; // ERROR
+type T = ReadonlyArray<number>; // OK
