@@ -1,5 +1,5 @@
-type T = mixed; // OK
+type T = mixed; // ERROR
 
-const x: mixed = 1; // OK
+const x: mixed = 1; // ERROR
 
 const uknown: number = 1; // OK

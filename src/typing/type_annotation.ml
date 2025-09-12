@@ -352,7 +352,15 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | (loc, (Any _ as t_ast)) ->
       add_unclear_type_error_if_not_lib_file env.cx loc;
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
-    | (loc, (Mixed _ as t_ast)) -> ((loc, MixedT.at loc), t_ast)
+    | (loc, (Mixed _ as t_ast)) ->
+      if Context.is_utility_type_deprecated env.cx "mixed" && Context.ts_utility_syntax env.cx then begin
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EIncorrectTypeWithReplacement
+             { loc; kind = Flow_intermediate_error_types.IncorrectType.Mixed }
+          )
+      end;
+      ((loc, MixedT.at loc), t_ast)
     | (loc, (Empty _ as t_ast)) -> ((loc, EmptyT.at loc), t_ast)
     | (loc, (Void _ as t_ast)) -> ((loc, VoidT.at loc), t_ast)
     | (loc, (Null _ as t_ast)) -> ((loc, NullT.at loc), t_ast)
