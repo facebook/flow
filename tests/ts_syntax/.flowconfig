@@ -10,3 +10,5 @@ experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/deprecated
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTIN>'
 
 experimental.deprecated_utilities='$NonMaybeType' -> '<PROJECT_ROOT>/deprecated'
+
+experimental.deprecated_utilities='$ReadOnly' -> '<PROJECT_ROOT>/deprecated'

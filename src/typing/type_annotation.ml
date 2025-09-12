@@ -921,6 +921,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         (* $ReadOnly<T> *)
         | "$ReadOnly" ->
+          if Context.is_utility_type_deprecated cx "$ReadOnly" then begin
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.DollarReadOnly }
+              )
+          end;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in

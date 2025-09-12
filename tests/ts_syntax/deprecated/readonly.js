@@ -1,1 +1,1 @@
-type T = $ReadOnly<{a: string}>; // OK
+type T = $ReadOnly<{a: string}>; // ERROR
