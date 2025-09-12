@@ -16,3 +16,5 @@ experimental.deprecated_utilities='$ReadOnly' -> '<PROJECT_ROOT>/deprecated'
 experimental.deprecated_utilities='mixed' -> '<PROJECT_ROOT>/deprecated'
 
 experimental.deprecated_utilities='$ReadOnlyMap' -> '<PROJECT_ROOT>/deprecated'
+
+experimental.deprecated_utilities='$ReadOnlySet' -> '<PROJECT_ROOT>/deprecated'

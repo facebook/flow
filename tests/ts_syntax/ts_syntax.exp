@@ -444,6 +444,14 @@ References:
                ^ [2]
 
 
+Error ----------------------------------------------------------------------------------- deprecated/readonlyset.js:1:10
+
+The utility type `$ReadOnlySet` is deprecated, use `ReadonlySet` instead. [deprecated-utility]
+
+   1| type T = $ReadOnlySet<number>; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------- deprecated/unknown.js:1:10
 
 The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utility]
@@ -666,4 +674,4 @@ types. [ts-syntax]
 
 
 
-Found 80 errors
+Found 81 errors
