@@ -382,6 +382,28 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------- deprecated/readonlyarray.js:1:10
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   1| type T = $ReadOnlyArray<number>; // error
+               ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:2:14
+
+Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
+
+   deprecated/readonlymap.js:2:14
+   2| const x: T = 3; // ERROR
+                   ^ [1]
+
+References:
+   deprecated/readonlymap.js:2:10
+   2| const x: T = 3; // ERROR
+               ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
 
 The equivalent of TypeScript's `in` variance annotation is `-` in Flow. [ts-syntax]
@@ -509,14 +531,6 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
          ^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------- readonlyarray.js:3:11
-
-The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
-
-   3| type T1 = $ReadOnlyArray<number>; // ERROR
-                ^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
 Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
@@ -596,4 +610,4 @@ types. [ts-syntax]
 
 
 
-Found 72 errors
+Found 73 errors
