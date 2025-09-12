@@ -2339,6 +2339,8 @@ end = struct
         ("Node", mk_reason (RType (OrdinaryName "React.Node")) loc, ImportType)
       | Flow_intermediate_error_types.ReactModuleForReactRefSetterType ->
         ("RefSetter", mk_reason (RType (OrdinaryName "React.RefSetter")) loc, ImportType)
+      | Flow_intermediate_error_types.ReactModuleForReactElementRefType ->
+        ("ElementRef", mk_reason (RType (OrdinaryName "React.ElementRef")) loc, ImportType)
     in
     get_imported_type
       cx

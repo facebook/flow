@@ -519,12 +519,15 @@ and type_of_hint_decomposition cx opts op reason t =
           reason
           Flow_intermediate_error_types.ReactModuleForReactRefSetterType
           [
-            Tvar.mk_where cx reason (fun ref_t ->
-                SpeculationFlow.resolved_lower_flow_unsafe
-                  cx
-                  reason
-                  (t, ReactKitT (unknown_use, reason, React.GetRef ref_t))
-            );
+            Flow_js.singleton_concrete_type_for_inspection
+              cx
+              reason
+              (Flow_js.get_builtin_react_typeapp
+                 cx
+                 reason
+                 Flow_intermediate_error_types.ReactModuleForReactElementRefType
+                 [t]
+              );
           ]
       | Decomp_MethodElem ->
         SpeculationFlow.get_method_type_unsafe

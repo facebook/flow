@@ -39,6 +39,7 @@ type expected_module_purpose =
   | ReactModuleForReactMixedElementType
   | ReactModuleForReactNodeType
   | ReactModuleForReactRefSetterType
+  | ReactModuleForReactElementRefType
 
 type 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;

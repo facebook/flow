@@ -48,7 +48,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       match tool with
       | GetProps _
       | GetConfig _
-      | GetRef _
       | CreateElement _
       | ConfigCheck _ ->
         Error_message.ENotAReactComponent { reason; use_op }
@@ -848,46 +847,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
     let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
-    let get_instance tout =
-      let component = l in
-      match drop_generic component with
-      (* Class components or legacy components. *)
-      | DefT (_, ClassT component) -> rec_flow_t ~use_op:unknown_use cx trace (component, tout)
-      (* Stateless functional components. *)
-      | DefT (r, FunT _) ->
-        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
-      (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (r, ObjT { call_t = Some _; _ }) ->
-        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
-      | DefT
-          ( _,
-            ReactAbstractComponentT
-              { instance = ComponentInstanceAvailableAsRefSetterProp ref_prop; _ }
-          ) ->
-        rec_flow cx trace (ref_prop, ExtractReactRefT (reason_of_t tout, tout))
-      | DefT (r, ReactAbstractComponentT { instance = ComponentInstanceOmitted _; _ }) ->
-        rec_flow_t ~use_op:unknown_use cx trace (VoidT.make (replace_desc_reason RVoid r), tout)
-      (* Intrinsic components. *)
-      | DefT (_, SingletonStrT { value = name; _ }) ->
-        get_intrinsic
-          ~artifact:`Instance
-          ~literal:(`Literal name)
-          ~prop_polarity:Polarity.Positive
-          tout
-      | DefT (_, StrGeneralT gen) ->
-        get_intrinsic
-          ~artifact:`Instance
-          ~literal:(`General gen)
-          ~prop_polarity:Polarity.Positive
-          tout
-      | AnyT (reason, source) ->
-        rec_flow_t ~use_op:unknown_use cx trace (AnyT.why source reason, tout)
-      (* ...otherwise, error. *)
-      | _ ->
-        let reason = reason_of_t component in
-        err_incompatible reason;
-        rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, tout)
-    in
     match u with
     | CreateElement
         {
@@ -913,5 +872,4 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       config_check use_op ~instance:(Some instance) ~jsx_props
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
-    | GetRef tout -> get_instance tout
 end

@@ -3131,7 +3131,6 @@ and React : sig
       }
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out
-    | GetRef of TypeTerm.t_out
 end =
   React
 
