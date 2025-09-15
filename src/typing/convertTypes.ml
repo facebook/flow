@@ -440,14 +440,15 @@ and def_t_to_json cx depth (def_t : def_t) : json =
         ("t_out", type_to_json cx (depth - 1) t_out);
         ("id", JSON_String (Poly.stable_string_of_id id));
       ]
-  | ReactAbstractComponentT { config; instance; renders; component_kind } ->
+  | ReactAbstractComponentT
+      { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
     json_with_type
       "ReactAbstractComponent"
       [
         ("config", type_to_json cx (depth - 1) config);
         ("renders", type_to_json cx (depth - 1) renders);
         ( "instance",
-          match instance with
+          match instance_ignored_when_ref_stored_in_props with
           | ComponentInstanceAvailableAsRefSetterProp t ->
             JSON_Object
               [("kind", JSON_String "RefSetterProp"); ("type", type_to_json cx (depth - 1) t)]
@@ -734,7 +735,7 @@ and json_of_destructor cx depth destructor =
   | TypeMap ObjectKeyMirror -> JSON_Object [("kind", JSON_String "ObjectKeyMirror")]
   | ReactElementPropsType -> JSON_Object [("kind", JSON_String "ReactElementPropsType")]
   | ReactElementConfigType -> JSON_Object [("kind", JSON_String "ReactElementConfigType")]
-  | ReactCheckComponentConfig props ->
+  | ReactCheckComponentConfig { props; allow_ref_in_spread = _ } ->
     JSON_Object
       [
         ("kind", JSON_String "ReactCheckComponentConfig");

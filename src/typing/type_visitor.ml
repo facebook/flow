@@ -125,10 +125,11 @@ class ['a] t =
         let acc = self#nel (self#type_param cx pole) acc tparams in
         let acc = self#type_ cx pole acc t_out in
         acc
-      | ReactAbstractComponentT { config; instance; renders; component_kind } ->
+      | ReactAbstractComponentT
+          { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
         let acc = self#type_ cx (P.inv pole) acc config in
         let acc =
-          match instance with
+          match instance_ignored_when_ref_stored_in_props with
           | ComponentInstanceOmitted (_ : Reason.reason) -> acc
           | ComponentInstanceAvailableAsRefSetterProp t -> self#type_ cx pole acc t
         in
@@ -220,7 +221,8 @@ class ['a] t =
       | ReactElementPropsType
       | ReactElementConfigType ->
         acc
-      | ReactCheckComponentConfig map -> self#namemap (self#prop cx pole_TODO) acc map
+      | ReactCheckComponentConfig { props = map; allow_ref_in_spread = _ } ->
+        self#namemap (self#prop cx pole_TODO) acc map
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
         self#type_ cx pole_TODO acc index_type

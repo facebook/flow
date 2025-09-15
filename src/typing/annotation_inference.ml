@@ -1490,9 +1490,9 @@ module rec ConsGen : S = struct
       let subt_check ~use_op:_ _ _ = () in
       Slice_utils.object_rest ~add_output ~return ~recurse ~subt_check options state cx
     in
-    let check_component_config cx pmap =
+    let check_component_config cx ~allow_ref_in_spread pmap =
       let return _ _ t = t in
-      Slice_utils.check_component_config ~add_output ~return pmap cx
+      Slice_utils.check_component_config ~add_output ~return ~allow_ref_in_spread pmap cx
     in
     let object_make_exact cx _use_op = Slice_utils.object_make_exact cx in
     let object_read_only cx _use_op = Slice_utils.object_read_only cx in
@@ -1508,7 +1508,8 @@ module rec ConsGen : S = struct
         | Required -> object_required cx use_op reason x
         | ReadOnly -> object_read_only cx use_op reason x
         | ReactConfig _ -> error_internal cx "ReactConfig" op
-        | Object.ReactCheckComponentConfig pmap -> check_component_config cx pmap use_op reason x
+        | Object.ReactCheckComponentConfig { props = pmap; allow_ref_in_spread } ->
+          check_component_config cx ~allow_ref_in_spread pmap use_op reason x
         | ObjectRep -> error_internal cx "ObjectRep" op
         | Object.ObjectMap _ ->
           (* TODO(jmbrown): Annotation inference for Mapped Types *)

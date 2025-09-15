@@ -294,7 +294,8 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                       ReactAbstractComponentT
                         {
                           config;
-                          instance = ComponentInstanceAvailableAsRefSetterProp (EmptyT.why r);
+                          instance_ignored_when_ref_stored_in_props =
+                            ComponentInstanceAvailableAsRefSetterProp (EmptyT.why r);
                           renders = react_node;
                           component_kind = Structural;
                         }
@@ -318,7 +319,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | PartialType
       | RequiredType ->
         merge_lower_or_upper_bounds (OpenT tout)
-      | ReactCheckComponentConfig pmap ->
+      | ReactCheckComponentConfig { props = pmap; allow_ref_in_spread = _ } ->
         merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun t ->
                reverse_component_check_config cx r pmap t
@@ -489,7 +490,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
           | Some reversed ->
             Flow.flow_t cx (reversed, tvar);
             UpperT reversed))
-      | Object.ReactCheckComponentConfig pmap ->
+      | Object.ReactCheckComponentConfig { props = pmap; allow_ref_in_spread = _ } ->
         let solution = merge_upper_bounds cx seen tout in
         (match solution with
         | UpperEmpty -> UpperEmpty
@@ -1656,7 +1657,8 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                    ReactAbstractComponentT
                      {
                        config = EmptyT.why reason;
-                       instance = ComponentInstanceAvailableAsRefSetterProp (EmptyT.why reason);
+                       instance_ignored_when_ref_stored_in_props =
+                         ComponentInstanceAvailableAsRefSetterProp (EmptyT.why reason);
                        renders = generic_t;
                        component_kind = Structural;
                      }

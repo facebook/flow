@@ -246,7 +246,7 @@ module rec TypeTerm : sig
     (* React$AbstractComponent<Config, Instance, ReturnElement> *)
     | ReactAbstractComponentT of {
         config: t;
-        instance: component_instance;
+        instance_ignored_when_ref_stored_in_props: component_instance;
         renders: t;
         component_kind: component_kind;
       }
@@ -1605,7 +1605,10 @@ module rec TypeTerm : sig
     | TypeMap of type_map
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactCheckComponentConfig of Property.t NameUtils.Map.t
+    | ReactCheckComponentConfig of {
+        props: Property.t NameUtils.Map.t;
+        allow_ref_in_spread: bool;
+      }
     | ReactDRO of react_dro
     | MakeHooklike
     | MappedType of {
@@ -3102,7 +3105,10 @@ and Object : sig
         state: ReactConfig.state;
         ref_manipulation: ReactConfig.ref_manipulation;
       }
-    | ReactCheckComponentConfig of Property.t NameUtils.Map.t
+    | ReactCheckComponentConfig of {
+        props: Property.t NameUtils.Map.t;
+        allow_ref_in_spread: bool;
+      }
     | ObjectRep
     | ObjectMap of {
         prop_type: TypeTerm.t;
@@ -3127,7 +3133,7 @@ and React : sig
       }
     | ConfigCheck of {
         props: TypeTerm.t;
-        instance: TypeTerm.component_instance;
+        instance_ignored_when_ref_stored_in_props: TypeTerm.component_instance;
       }
     | GetProps of TypeTerm.t_out
     | GetConfig of TypeTerm.t_out

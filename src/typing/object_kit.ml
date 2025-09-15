@@ -596,7 +596,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       | Partial -> object_partial
       | Required -> object_required
       | ObjectRep -> object_rep
-      | Object.ReactCheckComponentConfig pmap -> check_component_config pmap
+      | Object.ReactCheckComponentConfig { props = pmap; allow_ref_in_spread } ->
+        check_component_config ~allow_ref_in_spread pmap
       | Object.ObjectMap { prop_type; mapped_type_flags; selected_keys_opt } ->
         object_map prop_type mapped_type_flags selected_keys_opt
     in

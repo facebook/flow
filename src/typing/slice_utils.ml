@@ -691,14 +691,15 @@ let object_spread
 (*****************************)
 
 let check_config2
-    cx pmap { Object.reason; props; flags; frozen = _; generics; interface = _; reachable_targs } =
+    cx
+    ~allow_ref_in_spread
+    pmap
+    { Object.reason; props; flags; frozen = _; generics; interface = _; reachable_targs } =
   let dict = Obj_type.get_dict_opt flags.obj_kind in
   let ((duplicate_props_in_spread, ref_prop_in_spread), props) =
     NameUtils.Map.merge_env
       ~combine:(fun (duplicate_props_in_spread, ref_prop_in_spread) x p1 p2 ->
         match (x, p1, p2) with
-        | (Reason.OrdinaryName "ref", Some _, _) ->
-          failwith "Ref should have been extracted elsewhere"
         | (_, Some p1, Some { Object.key_loc = key_loc2; prop_t; _ }) ->
           let first =
             Type.Property.first_loc p1 |> Base.Option.value ~default:(loc_of_reason reason)
@@ -706,7 +707,14 @@ let check_config2
           let second = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc2 in
           let p1 = read_prop reason flags x p1 in
           (((first, x, second) :: duplicate_props_in_spread, ref_prop_in_spread), Some p1)
-        | (Reason.OrdinaryName "ref", None, Some { Object.key_loc; prop_t; _ }) ->
+        | (Reason.OrdinaryName "ref", _, Some { Object.key_loc; prop_t; _ })
+          when not allow_ref_in_spread ->
+          let () =
+            match Context.react_ref_as_prop cx with
+            | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+              if Option.is_some p1 then failwith "Ref should have been extracted elsewhere"
+            | Options.ReactRefAsProp.StoreRefInProps -> ()
+          in
           let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
           ((duplicate_props_in_spread, Some loc), None)
         | (_, Some p1, None) ->
@@ -756,20 +764,31 @@ let check_config2
   (t, List.rev duplicate_props_in_spread, ref_prop_in_spread)
 
 let check_component_config
-    (type a) ~add_output ~(return : _ -> _ -> Type.t -> a) pmap cx use_op reason x =
+    (type a)
+    ~add_output
+    ~(return : _ -> _ -> Type.t -> a)
+    ~allow_ref_in_spread
+    pmap
+    cx
+    use_op
+    reason
+    x =
   let xs =
     Nel.map
       (fun xelt ->
-        let (o, duplicate_props_in_spread, ref_prop_in_spread) = check_config2 cx pmap xelt in
+        let (o, duplicate_props_in_spread, ref_prop_in_spread) =
+          check_config2 cx ~allow_ref_in_spread pmap xelt
+        in
         let { Object.reason; _ } = xelt in
         Base.Option.iter (Nel.of_list duplicate_props_in_spread) ~f:(fun duplicates ->
             add_output
               cx
               (Error_message.EDuplicateComponentProp { spread = loc_of_reason reason; duplicates })
         );
-        Base.Option.iter ref_prop_in_spread ~f:(fun loc ->
-            add_output cx (Error_message.ERefComponentProp { spread = loc_of_reason reason; loc })
-        );
+        if not allow_ref_in_spread then
+          Base.Option.iter ref_prop_in_spread ~f:(fun loc ->
+              add_output cx (Error_message.ERefComponentProp { spread = loc_of_reason reason; loc })
+          );
         o)
       x
   in
