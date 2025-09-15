@@ -3,7 +3,7 @@
 const React = require('react');
 
 declare var C: component(
-  ref: React.RefSetter<number>,
+  ref?: React.RefSetter<number>,
   bar: number | string,
   baz: number,
   foo?: number,
