@@ -1950,13 +1950,89 @@ let with_type_checked_file ~options ~profiling ~env ~file_key ~file_content ~f =
         intermediate_result
   in
   match file_artifacts with
-  | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; _ }) -> f ~cx ~ast
+  | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
+    f ~cx ~file_sig ~ast ~typed_ast
   | _ -> Error "Failed to parse or check file"
+
+let autofix_errors_cli
+    ~options
+    ~profiling
+    ~env
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~module_system_info
+    ~get_type_sig
+    ~include_best_effort_fix
+    ~file_key
+    ~file_content =
+  let get_edits ~cx ~file_sig ~ast ~typed_ast =
+    let (safe_transforms, best_effort_transforms) =
+      Flow_error.ErrorSet.fold
+        (fun error acc ->
+          let lazy_error_loc =
+            lazy
+              (let { Flow_intermediate_error_types.loc; _ } =
+                 Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error
+               in
+               loc
+              )
+          in
+          match
+            ast_transforms_of_error
+              ~loc_of_aloc
+              ~lazy_error_loc
+              ~get_ast_from_shared_mem
+              ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
+              ~get_type_sig
+              (error |> Flow_error.map_loc_of_error loc_of_aloc |> Flow_error.msg_of_error)
+            |> Base.List.hd
+          with
+          | None -> acc
+          | Some transform ->
+            let (safe_transforms, best_effort_transforms) = acc in
+            (match transform.confidence with
+            | WillFixErrorAndSafeForRunningOnSave ->
+              (transform :: safe_transforms, best_effort_transforms)
+            | BestEffort ->
+              if include_best_effort_fix then
+                (safe_transforms, transform :: best_effort_transforms)
+              else
+                acc))
+        (Context.errors cx)
+        ([], [])
+    in
+    let (new_ast, _) =
+      Base.List.fold
+        (safe_transforms @ best_effort_transforms)
+        ~init:(ast, false)
+        ~f:(fun (ast, has_run_best_effort_fix) transform ->
+          match (transform.confidence, has_run_best_effort_fix) with
+          | (BestEffort, true) -> (ast, true)
+          | (WillFixErrorAndSafeForRunningOnSave, _) ->
+            let new_ast =
+              Base.Option.value
+                ~default:ast
+                (transform.transform ~cx ~file_sig ~ast ~typed_ast transform.target_loc)
+            in
+            (new_ast, has_run_best_effort_fix)
+          | (BestEffort, false) ->
+            let new_ast =
+              Base.Option.value
+                ~default:ast
+                (transform.transform ~cx ~file_sig ~ast ~typed_ast transform.target_loc)
+            in
+            (new_ast, new_ast != ast)
+      )
+    in
+    let opts = layout_options options in
+    Ok (Insert_type.mk_patch ~opts ast new_ast file_content)
+  in
+  with_type_checked_file ~options ~profiling ~env ~file_key ~file_content ~f:get_edits
 
 let suggest_imports_cli
     ~options ~profiling ~env ~loc_of_aloc ~module_system_info ~file_key ~file_content =
   let uri = File_key.to_string file_key |> Lsp_helpers.path_to_lsp_uri ~default_path:"" in
-  let get_edits ~cx ~ast =
+  let get_edits ~cx ~file_sig:_ ~ast ~typed_ast:_ =
     let errors = Context.errors cx in
     let (imports, _) =
       Flow_error.ErrorSet.fold
@@ -1995,7 +2071,7 @@ let suggest_imports_cli
 let autofix_imports_cli
     ~options ~profiling ~env ~loc_of_aloc ~module_system_info ~file_key ~file_content =
   let src_dir = File_key.to_string file_key |> Filename.dirname |> Base.Option.return in
-  let get_edits ~cx ~ast =
+  let get_edits ~cx ~file_sig:_ ~ast ~typed_ast:_ =
     let edits = autofix_imports ~options ~env ~loc_of_aloc ~module_system_info ~cx ~ast ~src_dir in
     Ok (Replacement_printer.loc_patch_to_patch file_content edits)
   in

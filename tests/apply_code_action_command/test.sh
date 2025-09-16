@@ -22,3 +22,8 @@ echo '> Confirm no errors'
 assert_ok "$FLOW" focus-check tmp/multi.js
 echo '> apply-code-action suggestImports tmp/suggest_imports.js'
 "$FLOW" apply-code-action suggestImports --pretty tmp/suggest_imports.js | sed -e 's/file:.*:/file:tmp\/suggest_imports.js": /'
+
+echo '> apply-code-action '\''experimental.quickfix'\'' tmp/test-quickfixes.js'
+assert_ok "$FLOW" apply-code-action 'experimental.quickfix' tmp/test-quickfixes.js
+echo '> apply-code-action '\''experimental.quickfix'\'' tmp/test-quickfixes.js --include-best-effort-fix'
+assert_ok "$FLOW" apply-code-action 'experimental.quickfix' tmp/test-quickfixes.js --include-best-effort-fix

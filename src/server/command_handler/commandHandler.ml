@@ -558,6 +558,30 @@ let autocomplete_on_parsed
   Autocomplete_js.autocomplete_unset_hooks ();
   (initial_json_props, ac_result)
 
+let autofix_errors_cli
+    ~options
+    ~env
+    ~profiling
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~module_system_info
+    ~get_type_sig
+    ~include_best_effort_fix
+    ~input =
+  let file_key = file_key_of_file_input ~options ~env input in
+  File_input.content_of_file_input input >>= fun file_content ->
+  Code_action_service.autofix_errors_cli
+    ~options
+    ~profiling
+    ~env
+    ~loc_of_aloc
+    ~get_ast_from_shared_mem
+    ~module_system_info
+    ~get_type_sig
+    ~include_best_effort_fix
+    ~file_key
+    ~file_content
+
 let autofix_imports_cli ~options ~env ~profiling ~loc_of_aloc ~module_system_info ~input =
   let file_key = file_key_of_file_input ~options ~env input in
   File_input.content_of_file_input input >>= fun file_content ->
@@ -1603,6 +1627,22 @@ let rank_autoimports_by_usage ~options client =
 let handle_apply_code_action ~options ~reader ~profiling ~env action file_input =
   ServerProt.Code_action.(
     match action with
+    | Quickfix { include_best_effort_fix } ->
+      let result =
+        try_with (fun () ->
+            autofix_errors_cli
+              ~options
+              ~profiling
+              ~env
+              ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+              ~get_ast_from_shared_mem:(Parsing_heaps.Reader.get_ast ~reader)
+              ~module_system_info:(mk_module_system_info ~options ~reader)
+              ~get_type_sig:(Parsing_heaps.Reader.get_type_sig ~reader)
+              ~include_best_effort_fix
+              ~input:file_input
+        )
+      in
+      Lwt.return (ServerProt.Response.APPLY_CODE_ACTION result, None)
     | SourceAddMissingImports ->
       let result =
         try_with (fun () ->
