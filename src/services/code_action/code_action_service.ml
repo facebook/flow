@@ -582,11 +582,16 @@ type ast_transform =
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t option
 
+type quickfix_confidence =
+  | WillFixErrorAndSafeForRunningOnSave
+  | BestEffort
+
 type ast_transform_of_error = {
   title: string;
   diagnostic_title: string;
   transform: ast_transform;
   target_loc: Loc.t;
+  confidence: quickfix_confidence;
 }
 
 let untyped_ast_transform transform ~cx:_ ~file_sig:_ ~ast ~typed_ast:_ loc =
@@ -672,6 +677,7 @@ let ast_transforms_of_error
                   )
                   );
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -731,6 +737,7 @@ let ast_transforms_of_error
                )
               );
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -747,6 +754,7 @@ let ast_transforms_of_error
           transform =
             untyped_ast_transform (Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name);
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -764,6 +772,7 @@ let ast_transforms_of_error
           diagnostic_title;
           transform = untyped_ast_transform Autofix_interface.replace_object_at_target;
           target_loc = obj_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -781,6 +790,7 @@ let ast_transforms_of_error
           diagnostic_title;
           transform = untyped_ast_transform Autofix_method.replace_method_at_target;
           target_loc = method_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -793,6 +803,7 @@ let ast_transforms_of_error
           diagnostic_title = "insert_await";
           transform = untyped_ast_transform Autofix_unused_promise.insert_await;
           target_loc = error_loc;
+          confidence = BestEffort;
         }
       in
       let insert_void =
@@ -801,6 +812,7 @@ let ast_transforms_of_error
           diagnostic_title = "insert_void";
           transform = untyped_ast_transform Autofix_unused_promise.insert_void;
           target_loc = error_loc;
+          confidence = BestEffort;
         }
       in
       if async then
@@ -817,6 +829,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_unknown_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_unknown_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -829,6 +842,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_never_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_never_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -841,6 +855,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_undefined_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_undefined_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -853,6 +868,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_keyof_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_keyof_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -865,6 +881,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_type_param_extends";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_type_param_extends;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -877,6 +894,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_readonly_variance";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_variance;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -889,6 +907,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_in_variance";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_in_variance;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -901,6 +920,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_out_variance";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_out_variance;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -913,6 +933,7 @@ let ast_transforms_of_error
           diagnostic_title = "remove_in_out_variance";
           transform = untyped_ast_transform Autofix_ts_syntax.remove_in_out_variance;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -935,6 +956,7 @@ let ast_transforms_of_error
             untyped_ast_transform
               (Autofix_casting_syntax.convert_satisfies_expression ~enabled_casting_syntax);
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -948,6 +970,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_readonly_array_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_array_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -961,6 +984,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_readonly_tuple_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_tuple_type;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -983,6 +1007,7 @@ let ast_transforms_of_error
           diagnostic_title;
           transform = untyped_ast_transform (fix ~enabled_casting_syntax);
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -999,6 +1024,7 @@ let ast_transforms_of_error
           diagnostic_title;
           transform = untyped_ast_transform (Autofix_type_name.convert_incorrect_type kind);
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1018,6 +1044,7 @@ let ast_transforms_of_error
           transform =
             untyped_ast_transform (Autofix_type_name.convert_type ~incorrect_name ~replacement_name);
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1041,6 +1068,7 @@ let ast_transforms_of_error
           transform =
             untyped_ast_transform (Autofix_type_name.convert_type ~incorrect_name ~replacement_name);
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1060,6 +1088,7 @@ let ast_transforms_of_error
             transform =
               untyped_ast_transform Autofix_renders_variant.to_renders_star_with_best_effort_fixes;
             target_loc = error_loc;
+            confidence = WillFixErrorAndSafeForRunningOnSave;
           };
         ]
       | (Flow_ast.Type.Renders.Maybe, Flow_intermediate_error_types.InvalidRendersNullVoidFalse) ->
@@ -1070,6 +1099,7 @@ let ast_transforms_of_error
             transform =
               untyped_ast_transform Autofix_renders_variant.to_renders_maybe_with_best_effort_fixes;
             target_loc = error_loc;
+            confidence = WillFixErrorAndSafeForRunningOnSave;
           };
         ]
       | (_, Flow_intermediate_error_types.InvalidRendersNullVoidFalse) ->
@@ -1080,6 +1110,7 @@ let ast_transforms_of_error
             transform =
               untyped_ast_transform Autofix_renders_variant.to_renders_maybe_with_best_effort_fixes;
             target_loc = error_loc;
+            confidence = WillFixErrorAndSafeForRunningOnSave;
           };
         ]
       | (_, Flow_intermediate_error_types.InvalidRendersIterable) ->
@@ -1090,6 +1121,7 @@ let ast_transforms_of_error
             transform =
               untyped_ast_transform Autofix_renders_variant.to_renders_star_with_best_effort_fixes;
             target_loc = error_loc;
+            confidence = WillFixErrorAndSafeForRunningOnSave;
           };
         ]
       | _ -> []
@@ -1103,6 +1135,7 @@ let ast_transforms_of_error
           diagnostic_title = "prefix_with_this";
           transform = Autofix_class_member_access.fix ~loc_of_aloc ~member_name:name;
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -1118,6 +1151,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_type_to_value_import";
           transform;
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -1130,6 +1164,7 @@ let ast_transforms_of_error
           diagnostic_title = "convert_match_object_shorthand_to_const";
           transform = untyped_ast_transform Autofix_match_syntax.convert_object_shorthand_to_const;
           target_loc = error_loc;
+          confidence = BestEffort;
         };
         {
           title = Utils_js.spf "Convert to `%s: %s`" name name;
@@ -1137,6 +1172,7 @@ let ast_transforms_of_error
           transform =
             untyped_ast_transform Autofix_match_syntax.convert_object_shorthand_to_reference;
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -1149,6 +1185,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_invalid_match_statement_body";
           transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_match_statement_body;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1164,6 +1201,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_match_invalid_binding_kind";
           transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_binding_kind;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1176,6 +1214,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_match_invalid_wildcard_syntax";
           transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_wildcard_syntax;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1188,6 +1227,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_match_invalid_case_syntax";
           transform = untyped_ast_transform Autofix_match_syntax.fix_invalid_case_syntax;
           target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
         };
       ]
     else
@@ -1202,6 +1242,7 @@ let ast_transforms_of_error
             untyped_ast_transform
               (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true []);
           target_loc = error_loc;
+          confidence = BestEffort;
         }
       in
       let missing_props_prefix_text missing_props =
@@ -1225,6 +1266,7 @@ let ast_transforms_of_error
                    missing_props
                 );
             target_loc = error_loc;
+            confidence = BestEffort;
           };
           add_only_rest;
         ]
@@ -1240,6 +1282,7 @@ let ast_transforms_of_error
               untyped_ast_transform
                 (Autofix_match_syntax.fix_non_exhaustive_object_pattern ~add_rest:true missing_props);
             target_loc = error_loc;
+            confidence = BestEffort;
           };
           add_only_rest;
         ]
@@ -1268,6 +1311,7 @@ let ast_transforms_of_error
           transform =
             untyped_ast_transform (Autofix_match_syntax.fix_not_exhaustive missing_pattern_asts);
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -1281,6 +1325,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_match_unused_pattern";
           transform = untyped_ast_transform Autofix_match_syntax.remove_unused_pattern;
           target_loc = error_loc;
+          confidence = BestEffort;
         };
       ]
     else
@@ -1358,6 +1403,7 @@ let ast_transforms_of_error
           diagnostic_title = "fix_invariant_subtyping_error_with_annot";
           transform;
           target_loc = lower_loc;
+          confidence = BestEffort;
         };
       ])
   | error_message ->
@@ -1375,6 +1421,7 @@ let ast_transforms_of_error
               untyped_ast_transform
                 (Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion);
             target_loc = error_loc;
+            confidence = BestEffort;
           };
         ]
       else
@@ -1395,6 +1442,7 @@ let ast_transforms_of_error
             diagnostic_title;
             transform = untyped_ast_transform Autofix_optional_chaining.add_optional_chaining;
             target_loc = error_loc;
+            confidence = BestEffort;
           };
         ]
       | _ -> [])
@@ -1467,7 +1515,8 @@ let code_actions_of_errors
               ~get_haste_module_info:module_system_info.Lsp_module_system_info.get_haste_module_info
               ~get_type_sig
               error_message
-            |> Base.List.filter_map ~f:(fun { title; diagnostic_title; transform; target_loc } ->
+            |> Base.List.filter_map
+                 ~f:(fun { title; diagnostic_title; transform; target_loc; confidence = _ } ->
                    autofix_in_upstream_file
                      ~cx
                      ~get_ast_from_shared_mem
