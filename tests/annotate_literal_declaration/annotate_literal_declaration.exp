@@ -1,4 +1,4 @@
->>> test.js (#changes: 6)
+>>> test.js (#changes: 5)
 // @flow
 
 import type { Expected } from "./exports";import {assertExpected} from './exports';
@@ -24,7 +24,7 @@ const obj1: Expected = {bar: 'foo' as const}; // annot and import
 const obj2 = {bar: 'bar' as const}; // no annot, since expected type is ExpectedLocal1 & ExpectedLocal2
 const obj3: ExpectedLocal1 = {bar: 'foo' as const}; // annot
 const obj4 = {bar: 'foo' as const}; // no annot. Too big
-let obj5: ExpectedLocal1 = true ? {bar: 'foo' as const} : obj3; // annot
+let obj5 = true ? ({ bar: 'foo' as const } as ExpectedLocal1) : obj3; // annot
 
 assertExpected(obj1);
 assertExpected1(obj2);
@@ -36,7 +36,7 @@ assertExpected1(obj5);
 
 declare export function assertExpectedArray(expected: Array<ExpectedLocal1>): void;
 const arr1: Array<ExpectedLocal1> = [{bar: 'foo' as const}];
-const arr2: Array<ExpectedLocal1> = [];
+const arr2 = [];
 arr2.push({bar: 'foo' as const});
 
 assertExpectedArray(arr1);
@@ -45,15 +45,15 @@ assertExpectedArray(arr2);
 >>> Launching report...
 
 Stats:
-  Files changed:                            1
-  Number of annotations added:              5
-  Total size of annotations:                7
-  Number of type errors:                    8
-  Number of annotations added:              5
+  Files changed:                            0
+  Number of annotations added:              0
+  Total size of annotations:                0
+  Number of potential fix sites:            6
+  Number of annotations added:              4
 
 Errors:
   Missing annot./normalizer error:          0
-  Validation Error:                         2
+  Validation Error:                         0
   Import Error:
     Loc source none:                        0
     Indeterminate module type:              0
