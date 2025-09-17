@@ -1345,7 +1345,7 @@ let ast_transforms_of_error
             ~strict:false
             ast
             lower_loc
-            upper_ty
+            (Ty_utils.simplify_type ~merge_kinds:true upper_ty)
         in
         if ast == ast' then
           None
