@@ -6864,8 +6864,18 @@ struct
         | TypeMap tmap -> rec_flow cx trace (t, MapTypeT (use_op, reason, tmap, OpenT tout))
         | ReactElementPropsType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetProps (OpenT tout)))
-        | ReactElementConfigType ->
-          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig (OpenT tout)))
+        | ReactElementConfigType { from_userland } ->
+          rec_flow
+            cx
+            trace
+            ( t,
+              ReactKitT
+                ( use_op,
+                  reason,
+                  React.GetConfig
+                    { from_userland_react_element_config = from_userland; tout = OpenT tout }
+                )
+            )
         | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->
           let (property_type, homomorphic) =
             substitute_mapped_type_distributive_tparams

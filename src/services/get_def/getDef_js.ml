@@ -66,7 +66,15 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
           let use_op = Type.Op Type.UnknownUse in
-          Flow_js.flow cx (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+          Flow_js.flow
+            cx
+            ( component_t,
+              Type.ReactKitT
+                ( use_op,
+                  reason,
+                  Type.React.GetConfig { from_userland_react_element_config = false; tout = tvar }
+                )
+            )
       )
     in
     let req =

@@ -118,7 +118,14 @@ module Potential_ordinary_refs_search = struct
                     let use_op = Type.Op Type.UnknownUse in
                     Flow_js.flow
                       cx
-                      (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+                      ( component_t,
+                        Type.ReactKitT
+                          ( use_op,
+                            reason,
+                            Type.React.GetConfig
+                              { from_userland_react_element_config = false; tout = tvar }
+                          )
+                      )
                 )
               in
               potential_refs := ALocMap.add loc props_object !potential_refs

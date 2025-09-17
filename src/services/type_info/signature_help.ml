@@ -237,7 +237,15 @@ module Callee_finder = struct
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let id = Type.Eval.generate_id () in
-    let conf = Flow_js.mk_type_destructor cx use_op reason t Type.ReactElementConfigType id in
+    let conf =
+      Flow_js.mk_type_destructor
+        cx
+        use_op
+        reason
+        t
+        (Type.ReactElementConfigType { from_userland = false })
+        id
+    in
     get_prop_of_obj_toplevel cx name reason conf
 
   (* find the argument whose Loc contains `loc`, or the first one past it.

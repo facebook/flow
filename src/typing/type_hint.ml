@@ -511,7 +511,14 @@ and type_of_hint_decomposition cx opts op reason t =
             SpeculationFlow.resolved_lower_flow_unsafe
               cx
               reason
-              (t, ReactKitT (unknown_use, reason, React.GetConfig (OpenT props_t)))
+              ( t,
+                ReactKitT
+                  ( unknown_use,
+                    reason,
+                    React.GetConfig
+                      { from_userland_react_element_config = false; tout = OpenT props_t }
+                  )
+              )
         )
       | Decomp_JsxRef ->
         Flow_js.get_builtin_react_typeapp

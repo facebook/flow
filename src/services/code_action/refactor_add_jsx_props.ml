@@ -62,7 +62,15 @@ let get_required_attribute_names cx loc t =
   let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) (ALoc.of_loc loc)) in
   let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
   let id = Type.Eval.generate_id () in
-  let conf = Flow_js.mk_type_destructor cx use_op reason t Type.ReactElementConfigType id in
+  let conf =
+    Flow_js.mk_type_destructor
+      cx
+      use_op
+      reason
+      t
+      (Type.ReactElementConfigType { from_userland = false })
+      id
+  in
   get_obj_prop_names ~include_optional:false cx reason conf
 
 let name_of_jsx_id (_, { Ast.JSX.Identifier.name; _ }) = name

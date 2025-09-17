@@ -219,7 +219,7 @@ class ['a] t =
       | RequiredType
       | EnumType
       | ReactElementPropsType
-      | ReactElementConfigType ->
+      | ReactElementConfigType { from_userland = _ } ->
         acc
       | ReactCheckComponentConfig { props = map; allow_ref_in_spread = _ } ->
         self#namemap (self#prop cx pole_TODO) acc map

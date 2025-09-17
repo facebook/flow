@@ -1604,7 +1604,7 @@ module rec TypeTerm : sig
       }
     | TypeMap of type_map
     | ReactElementPropsType
-    | ReactElementConfigType
+    | ReactElementConfigType of { from_userland: bool }
     | ReactCheckComponentConfig of {
         props: Property.t NameUtils.Map.t;
         allow_ref_in_spread: bool;
@@ -3136,7 +3136,10 @@ and React : sig
         instance_ignored_when_ref_stored_in_props: TypeTerm.component_instance;
       }
     | GetProps of TypeTerm.t_out
-    | GetConfig of TypeTerm.t_out
+    | GetConfig of {
+        from_userland_react_element_config: bool;
+        tout: TypeTerm.t_out;
+      }
 end =
   React
 

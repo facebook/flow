@@ -1885,7 +1885,15 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
   let props_object =
     Tvar.mk_where cx reason (fun tvar ->
         let use_op = Type.Op Type.UnknownUse in
-        flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+        flow
+          cx
+          ( cls,
+            Type.ReactKitT
+              ( use_op,
+                reason,
+                Type.React.GetConfig { from_userland_react_element_config = false; tout = tvar }
+              )
+          )
     )
   in
   let exact_by_default = Context.exact_by_default cx in

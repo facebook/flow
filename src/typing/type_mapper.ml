@@ -713,7 +713,7 @@ class virtual ['a] t =
               homomorphic = homomorphic';
             }
       | ReactElementPropsType
-      | ReactElementConfigType ->
+      | ReactElementConfigType { from_userland = _ } ->
         t
 
     method object_kit_spread_operand_slice

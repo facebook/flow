@@ -39,7 +39,7 @@ let string_of_destructor = function
   | ConditionalType _ -> "ConditionalType"
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
   | ReactElementPropsType -> "ReactElementProps"
-  | ReactElementConfigType -> "ReactElementConfig"
+  | ReactElementConfigType { from_userland = _ } -> "ReactElementConfig"
   | MappedType _ -> "MappedType"
 
 let string_of_destruct_kind = function
@@ -438,7 +438,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ConfigCheck { props; instance_ignored_when_ref_stored_in_props = _ } ->
         spf "ConfigCheck (%s)" (kid props)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
-      | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
+      | GetConfig { from_userland_react_element_config = _; tout } -> spf "GetConfig (%s)" (kid tout)
     )
   in
   let slice

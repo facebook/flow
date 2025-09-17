@@ -1892,7 +1892,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         l
         ~use_op
         ~reason_op:reasonl
-        (React.GetConfig l)
+        ~from_userland_react_element_config:false
+        (React.GetConfig { from_userland_react_element_config = false; tout = l })
         Polarity.Negative
         config;
 
