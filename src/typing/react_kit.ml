@@ -372,10 +372,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | _ ->
       let reason_component = reason_of_t component in
       let props =
-        Tvar.mk_where
-          cx
-          (replace_desc_reason RReactProps reason_component)
-          (props_to_tout cx trace component ~use_op ~reason_op:reason_component u)
+        let reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason_component in
+        Tvar.mk_where cx reason (props_to_tout cx trace component ~use_op ~reason_op:reason u)
       in
       let defaults = get_defaults cx trace component ~reason_op in
       (match defaults with
