@@ -11,93 +11,31 @@ module ALSet = Loc_collections.ALocSet
 module LMap = Loc_collections.LocMap
 open Insert_type_utils
 
-(* Adding annotation to the object declaration can be potentially helpful, if there is an error
-   * at the reference location of the object literal declaration. *)
-let compute_annotation_sites_for_potential_fixes ~reader cx ast =
-  let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
-  let (errors, _warnings, suppressions) =
-    Error_suppressions.filter_lints
-      ~include_suppressions:(Context.include_suppressions cx)
-      (Context.error_suppressions cx)
-      (Context.errors cx)
-      (Context.aloc_tables cx)
-      (Context.severity_cover cx)
-  in
-  let (unsuppressed_errors, _, _) =
-    Error_suppressions.filter_suppressed_errors
-      ~root:(Context.root cx)
-      ~file_options:(Some (Context.file_options cx))
-      ~unsuppressable_error_codes:SSet.empty
-      ~loc_of_aloc
-      suppressions
-      errors
-      ~unused:suppressions
-  in
-  let all_possible_annotation_sites =
-    Context.array_or_object_literal_declaration_upper_bounds cx
-    |> Base.List.filter_map ~f:(fun (loc, list) ->
-           match Nel.of_list list with
-           | None -> None
-           | Some nel -> Some (loc_of_aloc loc, nel)
-       )
-    |> Loc_collections.LocMap.of_list
-    |> Loc_collections.LocMap.map (fun (t, ts) ->
-           match ts with
-           | [] -> t
-           | t1 :: ts -> Type.IntersectionT (TypeUtil.reason_of_t t, Type.InterRep.make t t1 ts)
-       )
-  in
-  let unsuppressed_errors_locs =
-    let open Flow_errors_utils in
-    ConcreteLocPrintableErrorSet.elements unsuppressed_errors
-    |> Base.List.filter_map ~f:(fun printable_error ->
-           match kind_of_printable_error printable_error with
-           | InferError -> Some (loc_of_printable_error printable_error)
-           | _ -> None
-       )
-    |> Loc_collections.LocSet.of_list
-  in
-  let scope_info =
-    Scope_builder.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
-  in
-  let loc_filter loc _ =
-    let uses =
-      match Scope_api.With_Loc.def_of_use_opt scope_info loc with
-      | None -> Loc_collections.LocSet.empty
-      | Some def -> Scope_api.With_Loc.uses_of_def scope_info ~exclude_def:true def
-    in
-    Loc_collections.LocSet.exists
-      (fun use -> Loc_collections.LocSet.mem use unsuppressed_errors_locs)
-      uses
-  in
-  ( Loc_collections.LocMap.filter loc_filter all_possible_annotation_sites,
-    Loc_collections.LocSet.cardinal unsuppressed_errors_locs
-  )
-
 module Stats = struct
   type t = {
-    number_of_type_errors: int;
+    number_of_potential_fix_sites: int;
     number_of_added_annotations: int;
   }
 
-  let empty = { number_of_type_errors = 0; number_of_added_annotations = 0 }
+  let empty = { number_of_potential_fix_sites = 0; number_of_added_annotations = 0 }
 
   let combine c1 c2 =
     {
-      number_of_type_errors = c1.number_of_type_errors + c2.number_of_type_errors;
+      number_of_potential_fix_sites =
+        c1.number_of_potential_fix_sites + c2.number_of_potential_fix_sites;
       number_of_added_annotations = c1.number_of_added_annotations + c2.number_of_added_annotations;
     }
 
   let serialize s =
     let open Utils_js in
     [
-      spf "number_of_type_errors: %d" s.number_of_type_errors;
+      spf "number_of_potential_fix_sites: %d" s.number_of_potential_fix_sites;
       spf "number_of_added_annotations: %d" s.number_of_added_annotations;
     ]
 
   let report s =
     [
-      string_of_row ~indent:2 "Number of type errors" s.number_of_type_errors;
+      string_of_row ~indent:2 "Number of potential fix sites" s.number_of_potential_fix_sites;
       string_of_row ~indent:2 "Number of annotations added" s.number_of_added_annotations;
     ]
 end
@@ -108,7 +46,7 @@ module Acc = Acc (Stats)
 let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
   let lint_severities = Codemod_context.Typed.lint_severities cctx in
 
-  object (this)
+  object (_this)
     inherit
       Codemod_exports_annotator.mapper
         cctx
@@ -121,95 +59,122 @@ let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
         () as super
 
     (* initialized in this#program *)
-    val mutable annotation_sites = LMap.empty
+    val mutable stats = None
 
-    val mutable type_error_count = 0
-
-    val mutable total_success = 0
-
-    method! variable_declarator ~kind decl =
-      let open Ast.Statement.VariableDeclaration.Declarator in
-      match decl with
-      | ( dloc,
-          {
-            id =
-              ( id_loc,
-                Ast.Pattern.Identifier
-                  {
-                    Ast.Pattern.Identifier.name;
-                    annot = Ast.Type.Missing _ as annot;
-                    optional = false as optional;
-                  }
-              );
-            init = Some (eloc, _) as init;
-          }
-        )
-        when LMap.mem id_loc annotation_sites ->
-        let ty =
-          let t = LMap.find id_loc annotation_sites in
-          let genv =
-            Ty_normalizer_flow.mk_genv
-              ~options:Ty_normalizer_env.default_codemod_options
-              ~cx:cctx.Codemod_context.Typed.cx
-              ~file_sig:cctx.Codemod_context.Typed.file_sig
-              ~typed_ast_opt:(Some cctx.Codemod_context.Typed.typed_ast)
-          in
-          match Ty_normalizer_flow.from_type genv t with
-          | Ok elt ->
-            Ty_utils.typify_elt elt
-            |> Base.Result.of_option ~error:[Error.Missing_annotation_or_normalizer_error]
-            |> Base.Result.map ~f:(fun ty ->
-                   (* We know that we are annotating an object, so we don't have to include maybe types.
-                    * This will allow us to insert Foo instead of ?Foo, which will exceed size limit. *)
-                   Ty_utils.unmaybe_ty (Ty_utils.simplify_type ~merge_kinds:true ty)
-               )
-            |> Base.Result.bind ~f:(fun ty -> Codemod_annotator.validate_ty cctx ~max_type_size ty)
-          | Error _ -> Error [Insert_type_utils.Error.Missing_annotation_or_normalizer_error]
-        in
-        let f loc _annot ty =
-          this#annotate_node loc ty (fun a ->
-              total_success <- total_success + 1;
-              Ast.Type.Available a
-          )
-        in
-        let error _ = annot in
-        let annot' = this#opt_annotate ~f ~error ~expr:init eloc ty annot in
-        if annot == annot' then
-          super#variable_declarator ~kind decl
-        else
-          let decl' =
-            {
-              id =
-                ( id_loc,
-                  Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = annot'; optional }
-                );
-              init;
-            }
-          in
-          super#variable_declarator ~kind (dloc, decl')
-      | _ -> super#variable_declarator ~kind decl
-
-    method private post_run () =
-      let stats =
-        {
-          Stats.number_of_type_errors = type_error_count;
-          number_of_added_annotations = total_success;
-        }
-      in
-      stats
+    method private post_run () = Base.Option.value_exn stats
 
     method! program prog =
-      let (annotation_sites_, type_error_count_) =
-        compute_annotation_sites_for_potential_fixes
-          ~reader:cctx.Codemod_context.Typed.reader
-          cctx.Codemod_context.Typed.cx
-          prog
+      stats <- None;
+      let cx = cctx.Codemod_context.Typed.cx in
+      let reader = cctx.Codemod_context.Typed.reader in
+      let file_sig = cctx.Codemod_context.Typed.file_sig in
+      let typed_ast = cctx.Codemod_context.Typed.typed_ast in
+      let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+      let get_ast_from_shared_mem = Parsing_heaps.Reader_dispatcher.get_ast ~reader in
+      let get_type_sig = Parsing_heaps.Reader_dispatcher.get_type_sig ~reader in
+      let get_haste_module_info f =
+        let addr = Parsing_heaps.get_file_addr_unsafe f in
+        Parsing_heaps.Reader_dispatcher.get_haste_module_info ~reader addr
       in
-      annotation_sites <- annotation_sites_;
-      type_error_count <- type_error_count_;
-      if LMap.is_empty annotation_sites then
-        (* short when no signature *)
-        prog
-      else
-        super#program prog
+      let annotation_sites =
+        let (errors, _warnings, _suppressions) =
+          Error_suppressions.filter_lints
+            ~include_suppressions:(Context.include_suppressions cx)
+            (Context.error_suppressions cx)
+            (Context.errors cx)
+            (Context.aloc_tables cx)
+            (Context.severity_cover cx)
+        in
+        Flow_error.ErrorSet.fold
+          (fun error acc ->
+            match Flow_error.msg_of_error error with
+            | Error_message.EInvariantSubtypingWithUseOp
+                {
+                  explanation =
+                    Some
+                      Flow_intermediate_error_types.(
+                        ( LazyExplanationInvariantSubtypingDueToMutableArray
+                            {
+                              lower_array_loc = lower_loc;
+                              lower_array_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_array_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              _;
+                            }
+                        | LazyExplanationInvariantSubtypingDueToMutableProperty
+                            {
+                              lower_obj_loc = lower_loc;
+                              lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              _;
+                            }
+                        | LazyExplanationInvariantSubtypingDueToMutableProperties
+                            {
+                              lower_obj_loc = lower_loc;
+                              lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              _;
+                            } ));
+                  _;
+                }
+              when match lower_desc with
+                   | Reason.RObjectLit
+                   | Reason.RObjectLit_UNSOUND
+                   | Reason.RArrayLit
+                   | Reason.RArrayLit_UNSOUND ->
+                     true
+                   | _ -> false ->
+              (loc_of_aloc lower_loc, upper_ty) :: acc
+            | _ -> acc)
+          errors
+          []
+        |> Base.List.sort_and_group ~compare:(fun (loc1, _) (loc2, _) -> Loc.compare loc1 loc2)
+        |> Base.List.map ~f:(fun list ->
+               let loc = fst (Base.List.hd_exn list) in
+               let tys = Nel.of_list_exn (Base.List.map ~f:snd list) in
+               let ty =
+                 match tys with
+                 | (ty, []) -> ty
+                 | (ty0, ty1 :: tys) -> Ty.Inter (ty0, ty1, tys)
+               in
+               (loc, Ty_utils.simplify_type ~merge_kinds:true ty)
+           )
+      in
+      let (prog', fixed_count) =
+        Base.List.fold
+          annotation_sites
+          ~init:(prog, 0)
+          ~f:(fun (ast, fixed_count) (lower_loc, upper_ty) ->
+            if Base.Option.is_none (Ty_utils.size_of_type ~max:max_type_size upper_ty) then
+              (ast, fixed_count)
+            else
+              let ast' =
+                Insert_type.insert_type_ty
+                  ~cx
+                  ~loc_of_aloc
+                  ~get_ast_from_shared_mem
+                  ~get_haste_module_info
+                  ~get_type_sig
+                  ~file_sig
+                  ~typed_ast
+                  ~strict:false
+                  ast
+                  lower_loc
+                  upper_ty
+              in
+              let fixed_count =
+                if ast == ast' then
+                  fixed_count
+                else
+                  fixed_count + 1
+              in
+              (ast', fixed_count)
+        )
+      in
+      stats <-
+        Some
+          {
+            Stats.number_of_potential_fix_sites = Base.List.length annotation_sites;
+            number_of_added_annotations = fixed_count;
+          };
+      super#program prog'
   end
