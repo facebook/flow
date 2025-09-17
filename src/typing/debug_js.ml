@@ -438,7 +438,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | ConfigCheck { props; instance = _ } -> spf "ConfigCheck (%s)" (kid props)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
-      | GetRef tout -> spf "GetRef (%s)" (kid tout)
     )
   in
   let slice

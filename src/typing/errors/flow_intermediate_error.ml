@@ -2278,6 +2278,14 @@ let to_printable_error :
             code "React.RefSetter";
             text ".";
           ]
+        | ReactModuleForReactElementRefType ->
+          [
+            text "The ";
+            code "react";
+            text " module must exist to provide a type for ";
+            code "React.ElementRef";
+            text ".";
+          ]
       in
       [text "Cannot resolve module "; code name; text ". "] @ explanation
     | MessageCannotSpreadDueToPotentialOverwrite { spread_reason; object_reason; key_reason } ->

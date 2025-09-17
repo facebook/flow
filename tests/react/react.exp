@@ -1234,19 +1234,19 @@ Cannot cast `foo` to union type because: [incompatible-type]
  - Or `Foo` [1] is incompatible with null [3].
 
    ref.js:13:19
-   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                         ^^^
+    13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                          ^^^
 
 References:
-   ref.js:3:7
-    3| class Foo extends React.Component<{}, void> {}
-             ^^^ [1]
+   <BUILTINS>/react.js:289:39
+   289|   declare export type ElementRef<C> = React$ElementRef<C>;
+                                              ^^^^^^^^^^^^^^^^^^^ [1]
    ref.js:13:24
-   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                              ^^^ [2]
+    13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                               ^^^ [2]
    ref.js:13:30
-   13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
-                                    ^^^^ [3]
+    13| <Foo ref={foo => (foo: Bar | null)} />; // Error: `Foo` is not `Bar`.
+                                     ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:18:15

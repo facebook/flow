@@ -2547,8 +2547,7 @@ struct
             ReactKitT
               ( _,
                 _,
-                ( React.CreateElement _ | React.GetProps _ | React.GetConfig _ | React.ConfigCheck _
-                | React.GetRef _ )
+                (React.CreateElement _ | React.GetProps _ | React.GetConfig _ | React.ConfigCheck _)
               )
           )
           when match Context.find_call cx id with
@@ -2558,7 +2557,7 @@ struct
                | _ -> false ->
           ()
         | ( DefT (reason_tapp, PolyT { tparams_loc = _; tparams; t_out; _ }),
-            ReactKitT (use_op, reason_op, (React.GetProps _ | React.GetConfig _ | React.GetRef _))
+            ReactKitT (use_op, reason_op, (React.GetProps _ | React.GetConfig _))
           ) ->
           let t_ =
             ImplicitInstantiationKit.run_monomorphize
