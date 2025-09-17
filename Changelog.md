@@ -1,3 +1,8 @@
+### 0.283.0
+
+Likely to cause new Flow errors:
+* Invalid suppressions like `// $FlowFixMe[incompatible` will now cause an error on the suppression
+
 ### 0.282.0
 
 Likely to cause new Flow errors:
