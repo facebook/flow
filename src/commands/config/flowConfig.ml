@@ -1299,7 +1299,11 @@ module Opts = struct
         enum
           [
             ("partial_support", Options.ReactRefAsProp.StoreRefAndPropsSeparately);
-            ("experimental.store_ref_in_props", Options.ReactRefAsProp.StoreRefInProps);
+            ( "experimental.store_ref_in_props_but_remove_ref_in_react_element_config",
+              Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+            );
+            ("experimental.store_ref_in_props", Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase);
+            ("experimental.full_support", Options.ReactRefAsProp.FullSupport);
           ]
           (fun opts react_ref_as_prop -> Ok { opts with react_ref_as_prop })
       );

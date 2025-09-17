@@ -97,7 +97,9 @@ module Make
                   ~key_loc:(Some key_loc)
                   t
                   acc
-            | Options.ReactRefAsProp.StoreRefInProps ->
+            | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+            | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+            | Options.ReactRefAsProp.FullSupport ->
               Type.Properties.add_field
                 (Reason.OrdinaryName key)
                 Polarity.Positive
@@ -165,7 +167,10 @@ module Make
     let allow_ref_in_spread =
       match Context.react_ref_as_prop cx with
       | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
-      | Options.ReactRefAsProp.StoreRefInProps -> in_annotation
+      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase ->
+        in_annotation
+      | Options.ReactRefAsProp.FullSupport -> true
     in
     let config =
       Type.(

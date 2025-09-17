@@ -1898,7 +1898,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         config;
 
       (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+      | Options.ReactRefAsProp.StoreRefAndPropsSeparately
+      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig ->
         flow_react_component_instance_to_instance
           cx
           trace
@@ -1918,7 +1919,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
               ),
             instance_ignored_when_ref_stored_in_props
           )
-      | Options.ReactRefAsProp.StoreRefInProps -> ());
+      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+      | Options.ReactRefAsProp.FullSupport ->
+        ());
       (* check rendersl <: rendersu *)
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
     (* Function Component ~> AbstractComponent *)
@@ -2021,7 +2024,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (match Context.react_ref_as_prop cx with
       | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
         flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu)
-      | Options.ReactRefAsProp.StoreRefInProps -> ());
+      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+      | Options.ReactRefAsProp.FullSupport ->
+        ());
       let rendersl =
         match component_kind with
         | Nominal (renders_id, renders_name, _) ->
@@ -2072,7 +2078,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       (match Context.react_ref_as_prop cx with
       | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
         flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu)
-      | Options.ReactRefAsProp.StoreRefInProps -> ());
+      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+      | Options.ReactRefAsProp.FullSupport ->
+        ());
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, RendersT r1), DefT (reasonu, RendersT r2)) ->
       RendersKit.rec_renders_to_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))

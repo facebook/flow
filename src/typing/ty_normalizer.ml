@@ -1249,7 +1249,10 @@ module Make (I : INPUT) : S = struct
           (match instance_ignored_when_ref_stored_in_props with
           | Type.ComponentInstanceOmitted _ -> return None
           | Type.ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some)
-        | Options.ReactRefAsProp.StoreRefInProps -> return None
+        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+        | Options.ReactRefAsProp.FullSupport ->
+          return None
       in
       let%bind renders =
         match renders with

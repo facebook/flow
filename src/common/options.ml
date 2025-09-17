@@ -32,7 +32,10 @@ module ReactRefAsProp = struct
     | StoreRefAndPropsSeparately
         (** Only implement React 19 behavior for function components.
           * Utility types will still return ref and props separately. *)
-    | StoreRefInProps  (** Store ref as a regular prop *)
+    | StoreRefInPropsButRemoveRefInReactElementConfig
+        (** Store ref as a regular prop, but drop ref prop in React.ElementConfig EvalT to make rollout easier. *)
+    | StoreRefInPropsNoSpecialCase  (** Store ref as a regular prop *)
+    | FullSupport  (** Implement full React 19 behavior *)
 end
 
 type react_runtime =

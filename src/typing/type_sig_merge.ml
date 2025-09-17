@@ -1756,7 +1756,9 @@ and merge_component
                   acc,
                 ref_prop
               ))
-          | Options.ReactRefAsProp.StoreRefInProps ->
+          | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+          | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
+          | Options.ReactRefAsProp.FullSupport ->
             ( Type.Properties.add_field
                 (Reason.OrdinaryName name)
                 Polarity.Positive
@@ -1791,7 +1793,10 @@ and merge_component
       let allow_ref_in_spread =
         match Context.react_ref_as_prop file.cx with
         | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
-        | Options.ReactRefAsProp.StoreRefInProps -> is_annotation
+        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
+        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase ->
+          is_annotation
+        | Options.ReactRefAsProp.FullSupport -> true
       in
       EvalT
         ( rest_t,
