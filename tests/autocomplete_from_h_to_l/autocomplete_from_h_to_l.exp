@@ -2283,17 +2283,17 @@ Flags: --pretty
     },
     {
       "name":"?.includes",
-      "type":"void | ((searchElement: mixed, fromIndex?: number) => implies searchElement is T)"
+      "type":"void | ((searchElement: T, fromIndex?: number) => implies searchElement is T)"
     },
     {
       "name":"?.indexOf",
-      "type":"void | ((searchElement: mixed, fromIndex?: number) => number)"
+      "type":"void | ((searchElement: T, fromIndex?: number) => number)"
     },
     {"name":"?.join","type":"void | ((separator?: string) => string)"},
     {"name":"?.keys","type":"void | (() => Iterator<number>)"},
     {
       "name":"?.lastIndexOf",
-      "type":"void | ((searchElement: mixed, fromIndex?: number) => number)"
+      "type":"void | ((searchElement: T, fromIndex?: number) => number)"
     },
     {"name":"?.length","type":"void | number"},
     {
@@ -2392,17 +2392,14 @@ Flags: --pretty
     },
     {
       "name":"includes",
-      "type":"(searchElement: mixed, fromIndex?: number) => implies searchElement is T"
+      "type":"(searchElement: T, fromIndex?: number) => implies searchElement is T"
     },
-    {
-      "name":"indexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number"
-    },
+    {"name":"indexOf","type":"(searchElement: T, fromIndex?: number) => number"},
     {"name":"join","type":"(separator?: string) => string"},
     {"name":"keys","type":"() => Iterator<number>"},
     {
       "name":"lastIndexOf",
-      "type":"(searchElement: mixed, fromIndex?: number) => number"
+      "type":"(searchElement: T, fromIndex?: number) => number"
     },
     {"name":"length","type":"number"},
     {

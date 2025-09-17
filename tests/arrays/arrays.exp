@@ -12,6 +12,24 @@ References:
              ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- includes.js:3:55
+
+Cannot call `[...].includes` with `x` bound to `searchElement` because number [1] is incompatible with union type [2].
+[incompatible-type]
+
+   includes.js:3:55
+   3| if (([1, 2, 3] as $ReadOnlyArray<1 | 2 | 3>).includes(x)) {
+                                                            ^
+
+References:
+   includes.js:1:16
+   1| declare var x: number;
+                     ^^^^^^ [1]
+   includes.js:3:34
+   3| if (([1, 2, 3] as $ReadOnlyArray<1 | 2 | 3>).includes(x)) {
+                                       ^^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- isarray.js:3:31
 
 Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
@@ -215,4 +233,4 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors
