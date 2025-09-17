@@ -3,6 +3,8 @@ title: Const Expressions
 slug: /types/const-expression
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Sometimes it is useful to specify that a literal expression is expected to be immutable.
 In such cases, you can annotate the expression with the `as const` modifier. We
 refer to these expressions as const-expressions.
@@ -69,6 +71,46 @@ type State =
 ```
 Without the use of `as const` the type `typeof STATUS.INIT` would be `string`, which
 would make it unsuitable as a distinguishing tag in a disjoint union.
+
+## Const Expressions for React JSX <SinceVersion version="0.284" />{#toc-const-expression-jsx}
+
+:::info
+Check out [render types](../../react/render-types/) and [react type references](../../react/types/) if you are not familiar with React typing in Flow.
+:::
+
+Since version 0.284, Flow will infer a more general type for React JSX elements by default.
+
+```js
+const div1 = <div />; // `<div />` has type `React.MixedElement`
+declare component Foo();
+const foo1 = <Foo />; // `<Foo />` has type `renders Foo`
+```
+
+However, if the JSX element is in a position that can be contextually typed, Flow will infer a more specific type, so it can be accepted by more restrictive APIs:
+
+```js
+type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+declare function onlyAllowsExactDiv(div: ExactDiv): void;
+declare component OnlyAllowsExactDiv(children: ExactDiv);
+
+const divGeneral = <div />;
+onlyAllowsExactDiv(divGeneral); // Error
+<OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+onlyAllowsExactDiv(<div />); // OK
+<OnlyAllowsExactDiv><div /></OnlyAllowsExactDiv>; // OK
+```
+
+
+If you want to have the jsx to have a more specific type in a position that cannot be contextually typed, you can wrap it with `as const`:
+
+```js
+declare function onlyAllowsExactDiv(div: ExactDiv): void;
+declare component OnlyAllowsExactDiv(children: ExactDiv);
+
+const divSpecific = <div /> as const;
+onlyAllowsExactDiv(divSpecific); // OK
+<OnlyAllowsExactDiv>{divSpecific}</OnlyAllowsExactDiv>; // OK
+```
 
 ## Adoption of `as const` syntax
 To use the `as const` syntax, you need to upgrade your infrastructure:
