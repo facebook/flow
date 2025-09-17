@@ -67,6 +67,19 @@ val code_actions_at_loc :
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result
 
+val autofix_errors_cli :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  env:ServerEnv.env ->
+  loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  module_system_info:Lsp_module_system_info.t ->
+  get_type_sig:(File_key.t -> Type_sig_collections.Locs.index Packed_type_sig.Module.t option) ->
+  include_best_effort_fix:bool ->
+  file_key:File_key.t ->
+  file_content:string ->
+  (Replacement_printer.patch, string) result
+
 val autofix_imports_cli :
   options:Options.t ->
   profiling:Profiling_js.running ->

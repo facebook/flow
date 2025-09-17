@@ -49,10 +49,13 @@ end
 
 module Code_action = struct
   type t =
+    | Quickfix of { include_best_effort_fix: bool }
     | SourceAddMissingImports
     | SuggestImports
 
   let to_string = function
+    | Quickfix { include_best_effort_fix = false } -> "quickfix.safe"
+    | Quickfix { include_best_effort_fix = true } -> "quickfix.include_best_effort_fix"
     | SourceAddMissingImports -> "source.addMissingImports"
     | SuggestImports -> "suggestImports"
 end

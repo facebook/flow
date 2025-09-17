@@ -12,7 +12,7 @@ class mapper target_loc ~incorrect_name ~replacement_name =
     method! generic_type loc t =
       let open Flow_ast.Type in
       let { Generic.id; targs; comments } = t in
-      if Option.is_none targs || (not @@ this#is_target loc) then
+      if not @@ this#is_target loc then
         super#generic_type loc t
       else
         match id with
