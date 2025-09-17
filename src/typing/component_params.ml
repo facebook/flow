@@ -24,7 +24,7 @@ module type S = sig
 
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
-  val config_and_instance :
+  val config_and_instance_ignored_when_ref_stored_in_props :
     Context.t ->
     in_annotation:bool ->
     config_reason:Reason.reason ->
@@ -73,23 +73,39 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config_and_instance
+  let config_and_instance_ignored_when_ref_stored_in_props
       cx ~in_annotation ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
     let (pmap, ref_prop) =
       List.fold_left
         (fun (acc, ref_prop) p ->
-          let key_and_t = C.param_type_with_name p in
-          match key_and_t with
-          | (key_loc, "ref", t) -> (acc, Some (key_loc, t))
-          | (key_loc, key, t) ->
-            ( Type.Properties.add_field
+          let (key_loc, key, t) = C.param_type_with_name p in
+          let ref_prop =
+            if key = "ref" then
+              Some (key_loc, t)
+            else
+              ref_prop
+          in
+          let acc =
+            match Context.react_ref_as_prop cx with
+            | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+              if key = "ref" then
+                acc
+              else
+                Type.Properties.add_field
+                  (Reason.OrdinaryName key)
+                  Polarity.Positive
+                  ~key_loc:(Some key_loc)
+                  t
+                  acc
+            | Options.ReactRefAsProp.StoreRefInProps ->
+              Type.Properties.add_field
                 (Reason.OrdinaryName key)
                 Polarity.Positive
                 ~key_loc:(Some key_loc)
                 t
-                acc,
-              ref_prop
-            ))
+                acc
+          in
+          (acc, ref_prop))
         (NameUtils.Map.empty, None)
         params_rev
     in
@@ -121,7 +137,7 @@ module Make
         in
         t
     in
-    let instance =
+    let instance_ignored_when_ref_stored_in_props =
       match ref_prop with
       | None -> Type.ComponentInstanceOmitted instance_reason
       | Some (key_loc, ref_prop) ->
@@ -146,6 +162,11 @@ module Make
         in
         ComponentInstanceAvailableAsRefSetterProp ref_prop
     in
+    let allow_ref_in_spread =
+      match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
+      | Options.ReactRefAsProp.StoreRefInProps -> in_annotation
+    in
     let config =
       Type.(
         Flow_js.mk_possibly_evaluated_destructor
@@ -153,11 +174,11 @@ module Make
           unknown_use
           config_reason
           rest_t
-          (ReactCheckComponentConfig pmap)
+          (ReactCheckComponentConfig { props = pmap; allow_ref_in_spread })
           (Eval.generate_id ())
       )
     in
-    (config, instance)
+    (config, instance_ignored_when_ref_stored_in_props)
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in

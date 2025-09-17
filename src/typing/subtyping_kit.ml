@@ -1874,7 +1874,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* Class component ~> AbstractComponent *)
     | ( DefT (reasonl, ClassT this),
-        DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = Structural })
+        DefT
+          ( _,
+            ReactAbstractComponentT
+              {
+                config;
+                instance_ignored_when_ref_stored_in_props;
+                renders;
+                component_kind = Structural;
+              }
+          )
       ) ->
       (* Contravariant config check *)
       Flow.react_get_config
@@ -1887,32 +1896,41 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Polarity.Negative
         config;
 
-      flow_react_component_instance_to_instance
-        cx
-        trace
-        use_op
-        ( ComponentInstanceAvailableAsRefSetterProp
-            (get_builtin_react_typeapp
-               cx
-               ~use_desc:true
-               (replace_desc_reason
-                  (RTypeAppImplicit
-                     (RTypeAlias ("React.RefSetter", None, RType (OrdinaryName "React.RefSetter")))
-                  )
-                  (reason_of_t this)
-               )
-               Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-               [this]
-            ),
-          instance
-        );
+      (match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+        flow_react_component_instance_to_instance
+          cx
+          trace
+          use_op
+          ( ComponentInstanceAvailableAsRefSetterProp
+              (get_builtin_react_typeapp
+                 cx
+                 ~use_desc:true
+                 (replace_desc_reason
+                    (RTypeAppImplicit
+                       (RTypeAlias ("React.RefSetter", None, RType (OrdinaryName "React.RefSetter")))
+                    )
+                    (reason_of_t this)
+                 )
+                 Flow_intermediate_error_types.ReactModuleForReactRefSetterType
+                 [this]
+              ),
+            instance_ignored_when_ref_stored_in_props
+          )
+      | Options.ReactRefAsProp.StoreRefInProps -> ());
       (* check rendersl <: rendersu *)
       Flow.react_subtype_class_component_render cx trace ~use_op this ~reason_op:reasonl renders
     (* Function Component ~> AbstractComponent *)
     | ( DefT (reasonl, FunT (_, { return_t; _ })),
         DefT
           ( _reasonu,
-            ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+            ReactAbstractComponentT
+              {
+                config;
+                instance_ignored_when_ref_stored_in_props;
+                renders;
+                component_kind = Structural;
+              }
           )
       ) ->
       (* Function components will not always have an annotation, so the config may
@@ -1928,7 +1946,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow
         cx
         trace
-        (l, ReactKitT (use_op, reasonl, React.ConfigCheck { props = config; instance }));
+        ( l,
+          ReactKitT
+            ( use_op,
+              reasonl,
+              React.ConfigCheck { props = config; instance_ignored_when_ref_stored_in_props }
+            )
+        );
 
       (* check rendered elements are covariant *)
       rec_flow_t cx trace ~use_op (return_t, renders)
@@ -1936,13 +1960,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( DefT (reasonl, ObjT { call_t = Some id; _ }),
         DefT
           ( reasonu,
-            ReactAbstractComponentT { config; instance; renders; component_kind = Structural }
+            ReactAbstractComponentT
+              {
+                config;
+                instance_ignored_when_ref_stored_in_props;
+                renders;
+                component_kind = Structural;
+              }
           )
       ) ->
       rec_flow
         cx
         trace
-        (l, ReactKitT (use_op, reasonl, React.ConfigCheck { props = config; instance }));
+        ( l,
+          ReactKitT
+            ( use_op,
+              reasonl,
+              React.ConfigCheck { props = config; instance_ignored_when_ref_stored_in_props }
+            )
+        );
 
       (* Ensure the callable signature's return type is compatible with the rendered element (renders). We
        * do this by flowing it to (...empty): renders *)
@@ -1958,25 +1994,33 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       let mixed = MixedT.why reasonu in
       rec_flow_t ~use_op cx trace (Context.find_call cx id, DefT (reasonu, FunT (mixed, funtype)))
-    (* AbstractComponent ~> AbstractComponent *)
+      (* AbstractComponent ~> AbstractComponent *)
     | ( DefT
           ( reasonl,
             ReactAbstractComponentT
-              { config = configl; instance = instancel; renders = rendersl; component_kind }
+              {
+                config = configl;
+                instance_ignored_when_ref_stored_in_props = instancel;
+                renders = rendersl;
+                component_kind;
+              }
           ),
         DefT
           ( _reasonu,
             ReactAbstractComponentT
               {
                 config = configu;
-                instance = instanceu;
+                instance_ignored_when_ref_stored_in_props = instanceu;
                 renders = rendersu;
                 component_kind = Structural;
               }
           )
       ) ->
       rec_flow_t cx trace ~use_op (configu, configl);
-      flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu);
+      (match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+        flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu)
+      | Options.ReactRefAsProp.StoreRefInProps -> ());
       let rendersl =
         match component_kind with
         | Nominal (renders_id, renders_name, _) ->
@@ -2001,7 +2045,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ReactAbstractComponentT
               {
                 config = configl;
-                instance = instancel;
+                instance_ignored_when_ref_stored_in_props = instancel;
                 renders = rendersl;
                 component_kind = Nominal (idl, name_l, _);
               }
@@ -2011,7 +2055,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ReactAbstractComponentT
               {
                 config = configu;
-                instance = instanceu;
+                instance_ignored_when_ref_stored_in_props = instanceu;
                 renders = rendersu;
                 component_kind = Nominal (idu, name_u, _);
               }
@@ -2024,7 +2068,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 (idl, Some name_l)
                 (idu, Some name_u) ->
       rec_flow_t cx trace ~use_op (configu, configl);
-      flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu);
+      (match Context.react_ref_as_prop cx with
+      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+        flow_react_component_instance_to_instance cx trace use_op (instancel, instanceu)
+      | Options.ReactRefAsProp.StoreRefInProps -> ());
       rec_flow_t cx trace ~use_op:(Frame (RendersCompatibility, use_op)) (rendersl, rendersu)
     | (DefT (reasonl, RendersT r1), DefT (reasonu, RendersT r2)) ->
       RendersKit.rec_renders_to_renders cx trace ~use_op ((reasonl, r1), (reasonu, r2))

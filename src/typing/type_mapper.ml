@@ -309,15 +309,17 @@ class virtual ['a] t =
           t
         else
           PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Type.Poly.generate_id () }
-      | ReactAbstractComponentT { config; instance; renders; component_kind } ->
+      | ReactAbstractComponentT
+          { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
         let config' = self#type_ cx map_cx config in
-        let instance' =
-          match instance with
-          | ComponentInstanceOmitted (_ : Reason.reason) -> instance
+        let instance_ignored_when_ref_stored_in_props' =
+          match instance_ignored_when_ref_stored_in_props with
+          | ComponentInstanceOmitted (_ : Reason.reason) ->
+            instance_ignored_when_ref_stored_in_props
           | ComponentInstanceAvailableAsRefSetterProp t ->
             let t' = self#type_ cx map_cx t in
             if t' == t then
-              instance
+              instance_ignored_when_ref_stored_in_props
             else
               ComponentInstanceAvailableAsRefSetterProp t'
         in
@@ -334,7 +336,7 @@ class virtual ['a] t =
         in
         if
           config' == config
-          && instance' == instance
+          && instance_ignored_when_ref_stored_in_props' == instance_ignored_when_ref_stored_in_props
           && renders' == renders
           && component_kind' == component_kind
         then
@@ -343,7 +345,7 @@ class virtual ['a] t =
           ReactAbstractComponentT
             {
               config = config';
-              instance = instance';
+              instance_ignored_when_ref_stored_in_props = instance_ignored_when_ref_stored_in_props';
               renders = renders';
               component_kind = component_kind';
             }
@@ -570,12 +572,12 @@ class virtual ['a] t =
 
     method destructor cx map_cx t =
       match t with
-      | ReactCheckComponentConfig map ->
-        let map' = NameUtils.Map.ident_map (self#prop cx map_cx) map in
-        if map' == map then
+      | ReactCheckComponentConfig { props; allow_ref_in_spread } ->
+        let props' = NameUtils.Map.ident_map (self#prop cx map_cx) props in
+        if props' == props then
           t
         else
-          ReactCheckComponentConfig map'
+          ReactCheckComponentConfig { props = props'; allow_ref_in_spread }
       | ReactDRO _
       | MakeHooklike
       | NonMaybeType

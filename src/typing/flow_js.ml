@@ -5822,11 +5822,16 @@ struct
       covariant_flow ~use_op t;
       true
     | UseT
-        (use_op, DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }))
-      ->
+        ( use_op,
+          DefT
+            ( _,
+              ReactAbstractComponentT
+                { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
+            )
+        ) ->
       contravariant_flow ~use_op config;
       let () =
-        match instance with
+        match instance_ignored_when_ref_stored_in_props with
         | ComponentInstanceOmitted (_ : reason) -> ()
         | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
@@ -5985,10 +5990,14 @@ struct
     | DefT (_, ArrT (ROArrayAT (t, _))) ->
       covariant_flow ~use_op t;
       true
-    | DefT (_, ReactAbstractComponentT { config; instance; renders; component_kind = _ }) ->
+    | DefT
+        ( _,
+          ReactAbstractComponentT
+            { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
+        ) ->
       contravariant_flow ~use_op config;
       let () =
-        match instance with
+        match instance_ignored_when_ref_stored_in_props with
         | ComponentInstanceOmitted (_ : reason) -> ()
         | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
       in
@@ -6791,11 +6800,17 @@ struct
               )
           in
           rec_flow cx trace (t, u)
-        | ReactCheckComponentConfig pmap ->
+        | ReactCheckComponentConfig { props; allow_ref_in_spread } ->
           let u =
             Object.(
               let tool = Resolve Next in
-              ObjKitT (use_op, reason, tool, Object.ReactCheckComponentConfig pmap, OpenT tout)
+              ObjKitT
+                ( use_op,
+                  reason,
+                  tool,
+                  Object.ReactCheckComponentConfig { props; allow_ref_in_spread },
+                  OpenT tout
+                )
             )
           in
           rec_flow cx trace (t, u)

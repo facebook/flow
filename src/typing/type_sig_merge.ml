@@ -943,7 +943,7 @@ and merge_annot env file = function
     merge_fun env file reason def statics
   | ComponentAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RComponentType loc) in
-    merge_component env file reason def None
+    merge_component env file reason ~is_annotation:true def None
   | ObjAnnot { loc; props; proto; obj_kind } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let obj_kind =
@@ -1727,7 +1727,12 @@ and merge_fun
   merge_tparams_targs env file reason t tparams
 
 and merge_component
-    env file reason (ComponentSig { params_loc; tparams; params; rest_param; renders }) id_opt =
+    env
+    file
+    reason
+    ~is_annotation
+    (ComponentSig { params_loc; tparams; params; rest_param; renders })
+    id_opt =
   let t (env, _) =
     let open Type in
     let (pmap, ref_prop) =
@@ -1735,9 +1740,20 @@ and merge_component
         ~f:(fun (acc, ref_prop) param ->
           let (Type_sig.ComponentParam { name; name_loc; t }) = param in
           let t = merge env file t in
-          match name with
-          | "ref" -> (acc, Some t)
-          | _ ->
+          match Context.react_ref_as_prop file.cx with
+          | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
+            (match name with
+            | "ref" -> (acc, Some t)
+            | _ ->
+              ( Type.Properties.add_field
+                  (Reason.OrdinaryName name)
+                  Polarity.Positive
+                  ~key_loc:(Some name_loc)
+                  t
+                  acc,
+                ref_prop
+              ))
+          | Options.ReactRefAsProp.StoreRefInProps ->
             ( Type.Properties.add_field
                 (Reason.OrdinaryName name)
                 Polarity.Positive
@@ -1753,7 +1769,7 @@ and merge_component
     let instance_reason =
       Reason.(mk_reason (RInstanceOfComponent (desc_of_reason reason)) params_loc)
     in
-    let instance =
+    let instance_ignored_when_ref_stored_in_props =
       match ref_prop with
       | None -> Type.ComponentInstanceOmitted instance_reason
       | Some ref_prop -> Type.ComponentInstanceAvailableAsRefSetterProp ref_prop
@@ -1769,9 +1785,18 @@ and merge_component
             (Type.ObjProtoT config_reason)
         | Some (Type_sig.ComponentRestParam { t }) -> merge env file t
       in
+      let allow_ref_in_spread =
+        match Context.react_ref_as_prop file.cx with
+        | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
+        | Options.ReactRefAsProp.StoreRefInProps -> is_annotation
+      in
       EvalT
         ( rest_t,
-          TypeDestructorT (unknown_use, config_reason, ReactCheckComponentConfig pmap),
+          TypeDestructorT
+            ( unknown_use,
+              config_reason,
+              ReactCheckComponentConfig { props = pmap; allow_ref_in_spread }
+            ),
           Eval.generate_id ()
         )
     in
@@ -1783,7 +1808,11 @@ and merge_component
         let id = Context.make_aloc_id file.cx loc in
         Nominal (id, name, None)
     in
-    DefT (reason, ReactAbstractComponentT { config = param; instance; renders; component_kind })
+    DefT
+      ( reason,
+        ReactAbstractComponentT
+          { config = param; instance_ignored_when_ref_stored_in_props; renders; component_kind }
+      )
   in
   merge_tparams_targs env file reason t tparams
 
@@ -1972,7 +2001,13 @@ let merge_def ~const_decl file reason = function
   | DeclareFun { id_loc; fn_loc; name = _; def; tail } ->
     merge_declare_fun file ((id_loc, fn_loc, def), tail)
   | ComponentBinding { id_loc; name; fn_loc = _; def } ->
-    merge_component (mk_merge_env SMap.empty) file reason def (Some (id_loc, name))
+    merge_component
+      (mk_merge_env SMap.empty)
+      file
+      reason
+      ~is_annotation:false
+      def
+      (Some (id_loc, name))
   | Variable { id_loc = _; name; def } ->
     merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
   | Parameter { id_loc = _; name; def; tparams } ->
