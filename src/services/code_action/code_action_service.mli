@@ -15,11 +15,24 @@ type ast_transform =
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast.Program.t option
 
+(** The confidence level will be used to create a fix-all command that can potentially fix multiple
+  * issues at once. The command will:
+  *
+  * 1. Run all transforms tagged with SafeForRunningOnSave.
+  * 2. If requested, run the first transform tagged with BestEffort, if there's any. *)
+type quickfix_confidence =
+  | WillFixErrorAndSafeForRunningOnSave
+      (** e.g. user used some deprecated syntax when we have a modern alternative.
+        * As the same suggest, transforms tagged with this level must be very safe.
+        * At the very least, it should not cause any runtime changes. *)
+  | BestEffort  (** e.g. fixing subtyping errors *)
+
 type ast_transform_of_error = {
   title: string;
   diagnostic_title: string;
   transform: ast_transform;
   target_loc: Loc.t;
+  confidence: quickfix_confidence;
 }
 
 val untyped_ast_transform :
