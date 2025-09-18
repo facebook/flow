@@ -1144,8 +1144,8 @@ type argument `ElementType` [3]. [incompatible-type]
         ^
 
 References:
-   <BUILTINS>/react.js:987:54
-   987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+   <BUILTINS>/react.js:984:54
+   984|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
                                                              ^^^^^^^^^^^^^^^^^ [1]
    jsx.js:5:35
      5| b as ExactReactElement_DEPRECATED<'div'>; // error
@@ -1168,8 +1168,8 @@ References:
    jsx.js:5:35
      5| b as ExactReactElement_DEPRECATED<'div'>; // error
                                           ^^^^^ [1]
-   <BUILTINS>/react.js:987:54
-   987|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
+   <BUILTINS>/react.js:984:54
+   984|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
                                                              ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};

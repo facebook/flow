@@ -1442,8 +1442,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1552,8 +1552,8 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                       ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1850,8 +1850,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1865,8 +1865,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1880,8 +1880,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1895,8 +1895,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1910,8 +1910,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1925,8 +1925,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1940,8 +1940,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1955,8 +1955,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -1970,8 +1970,8 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
                  ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1009:26
-   1009|   declare export default typeof React;
+   <BUILTINS>/react.js:1006:26
+   1006|   declare export default typeof React;
                                   ^^^^^^^^^^^^ [1]
 
 
@@ -2215,16 +2215,16 @@ Cannot call `setCount` with `true` bound to the first parameter because: [incomp
  - Or boolean [1] is incompatible with function type [3].
 
    useState_hook.js:11:10
-     11| setCount(true); // Error: boolean is incompatible with number
-                  ^^^^ [1]
+    11| setCount(true); // Error: boolean is incompatible with number
+                 ^^^^ [1]
 
 References:
    useState_hook.js:5:42
-      5| const [count, setCount] = React.useState<number>(1);
-                                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:1001:39
-   1001|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
-                                               ^^^^^^ [3]
+     5| const [count, setCount] = React.useState<number>(1);
+                                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:998:39
+   998|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+                                              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ use_hook.js:19:21

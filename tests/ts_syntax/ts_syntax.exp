@@ -374,12 +374,12 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                         ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------- <BUILTINS>/react.js:1000:30
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:997:30
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1000|     type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   997|     type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------- deprecated/nonMaybeType.js:1:10

@@ -4,7 +4,7 @@ lazy_ref.js:14:9 = {
   default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
 }
 
-'RefSetter' defined at (lib) react.js:991:9
+'RefSetter' defined at (lib) react.js:988:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
