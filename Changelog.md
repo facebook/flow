@@ -1,3 +1,9 @@
+### 0.284.0
+
+Likely to cause new Flow errors:
+* Flow now strictly enforces that Array.includes, .indexOf, and .lastIndexOf take only values that could potentially be present in the array -- it is now an error to check if arrays include values whose types are unrelated to the array's element type. This catches many cases where developers accidentally test the wrong thing, which may lead to errors at runtime.
+* Flow will infer general types for react jsx elements. The new behavior is described [in the docs](https://flow.org/en/docs/types/const-expression/#toc-const-expression-jsx).
+
 ### 0.283.0
 
 Likely to cause new Flow errors:
