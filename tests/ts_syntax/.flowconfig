@@ -7,7 +7,7 @@ no_flowlib=false
 experimental.ts_utility_syntax=true
 
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/deprecated'
-experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTIN>'
+experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTINS>/'
 
 experimental.deprecated_utilities='$NonMaybeType' -> '<PROJECT_ROOT>/deprecated'
 

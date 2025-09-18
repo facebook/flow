@@ -541,7 +541,7 @@ let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
-let builtin_root_token = Str.regexp_string "<BUILTIN>"
+let builtin_root_token = Str.regexp_string "<BUILTINS>"
 
 let dir_filter_of_options (options : options) f =
   let can_prune =
