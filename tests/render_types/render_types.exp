@@ -293,7 +293,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- poly_component_type.js:8:1
 
-Cannot cast `el` to renders `NotAButton` because React element [1] does not render `NotAButton` [2]. [incompatible-type]
+Cannot cast `el` to renders `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
+[incompatible-type]
 
    poly_component_type.js:8:1
    8| el as renders NotAButton; // ERROR
