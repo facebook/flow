@@ -11,8 +11,8 @@ References:
    apply.js:3:11
      3| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:362:29
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:29
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -26,11 +26,11 @@ property `@@iterator` of type argument `A`. [incompatible-type]
                        ^^
 
 References:
-   <BUILTINS>/core.js:1932:19
-   1932|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:1938:19
+   1938|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1174:17
-   1174|   @@iterator(): Iterator<T>;
+   <BUILTINS>/core.js:1180:17
+   1180|   @@iterator(): Iterator<T>;
                          ^^^^^^^^^^^ [2]
 
 
@@ -46,8 +46,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -63,8 +63,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -80,8 +80,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -97,8 +97,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -114,8 +114,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -131,8 +131,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -148,8 +148,8 @@ References:
    maps.js:1:14
      1| const map1 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -165,8 +165,8 @@ References:
    maps.js:2:14
      2| const map2 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -182,8 +182,8 @@ References:
    maps.js:1:14
      1| const map1 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -199,8 +199,8 @@ References:
    maps.js:2:14
      2| const map2 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:705:15
-   705| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:711:15
+   711| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 

@@ -28,8 +28,8 @@ it in `new String(...))` to turn it into an object and attempt to use it as a su
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:362:29
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:29
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -43,8 +43,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1931:11
-   1931| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1937:11
+   1937| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -111,11 +111,11 @@ argument `A`. [incompatible-type]
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:1945:40
-   1945| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:1951:40
+   1951| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:362:29
-    362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:29
+    368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                      ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -132,8 +132,8 @@ References:
    apply-array-like.js:16:17
     16| function * gen() {
                         ^ [1]
-   <BUILTINS>/core.js:362:29
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:29
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -160,8 +160,8 @@ Cannot call `test.apply` because no more than 2 arguments are expected by functi
                                 ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:362:19
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:19
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -177,8 +177,8 @@ References:
    apply.js:1:1
      1| function test(this: number | string, a: string, b: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:362:59
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:59
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -227,8 +227,8 @@ it in `new String(...))` to turn it into an object and attempt to use it as a su
                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:362:29
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:29
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                     ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -242,8 +242,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1931:11
-   1931| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1937:11
+   1937| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -312,8 +312,8 @@ Non-callable objects are not compatible with functions. [incompatible-type]
          ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:362:59
-   362|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:368:59
+   368|     proto apply: (<T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -430,8 +430,8 @@ References:
    call.js:1:1
      1| function test(this: number | string, a: string, b: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:364:57
-   364|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+   <BUILTINS>/core.js:370:57
+   370|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -611,8 +611,8 @@ arguments or cast the expression to your expected type. [underconstrained-implic
                                ^^^^
 
 References:
-   <BUILTINS>/core.js:364:21
-   364|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+   <BUILTINS>/core.js:370:21
+   370|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
                             ^ [1]
    call.js:63:15
     63|   const err = setError.call(this, 1); // error under-constrained T
@@ -675,8 +675,8 @@ Cannot cast `x.length` to undefined because number [1] is incompatible with unde
             ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:369:14
-   369|     +length: number;
+   <BUILTINS>/core.js:375:14
+   375|     +length: number;
                      ^^^^^^ [1]
    function.js:40:17
     40|     x.length as void; // error, it's a number
@@ -692,8 +692,8 @@ Cannot cast `y.length` to undefined because number [1] is incompatible with unde
             ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:369:14
-   369|     +length: number;
+   <BUILTINS>/core.js:375:14
+   375|     +length: number;
                      ^^^^^^ [1]
    function.js:41:17
     41|     y.length as void; // error, it's a number
@@ -709,8 +709,8 @@ Cannot cast `x.name` to undefined because string [1] is incompatible with undefi
             ^^^^^^
 
 References:
-   <BUILTINS>/core.js:373:12
-   373|     +name: string;
+   <BUILTINS>/core.js:379:12
+   379|     +name: string;
                    ^^^^^^ [1]
    function.js:43:15
     43|     x.name as void; // error, it's a string
@@ -726,8 +726,8 @@ Cannot cast `y.name` to undefined because string [1] is incompatible with undefi
             ^^^^^^
 
 References:
-   <BUILTINS>/core.js:373:12
-   373|     +name: string;
+   <BUILTINS>/core.js:379:12
+   379|     +name: string;
                    ^^^^^^ [1]
    function.js:44:15
     44|     y.name as void; // error, it's a string

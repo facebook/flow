@@ -219,12 +219,12 @@ Cannot call `Promise` because function [1] requires another argument. [incompati
                      ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2176:5
+   <BUILTINS>/core.js:2188:5
              v----------------------
-   2176|     constructor(callback: (
-   2177|       resolve: (result: Promise<R> | R) => void,
-   2178|       reject: (error: any) => void
-   2179|     ) => mixed): void;
+   2188|     constructor(callback: (
+   2189|       resolve: (result: Promise<R> | R) => void,
+   2190|       reject: (error: any) => void
+   2191|     ) => mixed): void;
              ----------------^ [1]
 
 

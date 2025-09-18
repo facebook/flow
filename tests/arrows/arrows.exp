@@ -42,8 +42,8 @@ return value. [incompatible-type]
                                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1117:38
-   1117|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+   <BUILTINS>/core.js:1123:38
+   1123|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
                                               ^^^^^^ [2]
 
 
