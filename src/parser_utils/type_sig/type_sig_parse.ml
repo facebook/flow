@@ -2635,7 +2635,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | _ -> Err (loc, CheckError)
   end
   | "Readonly" ->
-    if opts.enable_ts_syntax then
+    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
         let t = annot opts scope tbls xs t in
@@ -2644,7 +2644,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     else
       Annot (Any loc)
   | "ReadonlyArray" ->
-    if opts.enable_ts_syntax then
+    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
         let t = annot opts scope tbls xs t in
@@ -2653,7 +2653,7 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     else
       Annot (Any loc)
   | "NonNullable" ->
-    if opts.enable_ts_syntax then
+    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
         let t = annot opts scope tbls xs t in
@@ -2661,8 +2661,10 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       | _ -> Err (loc, CheckError)
     else
       Annot (Any loc)
-  | "ReadonlyMap" when not opts.enable_ts_syntax -> Annot (Any loc)
-  | "ReadonlySet" when not opts.enable_ts_syntax -> Annot (Any loc)
+  | "ReadonlyMap" when not (opts.enable_ts_syntax || opts.enable_ts_utility_syntax) ->
+    Annot (Any loc)
+  | "ReadonlySet" when not (opts.enable_ts_syntax || opts.enable_ts_utility_syntax) ->
+    Annot (Any loc)
   | name ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs

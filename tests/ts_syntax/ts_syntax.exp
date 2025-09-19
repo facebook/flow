@@ -398,20 +398,50 @@ The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-
                ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:1:10
+Error -------------------------------------------------------------------------------------- deprecated/readonly.js:7:23
+
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   deprecated/readonly.js:7:23
+   7| let a: exportedType = {b: 1}; // ERROR
+                            ^^^^^^ [1]
+
+References:
+   deprecated/readonly.js:7:8
+   7| let a: exportedType = {b: 1}; // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:3:10
 
 The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
 
-   1| type A = $ReadOnly<[string, number]>; // ERROR
+   3| type A = $ReadOnly<[string, number]>; // ERROR
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:2:10
+Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:4:10
 
 The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
 
-   2| type B = $ReadOnly<[number]>; // ERROR
+   4| type B = $ReadOnly<[number]>; // ERROR
                ^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:6:23
+
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
+`exportedType` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   deprecated/readonly_type.js:6:23
+   6| let a: exportedType = {b: 1}; // ERROR
+                            ^^^^^^ [1]
+
+References:
+   deprecated/readonly_type.js:6:8
+   6| let a: exportedType = {b: 1}; // ERROR
+             ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- deprecated/readonlyarray.js:1:10
@@ -674,4 +704,4 @@ types. [ts-syntax]
 
 
 
-Found 81 errors
+Found 83 errors
