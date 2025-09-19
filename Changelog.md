@@ -1,3 +1,14 @@
+### 0.285.0
+
+Library Definitions:
+* Fix type of `useActionState` hook in React. Type should be `Awaited` instead of `Promise` (the opposite operation).
+* Added types for `Object.groupBy` and `Map.groupBy`
+  - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy
+  - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
+
+Bug fixes:
+* Fixed a bug that when `experimental.ts_utility_syntax=true`, imported `Readonly`, `ReadonlyArray`, `NonNullable`, `ReadonlyMap`, `ReadonlySet` types are considered any.
+
 ### 0.284.0
 
 Likely to cause new Flow errors:
