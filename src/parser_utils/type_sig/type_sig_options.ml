@@ -17,7 +17,6 @@ type t = {
   enable_ts_syntax: bool;
   enable_ts_utility_syntax: bool;
   hook_compatibility: bool;
-  casting_syntax: Options.CastingSyntax.t;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
   for_builtins: bool;
@@ -45,19 +44,6 @@ let of_options options docblock locs_to_dirtify file =
       file
       relay_integration_module_prefix
   in
-  let casting_syntax =
-    match Options.casting_syntax options with
-    | Options.CastingSyntax.Both -> Options.CastingSyntax.Both
-    | Options.CastingSyntax.As ->
-      (match Options.casting_syntax_only_support_as_excludes options with
-      | [] -> Options.CastingSyntax.As
-      | dirs ->
-        let normalized_filename = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
-        if List.exists (fun r -> Str.string_match r normalized_filename 0) dirs then
-          Options.CastingSyntax.Both
-        else
-          Options.CastingSyntax.As)
-  in
   {
     munge;
     facebook_keyMirror;
@@ -74,7 +60,6 @@ let of_options options docblock locs_to_dirtify file =
     enable_ts_syntax = Options.ts_syntax options;
     enable_ts_utility_syntax = Options.ts_utility_syntax options;
     for_builtins = false;
-    casting_syntax;
   }
 
 let builtin_options options =
@@ -96,7 +81,6 @@ let builtin_options options =
     enable_ts_syntax = false;
     enable_ts_utility_syntax = false;
     hook_compatibility = Options.hook_compatibility options;
-    casting_syntax = Options.casting_syntax options;
     for_builtins = true;
     locs_to_dirtify = [];
   }

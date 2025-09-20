@@ -3101,16 +3101,9 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
     let statics = SMap.empty in
     Value (FunExpr { loc; async; generator; def; statics })
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
-    let open Options.CastingSyntax in
-    (match opts.casting_syntax with
-    | Both -> annot opts scope tbls SSet.empty t
-    | As -> Annot (Any loc))
+    annot opts scope tbls SSet.empty t
   | E.AsExpression { E.AsExpression.expression = _; annot = (_, t); comments = _ } ->
-    let open Options.CastingSyntax in
-    (match opts.casting_syntax with
-    | As
-    | Both ->
-      annot opts scope tbls SSet.empty t)
+    annot opts scope tbls SSet.empty t
   | E.AsConstExpression
       {
         E.AsConstExpression.expression = (_, E.Array { E.Array.elements = []; comments = _ });

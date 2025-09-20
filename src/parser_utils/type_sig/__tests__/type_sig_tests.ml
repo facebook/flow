@@ -211,7 +211,6 @@ let sig_options
     ?(enable_ts_utility_syntax = true)
     ?(hook_compatibility = true)
     ?(enable_relay_integration = false)
-    ?(casting_syntax = Options.CastingSyntax.Both)
     ?relay_integration_module_prefix
     ?(for_builtins = false)
     ?(locs_to_dirtify = [])
@@ -229,7 +228,6 @@ let sig_options
     enable_ts_utility_syntax;
     hook_compatibility;
     enable_relay_integration;
-    casting_syntax;
     relay_integration_module_prefix;
     for_builtins;
     locs_to_dirtify;

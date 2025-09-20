@@ -78,7 +78,6 @@ let load_lib_files files =
       enable_ts_syntax = true;
       enable_ts_utility_syntax = true;
       hook_compatibility = true;
-      casting_syntax = Options.CastingSyntax.Both;
       for_builtins = true;
       locs_to_dirtify = [];
     }
