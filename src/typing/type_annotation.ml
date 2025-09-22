@@ -428,7 +428,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | (loc, Keyof { Keyof.argument; comments }) ->
       let (((_, arg_t), _) as argument) = convert env argument in
       let t = KeysT (mk_reason RKeySet loc, arg_t) in
-      if not (Context.ts_syntax env.cx) then
+      if not (Context.ts_syntax env.cx || Context.ts_utility_syntax env.cx) then
         Flow_js_utils.add_output
           env.cx
           (Error_message.ETSSyntax { kind = Error_message.TSKeyof; loc });

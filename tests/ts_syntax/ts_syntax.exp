@@ -547,15 +547,6 @@ Variance modifiers cannot appear on a type parameter of a function type. [unsupp
                          ^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- keyof.js:3:10
-
-`keyof` is only supported when used inline in a mapped type. The equivalent of TypeScript's `keyof` type operator in
-Flow is the `$Keys` utility type, used in the form `$Keys<T>`. [ts-syntax]
-
-   3| type T = keyof O; // ERROR
-               ^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------------- never.js:1:10
 
 The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-syntax]
@@ -704,4 +695,4 @@ types. [ts-syntax]
 
 
 
-Found 83 errors
+Found 82 errors
