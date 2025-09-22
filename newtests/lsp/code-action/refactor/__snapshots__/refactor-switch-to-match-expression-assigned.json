@@ -3,7 +3,7 @@
   "result": [
     {
       "title": "Refactor `switch` to `match`",
-      "kind": "refactor.rewrite",
+      "kind": "quickfix",
       "diagnostics": [],
       "edit": {
         "changes": {

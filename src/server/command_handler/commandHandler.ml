@@ -3864,7 +3864,8 @@ let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri me
       metadata
     )
   | File_input.FileContent (_, content) ->
-    let (live_errors, live_warnings, refined_locations, metadata) =
+    let (live_errors, live_warnings, switch_to_match_eligible_locations, refined_locations, metadata)
+        =
       let file_key = file_key_of_file_input ~options ~env file_input in
       match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
       | Ok () ->
@@ -3897,6 +3898,14 @@ let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri me
         let (live_errors, live_warnings) =
           Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
         in
+        let switch_to_match_eligible_locations =
+          match result with
+          | Ok (_, Typecheck_artifacts { cx; _ }) when semantic_decorations client ->
+            Context.switch_to_match_eligible_locations cx
+            |> Loc_collections.ALocSet.elements
+            |> Base.List.map ~f:loc_of_aloc
+          | _ -> []
+        in
         let refined_locations =
           match result with
           | Ok (_, Typecheck_artifacts { cx; _ }) when semantic_decorations client ->
@@ -3910,7 +3919,7 @@ let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri me
           let json = Hh_json.JSON_Object json_props in
           with_data ~extra_data:(Some json) metadata
         in
-        (live_errors, live_warnings, refined_locations, metadata)
+        (live_errors, live_warnings, switch_to_match_eligible_locations, refined_locations, metadata)
       | Error reason ->
         Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
 
@@ -3923,6 +3932,7 @@ let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri me
          * then just return empty sets *)
         ( Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
           Flow_errors_utils.ConcreteLocPrintableErrorSet.empty,
+          [],
           [],
           metadata
         )
@@ -3940,6 +3950,8 @@ let live_diagnostics_of_uri ~options ~env ~profiling ~client ~loc_of_aloc uri me
     in
     let live_diagnostics =
       live_diagnostics
+      @ Flow_lsp_conversions.synthetic_diagnostics_of_switch_to_match_eligible_locations
+          switch_to_match_eligible_locations
       @ Flow_lsp_conversions.synthetic_diagnostics_of_refined_locations refined_locations
     in
     (Ok { LspProt.live_diagnostics; live_errors_uri }, metadata)

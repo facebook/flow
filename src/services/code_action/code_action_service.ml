@@ -433,7 +433,10 @@ let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     []
 
 let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
-  if Context.enable_pattern_matching cx && include_rewrite_refactors only then
+  if
+    Context.enable_pattern_matching cx
+    && (include_quick_fixes only || include_rewrite_refactors only)
+  then
     match Refactor_switch_to_match_statement.refactor ast loc with
     | Some ast' ->
       Flow_ast_differ.program ast ast'
@@ -446,7 +449,7 @@ let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
         CodeAction.Action
           {
             CodeAction.title;
-            kind = CodeActionKind.refactor_rewrite;
+            kind = CodeActionKind.quickfix;
             diagnostics = [];
             action =
               CodeAction.BothEditThenCommand

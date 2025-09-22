@@ -1366,11 +1366,18 @@ module Make
              match_keyword_loc
           );
         (loc, Match { Flow_ast.Match.arg; cases = List.rev cases_rev; match_keyword_loc; comments })
-    | (switch_loc, Switch { Switch.discriminant; cases; comments; exhaustive_out }) ->
+    | (switch_loc, Switch ({ Switch.discriminant; cases; comments; exhaustive_out } as switch_ast))
+      ->
       let discriminant_ast = expression cx discriminant in
       let exhaustive_check_incomplete_out =
         Tvar.mk cx (mk_reason (RCustom "exhaustive check incomplete out") switch_loc)
       in
+      if
+        Context.enable_pattern_matching cx
+        && Base.Option.is_some
+             (Switch_to_match.convert_switch ~placeholder_loc:ALoc.none switch_loc switch_ast)
+      then
+        Context.add_switch_to_match_eligible_location cx switch_loc;
       let (cases_ast_rev, has_default) =
         cases
         |> Base.List.fold_left

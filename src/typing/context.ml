@@ -278,6 +278,7 @@ type t = {
   mutable reachable_deps: Utils_js.FilenameSet.t;
   mutable refined_locations: ALocSet.t ALocMap.t;
   mutable aggressively_invalidated_locations: Refinement_invalidation.t ALocMap.t;
+  mutable switch_to_match_eligible_locations: ALocSet.t;
   node_cache: Node_cache.t;
 }
 
@@ -499,6 +500,7 @@ let make ccx metadata file aloc_table resolve_require mk_builtins =
         node_cache = Node_cache.mk_empty ();
         refined_locations = ALocMap.empty;
         aggressively_invalidated_locations = ALocMap.empty;
+        switch_to_match_eligible_locations = ALocSet.empty;
       }
   in
   Lazy.force cx_lazy
@@ -854,6 +856,8 @@ let refined_locations cx = cx.refined_locations
 
 let aggressively_invalidated_locations cx = cx.aggressively_invalidated_locations
 
+let switch_to_match_eligible_locations cx = cx.switch_to_match_eligible_locations
+
 let hint_map_arglist_cache cx = cx.hint_map_arglist_cache
 
 let hint_map_jsx_cache cx = cx.hint_map_jsx_cache
@@ -959,6 +963,9 @@ let add_refined_location cx read_loc refining_locs =
 let add_aggressively_invalidated_location cx loc info =
   cx.aggressively_invalidated_locations <-
     ALocMap.add loc info cx.aggressively_invalidated_locations
+
+let add_switch_to_match_eligible_location cx loc =
+  cx.switch_to_match_eligible_locations <- ALocSet.add loc cx.switch_to_match_eligible_locations
 
 let add_missing_local_annot_lower_bound cx loc t =
   let missing_local_annot_lower_bounds = cx.ccx.missing_local_annot_lower_bounds in

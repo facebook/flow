@@ -318,6 +318,21 @@ let diagnostics_of_flow_errors =
     |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Err) errors
     |> Flow_errors_utils.ConcreteLocPrintableErrorSet.fold (add Severity.Warn) warnings
 
+let synthetic_diagnostics_of_switch_to_match_eligible_locations locs =
+  Base.List.filter_map locs ~f:(fun loc -> loc |> loc_to_lsp |> Result.to_option)
+  |> Base.List.map ~f:(fun location ->
+         {
+           Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
+           severity = Some Lsp.PublishDiagnostics.Hint;
+           code = Lsp.PublishDiagnostics.NoCode;
+           source = Some "Flow";
+           message = "This switch statement can be converted to use match syntax";
+           tags = [];
+           relatedInformation = [];
+           data = Lsp.PublishDiagnostics.NoExtraData;
+         }
+     )
+
 let synthetic_diagnostics_of_refined_locations locs =
   Base.List.filter_map locs ~f:(fun loc -> loc |> loc_to_lsp |> Result.to_option)
   |> Base.List.map ~f:(fun location ->
