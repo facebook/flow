@@ -295,7 +295,7 @@ module Opts = struct
       projects_strict_boundary_validate_import_pattern_opt_outs = true;
       projects_strict_boundary_import_pattern_opt_outs = [];
       react_custom_jsx_typing = false;
-      react_ref_as_prop = Options.ReactRefAsProp.StoreRefAndPropsSeparately;
+      react_ref_as_prop = Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig;
       react_rules = [];
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
@@ -1298,7 +1298,6 @@ module Opts = struct
       ( "react.ref_as_prop",
         enum
           [
-            ("partial_support", Options.ReactRefAsProp.StoreRefAndPropsSeparately);
             ( "experimental.store_ref_in_props_but_remove_ref_in_react_element_config",
               Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
             );

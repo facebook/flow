@@ -18,7 +18,7 @@ type DefaultProps = {|
   b: string,
 |};
 
-function connect<TProps: {...}, SProps: TProps>(): component(...SProps) {
+function connect<TProps: {...}, SProps: TProps>(): component(ref?: React.RefSetter<mixed>, ...SProps) {
   return class extends React.Component<TProps> {};
 }
 
@@ -34,8 +34,8 @@ function HOC<Config: {...}, Instance>(
   return x;
 }
 
-function WrapInDivWithExtraProp<Props: {...}, Instance>(
-  X: component(ref: React.RefSetter<Instance>, ...Props),
+function WrapInDivWithExtraProp<Props: {...}>(
+  X: component(...Props),
 ): component(...{|...$Exact<Props>, baz: number|}) {
   const C = ({baz, ...props}: {|...$Exact<Props>, baz: number|}) => (
     <div>

@@ -36,6 +36,7 @@ class Profile extends React.Component<Props> {
   }
 }
 
-export default createFragmentContainer(Profile) as React.ComponentType<
-  GetPropFragmentRef<Props>,
->;
+export default createFragmentContainer(Profile) as component(
+  ref?: React.RefSetter<Profile>,
+  ...GetPropFragmentRef<Props>
+);

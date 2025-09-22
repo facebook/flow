@@ -5821,20 +5821,8 @@ struct
     | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *) ->
       covariant_flow ~use_op t;
       true
-    | UseT
-        ( use_op,
-          DefT
-            ( _,
-              ReactAbstractComponentT
-                { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
-            )
-        ) ->
+    | UseT (use_op, DefT (_, ReactAbstractComponentT { config; renders; component_kind = _ })) ->
       contravariant_flow ~use_op config;
-      let () =
-        match instance_ignored_when_ref_stored_in_props with
-        | ComponentInstanceOmitted (_ : reason) -> ()
-        | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
-      in
       covariant_flow ~use_op renders;
       true
     | UseT
@@ -5990,17 +5978,8 @@ struct
     | DefT (_, ArrT (ROArrayAT (t, _))) ->
       covariant_flow ~use_op t;
       true
-    | DefT
-        ( _,
-          ReactAbstractComponentT
-            { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
-        ) ->
+    | DefT (_, ReactAbstractComponentT { config; renders; component_kind = _ }) ->
       contravariant_flow ~use_op config;
-      let () =
-        match instance_ignored_when_ref_stored_in_props with
-        | ComponentInstanceOmitted (_ : reason) -> ()
-        | ComponentInstanceAvailableAsRefSetterProp t -> contravariant_flow ~use_op t
-      in
       covariant_flow ~use_op renders;
       true
     | GenericT { bound; _ } ->

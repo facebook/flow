@@ -709,15 +709,6 @@ let check_config2
           (((first, x, second) :: duplicate_props_in_spread, ref_prop_in_spread), Some p1)
         | (Reason.OrdinaryName "ref", _, Some { Object.key_loc; prop_t; _ })
           when not allow_ref_in_spread ->
-          let () =
-            match Context.react_ref_as_prop cx with
-            | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-              if Option.is_some p1 then failwith "Ref should have been extracted elsewhere"
-            | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-            | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-            | Options.ReactRefAsProp.FullSupport ->
-              ()
-          in
           let loc = Base.Option.value ~default:(reason_of_t prop_t |> loc_of_reason) key_loc in
           ((duplicate_props_in_spread, Some loc), None)
         | (_, Some p1, None) ->

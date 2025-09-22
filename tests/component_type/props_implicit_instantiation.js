@@ -1,8 +1,8 @@
 import { extractor } from "./exported_extractor";
 
-declare function idComponent<Props: {...}, Instance>(
-    c: component(ref: React.RefSetter<Instance>, ...Props),
-): component(ref: React.RefSetter<Instance>, ...Props);
+declare function idComponent<Props: {...}>(
+    c: component(...Props),
+): component(...Props);
 
 declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
 

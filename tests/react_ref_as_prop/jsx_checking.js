@@ -13,7 +13,7 @@ import {CompWithoutRefProp, CompWithOptionalRefProp, CompWithRequiredRefProp} fr
 
 <CompWithoutRefProp foo="bar" />; // ok
 <CompWithOptionalRefProp foo="bar" />; // ok
-<CompWithRequiredRefProp foo="bar" />; // no error for now, should have prop-missing error under full support
+<CompWithRequiredRefProp foo="bar" />; // error: missing ref prop
 <CompWithoutRefProp foo={1} />; // error: 1 ~> string, normal checking still works
 <CompWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
 <CompWithOptionalRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // ok

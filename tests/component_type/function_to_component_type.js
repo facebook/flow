@@ -4,7 +4,7 @@ declare class ImNotARefSetter {}
 Foo as component(bar: string); // ok
 Foo as component(bar: number); // error: number ~> string
 Foo as component(...{bar: number}); // error: number ~> string
-Foo as component(bar: string, ref: React.RefSetter<void>); // ok
+Foo as component(bar: string, ref: React.RefSetter<void>); // error: extra ref prop
 Foo as component( // error: void ~> string
     bar: string,
     ref: React.RefSetter<string>

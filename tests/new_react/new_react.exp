@@ -204,7 +204,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
-Cannot create `Foo` element because property `x` is missing in props [1] but exists in `Props` [2]. [incompatible-type]
+Cannot create `Foo` element because property `x` is missing in props [1] but exists in props of class `Foo` [2].
+[incompatible-type]
 
    classes.js:39:26
    39| var foo: $jsx<number> = <Foo/>;
@@ -214,9 +215,9 @@ References:
    classes.js:39:25
    39| var foo: $jsx<number> = <Foo/>;
                                ^^^^^^ [1]
-   classes.js:7:35
+   classes.js:7:7
     7| class Foo extends React.Component<Props, State> {
-                                         ^^^^^ [2]
+             ^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- import-react.js:13:21
@@ -315,8 +316,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props4.js:14:2
 
-Cannot create `Example` element because property `bar` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Example` element because property `bar` is missing in props [1] but exists in props of class
+`Example` [2]. [incompatible-type]
 
    props4.js:14:2
    14| <Example foo="foo" />;
@@ -326,9 +327,9 @@ References:
    props4.js:14:1
    14| <Example foo="foo" />;
        ^^^^^^^^^^^^^^^^^^^^^ [1]
-   props4.js:8:39
+   props4.js:8:7
     8| class Example extends React.Component<{ bar: string }> {
-                                             ^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- state5.js:5:23

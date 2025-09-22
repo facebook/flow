@@ -85,8 +85,6 @@ and ('t, 'targs, 'args, 'props_and_children) hint_decomposition =
   | Comp_MaybeT
   (* Type of C in `<C [props]/>` becomes hint on `props` *)
   | Decomp_JsxProps
-  (* Type of C in `<C ref={ref} ... />` becomes hint on `ref` *)
-  | Decomp_JsxRef
   | Decomp_SentinelRefinement of sentinel_refinement SMap.t
   (* Type of a callee is concretized so that we can inspect its structure. *)
   | Simplify_Callee of Reason.t
@@ -137,7 +135,6 @@ let string_of_hint_unknown_kind = function
   | Comp_ImmediateFuncCall -> "Comp_ImmediateFuncCall"
   | Comp_MaybeT -> "Comp_MaybeT"
   | Decomp_JsxProps -> "Decomp_JsxProps"
-  | Decomp_JsxRef -> "Decomp_JsxRef"
   | Decomp_SentinelRefinement _ -> "Decomp_SentinelRefinement"
   | Decomp_Await -> "Decomp_Await"
   | Simplify_Callee _ -> "Simplify_Callee"
@@ -192,7 +189,6 @@ let rec map_decomp_op ~map_base_hint ~map_targs ~map_arg_list ~map_jsx = functio
   | Comp_ImmediateFuncCall -> Comp_ImmediateFuncCall
   | Comp_MaybeT -> Comp_MaybeT
   | Decomp_JsxProps -> Decomp_JsxProps
-  | Decomp_JsxRef -> Decomp_JsxRef
   | Decomp_SentinelRefinement checks -> Decomp_SentinelRefinement checks
   | Simplify_Callee r -> Simplify_Callee r
   | Instantiate_Callee { reason; return_hints; targs; arg_list; arg_index } ->

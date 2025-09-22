@@ -29,7 +29,7 @@ React.createElement(A, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
 React.createElement(A, null); // Error: `foo` and `bar` are missing.
 React.createElement(B, null); // Error: `foo` and `bar` are missing.
-(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: number, bar: number}>); // OK
+(React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>>); // OK
 (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B>); // OK
 (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
 (React.createElement(B, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<typeof B, {foo: boolean, bar: number}>); // error
@@ -56,7 +56,7 @@ React.createElement(D, {
 });
 React.createElement(C, {foo: 42}); // OK: `bar` is in `defaultProps`.
 React.createElement(D, {foo: 42}); // OK: `bar` is optional
-(React.createElement(C, {foo: 42}): ExactReactElement_DEPRECATED<Class<C>, {foo: number, bar: number}>); // OK
+(React.createElement(C, {foo: 42}): ExactReactElement_DEPRECATED<Class<C>>); // OK
 (React.createElement(D, {foo: 42}): ExactReactElement_DEPRECATED<typeof D, {foo: number, bar?: number}>); // OK
 
 React.createElement(any, {whateverYouWant: 'yes'}); // OK

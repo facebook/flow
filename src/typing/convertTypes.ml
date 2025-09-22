@@ -440,20 +440,12 @@ and def_t_to_json cx depth (def_t : def_t) : json =
         ("t_out", type_to_json cx (depth - 1) t_out);
         ("id", JSON_String (Poly.stable_string_of_id id));
       ]
-  | ReactAbstractComponentT
-      { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
+  | ReactAbstractComponentT { config; renders; component_kind } ->
     json_with_type
       "ReactAbstractComponent"
       [
         ("config", type_to_json cx (depth - 1) config);
         ("renders", type_to_json cx (depth - 1) renders);
-        ( "instance",
-          match instance_ignored_when_ref_stored_in_props with
-          | ComponentInstanceAvailableAsRefSetterProp t ->
-            JSON_Object
-              [("kind", JSON_String "RefSetterProp"); ("type", type_to_json cx (depth - 1) t)]
-          | ComponentInstanceOmitted _ -> JSON_Object [("kind", JSON_String "Omitted")]
-        );
         ( "component_kind",
           match component_kind with
           | Structural -> JSON_Object [("kind", JSON_String "Structural")]

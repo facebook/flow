@@ -132,15 +132,7 @@ module Make
   let component_type cx ~in_annotation x =
     let { T.reason; tparams; cparams; renders_t; id_opt; _ } = x in
     let config_reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason in
-    let instance_reason = update_desc_reason (fun desc -> RInstanceOfComponent desc) reason in
-    let (config, instance_ignored_when_ref_stored_in_props) =
-      F.config_and_instance_ignored_when_ref_stored_in_props
-        cx
-        ~in_annotation
-        ~config_reason
-        ~instance_reason
-        cparams
-    in
+    let config = F.config cx ~in_annotation ~config_reason cparams in
     let component_kind =
       match id_opt with
       | None -> Structural
@@ -149,16 +141,7 @@ module Make
         Nominal (opaque_id, name, None)
     in
     let t =
-      DefT
-        ( reason,
-          ReactAbstractComponentT
-            {
-              config;
-              instance_ignored_when_ref_stored_in_props;
-              renders = renders_t;
-              component_kind;
-            }
-        )
+      DefT (reason, ReactAbstractComponentT { config; renders = renders_t; component_kind })
     in
     poly_type_of_tparams (Type.Poly.generate_id ()) tparams t
 end

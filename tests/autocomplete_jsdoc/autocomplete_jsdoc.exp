@@ -1688,6 +1688,34 @@ Flags: --lsp
     ]
   }
 }
+{
+  "label":"ref",
+  "labelDetails":{"detail":"?: RefSetter<ClassComponent> | void"},
+  "kind":13,
+  "detail":"RefSetter<ClassComponent> | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
+    "newText":"ref="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "jsx attribute",
+      {
+        "token":null,
+        "index":4,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"ref",
+        "ac_type":"Acjsx"
+      }
+    ]
+  }
+}
 
 jsdoc-members-3.js:5:20
 Flags: --lsp

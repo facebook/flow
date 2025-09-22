@@ -287,8 +287,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ component.js:15:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
+`MyComponent` [2]. [incompatible-type]
 
    component.js:15:2
    15| <MyComponent />; // Error: `children` is required.
@@ -298,15 +298,15 @@ References:
    component.js:15:1
    15| <MyComponent />; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
-   component.js:6:43
+   component.js:6:7
     6| class MyComponent extends React.Component<{children: Node}, void> {
-                                                 ^^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ component.js:16:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
+`MyComponent` [2]. [incompatible-type]
 
    component.js:16:2
    16| <MyComponent></MyComponent>; // Error: `children` is required.
@@ -316,15 +316,15 @@ References:
    component.js:16:1
    16| <MyComponent></MyComponent>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   component.js:6:43
+   component.js:6:7
     6| class MyComponent extends React.Component<{children: Node}, void> {
-                                                 ^^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ component.js:18:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
+`MyComponent` [2]. [incompatible-type]
 
    component.js:18:2
    18| <MyComponent>{}</MyComponent>; // Error: `children` is required.
@@ -334,9 +334,9 @@ References:
    component.js:18:1
    18| <MyComponent>{}</MyComponent>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   component.js:6:43
+   component.js:6:7
     6| class MyComponent extends React.Component<{children: Node}, void> {
-                                                 ^^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ component.js:41:4
@@ -364,7 +364,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:23:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
 [incompatible-type]
 
    fun.js:23:2
@@ -375,9 +375,9 @@ References:
    fun.js:23:1
    23| <Fun />; // Error: `children` is required.
        ^^^^^^^ [1]
-   fun.js:16:35
+   fun.js:16:7
    16| class Fun extends React.Component<{children: Fn}, void> {}
-                                         ^^^^^^^^^^^^^^ [2]
+             ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:27:6
@@ -477,7 +477,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:47:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
 [incompatible-type]
 
    fun.js:47:2
@@ -488,14 +488,14 @@ References:
    fun.js:47:1
    47| <Fun>{}</Fun>; // Error: `void` is not allowed.
        ^^^^^^^^^^^^^ [1]
-   fun.js:16:35
+   fun.js:16:7
    16| class Fun extends React.Component<{children: Fn}, void> {}
-                                         ^^^^^^^^^^^^^^ [2]
+             ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:48:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in object type [2].
+Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
 [incompatible-type]
 
    fun.js:48:2
@@ -506,9 +506,9 @@ References:
    fun.js:48:1
    48| <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   fun.js:16:35
+   fun.js:16:7
    16| class Fun extends React.Component<{children: Fn}, void> {}
-                                         ^^^^^^^^^^^^^^ [2]
+             ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:49:7
@@ -616,7 +616,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:59:2
 
-Cannot create `Obj` element because property `children` is missing in props [1] but exists in object type [2].
+Cannot create `Obj` element because property `children` is missing in props [1] but exists in props of class `Obj` [2].
 [incompatible-type]
 
    fun.js:59:2
@@ -627,9 +627,9 @@ References:
    fun.js:59:1
    59| <Obj />; // Error: `children` is required.
        ^^^^^^^ [1]
-   fun.js:18:35
+   fun.js:18:7
    18| class Obj extends React.Component<{children: Data}, void> {}
-                                         ^^^^^^^^^^^^^^^^ [2]
+             ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:63:13
@@ -840,8 +840,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:140:2
 
-Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `FunArray` element because property `children` is missing in props [1] but exists in props of class
+`FunArray` [2]. [incompatible-type]
 
    fun.js:140:2
    140| <FunArray>{}</FunArray>; // Error: `void` is not allowed.
@@ -851,15 +851,15 @@ References:
    fun.js:140:1
    140| <FunArray>{}</FunArray>; // Error: `void` is not allowed.
         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   fun.js:21:40
+   fun.js:21:7
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+              ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:141:2
 
-Cannot create `FunArray` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `FunArray` element because property `children` is missing in props [1] but exists in props of class
+`FunArray` [2]. [incompatible-type]
 
    fun.js:141:2
    141| <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
@@ -869,9 +869,9 @@ References:
    fun.js:141:1
    141| <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   fun.js:21:40
+   fun.js:21:7
     21| class FunArray extends React.Component<{children: Fn | Array<Fn>}, void> {}
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+              ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- fun.js:142:12
@@ -1017,8 +1017,8 @@ A spread argument is unsupported here. [unsupported-syntax]
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:26:2
 
-Cannot create `TabBar` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `TabBar` element because property `children` is missing in props [1] but exists in props of class
+`TabBar` [2]. [incompatible-type]
 
    tabs.js:26:2
    26| <TabBar />; // Error: `children` is required.
@@ -1028,9 +1028,9 @@ References:
    tabs.js:26:1
    26| <TabBar />; // Error: `children` is required.
        ^^^^^^^^^^ [1]
-   tabs.js:24:38
+   tabs.js:24:7
    24| class TabBar extends React.Component<{children: TabBarNode}, void> {}
-                                            ^^^^^^^^^^^^^^^^^^^^^^ [2]
+             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
@@ -1188,8 +1188,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
+`Text` [2]. [incompatible-type]
 
    text.js:9:2
    9| <Text />; // Error: `children` is required.
@@ -1199,15 +1199,15 @@ References:
    text.js:9:1
    9| <Text />; // Error: `children` is required.
       ^^^^^^^^ [1]
-   text.js:5:36
+   text.js:5:7
    5| class Text extends React.Component<{children: string}, void> {}
-                                         ^^^^^^^^^^^^^^^^^^ [2]
+            ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:11:2
 
-Cannot create `TextLiteral` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `TextLiteral` element because property `children` is missing in props [1] but exists in props of class
+`TextLiteral` [2]. [incompatible-type]
 
    text.js:11:2
    11| <TextLiteral />; // Error: `children` is required.
@@ -1217,15 +1217,15 @@ References:
    text.js:11:1
    11| <TextLiteral />; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
-   text.js:7:43
+   text.js:7:7
     7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+             ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:15:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
+`Text` [2]. [incompatible-type]
 
    text.js:15:2
    15| <Text></Text>; // Error: `children` does not exist.
@@ -1235,15 +1235,15 @@ References:
    text.js:15:1
    15| <Text></Text>; // Error: `children` does not exist.
        ^^^^^^^^^^^^^ [1]
-   text.js:5:36
+   text.js:5:7
     5| class Text extends React.Component<{children: string}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^ [2]
+             ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:18:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
+`Text` [2]. [incompatible-type]
 
    text.js:18:2
    18| <Text>{}</Text>; // Error: `children` is required.
@@ -1253,15 +1253,15 @@ References:
    text.js:18:1
    18| <Text>{}</Text>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^ [1]
-   text.js:5:36
+   text.js:5:7
     5| class Text extends React.Component<{children: string}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^ [2]
+             ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:19:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
+`Text` [2]. [incompatible-type]
 
    text.js:19:2
    19| <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
@@ -1271,9 +1271,9 @@ References:
    text.js:19:1
    19| <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   text.js:5:36
+   text.js:5:7
     5| class Text extends React.Component<{children: string}, void> {}
-                                          ^^^^^^^^^^^^^^^^^^ [2]
+             ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- text.js:20:8
@@ -1533,8 +1533,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:9:2
 
-Cannot create `Tuple` element because property `children` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Tuple` element because property `children` is missing in props [1] but exists in props of class
+`Tuple` [2]. [incompatible-type]
 
    tuple.js:9:2
    9| <Tuple />; // Error: `children` is required.
@@ -1544,9 +1544,9 @@ References:
    tuple.js:9:1
    9| <Tuple />; // Error: `children` is required.
       ^^^^^^^^^ [1]
-   tuple.js:6:27
-   6|   extends React.Component<{children: [boolean, string, number]}, void> {}
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   tuple.js:5:7
+   5| class Tuple
+            ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:12:8

@@ -23,9 +23,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
 
-Cannot call `bar` because Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may
-contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making object type [2] exact.
-[cannot-spread-inexact]
+Cannot call `bar` because Flow cannot determine a type for object type [1]. props of class `C` [2] is inexact, so it may
+contain `m` with a type that conflicts with `m`'s definition in object type [1]. Try making props of class `C` [2]
+exact. [cannot-spread-inexact]
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call
@@ -35,9 +35,9 @@ References:
    error_positions.js:7:45
     7| declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
                                                    ^^^^^^^^^^^^^^^^^^ [1]
-   error_positions.js:9:33
+   error_positions.js:9:7
     9| class C extends React.Component<{}> {}
-                                       ^^ [2]
+             ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6

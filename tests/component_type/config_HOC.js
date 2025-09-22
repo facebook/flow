@@ -9,9 +9,9 @@ declare var x: Config;
 type NotTheRightConfig = {+baz: number, +qux: number, ...};
 x as NotTheRightConfig; // Error, configs don't match
 
-function HOC<Config: {...}, Instance>(
-  x: component(ref: React.RefSetter<Instance>, ...Config),
-): component(ref: React.RefSetter<Instance>, ...Config) {
+function HOC<Config: {...}>(
+  x: component(...Config),
+): component(...Config) {
   return x;
 }
 

@@ -19,6 +19,7 @@ class ProfilePic extends React.Component<Props> {
   }
 }
 
-export default createFragmentContainer(ProfilePic) as React.ComponentType<
-  GetPropFragmentRef<Props>,
->;
+export default createFragmentContainer(ProfilePic) as component(
+  ref?: React.RefSetter<ProfilePic>,
+  ...GetPropFragmentRef<Props>
+);

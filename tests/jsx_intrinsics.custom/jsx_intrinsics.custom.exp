@@ -19,12 +19,9 @@ property's key. [incompatible-type]
 
    main.js:7:12
    7| const d = <div {...dataProps} />; // OK with data props, but missing id
-                 ^^^
+                 ^^^ [1]
 
 References:
-   lib/jsx.js:4:22
-   4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    main.js:6:20
    6| const dataProps: {[StringPrefix<'data-'>]: string} = {};
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -32,8 +29,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- strings.js:9:2
 
-Cannot create `Div` element because property `id` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Div` element because property `id` is missing in props [1] but exists in props of string literal
+`div` [2]. [incompatible-type]
 
    strings.js:9:2
    9| <Div />; // This is fine
@@ -43,9 +40,9 @@ References:
    strings.js:9:1
    9| <Div />; // This is fine
       ^^^^^^^ [1]
-   lib/jsx.js:4:22
-   4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   strings.js:5:11
+   5| var Div = 'div' as const;
+                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:10:2
@@ -103,20 +100,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:13:2
 
-Cannot create `div` element because property `id` is missing in props [1] but exists in object type [2].
+Cannot create `div` element because property `id` is missing in props [1] but exists in props of `div` [2].
 [incompatible-type]
 
    strings.js:13:2
    13| <div />; // This is not fine
-        ^^^
+        ^^^ [2]
 
 References:
    strings.js:13:1
    13| <div />; // This is not fine
        ^^^^^^^ [1]
-   lib/jsx.js:4:22
-    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:14:2

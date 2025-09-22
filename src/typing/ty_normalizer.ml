@@ -706,11 +706,7 @@ module Make (I : INPUT) : S = struct
       (Ty.obj_t, error) t
 
     val convert_component :
-      env:Env.t ->
-      Type.t ->
-      Type.component_instance ->
-      Type.t ->
-      (Ty.component_props * Ty.t option * Ty.t option, error) t
+      env:Env.t -> Type.t -> Type.t -> (Ty.component_props * Ty.t option * Ty.t option, error) t
 
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
@@ -854,12 +850,7 @@ module Make (I : INPUT) : S = struct
       | DefT
           ( r,
             ReactAbstractComponentT
-              {
-                config = _;
-                instance_ignored_when_ref_stored_in_props = _;
-                renders = _;
-                component_kind = Nominal (_, name, inferred_targs);
-              }
+              { config = _; renders = _; component_kind = Nominal (_, name, inferred_targs) }
           ) ->
         let%bind inferred_targs =
           match inferred_targs with
@@ -870,14 +861,8 @@ module Make (I : INPUT) : S = struct
         in
         let symbol = Reason_utils.component_symbol env name r in
         return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
-      | DefT
-          ( _,
-            ReactAbstractComponentT
-              { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
-          ) ->
-        let%bind (regular_props, ref_prop, renders) =
-          convert_component ~env config instance_ignored_when_ref_stored_in_props renders
-        in
+      | DefT (_, ReactAbstractComponentT { config; renders; component_kind = _ }) ->
+        let%bind (regular_props, ref_prop, renders) = convert_component ~env config renders in
         return (Ty.Component { regular_props; ref_prop; renders })
       | DefT (_, RendersT (IntrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (_, RendersT (NominalRenders { renders_id; renders_name; _ })) ->
@@ -1241,19 +1226,8 @@ module Make (I : INPUT) : S = struct
         in
         Ty.InlineInterface { Ty.if_extends; if_props; if_dict }
 
-    and convert_component ~env config instance_ignored_when_ref_stored_in_props renders =
+    and convert_component ~env config renders =
       let%bind config = type__ ~env config in
-      let%bind ref_prop =
-        match Context.react_ref_as_prop (Env.get_cx env) with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          (match instance_ignored_when_ref_stored_in_props with
-          | Type.ComponentInstanceOmitted _ -> return None
-          | Type.ComponentInstanceAvailableAsRefSetterProp t -> type__ ~env t >>| Base.Option.some)
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          return None
-      in
       let%bind renders =
         match renders with
         | Type.(DefT (_, RendersT DefaultRenders)) -> return None
@@ -1290,7 +1264,7 @@ module Make (I : INPUT) : S = struct
         | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
         | Error config -> Ty.UnflattenedComponentProps config
       in
-      return (regular_props, ref_prop, renders)
+      return (regular_props, None, renders)
 
     and this_class_t ~env r t =
       let open Type in
@@ -1385,12 +1359,7 @@ module Make (I : INPUT) : S = struct
         | DefT
             ( r,
               ReactAbstractComponentT
-                {
-                  component_kind = Nominal (_, name, _);
-                  config = _;
-                  instance_ignored_when_ref_stored_in_props = _;
-                  renders = _;
-                }
+                { component_kind = Nominal (_, name, _); config = _; renders = _ }
             ) ->
           let symbol = Reason_utils.component_symbol env name r in
           mk_generic ~env symbol Ty.ComponentKind tparams targs
@@ -1917,8 +1886,7 @@ module Make (I : INPUT) : S = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let component_decl
-          ~env ?targs tparams config instance_ignored_when_ref_stored_in_props renders name reason =
+      let component_decl ~env ?targs tparams config renders name reason =
         let%bind tparams =
           match tparams with
           | Some tparams ->
@@ -1927,13 +1895,7 @@ module Make (I : INPUT) : S = struct
           | None -> return None
         in
         let%bind targs = optMapM (TypeConverter.convert_t ~env) targs in
-        let%map (props, instance, renders) =
-          TypeConverter.convert_component
-            ~env
-            config
-            instance_ignored_when_ref_stored_in_props
-            renders
-        in
+        let%map (props, instance, renders) = TypeConverter.convert_component ~env config renders in
         Ty.Decl
           (Ty.NominalComponentDecl
              {
@@ -1972,23 +1934,9 @@ module Make (I : INPUT) : S = struct
           toplevel ~env type_
         | DefT
             ( reason,
-              ReactAbstractComponentT
-                {
-                  component_kind = Nominal (_, name, targs);
-                  config;
-                  instance_ignored_when_ref_stored_in_props;
-                  renders;
-                }
+              ReactAbstractComponentT { component_kind = Nominal (_, name, targs); config; renders }
             ) ->
-          component_decl
-            ~env
-            ?targs
-            (Some tparams)
-            config
-            instance_ignored_when_ref_stored_in_props
-            renders
-            name
-            reason
+          component_decl ~env ?targs (Some tparams) config renders name reason
         (* Type Aliases *)
         | DefT (r, TypeT (kind, t)) ->
           let%bind (env, ps) = TypeConverter.convert_type_params_t ~env tparams in
@@ -2027,45 +1975,15 @@ module Make (I : INPUT) : S = struct
           enum_decl ~env reason
         | DefT
             ( reason,
-              ReactAbstractComponentT
-                {
-                  component_kind = Nominal (_, name, targs);
-                  config;
-                  instance_ignored_when_ref_stored_in_props;
-                  renders;
-                }
+              ReactAbstractComponentT { component_kind = Nominal (_, name, targs); config; renders }
             ) ->
-          component_decl
-            ~env
-            ?targs
-            None
-            config
-            instance_ignored_when_ref_stored_in_props
-            renders
-            name
-            reason
-        | DefT
-            ( _,
-              ReactAbstractComponentT
-                {
-                  component_kind = Structural;
-                  config;
-                  instance_ignored_when_ref_stored_in_props;
-                  renders;
-                }
-            )
+          component_decl ~env ?targs None config renders name reason
+        | DefT (_, ReactAbstractComponentT { component_kind = Structural; config; renders })
           when Env.toplevel_is_type_identifier_reference env ->
           let orig_reason = TypeUtil.reason_of_t orig_t in
           (match desc_of_reason orig_reason with
           | RIdentifier (OrdinaryName name) ->
-            component_decl
-              ~env
-              None
-              config
-              instance_ignored_when_ref_stored_in_props
-              renders
-              name
-              orig_reason
+            component_decl ~env None config renders name orig_reason
           | _ ->
             let%map t = TypeConverter.convert_t ~env orig_t in
             Ty.Type t)

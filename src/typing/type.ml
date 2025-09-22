@@ -246,7 +246,6 @@ module rec TypeTerm : sig
     (* React$AbstractComponent<Config, Instance, ReturnElement> *)
     | ReactAbstractComponentT of {
         config: t;
-        instance_ignored_when_ref_stored_in_props: component_instance;
         renders: t;
         component_kind: component_kind;
       }
@@ -257,12 +256,6 @@ module rec TypeTerm : sig
         enum_value_t: t;
         enum_info: enum_info;
       }
-
-  and component_instance =
-    | ComponentInstanceAvailableAsRefSetterProp of t
-        (** React.RefSetter<Instance> in component(ref: React.RefSetter<Instance>) *)
-    | ComponentInstanceOmitted of reason
-        (** Modeling the absence of ref prop in components. e.g. component Foo() *)
 
   (* A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
    * The subtyping rules are much simpler to understand in these forms, so we use the render type
@@ -3131,10 +3124,7 @@ and React : sig
         inferred_targs: (TypeTerm.t * Subst_name.Name.t) list option;
         specialized_component: TypeTerm.specialized_callee option;
       }
-    | ConfigCheck of {
-        props: TypeTerm.t;
-        instance_ignored_when_ref_stored_in_props: TypeTerm.component_instance;
-      }
+    | ConfigCheck of { props: TypeTerm.t }
     | GetProps of TypeTerm.t_out
     | GetConfig of {
         from_userland_react_element_config: bool;

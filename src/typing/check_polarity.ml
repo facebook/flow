@@ -199,18 +199,8 @@ end = struct
               )
           )
       )
-    | DefT
-        ( _,
-          ReactAbstractComponentT
-            { config; instance_ignored_when_ref_stored_in_props; renders; component_kind = _ }
-        ) ->
+    | DefT (_, ReactAbstractComponentT { config; renders; component_kind = _ }) ->
       check_polarity cx ?trace seen tparams (Polarity.inv polarity) config;
-      let () =
-        match instance_ignored_when_ref_stored_in_props with
-        | ComponentInstanceOmitted (_ : Reason.reason) -> ()
-        | ComponentInstanceAvailableAsRefSetterProp t ->
-          check_polarity cx ?trace seen tparams (Polarity.inv polarity) t
-      in
       check_polarity cx ?trace seen tparams polarity renders
     | DefT (_, RendersT (NominalRenders { renders_id = _; renders_name = _; renders_super })) ->
       check_polarity cx ?trace seen tparams polarity renders_super

@@ -24,13 +24,7 @@ module type S = sig
 
   val add_rest : Config_types.rest -> Types.t -> Types.t
 
-  val config_and_instance_ignored_when_ref_stored_in_props :
-    Context.t ->
-    in_annotation:bool ->
-    config_reason:Reason.reason ->
-    instance_reason:Reason.reason ->
-    Types.t ->
-    Type.t * Type.component_instance
+  val config : Context.t -> in_annotation:bool -> config_reason:Reason.reason -> Types.t -> Type.t
 
   val eval : Context.t -> Types.t -> (ALoc.t * Type.t) Config_types.ast
 end
@@ -73,8 +67,7 @@ module Make
 
   let add_rest r x = { x with rest = Some r }
 
-  let config_and_instance_ignored_when_ref_stored_in_props
-      cx ~in_annotation ~config_reason ~instance_reason { params_rev; rest; reconstruct = _ } =
+  let config cx ~in_annotation ~config_reason { params_rev; rest; reconstruct = _ } =
     let (pmap, ref_prop) =
       List.fold_left
         (fun (acc, ref_prop) p ->
@@ -86,26 +79,12 @@ module Make
               ref_prop
           in
           let acc =
-            match Context.react_ref_as_prop cx with
-            | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-              if key = "ref" then
-                acc
-              else
-                Type.Properties.add_field
-                  (Reason.OrdinaryName key)
-                  Polarity.Positive
-                  ~key_loc:(Some key_loc)
-                  t
-                  acc
-            | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-            | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-            | Options.ReactRefAsProp.FullSupport ->
-              Type.Properties.add_field
-                (Reason.OrdinaryName key)
-                Polarity.Positive
-                ~key_loc:(Some key_loc)
-                t
-                acc
+            Type.Properties.add_field
+              (Reason.OrdinaryName key)
+              Polarity.Positive
+              ~key_loc:(Some key_loc)
+              t
+              acc
           in
           (acc, ref_prop))
         (NameUtils.Map.empty, None)
@@ -139,34 +118,30 @@ module Make
         in
         t
     in
-    let instance_ignored_when_ref_stored_in_props =
+    let () =
       match ref_prop with
-      | None -> Type.ComponentInstanceOmitted instance_reason
+      | None -> ()
       | Some (key_loc, ref_prop) ->
         C.read_react cx key_loc;
         let open Type in
-        let () =
-          if not in_annotation then
-            let open Reason in
-            let reason_op = mk_reason RReactRef key_loc in
-            let u =
-              Flow_js.get_builtin_react_typeapp
-                cx
-                reason_op
-                Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-                [AnyT.error reason_op]
-            in
-            Context.add_post_inference_subtyping_check
+        if not in_annotation then
+          let open Reason in
+          let reason_op = mk_reason RReactRef key_loc in
+          let u =
+            Flow_js.get_builtin_react_typeapp
               cx
-              ref_prop
-              (Op (DeclareComponentRef { op = reason_op }))
-              u
-        in
-        ComponentInstanceAvailableAsRefSetterProp ref_prop
+              reason_op
+              Flow_intermediate_error_types.ReactModuleForReactRefSetterType
+              [AnyT.error reason_op]
+          in
+          Context.add_post_inference_subtyping_check
+            cx
+            ref_prop
+            (Op (DeclareComponentRef { op = reason_op }))
+            u
     in
     let allow_ref_in_spread =
       match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
       | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
       | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase ->
         in_annotation
@@ -183,7 +158,7 @@ module Make
           (Eval.generate_id ())
       )
     in
-    (config, instance_ignored_when_ref_stored_in_props)
+    config
 
   let eval cx { params_rev; rest; reconstruct } =
     let params = List.rev params_rev in

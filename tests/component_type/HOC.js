@@ -9,14 +9,14 @@ class Component extends React.Component<{|foo: number, bar: number|}> {
   }
 }
 
-function TrivialHOC<Props: {...}, Instance>(
-  x: component(ref: React.RefSetter<Instance>, ...Props),
-): component(ref: React.RefSetter<Instance>, ...Props) {
+function TrivialHOC<Props: {...}>(
+  x: component(...Props),
+): component(...Props) {
   return x;
 }
 
 const TrivialWrap = TrivialHOC(Component);
-TrivialWrap as component(ref: React.RefSetter<Component>, bar: number, foo?: number); // All ok!
+TrivialWrap as component(ref?: React.RefSetter<Component>, bar: number, foo?: number); // All ok!
 
 function WrapInDivWithExtraProp<Props: {...}>(
   X: React.ComponentType<Props>,
@@ -38,7 +38,7 @@ function WrapInDivWithExtraProp<Props: {...}>(
 
 const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we lose instance type here
 WrappedInDivWithExtraProp as React.ComponentType<
-  {|foo?: number, bar: number, baz: number|},
+  {|foo?: number, bar: number, baz: number, ref?: React.RefSetter<Component>|},
 >;
 
 function AddPropWithDefault<Props: {...}>(
@@ -61,5 +61,5 @@ function AddPropWithDefault<Props: {...}>(
 
 const WrappedAddPropWithDefault = AddPropWithDefault(Component);
 WrappedAddPropWithDefault as React.ComponentType<
-  {|foo?: number, bar: number, baz?: number|},
+  {|foo?: number, bar: number, baz?: number, ref?: React.RefSetter<Component>|},
 >;

@@ -1,8 +1,9 @@
 dro.js:2:9 = (compareFn?: (a: number, b: number) => number) => Array<number>
 dro.js:2:9,2:12
 lazy_ref.js:14:9 = {
-  default: component(ref: RefSetter<{moo(x: string): void}>, ...empty) renders null
+  default: component(...{...empty, +ref?: RefSetter<{moo(x: string): void}>}) renders null
 }
+= {default: component(...empty) renders null}
 
 'RefSetter' defined at (lib) react.js:988:9
 

@@ -125,14 +125,8 @@ class ['a] t =
         let acc = self#nel (self#type_param cx pole) acc tparams in
         let acc = self#type_ cx pole acc t_out in
         acc
-      | ReactAbstractComponentT
-          { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
+      | ReactAbstractComponentT { config; renders; component_kind } ->
         let acc = self#type_ cx (P.inv pole) acc config in
-        let acc =
-          match instance_ignored_when_ref_stored_in_props with
-          | ComponentInstanceOmitted (_ : Reason.reason) -> acc
-          | ComponentInstanceAvailableAsRefSetterProp t -> self#type_ cx pole acc t
-        in
         let acc = self#type_ cx pole acc renders in
         let acc =
           match component_kind with

@@ -64,7 +64,7 @@ let metadata =
     invariant_subtyping_error_message_improvement = false;
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
-    react_ref_as_prop = Options.ReactRefAsProp.StoreRefAndPropsSeparately;
+    react_ref_as_prop = Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig;
     react_runtime = Options.ReactRuntimeClassic;
     recursion_limit = 10000;
     relay_integration_esmodules = false;
@@ -616,7 +616,7 @@ let eval_hint_tests =
           [Decomp_CallSuper];
     "jsx_props_of_class_component"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"{+bar: string, +foo: number}"
+          ~expected:"{+bar: string, +foo: number, +ref?: RefSetter<MyComponent>}"
           "import * as React from 'react'; class MyComponent extends React.Component<{bar: string, foo: number}> {}; MyComponent"
           [Decomp_JsxProps];
     "jsx_props_of_function_component"
@@ -626,7 +626,7 @@ let eval_hint_tests =
           [Decomp_JsxProps];
     "jsx_props_of_abstract_component"
     >:: mk_eval_hint_test
-          ~expected:"{+bar: string, +foo: number}"
+          ~expected:"{+bar: string, +foo: number, +ref: RefSetter<mixed>}"
           "component(ref: React.RefSetter<mixed>, bar: string, foo: number) "
           [Decomp_JsxProps];
     "jsx_props_select"
@@ -639,11 +639,6 @@ let eval_hint_tests =
           ~expected:"{bar: string, foo: number}"
           "({bar: string, foo: number}) => number"
           [Decomp_ObjSpread; Decomp_JsxProps];
-    "jsx_ref_function"
-    >:: mk_eval_hint_test
-          ~expected:"string | null"
-          "component(ref: React.RefSetter<string>, ...{...})"
-          [Decomp_FuncParam ([None], 0, None); Decomp_JsxRef];
     "jsx_fragment_ref"
     >:: mk_eval_hint_test_with_type_setup
           ~expected:"void"

@@ -16,8 +16,8 @@ ComponentNarrower as component(ref: React.RefSetter<any>, ...any);
 ComponentNarrower as component(ref: React.RefSetter<any>, bar: number, foo?: number, ...{...}) ;
 ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
 ComponentNarrower as component(ref: React.RefSetter<any>, foo?: number); // Error missing bar in config
-ComponentNarrower as component(ref: React.RefSetter<Component>, ...any); // Error instance type is wrong
-ComponentNarrower as component(ref: React.RefSetter<ComponentNarrower>, ...any);
+ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
+ComponentNarrower as component(ref: React.RefSetter<ComponentNarrower>, foo?: number, bar: number, ...{...});
 
 class Subclass extends Component {}
 

@@ -230,9 +230,6 @@ module Make (Flow : INPUT) : S = struct
          * as we've already checked for structural compatibility in subtyping kit. *)
         let top_abstract_component =
           let config = EmptyT.why elem_reason in
-          let instance_ignored_when_ref_stored_in_props =
-            ComponentInstanceAvailableAsRefSetterProp (EmptyT.why elem_reason)
-          in
           let renders =
             get_builtin_react_type
               cx
@@ -240,15 +237,7 @@ module Make (Flow : INPUT) : S = struct
               Flow_intermediate_error_types.ReactModuleForReactNodeType
           in
           DefT
-            ( elem_reason,
-              ReactAbstractComponentT
-                {
-                  config;
-                  instance_ignored_when_ref_stored_in_props;
-                  renders;
-                  component_kind = Structural;
-                }
-            )
+            (elem_reason, ReactAbstractComponentT { config; renders; component_kind = Structural })
         in
         if speculative_subtyping_succeeds cx component_t top_abstract_component then
           concretize_component_renders_and_check component_t

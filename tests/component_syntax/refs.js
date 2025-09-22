@@ -9,14 +9,14 @@ component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
 
 component Qux(ref: React$RefSetter<'div'>) { return null };
 
-(Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
-(Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+(Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+(Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
 
-(Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+(Bar: component(ref: React.RefSetter<string>)); // err
 
-(Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+(Baz: component(ref: React.RefSetter<string>)); // err
 
-(Qux: component(ref: React.RefSetter<string>, ...empty)); // ok
+(Qux: component(ref: React.RefSetter<string>)); // ok
 
 
 import * as React from 'react';

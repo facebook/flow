@@ -309,20 +309,8 @@ class virtual ['a] t =
           t
         else
           PolyT { tparams_loc; tparams = tparamlist'; t_out = t''; id = Type.Poly.generate_id () }
-      | ReactAbstractComponentT
-          { config; instance_ignored_when_ref_stored_in_props; renders; component_kind } ->
+      | ReactAbstractComponentT { config; renders; component_kind } ->
         let config' = self#type_ cx map_cx config in
-        let instance_ignored_when_ref_stored_in_props' =
-          match instance_ignored_when_ref_stored_in_props with
-          | ComponentInstanceOmitted (_ : Reason.reason) ->
-            instance_ignored_when_ref_stored_in_props
-          | ComponentInstanceAvailableAsRefSetterProp t ->
-            let t' = self#type_ cx map_cx t in
-            if t' == t then
-              instance_ignored_when_ref_stored_in_props
-            else
-              ComponentInstanceAvailableAsRefSetterProp t'
-        in
         let renders' = self#type_ cx map_cx renders in
         let component_kind' =
           match component_kind with
@@ -334,21 +322,11 @@ class virtual ['a] t =
             else
               Nominal (id, s, ts')
         in
-        if
-          config' == config
-          && instance_ignored_when_ref_stored_in_props' == instance_ignored_when_ref_stored_in_props
-          && renders' == renders
-          && component_kind' == component_kind
-        then
+        if config' == config && renders' == renders && component_kind' == component_kind then
           t
         else
           ReactAbstractComponentT
-            {
-              config = config';
-              instance_ignored_when_ref_stored_in_props = instance_ignored_when_ref_stored_in_props';
-              renders = renders';
-              component_kind = component_kind';
-            }
+            { config = config'; renders = renders'; component_kind = component_kind' }
       | RendersT canonical_form ->
         let canonical_form' = self#canonical_renders_form cx map_cx canonical_form in
         if canonical_form' == canonical_form then

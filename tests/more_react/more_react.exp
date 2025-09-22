@@ -72,8 +72,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexact_props.js:19:2
 
-Cannot create `B` element because property `z` is extra in props [1] but missing in `Props2` [2]. Exact objects do not
-accept extra props. [incompatible-type]
+Cannot create `B` element because property `z` is extra in props [1] but missing in props of class `B` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    inexact_props.js:19:2
    19| <B x={4} y={"hello"} z={3}></B>; // error
@@ -83,9 +83,9 @@ References:
    inexact_props.js:19:1
    19| <B x={4} y={"hello"} z={3}></B>; // error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   inexact_props.js:16:33
+   inexact_props.js:16:7
    16| class B extends React.Component<Props2> {}
-                                       ^^^^^^ [2]
+             ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- inexact_props.js:44:34
@@ -104,6 +104,20 @@ References:
    inexact_props.js:35:9
    35|   p3? : string,
                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
+
+Cannot create `D` element because props [1] is incompatible with empty [1]. [incompatible-type]
+
+   subclassComponent.js:29:2
+   29| <D></D>; // error
+        ^
+
+References:
+   subclassComponent.js:29:1
+   29| <D></D>; // error
+       ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
@@ -147,6 +161,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
+Cannot create `E` element because props [1] is incompatible with empty [1]. [incompatible-type]
+
+   subclassComponent.js:30:2
+   30| <E></E>; // error
+        ^
+
+References:
+   subclassComponent.js:30:1
+   30| <E></E>; // error
+       ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
+
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
  - Either `E` [1] is incompatible with `Component` [2].
  - Or class `E` [1] is incompatible with string [3].
@@ -182,6 +210,20 @@ References:
    <BUILTINS>/react.js:611:19
    611|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
+
+Cannot create `F` element because props [1] is incompatible with empty [1]. [incompatible-type]
+
+   subclassComponent.js:31:2
+   31| <F></F>; // error
+        ^
+
+References:
+   subclassComponent.js:31:1
+   31| <F></F>; // error
+       ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
@@ -224,7 +266,7 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

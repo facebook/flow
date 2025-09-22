@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 function myHOC(
-  Component: React.ComponentType<{foo: number, bar: number}>,
-): React.ComponentType<{foo: number}> {
+  Component: component(ref?: React.RefSetter<mixed>, foo: number, bar: number),
+): component(ref?: React.RefSetter<mixed>, foo: number) {
   return class extends React.Component<{foo: number}, {bar: number}> {
     state: {bar: number} = {bar: 2};
     render(): React.Node {
@@ -33,7 +33,7 @@ function UnwrappedFun(props: {foo: number, bar: number}) {
 myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
 myHOC(function Empty(props: {foo: string}) {}); // Error
 
-const Wrapped: React.ComponentType<{foo: number}> = myHOC(Unwrapped);
+const Wrapped: component(ref?: React.RefSetter<mixed>, foo: number) = myHOC(Unwrapped);
 const WrappedFun = myHOC(UnwrappedFun);
 
 <Wrapped nonsense="what" />; // Error: `foo` is required.

@@ -1,3 +1,59 @@
+Error ------------------------------------------------------------------------------------------------------ main.js:9:3
+
+Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
+ - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in the first parameter.
+ - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
+
+   main.js:9:3
+     9|   <CustomComponent prop="asdf" />; // Error: Bad class type
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                           ^ [1]
+   main.js:4:7
+     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^^^^^ [2]
+   main.js:3:7
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:267:39
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+                                              ^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------------------ main.js:9:3
+
+Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
+ - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in property `current`.
+ - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
+
+   main.js:9:3
+     9|   <CustomComponent prop="asdf" />; // Error: Bad class type
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                           ^ [1]
+   main.js:4:7
+     4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^^^^^ [2]
+   main.js:3:7
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:267:39
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+                                              ^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:103:6
+   103|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [5]
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
 Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
@@ -21,23 +77,76 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:3
 
-Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
-type [2] in type argument `P` [3]. [incompatible-type]
+Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in `CustomComponent` element [1] but
+exists in `React.ElementProps` [2] in type argument `P` [3]. [incompatible-type]
 
    main.js:11:3
    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   main.js:3:47
-    3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                     ^^^^^^^^^^^^^^ [1]
-   main.js:10:59
-   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                 ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:58:88
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                                           ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:11:3
+
+Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
+ - Either `Component` [2] is incompatible with `CustomComponent` [3] in the first parameter.
+ - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
+
+   main.js:11:3
+    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                           ^ [1]
+   main.js:10:43
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   main.js:3:7
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:267:39
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+                                              ^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:102:5
+   102|   | { -current: T | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:11:3
+
+Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
+ - Either `Component` [2] is incompatible with `CustomComponent` [3] in property `current`.
+ - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
+
+   main.js:11:3
+    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:84
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                           ^ [1]
+   main.js:10:43
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   main.js:3:7
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+              ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:267:39
+   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+                                              ^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:103:6
+   103|   | ((T | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -89,4 +198,7 @@ References:
 
 
 
-Found 4 errors
+Found 8 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

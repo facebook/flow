@@ -48,8 +48,8 @@ declare var Duplicate: component(x: number, ...{x: number}); // error
 declare var InlineRef: component(ref: number); // ok: ref type in componenent type can be arbitrary
 <InlineRef ref={1} />; // error: string and number refs are still not allowed
 
-declare var SpreadRef: component(...p: {ref: number}); // error
-<SpreadRef ref={1} />; // error: string and number refs are still not allowed
+declare var SpreadRef: component(...p: {ref: number}); // no error. spreading ref is now allowed
+<SpreadRef ref={1} />; // no error. spreading ref is now allowed
 
 declare export var Export: component(x: number) renders number; // invalid-render
 

@@ -9,7 +9,7 @@ Component as component(...Props);
 Component as component(...{...}); // Error, missing foo
 Component as component(ref: React.RefSetter<void>, bar: number, foo: number, ...{...}); //Ok, extra prop bar
 Component as component(ref: React.RefSetter<number | void>, ...Props); // Ok
-Component as component(ref: React.RefSetter<number>, ...Props); // Error
+Component as component(ref: React.RefSetter<number>, ...Props); // Ok, extra ref prop is covered by inexact Props
 
 class NotAComponent {}
 

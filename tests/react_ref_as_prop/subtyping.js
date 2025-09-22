@@ -3,9 +3,7 @@ import {CompWithoutRefProp, CompWithOptionalRefProp, CompWithRequiredRefProp} fr
 
 FnWithoutRefProp as component(foo: string); // ok
 FnWithoutRefProp as React.ComponentType<{+foo: string}>; // ok
-// temporarily allowed, should be banned in the full ref-as-prop support,
-// since {ref: React.RefSetter<mixed>} ~> {} should be an error
-FnWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // ok
+FnWithoutRefProp as component(foo: string, ref: React.RefSetter<mixed>); // error, since {ref: React.RefSetter<mixed>} ~> {} should be an error
 
 FnWithOptionalRefProp as component(foo: string); // ok
 FnWithOptionalRefProp as React.ComponentType<{+foo: string}>; // ok

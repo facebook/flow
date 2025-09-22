@@ -264,7 +264,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either object literal [1] is incompatible with union type [2] in the second argument.
- - Or number [3] is incompatible with boolean [4] in property `foo` of type argument `P` [5].
+ - Or property `ref` is extra in `React.ElementProps` [3] but missing in object type [4]. Exact objects do not accept
+   extra props in type argument `P` [5].
 
    test.js:34:8
    34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
@@ -277,12 +278,12 @@ References:
    lib.js:30:30
    30|   >(component: Comp, props?: null | void, ...children: Children) => CheckedReactElement<Comp, {||}, Children>
                                     ^^^^^^^^^^^ [2]
-   test.js:13:39
-   13| class A extends React.Component<{foo: number, bar: number}> {}
-                                             ^^^^^^ [3]
-   test.js:34:89
+   <BUILTINS>/react.js:58:88
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:34:83
    34| (React.createElement(A, {foo: 1, bar: 2}): ExactReactElement_DEPRECATED<Class<A>, {foo: boolean, bar: number}>); // error
-                                                                                               ^^^^^^^ [4]
+                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
                                                                                           ^ [5]

@@ -20,4 +20,4 @@ const _f = <MemoComponentWithEqual />; // Error missing foo
 const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar
 const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
 
-const _i = React.memo<Props, void>(React.forwardRef(Component));
+const _i = React.memo<Props>(React.forwardRef(Component));

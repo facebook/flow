@@ -230,55 +230,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Everything else will not have default props we should diff out. *)
     | _ -> None
 
-  let get_expected_ref cx reason_ref component =
-    match component with
-    | DefT
-        ( _,
-          ReactAbstractComponentT
-            {
-              instance_ignored_when_ref_stored_in_props =
-                ComponentInstanceAvailableAsRefSetterProp t;
-              _;
-            }
-        ) ->
-      Some t
-    | DefT (_, ClassT instance) ->
-      get_builtin_react_typeapp
-        cx
-        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-        [instance]
-      |> Option.some
-    | DefT (_, FunT _)
-    | DefT (_, ObjT _)
-    | DefT
-        ( _,
-          ReactAbstractComponentT
-            { instance_ignored_when_ref_stored_in_props = ComponentInstanceOmitted _; _ }
-        ) ->
-      None
-    | DefT (_, SingletonStrT { value = name; _ }) ->
-      let instance =
-        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_ref (fun tout ->
-            get_intrinsic
-              cx
-              DepthTrace.unit_trace
-              ~component_reason:(reason_of_t component)
-              ~reason_op:reason_ref
-              ~artifact:`Instance
-              ~literal:(`Literal name)
-              ~prop_polarity:Polarity.Positive
-              tout
-        )
-      in
-      get_builtin_react_typeapp
-        cx
-        (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) reason_ref)
-        Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-        [instance]
-      |> Option.some
-    | _ -> None
-
   let add_optional_ref_prop_to_props cx trace props reason_op instance tout =
     rec_flow
       cx
@@ -317,9 +268,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     | DefT (r, ClassT i) ->
       let props = Tvar.mk cx reason_op in
       (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-        rec_flow_t ~use_op:unknown_use cx trace (props, tout);
-        rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
       | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
         when from_userland_react_element_config ->
         rec_flow_t ~use_op:unknown_use cx trace (props, tout);
@@ -375,16 +323,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Special case for intrinsic components. *)
     | DefT (_, SingletonStrT { value = name; _ }) ->
       (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`Literal name)
-          ~prop_polarity:Polarity.Positive
-          tout
       | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
         when from_userland_react_element_config ->
         get_intrinsic
@@ -425,16 +363,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         add_optional_ref_prop_to_props cx trace props reason_op i tout)
     | DefT (_, StrGeneralT gen) ->
       (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`General gen)
-          ~prop_polarity:Polarity.Positive
-          tout
       | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
         when from_userland_react_element_config ->
         get_intrinsic
@@ -580,7 +508,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
 
   let run cx trace ~use_op reason_op l u =
     let err_incompatible ?(use_op = use_op) reason = err_incompatible cx ~use_op reason u in
-    let get_intrinsic = get_intrinsic cx trace ~component_reason:(reason_of_t l) ~reason_op in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
      * component's props is inferred (such as when a stateless functional
@@ -591,26 +518,18 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let component = l in
       match drop_generic component with
       (* Class components or legacy components. *)
-      | DefT (r, ClassT _) as c ->
+      | DefT (_, ClassT _) as c ->
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
-        (match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          let props = Tvar.mk cx reason_op in
-          rec_flow_t ~use_op:unknown_use cx trace (tin, props);
-          rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          let props =
-            EvalT
-              ( c,
-                TypeDestructorT
-                  (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
-                Eval.generate_id ()
-              )
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (tin, props))
+        let props =
+          EvalT
+            ( c,
+              TypeDestructorT
+                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              Eval.generate_id ()
+            )
+        in
+        rec_flow_t ~use_op:unknown_use cx trace (tin, props)
         (* Stateless functional components. *)
       | DefT (r, FunT (_, fun_t)) ->
         (match fun_t with
@@ -663,46 +582,26 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       (* Abstract components. *)
       | DefT (reason, ReactAbstractComponentT _) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, MixedT.why reason) (* Intrinsic components. *)
-      | DefT (_, SingletonStrT { value = name; _ }) as c ->
-        (match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          get_intrinsic
-            ~artifact:`Props
-            ~literal:(`Literal name)
-            ~prop_polarity:Polarity.Negative
-            tin
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          let props =
-            EvalT
-              ( c,
-                TypeDestructorT
-                  (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
-                Eval.generate_id ()
-              )
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (tin, props))
-      | DefT (_, StrGeneralT gen) as c ->
-        (match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          get_intrinsic
-            ~artifact:`Props
-            ~literal:(`General gen)
-            ~prop_polarity:Polarity.Negative
-            tin
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          let props =
-            EvalT
-              ( c,
-                TypeDestructorT
-                  (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
-                Eval.generate_id ()
-              )
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (tin, props))
+      | DefT (_, SingletonStrT _) as c ->
+        let props =
+          EvalT
+            ( c,
+              TypeDestructorT
+                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              Eval.generate_id ()
+            )
+        in
+        rec_flow_t ~use_op:unknown_use cx trace (tin, props)
+      | DefT (_, StrGeneralT _) as c ->
+        let props =
+          EvalT
+            ( c,
+              TypeDestructorT
+                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              Eval.generate_id ()
+            )
+        in
+        rec_flow_t ~use_op:unknown_use cx trace (tin, props)
       | AnyT (reason, source) ->
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.why source reason)
       (* ...otherwise, error. *)
@@ -714,44 +613,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     let props_to_tout =
       props_to_tout cx trace l ~use_op ~reason_op ~from_userland_react_element_config:false u
     in
-    let config_check use_op ~instance_ignored_when_ref_stored_in_props ~jsx_props =
-      let props_of_fn_component l =
-        match drop_generic l with
-        | DefT (r, FunT (_, { params; _ })) ->
-          Some
-            (Base.List.hd params
-            |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
-            )
-        | DefT (r, ObjT { call_t = Some id; _ }) ->
-          (match Context.find_call cx id with
-          | DefT (_, FunT (_, { params; _ })) ->
-            Some
-              (Base.List.hd params
-              |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
-              )
-          | _ -> None)
-        | DefT
-            ( _,
-              ReactAbstractComponentT
-                {
-                  config;
-                  instance_ignored_when_ref_stored_in_props = ComponentInstanceOmitted _;
-                  _;
-                }
-            ) ->
-          Some config
-        | _ -> None
-      in
-      let definitely_has_ref_in_props cx r props =
-        (* If props is unresolved, then the following check will succeed,
-         * but it doesn't tell us anything. In this case, we decide to intentionally assume
-         * that the inferred props should not contain a ref prop. *)
-        (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx props))
-        && speculative_subtyping_succeeds
-             cx
-             (DefT (r, SingletonStrT { from_annot = false; value = OrdinaryName "ref" }))
-             (KeysT (r, props))
-      in
+    let config_check use_op ~jsx_props =
       (* Create a type variable for our props. *)
       let (component_props, component_default_props) =
         match drop_generic l with
@@ -763,70 +625,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             get_defaults cx trace l ~reason_op
           )
       in
-      let ref_manipulation =
-        match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          (match props_of_fn_component l with
-          | None -> Object.ReactConfig.FilterRef
-          | Some props ->
-            (match instance_ignored_when_ref_stored_in_props with
-            | None -> Object.ReactConfig.KeepRef
-            | Some (ComponentInstanceOmitted _) ->
-              (* e.g. `component(foo: string)`, which doesn't have ref prop,
-               * so we just do `{foo: string} ~> function component props` *)
-              Object.ReactConfig.KeepRef
-            | Some (ComponentInstanceAvailableAsRefSetterProp ref_t) ->
-              let r = reason_of_t ref_t in
-              if definitely_has_ref_in_props cx r props then (
-                ( if Context.in_implicit_instantiation cx then
-                  (* Why do we need to do this when ref_t is added below anyways?
-                   * In implicit instantiation, we might have `fn_component ~> component(ref: infer I, ...infer Props)`
-                   * The ref type will be underconstrained in implicit instantiation,
-                   * so we need the extra flow to constrain it. *)
-                  let fn_component_ref =
-                    EvalT
-                      ( props,
-                        TypeDestructorT (use_op, r, PropertyType { name = OrdinaryName "ref" }),
-                        Eval.generate_id ()
-                      )
-                  in
-                  rec_flow_t
-                    cx
-                    trace
-                    ~use_op:(Frame (ReactConfigCheck, use_op))
-                    (ref_t, fn_component_ref)
-                );
-                (* If we see that the function component has a ref prop,
-                 * then given `component(ref: R, ...Props)`,
-                 * and `(fn_props_has_ref) => React.Node`
-                 * we will do something equivalent to
-                 * {...Props, ref: R} ~> fn_props_has_ref *)
-                Object.ReactConfig.AddRef ref_t
-              ) else
-                (* If function component doesn't have a ref prop, technically
-                 * we should do the same thing as above, but it will fail
-                 * ({}) => React.Node ~> component(ref: React.RefSetter<mixed>)
-                 * which previously passes. Therefore, during the transition phase,
-                 * we add this logic to keep the old behavior, where a function
-                 * component is treated as `component(ref: React.RefSetter<void>)` *)
-                let fn_component_ref =
-                  get_builtin_react_typeapp
-                    cx
-                    (update_desc_new_reason (fun desc -> RTypeAppImplicit desc) r)
-                    Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-                    [VoidT.why r]
-                in
-                rec_flow_t
-                  cx
-                  trace
-                  ~use_op:(Frame (ReactConfigCheck, use_op))
-                  (ref_t, fn_component_ref);
-                Object.ReactConfig.FilterRef))
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          Object.ReactConfig.KeepRef
-      in
+      let ref_manipulation = Object.ReactConfig.KeepRef in
       (* Use object spread to add children to config (if we have children)
        * and remove key and ref since we already checked key and ref. Finally in
        * this block we will flow the final config to our props type.
@@ -883,7 +682,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         unwrap use_op
       in
-      config_check use_op ~instance_ignored_when_ref_stored_in_props:None ~jsx_props;
+      config_check use_op ~jsx_props;
 
       (* If our jsx props is void or null then we want to replace it with an
        * empty object.
@@ -946,58 +745,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               }
           )
       in
-      (* Check the type of React refs in the config input.
-       *
-       * NOTE: We are intentionally being unsound here. If config is inexact
-       * and we can't find a ref prop in config then the sound thing to do
-       * would be to assume that the type of ref is mixed. Instead we are unsound
-       * and don't check a type for key. Otherwise we would cause a lot of issues
-       * in existing React code. *)
-      let () =
-        match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-          let reason_ref =
-            replace_desc_reason (RCustom "React ref") (reason_of_t normalized_jsx_props)
-          in
-          (* Create the ref type. *)
-          (match get_expected_ref cx reason_ref l with
-          | None -> ()
-          | Some ref_t ->
-            (* Flow the config input ref type to the ref type. *)
-            let lookup_kind = NonstrictReturning (None, None) in
-            let prop_name = OrdinaryName "ref" in
-            let propref = mk_named_prop ~reason:reason_ref prop_name in
-            let action =
-              LookupPropForSubtyping
-                {
-                  use_op;
-                  prop = OrdinaryField { type_ = ref_t; polarity = Polarity.Positive };
-                  prop_name;
-                  reason_lower = reason_of_t normalized_jsx_props;
-                  reason_upper = reason_ref;
-                }
-            in
-            rec_flow
-              cx
-              trace
-              ( normalized_jsx_props,
-                LookupT
-                  {
-                    reason = reason_ref;
-                    lookup_kind;
-                    try_ts_on_failure = [];
-                    propref;
-                    lookup_action = action;
-                    method_accessible = true;
-                    ids = Some Properties.Set.empty;
-                    ignore_dicts = false;
-                  }
-              ))
-        | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-        | Options.ReactRefAsProp.FullSupport ->
-          ()
-      in
       let annot_loc = loc_of_reason reason_op in
       let elem_reason =
         let desc = react_element_desc_of_component_reason (reason_of_t l) in
@@ -1053,13 +800,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         match (drop_generic component, inferred_targs) with
         | ( DefT
               ( r,
-                ReactAbstractComponentT
-                  {
-                    config;
-                    instance_ignored_when_ref_stored_in_props;
-                    renders;
-                    component_kind = Nominal (loc, name, _);
-                  }
+                ReactAbstractComponentT { config; renders; component_kind = Nominal (loc, name, _) }
               ),
             Some inferred_targs
           ) ->
@@ -1068,12 +809,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             DefT
               ( r,
                 ReactAbstractComponentT
-                  {
-                    config;
-                    instance_ignored_when_ref_stored_in_props;
-                    renders;
-                    component_kind = Nominal (loc, name, ts);
-                  }
+                  { config; renders; component_kind = Nominal (loc, name, ts) }
               )
           in
           Flow_js_utils.CalleeRecorder.add_callee
@@ -1146,11 +882,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         inferred_targs
         specialized_component
         tout
-    | ConfigCheck { props = jsx_props; instance_ignored_when_ref_stored_in_props } ->
-      config_check
-        use_op
-        ~instance_ignored_when_ref_stored_in_props:(Some instance_ignored_when_ref_stored_in_props)
-        ~jsx_props
+    | ConfigCheck { props = jsx_props } -> config_check use_op ~jsx_props
     | GetProps tout -> props_to_tout tout
     | GetConfig { from_userland_react_element_config; tout } ->
       get_config ~from_userland_react_element_config tout

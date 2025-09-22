@@ -1,9 +1,9 @@
 import {FnWithoutRefProp,FnWithOptionalRefProp,FnWithRequiredRefProp} from './fn_components';
 import {CompWithoutRefProp, CompWithOptionalRefProp, CompWithRequiredRefProp} from './component_syntax_components';
 
-declare function id<Props: {...}, Ref>(
-  c: component(ref?: Ref, ...Props),
-): component(ref?: Ref, ...Props);
+declare function id<Props: {...}>(
+  c: component(...Props),
+): component(...Props);
 
 const IdMappedFnWithoutRefProp = id(FnWithoutRefProp); // ok
 const IdMappedFnWithOptionalRefProp = id(FnWithOptionalRefProp); // ok

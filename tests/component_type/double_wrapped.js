@@ -7,15 +7,15 @@ class MyComponent extends React.Component<{| foo: number |}> {
   }
 }
 
-function wrapper<TProps: {...}, TInstance, TRenders: React$Node>(
-  base: component(ref: React.RefSetter<TInstance>, ...TProps) renders TRenders,
-): component(ref: React.RefSetter<TInstance>, ...TProps) renders TRenders {
+function wrapper<TProps: {...}, TRenders: React$Node>(
+  base: component(...TProps) renders TRenders,
+): component(...TProps) renders TRenders {
   return base;
 }
 
 function wrapper2<TProps: {...}, TInstance, TRenders: React$Node>(
-  base: component(ref: React.RefSetter<TInstance>, ...TProps) renders TRenders,
-): component(ref: React.RefSetter<TInstance>, ...TProps) renders TRenders {
+  base: component(...TProps) renders TRenders,
+): component(...TProps) renders TRenders {
   return base;
 }
 

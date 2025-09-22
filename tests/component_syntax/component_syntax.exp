@@ -154,38 +154,6 @@ References:
                                                        ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- annotation.js:51:40
-
-Components do not support ref properties [1] within spreads [2] [invalid-component-prop]
-
-   annotation.js:51:40
-   51| declare var SpreadRef: component(...p: {ref: number}); // error
-                                              ^^^^^^^^^^^^^ [2]
-
-References:
-   annotation.js:51:41
-   51| declare var SpreadRef: component(...p: {ref: number}); // error
-                                               ^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- annotation.js:52:2
-
-Cannot create `SpreadRef` element because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
-
-   annotation.js:52:2
-   52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
-        ^^^^^^^^^
-
-References:
-   annotation.js:52:1
-   52| <SpreadRef ref={1} />; // error: string and number refs are still not allowed
-       ^^^^^^^^^^^^^^^^^^^^^ [1]
-   annotation.js:51:40
-   51| declare var SpreadRef: component(...p: {ref: number}); // error
-                                              ^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------- annotation.js:54:57
 
 Cannot use number [1] as the type argument of renders type. [invalid-render]
@@ -1837,6 +1805,24 @@ References:
                                                          ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- import.js:37:2
+
+Cannot create `NoRef` element because property `ref` is missing in props [1] but exists in props of component NoRef [2].
+[incompatible-type]
+
+   import.js:37:2
+   37| <NoRef /> // error again because ref in NoRef is bad
+        ^^^^^
+
+References:
+   import.js:37:1
+   37| <NoRef /> // error again because ref in NoRef is bad
+       ^^^^^^^^^ [1]
+   names.js:22:23
+   22| export component NoRef(ref: string) { return <div /> }; // Error
+                             ^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- import.js:42:2
 
 Cannot create `ExportType` element because property `x` is missing in props [1] but exists in props of component [2].
@@ -2150,6 +2136,24 @@ References:
    <BUILTINS>/react.js:103:6
    103|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- names.js:23:2
+
+Cannot create `NoRef` element because property `ref` is missing in props [1] but exists in props of component NoRef [2].
+[incompatible-type]
+
+   names.js:23:2
+   23| <NoRef /> // error again due to bad ref
+        ^^^^^
+
+References:
+   names.js:23:1
+   23| <NoRef /> // error again due to bad ref
+       ^^^^^^^^^ [1]
+   names.js:22:8
+   22| export component NoRef(ref: string) { return <div /> }; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- names.js:25:35
@@ -2645,9 +2649,9 @@ References:
    flow-typed/jsx.js:29:15
     29|     instance: MetaInstance,
                       ^^^^^^^^^^^^ [1]
-   propsof.js:26:34
-    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                                         ^^^^^^^^^^^^^^ [2]
+   propsof.js:3:60
+     3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
+                                                                   ^^^^^^^^^ [2]
    <BUILTINS>/react.js:103:11
    103|   | ((T | null) => mixed)
                   ^^^^ [3]
@@ -2667,12 +2671,12 @@ References:
    flow-typed/jsx.js:29:15
     29|     instance: MetaInstance,
                       ^^^^^^^^^^^^ [1]
-   propsof.js:26:34
-    26| component C(ref: React.RefSetter<React.RefOf<A>>) {
-                                         ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:102:21
-   102|   | { -current: T | null, ... }
-                            ^^^^ [3]
+   propsof.js:3:60
+     3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
+                                                                   ^^^^^^^^^ [2]
+   <BUILTINS>/react.js:103:11
+   103|   | ((T | null) => mixed)
+                  ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
@@ -2771,15 +2775,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `Foo` to component because null [1] is incompatible with object type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:22
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2788,15 +2793,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:22
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2805,16 +2811,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2] in property
+`ref`. [incompatible-exact]
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:22
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2823,16 +2829,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2] in property
+`ref`. [incompatible-exact]
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:22
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2842,15 +2848,15 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
 Cannot cast `Foo` to component because property `current` is write-only in object type [1] but readable in object
-type [2]. [incompatible-variance]
+type [2] in property `ref`. [incompatible-variance]
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
         ^^^
 
 References:
    refs.js:12:22
-   12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2859,12 +2865,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because in property `current`: [incompatible-type]
+Cannot cast `Foo` to component because in property `ref.current`: [incompatible-type]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:12:2
-    12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
          ^^^
 
 References:
@@ -2872,7 +2878,7 @@ References:
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                                      ^^^^^^^^^^^^^ [1]
    refs.js:12:38
-    12| (Foo: component(ref: React.RefSetter<string>, ...empty)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
                                              ^^^^^^ [2]
    <BUILTINS>/react.js:102:21
    102|   | { -current: T | null, ... }
@@ -2881,15 +2887,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `Foo` to component because null [1] is incompatible with object type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:13:2
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
         ^^^
 
 References:
    refs.js:13:22
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2898,15 +2905,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:13:2
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
         ^^^
 
 References:
    refs.js:13:22
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2915,16 +2923,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2] in property
+`ref`. [incompatible-exact]
 
    refs.js:13:2
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
         ^^^
 
 References:
    refs.js:13:22
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2933,16 +2941,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2] in property
+`ref`. [incompatible-exact]
 
    refs.js:13:2
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
         ^^^
 
 References:
    refs.js:13:22
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2952,15 +2960,15 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
 Cannot cast `Foo` to component because property `current` is write-only in object type [1] but readable in object
-type [2]. [incompatible-variance]
+type [2] in property `ref`. [incompatible-variance]
 
    refs.js:13:2
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
         ^^^
 
 References:
    refs.js:13:22
-   13| (Foo: component(ref: React.RefSetter<typeof Reffed>, ...empty)); //err
+   13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:3:20
     3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2969,15 +2977,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because null [1] is incompatible with function type [2]. [incompatible-type]
+Cannot cast `Bar` to component because null [1] is incompatible with function type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:15:2
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
         ^^^
 
 References:
    refs.js:15:22
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
@@ -2986,15 +2995,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2]. [incompatible-type]
+Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:15:2
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
         ^^^
 
 References:
    refs.js:15:22
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
@@ -3003,17 +3013,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because object type [1] is incompatible with function type [2]. 
+Cannot cast `Bar` to component because object type [1] is incompatible with function type [2] in property `ref`. 
 
 Non-callable objects are not compatible with functions. [incompatible-type]
 
    refs.js:15:2
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
         ^^^
 
 References:
    refs.js:15:22
-   15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+   15| (Bar: component(ref: React.RefSetter<string>)); // err
                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:5:21
     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
@@ -3022,12 +3032,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because in the first parameter: [incompatible-type]
+Cannot cast `Bar` to component because in the first parameter of property `ref`: [incompatible-type]
  - Either component Reffed [1] is incompatible with string [2].
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:15:2
-    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+    15| (Bar: component(ref: React.RefSetter<string>)); // err
          ^^^
 
 References:
@@ -3035,7 +3045,7 @@ References:
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
                              ^^^^^^^^^^^^^ [1]
    refs.js:15:38
-    15| (Bar: component(ref: React.RefSetter<string>, ...empty)); // err
+    15| (Bar: component(ref: React.RefSetter<string>)); // err
                                              ^^^^^^ [2]
    <BUILTINS>/react.js:103:11
    103|   | ((T | null) => mixed)
@@ -3044,18 +3054,18 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because: [incompatible-type]
+Cannot cast `Baz` to component because in property `ref`: [incompatible-type]
  - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
    objects.
  - Or component Reffed [3] is incompatible with string [4] in the first parameter.
 
    refs.js:17:2
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
          ^^^
 
 References:
    refs.js:17:22
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:102:5
    102|   | { -current: T | null, ... }
@@ -3064,24 +3074,24 @@ References:
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
                                            ^^^^^^^^^^^^^ [3]
    refs.js:17:38
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
                                              ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because: [incompatible-type]
+Cannot cast `Baz` to component because in property `ref`: [incompatible-type]
  - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
    functions.
  - Or component Reffed [3] is incompatible with string [4] in property `current`.
 
    refs.js:17:2
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
          ^^^
 
 References:
    refs.js:17:22
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
                              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:103:6
    103|   | ((T | null) => mixed)
@@ -3090,7 +3100,7 @@ References:
      8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
                                            ^^^^^^^^^^^^^ [3]
    refs.js:17:38
-    17| (Baz: component(ref: React.RefSetter<string>, ...empty)); // err
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
                                              ^^^^^^ [4]
 
 

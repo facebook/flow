@@ -1738,47 +1738,21 @@ and merge_component
     id_opt =
   let t (env, _) =
     let open Type in
-    let (pmap, ref_prop) =
+    let pmap =
       Base.List.fold
-        ~f:(fun (acc, ref_prop) param ->
+        ~f:(fun acc param ->
           let (Type_sig.ComponentParam { name; name_loc; t }) = param in
           let t = merge env file t in
-          match Context.react_ref_as_prop file.cx with
-          | Options.ReactRefAsProp.StoreRefAndPropsSeparately ->
-            (match name with
-            | "ref" -> (acc, Some t)
-            | _ ->
-              ( Type.Properties.add_field
-                  (Reason.OrdinaryName name)
-                  Polarity.Positive
-                  ~key_loc:(Some name_loc)
-                  t
-                  acc,
-                ref_prop
-              ))
-          | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-          | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-          | Options.ReactRefAsProp.FullSupport ->
-            ( Type.Properties.add_field
-                (Reason.OrdinaryName name)
-                Polarity.Positive
-                ~key_loc:(Some name_loc)
-                t
-                acc,
-              ref_prop
-            ))
-        ~init:(NameUtils.Map.empty, None)
+          Type.Properties.add_field
+            (Reason.OrdinaryName name)
+            Polarity.Positive
+            ~key_loc:(Some name_loc)
+            t
+            acc)
+        ~init:NameUtils.Map.empty
         params
     in
     let config_reason = Reason.(mk_reason (RPropsOfComponent (desc_of_reason reason)) params_loc) in
-    let instance_reason =
-      Reason.(mk_reason (RInstanceOfComponent (desc_of_reason reason)) params_loc)
-    in
-    let instance_ignored_when_ref_stored_in_props =
-      match ref_prop with
-      | None -> Type.ComponentInstanceOmitted instance_reason
-      | Some ref_prop -> Type.ComponentInstanceAvailableAsRefSetterProp ref_prop
-    in
     let param =
       let rest_t =
         match rest_param with
@@ -1792,7 +1766,6 @@ and merge_component
       in
       let allow_ref_in_spread =
         match Context.react_ref_as_prop file.cx with
-        | Options.ReactRefAsProp.StoreRefAndPropsSeparately -> false
         | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
         | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase ->
           is_annotation
@@ -1816,11 +1789,7 @@ and merge_component
         let id = Context.make_aloc_id file.cx loc in
         Nominal (id, name, None)
     in
-    DefT
-      ( reason,
-        ReactAbstractComponentT
-          { config = param; instance_ignored_when_ref_stored_in_props; renders; component_kind }
-      )
+    DefT (reason, ReactAbstractComponentT { config = param; renders; component_kind })
   in
   merge_tparams_targs env file reason t tparams
 

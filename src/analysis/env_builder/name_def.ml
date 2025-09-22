@@ -2730,7 +2730,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           )
           hints
       in
-      let ref_hints = decompose_hints Decomp_JsxRef hints in
       let hints = decompose_hints Decomp_JsxProps hints in
       let hints =
         let has_autocomplete =
@@ -2764,9 +2763,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | Opening.Attribute (_, { Attribute.name; value }) ->
             let (hints, name_loc) =
               match name with
-              | Ast.JSX.Attribute.Identifier (loc, { Ast.JSX.Identifier.name = "ref"; comments = _ })
-                ->
-                (ref_hints, Some loc)
               | Ast.JSX.Attribute.Identifier (loc, { Ast.JSX.Identifier.name; comments = _ }) ->
                 (decompose_hints (Decomp_ObjProp name) hints, Some loc)
               | Ast.JSX.Attribute.NamespacedName _ -> ([], None)

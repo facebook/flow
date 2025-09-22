@@ -63,7 +63,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     let open React in
     match tool with
     | CreateElement { tout; _ }
-    | ConfigCheck { props = tout; instance_ignored_when_ref_stored_in_props = _ }
+    | ConfigCheck { props = tout }
     | GetProps tout
     | GetConfig { from_userland_react_element_config = _; tout } ->
       resolve tout

@@ -41,7 +41,7 @@ References:
                                v-------
    545|       component: () => Promise<
    546|         $ReadOnly<{
-   547|           default: component(ref?: Ref, ...Config) renders Renders,
+   547|           default: component(...Config) renders Renders,
    548|           ...
    549|         }>,
    550|       >,
@@ -65,7 +65,7 @@ References:
                                v-------
    545|       component: () => Promise<
    546|         $ReadOnly<{
-   547|           default: component(ref?: Ref, ...Config) renders Renders,
+   547|           default: component(...Config) renders Renders,
    548|           ...
    549|         }>,
    550|       >,
@@ -90,7 +90,7 @@ References:
    <BUILTINS>/react.js:546:19
                            v
     546|         $ReadOnly<{
-    547|           default: component(ref?: Ref, ...Config) renders Renders,
+    547|           default: component(...Config) renders Renders,
     548|           ...
     549|         }>,
                  ^ [2]
@@ -115,7 +115,7 @@ References:
    <BUILTINS>/react.js:546:19
                            v
     546|         $ReadOnly<{
-    547|           default: component(ref?: Ref, ...Config) renders Renders,
+    547|           default: component(...Config) renders Renders,
     548|           ...
     549|         }>,
                  ^ [2]
@@ -177,8 +177,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
 
-Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[incompatible-type]
+Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in props of class
+`ClassComponent` [2]. [incompatible-type]
 
    lazy.js:28:13
    28| const _f = <LazyClassComponent />; // Error missing foo
@@ -188,15 +188,15 @@ References:
    lazy.js:28:12
    28| const _f = <LazyClassComponent />; // Error missing foo
                   ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lazy.js:7:46
+   lazy.js:7:7
     7| class ClassComponent extends React.Component<Props> {}
-                                                    ^^^^^ [2]
+             ^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
-Cannot create `LazyClassComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `LazyClassComponent` element because property `bar` is extra in props [1] but missing in props of class
+`ClassComponent` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
@@ -206,9 +206,9 @@ References:
    lazy.js:29:12
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lazy.js:7:46
+   lazy.js:7:7
     7| class ClassComponent extends React.Component<Props> {}
-                                                    ^^^^^ [2]
+             ^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36

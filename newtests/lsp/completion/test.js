@@ -5126,6 +5126,42 @@ b.te
                     ],
                   },
                 },
+                {
+                  label: 'ref',
+                  kind: 13,
+                  detail: 'RefSetter<C> | void',
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 4,
+                      },
+                      end: {
+                        line: 12,
+                        character: 4,
+                      },
+                    },
+                    newText: 'ref=',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'ref',
+                        ac_type: 'Acjsx',
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -5689,6 +5725,42 @@ b.te
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'a',
+                        ac_type: 'Acjsx',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'ref',
+                  kind: 13,
+                  detail: 'RefSetter<C> | void',
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 4,
+                      },
+                      end: {
+                        line: 12,
+                        character: 4,
+                      },
+                    },
+                    newText: 'ref=',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'jsx attribute',
+                      {
+                        token: 'AUTO332',
+                        index: 1,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'ref',
                         ac_type: 'Acjsx',
                       },
                     ],

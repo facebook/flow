@@ -292,13 +292,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                  (DefT
                     ( r,
                       ReactAbstractComponentT
-                        {
-                          config;
-                          instance_ignored_when_ref_stored_in_props =
-                            ComponentInstanceAvailableAsRefSetterProp (EmptyT.why r);
-                          renders = react_node;
-                          component_kind = Structural;
-                        }
+                        { config; renders = react_node; component_kind = Structural }
                     )
                  )
            )
@@ -1657,8 +1651,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                    ReactAbstractComponentT
                      {
                        config = EmptyT.why reason;
-                       instance_ignored_when_ref_stored_in_props =
-                         ComponentInstanceAvailableAsRefSetterProp (EmptyT.why reason);
                        renders = generic_t;
                        component_kind = Structural;
                      }

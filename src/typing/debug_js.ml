@@ -435,8 +435,7 @@ and dump_use_t_ (depth, tvars) cx t =
             specialized_component = _;
           } ->
         p ~extra:(spf "CreateElement (%s) => %s" (kid jsx_props) (kid tout)) t
-      | ConfigCheck { props; instance_ignored_when_ref_stored_in_props = _ } ->
-        spf "ConfigCheck (%s)" (kid props)
+      | ConfigCheck { props } -> spf "ConfigCheck (%s)" (kid props)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig { from_userland_react_element_config = _; tout } -> spf "GetConfig (%s)" (kid tout)
     )

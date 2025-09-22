@@ -1,6 +1,6 @@
-declare function idComponent<Props: {...}, Instance, Renders: React.Node>(
-    c: component(ref: React.RefSetter<Instance>, ...Props) renders Renders,
-): component(ref: React.RefSetter<Instance>, ...Props) renders Renders;
+declare function idComponent<Props: {...}, Renders: React.Node>(
+    c: component(...Props) renders Renders,
+): component(...Props) renders Renders;
 
 declare component A();
 declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
