@@ -20,6 +20,23 @@ References:
               ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- undefined.js:8:9
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   undefined.js:8:9
+   8|     if (x) x.bar(); // error: x is unitialized, so constant-condition
+              ^
+
+References:
+   undefined.js:7:9
+   7|     var x:?{ bar():void; };
+              ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- undefined.js:13:11
 
 Cannot get `undefined['foo']` because undefined [1] does not have properties. [incompatible-use]
@@ -42,6 +59,23 @@ Variable `id` [1] is never initialized, annotated, or assigned to. [invalid-decl
               ^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- undefined2.js:4:16
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   undefined2.js:4:16
+   4|     var name = id ? 'John' : undefined; // error: id is unitialized, so constant-condition
+                     ^^
+
+References:
+   undefined2.js:3:9
+   3|     var id;
+              ^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ undefined2.js:5:6
 
 Cannot cast `name` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -52,7 +86,7 @@ Cannot cast `name` to boolean because string [1] is incompatible with boolean [2
 
 References:
    undefined2.js:4:21
-   4|     var name = id ? 'John' : undefined;
+   4|     var name = id ? 'John' : undefined; // error: id is unitialized, so constant-condition
                           ^^^^^^ [1]
    undefined2.js:5:12
    5|     (name: boolean); // error, string or void
@@ -69,7 +103,7 @@ Cannot cast `name` to boolean because undefined [1] is incompatible with boolean
 
 References:
    undefined2.js:4:30
-   4|     var name = id ? 'John' : undefined;
+   4|     var name = id ? 'John' : undefined; // error: id is unitialized, so constant-condition
                                    ^^^^^^^^^ [1]
    undefined2.js:5:12
    5|     (name: boolean); // error, string or void
@@ -159,4 +193,4 @@ References:
 
 
 
-Found 11 errors
+Found 13 errors

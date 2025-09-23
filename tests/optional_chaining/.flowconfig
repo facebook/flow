@@ -2,7 +2,6 @@
 all=true
 exact_by_default=false
 no_flowlib=false
-experimental.constant_condition=false
 
 [lints]
 unnecessary-optional-chain=error

@@ -137,7 +137,7 @@ declare function invariant(boolean): empty;
 
   function alwaysThrows1(): number { x ??= invariant(false); } // Error
   function alwaysThrows2(): number { y &&= invariant(false); } // Error
-  function alwaysThrows3(): number { x ||= invariant(false); } // Error
+  function alwaysThrows3(): number { x ||= invariant(false); } // Error: void ~> number, constant-condition error
 }
 
 // Illegal patterns

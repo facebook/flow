@@ -291,8 +291,25 @@ Error --------------------------------------------------------------------------
 Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
 undefined. [incompatible-type]
 
-   140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error
+   140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error: void ~> number, constant-condition error
                                     ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:140:38
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:140:38
+   140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error: void ~> number, constant-condition error
+                                             ^
+
+References:
+   test.js:135:10
+   135|   let x: null = null;
+                 ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:145:3
@@ -312,4 +329,4 @@ Invalid left-hand side in assignment expression. [invalid-lhs]
 
 
 
-Found 29 errors
+Found 30 errors

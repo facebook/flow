@@ -76,6 +76,23 @@ Missing an annotation on `x`. [missing-local-annot]
                ^
 
 
+Error ----------------------------------------------------------------------------------------------------- call.js:18:1
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   call.js:18:1
+   18| f((x) => 3, (x: number) => 3) || []; // no annot, constant-condition error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   call.js:4:40
+    4| function f(x: number => number, y: any) {}
+                                              ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- cast.js:6:15
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -395,6 +412,23 @@ References:
    conditional.js:31:23
    31|   foo(() => (false ? ['x'] : [])); // TODO(T225768659) okay, [] is contextually typed
                              ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- conditional.js:39:5
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   conditional.js:39:5
+   39|     foo(value) && value.id != null && value.id // okay, no definition-cycle error, but constant-condition error
+           ^^^^^^^^^^
+
+References:
+   conditional.js:35:33
+   35|   declare function foo(x: any): void;
+                                       ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- destructuring_init.js:3:6
@@ -1062,4 +1096,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 124 errors
+Found 126 errors

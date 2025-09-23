@@ -1,49 +1,67 @@
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:15
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:15:9
 
-Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
-string literal `a` [1]. [incompatible-type]
+Cannot compare `a` [1] to string literal `b` [2], because `A` [3] is not a subtype of string literal `b` [2] and string
+literal `b` [2] is not a subtype of `A` [3]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
+   detect_literal_subtypes.js:15:9
+   15|     if (a === 'b'){ } // error 'b' not compatible with 'a'
+               ^^^^^^^^^
+
+References:
+   detect_literal_subtypes.js:14:23
+   14|   function a1<A: 'a'>(a: A): void {
+                             ^ [1]
    detect_literal_subtypes.js:15:15
    15|     if (a === 'b'){ } // error 'b' not compatible with 'a'
                      ^^^ [2]
+   detect_literal_subtypes.js:14:26
+   14|   function a1<A: 'a'>(a: A): void {
+                                ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:19:9
+
+Cannot compare `b` [1] to string literal `b` [2], because `B` [3] is not a subtype of string literal `b` [2] and string
+literal `b` [2] is not a subtype of `B` [3]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   detect_literal_subtypes.js:19:9
+   19|     if (b === 'b'){ } // error 'b' not compatible with 'a'
+               ^^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:14:18
-   14|   function a1<A: 'a'>(a: A): void {
-                        ^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:19:15
-
-Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
-string literal `a` [1]. [incompatible-type]
-
+   detect_literal_subtypes.js:18:29
+   18|   function b1<A: 'a', B: A>(b: B): void {
+                                   ^ [1]
    detect_literal_subtypes.js:19:15
    19|     if (b === 'b'){ } // error 'b' not compatible with 'a'
                      ^^^ [2]
+   detect_literal_subtypes.js:18:32
+   18|   function b1<A: 'a', B: A>(b: B): void {
+                                      ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:37:7
+
+Cannot compare `x` [1] to string literal `r` [2], because `x` [1] is not a subtype of string literal `r` [2] and string
+literal `r` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   detect_literal_subtypes.js:37:7
+   37|       case 'r': // error
+             ^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:18:18
-   18|   function b1<A: 'a', B: A>(b: B): void {
-                        ^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:37:12
-
-Invalid check of string literal `r` against key set [1] because property `r` is missing in object type [2].
-[prop-missing]
-
+   detect_literal_subtypes.js:31:20
+   31|   function c<X: T>(x: $Keys<X>) {
+                          ^ [1]
    detect_literal_subtypes.js:37:12
    37|       case 'r': // error
-                  ^^^
-
-References:
-   detect_literal_subtypes.js:31:23
-   31|   function c<X: T>(x: $Keys<X>) {
-                             ^^^^^^^^ [1]
-   detect_literal_subtypes.js:31:29
-   31|   function c<X: T>(x: $Keys<X>) {
-                                   ^ [2]
+                  ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ generics.js:17:16

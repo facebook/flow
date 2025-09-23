@@ -5,8 +5,8 @@ function foo(a: ?string, b: ?number, c : boolean) {
   (a ?? 42 : string | number);
   (a ?? 42 : empty); // Error
   var d = null;
-  (d ?? "true" : string);
-  (d ?? a ?? b : ?(string | number));
+  (d ?? "true" : string); // constant-condition error
+  (d ?? a ?? b : ?(string | number)); // constant-condition error
   if (c) {
     d = a;
   } else {

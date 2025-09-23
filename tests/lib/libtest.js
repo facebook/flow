@@ -7,7 +7,7 @@ var a = new Map<string, string>();
 a.delete('foobar');
 
 var b = undefined;
-if (undefined) {
+if (undefined) { // constant-condition error
 }
 
 queueMicrotask(() => {}); // ok

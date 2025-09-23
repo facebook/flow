@@ -34,34 +34,44 @@ References:
              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:18:10
+Error ----------------------------------------------------------------------------------------------------- test.js:18:5
 
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
-`Enum` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `qux` [2], because `x` [1] is not a subtype of string literal `qux` [2] and
+string literal `qux` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
+   test.js:18:5
+   18|     case 'qux': // error
+           ^^^^^^^^^^
+
+References:
+   test.js:13:17
+   13|   declare const x: Enum;
+                       ^ [1]
    test.js:18:10
    18|     case 'qux': // error
                 ^^^^^ [2]
 
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:5
+
+Cannot compare `x` [1] to string literal `qux` [2], because `x` [1] is not a subtype of string literal `qux` [2] and
+string literal `qux` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   test.js:29:5
+   29|     case 'qux': // error
+           ^^^^^^^^^^
+
 References:
-   test.js:13:20
-   13|   declare const x: Enum;
-                          ^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:29:10
-
-Invalid check of string literal `qux` against `Enum` [1] because string literal `qux` [2] is incompatible with
-`Enum` [1]. [incompatible-type]
-
+   test.js:24:17
+   24|   declare const x: Enum;
+                       ^ [1]
    test.js:29:10
    29|     case 'qux': // error
                 ^^^^^ [2]
-
-References:
-   test.js:24:20
-   24|   declare const x: Enum;
-                          ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:3

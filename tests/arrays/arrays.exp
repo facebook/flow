@@ -84,18 +84,27 @@ References:
                           ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ map.js:6:13
+Error ------------------------------------------------------------------------------------------------------- map.js:6:7
 
-Invalid check of empty string against number [1] because string [2] is incompatible with number [1]. [incompatible-type]
+Cannot compare `n` [1] to empty string [2], because number [3] is not a subtype of empty string [2] and empty string [2]
+is not a subtype of number [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
+   map.js:6:7
+   6|   if (n !== '') { // number incompatible with string
+            ^^^^^^^^
+
+References:
+   map.js:5:20
+   5| (x ? x.a : []).map(n => {
+                         ^ [1]
    map.js:6:13
    6|   if (n !== '') { // number incompatible with string
                   ^^ [2]
-
-References:
    map.js:2:21
    2|   a: $ReadOnlyArray<number>,
-                          ^^^^^^ [1]
+                          ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- numeric_elem.js:6:1

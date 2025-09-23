@@ -144,7 +144,7 @@ function non_assigning_member_assigns() {
     greeting: string,
   };
 
-  if (values.greeting === values) {
+  if (values.greeting === values) {  // constant-condition error
 
   }
 }

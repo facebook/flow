@@ -2,4 +2,3 @@
 module.system=haste
 no_flowlib=false
 all=true
-experimental.constant_condition=false

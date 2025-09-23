@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 This use of `invariant` is unnecessary because boolean literal `true` [1] is always truthy. [unnecessary-invariant]
 
    index.js:4:1
-   4| invariant(a);
+   4| invariant(a); // constant-condition error
       ^^^^^^^^^^^^
 
 References:
@@ -12,13 +12,81 @@ References:
                      ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- index.js:4:11
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   index.js:4:11
+   4| invariant(a); // constant-condition error
+                ^
+
+References:
+   index.js:3:16
+   3| declare var a: true;
+                     ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:7:11
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   index.js:7:11
+   7| invariant(b); // constant-condition error
+                ^
+
+References:
+   index.js:6:16
+   6| declare var b: false;
+                     ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:11:1
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   index.js:11:1
+   11| c ? invariant(c) : invariant(c); // constant-condition error
+       ^
+
+References:
+   index.js:9:16
+    9| declare var c: boolean;
+                      ^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- index.js:11:5
 
 This use of `invariant` is unnecessary because boolean [1] is always truthy. [unnecessary-invariant]
 
    index.js:11:5
-   11| c ? invariant(c) : invariant(c);
+   11| c ? invariant(c) : invariant(c); // constant-condition error
            ^^^^^^^^^^^^
+
+References:
+   index.js:9:16
+    9| declare var c: boolean;
+                      ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- index.js:11:15
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   index.js:11:15
+   11| c ? invariant(c) : invariant(c); // constant-condition error
+                     ^
 
 References:
    index.js:9:16
@@ -62,7 +130,7 @@ Error --------------------------------------------------------------------------
 This use of `invariant` is unnecessary because intersection type [1] is always truthy. [unnecessary-invariant]
 
    index.js:23:1
-   23| invariant(g);
+   23| invariant(g); // constant-condition error
        ^^^^^^^^^^^^
 
 References:
@@ -71,5 +139,22 @@ References:
                       ^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- index.js:23:11
 
-Found 5 errors
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   index.js:23:11
+   23| invariant(g); // constant-condition error
+                 ^
+
+References:
+   index.js:22:16
+   22| declare var g: false & true;
+                      ^^^^^ [1]
+
+
+
+Found 10 errors

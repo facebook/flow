@@ -428,52 +428,70 @@ References:
             ^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:15:13
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:15:7
 
-Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
-string literal `a` [1]. [incompatible-type]
+Cannot compare `a` [1] to string literal `b` [2], because `A` [3] is not a subtype of string literal `b` [2] and string
+literal `b` [2] is not a subtype of `A` [3]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
+   detect_literal_subtypes.js:15:7
+   15|   if (a === 'b'){ } // error 'b' not compatible with 'a'
+             ^^^^^^^^^
+
+References:
+   detect_literal_subtypes.js:14:21
+   14| function a1<A: 'a'>(a: A): void {
+                           ^ [1]
    detect_literal_subtypes.js:15:13
    15|   if (a === 'b'){ } // error 'b' not compatible with 'a'
                    ^^^ [2]
+   detect_literal_subtypes.js:14:24
+   14| function a1<A: 'a'>(a: A): void {
+                              ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:19:7
+
+Cannot compare `b` [1] to string literal `b` [2], because `B` [3] is not a subtype of string literal `b` [2] and string
+literal `b` [2] is not a subtype of `B` [3]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   detect_literal_subtypes.js:19:7
+   19|   if (b === 'b'){ } // error 'b' not compatible with 'a'
+             ^^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:14:16
-   14| function a1<A: 'a'>(a: A): void {
-                      ^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:19:13
-
-Invalid check of string literal `b` against string literal `a` [1] because string literal `b` [2] is incompatible with
-string literal `a` [1]. [incompatible-type]
-
+   detect_literal_subtypes.js:18:27
+   18| function b1<A: 'a', B: A>(b: B): void {
+                                 ^ [1]
    detect_literal_subtypes.js:19:13
    19|   if (b === 'b'){ } // error 'b' not compatible with 'a'
                    ^^^ [2]
+   detect_literal_subtypes.js:18:30
+   18| function b1<A: 'a', B: A>(b: B): void {
+                                    ^ [3]
+
+
+Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:37:5
+
+Cannot compare `x` [1] to string literal `r` [2], because `x` [1] is not a subtype of string literal `r` [2] and string
+literal `r` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   detect_literal_subtypes.js:37:5
+   37|     case 'r': // error
+           ^^^^^^^^
 
 References:
-   detect_literal_subtypes.js:18:16
-   18| function b1<A: 'a', B: A>(b: B): void {
-                      ^^^ [1]
-
-
-Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:37:10
-
-Invalid check of string literal `r` against key set [1] because property `r` is missing in object type [2].
-[prop-missing]
-
+   detect_literal_subtypes.js:31:18
+   31| function c<X: T>(x: $Keys<X>) {
+                        ^ [1]
    detect_literal_subtypes.js:37:10
    37|     case 'r': // error
-                ^^^
-
-References:
-   detect_literal_subtypes.js:31:21
-   31| function c<X: T>(x: $Keys<X>) {
-                           ^^^^^^^^ [1]
-   detect_literal_subtypes.js:31:27
-   31| function c<X: T>(x: $Keys<X>) {
-                                 ^ [2]
+                ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:3
@@ -922,6 +940,31 @@ References:
    misc.js:15:43
    15| function b<X: number, Y: string>(x: X, y: Y) {
                                                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:20:4
+
+Cannot compare `x` [1] to `y` [2], because `X` [3] is not a subtype of `Y` [4] and `Y` [4] is not a subtype of `X` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
+
+   misc.js:20:4
+   20|   (x === y: boolean); // nope, constant-condition error
+          ^^^^^^^
+
+References:
+   misc.js:15:34
+   15| function b<X: number, Y: string>(x: X, y: Y) {
+                                        ^ [1]
+   misc.js:15:40
+   15| function b<X: number, Y: string>(x: X, y: Y) {
+                                              ^ [2]
+   misc.js:15:37
+   15| function b<X: number, Y: string>(x: X, y: Y) {
+                                           ^ [3]
+   misc.js:15:43
+   15| function b<X: number, Y: string>(x: X, y: Y) {
+                                                 ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:22:4
@@ -1506,7 +1549,7 @@ References:
 
 
 
-Found 88 errors
+Found 89 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -6,7 +6,7 @@
 function logical1a(): number {
   // expected `: boolean`
   var x = false as const;
-  return x && '123';
+  return x && '123'; // constant-condition error
 }
 
 /**
@@ -14,7 +14,7 @@ function logical1a(): number {
  */
 function logical1b(): string {
   var x = true as const;
-  return x && '123';
+  return x && '123'; // constant-condition error
 }
 
 /**
@@ -85,7 +85,7 @@ function logical2i(x: Object): string {
  * A literal on the left side of &&
  */
 function logical2j(x: (a: number) => number): string {
-  return x && 'foo';
+  return x && 'foo'; // constant-condition error
 }
 
 /**
@@ -114,7 +114,7 @@ function logical2m(x: {||}): string {
  * We allow `$Exact<void>`
  */
 function logical2n(x: $Exact<void>): void | string {
-  return x && 'foo';
+  return x && 'foo'; // constant-condition error
 }
 
 /**
@@ -165,7 +165,7 @@ function logical4(x: boolean): string {
  */
 function logical5a(): number {
   var x = false as const;
-  return x || 0;
+  return x || 0; // constant-condition error
 }
 
 /**
@@ -182,7 +182,7 @@ function logical5b(): number {
 function logical5c(): string {
   // expected `: boolean`
   var x = true as const;
-  return x || 0;
+  return x || 0; // constant-condition error
 }
 
 /**
@@ -247,7 +247,7 @@ function logical6h(x: {||}): {||} {
  * We allow `$Exact<void>`
  */
 function logical6i(x: $Exact<void>): string {
-  return x || 'foo';
+  return x || 'foo'; // constant-condition error
 }
 
 /**
@@ -294,7 +294,7 @@ function logical7e(x: number): string {
  */
 function logical8a(): number {
   var x = false as const;
-  return (x || 0) && 'foo';
+  return (x || 0) && 'foo'; // constant-condition error
 }
 
 /**
@@ -322,7 +322,7 @@ function logical8c(): string {
  */
 function logical8d(): number {
   var x = false as const;
-  return x || (0 && 'foo');
+  return x || (0 && 'foo'); // constant-condition error
 }
 
 /**
@@ -330,7 +330,7 @@ function logical8d(): number {
  */
 function logical8e(): string {
   var x = false as const;
-  return x || (1 && 'foo');
+  return x || (1 && 'foo'); // constant-condition error
 }
 
 /**

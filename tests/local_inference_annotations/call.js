@@ -15,7 +15,7 @@ function g(x: number) {}
 g(3); // Ok
 
 
-f((x) => 3, (x: number) => 3) || []; // no annot
+f((x) => 3, (x: number) => 3) || []; // no annot, constant-condition error
 
 const h: ?(number => number) = null;
 h ?? ((x) => 3); // no annot

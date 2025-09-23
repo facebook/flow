@@ -1893,6 +1893,24 @@ References:
               ^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- refinements.js:55:7
+
+Cannot compare `x?.a` [1] to null [2], because [2] is null and `x?.a` [1] does not contain null. Perhaps you meant to
+use `==`, which checks for both `undefined` and `null`? [invalid-compare]
+
+   refinements.js:55:7
+   55|   if (x?.a === null) { // constant-condition error
+             ^^^^^^^^^^^^^
+
+References:
+   refinements.js:55:7
+   55|   if (x?.a === null) { // constant-condition error
+             ^^^^ [1]
+   refinements.js:55:16
+   55|   if (x?.a === null) { // constant-condition error
+                      ^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- refinements.js:61:5
 
 Cannot get `x.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
@@ -3699,7 +3717,7 @@ References:
 
 
 
-Found 231 errors
+Found 232 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

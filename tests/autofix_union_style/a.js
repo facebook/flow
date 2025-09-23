@@ -26,12 +26,14 @@ module.exports = {
   n1: () =>
     (cond ? 0 : 1),
   n2: () =>
+     // $FlowFixMe[constant-condition]
     (cond ? 0 : (cond ? 1 : (cond ? 0 : 1))),
   n3: (n : number) =>
     (cond ? 0 : (cond2 ? 1 : (cond3 ? 0 : n))),
   s1: () =>
     (cond ? "0" : "1"),
   s2: () =>
+    // $FlowFixMe[constant-condition]
     (cond ? "0" : (cond ? "1" : (cond ? "0" : "1"))),
   s3: (s : string) =>
     (cond ? "0" : (cond2 ? "1" : (cond3 ? s : "1"))),

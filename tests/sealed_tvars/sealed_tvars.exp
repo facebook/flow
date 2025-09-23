@@ -67,6 +67,35 @@ References:
                   ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- error_examples.js:7:5
+
+Cannot compare `values.greeting` [1] to `values` [2], because string [3] is not a subtype of object type [4] and object
+type [4] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   error_examples.js:7:5
+   7| if (values.greeting === values) {} // constant-condition error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   error_examples.js:7:5
+   7| if (values.greeting === values) {} // constant-condition error
+          ^^^^^^^^^^^^^^^ [1]
+   error_examples.js:3:13
+   3| declare var values: {
+                  ^^^^^^ [2]
+   error_examples.js:4:15
+   4|     greeting: string,
+                    ^^^^^^ [3]
+   error_examples.js:3:21
+                          v
+   3| declare var values: {
+   4|     greeting: string,
+   5| };
+      ^ [4]
+
+
 Error --------------------------------------------------------------------------------- illegal_function_binding.js:2:10
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
@@ -398,6 +427,35 @@ References:
                      ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- regression_tests.js:147:7
+
+Cannot compare `values.greeting` [1] to `values` [2], because string [3] is not a subtype of object type [4] and object
+type [4] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   regression_tests.js:147:7
+   147|   if (values.greeting === values) {  // constant-condition error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   regression_tests.js:147:7
+   147|   if (values.greeting === values) {  // constant-condition error
+              ^^^^^^^^^^^^^^^ [1]
+   regression_tests.js:143:15
+   143|   declare var values: {
+                      ^^^^^^ [2]
+   regression_tests.js:144:15
+   144|     greeting: string,
+                      ^^^^^^ [3]
+   regression_tests.js:143:23
+                              v
+   143|   declare var values: {
+   144|     greeting: string,
+   145|   };
+          ^ [4]
+
+
 Error --------------------------------------------------------------------------------------- regression_tests.js:154:31
 
 Cannot assign function to `defaultValue` because function [1] is incompatible with boolean [2]. [incompatible-type]
@@ -470,4 +528,4 @@ Missing an annotation on implicit `this` parameter of function. [missing-this-an
 
 
 
-Found 42 errors
+Found 44 errors

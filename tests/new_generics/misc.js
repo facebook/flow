@@ -17,7 +17,7 @@ function b<X: number, Y: string>(x: X, y: Y) {
   (x == x: boolean);
   (x === x: boolean);
   (x == y: boolean); // nope
-  (x === y: boolean); // nope, will be flagged by invalid compare / constant condition check
+  (x === y: boolean); // nope, constant-condition error
   (x < x: boolean);
   (x < y: boolean); // nope
 }

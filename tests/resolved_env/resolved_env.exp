@@ -1112,5 +1112,22 @@ undefined. [incompatible-type]
                                    ^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- updates.js:46:5
 
-Found 76 errors
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   updates.js:46:5
+   46|     x ||= invariant(false); // constant-condition error
+           ^
+
+References:
+   updates.js:36:10
+   36|   let x: null = null;
+                ^^^^ [1]
+
+
+
+Found 77 errors

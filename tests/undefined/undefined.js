@@ -5,7 +5,7 @@ function foo() {
 
 function bar() {
     var x:?{ bar():void; };
-    if (x) x.bar();
+    if (x) x.bar(); // error: x is unitialized, so constant-condition
 }
 
 function qux(x?: number, y:string = "", z: void) { }

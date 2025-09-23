@@ -52,7 +52,7 @@ if (a && a.b && a.b.g) {
 }
 
 function f<T: any>(x: ?T) {
-  if (x?.a === null) {
+  if (x?.a === null) { // constant-condition error
     return;
   }
   if (x) {

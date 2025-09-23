@@ -1,9 +1,26 @@
 Error -------------------------------------------------------------------------------------------------- logical.js:9:10
 
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:9:10
+   9|   return x && '123'; // constant-condition error
+               ^
+
+References:
+   logical.js:8:11
+   8|   var x = false as const;
+                ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- logical.js:9:10
+
 Cannot return `x && '123'` because boolean literal `false` [1] is incompatible with number [2]. [incompatible-type]
 
    logical.js:9:10
-   9|   return x && '123';
+   9|   return x && '123'; // constant-condition error
                ^
 
 References:
@@ -13,6 +30,23 @@ References:
    logical.js:6:23
    6| function logical1a(): number {
                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:17:10
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:17:10
+   17|   return x && '123'; // constant-condition error
+                ^
+
+References:
+   logical.js:16:11
+   16|   var x = true as const;
+                 ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- logical.js:25:10
@@ -59,6 +93,40 @@ This condition is truthy. [constant-condition]
 
    67|   return [1, 2, 3] && 'foo';
                 ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- logical.js:88:10
+
+This condition is likely truthy. Perhaps you meant to call the function?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:88:10
+   88|   return x && 'foo'; // constant-condition error
+                ^
+
+References:
+   logical.js:87:23
+   87| function logical2j(x: (a: number) => number): string {
+                             ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:117:10
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:117:10
+   117|   return x && 'foo'; // constant-condition error
+                 ^
+
+References:
+   logical.js:116:23
+   116| function logical2n(x: $Exact<void>): void | string {
+                              ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:126:10
@@ -134,12 +202,46 @@ References:
                                        ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ logical.js:168:10
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:168:10
+   168|   return x || 0; // constant-condition error
+                 ^
+
+References:
+   logical.js:167:11
+   167|   var x = false as const;
+                  ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:185:10
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:185:10
+   185|   return x || 0; // constant-condition error
+                 ^
+
+References:
+   logical.js:184:11
+   184|   var x = true as const;
+                  ^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ logical.js:185:10
 
 Cannot return `x || 0` because boolean literal `true` [1] is incompatible with string [2]. [incompatible-type]
 
    logical.js:185:10
-   185|   return x || 0;
+   185|   return x || 0; // constant-condition error
                  ^
 
 References:
@@ -187,6 +289,74 @@ This condition is truthy. [constant-condition]
 
    228|   return 123 || 'foo';
                  ^^^
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:250:10
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:250:10
+   250|   return x || 'foo'; // constant-condition error
+                 ^
+
+References:
+   logical.js:249:23
+   249| function logical6i(x: $Exact<void>): string {
+                              ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:297:11
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:297:11
+   297|   return (x || 0) && 'foo'; // constant-condition error
+                  ^
+
+References:
+   logical.js:296:11
+   296|   var x = false as const;
+                  ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:325:10
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:325:10
+   325|   return x || (0 && 'foo'); // constant-condition error
+                 ^
+
+References:
+   logical.js:324:11
+   324|   var x = false as const;
+                  ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ logical.js:333:10
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   logical.js:333:10
+   333|   return x || (1 && 'foo'); // constant-condition error
+                 ^
+
+References:
+   logical.js:332:11
+   332|   var x = false as const;
+                  ^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ logical.js:342:10
@@ -743,7 +913,7 @@ References:
 
 
 
-Found 52 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

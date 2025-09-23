@@ -36,6 +36,6 @@ function test5() {
   declare var value: any;
 
   return foo(
-    foo(value) && value.id != null && value.id // okay, no definition-cycle error
+    foo(value) && value.id != null && value.id // okay, no definition-cycle error, but constant-condition error
   );
 }

@@ -1,3 +1,20 @@
+Error --------------------------------------------------------------------------------------------- conditional.js:16:17
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   conditional.js:16:17
+   16|   const temp = (x ? 1 : x); // constant-condition error
+                       ^
+
+References:
+   conditional.js:15:13
+   15|   const x = false;
+                   ^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- conditional.js:23:24
 
 Cannot return `x != null ? x : x != null` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -30,4 +47,4 @@ References:
 
 
 
-Found 2 errors
+Found 3 errors

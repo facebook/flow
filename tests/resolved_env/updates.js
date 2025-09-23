@@ -43,6 +43,6 @@ x as empty; // err
     y &&= invariant(false);
   } // Error
   function alwaysThrows3(): number {
-    x ||= invariant(false);
+    x ||= invariant(false); // constant-condition error
   } // Error
 }

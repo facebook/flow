@@ -1,7 +1,7 @@
 let tests = [
   function(x: number) {
     var id;
-    var name = id ? 'John' : undefined;
+    var name = id ? 'John' : undefined; // error: id is unitialized, so constant-condition
     (name: boolean); // error, string or void
 
     const bar = [

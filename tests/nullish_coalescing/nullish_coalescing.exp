@@ -1,3 +1,14 @@
+Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:2:4
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   2|   (undefined ?? "hello" : string);
+         ^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:4:4
 
 Cannot cast `a ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -60,6 +71,40 @@ References:
                    ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:8:4
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   nullish_coalescing.js:8:4
+   8|   (d ?? "true" : string); // constant-condition error
+         ^
+
+References:
+   nullish_coalescing.js:7:11
+   7|   var d = null;
+                ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- nullish_coalescing.js:9:4
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   nullish_coalescing.js:9:4
+   9|   (d ?? a ?? b : ?(string | number)); // constant-condition error
+         ^
+
+References:
+   nullish_coalescing.js:7:11
+   7|   var d = null;
+                ^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- nullish_coalescing.js:16:4
 
 Cannot cast `d ?? "hello"` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -109,4 +154,4 @@ References:
 
 
 
-Found 7 errors
+Found 10 errors

@@ -13,7 +13,7 @@ function b(): number {
 function c(): number {
   // equivalent to `return (x && 1) || 0`
   const x = false;
-  const temp = (x ? 1 : x);
+  const temp = (x ? 1 : x); // constant-condition error
   return temp ? temp : 0;
 }
 

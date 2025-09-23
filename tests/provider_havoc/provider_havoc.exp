@@ -183,6 +183,29 @@ References:
              ^^ [4]
 
 
+Error --------------------------------------------------------------------------------------- provider_edge_cases.js:5:5
+
+Cannot compare function [1] to `console.log` [2], because function [1] is not a subtype of function type [3] and
+function type [3] is not a subtype of function [1]. In **rare** cases, these types may have overlapping values but lack
+a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   provider_edge_cases.js:5:5
+      5| if (((x: mixed) => 42) === console.log) { // constant-condition error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   provider_edge_cases.js:5:6
+      5| if (((x: mixed) => 42) === console.log) { // constant-condition error
+              ^^^^^^^^^^^^^^^^ [1]
+   provider_edge_cases.js:5:28
+      5| if (((x: mixed) => 42) === console.log) { // constant-condition error
+                                    ^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:2865:5
+   2865|     log(...data: Array<any>): void,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
 
 Cannot resolve name `f`. [cannot-resolve-name]
@@ -674,7 +697,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 26 errors
+Found 27 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

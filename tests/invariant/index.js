@@ -1,14 +1,14 @@
 declare function invariant(): void;
 
 declare var a: true;
-invariant(a);
+invariant(a); // constant-condition error
 
 declare var b: false;
-invariant(b);
+invariant(b); // constant-condition error
 
 declare var c: boolean;
 invariant(c);
-c ? invariant(c) : invariant(c);
+c ? invariant(c) : invariant(c); // constant-condition error
 
 declare var d: 0;
 invariant(d);
@@ -20,7 +20,7 @@ declare var f: number;
 invariant(f);
 
 declare var g: false & true;
-invariant(g);
+invariant(g); // constant-condition error
 
 declare var h: false | true;
 invariant(h);

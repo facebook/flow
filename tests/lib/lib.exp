@@ -66,5 +66,16 @@ References:
              ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- libtest.js:10:5
 
-Found 4 errors
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make the type of this expression nullable
+(`T` -> `?T`). [constant-condition]
+
+   10| if (undefined) { // constant-condition error
+           ^^^^^^^^^
+
+
+
+Found 5 errors

@@ -19,13 +19,13 @@ spec_it a.js 22 17
 spec_it a.js 24 15
 spec_it a.js 26 9
 spec_it a.js 28 9
-spec_it a.js 30 19
-spec_it a.js 32 9
-spec_it a.js 34 9
-spec_it a.js 36 19
-spec_it a.js 38 14
-spec_it a.js 40 31
-spec_it a.js 44 9
+spec_it a.js 31 19
+spec_it a.js 33 9
+spec_it a.js 35 9
+spec_it a.js 38 19
+spec_it a.js 40 14
+spec_it a.js 42 31
+spec_it a.js 46 9
 
 
 echo "> cat a.js"
