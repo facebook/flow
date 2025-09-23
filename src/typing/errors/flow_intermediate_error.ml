@@ -3259,6 +3259,10 @@ let to_printable_error :
           code replacement_name;
           text " instead.";
         ]
+        @
+        (match kind with
+        | DollarKeys -> [text " For example, `type KeyType = keyof MyObjectType;` "]
+        | _ -> [])
       | TSType ->
         [
           text "The equivalent of TypeScript's ";

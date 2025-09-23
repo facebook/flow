@@ -153,6 +153,8 @@ module IncorrectType = struct
     | DollarReadOnlySet
     | DollarReadOnlyWeakMap
     | DollarReadOnlyWeakSet
+    | DollarKeys
+    | DollarValues
     | Mixed
 
   let incorrect_of_kind = function
@@ -170,6 +172,8 @@ module IncorrectType = struct
     | DollarReadOnlySet -> "$ReadOnlySet"
     | DollarReadOnlyWeakMap -> "$ReadOnlyWeakMap"
     | DollarReadOnlyWeakSet -> "$ReadOnlyWeakSet"
+    | DollarKeys -> "$Keys"
+    | DollarValues -> "$Values"
     | Mixed -> "mixed"
 
   let replacement_of_kind = function
@@ -187,6 +191,8 @@ module IncorrectType = struct
     | DollarReadOnlySet -> "ReadonlySet"
     | DollarReadOnlyWeakMap -> "ReadonlyWeakMap"
     | DollarReadOnlyWeakSet -> "ReadonlyWeakSet"
+    | DollarKeys -> "keyof"
+    | DollarValues -> "Values"
     | Mixed -> "unknown"
 
   type error_type =
@@ -203,6 +209,8 @@ module IncorrectType = struct
     | DollarReadOnlySet
     | DollarReadOnlyWeakMap
     | DollarReadOnlyWeakSet
+    | DollarKeys
+    | DollarValues
     | Mixed ->
       DeprecatedUtility
     | TSReadonly
