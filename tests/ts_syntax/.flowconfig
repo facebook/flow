@@ -8,13 +8,9 @@ experimental.ts_utility_syntax=true
 
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/deprecated'
 experimental.deprecated_utilities='$ReadOnlyArray' -> '<BUILTINS>/'
-
 experimental.deprecated_utilities='$NonMaybeType' -> '<PROJECT_ROOT>/deprecated'
-
 experimental.deprecated_utilities='$ReadOnly' -> '<PROJECT_ROOT>/deprecated'
-
 experimental.deprecated_utilities='mixed' -> '<PROJECT_ROOT>/deprecated'
-
 experimental.deprecated_utilities='$ReadOnlyMap' -> '<PROJECT_ROOT>/deprecated'
-
 experimental.deprecated_utilities='$ReadOnlySet' -> '<PROJECT_ROOT>/deprecated'
+experimental.deprecated_utilities='$Keys' -> '<PROJECT_ROOT>/deprecated'

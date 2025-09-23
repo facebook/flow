@@ -382,6 +382,15 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------- deprecated/keyof.js:3:10
+
+The utility type `$Keys` is deprecated, use `keyof` instead. For example, `type KeyType = keyof MyObjectType;` 
+[deprecated-utility]
+
+   3| type T = $Keys<O>; // ERROR
+               ^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------- deprecated/nonMaybeType.js:1:10
 
 The utility type `$NonMaybeType` is deprecated, use `NonNullable` instead. [deprecated-utility]
@@ -695,4 +704,4 @@ types. [ts-syntax]
 
 
 
-Found 82 errors
+Found 83 errors
