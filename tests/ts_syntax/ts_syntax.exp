@@ -453,6 +453,20 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------- deprecated/readonly_type.js:10:29
+
+Cannot assign `3` to `b` because number [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
+
+   deprecated/readonly_type.js:10:29
+   10| let b: exportedValuesType = 3; // ERROR
+                                   ^ [1]
+
+References:
+   deprecated/readonly_type.js:10:8
+   10| let b: exportedValuesType = 3; // ERROR
+              ^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- deprecated/readonlyarray.js:1:10
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
@@ -505,6 +519,14 @@ The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utili
 
    3| const x: mixed = 1; // ERROR
                ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- deprecated/values.js:3:11
+
+The utility type `$Values` is deprecated, use `Values` instead. [deprecated-utility]
+
+   3| type T1 = $Values<O>; // ERROR
+                ^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------ in_out_variance.js:1:20
@@ -704,4 +726,4 @@ types. [ts-syntax]
 
 
 
-Found 83 errors
+Found 85 errors
