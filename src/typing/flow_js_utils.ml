@@ -494,7 +494,10 @@ let add_output_generic ~src_cx:cx ~dst_cx msg =
       Speculation.defer_error cx msg
     else (
       if Context.is_verbose cx then
-        prerr_endlinef "\nspeculative_error: %s" (Debug_js.dump_error_message cx msg);
+        prerr_endlinef
+          "\nspeculative_error: %s. (score: %d)"
+          (Debug_js.dump_error_message cx msg)
+          (Flow_intermediate_error.score_of_msg msg);
       raise (SpeculativeError msg)
     )
   else (

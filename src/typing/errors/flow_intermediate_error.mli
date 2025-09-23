@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val score_of_msg : Error_message.t -> int
+
 val post_process_errors : Flow_error.ErrorSet.t -> Flow_error.ErrorSet.t
 
 val make_intermediate_error :
