@@ -964,6 +964,36 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for `$Keys`', [
+      addFile('fix-dollar-keys.js.ignored', 'fix-dollar-keys.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-dollar-keys.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 10,
+          },
+          end: {
+            line: 2,
+            character: 11,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-fix-dollar-keys-type.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_ts_utility_syntax'),
     test('provide quickfix for `unknown` type', [
       addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
       lspStartAndConnect(),

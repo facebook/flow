@@ -1015,6 +1015,22 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.EIncorrectTypeWithReplacement
+      { kind = Flow_intermediate_error_types.IncorrectType.DollarKeys; loc = error_loc } ->
+    let title = "Convert to `keyof`" in
+    let diagnostic_title = "convert_dollar_keys_type" in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title;
+          diagnostic_title;
+          transform = untyped_ast_transform Autofix_legacy_flow_syntax.convert_dollar_keys_type;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
   | Error_message.EIncorrectTypeWithReplacement { kind; loc = error_loc } ->
     let incorrect_name = Flow_intermediate_error_types.IncorrectType.incorrect_of_kind kind in
     let replacement_name = Flow_intermediate_error_types.IncorrectType.replacement_of_kind kind in
