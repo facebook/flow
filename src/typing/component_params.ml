@@ -142,9 +142,7 @@ module Make
     in
     let allow_ref_in_spread =
       match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase ->
-        in_annotation
+      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase -> in_annotation
       | Options.ReactRefAsProp.FullSupport -> true
     in
     let config =

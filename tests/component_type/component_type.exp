@@ -400,7 +400,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
 
 Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
-in props of component [2]. [incompatible-type]
+in object type [2]. [incompatible-type]
 
    destructors.js:21:2
    21| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing

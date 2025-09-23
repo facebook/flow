@@ -10,7 +10,7 @@ const IdMappedFnWithOptionalRefProp = id(FnWithOptionalRefProp); // ok
 const IdMappedFnWithRequiredRefProp = id(FnWithRequiredRefProp); // ok
 ({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // ok
 ({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // ok
+({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing ref prop
 ({}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
@@ -29,7 +29,7 @@ const IdMappedCompWithOptionalRefProp = id(CompWithOptionalRefProp); // ok
 const IdMappedCompWithRequiredRefProp = id(CompWithRequiredRefProp); // ok
 ({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // ok
 ({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // ok
+({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing ref prop
 ({}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
 ({}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop

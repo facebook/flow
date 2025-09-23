@@ -29,8 +29,6 @@ type saved_state_fetcher =
 
 module ReactRefAsProp = struct
   type t =
-    | StoreRefInPropsButRemoveRefInReactElementConfig
-        (** Store ref as a regular prop, but drop ref prop in React.ElementConfig EvalT to make rollout easier. *)
     | StoreRefInPropsNoSpecialCase  (** Store ref as a regular prop *)
     | FullSupport  (** Implement full React 19 behavior *)
 end

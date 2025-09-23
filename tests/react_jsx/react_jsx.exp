@@ -1254,7 +1254,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:569:2
 
 Cannot create `EnhancedClass_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+`string2` are missing in props [1] but exist in props of class `Class_ManyProps` [2]. [incompatible-type]
 
    test.js:569:2
    569| <EnhancedClass_ManyProps />; // Error: There are no props.
@@ -1346,8 +1346,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:606:2
 
-Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in props of
+class `Class_ManyProps` [2]. [incompatible-type]
 
    test.js:606:2
    606| <EnhancedClass_ManyProps // Error: Missing `number`.
@@ -1897,8 +1897,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:838:2
 
-Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in props [1] but exists in
-`Props_OptionalProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in props [1] but exists in props
+of class `Class_OptionalProps` [2]. [incompatible-type]
 
    test.js:838:2
    838| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
@@ -2077,8 +2077,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:949:2
 
-Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in
-`Props_DefaultProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in props of
+class `Class_DefaultProps` [2]. [incompatible-type]
 
    test.js:949:2
    949| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.

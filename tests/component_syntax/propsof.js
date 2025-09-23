@@ -1,5 +1,5 @@
 import * as React from 'react';
-type Props = React.PropsOf<A>;
+type Props = Omit<React.PropsOf<A>, 'ref'>;
 component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
   return <div />;
 }

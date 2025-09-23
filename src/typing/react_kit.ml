@@ -267,16 +267,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     (* Class components or legacy components. *)
     | DefT (r, ClassT i) ->
       let props = Tvar.mk cx reason_op in
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        when from_userland_react_element_config ->
-        rec_flow_t ~use_op:unknown_use cx trace (props, tout);
-        rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props)
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-      | Options.ReactRefAsProp.FullSupport ->
-        rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props);
-        add_optional_ref_prop_to_props cx trace props reason_op i tout)
+      rec_flow_t ~use_op:unknown_use cx trace (component, component_class cx r props);
+      add_optional_ref_prop_to_props cx trace props reason_op i tout
     (* Functional components. *)
     | DefT (r, FunT (_, fun_t)) ->
       (match fun_t with
@@ -322,85 +314,55 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     (* Special case for intrinsic components. *)
     | DefT (_, SingletonStrT { value = name; _ }) ->
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        when from_userland_react_element_config ->
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`Literal name)
-          ~prop_polarity:Polarity.Positive
-          tout
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-      | Options.ReactRefAsProp.FullSupport ->
-        let props = Tvar.mk cx reason_op in
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`Literal name)
-          ~prop_polarity:Polarity.Positive
-          props;
-        let i =
-          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_op (fun tout ->
-              get_intrinsic
-                cx
-                trace
-                ~component_reason:(reason_of_t component)
-                ~reason_op
-                ~artifact:`Instance
-                ~literal:(`Literal name)
-                ~prop_polarity:Polarity.Positive
-                tout
-          )
-        in
-        add_optional_ref_prop_to_props cx trace props reason_op i tout)
+      let props = Tvar.mk cx reason_op in
+      get_intrinsic
+        cx
+        trace
+        ~component_reason:(reason_of_t component)
+        ~reason_op
+        ~artifact:`Props
+        ~literal:(`Literal name)
+        ~prop_polarity:Polarity.Positive
+        props;
+      let i =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_op (fun tout ->
+            get_intrinsic
+              cx
+              trace
+              ~component_reason:(reason_of_t component)
+              ~reason_op
+              ~artifact:`Instance
+              ~literal:(`Literal name)
+              ~prop_polarity:Polarity.Positive
+              tout
+        )
+      in
+      add_optional_ref_prop_to_props cx trace props reason_op i tout
     | DefT (_, StrGeneralT gen) ->
-      (match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        when from_userland_react_element_config ->
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`General gen)
-          ~prop_polarity:Polarity.Positive
-          tout
-      | Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase
-      | Options.ReactRefAsProp.FullSupport ->
-        let props = Tvar.mk cx reason_op in
-        let i =
-          Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_op (fun tout ->
-              get_intrinsic
-                cx
-                trace
-                ~component_reason:(reason_of_t component)
-                ~reason_op
-                ~artifact:`Instance
-                ~literal:(`General gen)
-                ~prop_polarity:Polarity.Positive
-                tout
-          )
-        in
-        get_intrinsic
-          cx
-          trace
-          ~component_reason:(reason_of_t component)
-          ~reason_op
-          ~artifact:`Props
-          ~literal:(`General gen)
-          ~prop_polarity:Polarity.Positive
-          tout;
-        add_optional_ref_prop_to_props cx trace props reason_op i tout)
+      let props = Tvar.mk cx reason_op in
+      let i =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason_op (fun tout ->
+            get_intrinsic
+              cx
+              trace
+              ~component_reason:(reason_of_t component)
+              ~reason_op
+              ~artifact:`Instance
+              ~literal:(`General gen)
+              ~prop_polarity:Polarity.Positive
+              tout
+        )
+      in
+      get_intrinsic
+        cx
+        trace
+        ~component_reason:(reason_of_t component)
+        ~reason_op
+        ~artifact:`Props
+        ~literal:(`General gen)
+        ~prop_polarity:Polarity.Positive
+        tout;
+      add_optional_ref_prop_to_props cx trace props reason_op i tout
     (* any and any specializations *)
     | AnyT (reason, src) -> rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, tout)
     | DefT (reason, ReactAbstractComponentT { config; _ }) ->
@@ -434,40 +396,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
     match drop_generic component with
     | DefT (_, ReactAbstractComponentT { config; _ }) ->
       let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
-      if
-        Context.react_ref_as_prop cx
-        = Options.ReactRefAsProp.StoreRefInPropsButRemoveRefInReactElementConfig
-        && from_userland_react_element_config
-      then
-        match pole with
-        | Polarity.Negative
-        | Polarity.Neutral ->
-          failwith "When from_userland_react_element_config=true, pole must be positive"
-        | Polarity.Positive ->
-          let reason = reason_of_t config in
-          let open Object in
-          let t_ref_removed =
-            Tvar.mk_where cx reason (fun tout ->
-                rec_flow
-                  cx
-                  trace
-                  ( config,
-                    ObjKitT
-                      ( use_op,
-                        reason,
-                        Resolve Next,
-                        ReactConfig
-                          {
-                            state = ReactConfig.Config { component_default_props = None };
-                            ref_manipulation = ReactConfig.FilterRef;
-                          },
-                        tout
-                      )
-                  )
-            )
-          in
-          rec_flow cx trace (t_ref_removed, ObjKitT (use_op, reason, Resolve Next, ReadOnly, tout))
-      else begin
+      begin
         match pole with
         | Polarity.Positive -> rec_flow_t ~use_op cx trace (config, tout)
         | Polarity.Negative -> rec_flow_t ~use_op cx trace (tout, config)

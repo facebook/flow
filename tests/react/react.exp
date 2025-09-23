@@ -494,8 +494,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:58:9
 
-Cannot cast `{...}` to `React.ElementConfig` because property `p` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in object type [1] but exist
+in props of class `C` [2]. [incompatible-type]
 
    element_config.js:58:9
    58| ({}) as {} as React.ElementConfig<typeof C>; // Error: missing property `p`
@@ -524,8 +524,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:62:9
 
-Cannot cast `{...}` to `React.ElementConfig` because property `p` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in object type [1] but exist
+in props of class `D` [2]. [incompatible-type]
 
    element_config.js:62:9
    62| ({}) as {} as React.ElementConfig<typeof D>; // Error: missing property `p`
@@ -555,7 +555,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:71:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+props of class `F` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:71:2
    71| ({p: 42}) as React.ElementConfig<typeof F>; // Error: extra property `p`
@@ -570,7 +570,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:72:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+props of class `F` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:72:2
    72| ({p: 'foo'}) as React.ElementConfig<typeof F>; // Error: extra property `p`
@@ -1066,8 +1066,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:30:2
 
-Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in object
-type [2]. [incompatible-type]
+Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in props of class
+`MyComponent1` [2]. [incompatible-type]
 
    hoc5.js:30:2
    30| <MyEnhancedComponent1 />; // Error
