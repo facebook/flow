@@ -60,7 +60,7 @@ function test_regression() {
   declare function union<V>(
     ...wrappers: $ReadOnlyArray<Wrapper<V>>
   ): Wrapper<V>;
-  declare function object<Wrappers: {[key: string]: Wrapper<mixed>}>(
+  declare function object<Wrappers: {+[key: string]: Wrapper<mixed>}>(
     wrappers: Wrappers,
   ): Wrapper<$ReadOnly<MapWrapperObject<Wrappers>>>;
 

@@ -1018,9 +1018,9 @@ Cannot call `myFun.bind` because boolean [1] is incompatible with number [2] in 
                          ^^^^ [1]
 
 References:
-   declare_function.js:1:37
-    1| declare function myFun(this: {prop: number}): string;
-                                           ^^^^^^ [2]
+   declare_function.js:1:38
+    1| declare function myFun(this: {+prop: number}): string;
+                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:13:1
@@ -1033,9 +1033,9 @@ parameter. [incompatible-type]
        ^^^^^
 
 References:
-   declare_function.js:1:37
-    1| declare function myFun(this: {prop: number}): string;
-                                           ^^^^^^ [1]
+   declare_function.js:1:38
+    1| declare function myFun(this: {+prop: number}): string;
+                                            ^^^^^^ [1]
    declare_function.js:13:20
    13| myFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
                           ^^^^ [2]
@@ -1051,9 +1051,9 @@ Cannot call `myFun.call` because number [1] is incompatible with boolean [2] in 
        ^^^^^
 
 References:
-   declare_function.js:1:37
-    1| declare function myFun(this: {prop: number}): string;
-                                           ^^^^^^ [1]
+   declare_function.js:1:38
+    1| declare function myFun(this: {+prop: number}): string;
+                                            ^^^^^^ [1]
    declare_function.js:14:19
    14| myFun.call({prop: true}); // Error - boolean ~> number
                          ^^^^ [2]
@@ -1068,9 +1068,9 @@ Cannot call `myPolyFun.bind` because boolean [1] is incompatible with number [2]
                              ^^^^ [1]
 
 References:
-   declare_function.js:2:44
-    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                                  ^^^^^^ [2]
+   declare_function.js:2:45
+    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+                                                   ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:16:1
@@ -1083,9 +1083,9 @@ parameter. [incompatible-type]
        ^^^^^^^^^
 
 References:
-   declare_function.js:2:44
-    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                                  ^^^^^^ [1]
+   declare_function.js:2:45
+    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+                                                   ^^^^^^ [1]
    declare_function.js:16:24
    16| myPolyFun.apply({prop: true}, ([]: Array<number>)); // Error - boolean ~> number
                               ^^^^ [2]
@@ -1101,9 +1101,9 @@ parameter. [incompatible-type]
        ^^^^^^^^^
 
 References:
-   declare_function.js:2:44
-    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                                  ^^^^^^ [1]
+   declare_function.js:2:45
+    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+                                                   ^^^^^^ [1]
    declare_function.js:17:23
    17| myPolyFun.call({prop: true}); // Error - boolean ~> number
                              ^^^^ [2]
@@ -1135,8 +1135,8 @@ Cannot call `myFun.apply` because object type [1] is incompatible with undefined
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {prop: number}): string;
-                                    ^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {+prop: number}): string;
+                                    ^^^^^^^^^^^^^^^ [1]
    declare_function.js:20:1
    20| myFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^ [2]
@@ -1153,8 +1153,8 @@ Cannot call `myFun.call` because object type [1] is incompatible with undefined 
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {prop: number}): string;
-                                    ^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {+prop: number}): string;
+                                    ^^^^^^^^^^^^^^^ [1]
    declare_function.js:21:1
    21| myFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^ [2]
@@ -1186,8 +1186,8 @@ Cannot call `myPolyFun.apply` because object type [1] is incompatible with undef
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                           ^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+                                           ^^^^^^^^^^^^^^^ [1]
    declare_function.js:23:1
    23| myPolyFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^^ [2]
@@ -1204,8 +1204,8 @@ Cannot call `myPolyFun.call` because object type [1] is incompatible with undefi
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {prop: number}, x: T): T;
-                                           ^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
+                                           ^^^^^^^^^^^^^^^ [1]
    declare_function.js:24:1
    24| myPolyFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^ [2]

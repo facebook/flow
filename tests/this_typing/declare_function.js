@@ -1,5 +1,5 @@
-declare function myFun(this: {prop: number}): string;
-declare function myPolyFun<T>(this: {prop: number}, x: T): T;
+declare function myFun(this: {+prop: number}): string;
+declare function myPolyFun<T>(this: {+prop: number}, x: T): T;
 
 // All ok - {prop: 123} is a subtype of {prop: number}
 myFun.bind({prop: 123});
