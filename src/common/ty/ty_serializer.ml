@@ -167,7 +167,7 @@ let type_ options =
     | TypeOf (FunProto, _) -> just (qualified2 "Object" "prototype")
     | TypeOf (ObjProto, _) -> just (qualified2 "Function" "prototype")
     | TypeOf (FunProtoBind, _) -> just (qualified3 "Function" "prototype" "bind")
-    | Component { regular_props; ref_prop; renders = renders_ } ->
+    | Component { regular_props; renders = renders_ } ->
       let all_params =
         match regular_props with
         | UnflattenedComponentProps t ->
@@ -223,22 +223,6 @@ let type_ options =
               None
           in
           { T.Component.Params.params; rest; comments = None }
-      in
-      let all_params =
-        match ref_prop with
-        | None -> all_params
-        | Some t ->
-          let ref_prop =
-            just
-              {
-                T.Component.Param.name =
-                  Ast.Statement.ComponentDeclaration.Param.Identifier (id_from_string "ref");
-                optional = false;
-                annot = annotation t;
-              }
-          in
-          let params = ref_prop :: all_params.T.Component.Params.params in
-          { all_params with T.Component.Params.params }
       in
       let params = just all_params in
       let renders =

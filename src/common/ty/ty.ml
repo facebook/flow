@@ -79,7 +79,6 @@ type t =
   | Infer of symbol * t option
   | Component of {
       regular_props: component_props;
-      ref_prop: t option;
       renders: t option;
     }
   | Renders of t * renders_kind
@@ -337,7 +336,6 @@ and decl =
       (* Used to show instantiation at JSX creation site. *)
       targs: t list option;
       props: component_props;
-      instance: t option;
       renders: t option;
       is_type: bool;
     }

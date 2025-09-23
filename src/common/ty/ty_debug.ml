@@ -382,7 +382,7 @@ struct
           "Infer (%s, %s)"
           (dump_symbol s)
           (Base.Option.value_map ~default:"None" ~f:(dump_t ~depth) b)
-      | Component { regular_props; ref_prop; renders } ->
+      | Component { regular_props; renders } ->
         let props =
           match regular_props with
           | UnflattenedComponentProps t -> [spf "...%s" (dump_t ~depth t)]
@@ -406,11 +406,6 @@ struct
               props @ ["...{...}"]
             else
               props
-        in
-        let props =
-          match ref_prop with
-          | None -> props
-          | Some t -> spf "ref: %s" (dump_t ~depth t) :: props
         in
         spf
           "Component(%s): %s"
@@ -456,8 +451,7 @@ struct
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
-    | NominalComponentDecl
-        { name; tparams; targs = _; props = _; instance = _; renders = _; is_type } ->
+    | NominalComponentDecl { name; tparams; targs = _; props = _; renders = _; is_type } ->
       spf
         "NominalComponentDecl (%s, %s, %b)"
         (dump_symbol name)
@@ -591,8 +585,7 @@ struct
             ("name", json_of_symbol s);
             ("bound", Base.Option.value_map ~default:JSON_Null ~f:json_of_t b);
           ]
-        | Component { regular_props; ref_prop; renders } ->
-          json_of_component regular_props ref_prop renders
+        | Component { regular_props; renders } -> json_of_component regular_props renders
         | Renders (t, variant) ->
           [
             ("argument", json_of_t t);
@@ -604,7 +597,7 @@ struct
             );
           ]
       )
-    and json_of_component regular_props ref_prop renders =
+    and json_of_component regular_props renders =
       let open Hh_json in
       let props =
         match regular_props with
@@ -632,7 +625,6 @@ struct
       in
       [
         ("regularProps", props);
-        ("refProp", Base.Option.value_map ref_prop ~f:json_of_t ~default:JSON_Null);
         ("renders", Base.Option.value_map renders ~f:json_of_t ~default:JSON_Null);
       ]
     and json_of_generic (s, k, targs_opt) =
@@ -836,13 +828,13 @@ struct
     let json_of_interface_decl (name, tparams) =
       [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
     in
-    let json_of_nominal_component_decl (name, tparams, props, instance, renders, is_type) =
+    let json_of_nominal_component_decl (name, tparams, props, renders, is_type) =
       [
         ("name", json_of_symbol name);
         ("typeParams", json_of_type_params tparams);
         ("isType", Hh_json.JSON_Bool is_type);
       ]
-      @ json_of_component props instance renders
+      @ json_of_component props renders
     in
     let json_of_namespace name _ =
       Hh_json.[("name", Base.Option.value_map ~f:json_of_symbol ~default:JSON_Null name)]
@@ -864,8 +856,8 @@ struct
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
       | EnumDecl name -> [("name", json_of_symbol name)]
-      | NominalComponentDecl { name; tparams; targs = _; props; instance; renders; is_type } ->
-        json_of_nominal_component_decl (name, tparams, props, instance, renders, is_type)
+      | NominalComponentDecl { name; tparams; targs = _; props; renders; is_type } ->
+        json_of_nominal_component_decl (name, tparams, props, renders, is_type)
       | NamespaceDecl { name; exports } -> json_of_namespace name exports
       | ModuleDecl { name; exports; default } -> json_of_module name exports default
     in

@@ -201,8 +201,8 @@ let layout_of_elt
               option ~f:(fun t -> fuse [space; Atom "extends"; space; type_ ~depth t]) b;
             ];
         ]
-    | Component { regular_props; ref_prop; renders } ->
-      fuse [Atom "component"; type_component_sig ~depth ~regular_props ~ref_prop ~renders]
+    | Component { regular_props; renders } ->
+      fuse [Atom "component"; type_component_sig ~depth ~regular_props ~renders]
     | Renders (t, variant) ->
       let renders_str =
         match variant with
@@ -211,7 +211,7 @@ let layout_of_elt
         | RendersStar -> "renders*"
       in
       fuse [Atom renders_str; space; type_with_parens ~depth t]
-  and type_component_sig ~depth ~regular_props ~ref_prop ~renders =
+  and type_component_sig ~depth ~regular_props ~renders =
     let to_key x =
       if property_key_quotes_needed x then
         let quote = better_quote ~prefer_single_quotes x in
@@ -245,11 +245,6 @@ let layout_of_elt
           params @ [Atom "...{...}"]
         else
           params
-    in
-    let params =
-      match ref_prop with
-      | None -> params
-      | Some t -> fuse [Atom "ref:"; pretty_space; type_ ~depth t] :: params
     in
     let renders =
       match renders with
@@ -586,8 +581,7 @@ let layout_of_elt
         option ~f:(type_parameter ~depth) typeParameters;
       ]
   in
-  let nominal_component_decl ~depth s typeParameters typeArgs regular_props ref_prop renders is_type
-      =
+  let nominal_component_decl ~depth s typeParameters typeArgs regular_props renders is_type =
     if is_type then
       fuse
         [
@@ -618,7 +612,7 @@ let layout_of_elt
           (match typeArgs with
           | Some ts -> type_args ~depth ts
           | None -> option ~f:(type_parameter ~depth) typeParameters);
-          type_component_sig ~depth ~regular_props ~ref_prop ~renders;
+          type_component_sig ~depth ~regular_props ~renders;
         ]
   in
   let type_alias ~depth name tparams t_opt =
@@ -659,8 +653,8 @@ let layout_of_elt
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | EnumDecl n -> enum_decl n
-    | NominalComponentDecl { name; tparams; targs; props; instance; renders; is_type } ->
-      nominal_component_decl ~depth name tparams targs props instance renders is_type
+    | NominalComponentDecl { name; tparams; targs; props; renders; is_type } ->
+      nominal_component_decl ~depth name tparams targs props renders is_type
     | NamespaceDecl { name; exports = _ } -> namespace name
     | ModuleDecl { name; exports = _; default = _ } -> module_ ~depth name
   in

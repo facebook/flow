@@ -706,7 +706,7 @@ module Make (I : INPUT) : S = struct
       (Ty.obj_t, error) t
 
     val convert_component :
-      env:Env.t -> Type.t -> Type.t -> (Ty.component_props * Ty.t option * Ty.t option, error) t
+      env:Env.t -> Type.t -> Type.t -> (Ty.component_props * Ty.t option, error) t
 
     val convert_type_destructor_unevaluated : env:Env.t -> Type.t -> T.destructor -> (Ty.t, error) t
   end = struct
@@ -862,8 +862,8 @@ module Make (I : INPUT) : S = struct
         let symbol = Reason_utils.component_symbol env name r in
         return (Ty.TypeOf (Ty.TSymbol symbol, inferred_targs))
       | DefT (_, ReactAbstractComponentT { config; renders; component_kind = _ }) ->
-        let%bind (regular_props, ref_prop, renders) = convert_component ~env config renders in
-        return (Ty.Component { regular_props; ref_prop; renders })
+        let%bind (regular_props, renders) = convert_component ~env config renders in
+        return (Ty.Component { regular_props; renders })
       | DefT (_, RendersT (IntrinsicRenders n)) -> return (Ty.StrLit (OrdinaryName n))
       | DefT (_, RendersT (NominalRenders { renders_id; renders_name; _ })) ->
         let symbol =
@@ -1264,7 +1264,7 @@ module Make (I : INPUT) : S = struct
         | Ok (props, inexact) -> Ty.FlattenedComponentProps { props = List.rev props; inexact }
         | Error config -> Ty.UnflattenedComponentProps config
       in
-      return (regular_props, None, renders)
+      return (regular_props, renders)
 
     and this_class_t ~env r t =
       let open Type in
@@ -1894,7 +1894,7 @@ module Make (I : INPUT) : S = struct
           | None -> return None
         in
         let%bind targs = optMapM (TypeConverter.convert_t ~env) targs in
-        let%map (props, instance, renders) = TypeConverter.convert_component ~env config renders in
+        let%map (props, renders) = TypeConverter.convert_component ~env config renders in
         Ty.Decl
           (Ty.NominalComponentDecl
              {
@@ -1902,7 +1902,6 @@ module Make (I : INPUT) : S = struct
                tparams;
                targs;
                props;
-               instance;
                renders;
                is_type = Env.toplevel_is_type_identifier_reference env;
              }

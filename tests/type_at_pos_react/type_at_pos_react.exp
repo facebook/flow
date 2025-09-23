@@ -72,7 +72,6 @@ react_component.js:31:7 = {
           "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
           "inexact":false
         },
-        "refProp":null,
         "renders":{
           "kind":"Renders",
           "argument":{"kind":"Bound","bound":"Renders"},
@@ -110,7 +109,6 @@ react_component.js:31:7 = {
           "types":[{"name":"children","optional":true,"type":{"kind":"Bound","bound":"Renders"}}],
           "inexact":false
         },
-        "refProp":null,
         "renders":{
           "kind":"Renders",
           "argument":{"kind":"Bound","bound":"Renders"},
@@ -139,7 +137,6 @@ react_component.js:32:13 = {
       "expanded":{
         "kind":"Component",
         "regularProps":{"kind":"unflattened","type":{"kind":"Num"}},
-        "refProp":null,
         "renders":null
       },
       "type":"component(...number)"
@@ -148,7 +145,6 @@ react_component.js:32:13 = {
       "expanded":{
         "kind":"Component",
         "regularProps":{"kind":"unflattened","type":{"kind":"Implicit Any","any":"implicit"}},
-        "refProp":null,
         "renders":null
       },
       "type":"component(...any)"
