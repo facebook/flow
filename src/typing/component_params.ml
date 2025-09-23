@@ -122,7 +122,9 @@ module Make
       match ref_prop with
       | None -> ()
       | Some (key_loc, ref_prop) ->
-        C.read_react cx key_loc;
+        (match Context.react_ref_as_prop cx with
+        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase -> C.read_react cx key_loc
+        | Options.ReactRefAsProp.FullSupport -> ());
         let open Type in
         if not in_annotation then
           let open Reason in

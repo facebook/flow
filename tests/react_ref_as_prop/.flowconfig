@@ -1,4 +1,6 @@
 [options]
 all=true
 no_flowlib=false
+component_syntax=true
 react.runtime=automatic
+react.ref_as_prop=experimental.full_support
