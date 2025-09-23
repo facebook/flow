@@ -146,6 +146,7 @@ module IncorrectType = struct
     | TSReadonlyMap
     | TSReadonlySet
     | TSNonNullable
+    | Values
     | DollarNonMaybeType
     | DollarReadOnly
     | DollarReadOnlyArray
@@ -165,6 +166,7 @@ module IncorrectType = struct
     | TSReadonlyMap -> "ReadonlyMap"
     | TSReadonlySet -> "ReadonlySet"
     | TSNonNullable -> "NonNullable"
+    | Values -> "Values"
     | DollarNonMaybeType -> "$NonMaybeType"
     | DollarReadOnly -> "$ReadOnly"
     | DollarReadOnlyArray -> "$ReadOnlyArray"
@@ -184,6 +186,7 @@ module IncorrectType = struct
     | TSReadonlyMap -> "$ReadOnlyMap"
     | TSReadonlySet -> "$ReadOnlySet"
     | TSNonNullable -> "$NonMaybeType"
+    | Values -> "$Values"
     | DollarNonMaybeType -> "NonNullable"
     | DollarReadOnly -> "Readonly"
     | DollarReadOnlyArray -> "ReadonlyArray"
@@ -217,7 +220,8 @@ module IncorrectType = struct
     | TSReadonlyArray
     | TSReadonlyMap
     | TSReadonlySet
-    | TSNonNullable ->
+    | TSNonNullable
+    | Values ->
       TSType
 end
 

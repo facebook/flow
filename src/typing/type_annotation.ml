@@ -1008,6 +1008,25 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 (mk_type_destructor cx (use_op reason) reason t ValuesType (mk_eval_id cx loc))
                 targs
           )
+        (* Values<T> is a union of all the own enumerable value types of T. This replaces $Values<T> *)
+        | "Values" ->
+          if Context.ts_syntax cx || Context.ts_utility_syntax cx then
+            check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+                let (ts, targs) = convert_type_params () in
+                let t = List.hd ts in
+                let reason = mk_reason (RType (OrdinaryName "Values")) loc in
+                reconstruct_ast
+                  (mk_type_destructor cx (use_op reason) reason t ValuesType (mk_eval_id cx loc))
+                  targs
+            )
+          else
+            error_type
+              cx
+              loc
+              (Error_message.EIncorrectTypeWithReplacement
+                 { loc; kind = Flow_intermediate_error_types.IncorrectType.Values }
+              )
+              t_ast
         | "$Exact" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in

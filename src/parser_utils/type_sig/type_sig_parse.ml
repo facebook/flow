@@ -2561,6 +2561,16 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       Annot (Values (loc, t))
     | _ -> Err (loc, CheckError)
   end
+  | "Values" -> begin
+    if opts.enable_ts_syntax || opts.enable_ts_utility_syntax then
+      match targs with
+      | Some (_, { arguments = [t]; _ }) ->
+        let t = annot opts scope tbls xs t in
+        Annot (Values (loc, t))
+      | _ -> Err (loc, CheckError)
+    else
+      Annot (Any loc)
+  end
   | "$Exact" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->
