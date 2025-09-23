@@ -3,3 +3,4 @@ unnecessary-invariant=error
 
 [options]
 all=true
+experimental.constant_condition=false

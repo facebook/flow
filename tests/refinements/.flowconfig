@@ -3,6 +3,7 @@ no_flowlib=false
 all=true
 exact_by_default=false
 dev_only.refinement_info_as_errors=true
+experimental.constant_condition=false
 
 [libs]
 lib.js

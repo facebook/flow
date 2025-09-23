@@ -1467,7 +1467,7 @@ let make_options
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.pattern_matching_includes flowconfig);
     opt_constant_condition =
-      Base.Option.value ~default:false (FlowConfig.constant_condition flowconfig);
+      Base.Option.value ~default:true (FlowConfig.constant_condition flowconfig);
     opt_constant_condition_boolean_literal_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)

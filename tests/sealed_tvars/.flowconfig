@@ -2,3 +2,4 @@
 all=true
 enums=true
 no_flowlib=false
+experimental.constant_condition=false

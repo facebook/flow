@@ -581,7 +581,7 @@ let enable_constant_condition_boolean_literal cx =
   cx.metadata.constant_condition
   &&
   match cx.metadata.constant_condition_boolean_literal_includes with
-  | [] -> false
+  | [] -> true
   | dirs ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
@@ -591,7 +591,7 @@ let enable_constant_condition_null_void cx =
   cx.metadata.constant_condition
   &&
   match cx.metadata.constant_condition_null_void_includes with
-  | [] -> false
+  | [] -> true
   | dirs ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
@@ -601,7 +601,7 @@ let enable_constant_condition_function cx =
   cx.metadata.constant_condition
   &&
   match cx.metadata.constant_condition_function_includes with
-  | [] -> false
+  | [] -> true
   | dirs ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
@@ -611,7 +611,7 @@ let enable_invalid_comparison_general cx =
   cx.metadata.constant_condition
   &&
   match cx.metadata.invalid_comparison_general_includes with
-  | [] -> false
+  | [] -> true
   | dirs ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
@@ -621,7 +621,7 @@ let enable_invalid_comparison_null_check cx =
   cx.metadata.constant_condition
   &&
   match cx.metadata.invalid_comparison_null_check_includes with
-  | [] -> false
+  | [] -> true
   | dirs ->
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in

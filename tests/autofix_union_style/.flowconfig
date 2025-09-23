@@ -8,5 +8,6 @@
 
 [options]
 all=true
+experimental.constant_condition=false
 
 [strict]
