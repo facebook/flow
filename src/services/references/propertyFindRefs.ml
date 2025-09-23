@@ -119,12 +119,7 @@ module Potential_ordinary_refs_search = struct
                     Flow_js.flow
                       cx
                       ( component_t,
-                        Type.ReactKitT
-                          ( use_op,
-                            reason,
-                            Type.React.GetConfig
-                              { from_userland_react_element_config = false; tout = tvar }
-                          )
+                        Type.ReactKitT (use_op, reason, Type.React.GetConfig { tout = tvar })
                       )
                 )
               in

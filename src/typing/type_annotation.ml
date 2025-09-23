@@ -1206,7 +1206,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                    (use_op reason)
                    reason
                    t
-                   (ReactElementConfigType { from_userland = true })
+                   ReactElementConfigType
                    (mk_eval_id cx loc)
                 )
                 targs

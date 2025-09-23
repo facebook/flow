@@ -31,7 +31,6 @@ module type REACT = sig
     Type.t ->
     use_op:use_op ->
     reason_op:reason ->
-    from_userland_react_element_config:bool ->
     Type.React.tool ->
     Polarity.t ->
     Type.t ->
@@ -261,8 +260,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           )
       )
 
-  let rec props_to_tout
-      cx trace component ~use_op ~reason_op ~from_userland_react_element_config u tout =
+  let rec props_to_tout cx trace component ~use_op ~reason_op u tout =
     match drop_generic component with
     (* Class components or legacy components. *)
     | DefT (r, ClassT i) ->
@@ -300,15 +298,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               )
           ) as fun_t ->
         (* Keep the object's reason for better error reporting *)
-        props_to_tout
-          cx
-          trace
-          (mod_reason_of_t (Fun.const r) fun_t)
-          ~use_op
-          ~reason_op
-          ~from_userland_react_element_config
-          u
-          tout
+        props_to_tout cx trace (mod_reason_of_t (Fun.const r) fun_t) ~use_op ~reason_op u tout
       | _ ->
         err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
@@ -391,8 +381,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
    * of get_config as an upper bound won't give props a lower bound. However,
    * the places in which this approach stalls are the same places as other type
    * destructor annotations. Like object spread, $Diff, and $Rest. *)
-  let get_config
-      cx trace component ~use_op ~reason_op ~from_userland_react_element_config u pole tout =
+  let get_config cx trace component ~use_op ~reason_op u pole tout =
     match drop_generic component with
     | DefT (_, ReactAbstractComponentT { config; _ }) ->
       let use_op = Frame (ReactGetConfig { polarity = pole }, use_op) in
@@ -407,18 +396,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let reason_component = reason_of_t component in
       let props =
         let reason = update_desc_reason (fun desc -> RPropsOfComponent desc) reason_component in
-        Tvar.mk_where
-          cx
-          reason
-          (props_to_tout
-             cx
-             trace
-             component
-             ~use_op
-             ~reason_op:reason
-             ~from_userland_react_element_config
-             u
-          )
+        Tvar.mk_where cx reason (props_to_tout cx trace component ~use_op ~reason_op:reason u)
       in
       let defaults = get_defaults cx trace component ~reason_op in
       (match defaults with
@@ -453,8 +431,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let props =
           EvalT
             ( c,
-              TypeDestructorT
-                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
               Eval.generate_id ()
             )
         in
@@ -515,8 +492,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let props =
           EvalT
             ( c,
-              TypeDestructorT
-                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
               Eval.generate_id ()
             )
         in
@@ -525,8 +501,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         let props =
           EvalT
             ( c,
-              TypeDestructorT
-                (unknown_use, reason_op, ReactElementConfigType { from_userland = false }),
+              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
               Eval.generate_id ()
             )
         in
@@ -539,9 +514,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
-    let props_to_tout =
-      props_to_tout cx trace l ~use_op ~reason_op ~from_userland_react_element_config:false u
-    in
+    let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
     let config_check use_op ~jsx_props =
       (* Create a type variable for our props. *)
       let (component_props, component_default_props) =
@@ -779,17 +752,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       in
       rec_flow_t ~use_op:unknown_use cx trace (elem, tout)
     in
-    let get_config ~from_userland_react_element_config =
-      get_config
-        cx
-        trace
-        l
-        ~use_op
-        ~reason_op
-        ~from_userland_react_element_config
-        u
-        Polarity.Positive
-    in
+    let get_config = get_config cx trace l ~use_op ~reason_op u Polarity.Positive in
     match u with
     | CreateElement
         {
@@ -813,6 +776,5 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         tout
     | ConfigCheck { props = jsx_props } -> config_check use_op ~jsx_props
     | GetProps tout -> props_to_tout tout
-    | GetConfig { from_userland_react_element_config; tout } ->
-      get_config ~from_userland_react_element_config tout
+    | GetConfig { tout } -> get_config tout
 end

@@ -726,8 +726,7 @@ and json_of_destructor cx depth destructor =
       ]
   | TypeMap ObjectKeyMirror -> JSON_Object [("kind", JSON_String "ObjectKeyMirror")]
   | ReactElementPropsType -> JSON_Object [("kind", JSON_String "ReactElementPropsType")]
-  | ReactElementConfigType { from_userland = _ } ->
-    JSON_Object [("kind", JSON_String "ReactElementConfigType")]
+  | ReactElementConfigType -> JSON_Object [("kind", JSON_String "ReactElementConfigType")]
   | ReactCheckComponentConfig { props; allow_ref_in_spread = _ } ->
     JSON_Object
       [

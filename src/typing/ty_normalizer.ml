@@ -449,7 +449,7 @@ module Make (I : INPUT) : S = struct
     | ConditionalType _
     | TypeMap _
     | ReactElementPropsType
-    | ReactElementConfigType { from_userland = _ }
+    | ReactElementConfigType
     | ReactCheckComponentConfig _
     | ReactDRO _
     | MakeHooklike
@@ -494,7 +494,7 @@ module Make (I : INPUT) : S = struct
         | TypeMap _
         | EnumType
         | ReactElementPropsType
-        | ReactElementConfigType { from_userland = _ } ->
+        | ReactElementConfigType ->
           false)
       )
     | Env.EvaluateCustom f -> f d
@@ -1732,8 +1732,7 @@ module Make (I : INPUT) : S = struct
       | T.ReactCheckComponentConfig { props; allow_ref_in_spread = _ } ->
         check_component ~env ty props
       | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
-      | T.ReactElementConfigType { from_userland = _ } ->
-        return (Ty.Utility (Ty.ReactElementConfigType ty))
+      | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.RestType ((T.Object.Rest.SpreadReversal | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
       | T.MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->

@@ -1597,7 +1597,7 @@ module rec TypeTerm : sig
       }
     | TypeMap of type_map
     | ReactElementPropsType
-    | ReactElementConfigType of { from_userland: bool }
+    | ReactElementConfigType
     | ReactCheckComponentConfig of {
         props: Property.t NameUtils.Map.t;
         allow_ref_in_spread: bool;
@@ -3126,10 +3126,7 @@ and React : sig
       }
     | ConfigCheck of { props: TypeTerm.t }
     | GetProps of TypeTerm.t_out
-    | GetConfig of {
-        from_userland_react_element_config: bool;
-        tout: TypeTerm.t_out;
-      }
+    | GetConfig of { tout: TypeTerm.t_out }
 end =
   React
 

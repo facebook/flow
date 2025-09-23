@@ -302,7 +302,6 @@ module type REACT = sig
     Type.t ->
     use_op:ALoc.t Type.virtual_use_op ->
     reason_op:Reason.reason ->
-    from_userland_react_element_config:bool ->
     Type.React.tool ->
     Polarity.t ->
     Type.t ->

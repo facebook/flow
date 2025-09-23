@@ -29,7 +29,6 @@ module type REACT = sig
     Type.t ->
     use_op:use_op ->
     reason_op:reason ->
-    from_userland_react_element_config:bool ->
     Type.React.tool ->
     Polarity.t ->
     Type.t ->

@@ -68,13 +68,7 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
           let use_op = Type.Op Type.UnknownUse in
           Flow_js.flow
             cx
-            ( component_t,
-              Type.ReactKitT
-                ( use_op,
-                  reason,
-                  Type.React.GetConfig { from_userland_react_element_config = false; tout = tvar }
-                )
-            )
+            (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig { tout = tvar }))
       )
     in
     let req =

@@ -279,7 +279,7 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
                |> use_t_result_of_t_option
            )
       | ReactElementPropsType
-      | ReactElementConfigType { from_userland = _ } ->
+      | ReactElementConfigType ->
         merge_lower_or_upper_bounds (OpenT tout)
         |> bind_use_t_result ~f:(fun config ->
                let react_node =

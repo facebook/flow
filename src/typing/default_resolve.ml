@@ -65,7 +65,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     | CreateElement { tout; _ }
     | ConfigCheck { props = tout }
     | GetProps tout
-    | GetConfig { from_userland_react_element_config = _; tout } ->
+    | GetConfig { tout } ->
       resolve tout
   in
   let resolve_spread_resolve resolve_tool =
