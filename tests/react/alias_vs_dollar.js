@@ -17,19 +17,3 @@ c as ExactReactElement_DEPRECATED<React$ElementType>;
 
 const d = <Component />;
 d as ExactReactElement_DEPRECATED<React$ElementType>;
-
-declare var e: ExactReactElement_DEPRECATED<Class<Component>>;
-// $FlowFixMe[internal-type] This test is specially testing dot vs internal dollar type
-d as React$Element<React$ElementType>;
-
-const f = <Component />;
-// $FlowFixMe[internal-type] This test is specially testing dot vs internal dollar type
-f as React$Element<React$ElementType>;
-
-declare var g: ExactReactElement_DEPRECATED<Class<Component>>;
-// $FlowFixMe[internal-type] This test is specially testing dot vs internal dollar type
-g as React$Element<React.ElementType>;
-
-const h = <Component />;
-// $FlowFixMe[internal-type] This test is specially testing dot vs internal dollar type
-h as React$Element<React.ElementType>;

@@ -18,11 +18,11 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:267:39
-   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:253:39
+   253|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:102:5
-   102|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:88:5
+    88|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -46,11 +46,11 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:267:39
-   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:253:39
+   253|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:103:6
-   103|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:89:6
+    89|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -113,11 +113,11 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:267:39
-   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:253:39
+   253|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:102:5
-   102|   | { -current: T | null, ... }
+   <BUILTINS>/react.js:88:5
+    88|   | { -current: T | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -141,11 +141,11 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:267:39
-   267|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:253:39
+   253|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:103:6
-   103|   | ((T | null) => mixed)
+   <BUILTINS>/react.js:89:6
+    89|   | ((T | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -165,8 +165,8 @@ References:
    main.js:3:47
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:611:29
-   611|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:597:29
+   597|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
@@ -189,8 +189,8 @@ References:
    main.js:10:59
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
                                                                   ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:611:29
-   611|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:597:29
+   597|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};

@@ -6,22 +6,22 @@ Cannot create `HocChild` element because in property `ref`: [incompatible-type]
    with objects.
 
    test1.js:13:45
-    13|   render = (): React.Node => <HocChild ref={this._handleChild} />;
-                                                    ^^^^^^^^^^^^^^^^^
+   13|   render = (): React.Node => <HocChild ref={this._handleChild} />;
+                                                   ^^^^^^^^^^^^^^^^^
 
 References:
    test1.js:14:27
-    14|   _handleChild = (child: ?HocChild): void => {}; // Error
-                                  ^^^^^^^^ [1]
+   14|   _handleChild = (child: ?HocChild): void => {}; // Error
+                                 ^^^^^^^^ [1]
    test1.js:5:48
-     5| const HocChild: component(ref: React.RefSetter<mixed>, ...PropsType) = (null: any);
-                                                       ^^^^^ [2]
+    5| const HocChild: component(ref: React.RefSetter<mixed>, ...PropsType) = (null: any);
+                                                      ^^^^^ [2]
    test1.js:14:3
-    14|   _handleChild = (child: ?HocChild): void => {}; // Error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:102:5
-   102|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   14|   _handleChild = (child: ?HocChild): void => {}; // Error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:88:5
+   88|   | { -current: T | null, ... }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:2:5

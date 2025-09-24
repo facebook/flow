@@ -1118,7 +1118,7 @@ class type_normalization_hardcoded_fixes_mapper
         (* empty with `UseT ub` upper bounds becomes `ub` *)
         add_warning loc Warning.Empty_SomeKnownUpper;
         this#on_t env ub
-      (* E.g. React$Element<'div'> will become React.MixedElement *)
+      (* E.g. ExactReactElement_DEPRECATED<'div'> will become React.MixedElement *)
       | Ty.Generic
           ( ( {
                 Ty.sym_name = Reason.OrdinaryName "ExactReactElement_DEPRECATED";
@@ -1134,7 +1134,7 @@ class type_normalization_hardcoded_fixes_mapper
         let name = "React.MixedElement" in
         let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName name } in
         this#on_t env Ty.(Generic (symbol, kind, None))
-      (* E.g. React$Element<typeof A> will become React.MixedElement or React.Node.
+      (* E.g. ExactReactElement_DEPRECATED<typeof A> will become React.MixedElement or React.Node.
          The reason for this conversion is that it's a common idiom to keep SomeComponentClass to
          a local scope (e.g. that of a function) which would make the annotation ill-formed. *)
       | Ty.Generic
