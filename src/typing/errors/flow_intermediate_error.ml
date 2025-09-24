@@ -27,73 +27,51 @@ let tuple_element_frame_score = type_arg_frame_score * 2
  *
  * Calculated by taking the count of all the frames. *)
 let score_of_use_op use_op =
-  let score =
-    fold_use_op
-      (* Comparing the scores of use_ops only works when they all have the same
-       * root_use_op! If two use_ops have different roots, we can't realistically
-       * compare the number of frames since the basis is completely different.
+  fold_use_op
+    (fun _ -> 0)
+    (fun acc frame ->
+      acc
+      +
+      match frame with
+      (* Later params that error get a higher score. This roughly represents how
+       * much type-checking work Flow successfully completed before erroring.
+       * Useful for basically only overloaded function error messages.
        *
-       * So we require a Speculation root use_op to be passed into score_of_use_op
-       * and we perform a structural equality check using that.
+       * The signal that this gives us is that we successfully type checked n
+       * params in the call before erroring. If there was no error, Flow may
+       * have gone to successfully check another m params. However, we will
+       * never know that. n is our best approximation. It rewards errors near
+       * the end of a call and punishes (slightly) errors near the beginning of
+       * a call.
        *
-       * Otherwise, the total score from score_of_use_op is -1. This way, errors
-       * which match Speculation will be promoted. It is more likely the user was
-       * trying to target these branches. *)
-        (function
-        | Type.Speculation _ -> Ok 0
-        | _ -> Error (-1))
-      (fun acc frame ->
-        match acc with
-        | Error _ -> acc
-        | Ok acc ->
-          Ok
-            (acc
-            +
-            match frame with
-            (* Later params that error get a higher score. This roughly represents how
-             * much type-checking work Flow successfully completed before erroring.
-             * Useful for basically only overloaded function error messages.
-             *
-             * The signal that this gives us is that we successfully type checked n
-             * params in the call before erroring. If there was no error, Flow may
-             * have gone to successfully check another m params. However, we will
-             * never know that. n is our best approximation. It rewards errors near
-             * the end of a call and punishes (slightly) errors near the beginning of
-             * a call.
-             *
-             * This, however, turns out to be consistent with code style in modern
-             * JavaScript. As an unspoken convention, more complex arguments usually
-             * go last. For overloaded functions, the switching generally happens on
-             * the first argument. The "tag". This gives us confidence that n on
-             * FunParam is a good heuristic for the score.
-             *
-             * FunRestParam is FunParam, but at the end. So give it a larger score
-             * then FunParam after adding n.
-             *
-             * We do _not_ add n to the score if this use_op was added to an implicit type parameter. *)
-            | FunParam { n; _ } -> frame_score + n
-            | FunRestParam _ -> frame_score + frame_score - 1
-            (* FunCompatibility is generally followed by another use_op. So let's not
-             * count FunCompatibility. *)
-            | FunCompatibility _ -> 0
-            (* FunMissingArg means the error is *less* likely to be correct. *)
-            | FunMissingArg _ -> 0
-            (* Higher signal then PropertyCompatibility, for example. *)
-            | TypeArgCompatibility _ -> type_arg_frame_score
-            | ArrayElementCompatibility _ -> type_arg_frame_score
-            (* Higher signal then TypeArgCompatibility. *)
-            | TupleElementCompatibility _ -> tuple_element_frame_score
-            (* ImplicitTypeParam is an internal marker use_op that doesn't get
-             * rendered in error messages. So it doesn't necessarily signal anything
-             * about the user's intent. *)
-            | ImplicitTypeParam -> 0
-            | _ -> frame_score
-            ))
-      use_op
-  in
-  match score with
-  | Ok n -> n
-  | Error n -> n
+       * This, however, turns out to be consistent with code style in modern
+       * JavaScript. As an unspoken convention, more complex arguments usually
+       * go last. For overloaded functions, the switching generally happens on
+       * the first argument. The "tag". This gives us confidence that n on
+       * FunParam is a good heuristic for the score.
+       *
+       * FunRestParam is FunParam, but at the end. So give it a larger score
+       * then FunParam after adding n.
+       *
+       * We do _not_ add n to the score if this use_op was added to an implicit type parameter. *)
+      | FunParam { n; _ } -> frame_score + n
+      | FunRestParam _ -> frame_score + frame_score - 1
+      (* FunCompatibility is generally followed by another use_op. So let's not
+       * count FunCompatibility. *)
+      | FunCompatibility _ -> 0
+      (* FunMissingArg means the error is *less* likely to be correct. *)
+      | FunMissingArg _ -> 0
+      (* Higher signal then PropertyCompatibility, for example. *)
+      | TypeArgCompatibility _ -> type_arg_frame_score
+      | ArrayElementCompatibility _ -> type_arg_frame_score
+      (* Higher signal then TypeArgCompatibility. *)
+      | TupleElementCompatibility _ -> tuple_element_frame_score
+      (* ImplicitTypeParam is an internal marker use_op that doesn't get
+       * rendered in error messages. So it doesn't necessarily signal anything
+       * about the user's intent. *)
+      | ImplicitTypeParam -> 0
+      | _ -> frame_score)
+    use_op
 
 (* Gets the score of an error message. The score is an approximation of how
  * close the user was to getting their code right. A higher score means the user

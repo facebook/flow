@@ -1858,48 +1858,48 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:47:35
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either function [1] is incompatible with class `Boolean` [2].
- - Or number [3] is incompatible with string [4] in array element.
+ - Either number [1] is incompatible with string [2] in array element.
+ - Or mixed [3] is incompatible with string [2] in array element.
 
    refinement.js:47:35
    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
                                          ^^^^^^
 
 References:
-   refinement.js:47:42
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refinement.js:39:24
-   39|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                              ^^^^^^^^^^^^^^ [2]
    refinement.js:47:59
    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                                 ^^^^^^ [3]
+                                                                 ^^^^^^ [1]
    refinement.js:47:21
    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                           ^^^^^^ [4]
+                           ^^^^^^ [2]
+   refinement.js:44:35
+   44|   declare var arr: ReadOnlyArray_<mixed>;
+                                         ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either function [1] is incompatible with class `Boolean` [2].
- - Or function [1], a non-type-guard function, is incompatible with function type [3], which is a type-guard function.
+ - Either mixed [1] is incompatible with string [2] in array element.
+ - Or function [3] is incompatible with class `Boolean` [4].
 
    refinement.js:48:35
    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
                                          ^^^^^^
 
 References:
+   refinement.js:44:35
+   44|   declare var arr: ReadOnlyArray_<mixed>;
+                                         ^^^^^ [1]
+   refinement.js:48:21
+   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+                           ^^^^^^ [2]
    refinement.js:48:42
    48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    refinement.js:39:24
    39|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                              ^^^^^^^^^^^^^^ [2]
-   refinement.js:40:35
-   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                              ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
@@ -2493,7 +2493,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-type]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or function type [3] is incompatible with class `Boolean` [4].
+ - Or mixed [3] is incompatible with string [2] in array element.
 
    refinement.js:249:7
    249|   arr.filter(fn) as Array<string>; // error number ~> string
@@ -2506,19 +2506,16 @@ References:
    refinement.js:249:27
    249|   arr.filter(fn) as Array<string>; // error number ~> string
                                   ^^^^^^ [2]
-   refinement.js:231:7
-   231|   fn: (x: mixed) => implies x is number,
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   refinement.js:242:24
-   242|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                               ^^^^^^^^^^^^^^ [4]
+   refinement.js:247:35
+   247|   declare var arr: ReadOnlyArray_<mixed>;
+                                          ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:253:10
 
 Cannot call `ro_arr.filter` because: [incompatible-type]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or function type [3] is incompatible with class `Boolean` [4].
+ - Or mixed [3] is incompatible with string [2] in array element.
 
    refinement.js:253:10
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2531,19 +2528,16 @@ References:
    refinement.js:253:30
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:231:7
-   231|   fn: (x: mixed) => implies x is number,
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:745:24
-   745|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                               ^^^^^^^^^^^^^^ [4]
+   refinement.js:251:38
+   251|   declare var ro_arr: $ReadOnlyArray<mixed>;
+                                             ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
 
 Cannot call `rw_arr.filter` because: [incompatible-type]
  - Either number [1] is incompatible with string [2] in the type predicate.
- - Or function type [3] is incompatible with class `Boolean` [4].
+ - Or mixed [3] is incompatible with string [2] in array element.
 
    refinement.js:257:10
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2556,12 +2550,9 @@ References:
    refinement.js:257:30
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:231:7
-   231|   fn: (x: mixed) => implies x is number,
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:745:24
-   745|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                               ^^^^^^^^^^^^^^ [4]
+   refinement.js:255:38
+   255|   declare var rw_arr: $ReadOnlyArray<mixed>;
+                                             ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7

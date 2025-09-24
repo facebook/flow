@@ -258,7 +258,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `str_arr.filter` because: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in the return value.
- - Or function [3] is incompatible with class `Boolean` [4].
+ - Or string [3] is incompatible with boolean [4] in array element.
 
    filter_error_msg_quality_test.js:3:9
       3| str_arr.filter(s => s.length) as Array<boolean>;
@@ -271,34 +271,37 @@ References:
    <BUILTINS>/core.js:1013:103
    1013|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                                                ^^^^^^^^^^^^^^^^^^ [2]
-   filter_error_msg_quality_test.js:3:16
+   filter_error_msg_quality_test.js:2:30
+      2| declare const str_arr: Array<string>;
+                                      ^^^^^^ [3]
+   filter_error_msg_quality_test.js:3:40
       3| str_arr.filter(s => s.length) as Array<boolean>;
-                        ^^^^^^^^^^^^^ [3]
-   <BUILTINS>/core.js:1006:24
-   1006|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                                ^^^^^^^^^^^^^^ [4]
+                                                ^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
 
 Cannot call `nullable_str_arr.filter` because: [incompatible-type]
- - Either function [1] is incompatible with class `Boolean` [2].
- - Or function [1], a non-type-guard function, is incompatible with function type [3], which is a type-guard function.
+ - Either null or undefined [1] is incompatible with string [2] in array element.
+ - Or function [3] is incompatible with class `Boolean` [4].
 
    filter_error_msg_quality_test.js:7:18
       7| nullable_str_arr.filter(s => !!s) as Array<string>;
                           ^^^^^^
 
 References:
+   filter_error_msg_quality_test.js:6:39
+      6| declare const nullable_str_arr: Array<?string>;
+                                               ^^^^^^^ [1]
+   filter_error_msg_quality_test.js:7:44
+      7| nullable_str_arr.filter(s => !!s) as Array<string>;
+                                                    ^^^^^^ [2]
    filter_error_msg_quality_test.js:7:25
       7| nullable_str_arr.filter(s => !!s) as Array<string>;
-                                 ^^^^^^^^ [1]
+                                 ^^^^^^^^ [3]
    <BUILTINS>/core.js:1006:24
    1006|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
-                                ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1013:36
-   1013|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+                                ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:3:34
