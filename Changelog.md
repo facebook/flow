@@ -1,3 +1,23 @@
+### 0.286.0
+
+Breaking Changes:
+* Starting from this version, `flow-bin` will only contain ARM64 binaries for macOS.
+
+Likely to cause new Flow errors:
+* Flow now errors on constant conditions and invalid comparisons. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSGieVGwAAIJWypQARCAIKXAAUAbgAOo9oPYpWhiLgpQBeKVSGSa7V2CRSmDEY1Sr4AdwVSoAFABKC1wGBS136iC4d0qgVSgD0oalJkovK1tl1aHt-sNRpTNuIarDEajMaguRADRMJDg0CSGXsJhAAqAA) (D83014262 samzhou19815)
+* Flow will no longer infer an unsound type for array and object literals passed to a general function. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSGieVGwAAIYA9lHBoFK4GwADwAFQAfAAKBrIKVqgCUerVAG4ADpQC22exSiBoABWUoAvEq2FrgDBiHqAMwCg3mqB2x2sqUer1S+ymKAIKUAHylwhENwFJqlAHo0wmIFKTJReVKcJ6WLwc9R84GAO4Wi25EANEwkBVQJIZewmEACoA)
+* `React.ElementConfig<...>` and `React.PropsOf<...>` will now always include the ref prop in the props object type.
+* The config option for an earlier mode `react.ref_as_prop=partial_support` is removed, and Flow now has better support for React 19's ref-as-prop behavior:
+  1. All the ref prop in component syntax components must be made optional
+  2. You might need to rewrite some of your higher order components. e.g. previously an identity HOC must be written as
+```
+declare function id<Props: {...}, Ref>(c: component(ref?: Ref, ...Props)): component(ref?: Ref...Props)
+```
+now it must be written as
+```
+declare function id<Props: {...}>(c: component(...Props)): component(...Props)
+```
+
 ### 0.285.0
 
 Library Definitions:
