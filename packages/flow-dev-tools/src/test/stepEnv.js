@@ -47,12 +47,12 @@ function newEnv(oldErrors: FlowResult): {
   let stderr: Array<string> = [];
   let exitCodes: Array<number> = [];
   let newErrors = oldErrors;
-  let serverRunning = 'stopped';
-  let lspRunning = 'stopped';
+  let serverRunning: 'running' | 'stopped' = 'stopped';
+  let lspRunning: 'running' | 'stopped' = 'stopped';
   let shouldRunFlow = false;
   let lspMessagesSinceStartOfStep: Array<LSPMessage> = [];
   let lspStderrSinceStartOfStep = '';
-  let mockInvocationsSinceStartOfStep = {};
+  let mockInvocationsSinceStartOfStep: AllInvocations = {};
 
   const envWrite: StepEnvWriteable = {
     reportStdout(output: string) {

@@ -225,7 +225,7 @@ function getExtraMessages(extra: ?FlowExtra): Array<FlowMessage> {
 
 function getTraceReasons(trace: ?Array<FlowMessage>): Array<FlowMessage> {
   if (trace != null && trace.length > 0) {
-    return [{descr: 'Trace:', type: 'Blame'}].concat(trace);
+    return [{descr: 'Trace:', type: 'Blame'} as FlowMessage].concat(trace);
   }
   return [];
 }

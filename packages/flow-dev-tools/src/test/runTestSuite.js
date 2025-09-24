@@ -21,20 +21,20 @@ import type {Builder, TestBuilder} from './builder';
 import type {Suite} from './Suite';
 import type {StepResult} from './TestStep';
 
-type TestResult = {
+type TestResult = $ReadOnly<{
   name: ?string,
-  stepResults: Array<StepResult>,
-};
+  stepResults: $ReadOnlyArray<StepResult>,
+}>;
 
 export type SuiteResult =
-  | {
+  | $ReadOnly<{
       type: 'exceptional',
       message: string,
-    }
-  | {
+    }>
+  | $ReadOnly<{
       type: 'normal',
-      testResults: Array<TestResult>,
-    };
+      testResults: $ReadOnlyArray<TestResult>,
+    }>;
 
 async function runTestSuite(
   bin: string,

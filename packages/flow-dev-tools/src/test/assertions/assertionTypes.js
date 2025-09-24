@@ -33,28 +33,28 @@ export type AssertionMethod =
   | 'waitAndVerifyNoLSPMessagesSinceStartOfStep'
   | 'lspStderr';
 
-export type CallSuggestion = {|
+export type CallSuggestion = $ReadOnly<{
   method: AssertionMethod,
-  args: Array<mixed>,
-|};
+  args: $ReadOnlyArray<mixed>,
+}>;
 
-export type SnapshotSuggestion = {|
+export type SnapshotSuggestion = $ReadOnly<{
   file: string,
   contents: string,
-|};
+}>;
 
 export type Suggestion = CallSuggestion | SnapshotSuggestion;
 
 export type ErrorAssertionResult =
-  | {
+  | $ReadOnly<{
       type: 'pass',
-    }
-  | {
+    }>
+  | $ReadOnly<{
       type: 'fail',
-      messages: Array<string>,
+      messages: $ReadOnlyArray<string>,
       assertLoc: ?AssertionLocation,
       suggestion: Suggestion,
-    };
+    }>;
 
 export type ErrorAssertion = (
   reason: ?string,

@@ -1,6 +1,9 @@
 [include]
 ../node_modules
 
+[libs]
+../packages/flow-dev-tools/flow-typed/
+
 [ignore]
 .*/packages/flow-remove-types/.*
 .*/json5/test/parse-cases/.*

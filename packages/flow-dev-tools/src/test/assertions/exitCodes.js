@@ -10,7 +10,11 @@
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 
 function exitCodes(
   expectedArr: Array<number>,
@@ -19,7 +23,7 @@ function exitCodes(
   return (reason: ?string, env) => {
     const actual = JSON.stringify(env.getExitCodes(), null, 2);
     const expected = JSON.stringify(expectedArr, null, 2);
-    const suggestion = {method: 'exitCodes', args: [actual]};
+    const suggestion: Suggestion = {method: 'exitCodes', args: [actual]};
     return simpleDiffAssertion(
       expected,
       actual,

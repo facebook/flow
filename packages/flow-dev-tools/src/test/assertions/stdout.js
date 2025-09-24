@@ -10,7 +10,11 @@
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 
 function formatIfJSON(actual: string) {
   try {
@@ -27,7 +31,10 @@ function stdout(
   return (reason: ?string, env) => {
     const actual = formatIfJSON(env.getStdout());
     expected = formatIfJSON(expected);
-    const suggestion = {method: 'stdout', args: [formatIfJSON(actual)]};
+    const suggestion: Suggestion = {
+      method: 'stdout',
+      args: [formatIfJSON(actual)],
+    };
     return simpleDiffAssertion(
       expected,
       actual,

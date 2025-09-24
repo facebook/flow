@@ -10,7 +10,11 @@
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 
 function serverRunning(
   expected: 'stopped' | 'running',
@@ -18,7 +22,10 @@ function serverRunning(
 ): ErrorAssertion {
   return (reason: ?string, env) => {
     const actual = env.getServerRunning();
-    const suggestion = {method: 'verifyServerStatus', args: [actual]};
+    const suggestion: Suggestion = {
+      method: 'verifyServerStatus',
+      args: [actual],
+    };
     return simpleDiffAssertion(
       String(expected),
       String(actual),

@@ -13,27 +13,27 @@ const {format} = require('util');
 const parseArgs = require('minimist');
 
 export type Flag =
-  | $Exact<{
+  | $ReadOnly<{
       type: 'string',
       name: string,
       description: string,
       argName: string,
-      aliases?: Array<string>,
+      aliases?: $ReadOnlyArray<string>,
       default?: string,
     }>
-  | $Exact<{
+  | $ReadOnly<{
       type: 'boolean',
       name: string,
       description: string,
-      aliases?: Array<string>,
+      aliases?: $ReadOnlyArray<string>,
     }>
-  | $Exact<{
+  | $ReadOnly<{
       type: 'enum',
       name: string,
       description: string,
       argName: string,
-      validValues: Array<string>,
-      aliases?: Array<string>,
+      validValues: $ReadOnlyArray<string>,
+      aliases?: $ReadOnlyArray<string>,
       default?: string,
     }>;
 
@@ -43,14 +43,14 @@ const commonFlags = {
     name: 'bin',
     argName: 'path/to/flow',
     description: 'Path to the flow binary',
-  },
+  } as Flag,
   flowconfigName: {
     type: 'string',
     name: 'flowconfigName',
     argName: '.flowconfig',
     description: 'Name of the flowconfig to use in checking',
     default: '.flowconfig',
-  },
+  } as Flag,
   parallelism: {
     type: 'string',
     name: 'parallelism',
@@ -58,7 +58,7 @@ const commonFlags = {
     description: 'Number of tests to run in parallel',
     aliases: ['p'],
     default: '16',
-  },
+  } as Flag,
   errorCheckCommand: {
     type: 'enum',
     name: 'check',
@@ -67,7 +67,7 @@ const commonFlags = {
     validValues: ['check', 'status'],
     aliases: ['c'],
     default: 'status',
-  },
+  } as Flag,
 };
 
 class ShowUsageException {

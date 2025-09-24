@@ -16,6 +16,7 @@ import type {
   AssertionLocation,
   ErrorAssertion,
   ErrorAssertionResult,
+  Suggestion,
 } from './assertionTypes';
 
 function lspNoNewMessagesAfterSleep(
@@ -53,7 +54,7 @@ function lspNoNewMessagesAfterSleep(
         keyMessage,
         errorMessages,
       );
-      const suggestion = {
+      const suggestion: Suggestion = {
         method: 'waitAndVerifyAllLSPMessagesContentSinceStartOfStep',
         args: [timeoutMs * 10, actual],
       };

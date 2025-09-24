@@ -145,7 +145,8 @@ async function runner(args: Args): Promise<void> {
       newline = '\n';
     }
     if (process.stdout.isTTY) {
-      // $FlowFixMe - Add this to lib file
+      // $FlowFixMe[prop-missing] - Add this to lib file
+      // $FlowFixMe[incompatible-type] - Add this to lib file
       process.stdout.clearLine();
       process.stdout.write(
         format(
@@ -227,6 +228,7 @@ async function runner(args: Args): Promise<void> {
                     const [start, end] = range;
                     const out =
                       code.slice(0, start) +
+                      // $FlowFixMe[incompatible-type]
                       suggestionToString(suggestion, assertLoc.column) +
                       code.slice(end);
                     await writeFile(filename, out);

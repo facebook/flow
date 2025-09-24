@@ -10,7 +10,11 @@
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 
 function sortedStdout(
   expected: string,
@@ -23,7 +27,7 @@ function sortedStdout(
       .filter(line => line !== '') // Whitespace in a sorted stdout isn't useful
       .sort()
       .join('\n');
-    const suggestion = {method: 'sortedStdout', args: [actual]};
+    const suggestion: Suggestion = {method: 'sortedStdout', args: [actual]};
     return simpleDiffAssertion(
       expected,
       actual,

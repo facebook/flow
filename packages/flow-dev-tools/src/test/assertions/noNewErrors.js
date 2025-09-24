@@ -18,6 +18,7 @@ import type {
   AssertionLocation,
   ErrorAssertion,
   ErrorAssertionResult,
+  Suggestion,
 } from './assertionTypes';
 import type {FlowResult} from '../../flowResult';
 
@@ -53,7 +54,7 @@ function noNewErrors(assertLoc: ?AssertionLocation): ErrorAssertion {
         keyMessage,
         errorMessages,
       );
-      const suggestion = {
+      const suggestion: Suggestion = {
         method: 'newErrors',
         args: [prettyPrint(brandNew)],
       };

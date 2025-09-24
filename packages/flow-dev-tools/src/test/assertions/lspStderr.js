@@ -27,7 +27,10 @@ function lspStderr(
   return (reason: ?string, env) => {
     const actual = formatIfJSON(env.getLSPStderrSinceStartOfStep());
     expected = formatIfJSON(expected);
-    const suggestion = {method: 'lspStderr', args: [formatIfJSON(actual)]};
+    const suggestion = {
+      method: 'lspStderr' as const,
+      args: [formatIfJSON(actual)],
+    };
     return simpleDiffAssertion(
       expected,
       actual,

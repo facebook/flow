@@ -10,7 +10,11 @@
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
-import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
+import type {
+  AssertionLocation,
+  ErrorAssertion,
+  Suggestion,
+} from './assertionTypes';
 import type {LSPMessage} from '../lsp';
 
 function lspNewMessagesWithTimeout(
@@ -21,7 +25,7 @@ function lspNewMessagesWithTimeout(
   return (reason: ?string, env) => {
     const actual = env.getLSPMessagesSinceStartOfStep();
 
-    let suggestion = {
+    let suggestion: Suggestion = {
       method: 'waitAndVerifyNoLSPMessagesSinceStartOfStep',
       args: [(Math.round(timeoutMs / 10): mixed)],
     };

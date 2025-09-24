@@ -100,7 +100,7 @@ async function getErrorsForAllRootsForBinary(
         if (error.message[0].loc === null) {
           throw new Error('Found an error without a location');
         } else {
-          // $FlowFixMe loc is non-null from check above
+          // $FlowFixMe[incompatible-type] loc is non-null from check above
           const loc: FlowLoc = error.message[0].loc;
           const dataForLine: ErrorsForLine = errorsByLine.get(
             loc.start.line,

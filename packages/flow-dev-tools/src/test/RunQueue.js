@@ -130,7 +130,7 @@ class RunQueue {
     this.writeResults.push(this.builder.saveResults(suiteName, suiteResult));
     if (this.isFbmakeJson) {
       let details = '';
-      let status = 'passed';
+      let status: 'passed' | 'failed' = 'passed';
       if (suiteResult.type === 'exceptional') {
         status = 'failed';
         details += format('ERROR: suite %s\n%s', suiteResult.message);
@@ -202,7 +202,8 @@ class RunQueue {
         this.almostDone.length > 0 &&
         (this.running.length == 0 || this.almostDone[0] <= this.running[0])
       ) {
-        const suiteName = this.almostDone.shift();
+        // $FlowFixMe[incompatible-type]
+        const suiteName: string = this.almostDone.shift();
         this.done.push(suiteName);
         const stdout = process.stdout;
         if (this.isTTY && stdout instanceof tty.WriteStream) {
@@ -263,18 +264,20 @@ class RunQueue {
     if (!this.isTTY) {
       return;
     }
-    // $FlowFixMe Add to lib
+    // $FlowFixMe[prop-missing] Add to lib
+    // $FlowFixMe[incompatible-type] Add to lib
     process.stdout.clearLine();
     for (let i = 0; i < this.fancyStatusSize; i++) {
-      // $FlowFixMe Add to lib
+      // $FlowFixMe[prop-missing] Add to lib
       process.stdout.moveCursor(0, -1);
-      // $FlowFixMe Add to lib
+      // $FlowFixMe[prop-missing] Add to lib
+      // $FlowFixMe[incompatible-type] Add to lib
       process.stdout.clearLine();
     }
     const numLines = this.running.length;
     this.fancyStatusSize = numLines;
     process.stdout.write(Array(numLines + 1).join('\n'));
-    // $FlowFixMe Add to lib
+    // $FlowFixMe[prop-missing] Add to lib
     process.stdout.moveCursor(0, -numLines);
     const suites = this.running.sort();
     for (const suiteName of suites) {

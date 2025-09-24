@@ -53,11 +53,11 @@ type Action = (
   envWrite: StepEnvWriteable,
 ) => Promise<void>;
 
-export type StepResult = {
+export type StepResult = $ReadOnly<{
   passed: boolean,
-  assertionResults: Array<ErrorAssertionResult>,
+  assertionResults: $ReadOnlyArray<ErrorAssertionResult>,
   exception?: Error,
-};
+}>;
 
 /**
  * A test suite is made up of tests. A test is made up of test steps. When you
@@ -349,7 +349,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
         invocation.some(arg => arg.includes(substring)),
       );
       const actualCount = actualContaining.length;
-      const suggestion = {
+      const suggestion: Suggestion = {
         method: 'verifyMockInvocationsSinceStartOfStepContaining',
         args: [name, substring, actualCount],
       };
@@ -388,7 +388,10 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       const assertLoc = searchStackForTestAssertion();
       const ret = this._cloneWithAssertion((reason, env) => {
         const actual = env.getLSPRunning();
-        const suggestion = {method: 'verifyLSPStatus', args: [actual]};
+        const suggestion: Suggestion = {
+          method: 'verifyLSPStatus',
+          args: [actual],
+        };
         return simpleDiffAssertion(
           expected,
           actual,
@@ -495,7 +498,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
         .some(msg =>
           Builder.doesMessageFuzzyMatch(msg, expectedMethod, expectedContents),
         );
-      const suggestion = {
+      const suggestion: Suggestion = {
         method: 'lspStartAndConnect',
         args: [timeoutMs * 2],
       };
