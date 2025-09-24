@@ -254,6 +254,53 @@ References:
                                                   ^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------- filter_error_msg_quality_test.js:3:9
+
+Cannot call `str_arr.filter` because: [incompatible-type]
+ - Either number [1] is incompatible with boolean [2] in the return value.
+ - Or function [3] is incompatible with class `Boolean` [4].
+
+   filter_error_msg_quality_test.js:3:9
+      3| str_arr.filter(s => s.length) as Array<boolean>;
+                 ^^^^^^
+
+References:
+   <BUILTINS>/core.js:1437:13
+   1437|     length: number;
+                     ^^^^^^ [1]
+   <BUILTINS>/core.js:1013:103
+   1013|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                               ^^^^^^^^^^^^^^^^^^ [2]
+   filter_error_msg_quality_test.js:3:16
+      3| str_arr.filter(s => s.length) as Array<boolean>;
+                        ^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1006:24
+   1006|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                                ^^^^^^^^^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
+
+Cannot call `nullable_str_arr.filter` because: [incompatible-type]
+ - Either function [1] is incompatible with class `Boolean` [2].
+ - Or function [1], a non-type-guard function, is incompatible with function type [3], which is a type-guard function.
+
+   filter_error_msg_quality_test.js:7:18
+      7| nullable_str_arr.filter(s => !!s) as Array<string>;
+                          ^^^^^^
+
+References:
+   filter_error_msg_quality_test.js:7:25
+      7| nullable_str_arr.filter(s => !!s) as Array<string>;
+                                 ^^^^^^^^ [1]
+   <BUILTINS>/core.js:1006:24
+   1006|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+                                ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1013:36
+   1013|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- flat.js:3:34
 
 Cannot assign `arr1.flat()` to `result1_1` because `number extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly
@@ -534,4 +581,7 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 25 errors
+Found 27 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
