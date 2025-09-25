@@ -4,37 +4,19 @@
     {
       "title": "Rewrite object type as an interface",
       "kind": "quickfix",
-      "diagnostics": [
-        {
-          "range": {
-            "start": {
-              "line": 8,
-              "character": 4
-            },
-            "end": {
-              "line": 8,
-              "character": 11
-            }
-          },
-          "severity": 1,
-          "code": "InferError",
-          "source": "Flow",
-          "message": "Cannot call foo with new A() bound to x because cannot subtype class A [1] with object type [2]. Please use an interface instead.",
-          "relatedInformation": []
-        }
-      ],
+      "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js": [
             {
               "range": {
                 "start": {
-                  "line": 6,
-                  "character": 17
+                  "line": 10,
+                  "character": 23
                 },
                 "end": {
-                  "line": 6,
-                  "character": 35
+                  "line": 10,
+                  "character": 39
                 }
               },
               "newText": "interface { x: number }"

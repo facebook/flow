@@ -2,3 +2,4 @@
 
 declare var x : { facebook: string };
 x.faceboy;
+//    ^

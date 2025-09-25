@@ -4,25 +4,7 @@
     {
       "title": "Rewrite `T` as an interface",
       "kind": "quickfix",
-      "diagnostics": [
-        {
-          "range": {
-            "start": {
-              "line": 18,
-              "character": 4
-            },
-            "end": {
-              "line": 18,
-              "character": 4
-            }
-          },
-          "severity": 1,
-          "code": "InferError",
-          "source": "Flow",
-          "message": "Cannot call `baz` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.",
-          "relatedInformation": []
-        }
-      ],
+      "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js": [

@@ -4,37 +4,19 @@
     {
       "title": "Rewrite object type as an interface",
       "kind": "quickfix",
-      "diagnostics": [
-        {
-          "range": {
-            "start": {
-              "line": 12,
-              "character": 9
-            },
-            "end": {
-              "line": 12,
-              "character": 16
-            }
-          },
-          "severity": 1,
-          "code": "InferError",
-          "source": "Flow",
-          "message": "Cannot call `bar` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.",
-          "relatedInformation": []
-        }
-      ],
+      "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js": [
             {
               "range": {
                 "start": {
-                  "line": 10,
-                  "character": 23
+                  "line": 6,
+                  "character": 17
                 },
                 "end": {
-                  "line": 10,
-                  "character": 39
+                  "line": 6,
+                  "character": 35
                 }
               },
               "newText": "interface { x: number }"

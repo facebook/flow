@@ -2,5 +2,7 @@
 
 declare var foo: {bar: number} | void | null;
 foo.bar;
+//   ^
 declare var nested: {foo: {bar: number}} | null;
 nested.foo.bar;
+//      ^

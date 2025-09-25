@@ -7,9 +7,12 @@ class C {
 
   test() {
     field;
+//   ^
 
     method();
+//   ^
 
     notAMember;
+//   ^
   }
 }

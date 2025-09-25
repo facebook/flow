@@ -5,3 +5,4 @@ enum E {
   Foobar,
 }
 E.Foobat;
+//    ^

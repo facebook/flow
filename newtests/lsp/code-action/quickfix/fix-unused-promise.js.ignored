@@ -4,4 +4,5 @@ declare function foo(): Promise<void>;
 
 async function bar(): Promise<void> {
     foo();
+//   ^
 }
