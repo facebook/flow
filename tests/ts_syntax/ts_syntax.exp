@@ -198,91 +198,59 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                                                                                                 ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1792:66
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1797:66
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1792|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
+   1797|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
                                                                           ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2036:43
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2041:43
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2036| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2041| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2250:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2255:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2250|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   2255|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2260:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2265:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2260|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   2265|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2771:45
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2776:45
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2771| declare function queueMicrotask<TArguments: $ReadOnlyArray<mixed>>(
+   2776| declare function queueMicrotask<TArguments: $ReadOnlyArray<mixed>>(
                                                      ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2996:70
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3001:70
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2996|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3001|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                                                               ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3025:31
-
-The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
-
-   3025| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
-                                       ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3025:81
-
-The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
-
-   3025| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
-                                                                                         ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3026:23
-
-The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
-
-   3026|   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return :
-                               ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3027:28
-
-The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
-
-   3027|   T extends hook (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
-                                    ^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3030:31
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3030| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3030| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                        ^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -290,15 +258,47 @@ Error --------------------------------------------------------------------------
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3030| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3030| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                                                                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3113:47
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3031:23
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3113| type Object$Assign = (target: any, ...source: $ReadOnlyArray<any>) => any;
+   3031|   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return :
+                               ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3032:28
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   3032|   T extends hook (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
+                                    ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3035:31
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   3035| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+                                       ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3035:81
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   3035| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+                                                                                         ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3118:47
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   3118| type Object$Assign = (target: any, ...source: $ReadOnlyArray<any>) => any;
                                                        ^^^^^^^^^^^^^^^^^^^
 
 
