@@ -101,7 +101,7 @@ import React from "react";
   if ((x,2,1)) {} // OK
   if ((x,x,x,2)) {} // ERROR
   if ((0,0,()=>0)) {} // ERROR
-  if((0,0,f)) {} // OK
+  if((0,0,f)) {} // ERROR: f is always truthy
   if((0,0,f())) {} // OK
   if((0,1,2,'a'?f():3)) {} // ERROR
   if((0,1,2,

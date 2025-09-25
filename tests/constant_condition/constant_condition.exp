@@ -823,6 +823,23 @@ This condition is truthy. [constant-condition]
                    ^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:104:11
+
+This condition is likely truthy. Perhaps you meant to call the function?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   test.js:104:11
+   104|   if((0,0,f)) {} // ERROR: f is always truthy
+                  ^
+
+References:
+   test.js:99:11
+    99|   let f = () => 0;
+                  ^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- test.js:106:13
 
 This condition is truthy. [constant-condition]
@@ -1228,6 +1245,23 @@ References:
    typed_check.js:8:11
     8|   let x3: string = 'avuyv'
                  ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- typed_check.js:97:6
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   typed_check.js:97:6
+   97|   if(d) {} // D is always truthy
+            ^
+
+References:
+   typed_check.js:93:7
+   93|   let d: C;
+             ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:120:8
@@ -1886,4 +1920,4 @@ This condition is falsy. [constant-condition]
 
 
 
-Found 173 errors
+Found 175 errors

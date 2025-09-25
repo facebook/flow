@@ -94,7 +94,7 @@
   function f(): C {
     return d; // Is undefined
   }
-  if(d) {} // Currently doesn't error. turn on `NullT` & `VoidT` to give error.
+  if(d) {} // D is always truthy
   if(f()) {} // OK because f() could return undefined
 }
 
