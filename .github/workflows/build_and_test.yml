@@ -346,22 +346,6 @@ jobs:
     - run: chmod +x bin/linux/flow
     - name: Run tests
       run: ./runtests.sh bin/linux/flow
-  runtests_macos_x86:
-    runs-on: macos-13
-    needs:
-    - build_macos_x86
-    steps:
-    - uses: maxim-lobanov/setup-xcode@v1.6.0
-      with:
-        xcode-version: '14.3.1'
-    - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_bin
-        path: bin/macos
-    - run: chmod +x bin/macos/flow
-    - name: Run tests
-      run: ./runtests.sh bin/macos/flow
   runtests_macos_arm:
     runs-on: macos-15
     needs:
