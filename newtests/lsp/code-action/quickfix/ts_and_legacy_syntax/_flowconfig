@@ -1,0 +1,3 @@
+[options]
+enums=true
+component_syntax=true
