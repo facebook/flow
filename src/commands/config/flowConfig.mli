@@ -100,8 +100,6 @@ val invalid_comparison_general_includes : config -> string list
 
 val invalid_comparison_null_check_includes : config -> string list
 
-val invariant_subtyping_error_message_improvement : config -> bool
-
 val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option

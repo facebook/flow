@@ -1488,8 +1488,6 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.invalid_comparison_null_check_includes flowconfig);
-    opt_invariant_subtyping_error_message_improvement =
-      FlowConfig.invariant_subtyping_error_message_improvement flowconfig;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
