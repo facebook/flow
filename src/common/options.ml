@@ -29,7 +29,7 @@ type saved_state_fetcher =
 
 module ReactRefAsProp = struct
   type t =
-    | StoreRefInPropsNoSpecialCase  (** Store ref as a regular prop *)
+    | Legacy  (** Only in component syntax: ban ref prop in spread *)
     | FullSupport  (** Implement full React 19 behavior *)
 end
 

@@ -1763,7 +1763,7 @@ and merge_component
       in
       let allow_ref_in_spread =
         match Context.react_ref_as_prop file.cx with
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase -> is_annotation
+        | Options.ReactRefAsProp.Legacy -> is_annotation
         | Options.ReactRefAsProp.FullSupport -> true
       in
       EvalT

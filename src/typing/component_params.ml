@@ -123,7 +123,7 @@ module Make
       | None -> ()
       | Some (key_loc, ref_prop) ->
         (match Context.react_ref_as_prop cx with
-        | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase -> C.read_react cx key_loc
+        | Options.ReactRefAsProp.Legacy -> C.read_react cx key_loc
         | Options.ReactRefAsProp.FullSupport -> ());
         let open Type in
         if not in_annotation then
@@ -144,7 +144,7 @@ module Make
     in
     let allow_ref_in_spread =
       match Context.react_ref_as_prop cx with
-      | Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase -> in_annotation
+      | Options.ReactRefAsProp.Legacy -> in_annotation
       | Options.ReactRefAsProp.FullSupport -> true
     in
     let config =
