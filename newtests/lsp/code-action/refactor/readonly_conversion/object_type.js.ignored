@@ -1,0 +1,15 @@
+// @flow
+type A = {foo: string}
+//              ^ no conversion
+type B = {foo: string}
+//          ^ convert
+type C = $ReadOnly<{foo: string}>;
+//                    ^ no conversion
+type D = {foo: {bar: string}};
+//         ^ convert outer one
+type E = {foo: {bar: string}};
+//               ^ convert inner one
+type F = $ReadOnlyMap<{foo: string}>;
+//                     ^ conversion
+type G = $ReadOnly<Foooooooo<{foo: string}>>;
+//                             ^ conversion

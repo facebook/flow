@@ -405,6 +405,45 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
     ]
   | _ -> []
 
+let convert_type_to_readonly_form_code_actions ~options ~ast ~only uri loc =
+  if include_rewrite_refactors only then
+    match
+      Convert_type_to_readonly_form.convert
+        ~ts_readonly_name:(Options.ts_utility_syntax options)
+        ast
+        loc
+    with
+    | None -> []
+    | Some (ast', conversion_kind) ->
+      let edits =
+        Flow_ast_differ.program ast ast'
+        |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+        |> flow_loc_patch_to_lsp_edits
+      in
+      let title =
+        match conversion_kind with
+        | Convert_type_to_readonly_form.ConversionToReadOnlyArray -> "Make the array readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlyObject -> "Make the object readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlyMap -> "Make the Map readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlySet -> "Make the Set readonly"
+      in
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.refactor_rewrite;
+            diagnostics = [];
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command ~title ~diagnostic_title:"refactor_rewrite_readonly_conversion"
+                );
+          };
+      ]
+  else
+    []
+
 let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc =
   if include_rewrite_refactors only then
     match Refactor_arrow_functions.add_or_remove_braces ~ast ~scope_info loc with
@@ -1786,6 +1825,7 @@ let code_actions_at_loc
       uri
       loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
+    @ convert_type_to_readonly_form_code_actions ~options ~ast ~only uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     @ refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc
     @ add_jsx_props_code_actions

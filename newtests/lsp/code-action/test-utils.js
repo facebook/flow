@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 function generateSimpleTests(
+  only: string,
   {
     addFile,
     lspIgnoreStatusAndCancellation,
@@ -54,7 +55,7 @@ function generateSimpleTests(
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {uri: `<PLACEHOLDER_PROJECT_URL>/${filename}`},
         range: {start: {line, character}, end: {line, character}},
-        context: {only: ['quickfix'], diagnostics: []},
+        context: {only: [only], diagnostics: []},
       }).verifyLSPMessageSnapshot(
         path.join(
           testDir,

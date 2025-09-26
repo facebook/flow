@@ -5,7 +5,7 @@
 
 import type {SuiteType} from '../../../Tester';
 
-const {generateSimpleTests} = require('./test-utils');
+const {generateSimpleTests} = require('../test-utils');
 const path = require('path');
 const {suite, test} = require('../../../Tester');
 
@@ -22,6 +22,7 @@ module.exports = (suite(
     test(
       'provide quickfix through annotation for invariant subtyping errors',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -36,6 +37,7 @@ module.exports = (suite(
     test(
       'provide quickfix for adding optional chaining',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -50,6 +52,7 @@ module.exports = (suite(
     test(
       'provide quickfix for PropMissing errors with dot syntax',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -64,6 +67,7 @@ module.exports = (suite(
     test(
       'provide quickfix for PropMissing errors with bracket syntax',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -78,6 +82,7 @@ module.exports = (suite(
     test(
       'provide quickfix for invalid enum member access errors',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -92,6 +97,7 @@ module.exports = (suite(
     test(
       "don't provide quickfixes for object subtyping errors",
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -106,6 +112,7 @@ module.exports = (suite(
     test(
       'provide quickfix for type-as-value errors',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -120,6 +127,7 @@ module.exports = (suite(
     test('provide quickfix for aliased ClassObject errors', [
       addFile('lib.js.ignored', 'lib.js'),
       ...generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -135,6 +143,7 @@ module.exports = (suite(
     test(
       'provide codeAction for MethodUnbinding errors',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -192,6 +201,7 @@ module.exports = (suite(
     test(
       'provide quickfix for unused promise errors',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -206,6 +216,7 @@ module.exports = (suite(
     test('provide autoimport for missing import', [
       addFile('import-provider.js.ignored', 'import-provider.js'),
       ...generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,
@@ -220,6 +231,7 @@ module.exports = (suite(
     test(
       'provide quickfix for class member access',
       generateSimpleTests(
+        'quickfix',
         {
           addFile,
           lspIgnoreStatusAndCancellation,

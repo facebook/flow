@@ -1,0 +1,11 @@
+// @flow
+type A = number[];
+//              ^ no conversion
+type B = Array<number>;
+//          ^ convert
+type C = $ReadOnlyArray<number>;
+//          ^ no conversion
+type D = Array<Array<number>>;
+//         ^ convert outer one
+type E = Array<Array<number>>;
+//              ^ convert inner one
