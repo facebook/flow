@@ -256,16 +256,10 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, MixedT Mixed_function) -> ConstCond_Unknown
   | DefT (reason, NullT)
   | DefT (reason, VoidT) ->
-    if Context.enable_constant_condition cx then
-      ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
-    else
-      ConstCond_Unknown
+    ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
   | DefT (_, SymbolT) -> ConstCond_Unknown
   | DefT (reason, FunT _) ->
-    if Context.enable_constant_condition cx then
-      ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
-    else
-      ConstCond_Unknown
+    ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
   | DefT (_, ObjT _) -> ConstCond_Unknown
   | DefT (_, ArrT _) -> ConstCond_Unknown
   | DefT (_, ClassT _) -> ConstCond_Unknown
@@ -288,9 +282,7 @@ let try_eval_concrete_type_truthyness cx t =
     else
       ConstCond_Unknown
   | DefT (reason, SingletonBoolT { value; _ }) ->
-    if not (Context.enable_constant_condition cx) then
-      ConstCond_Unknown
-    else if value then
+    if value then
       ConstCond_Truthy { constant_condition_kind = ConstCond_General; reason = Some reason }
     else
       ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
@@ -658,52 +650,38 @@ let check_strict_comparison cx all_strict_comparisons =
         allowed
       | (DefT (_, EmptyT), DefT (_, EmptyT)) -> allowed
       | (DefT (_, EmptyT), _) ->
-        if Context.enable_constant_condition cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Left };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Left };
+            }
+        )
       | (_, DefT (_, EmptyT)) ->
-        if Context.enable_constant_condition cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Right };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Right };
+            }
+        )
       | (other, DefT (_, NullT)) when not (has_null_type cx other) ->
-        if Context.enable_constant_condition cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Right };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Right };
+            }
+        )
       | (DefT (_, NullT), other) when not (has_null_type cx other) ->
-        if Context.enable_constant_condition cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Left };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Left };
+            }
+        )
       | _ ->
         if filter_maybe_and_check_is_subtyping cx left_conc_t right_conc_t then
           allowed
-        else if Context.enable_constant_condition cx then
-          banned
         else
-          allowed
+          banned
   )
 
 let detect_invalid_strict_comparison cx =

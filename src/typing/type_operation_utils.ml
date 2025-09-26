@@ -230,7 +230,7 @@ module Operators = struct
         false
       | _ -> true
     in
-    let strict_equatable_error cx encl_ctx (l, r) =
+    let strict_equatable_error encl_ctx (l, r) =
       let comparison_error =
         let open TypeUtil in
         lazy
@@ -296,10 +296,7 @@ module Operators = struct
       | (_, DefT (_, EnumValueT _))
       | (DefT (_, EnumObjectT _), _)
       | (_, DefT (_, EnumObjectT _)) ->
-        if Context.enable_constant_condition cx then
-          None
-        else
-          Some (Lazy.force comparison_error)
+        None
       (* We don't check other strict equality comparisons. *)
       | _ -> None
     in
@@ -330,7 +327,7 @@ module Operators = struct
         let t1_needs_concretization = eq_needs_concretization t1 in
         let t2_needs_concretization = eq_needs_concretization t2 in
         if (not t1_needs_concretization) && not t2_needs_concretization then
-          match strict_equatable_error cx encl_ctx (t1, t2) with
+          match strict_equatable_error encl_ctx (t1, t2) with
           | Some error -> add_output cx error
           | None -> ()
         else
