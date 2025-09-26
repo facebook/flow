@@ -53,19 +53,6 @@
                 }
               },
               "newText": "$ReadOnly<{ v: string | number }>"
-            },
-            {
-              "range": {
-                "start": {
-                  "line": 5,
-                  "character": 0
-                },
-                "end": {
-                  "line": 5,
-                  "character": 8
-                }
-              },
-              "newText": "foo as A"
             }
           ]
         }

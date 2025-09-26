@@ -1557,6 +1557,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
       | ((loc, Logical l1), (_, Logical l2)) -> logical loc l1 l2
       | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
+      | ((loc, AsExpression as_cast1), (_, AsExpression as_cast2)) ->
+        Some (as_cast loc as_cast1 as_cast2)
       | ((_, (AsExpression _ | TSSatisfies _)), (_, TypeCast _)) -> None
       | (expr, (loc, TypeCast t2)) -> Some (type_cast_added parent expr loc t2)
       | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
@@ -3483,6 +3485,24 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let id = diff_if_changed identifier x1 x2 in
       let comments = syntax_opt loc1 comments1 comments2 |> Base.Option.value ~default:[] in
       Base.List.concat [id; comments]
+  and as_cast
+      (loc : Loc.t)
+      (as_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.AsExpression.t)
+      (as_cast2 : (Loc.t, Loc.t) Flow_ast.Expression.AsExpression.t) : node change list =
+    let open Flow_ast.Expression.AsExpression in
+    let { expression = expr1; annot = annot1; comments = comments1 } = as_cast1 in
+    let { expression = expr2; annot = annot2; comments = comments2 } = as_cast2 in
+    let expr =
+      diff_if_changed
+        (expression
+           ~parent:(ExpressionParentOfExpression (loc, Ast.Expression.AsExpression as_cast2))
+        )
+        expr1
+        expr2
+    in
+    let annot = diff_if_changed type_annotation annot1 annot2 in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [expr; annot; comments]
   and type_cast
       (loc : Loc.t)
       (type_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)
