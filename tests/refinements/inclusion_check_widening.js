@@ -29,7 +29,7 @@ setter('B');  // okay
 // Example 2
 
 const x = null;
-const y = x && x.f.g;
+const y = x && x.f.g; // error: x is always null
 // `null` may reach `y` here, and so this should be reported as an error ('val'
 // cannot refine `null`).
 if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null

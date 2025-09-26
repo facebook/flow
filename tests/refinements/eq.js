@@ -3,7 +3,7 @@
 let tests = [
   function(x: string, y: number) {
     if (x == y) {} // error, string & number are not comparable (unsafe casting)
-    if (x === y) {} // error to be flagged by invalid compare because it's always false
+    if (x === y) {} // error: flagged by constant condition
   },
 
   function(x: string) {
