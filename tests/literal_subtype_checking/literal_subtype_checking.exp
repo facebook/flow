@@ -1,256 +1,322 @@
-Error ------------------------------------------------------------------------------------------- non_refinements.js:5:7
+Error ------------------------------------------------------------------------------------------- non_refinements.js:5:1
 
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
+Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
+string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
+   non_refinements.js:5:1
+   5| x === 'foox'; // ERROR
+      ^^^^^^^^^^^^
+
+References:
+   non_refinements.js:3:15
+   3| declare const x: ?T;
+                    ^ [1]
    non_refinements.js:5:7
    5| x === 'foox'; // ERROR
             ^^^^^^ [2]
 
+
+Error ------------------------------------------------------------------------------------------- non_refinements.js:7:1
+
+Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
+string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:7:1
+   7| x === 'foox' || x === 'barx'; // ERROR
+      ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
+   non_refinements.js:3:15
    3| declare const x: ?T;
-                       ^^ [1]
-   non_refinements.js:3:19
-   3| declare const x: ?T;
-                        ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- non_refinements.js:7:7
-
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+                    ^ [1]
    non_refinements.js:7:7
    7| x === 'foox' || x === 'barx'; // ERROR
             ^^^^^^ [2]
 
+
+Error ------------------------------------------------------------------------------------------ non_refinements.js:7:17
+
+Cannot compare `x` [1] to string literal `barx` [2], because `x` [1] is not a subtype of string literal `barx` [2] and
+string literal `barx` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:7:17
+   7| x === 'foox' || x === 'barx'; // ERROR
+                      ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
+   non_refinements.js:3:15
    3| declare const x: ?T;
-                       ^^ [1]
-   non_refinements.js:3:19
-   3| declare const x: ?T;
-                        ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------ non_refinements.js:7:23
-
-Invalid check of string literal `barx` against nullable `T` [1] because string literal `barx` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+                    ^ [1]
    non_refinements.js:7:23
    7| x === 'foox' || x === 'barx'; // ERROR
                             ^^^^^^ [2]
 
+
+Error ------------------------------------------------------------------------------------------- non_refinements.js:9:1
+
+Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
+string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:9:1
+   9| x === 'foox' || true;
+      ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
+   non_refinements.js:3:15
    3| declare const x: ?T;
-                       ^^ [1]
-   non_refinements.js:3:19
-   3| declare const x: ?T;
-                        ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------- non_refinements.js:9:7
-
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+                    ^ [1]
    non_refinements.js:9:7
    9| x === 'foox' || true;
             ^^^^^^ [2]
 
+
+Error ------------------------------------------------------------------------------------------ non_refinements.js:11:9
+
+Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
+string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:11:9
+   11| true || x === 'foox'; // ERROR
+               ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
-   3| declare const x: ?T;
-                       ^^ [1]
-   non_refinements.js:3:19
-   3| declare const x: ?T;
-                        ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- non_refinements.js:11:15
-
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+   non_refinements.js:3:15
+    3| declare const x: ?T;
+                     ^ [1]
    non_refinements.js:11:15
    11| true || x === 'foox'; // ERROR
                      ^^^^^^ [2]
 
+
+Error ----------------------------------------------------------------------------------------- non_refinements.js:13:15
+
+Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
+string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:13:15
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                     ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
-    3| declare const x: ?T;
-                        ^^ [1]
-   non_refinements.js:3:19
-    3| declare const x: ?T;
-                         ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- non_refinements.js:13:21
-
-Invalid check of string literal `foox` against nullable `T` [1] because string literal `foox` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+   non_refinements.js:13:15
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                     ^ [1]
    non_refinements.js:13:21
    13| x != null && (x === 'foox' || x === 'barx'); // ERROR
                            ^^^^^^ [2]
 
+
+Error ----------------------------------------------------------------------------------------- non_refinements.js:13:31
+
+Cannot compare `x` [1] to string literal `barx` [2], because `x` [1] is not a subtype of string literal `barx` [2] and
+string literal `barx` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   non_refinements.js:13:31
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                                     ^^^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
-    3| declare const x: ?T;
-                        ^^ [1]
-   non_refinements.js:3:19
-    3| declare const x: ?T;
-                         ^ [3]
-
-
-Error ----------------------------------------------------------------------------------------- non_refinements.js:13:37
-
-Invalid check of string literal `barx` against nullable `T` [1] because string literal `barx` [2] is incompatible with
-`T` [3]. [incompatible-type]
-
+   non_refinements.js:13:31
+   13| x != null && (x === 'foox' || x === 'barx'); // ERROR
+                                     ^ [1]
    non_refinements.js:13:37
    13| x != null && (x === 'foox' || x === 'barx'); // ERROR
                                            ^^^^^^ [2]
 
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:3
+
+Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
+
+   test.js:7:3
+   7|   case 'bar': // Error
+        ^^^^^^^^^^
+
 References:
-   non_refinements.js:3:18
-    3| declare const x: ?T;
-                        ^^ [1]
-   non_refinements.js:3:19
-    3| declare const x: ?T;
-                         ^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------------ test.js:7:8
-
-Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
-literal `foo` [1]. [incompatible-type]
-
+   test.js:2:13
+   2| declare var x: Literal;
+                  ^ [1]
    test.js:7:8
    7|   case 'bar': // Error
              ^^^^^ [2]
-
-References:
    test.js:2:16
    2| declare var x: Literal;
-                     ^^^^^^^ [1]
+                     ^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:8
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Invalid check of number literal `1` against `Literal` [1] because number [2] is incompatible with string literal
-`foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   test.js:8:3
+   8|   case 1: // Error
+        ^^^^^^
+
+References:
+   test.js:2:13
+   2| declare var x: Literal;
+                  ^ [1]
    test.js:8:8
    8|   case 1: // Error
              ^ [2]
-
-References:
    test.js:2:16
    2| declare var x: Literal;
-                     ^^^^^^^ [1]
+                     ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:14:8
+Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Cannot compare string literal `bar` [1] with property `p` of `o` [2] because string literal `bar` [1] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare `o.p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
+   test.js:14:3
+   14|   case 'bar': // Error
+         ^^^^^^^^^^
+
+References:
+   test.js:12:9
+   12| switch (o.p) {
+               ^^^ [1]
    test.js:14:8
    14|   case 'bar': // Error
-              ^^^^^ [1]
-
-References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+              ^^^^^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:15:8
+Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
-Cannot compare number literal `1` [1] with property `p` of `o` [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare `o.p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   test.js:15:3
+   15|   case 1: // Error
+         ^^^^^^
+
+References:
+   test.js:12:9
+   12| switch (o.p) {
+               ^^^ [1]
    test.js:15:8
    15|   case 1: // Error
-              ^ [1]
-
-References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+              ^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:21:13
+Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
-Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
-literal `foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
+   test.js:21:7
+   21|   if (x === 'bar') {} // Error
+             ^^^^^^^^^^^
+
+References:
+   test.js:2:13
+    2| declare var x: Literal;
+                   ^ [1]
    test.js:21:13
    21|   if (x === 'bar') {} // Error
                    ^^^^^ [2]
-
-References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:13
+Error ----------------------------------------------------------------------------------------------------- test.js:22:7
 
-Invalid check of number literal `1` against `Literal` [1] because number [2] is incompatible with string literal
-`foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   test.js:22:7
+   22|   if (x === 1) {} // Error
+             ^^^^^^^
+
+References:
+   test.js:2:13
+    2| declare var x: Literal;
+                   ^ [1]
    test.js:22:13
    22|   if (x === 1) {} // Error
                    ^ [2]
-
-References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:25:15
+Error ----------------------------------------------------------------------------------------------------- test.js:25:7
 
-Cannot compare string literal `bar` [1] with property `p` of `o` [2] because string literal `bar` [1] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare `o.p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
-   test.js:25:15
+   test.js:25:7
    25|   if (o.p === 'bar') {} // Error
-                     ^^^^^ [1]
+             ^^^^^^^^^^^^^
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:25:7
+   25|   if (o.p === 'bar') {} // Error
+             ^^^ [1]
+   test.js:25:15
+   25|   if (o.p === 'bar') {} // Error
+                     ^^^^^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:26:15
+Error ----------------------------------------------------------------------------------------------------- test.js:26:7
 
-Cannot compare number literal `1` [1] with property `p` of `o` [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare `o.p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
-   test.js:26:15
+   test.js:26:7
    26|   if (o.p === 1) {} // Error
-                     ^ [1]
+             ^^^^^^^^^
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:26:7
+   26|   if (o.p === 1) {} // Error
+             ^^^ [1]
+   test.js:26:15
+   26|   if (o.p === 1) {} // Error
+                     ^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -258,47 +324,68 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
-Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
-literal `foo` [1]. [incompatible-type]
+Cannot compare string literal `bar` [1] to `x` [2], because string literal `bar` [1] is not a subtype of string literal
+`foo` [3] and string literal `foo` [3] is not a subtype of string literal `bar` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    test.js:31:7
    31|   if ('bar' === x) {} // Error
-             ^^^^^ [2]
+             ^^^^^^^^^^^
 
 References:
+   test.js:31:7
+   31|   if ('bar' === x) {} // Error
+             ^^^^^ [1]
+   test.js:2:13
+    2| declare var x: Literal;
+                   ^ [2]
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
 
-Invalid check of number literal `1` against `Literal` [1] because number [2] is incompatible with string literal
-`foo` [1]. [incompatible-type]
+Cannot compare number literal `1` [1] to `x` [2], because number literal `1` [1] is not a subtype of string literal
+`foo` [3] and string literal `foo` [3] is not a subtype of number literal `1` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    test.js:32:7
    32|   if (1 === x) {} // Error
-             ^ [2]
+             ^^^^^^^
 
 References:
+   test.js:32:7
+   32|   if (1 === x) {} // Error
+             ^ [1]
+   test.js:2:13
+    2| declare var x: Literal;
+                   ^ [2]
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:7
 
-Cannot compare string literal `bar` [1] with property `p` of `o` [2] because string literal `bar` [1] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare string literal `bar` [1] to `o.p` [2], because string literal `bar` [1] is not a subtype of string
+literal `foo` [3] and string literal `foo` [3] is not a subtype of string literal `bar` [1]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
    test.js:35:7
    35|   if ('bar' === o.p) {} // Error
-             ^^^^^ [1]
+             ^^^^^^^^^^^^^
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:35:7
+   35|   if ('bar' === o.p) {} // Error
+             ^^^^^ [1]
+   test.js:35:17
+   35|   if ('bar' === o.p) {} // Error
+                       ^^^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
@@ -306,435 +393,588 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:7
 
-Cannot compare number literal `1` [1] with property `p` of `o` [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare number literal `1` [1] to `o.p` [2], because number literal `1` [1] is not a subtype of string literal
+`foo` [3] and string literal `foo` [3] is not a subtype of number literal `1` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    test.js:36:7
    36|   if (1 === o.p) {} // Error
-             ^ [1]
+             ^^^^^^^^^
 
 References:
-   test.js:3:13
-    3| declare var o: {p: Literal}
-                   ^ [2]
+   test.js:36:7
+   36|   if (1 === o.p) {} // Error
+             ^ [1]
+   test.js:36:13
+   36|   if (1 === o.p) {} // Error
+                   ^^^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:40:29
+Error ---------------------------------------------------------------------------------------------------- test.js:40:23
 
-Invalid check of string literal `bar` against `Literal` [1] because string literal `bar` [2] is incompatible with string
-literal `foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
+   test.js:40:23
+   40| if (true && (false || x === 'bar')) {} // Error
+                             ^^^^^^^^^^^
+
+References:
+   test.js:40:23
+   40| if (true && (false || x === 'bar')) {} // Error
+                             ^ [1]
    test.js:40:29
    40| if (true && (false || x === 'bar')) {} // Error
                                    ^^^^^ [2]
-
-References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:41:31
+Error ---------------------------------------------------------------------------------------------------- test.js:41:23
 
-Cannot compare string literal `bar` [1] with property `p` of `o` [2] because string literal `bar` [1] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare property `p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
-   test.js:41:31
+   test.js:41:23
    41| if (true && (false || o.p === 'bar')) {} // Error
-                                     ^^^^^ [1]
+                             ^^^^^^^^^^^^^
 
 References:
    test.js:41:23
    41| if (true && (false || o.p === 'bar')) {} // Error
-                             ^ [2]
+                             ^^^ [1]
+   test.js:41:31
+   41| if (true && (false || o.p === 'bar')) {} // Error
+                                     ^^^^^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:42:29
+Error ---------------------------------------------------------------------------------------------------- test.js:42:23
 
-Invalid check of number literal `1` against `Literal` [1] because number [2] is incompatible with string literal
-`foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   test.js:42:23
+   42| if (true && (false || x === 1)) {} // Error
+                             ^^^^^^^
+
+References:
+   test.js:40:23
+   40| if (true && (false || x === 'bar')) {} // Error
+                             ^ [1]
    test.js:42:29
    42| if (true && (false || x === 1)) {} // Error
                                    ^ [2]
-
-References:
    test.js:2:16
     2| declare var x: Literal;
-                      ^^^^^^^ [1]
+                      ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:43:31
+Error ---------------------------------------------------------------------------------------------------- test.js:43:23
 
-Cannot compare number literal `1` [1] with property `p` of `o` [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare property `p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
 
-   test.js:43:31
+   test.js:43:23
    43| if (true && (false || o.p === 1)) {} // Error
-                                     ^ [1]
+                             ^^^^^^^^^
 
 References:
    test.js:41:23
    41| if (true && (false || o.p === 'bar')) {} // Error
-                             ^ [2]
+                             ^^^ [1]
+   test.js:43:31
+   43| if (true && (false || o.p === 1)) {} // Error
+                                     ^ [2]
    test.js:3:20
     3| declare var o: {p: Literal}
                           ^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:51:10
+Error ----------------------------------------------------------------------------------------------------- test.js:51:5
 
-Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   test.js:51:5
+   51|     case 'bar': // Error
+           ^^^^^^^^^^
+
+References:
+   test.js:45:13
+   45| declare var nullableX: ?Literal;
+                   ^^^^^^^^^ [1]
    test.js:51:10
    51|     case 'bar': // Error
                 ^^^^^ [2]
 
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:5
+
+Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
+
+   test.js:52:5
+   52|     case 1: // Error
+           ^^^^^^
+
 References:
-   test.js:45:24
+   test.js:45:13
    45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:52:10
-
-Invalid check of number literal `1` against nullable `Literal` [1] because number [2] is incompatible with string
-literal `foo` [3]. [incompatible-type]
-
+                   ^^^^^^^^^ [1]
    test.js:52:10
    52|     case 1: // Error
                 ^ [2]
 
+
+Error ----------------------------------------------------------------------------------------------------- test.js:58:5
+
+Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
+
+   test.js:58:5
+   58|     case 'bar': // Error
+           ^^^^^^^^^^
+
 References:
-   test.js:45:24
-   45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:58:10
-
-Cannot compare string literal `bar` [1] with property `p` of `nullableO` [2] because string literal `bar` [1] is
-incompatible with string literal `foo` [3]. [incompatible-type]
-
+   test.js:56:11
+   56|   switch (nullableO?.p) {
+                 ^^^^^^^^^^^^ [1]
    test.js:58:10
    58|     case 'bar': // Error
-                ^^^^^ [1]
+                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:59:5
+
+Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
+
+   test.js:59:5
+   59|     case 1: // Error
+           ^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:59:10
-
-Cannot compare number literal `1` [1] with property `p` of `nullableO` [2] because number [1] is incompatible with
-string literal `foo` [3]. [incompatible-type]
-
+   test.js:56:11
+   56|   switch (nullableO?.p) {
+                 ^^^^^^^^^^^^ [1]
    test.js:59:10
    59|     case 1: // Error
-                ^ [1]
+                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:66:7
+
+Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
+
+   test.js:66:7
+   66|   if (nullableX === 'bar') {} // Error
+             ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:66:21
-
-Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
-with string literal `foo` [3]. [incompatible-type]
-
+   test.js:45:13
+   45| declare var nullableX: ?Literal;
+                   ^^^^^^^^^ [1]
    test.js:66:21
    66|   if (nullableX === 'bar') {} // Error
                            ^^^^^ [2]
 
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:7
+
+Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
+
+   test.js:67:7
+   67|   if (nullableX === 1) {} // Error
+             ^^^^^^^^^^^^^^^
+
 References:
-   test.js:45:24
+   test.js:45:13
    45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:67:21
-
-Invalid check of number literal `1` against nullable `Literal` [1] because number [2] is incompatible with string
-literal `foo` [3]. [incompatible-type]
-
+                   ^^^^^^^^^ [1]
    test.js:67:21
    67|   if (nullableX === 1) {} // Error
                            ^ [2]
 
+
+Error ----------------------------------------------------------------------------------------------------- test.js:70:7
+
+Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
+
+   test.js:70:7
+   70|   if (nullableO?.p === 'bar') {} // Error
+             ^^^^^^^^^^^^^^^^^^^^^^
+
 References:
-   test.js:45:24
-   45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:70:24
-
-Cannot compare string literal `bar` [1] with property `p` of `nullableO` [2] because string literal `bar` [1] is
-incompatible with string literal `foo` [3]. [incompatible-type]
-
+   test.js:70:7
+   70|   if (nullableO?.p === 'bar') {} // Error
+             ^^^^^^^^^^^^ [1]
    test.js:70:24
    70|   if (nullableO?.p === 'bar') {} // Error
-                              ^^^^^ [1]
+                              ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:7
+
+Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
+
+   test.js:71:7
+   71|   if (nullableO?.p === 1) {} // Error
+             ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:71:24
-
-Cannot compare number literal `1` [1] with property `p` of `nullableO` [2] because number [1] is incompatible with
-string literal `foo` [3]. [incompatible-type]
-
+   test.js:71:7
+   71|   if (nullableO?.p === 1) {} // Error
+             ^^^^^^^^^^^^ [1]
    test.js:71:24
    71|   if (nullableO?.p === 1) {} // Error
-                              ^ [1]
+                              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:76:25
+
+Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
+
+   test.js:76:25
+   76|   if (true && (false || nullableX === 'bar')) {} // Error
+                               ^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:76:39
-
-Invalid check of string literal `bar` against nullable `Literal` [1] because string literal `bar` [2] is incompatible
-with string literal `foo` [3]. [incompatible-type]
-
+   test.js:45:13
+   45| declare var nullableX: ?Literal;
+                   ^^^^^^^^^ [1]
    test.js:76:39
    76|   if (true && (false || nullableX === 'bar')) {} // Error
                                              ^^^^^ [2]
 
+
+Error ---------------------------------------------------------------------------------------------------- test.js:77:25
+
+Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
+
+   test.js:77:25
+   77|   if (true && (false || nullableO?.p === 'bar')) {} // Error
+                               ^^^^^^^^^^^^^^^^^^^^^^
+
 References:
-   test.js:45:24
-   45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:77:42
-
-Cannot compare string literal `bar` [1] with property `p` of `nullableO` [2] because string literal `bar` [1] is
-incompatible with string literal `foo` [3]. [incompatible-type]
-
+   test.js:77:25
+   77|   if (true && (false || nullableO?.p === 'bar')) {} // Error
+                               ^^^^^^^^^^^^ [1]
    test.js:77:42
    77|   if (true && (false || nullableO?.p === 'bar')) {} // Error
-                                                ^^^^^ [1]
+                                                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:78:25
+
+Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
+
+   test.js:78:25
+   78|   if (true && (false || nullableX === 1)) {} // Error
+                               ^^^^^^^^^^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:78:39
-
-Invalid check of number literal `1` against nullable `Literal` [1] because number [2] is incompatible with string
-literal `foo` [3]. [incompatible-type]
-
+   test.js:45:13
+   45| declare var nullableX: ?Literal;
+                   ^^^^^^^^^ [1]
    test.js:78:39
    78|   if (true && (false || nullableX === 1)) {} // Error
                                              ^ [2]
 
+
+Error ---------------------------------------------------------------------------------------------------- test.js:79:25
+
+Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
+
+   test.js:79:25
+   79|   if (true && (false || nullableO?.p === 1)) {} // Error
+                               ^^^^^^^^^^^^^^^^^^
+
 References:
-   test.js:45:24
-   45| declare var nullableX: ?Literal;
-                              ^^^^^^^^ [1]
-   test.js:45:25
-   45| declare var nullableX: ?Literal;
-                               ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:79:42
-
-Cannot compare number literal `1` [1] with property `p` of `nullableO` [2] because number [1] is incompatible with
-string literal `foo` [3]. [incompatible-type]
-
+   test.js:79:25
+   79|   if (true && (false || nullableO?.p === 1)) {} // Error
+                               ^^^^^^^^^^^^ [1]
    test.js:79:42
    79|   if (true && (false || nullableO?.p === 1)) {} // Error
-                                                ^ [1]
+                                                ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:84:7
+
+Cannot compare `b1` [1] to boolean literal `false` [2], because boolean literal `true` [3] is not a subtype of boolean
+literal `false` [2] and boolean literal `false` [2] is not a subtype of boolean literal `true` [3]. In **rare** cases,
+these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
+union of both types to pass the flow check.  [invalid-compare]
+
+   test.js:84:7
+   84|   if (b1 === false) {} // error
+             ^^^^^^^^^^^^
 
 References:
-   test.js:46:13
-   46| declare var nullableO: ?{p: Literal}
-                   ^^^^^^^^^ [2]
-   test.js:46:29
-   46| declare var nullableO: ?{p: Literal}
-                                   ^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:84:14
-
-Invalid check of boolean literal `false` against boolean literal `true` [1] because boolean literal `false` [2] is
-incompatible with boolean literal `true` [1]. [incompatible-type]
-
+   test.js:82:39
+   82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                             ^^ [1]
    test.js:84:14
    84|   if (b1 === false) {} // error
                     ^^^^^ [2]
-
-References:
    test.js:82:43
    82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                 ^^^^ [1]
+                                                 ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:86:14
+Error ----------------------------------------------------------------------------------------------------- test.js:86:7
 
-Invalid check of boolean literal `false` against boolean literal `true` [1] because boolean literal `false` [2] is
-incompatible with boolean literal `true` [1]. [incompatible-type]
+Cannot compare `b1` [1] to boolean literal `false` [2], because boolean literal `true` [3] is not a subtype of boolean
+literal `false` [2] and boolean literal `false` [2] is not a subtype of boolean literal `true` [3]. In **rare** cases,
+these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
+union of both types to pass the flow check.  [invalid-compare]
 
+   test.js:86:7
+   86|   if (b1 !== false) {} // error
+             ^^^^^^^^^^^^
+
+References:
+   test.js:82:39
+   82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                             ^^ [1]
    test.js:86:14
    86|   if (b1 !== false) {} // error
                     ^^^^^ [2]
-
-References:
    test.js:82:43
    82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                 ^^^^ [1]
+                                                 ^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:88:14
+Error ----------------------------------------------------------------------------------------------------- test.js:88:7
 
-Invalid check of boolean literal `true` against boolean literal `false` [1] because boolean literal `true` [2] is
-incompatible with boolean literal `false` [1]. [incompatible-type]
+Cannot compare `b2` [1] to boolean literal `true` [2], because boolean literal `false` [3] is not a subtype of boolean
+literal `true` [2] and boolean literal `true` [2] is not a subtype of boolean literal `false` [3]. In **rare** cases,
+these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
+union of both types to pass the flow check.  [invalid-compare]
 
+   test.js:88:7
+   88|   if (b2 === true) {} // error
+             ^^^^^^^^^^^
+
+References:
+   test.js:82:49
+   82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                       ^^ [1]
    test.js:88:14
    88|   if (b2 === true) {} // error
                     ^^^^ [2]
-
-References:
    test.js:82:53
    82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                           ^^^^^ [1]
+                                                           ^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:90:14
+Error ----------------------------------------------------------------------------------------------------- test.js:90:7
 
-Invalid check of boolean literal `true` against boolean literal `false` [1] because boolean literal `true` [2] is
-incompatible with boolean literal `false` [1]. [incompatible-type]
+Cannot compare `b2` [1] to boolean literal `true` [2], because boolean literal `false` [3] is not a subtype of boolean
+literal `true` [2] and boolean literal `true` [2] is not a subtype of boolean literal `false` [3]. In **rare** cases,
+these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
+union of both types to pass the flow check.  [invalid-compare]
 
+   test.js:90:7
+   90|   if (b2 !== true) {} // error
+             ^^^^^^^^^^^
+
+References:
+   test.js:82:49
+   82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
+                                                       ^^ [1]
    test.js:90:14
    90|   if (b2 !== true) {} // error
                     ^^^^ [2]
-
-References:
    test.js:82:53
    82| function bool_literal_subtyping_check(b1: true, b2: false, b3: boolean) {
-                                                           ^^^^^ [1]
+                                                           ^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:109:17
+Error ---------------------------------------------------------------------------------------------------- test.js:105:7
 
-Cannot compare string literal `bar` [1] with property `p` of call of `o` [2] because string literal `bar` [1] is
-incompatible with string literal `foo` [3]. [incompatible-type]
+Cannot compare call of `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
-   test.js:109:17
+   test.js:105:7
+   105|   if (x() === 'bar') {} // Error
+              ^^^^^^^^^^^^^
+
+References:
+   test.js:105:7
+   105|   if (x() === 'bar') {} // Error
+              ^^^ [1]
+   test.js:105:15
+   105|   if (x() === 'bar') {} // Error
+                      ^^^^^ [2]
+   test.js:100:12
+   100|   x: () => Literal,
+                   ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:106:7
+
+Cannot compare call of `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
+
+   test.js:106:7
+   106|   if (x() === 1) {} // Error
+              ^^^^^^^^^
+
+References:
+   test.js:106:7
+   106|   if (x() === 1) {} // Error
+              ^^^ [1]
+   test.js:106:15
+   106|   if (x() === 1) {} // Error
+                      ^ [2]
+   test.js:100:12
+   100|   x: () => Literal,
+                   ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:109:7
+
+Cannot compare `o().p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
+
+   test.js:109:7
    109|   if (o().p === 'bar') {} // Error
-                        ^^^^^ [1]
+              ^^^^^^^^^^^^^^^
 
 References:
    test.js:109:7
    109|   if (o().p === 'bar') {} // Error
-              ^^^ [2]
+              ^^^^^ [1]
+   test.js:109:17
+   109|   if (o().p === 'bar') {} // Error
+                        ^^^^^ [2]
    test.js:101:16
    101|   o: () => {p: Literal},
                        ^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:110:17
+Error ---------------------------------------------------------------------------------------------------- test.js:110:7
 
-Cannot compare number literal `1` [1] with property `p` of call of `o` [2] because number [1] is incompatible with
-string literal `foo` [3]. [incompatible-type]
+Cannot compare `o().p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
 
-   test.js:110:17
+   test.js:110:7
    110|   if (o().p === 1) {} // Error
-                        ^ [1]
+              ^^^^^^^^^^^
 
 References:
    test.js:110:7
    110|   if (o().p === 1) {} // Error
-              ^^^ [2]
+              ^^^^^ [1]
+   test.js:110:17
+   110|   if (o().p === 1) {} // Error
+                        ^ [2]
    test.js:101:16
    101|   o: () => {p: Literal},
                        ^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:113:17
+Error ---------------------------------------------------------------------------------------------------- test.js:113:7
 
-Cannot compare string literal `bar` [1] with property `q` of `m.p` [2] because string literal `bar` [1] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot compare `m.p.q` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
+literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
+types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
+of both types to pass the flow check.  [invalid-compare]
 
-   test.js:113:17
+   test.js:113:7
    113|   if (m.p.q === 'bar') {} // Error
-                        ^^^^^ [1]
+              ^^^^^^^^^^^^^^^
 
 References:
    test.js:113:7
    113|   if (m.p.q === 'bar') {} // Error
-              ^^^ [2]
+              ^^^^^ [1]
+   test.js:113:17
+   113|   if (m.p.q === 'bar') {} // Error
+                        ^^^^^ [2]
    test.js:102:14
    102|   m: {p: {q: Literal}},
                      ^^^^^^^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:114:17
+Error ---------------------------------------------------------------------------------------------------- test.js:114:7
 
-Cannot compare number literal `1` [1] with property `q` of `m.p` [2] because number [1] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot compare `m.p.q` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
+literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
 
-   test.js:114:17
+   test.js:114:7
    114|   if (m.p.q === 1) {} // Error
-                        ^ [1]
+              ^^^^^^^^^^^
 
 References:
    test.js:114:7
    114|   if (m.p.q === 1) {} // Error
-              ^^^ [2]
+              ^^^^^ [1]
+   test.js:114:17
+   114|   if (m.p.q === 1) {} // Error
+                        ^ [2]
    test.js:102:14
    102|   m: {p: {q: Literal}},
                      ^^^^^^^ [3]
 
 
 
-Found 43 errors
+Found 45 errors

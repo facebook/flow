@@ -102,8 +102,8 @@ function complex_expression (
   m: {p: {q: Literal}},
 ) {
   if (x() === 'foo') {}
-  if (x() === 'bar') {} // TODO Error
-  if (x() === 1) {} // TODO Error
+  if (x() === 'bar') {} // Error
+  if (x() === 1) {} // Error
 
   if (o().p === 'foo') {}
   if (o().p === 'bar') {} // Error
