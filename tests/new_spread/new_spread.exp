@@ -1166,9 +1166,9 @@ Cannot cast `o1` to union type because: [incompatible-type]
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `p` is missing in object type [3] but exists in object type [4]. This optional property of object
    type [4] is invariantly typed. To fix,
-   - Either make object type [3] and object type [4] exactly the same
-   - Or make this optional property readonly in object type [4]
-   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+   - Either make `{q: U, ...}` [5] and `{p?: T, ...}` [4] exactly the same
+   - Or make object type [4] readonly. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1187,6 +1187,9 @@ References:
    type_union.js:9:6
    9| (o1: {p?:T}|{q?:U}); // ok
            ^^^^^^ [4]
+   type_union.js:7:11
+   7| type O1 = {...{p:T}|{q:U}};
+                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
@@ -1196,9 +1199,9 @@ Cannot cast `o1` to union type because: [incompatible-type]
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `q` is missing in object type [3] but exists in object type [4]. This optional property of object
    type [4] is invariantly typed. To fix,
-   - Either make object type [3] and object type [4] exactly the same
-   - Or make this optional property readonly in object type [4]
-   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+   - Either make `{p: T, ...}` [5] and `{q?: U, ...}` [4] exactly the same
+   - Or make object type [4] readonly. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1217,6 +1220,9 @@ References:
    type_union.js:9:13
    9| (o1: {p?:T}|{q?:U}); // ok
                   ^^^^^^ [4]
+   type_union.js:7:11
+   7| type O1 = {...{p:T}|{q:U}};
+                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:17

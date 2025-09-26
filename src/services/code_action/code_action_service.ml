@@ -1419,6 +1419,14 @@ let ast_transforms_of_error
                   } ));
         _;
       }
+  | Error_message.EPropsNotFoundInInvariantSubtyping
+      {
+        lower_obj_loc = lower_loc;
+        upper_obj_loc = upper_loc;
+        lower_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+        upper_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+        _;
+      }
     when match lower_desc with
          | Reason.RObjectLit
          | Reason.RObjectLit_UNSOUND

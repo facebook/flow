@@ -624,26 +624,28 @@ module Make (Flow : INPUT) : OUTPUT = struct
       Base.Option.iter (Nel.of_list regular_missing) ~f:(fun props ->
           let error_message =
             Error_message.EPropsNotFoundInSubtyping
-              {
-                prop_names = props;
-                reason_lower = lreason;
-                reason_upper = ureason;
-                use_op;
-                due_to_neutral_optional_property = false;
-              }
+              { prop_names = props; reason_lower = lreason; reason_upper = ureason; use_op }
           in
           add_output cx error_message;
           ()
       );
       Base.Option.iter (Nel.of_list rhs_neutral_optional) ~f:(fun props ->
+          let t1 = DefT (lreason, ObjT l_obj) in
+          let t2 = DefT (ureason, ObjT u_obj) in
+          let lower_obj_loc = def_loc_of_reason lreason in
+          let upper_obj_loc = def_loc_of_reason ureason in
+          let open Flow_intermediate_error_types in
           let error_message =
-            Error_message.EPropsNotFoundInSubtyping
+            Error_message.EPropsNotFoundInInvariantSubtyping
               {
                 prop_names = props;
                 reason_lower = lreason;
                 reason_upper = ureason;
+                lower_obj_loc;
+                upper_obj_loc;
+                lower_obj_desc = TypeOrTypeDesc.Type t1;
+                upper_obj_desc = TypeOrTypeDesc.Type t2;
                 use_op;
-                due_to_neutral_optional_property = true;
               }
           in
           add_output cx error_message;

@@ -95,7 +95,16 @@ and 'loc t' =
       reason_lower: 'loc virtual_reason;
       reason_upper: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
-      due_to_neutral_optional_property: bool;
+    }
+  | EPropsNotFoundInInvariantSubtyping of {
+      prop_names: name Nel.t;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      lower_obj_loc: 'loc;
+      upper_obj_loc: 'loc;
+      lower_obj_desc: 'loc TypeOrTypeDesc.t;
+      upper_obj_desc: 'loc TypeOrTypeDesc.t;
+      use_op: 'loc virtual_use_op;
     }
   | EPropsExtraAgainstExactObject of {
       prop_names: name Nel.t;
@@ -1001,9 +1010,24 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationMultiplatform -> ExplanationMultiplatform
   | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
-  | ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper } ->
+  | ExplanationPropertyMissingDueToNeutralOptionalProperty
+      {
+        props_plural;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        upper_object_reason;
+      } ->
     ExplanationPropertyMissingDueToNeutralOptionalProperty
-      { props_plural; lower = map_reason lower; upper = map_reason upper }
+      {
+        props_plural;
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) lower_obj_desc;
+        upper_obj_desc = Base.Result.map_error ~f:(Reason.map_desc_locs f) upper_obj_desc;
+        upper_object_reason = map_reason upper_object_reason;
+      }
   | ExplanationReactComponentPropsDeepReadOnly loc ->
     ExplanationReactComponentPropsDeepReadOnly (f loc)
   | ExplanationReactComponentRefRequirement -> ExplanationReactComponentRefRequirement
@@ -1128,15 +1152,35 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         use_op = map_use_op use_op;
         suggestion;
       }
-  | EPropsNotFoundInSubtyping
-      { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+  | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
     EPropsNotFoundInSubtyping
       {
         prop_names;
         reason_lower = map_reason reason_lower;
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
-        due_to_neutral_optional_property;
+      }
+  | EPropsNotFoundInInvariantSubtyping
+      {
+        prop_names;
+        reason_lower;
+        reason_upper;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        use_op;
+      } ->
+    EPropsNotFoundInInvariantSubtyping
+      {
+        prop_names;
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        lower_obj_loc = f lower_obj_loc;
+        upper_obj_loc = f upper_obj_loc;
+        lower_obj_desc = TypeOrTypeDesc.map_loc f lower_obj_desc;
+        upper_obj_desc = TypeOrTypeDesc.map_loc f upper_obj_desc;
+        use_op = map_use_op use_op;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     EPropsExtraAgainstExactObject
@@ -1806,7 +1850,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETemporaryHardcodedErrorForPrototyping (r, s) ->
     ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
 
-let convert_type_to_type_desc ~f = function
+let rec convert_type_to_type_desc ~f = function
   | EInvariantSubtypingWithUseOp
       { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
     let explanation =
@@ -1887,6 +1931,37 @@ let convert_type_to_type_desc ~f = function
         use_op;
         explanation;
       }
+  | EPropsNotFoundInInvariantSubtyping
+      {
+        prop_names;
+        reason_lower;
+        reason_upper;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        use_op;
+      } ->
+    EPropsNotFoundInInvariantSubtyping
+      {
+        prop_names;
+        reason_lower;
+        reason_upper;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc = f lower_obj_desc;
+        upper_obj_desc = f upper_obj_desc;
+        use_op;
+      }
+  | EIncompatibleSpeculation { use_op; loc; branches } ->
+    let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
+    EIncompatibleSpeculation { use_op; loc; branches }
+  | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
+    let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
+    EIncompatibleDefs { use_op; reason_lower; reason_upper; branches }
+  | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
+    let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
+    EUnionSpeculationFailed { use_op; reason; op_reasons; branches }
   | e -> e
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
@@ -1906,6 +1981,7 @@ let util_use_op_of_msg nope util = function
   | EPropNotFoundInLookup { use_op; _ } -> util use_op
   | EPropNotFoundInSubtyping { use_op; _ } -> util use_op
   | EPropsNotFoundInSubtyping { use_op; _ } -> util use_op
+  | EPropsNotFoundInInvariantSubtyping { use_op; _ } -> util use_op
   | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
   | EIndexerCheckFailed { use_op; _ } -> util use_op
   | EPropNotReadable { use_op; _ } -> util use_op
@@ -2396,6 +2472,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropNotFoundInLookup _
   | EPropNotFoundInSubtyping _
   | EPropsNotFoundInSubtyping _
+  | EPropsNotFoundInInvariantSubtyping _
   | EPropsExtraAgainstExactObject _
   | EIndexerCheckFailed _
   | EExpectedBooleanLit _
@@ -2618,7 +2695,16 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
-      due_to_neutral_optional_property: bool;
+    }
+  | PropsMissingInInvariantSubtyping of {
+      props: string Nel.t;
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
+      lower_obj_loc: 'loc;
+      upper_obj_loc: 'loc;
+      lower_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      use_op: 'loc Type.virtual_use_op;
     }
   | PropsExtraAgainstExactObject of {
       props: string Nel.t;
@@ -2639,6 +2725,10 @@ type 'loc friendly_message_recipe =
       props: (string option * Polarity.t * Polarity.t) Nel.t;
       use_op: 'loc Type.virtual_use_op;
     }
+
+let expect_type_desc = function
+  | TypeOrTypeDesc.Type _ -> failwith "At this point, we should no longer have TypeOrTypeDesc.Type"
+  | TypeOrTypeDesc.TypeDesc desc -> desc
 
 let friendly_message_of_msg = function
   | EIncompatible { lower = (reason_lower, _); upper = (reason_upper, upper_kind); use_op } ->
@@ -2753,15 +2843,30 @@ let friendly_message_of_msg = function
         reason_indexer = None;
         use_op;
       }
-  | EPropsNotFoundInSubtyping
-      { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+  | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
     PropsMissingInSubtyping
+      { props = Nel.map display_string_of_name prop_names; reason_lower; reason_upper; use_op }
+  | EPropsNotFoundInInvariantSubtyping
+      {
+        prop_names;
+        reason_lower;
+        reason_upper;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc;
+        upper_obj_desc;
+        use_op;
+      } ->
+    PropsMissingInInvariantSubtyping
       {
         props = Nel.map display_string_of_name prop_names;
         reason_lower;
         reason_upper;
+        lower_obj_loc;
+        upper_obj_loc;
+        lower_obj_desc = expect_type_desc lower_obj_desc;
+        upper_obj_desc = expect_type_desc upper_obj_desc;
         use_op;
-        due_to_neutral_optional_property;
       }
   | EPropsExtraAgainstExactObject { prop_names; reason_l_obj; reason_r_obj; use_op } ->
     PropsExtraAgainstExactObject
@@ -3102,11 +3207,6 @@ let friendly_message_of_msg = function
     IncompatibleSubtyping { reason_lower; reason_upper; use_op; explanation }
   | EInvariantSubtypingWithUseOp
       { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
-    let expect_type_desc = function
-      | TypeOrTypeDesc.Type _ ->
-        failwith "At this point, we should no longer have TypeOrTypeDesc.Type"
-      | TypeOrTypeDesc.TypeDesc desc -> desc
-    in
     let explanation =
       match explanation with
       | None -> None
@@ -3808,6 +3908,7 @@ let error_code_of_message err : error_code option =
     react_rule_of_use_op use_op ~default
   | EPropNotFoundInSubtyping { use_op; _ }
   | EPropsNotFoundInSubtyping { use_op; _ }
+  | EPropsNotFoundInInvariantSubtyping { use_op; _ }
   | EPropsExtraAgainstExactObject { use_op; _ } ->
     react_rule_of_use_op use_op ~default:Error_codes.IncompatibleType
   | EIndexerCheckFailed { use_op; _ } ->

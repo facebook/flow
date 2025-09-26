@@ -11,3 +11,8 @@ type B = {v1: string | number, v2: string | number};
 const bar = {v1: '', v2: 2};
 bar as B;
 //^
+
+type C = {v?: string};
+const baz = {};
+baz as C;
+//^
