@@ -2,4 +2,3 @@
 all=true
 component_syntax=true
 no_flowlib=false
-experimental.natural_inference.jsx_literal=true

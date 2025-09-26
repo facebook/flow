@@ -897,7 +897,7 @@ module Make
       | JSXElement _
       | JSXFragment _ ->
         (match Context.jsx cx with
-        | Options.Jsx_react -> not (Context.natural_inference_jsx_literal cx)
+        | Options.Jsx_react -> false
         | Options.Jsx_pragma _ -> true)
       | _ -> true
     then
@@ -6039,13 +6039,10 @@ module Make
       (unresolved_params, (children_loc, children'))
 
   and should_generalize_jsx cx ~has_hint ~as_const jsx_loc =
-    if Context.natural_inference_jsx_literal cx then
-      if as_const then
-        false
-      else
-        not (Lazy.force has_hint || Natural_inference.loc_has_hint cx jsx_loc)
-    else
+    if as_const then
       false
+    else
+      not (Lazy.force has_hint || Natural_inference.loc_has_hint cx jsx_loc)
 
   and jsx cx ~should_generalize expr_loc e : Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element =
     let open Ast.JSX in

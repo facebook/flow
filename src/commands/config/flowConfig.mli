@@ -204,14 +204,8 @@ val multi_platform_ambient_supports_platform_project_overrides :
 
 val munge_underscores : config -> bool
 
-val natural_inference_array_object_literal_implicit_instantiation_fix : config -> bool
-
 val natural_inference_array_object_literal_implicit_instantiation_fix_excludes :
   config -> string list
-
-val natural_inference_jsx_literal : config -> bool
-
-val natural_inference_jsx_literal_excludes : config -> string list
 
 val no_flowlib : config -> bool
 
