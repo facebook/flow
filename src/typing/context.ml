@@ -49,11 +49,6 @@ type metadata = {
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
   constant_condition: bool;
-  constant_condition_boolean_literal_includes: string list;
-  constant_condition_null_void_includes: string list;
-  constant_condition_function_includes: string list;
-  invalid_comparison_general_includes: string list;
-  invalid_comparison_null_check_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -314,12 +309,6 @@ let metadata_of_options options =
     enable_pattern_matching = Options.enable_pattern_matching options;
     pattern_matching_includes = Options.pattern_matching_includes options;
     constant_condition = Options.constant_condition options;
-    constant_condition_boolean_literal_includes =
-      Options.constant_condition_boolean_literal_includes options;
-    constant_condition_null_void_includes = Options.constant_condition_null_void_includes options;
-    constant_condition_function_includes = Options.constant_condition_function_includes options;
-    invalid_comparison_general_includes = Options.invalid_comparison_general_includes options;
-    invalid_comparison_null_check_includes = Options.invalid_comparison_null_check_includes options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -574,55 +563,7 @@ let enable_pattern_matching cx =
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
-let enable_constant_condition_boolean_literal cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_boolean_literal_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_constant_condition_null_void cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_null_void_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_constant_condition_function cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_function_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_invalid_comparison_general cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.invalid_comparison_general_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_invalid_comparison_null_check cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.invalid_comparison_null_check_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+let enable_constant_condition cx = cx.metadata.constant_condition
 
 let is_utility_type_deprecated cx t =
   match SMap.find_opt t cx.metadata.deprecated_utilities with

@@ -296,10 +296,7 @@ module Operators = struct
       | (_, DefT (_, EnumValueT _))
       | (DefT (_, EnumObjectT _), _)
       | (_, DefT (_, EnumObjectT _)) ->
-        if
-          Context.enable_invalid_comparison_general cx
-          && Context.enable_invalid_comparison_null_check cx
-        then
+        if Context.enable_constant_condition cx then
           None
         else
           Some (Lazy.force comparison_error)
