@@ -339,7 +339,7 @@ Cannot cast `any` to `Foo` because properties `a` and `b` of `{a: string, b: str
 those of mapped type [2]. 
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
-- Either make `{a: string, b: string}` [1] and mapped type [2] exactly the same
+- Either make `{a: string, b: string}` [1] and mapped type [3] exactly the same
 - Or make properties `a` and `b` in `IdentityMap` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -355,6 +355,9 @@ References:
    identity.js:20:5
    20| }): Foo);
            ^^^ [2]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:22:7
@@ -393,7 +396,7 @@ Cannot cast `foo` to object type because properties `a` and `b` of mapped type [
 `{a: string, b: string}` [2]. 
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
-- Either make mapped type [1] and `{a: string, b: string}` [2] exactly the same
+- Either make mapped type [3] and `{a: string, b: string}` [2] exactly the same
 - Or make properties `a` and `b` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -409,6 +412,9 @@ References:
    33|   b: string, // Error: number ~> string
    34| });
        ^ [2]
+   identity.js:3:23
+    3| type IdentityMap<O> = {[K in keyof O]: O[K]};
+                             ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:36:2
@@ -872,7 +878,7 @@ those of `{bar: empty, +baz: empty, foo: empty}` [2].
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make object type [1] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -884,6 +890,9 @@ References:
    import.js:18:12
    18|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   export.js:3:24
+    3| export type MappedO = {[key in keyof O]: O[key]};
+                              ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
@@ -951,7 +960,7 @@ those of `{bar: empty, +baz: empty, foo: empty}` [2].
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make object type [1] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
+- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -963,6 +972,9 @@ References:
    import.js:47:12
    47|   (mapped: {foo: empty, bar: empty, +baz: empty}); // ERROR
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   export.js:7:42
+    7| export type ParameterizedId<O: {...}> = {[key in keyof O]: O[key]};
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
@@ -1448,7 +1460,7 @@ those of `{bar: empty, foo: empty}` [2].
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make mapped type [1] and `{bar: empty, foo: empty}` [2] exactly the same
+- Either make mapped type [3] and `{bar: empty, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -1460,6 +1472,9 @@ References:
    non_homomorphic.js:12:12
    12|   (mapped: {foo: empty, bar: empty}); // ERROR 2x
                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:4:17
+    4|   type Mapped = {[key in Keys]: number};
+                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
@@ -1542,7 +1557,7 @@ exactly the same as those of `{bar: "baz", baz: "foo", foo: "bar"}` [2].
 
 The above-mentioned two types must be the same because properties `bar`, `baz`, and `foo` are invariantly typed. To fix
 the error,
-- Either make mapped type [1] and `{bar: "baz", baz: "foo", foo: "bar"}` [2] exactly the same
+- Either make mapped type [3] and `{bar: "baz", baz: "foo", foo: "bar"}` [2] exactly the same
 - Or make properties `bar`, `baz`, and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -1554,6 +1569,9 @@ References:
    non_homomorphic.js:40:23
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:35:62
+   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
+                                                                    ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
@@ -1581,7 +1599,7 @@ those of `{bar: empty, baz: number, foo: empty}` [2].
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make mapped type [1] and `{bar: empty, baz: number, foo: empty}` [2] exactly the same
+- Either make mapped type [3] and `{bar: empty, baz: number, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -1593,6 +1611,9 @@ References:
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   non_homomorphic.js:45:89
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
+                                                                                               ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
@@ -1653,7 +1674,7 @@ those of `{bar?: number, foo: string}` [2].
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make mapped type [1] and `{bar?: number, foo: string}` [2] exactly the same
+- Either make mapped type [3] and `{bar?: number, foo: string}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -1665,6 +1686,9 @@ References:
    optionality.js:9:14
    9|   (preserve: {foo: string, bar?: number}); // Error string ~> number, number ~> string
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   optionality.js:5:19
+   5|   type Preserve = {[key in keyof O]: O[key]};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- optionality.js:13:10

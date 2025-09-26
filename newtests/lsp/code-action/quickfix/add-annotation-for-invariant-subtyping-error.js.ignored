@@ -5,3 +5,9 @@ type A = {v: string | number};
 const foo = {v: ''};
 foo as A;
 //^
+
+type B = {v1: string | number, v2: string | number};
+
+const bar = {v1: '', v2: 2};
+bar as B;
+//^

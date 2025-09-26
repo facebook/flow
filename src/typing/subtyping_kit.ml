@@ -583,8 +583,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         let explanation =
           LazyExplanationInvariantSubtypingDueToMutableProperties
             {
-              lower_obj_loc = lower_loc;
-              upper_obj_loc = upper_loc;
+              lower_obj_loc = def_loc_of_reason lreason;
+              upper_obj_loc = def_loc_of_reason ureason;
               lower_obj_desc = TypeOrTypeDesc.Type t1;
               upper_obj_desc = TypeOrTypeDesc.Type t2;
               upper_object_reason = ureason;

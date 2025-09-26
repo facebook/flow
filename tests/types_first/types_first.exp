@@ -144,7 +144,7 @@ Cannot cast `o` to `O` because properties `x` and `y` of object literal [1] are 
 `O` [2]. 
 
 The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
-- Either annotate object literal [1] with `O` [2]
+- Either annotate object literal [3] with `O` [4]
 - Or make properties `x` and `y` in `O` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -156,6 +156,20 @@ References:
    test.js:10:5
    10| (o: O); // error: number (property x) <~/~> string
            ^ [2]
+   import-value3.js:2:12
+                  v
+    2| const o2 = {
+    3|   x: 0,
+    4|   y: o1,
+    5| };
+       ^ [3]
+   import-type5.js:3:17
+                       v----------------------------------
+    3| export type O = { // mutually recursive object type
+    4|   x: string;
+    5|   y: T;
+    6| }
+       ^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:2
@@ -164,7 +178,7 @@ Cannot cast `o.y` to `O` because properties `x` and `y` of object literal [1] ar
 `O` [2]. 
 
 The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
-- Either annotate object literal [1] with `O` [2]
+- Either annotate object literal [3] with `O` [4]
 - Or make properties `x` and `y` in `O` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -176,6 +190,20 @@ References:
    test.js:11:7
    11| (o.y: O); // error: number (property x) <~/~> string
              ^ [2]
+   import-value3.js:2:12
+                  v
+    2| const o2 = {
+    3|   x: 0,
+    4|   y: o1,
+    5| };
+       ^ [3]
+   import-type5.js:3:17
+                       v----------------------------------
+    3| export type O = { // mutually recursive object type
+    4|   x: string;
+    5|   y: T;
+    6| }
+       ^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:24

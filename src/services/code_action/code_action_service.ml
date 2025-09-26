@@ -1435,7 +1435,7 @@ let ast_transforms_of_error
         else
           None
     in
-    let make_readonly_code_action =
+    let make_readonly_code_action upper_ty =
       let transform ~cx ~file_sig:_ ~ast ~typed_ast:_ loc =
         Convert_type_to_readonly_form.convert
           ~ts_readonly_name:(Context.ts_utility_syntax cx)
@@ -1457,7 +1457,7 @@ let ast_transforms_of_error
       ]
     in
     (match error_loc_opt with
-    | None -> make_readonly_code_action
+    | None -> []
     | Some _ ->
       let upper_ty = Ty_utils.simplify_type ~merge_kinds:true upper_ty in
       (let transform ~cx ~file_sig ~ast ~typed_ast _ =
@@ -1488,7 +1488,7 @@ let ast_transforms_of_error
          confidence = BestEffort;
        }
       )
-      :: make_readonly_code_action)
+      :: make_readonly_code_action upper_ty)
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissingInLookup
