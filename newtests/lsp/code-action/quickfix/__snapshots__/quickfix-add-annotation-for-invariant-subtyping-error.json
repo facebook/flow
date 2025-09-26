@@ -33,6 +33,52 @@
           "Add suggested annotation to the literal"
         ]
       }
+    },
+    {
+      "title": "Make `A` readonly",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 9
+                },
+                "end": {
+                  "line": 2,
+                  "character": 29
+                }
+              },
+              "newText": "$ReadOnly<{ v: string | number }>"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 0
+                },
+                "end": {
+                  "line": 5,
+                  "character": 8
+                }
+              },
+              "newText": "foo as A"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_invariant_subtyping_error_with_readonly_conversion",
+          "Make `A` readonly"
+        ]
+      }
     }
   ]
 }
