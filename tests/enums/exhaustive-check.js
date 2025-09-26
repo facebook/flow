@@ -139,15 +139,15 @@ function f3(x: ?E) {
 
 function f4(x: E | F) {
   switch (x)  { // Error
-    case E.A: break; // Error
-    case E.B: break; // Error
+    case E.A: break; // ok: E <: E | F
+    case E.B: break; // ok: E <: E | F
   }
 }
 
 function f5(x: E | string) {
   switch (x)  {
-    case E.A: break; // Error
-    case E.B: break; // Error
+    case E.A: break; // ok: E <: E | string
+    case E.B: break; // ok: E <: E | string
   }
 }
 
@@ -186,28 +186,28 @@ enum N {
 }
 function f8(x: M | N, X: typeof M | typeof N) {
   switch (x) { // Error
-    case X.A: break; // Error
+    case X.A: break; // ok: M <: M | N
   }
 }
 
 function f9(x: E | F, X: typeof E & typeof F) {
   switch (x) {
-    case X.A: break;
-    case X.B: break;
+    case X.A: break; // ok: E & F <: E | F
+    case X.B: break; // ok: E & F <: E | F
   }
 }
 
 // Empty
 function f10(x: empty) {
   switch (x) {
-    case E.A: break;
-    case E.B: break;
+    case E.A: break; // error on comparison with empty
+    case E.B: break; // error on comparison with empty
   }
 }
 
 function f11(x: E, X: empty) {
   switch (x) { // Error
-    case X.A: break;
+    case X.A: break; // error on comparison with empty
   }
 }
 
