@@ -49,7 +49,6 @@ let metadata =
     natural_inference_array_object_literal_implicit_instantiation_fix_excludes = [];
     no_unchecked_indexed_access = false;
     pattern_matching_includes = [];
-    constant_condition = false;
     opaque_type_new_bound_syntax = true;
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;

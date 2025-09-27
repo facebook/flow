@@ -55,7 +55,6 @@ module Opts = struct
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
-    constant_condition: bool option;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -203,7 +202,6 @@ module Opts = struct
       casting_syntax = None;
       casting_syntax_only_support_as_excludes = [];
       component_syntax = false;
-      constant_condition = Some true;
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1084,9 +1082,6 @@ module Opts = struct
           ~multiple:true
           (fun opts v ->
             Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
-      );
-      ( "experimental.constant_condition",
-        boolean (fun opts v -> Ok { opts with constant_condition = Some v })
       );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
@@ -2015,8 +2010,6 @@ let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_r
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
-
-let constant_condition c = c.options.Opts.constant_condition
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 

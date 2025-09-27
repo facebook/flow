@@ -813,7 +813,8 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let detect_matching_props_violations cx =
+(* TODO(samzhou19815): Remove and cleanup `Context.matching_props` *)
+let _detect_matching_props_violations cx =
   let open Type in
   let peek =
     let open Type in
@@ -910,7 +911,8 @@ let detect_matching_props_violations cx =
   in
   Base.List.iter ~f:step matching_props_checks
 
-let detect_literal_subtypes =
+(* TODO(samzhou19815): Remove and cleanup `Context.literal_subtypes` *)
+let _detect_literal_subtypes =
   let open Type in
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
   let rec unwrap = function
@@ -1603,13 +1605,7 @@ let post_merge_checks cx file_sig ast tast metadata =
   detect_unnecessary_optional_chains cx;
   detect_constant_conditions cx;
   detect_import_export_errors cx ast metadata;
-  if Context.enable_constant_condition cx then begin
-    detect_invalid_strict_comparison cx
-  end;
-  if not (Context.enable_constant_condition cx) then begin
-    detect_matching_props_violations cx;
-    detect_literal_subtypes cx
-  end;
+  detect_invalid_strict_comparison cx;
   detect_unused_promises cx;
   check_union_opt cx;
   check_spread_prop_keys cx tast;
