@@ -117,7 +117,6 @@ let stub_metadata ~root ~checked =
     enable_jest_integration = false;
     enable_pattern_matching = true;
     pattern_matching_includes = [];
-    constant_condition = true;
     enable_relay_integration = false;
     exact_by_default = true;
     facebook_fbs = None;

@@ -48,7 +48,6 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
-  constant_condition: bool;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -305,7 +304,6 @@ let metadata_of_options options =
     enable_jest_integration = Options.enable_jest_integration options;
     enable_pattern_matching = Options.enable_pattern_matching options;
     pattern_matching_includes = Options.pattern_matching_includes options;
-    constant_condition = Options.constant_condition options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -555,8 +553,6 @@ let enable_pattern_matching cx =
     let filename = File_key.to_string (file cx) in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_constant_condition cx = cx.metadata.constant_condition
 
 let is_utility_type_deprecated cx t =
   match SMap.find_opt t cx.metadata.deprecated_utilities with

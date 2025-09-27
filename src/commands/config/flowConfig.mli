@@ -88,8 +88,6 @@ val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
 
-val constant_condition : config -> bool option
-
 val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option
