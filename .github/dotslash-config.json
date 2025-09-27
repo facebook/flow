@@ -13,11 +13,6 @@
             "format": "zip",
             "path": "flow/flow"
           },
-          "macos-x86_64": {
-            "regex": "^flow-osx-v.*.zip$",
-            "format": "zip",
-            "path": "flow/flow"
-          },
           "windows-x86_64": {
             "regex": "^flow-win64-v.*.zip$",
             "format": "zip",
