@@ -763,7 +763,7 @@ Cannot cast `o1` to object type because properties `p` and `q` of `{p: T, q: U, 
 those of `{p?: T, q?: U, ...}` [2]. 
 
 The above-mentioned two types must be the same because properties `p` and `q` are invariantly typed. To fix the error,
-- Either make `{p: T, q: U, ...}` [1] and `{p?: T, q?: U, ...}` [2] exactly the same
+- Either make `{p: T, q: U, ...}` [3] and `{p?: T, q?: U, ...}` [2] exactly the same
 - Or make properties `p` and `q` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -775,6 +775,9 @@ References:
    type_intersection.js:9:6
    9| (o1: {p?:T,q?:U}); // ok
            ^^^^^^^^^^^ [2]
+   type_intersection.js:7:11
+   7| type O1 = {...{p:T}&{q:U}};
+                ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
@@ -897,7 +900,7 @@ Cannot cast `o17` to object type because properties `p` and `q` of `{p: T, q: U,
 those of `{p?: T, q?: U, ...}` [2]. 
 
 The above-mentioned two types must be the same because properties `p` and `q` are invariantly typed. To fix the error,
-- Either make `{p: T, q: U, ...}` [1] and `{p?: T, q?: U, ...}` [2] exactly the same
+- Either make `{p: T, q: U, ...}` [3] and `{p?: T, q?: U, ...}` [2] exactly the same
 - Or make properties `p` and `q` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -909,6 +912,9 @@ References:
    type_intersection_optional.js:53:7
    53| (o17: {p?:T,q?:U}); // ok
              ^^^^^^^^^^^ [2]
+   type_intersection_optional.js:52:18
+   52| declare var o17: {...{p:T}&{q:U}};
+                        ^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
@@ -1160,9 +1166,9 @@ Cannot cast `o1` to union type because: [incompatible-type]
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `p` is missing in object type [3] but exists in object type [4]. This optional property of object
    type [4] is invariantly typed. To fix,
-   - Either make object type [3] and object type [4] exactly the same
-   - Or make this optional property readonly in object type [4]
-   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+   - Either make `{q: U, ...}` [5] and `{p?: T, ...}` [4] exactly the same
+   - Or make object type [4] readonly. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1181,6 +1187,9 @@ References:
    type_union.js:9:6
    9| (o1: {p?:T}|{q?:U}); // ok
            ^^^^^^ [4]
+   type_union.js:7:11
+   7| type O1 = {...{p:T}|{q:U}};
+                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
@@ -1190,9 +1199,9 @@ Cannot cast `o1` to union type because: [incompatible-type]
    https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `q` is missing in object type [3] but exists in object type [4]. This optional property of object
    type [4] is invariantly typed. To fix,
-   - Either make object type [3] and object type [4] exactly the same
-   - Or make this optional property readonly in object type [4]
-   See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+   - Either make `{p: T, ...}` [5] and `{q?: U, ...}` [4] exactly the same
+   - Or make object type [4] readonly. See
+   https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_union.js:9:2
    9| (o1: {p?:T}|{q?:U}); // ok
@@ -1211,6 +1220,9 @@ References:
    type_union.js:9:13
    9| (o1: {p?:T}|{q?:U}); // ok
                   ^^^^^^ [4]
+   type_union.js:7:11
+   7| type O1 = {...{p:T}|{q:U}};
+                ^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:17

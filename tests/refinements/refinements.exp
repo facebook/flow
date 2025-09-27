@@ -958,6 +958,31 @@ References:
                                ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------------- eq.js:6:9
+
+Cannot compare `x` [1] to `y` [2], because string [3] is not a subtype of number [4] and number [4] is not a subtype of
+string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+
+   eq.js:6:9
+   6|     if (x === y) {} // error: flagged by constant condition
+              ^^^^^^^
+
+References:
+   eq.js:4:12
+   4|   function(x: string, y: number) {
+                 ^ [1]
+   eq.js:4:23
+   4|   function(x: string, y: number) {
+                            ^ [2]
+   eq.js:4:15
+   4|   function(x: string, y: number) {
+                    ^^^^^^ [3]
+   eq.js:4:26
+   4|   function(x: string, y: number) {
+                               ^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
 Cannot compare string literal `foo` [1] to number literal `123` [2] with a non-strict equality check. Make sure the
@@ -994,28 +1019,24 @@ References:
                       ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ eq.js:20:17
+Error ------------------------------------------------------------------------------------------------------- eq.js:20:9
 
-Cannot compare number literal `123` [1] with property `y` of `x` [2] because: [incompatible-type]
- - Either cannot compare number literal `123` [1] with property `y` of `x` [2] because number [1] is incompatible with
-   string literal `foo` [3].
- - Or cannot compare number literal `123` [1] with property `y` of `x` [2] because number [1] is incompatible with
-   string literal `bar` [4].
+Cannot compare `x.y` [1] to number literal `123` [2], because `x.y` [1] is not a subtype of number literal `123` [2] and
+number literal `123` [2] is not a subtype of `x.y` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
-   eq.js:20:17
+   eq.js:20:9
    20|     if (x.y === 123) {} // error
-                       ^^^ [1]
+               ^^^^^^^^^^^
 
 References:
-   eq.js:18:12
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                  ^ [2]
-   eq.js:18:20
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                          ^^^^^ [3]
-   eq.js:18:35
-   18|   function(x: { y: 'foo' } | { y: 'bar' }) {
-                                         ^^^^^ [4]
+   eq.js:20:9
+   20|     if (x.y === 123) {} // error
+               ^^^ [1]
+   eq.js:20:17
+   20|     if (x.y === 123) {} // error
+                       ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- eval.js:21:14
@@ -1110,22 +1131,24 @@ References:
               ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------- flow_to_general.js:15:11
+Error ------------------------------------------------------------------------------------------ flow_to_general.js:15:5
 
-Invalid check of string literal `C` against optional nullable `T` [1] because string literal `C` [2] is incompatible
-with `T` [3]. [incompatible-type]
+Cannot compare `p` [1] to string literal `C` [2], because `p` [1] is not a subtype of string literal `C` [2] and string
+literal `C` [2] is not a subtype of `p` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
+   flow_to_general.js:15:5
+   15| if (p === 'C') {
+           ^^^^^^^^^
+
+References:
+   flow_to_general.js:13:6
+   13| let {p} = x;
+            ^ [1]
    flow_to_general.js:15:11
    15| if (p === 'C') {
                  ^^^ [2]
-
-References:
-   flow_to_general.js:12:21
-   12| declare var x: {p?: ?T};
-                           ^^ [1]
-   flow_to_general.js:12:22
-   12| declare var x: {p?: ?T};
-                            ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
@@ -2493,28 +2516,16 @@ References:
               ^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:32:16
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:32:11
 
-Refined at [1]
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
 
-   inclusion_check_widening.js:32:16
-   32| const y = x && x.f.g;
-                      ^
-
-References:
    inclusion_check_widening.js:32:11
-   32| const y = x && x.f.g;
-                 ^ [1]
-
-
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:35:11
-
-Invalid check of string literal `val` against null [1] because string [2] is incompatible with null [1].
-[incompatible-type]
-
-   inclusion_check_widening.js:35:11
-   35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
-                 ^^^^^ [2]
+   32| const y = x && x.f.g; // error: x is always null
+                 ^
 
 References:
    inclusion_check_widening.js:31:11
@@ -2522,22 +2533,56 @@ References:
                  ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:43:14
+Error -------------------------------------------------------------------------------- inclusion_check_widening.js:32:16
 
-Invalid check of string literal `a` against key set [1] because property `a` is missing in object type [2].
-[prop-missing]
+Refined at [1]
 
-   inclusion_check_widening.js:43:14
-   43| if (key2 === 'a') {} // error (key2 does not include 'a')
-                    ^^^
+   inclusion_check_widening.js:32:16
+   32| const y = x && x.f.g; // error: x is always null
+                      ^
 
 References:
-   inclusion_check_widening.js:40:28
-   40| type V<T: {...}> = { key2: $Keys<T> };
-                                  ^^^^^^^^ [1]
-   inclusion_check_widening.js:41:23
-   41| declare var column: V<{...}>;
-                             ^^^^^ [2]
+   inclusion_check_widening.js:32:11
+   32| const y = x && x.f.g; // error: x is always null
+                 ^ [1]
+
+
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:35:5
+
+Cannot compare `y` [1] to string literal `val` [2], because [3] is null and string literal `val` [2] does not contain
+null. Perhaps you meant to use `==`, which checks for both `undefined` and `null`? [invalid-compare]
+
+   inclusion_check_widening.js:35:5
+   35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
+           ^^^^^^^^^^^
+
+References:
+   inclusion_check_widening.js:32:7
+   32| const y = x && x.f.g; // error: x is always null
+             ^ [1]
+   inclusion_check_widening.js:35:11
+   35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
+                 ^^^^^ [2]
+   inclusion_check_widening.js:35:5
+   35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
+           ^ [3]
+
+
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:43:5
+
+Cannot compare `key2` [1] to string literal `a` [2], because `key2` [1] is empty.  [invalid-compare]
+
+   inclusion_check_widening.js:43:5
+   43| if (key2 === 'a') {} // error (key2 does not include 'a')
+           ^^^^^^^^^^^^
+
+References:
+   inclusion_check_widening.js:42:8
+   42| const {key2} = column;
+              ^^^^ [1]
+   inclusion_check_widening.js:43:14
+   43| if (key2 === 'a') {} // error (key2 does not include 'a')
+                    ^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:57:9
@@ -2571,19 +2616,24 @@ References:
                ^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- inclusion_check_widening.js:58:18
+Error --------------------------------------------------------------------------------- inclusion_check_widening.js:58:9
 
-Invalid check of number literal `0` against nullable `C` [1] because number [2] is incompatible with `C` [3].
-[incompatible-type]
+Cannot compare `prop` [1] to number literal `0` [2], because `C` [3] is not a subtype of number literal `0` [2] and
+number literal `0` [2] is not a subtype of `C` [3]. In **rare** cases, these types may have overlapping values but lack
+a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
+   inclusion_check_widening.js:58:9
+   58|         prop !== 0 // error (0 incompatible with C)
+               ^^^^^^^^^^
+
+References:
+   inclusion_check_widening.js:58:9
+   58|         prop !== 0 // error (0 incompatible with C)
+               ^^^^ [1]
    inclusion_check_widening.js:58:18
    58|         prop !== 0 // error (0 incompatible with C)
                         ^ [2]
-
-References:
-   inclusion_check_widening.js:49:22
-   49| type State = { prop: ?C };
-                            ^^ [1]
    inclusion_check_widening.js:49:23
    49| type State = { prop: ?C };
                              ^ [3]
@@ -3777,6 +3827,23 @@ References:
                            ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:96:35
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:96:35
+    96|   if (a.b) { while (p) { f(); if (p) continue; }     a.b.c; } // error
+                                          ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:54
 
 Refinement invalidated due to function call at [1]
@@ -3819,6 +3886,23 @@ References:
                            ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- invalidation.js:97:35
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:97:35
+    97|   if (a.b) { while (p) { f(); if (p) break;    }     a.b.c; } // error
+                                          ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:54
 
 Refinement invalidated due to function call at [1]
@@ -3859,6 +3943,23 @@ References:
    invalidation.js:98:21
    98|   if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
                            ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:98:35
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:98:35
+    98|   if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
+                                          ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:54
@@ -4029,6 +4130,23 @@ References:
                                    ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:104:50
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:104:50
+   104|   if (a.b) { do { f(); if (p) break;    } while (p); a.b.c; } // error
+                                                         ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:54
 
 Refinement invalidated due to function call at [1]
@@ -4069,6 +4187,23 @@ References:
    invalidation.js:105:28
    105|   if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
                                    ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:105:50
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:105:50
+   105|   if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
+                                                         ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:54
@@ -4141,6 +4276,23 @@ References:
                               ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:107:30
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:107:30
+   107|   if (a.b) { do { if (p) if (p) break;    } while (f());    a.b.c; } // ideally ok, error acceptable
+                                     ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:61
 
 Refinement invalidated due to function call at [1]
@@ -4205,6 +4357,23 @@ References:
                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:110:36
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:110:36
+   110|   if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
+                                           ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:110:54
 
 Refinement invalidated due to function call at [1]
@@ -4261,6 +4430,23 @@ References:
                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:111:36
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:111:36
+   111|   if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
+                                           ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:111:54
 
 Refinement invalidated due to function call at [1]
@@ -4301,6 +4487,23 @@ References:
    invalidation.js:112:21
    112|   if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
                             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:112:36
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:112:36
+   112|   if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
+                                           ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:54
@@ -4345,6 +4548,23 @@ References:
                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:113:33
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:113:33
+   113|   if (a.b) { for (; p; f()) if (p) continue;         a.b.c; } // error
+                                        ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:54
 
 Refinement invalidated due to function call at [1]
@@ -4387,6 +4607,23 @@ References:
                             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:114:33
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:114:33
+   114|   if (a.b) { for (; p; f()) if (p) break;            a.b.c; } // ideally ok, error acceptable
+                                        ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:54
 
 Refinement invalidated due to function call at [1]
@@ -4427,6 +4664,23 @@ References:
    invalidation.js:115:21
    115|   if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
                             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:115:33
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:115:33
+   115|   if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
+                                        ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:54
@@ -4555,6 +4809,23 @@ References:
                                ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:119:32
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:119:32
+   119|   if (a.b) { for (f(); p;) if (p) continue;          a.b.c; } // error
+                                       ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:54
 
 Refinement invalidated due to function call at [1]
@@ -4597,6 +4868,23 @@ References:
                                ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- invalidation.js:120:32
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:120:32
+   120|   if (a.b) { for (f(); p;) if (p) break;             a.b.c; } // error
+                                       ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:54
 
 Refinement invalidated due to function call at [1]
@@ -4637,6 +4925,23 @@ References:
    invalidation.js:121:24
    121|   if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- invalidation.js:121:32
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   invalidation.js:121:32
+   121|   if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
+                                       ^
+
+References:
+   invalidation.js:296:16
+   296| declare var p: boolean;
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:54
@@ -9468,6 +9773,23 @@ Cannot assign `3` to `x.a` because property `a` is not writable. [cannot-write]
             ^
 
 
+Error ---------------------------------------------------------------------------------------- nested_union_maybe.js:5:7
+
+This condition is likely truthy. Perhaps you meant to call the function?
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   nested_union_maybe.js:5:7
+   5|     ? foo // error: foo is always truthy
+            ^^^
+
+References:
+   nested_union_maybe.js:1:21
+   1| declare function foo(x : number) : ?string;
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- nested_union_maybe.js:11:18
 
 Refined at [1]
@@ -9808,19 +10130,27 @@ References:
                ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:19:15
+Error --------------------------------------------------------------------------------------------------- number.js:19:9
 
-Invalid check of number literal `0` against number literal `1` [1] because number literal `0` [2] is incompatible with
-number literal `1` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `0` [2], because number literal `1` [3] is not a subtype of number literal
+`0` [2] and number literal `0` [2] is not a subtype of number literal `1` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   number.js:19:9
+   19|     if (x === 0) {
+               ^^^^^^^
+
+References:
+   number.js:18:12
+   18|   function(x: 1): 0 {
+                  ^ [1]
    number.js:19:15
    19|     if (x === 0) {
                      ^ [2]
-
-References:
    number.js:18:15
    18|   function(x: 1): 0 {
-                     ^ [1]
+                     ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:20:14
@@ -9837,19 +10167,27 @@ References:
                ^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:26:15
+Error --------------------------------------------------------------------------------------------------- number.js:26:9
 
-Invalid check of number literal `1` against number literal `0` [1] because number literal `1` [2] is incompatible with
-number literal `0` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   number.js:26:9
+   26|     if (x === 1) {
+               ^^^^^^^
+
+References:
+   number.js:25:12
+   25|   function(x: 0): number {
+                  ^ [1]
    number.js:26:15
    26|     if (x === 1) {
                      ^ [2]
-
-References:
    number.js:25:15
    25|   function(x: 0): number {
-                     ^ [1]
+                     ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:27:14
@@ -9866,19 +10204,27 @@ References:
                ^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- number.js:33:15
+Error --------------------------------------------------------------------------------------------------- number.js:33:9
 
-Invalid check of number literal `1` against number literal `0` [1] because number literal `1` [2] is incompatible with
-number literal `0` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
+`1` [2] and number literal `1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   number.js:33:9
+   33|     if (x !== 1) {
+               ^^^^^^^
+
+References:
+   number.js:32:12
+   32|   function(x: 0) {
+                  ^ [1]
    number.js:33:15
    33|     if (x !== 1) {
                      ^ [2]
-
-References:
    number.js:32:15
    32|   function(x: 0) {
-                     ^ [1]
+                     ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:43:12
@@ -10318,19 +10664,27 @@ References:
                 ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- number.js:144:15
+Error -------------------------------------------------------------------------------------------------- number.js:144:9
 
-Invalid check of number literal `-1` against number literal `0` [1] because number literal `-1` [2] is incompatible with
-number literal `0` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
+`-1` [2] and number literal `-1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   number.js:144:9
+   144|     if (x === -1) { // error
+                ^^^^^^^^
+
+References:
+   number.js:143:12
+   143|   function(x: 0): number {
+                   ^ [1]
    number.js:144:15
    144|     if (x === -1) { // error
                       ^^ [2]
-
-References:
    number.js:143:15
    143|   function(x: 0): number {
-                      ^ [1]
+                      ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- number.js:145:14
@@ -10347,19 +10701,27 @@ References:
                 ^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- number.js:151:15
+Error -------------------------------------------------------------------------------------------------- number.js:151:9
 
-Invalid check of number literal `0` against number literal `-1` [1] because number literal `0` [2] is incompatible with
-number literal `-1` [1]. [incompatible-type]
+Cannot compare `x` [1] to number literal `0` [2], because number literal `-1` [3] is not a subtype of number literal
+`0` [2] and number literal `0` [2] is not a subtype of number literal `-1` [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
+   number.js:151:9
+   151|     if (x === 0) { //error
+                ^^^^^^^
+
+References:
+   number.js:150:12
+   150|   function(x: -1) {
+                   ^ [1]
    number.js:151:15
    151|     if (x === 0) { //error
                       ^ [2]
-
-References:
    number.js:150:15
    150|   function(x: -1) {
-                      ^^ [1]
+                      ^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- number.js:152:8
@@ -10928,28 +11290,24 @@ References:
              ^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------- object_union_number_keys.js:21:10
+Error --------------------------------------------------------------------------------- object_union_number_keys.js:21:5
 
-Cannot compare string literal `xxx` [1] with property `0` of `x` [2] because: [incompatible-type]
- - Either cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
-   incompatible with string literal `a` [3].
- - Or cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
-   incompatible with string literal `b` [4].
+Cannot compare computed property [1] to string literal `xxx` [2], because computed property [1] is not a subtype of
+string literal `xxx` [2] and string literal `xxx` [2] is not a subtype of computed property [1]. In **rare** cases,
+these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
+union of both types to pass the flow check.  [invalid-compare]
 
-   object_union_number_keys.js:21:10
+   object_union_number_keys.js:21:5
    21|     case 'xxx': break; // ERROR
-                ^^^^^ [1]
+           ^^^^^^^^^^
 
 References:
-   object_union_number_keys.js:2:17
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
-                       ^ [2]
-   object_union_number_keys.js:2:24
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
-                              ^^^ [3]
-   object_union_number_keys.js:2:46
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
-                                                    ^^^ [4]
+   object_union_number_keys.js:18:11
+   18|   switch (x['0']) {
+                 ^^^^^^ [1]
+   object_union_number_keys.js:21:10
+   21|     case 'xxx': break; // ERROR
+                ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:24:11
@@ -10986,28 +11344,24 @@ References:
                 ^^^ [2]
 
 
-Error -------------------------------------------------------------------------------- object_union_number_keys.js:27:10
+Error --------------------------------------------------------------------------------- object_union_number_keys.js:27:5
 
-Cannot compare string literal `xxx` [1] with property `0` of `x` [2] because: [incompatible-type]
- - Either cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
-   incompatible with string literal `a` [3].
- - Or cannot compare string literal `xxx` [1] with property `0` of `x` [2] because string literal `xxx` [1] is
-   incompatible with string literal `b` [4].
+Cannot compare property `0` [1] to string literal `xxx` [2], because property `0` [1] is not a subtype of string literal
+`xxx` [2] and string literal `xxx` [2] is not a subtype of property `0` [1]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
-   object_union_number_keys.js:27:10
+   object_union_number_keys.js:27:5
    27|     case 'xxx': break; // ERROR
-                ^^^^^ [1]
+           ^^^^^^^^^^
 
 References:
    object_union_number_keys.js:24:11
    24|   switch (x[0]) {
-                 ^ [2]
-   object_union_number_keys.js:2:24
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
-                              ^^^ [3]
-   object_union_number_keys.js:2:46
-    2|   declare const x: {0: 'a', 1: number} | {0: 'b', 1: string};
-                                                    ^^^ [4]
+                 ^^^^ [1]
+   object_union_number_keys.js:27:10
+   27|     case 'xxx': break; // ERROR
+                ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:35:5
@@ -12046,19 +12400,27 @@ References:
                ^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- string.js:19:15
+Error --------------------------------------------------------------------------------------------------- string.js:19:9
 
-Invalid check of string literal `foo` against string literal `bar` [1] because string literal `foo` [2] is incompatible
-with string literal `bar` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `foo` [2], because string literal `bar` [3] is not a subtype of string literal
+`foo` [2] and string literal `foo` [2] is not a subtype of string literal `bar` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
+   string.js:19:9
+   19|     if (x === 'foo') {
+               ^^^^^^^^^^^
+
+References:
+   string.js:18:12
+   18|   function(x: 'bar'): 'foo' {
+                  ^ [1]
    string.js:19:15
    19|     if (x === 'foo') {
                      ^^^^^ [2]
-
-References:
    string.js:18:15
    18|   function(x: 'bar'): 'foo' {
-                     ^^^^^ [1]
+                     ^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:20:14
@@ -12075,19 +12437,27 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- string.js:26:15
+Error --------------------------------------------------------------------------------------------------- string.js:26:9
 
-Invalid check of string literal `bar` against string literal `foo` [1] because string literal `bar` [2] is incompatible
-with string literal `foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
+   string.js:26:9
+   26|     if (x === 'bar') {
+               ^^^^^^^^^^^
+
+References:
+   string.js:25:12
+   25|   function(x: 'foo'): string {
+                  ^ [1]
    string.js:26:15
    26|     if (x === 'bar') {
                      ^^^^^ [2]
-
-References:
    string.js:25:15
    25|   function(x: 'foo'): string {
-                     ^^^^^ [1]
+                     ^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:27:14
@@ -12104,19 +12474,27 @@ References:
                ^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- string.js:33:15
+Error --------------------------------------------------------------------------------------------------- string.js:33:9
 
-Invalid check of string literal `bar` against string literal `foo` [1] because string literal `bar` [2] is incompatible
-with string literal `foo` [1]. [incompatible-type]
+Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
+`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
+   string.js:33:9
+   33|     if (x !== 'bar') {
+               ^^^^^^^^^^^
+
+References:
+   string.js:32:12
+   32|   function(x: 'foo') {
+                  ^ [1]
    string.js:33:15
    33|     if (x !== 'bar') {
                      ^^^^^ [2]
-
-References:
    string.js:32:15
    32|   function(x: 'foo') {
-                     ^^^^^ [1]
+                     ^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- string.js:43:12
@@ -13194,19 +13572,24 @@ References:
                 ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:120:24
+Error -------------------------------------------------------------------------------------------- tagged_union.js:120:9
 
-Cannot compare number literal `0` [1] with property `toString` of `z` [2] because number [1] is incompatible with
-function type [3]. [incompatible-type]
+Cannot compare `z.toString` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
+`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
-   tagged_union.js:120:24
+   tagged_union.js:120:9
    120|     if (z.toString === 0) {} // Error
-                               ^ [1]
+                ^^^^^^^^^^^^^^^^
 
 References:
-   tagged_union.js:107:34
-   107|     x: Array<string>, y: string, z: number, q: boolean,
-                                         ^ [2]
+   tagged_union.js:120:9
+   120|     if (z.toString === 0) {} // Error
+                ^^^^^^^^^^ [1]
+   tagged_union.js:120:24
+   120|     if (z.toString === 0) {} // Error
+                               ^ [2]
    <BUILTINS>/core.js:493:5
    493|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -13271,19 +13654,24 @@ References:
                 ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:125:23
+Error -------------------------------------------------------------------------------------------- tagged_union.js:125:9
 
-Cannot compare number literal `0` [1] with property `valueOf` of `q` [2] because number [1] is incompatible with
-function type [3]. [incompatible-type]
+Cannot compare `q.valueOf` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
+`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
-   tagged_union.js:125:23
+   tagged_union.js:125:9
    125|     if (q.valueOf === 0) {} // Error
-                              ^ [1]
+                ^^^^^^^^^^^^^^^
 
 References:
-   tagged_union.js:107:45
-   107|     x: Array<string>, y: string, z: number, q: boolean,
-                                                    ^ [2]
+   tagged_union.js:125:9
+   125|     if (q.valueOf === 0) {} // Error
+                ^^^^^^^^^ [1]
+   tagged_union.js:125:23
+   125|     if (q.valueOf === 0) {} // Error
+                              ^ [2]
    <BUILTINS>/core.js:386:5
    386|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [3]
@@ -13348,19 +13736,24 @@ References:
                 ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
+Error -------------------------------------------------------------------------------------------- tagged_union.js:137:9
 
-Cannot compare number literal `0` [1] with property `call` of `t` [2] because number [1] is incompatible with function
-type [3]. [incompatible-type]
+Cannot compare `t.call` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
+`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
+overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
+to pass the flow check.  [invalid-compare]
 
-   tagged_union.js:137:20
+   tagged_union.js:137:9
    137|     if (t.call === 0) {} // Error
-                           ^ [1]
+                ^^^^^^^^^^^^
 
 References:
-   tagged_union.js:108:29
-   108|     r: Object, s: Function, t: () => void
-                                    ^ [2]
+   tagged_union.js:137:9
+   137|     if (t.call === 0) {} // Error
+                ^^^^^^ [1]
+   tagged_union.js:137:20
+   137|     if (t.call === 0) {} // Error
+                           ^ [2]
    <BUILTINS>/core.js:370:17
    370|     proto call: <T, R, A: $ArrayLike<mixed> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -17119,7 +17512,7 @@ References:
 
 
 
-Found 1162 errors
+Found 1180 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

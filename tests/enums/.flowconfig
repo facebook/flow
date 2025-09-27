@@ -5,7 +5,6 @@ lib.js
 all=true
 no_flowlib=false
 enums=true
-experimental.constant_condition=false
 
 [lints]
 deprecated-type=off

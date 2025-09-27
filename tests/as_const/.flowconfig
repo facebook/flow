@@ -1,6 +1,5 @@
 [options]
 all=true
 experimental.ts_syntax=true
-experimental.natural_inference.jsx_literal=true
 no_flowlib=false
 react.runtime=automatic

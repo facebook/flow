@@ -330,8 +330,11 @@ type 'loc explanation =
   | ExplanationPropertyInvariantTyping
   | ExplanationPropertyMissingDueToNeutralOptionalProperty of {
       props_plural: bool;
-      lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
+      lower_obj_loc: 'loc;
+      upper_obj_loc: 'loc;
+      lower_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_obj_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_object_reason: 'loc virtual_reason;
     }
   | ExplanationReactComponentPropsDeepReadOnly of 'loc
   | ExplanationReactComponentRefRequirement

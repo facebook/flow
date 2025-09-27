@@ -324,7 +324,7 @@ let synthetic_diagnostics_of_switch_to_match_eligible_locations locs =
          {
            Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
            severity = Some Lsp.PublishDiagnostics.Hint;
-           code = Lsp.PublishDiagnostics.NoCode;
+           code = Lsp.PublishDiagnostics.StringCode "switch-to-match";
            source = Some "Flow";
            message = "This switch statement can be converted to use match syntax";
            tags = [];

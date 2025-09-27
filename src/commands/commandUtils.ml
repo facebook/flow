@@ -1422,19 +1422,12 @@ let make_options
     opt_module = FlowConfig.module_system flowconfig;
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
-    opt_natural_inference_array_object_literal_implicit_instantiation_fix =
-      FlowConfig.natural_inference_array_object_literal_implicit_instantiation_fix flowconfig;
     opt_natural_inference_array_object_literal_implicit_instantiation_fix_excludes =
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
            flowconfig
         );
-    opt_natural_inference_jsx_literal = FlowConfig.natural_inference_jsx_literal flowconfig;
-    opt_natural_inference_jsx_literal_excludes =
-      Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
-        (FlowConfig.natural_inference_jsx_literal_excludes flowconfig);
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
     opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
     opt_temp_dir;
@@ -1466,28 +1459,6 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.pattern_matching_includes flowconfig);
-    opt_constant_condition =
-      Base.Option.value ~default:true (FlowConfig.constant_condition flowconfig);
-    opt_constant_condition_boolean_literal_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.constant_condition_boolean_literal_includes flowconfig);
-    opt_constant_condition_null_void_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.constant_condition_null_void_includes flowconfig);
-    opt_constant_condition_function_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.constant_condition_function_includes flowconfig);
-    opt_invalid_comparison_general_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.invalid_comparison_general_includes flowconfig);
-    opt_invalid_comparison_null_check_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.invalid_comparison_null_check_includes flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);

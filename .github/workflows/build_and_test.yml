@@ -346,22 +346,6 @@ jobs:
     - run: chmod +x bin/linux/flow
     - name: Run tests
       run: ./runtests.sh bin/linux/flow
-  runtests_macos_x86:
-    runs-on: macos-13
-    needs:
-    - build_macos_x86
-    steps:
-    - uses: maxim-lobanov/setup-xcode@v1.6.0
-      with:
-        xcode-version: '14.3.1'
-    - uses: actions/checkout@v3.6.0
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_bin
-        path: bin/macos
-    - run: chmod +x bin/macos/flow
-    - name: Run tests
-      run: ./runtests.sh bin/macos/flow
   runtests_macos_arm:
     runs-on: macos-15
     needs:
@@ -628,7 +612,6 @@ jobs:
     needs:
     - build_linux
     - build_linux_arm64
-    - build_macos_x86
     - build_macos_arm64
     - build_win
     steps:
@@ -649,12 +632,6 @@ jobs:
       run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux-arm64-${{ github.ref_name }}.zip"
     - name: Upload Linux libflowparser (arm64)
       run: .circleci/github_upload.sh dist/libflowparser-linux64-arm64.zip "libflowparser-linux-arm64-${{ github.ref_name }}.zip"
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_dist
-        path: dist
-    - name: Upload Mac binary (x86_64)
-      run: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-${{ github.ref_name }}.zip"
     - name: Upload Mac libflowparser (x86_64)
       run: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-${{ github.ref_name }}.zip"
     - uses: actions/download-artifact@v4.1.7

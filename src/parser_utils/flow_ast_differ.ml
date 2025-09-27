@@ -1513,9 +1513,6 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (expr1 : (Loc.t, Loc.t) Ast.Expression.t)
       (expr2 : (Loc.t, Loc.t) Ast.Expression.t) : node change list =
     let changes =
-      (* The open is here to avoid ambiguity with the use of the local `Expression` constructor
-       * below *)
-      let open Ast.Expression in
       match (expr1, expr2) with
       | ((loc1, Ast.Expression.StringLiteral lit1), (loc2, Ast.Expression.StringLiteral lit2)) ->
         diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
@@ -1532,41 +1529,82 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | ((loc1, Ast.Expression.ModuleRefLiteral lit1), (loc2, Ast.Expression.ModuleRefLiteral lit2))
         ->
         diff_if_changed_ret_opt (module_ref_literal loc1 loc2) lit1 lit2
-      | ((loc, Binary b1), (_, Binary b2)) -> binary loc b1 b2
-      | ((loc, Unary u1), (_, Unary u2)) -> unary loc u1 u2
+      | ((loc, Ast.Expression.Binary b1), (_, Ast.Expression.Binary b2)) -> binary loc b1 b2
+      | ((loc, Ast.Expression.Unary u1), (_, Ast.Expression.Unary u2)) -> unary loc u1 u2
       | ((_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2)) ->
         identifier id1 id2 |> Base.Option.return
-      | ((loc, Conditional c1), (_, Conditional c2)) -> conditional loc c1 c2 |> Base.Option.return
-      | ((loc, New new1), (_, New new2)) -> new_ loc new1 new2
-      | ((loc, Member member1), (_, Member member2)) -> member loc member1 member2
-      | ((loc, Call call1), (_, Call call2)) -> call loc call1 call2
-      | ((loc, ArrowFunction f1), (_, ArrowFunction f2)) -> function_ ~is_arrow:true loc f1 f2
-      | ((loc, Function f1), (_, Function f2)) -> function_ loc f1 f2
-      | ((loc, Class class1), (_, Class class2)) -> class_ loc class1 class2
-      | ((loc, Assignment assn1), (_, Assignment assn2)) -> assignment loc assn1 assn2
-      | ((loc, Object obj1), (_, Object obj2)) -> object_ loc obj1 obj2
-      | ((loc, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2)) ->
+      | ((loc, Ast.Expression.Conditional c1), (_, Ast.Expression.Conditional c2)) ->
+        conditional loc c1 c2 |> Base.Option.return
+      | ((loc, Ast.Expression.New new1), (_, Ast.Expression.New new2)) -> new_ loc new1 new2
+      | ((loc, Ast.Expression.Member member1), (_, Ast.Expression.Member member2)) ->
+        member loc member1 member2
+      | ((loc, Ast.Expression.Call call1), (_, Ast.Expression.Call call2)) -> call loc call1 call2
+      | ((loc, Ast.Expression.ArrowFunction f1), (_, Ast.Expression.ArrowFunction f2)) ->
+        function_ ~is_arrow:true loc f1 f2
+      | ((loc, Ast.Expression.Function f1), (_, Ast.Expression.Function f2)) -> function_ loc f1 f2
+      | ((loc, Ast.Expression.Class class1), (_, Ast.Expression.Class class2)) ->
+        class_ loc class1 class2
+      | ((loc, Ast.Expression.Assignment assn1), (_, Ast.Expression.Assignment assn2)) ->
+        assignment loc assn1 assn2
+      | ((loc, Ast.Expression.Object obj1), (_, Ast.Expression.Object obj2)) ->
+        object_ loc obj1 obj2
+      | ((loc, Ast.Expression.TaggedTemplate t_tmpl1), (_, Ast.Expression.TaggedTemplate t_tmpl2))
+        ->
         Some (tagged_template loc t_tmpl1 t_tmpl2)
       | ( (loc1, Ast.Expression.TemplateLiteral t_lit1),
           (loc2, Ast.Expression.TemplateLiteral t_lit2)
         ) ->
         Some (template_literal loc1 loc2 t_lit1 t_lit2)
-      | ((loc, JSXElement jsx_elem1), (_, JSXElement jsx_elem2)) ->
+      | ((loc, Ast.Expression.JSXElement jsx_elem1), (_, Ast.Expression.JSXElement jsx_elem2)) ->
         jsx_element loc jsx_elem1 jsx_elem2
-      | ((loc, JSXFragment frag1), (_, JSXFragment frag2)) -> jsx_fragment loc frag1 frag2
-      | ((loc, TypeCast t1), (_, TypeCast t2)) -> Some (type_cast loc t1 t2)
-      | ((loc, Logical l1), (_, Logical l2)) -> logical loc l1 l2
-      | ((loc, Array arr1), (_, Array arr2)) -> array loc arr1 arr2
-      | ((_, (AsExpression _ | TSSatisfies _)), (_, TypeCast _)) -> None
-      | (expr, (loc, TypeCast t2)) -> Some (type_cast_added parent expr loc t2)
-      | ((loc, Update update1), (_, Update update2)) -> update loc update1 update2
-      | ((loc, Sequence seq1), (_, Sequence seq2)) -> sequence loc seq1 seq2
-      | ((loc, This t1), (_, This t2)) -> this_expression loc t1 t2
-      | ((loc, Super s1), (_, Super s2)) -> super_expression loc s1 s2
-      | ((loc, MetaProperty m1), (_, MetaProperty m2)) -> meta_property loc m1 m2
-      | ((loc, Import i1), (_, Import i2)) -> import_expression loc i1 i2
-      | ((loc, Match m1), (_, Match m2)) -> match_expression loc m1 m2
-      | (_, _) -> None
+      | ((loc, Ast.Expression.JSXFragment frag1), (_, Ast.Expression.JSXFragment frag2)) ->
+        jsx_fragment loc frag1 frag2
+      | ((loc, Ast.Expression.TypeCast t1), (_, Ast.Expression.TypeCast t2)) ->
+        Some (type_cast loc t1 t2)
+      | ((loc, Ast.Expression.Logical l1), (_, Ast.Expression.Logical l2)) -> logical loc l1 l2
+      | ((loc, Ast.Expression.Array arr1), (_, Ast.Expression.Array arr2)) -> array loc arr1 arr2
+      | ((loc, Ast.Expression.AsExpression as_cast1), (_, Ast.Expression.AsExpression as_cast2)) ->
+        Some (as_cast loc as_cast1 as_cast2)
+      | ( (_, (Ast.Expression.AsExpression _ | Ast.Expression.TSSatisfies _)),
+          (_, Ast.Expression.TypeCast _)
+        ) ->
+        None
+      | (expr, (loc, Ast.Expression.TypeCast t2)) -> Some (type_cast_added parent expr loc t2)
+      | ((loc, Ast.Expression.Update update1), (_, Ast.Expression.Update update2)) ->
+        update loc update1 update2
+      | ((loc, Ast.Expression.Sequence seq1), (_, Ast.Expression.Sequence seq2)) ->
+        sequence loc seq1 seq2
+      | ((loc, Ast.Expression.This t1), (_, Ast.Expression.This t2)) -> this_expression loc t1 t2
+      | ((loc, Ast.Expression.Super s1), (_, Ast.Expression.Super s2)) -> super_expression loc s1 s2
+      | ((loc, Ast.Expression.MetaProperty m1), (_, Ast.Expression.MetaProperty m2)) ->
+        meta_property loc m1 m2
+      | ((loc, Ast.Expression.Import i1), (_, Ast.Expression.Import i2)) ->
+        import_expression loc i1 i2
+      | ((loc, Ast.Expression.Match m1), (_, Ast.Expression.Match m2)) -> match_expression loc m1 m2
+      (* TODO: handle AsConstExpression, OptionalCall, OptionalMember, TSSatisfies *)
+      (* The catch all case where LHS and RHS are different AST nodes.
+       * We keep this so that we don't forget to create handlers above when we add new AST nodes. *)
+      | ( ( _,
+            ( Ast.Expression.Array _ | Ast.Expression.ArrowFunction _
+            | Ast.Expression.AsConstExpression _ | Ast.Expression.AsExpression _
+            | Ast.Expression.Assignment _ | Ast.Expression.Binary _ | Ast.Expression.Call _
+            | Ast.Expression.Class _ | Ast.Expression.Conditional _ | Ast.Expression.Function _
+            | Ast.Expression.Identifier _ | Ast.Expression.Import _ | Ast.Expression.JSXElement _
+            | Ast.Expression.JSXFragment _ | Ast.Expression.StringLiteral _
+            | Ast.Expression.BooleanLiteral _ | Ast.Expression.NullLiteral _
+            | Ast.Expression.NumberLiteral _ | Ast.Expression.BigIntLiteral _
+            | Ast.Expression.RegExpLiteral _ | Ast.Expression.ModuleRefLiteral _
+            | Ast.Expression.Logical _ | Ast.Expression.Match _ | Ast.Expression.Member _
+            | Ast.Expression.MetaProperty _ | Ast.Expression.New _ | Ast.Expression.Object _
+            | Ast.Expression.OptionalCall _ | Ast.Expression.OptionalMember _
+            | Ast.Expression.Sequence _ | Ast.Expression.Super _ | Ast.Expression.TaggedTemplate _
+            | Ast.Expression.TemplateLiteral _ | Ast.Expression.This _
+            | Ast.Expression.TSSatisfies _ | Ast.Expression.TypeCast _ | Ast.Expression.Unary _
+            | Ast.Expression.Update _ | Ast.Expression.Yield _ )
+          ),
+          _
+        ) ->
+        None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Base.Option.value
@@ -3483,6 +3521,24 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let id = diff_if_changed identifier x1 x2 in
       let comments = syntax_opt loc1 comments1 comments2 |> Base.Option.value ~default:[] in
       Base.List.concat [id; comments]
+  and as_cast
+      (loc : Loc.t)
+      (as_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.AsExpression.t)
+      (as_cast2 : (Loc.t, Loc.t) Flow_ast.Expression.AsExpression.t) : node change list =
+    let open Flow_ast.Expression.AsExpression in
+    let { expression = expr1; annot = annot1; comments = comments1 } = as_cast1 in
+    let { expression = expr2; annot = annot2; comments = comments2 } = as_cast2 in
+    let expr =
+      diff_if_changed
+        (expression
+           ~parent:(ExpressionParentOfExpression (loc, Ast.Expression.AsExpression as_cast2))
+        )
+        expr1
+        expr2
+    in
+    let annot = diff_if_changed type_annotation annot1 annot2 in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    Base.List.concat [expr; annot; comments]
   and type_cast
       (loc : Loc.t)
       (type_cast1 : (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)

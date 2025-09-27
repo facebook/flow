@@ -2,24 +2,24 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add suggested annotation to the literal",
-      "kind": "quickfix",
+      "title": "Make the object readonly",
+      "kind": "refactor.rewrite",
       "diagnostics": [],
       "edit": {
         "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/add-annotation-for-invariant-subtyping-error.js": [
+          "<PLACEHOLDER_PROJECT_URL>/object_type.js": [
             {
               "range": {
                 "start": {
-                  "line": 4,
-                  "character": 9
+                  "line": 9,
+                  "character": 15
                 },
                 "end": {
-                  "line": 4,
-                  "character": 9
+                  "line": 9,
+                  "character": 28
                 }
               },
-              "newText": ": A"
+              "newText": "Readonly<{ bar: string }>"
             }
           ]
         }
@@ -29,8 +29,8 @@
         "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
         "arguments": [
           "textDocument/codeAction",
-          "fix_invariant_subtyping_error_with_annot",
-          "Add suggested annotation to the literal"
+          "refactor_rewrite_readonly_conversion",
+          "Make the object readonly"
         ]
       }
     }

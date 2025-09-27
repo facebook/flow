@@ -5,6 +5,7 @@ class A {
 }
 
 (new A).f;
+//      ^
 
 class B extends class { f() {}} {
     f(x) : void { super.f }

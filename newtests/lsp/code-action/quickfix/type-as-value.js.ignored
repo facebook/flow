@@ -2,3 +2,4 @@
 
 import type {Component} from 'react';
 Component;
+// ^

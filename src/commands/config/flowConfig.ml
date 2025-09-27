@@ -55,12 +55,6 @@ module Opts = struct
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
-    constant_condition: bool option;
-    constant_condition_boolean_literal_includes: string list;
-    constant_condition_null_void_includes: string list;
-    constant_condition_function_includes: string list;
-    invalid_comparison_general_includes: string list;
-    invalid_comparison_null_check_includes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -116,10 +110,7 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
     munge_underscores: bool;
-    natural_inference_array_object_literal_implicit_instantiation_fix: bool;
     natural_inference_array_object_literal_implicit_instantiation_fix_excludes: string list;
-    natural_inference_jsx_literal: bool;
-    natural_inference_jsx_literal_excludes: string list;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
     node_main_fields: string list;
@@ -211,12 +202,6 @@ module Opts = struct
       casting_syntax = None;
       casting_syntax_only_support_as_excludes = [];
       component_syntax = false;
-      constant_condition = Some true;
-      constant_condition_boolean_literal_includes = [];
-      constant_condition_null_void_includes = [];
-      constant_condition_function_includes = [];
-      invalid_comparison_general_includes = [];
-      invalid_comparison_null_check_includes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -272,10 +257,7 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
       munge_underscores = false;
-      natural_inference_array_object_literal_implicit_instantiation_fix = true;
       natural_inference_array_object_literal_implicit_instantiation_fix_excludes = [];
-      natural_inference_jsx_literal = true;
-      natural_inference_jsx_literal_excludes = [];
       no_flowlib = false;
       no_unchecked_indexed_access = false;
       node_main_fields = ["main"];
@@ -293,7 +275,7 @@ module Opts = struct
       projects_strict_boundary_validate_import_pattern_opt_outs = true;
       projects_strict_boundary_import_pattern_opt_outs = [];
       react_custom_jsx_typing = false;
-      react_ref_as_prop = Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase;
+      react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
       react_rules = [];
       react_runtime = Options.ReactRuntimeClassic;
       recursion_limit = 10000;
@@ -1101,68 +1083,6 @@ module Opts = struct
           (fun opts v ->
             Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
       );
-      ( "experimental.constant_condition",
-        boolean (fun opts v -> Ok { opts with constant_condition = Some v })
-      );
-      ( "experimental.constant_condition.boolean_literal.includes",
-        string
-          ~init:(fun opts -> { opts with constant_condition_boolean_literal_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                constant_condition_boolean_literal_includes =
-                  v :: opts.constant_condition_boolean_literal_includes;
-              })
-      );
-      ( "experimental.constant_condition.null_void.includes",
-        string
-          ~init:(fun opts -> { opts with constant_condition_null_void_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                constant_condition_null_void_includes =
-                  v :: opts.constant_condition_null_void_includes;
-              })
-      );
-      ( "experimental.constant_condition.function.includes",
-        string
-          ~init:(fun opts -> { opts with constant_condition_function_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                constant_condition_function_includes =
-                  v :: opts.constant_condition_function_includes;
-              })
-      );
-      ( "experimental.constant_condition.invalid_comparison.general.includes",
-        string
-          ~init:(fun opts -> { opts with invalid_comparison_general_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                invalid_comparison_general_includes = v :: opts.invalid_comparison_general_includes;
-              })
-      );
-      ( "experimental.constant_condition.invalid_comparison.null_check.includes",
-        string
-          ~init:(fun opts -> { opts with invalid_comparison_null_check_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                invalid_comparison_null_check_includes =
-                  v :: opts.invalid_comparison_null_check_includes;
-              })
-      );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
       ( "experimental.projects.strict_boundary",
@@ -1249,11 +1169,6 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ( "experimental.natural_inference.array_object_literals.implicit_instantiation_fix",
-        boolean (fun opts v ->
-            Ok { opts with natural_inference_array_object_literal_implicit_instantiation_fix = v }
-        )
-      );
       ( "experimental.natural_inference.array_object_literals.implicit_instantiation_fix.excludes",
         string
           ~init:(fun opts ->
@@ -1271,21 +1186,6 @@ module Opts = struct
                   :: opts.natural_inference_array_object_literal_implicit_instantiation_fix_excludes;
               })
       );
-      ( "experimental.natural_inference.jsx_literal",
-        boolean (fun opts v -> Ok { opts with natural_inference_jsx_literal = v })
-      );
-      ( "experimental.natural_inference.jsx_literal.excludes",
-        string
-          ~init:(fun opts -> { opts with natural_inference_jsx_literal_excludes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok
-              {
-                opts with
-                natural_inference_jsx_literal_excludes =
-                  v :: opts.natural_inference_jsx_literal_excludes;
-              })
-      );
       ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
@@ -1296,7 +1196,8 @@ module Opts = struct
       ( "react.ref_as_prop",
         enum
           [
-            ("experimental.store_ref_in_props", Options.ReactRefAsProp.StoreRefInPropsNoSpecialCase);
+            ("legacy", Options.ReactRefAsProp.Legacy);
+            ("experimental.store_ref_in_props", Options.ReactRefAsProp.Legacy);
             ("experimental.full_support", Options.ReactRefAsProp.FullSupport);
           ]
           (fun opts react_ref_as_prop -> Ok { opts with react_ref_as_prop })
@@ -2089,15 +1990,8 @@ let multi_platform_ambient_supports_platform_project_overrides c =
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
-let natural_inference_array_object_literal_implicit_instantiation_fix c =
-  c.options.Opts.natural_inference_array_object_literal_implicit_instantiation_fix
-
 let natural_inference_array_object_literal_implicit_instantiation_fix_excludes c =
   c.options.Opts.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
-
-let natural_inference_jsx_literal c = c.options.Opts.natural_inference_jsx_literal
-
-let natural_inference_jsx_literal_excludes c = c.options.Opts.natural_inference_jsx_literal_excludes
 
 let no_flowlib c = c.options.Opts.no_flowlib
 
@@ -2116,19 +2010,6 @@ let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_r
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
-
-let constant_condition c = c.options.Opts.constant_condition
-
-let constant_condition_boolean_literal_includes c =
-  c.options.Opts.constant_condition_boolean_literal_includes
-
-let constant_condition_null_void_includes c = c.options.Opts.constant_condition_null_void_includes
-
-let constant_condition_function_includes c = c.options.Opts.constant_condition_function_includes
-
-let invalid_comparison_general_includes c = c.options.Opts.invalid_comparison_general_includes
-
-let invalid_comparison_null_check_includes c = c.options.Opts.invalid_comparison_null_check_includes
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 

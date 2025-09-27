@@ -4,25 +4,7 @@
     {
       "title": "Rewrite function as an arrow function",
       "kind": "quickfix",
-      "diagnostics": [
-        {
-          "range": {
-            "start": {
-              "line": 6,
-              "character": 8
-            },
-            "end": {
-              "line": 6,
-              "character": 9
-            }
-          },
-          "severity": 1,
-          "code": "InferError",
-          "source": "Flow",
-          "message": "Cannot get `(new A).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.",
-          "relatedInformation": []
-        }
-      ],
+      "diagnostics": [],
       "edit": {
         "changes": {
           "<PLACEHOLDER_PROJECT_URL>/method-unbinding.js": [

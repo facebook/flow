@@ -1,0 +1,11 @@
+// @flow
+type A = Map<string, number>;
+//        ^ convert
+type B = Set<number>;
+//          ^ convert
+type C = $ReadOnlySet<number>;
+//          ^ no conversion
+type D = Set<Set<number>>;
+//        ^ convert outer one
+type E = Set<Set<number>>;
+//             ^ convert inner one

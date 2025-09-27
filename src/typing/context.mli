@@ -98,12 +98,6 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
-  constant_condition: bool;
-  constant_condition_boolean_literal_includes: string list;
-  constant_condition_null_void_includes: string list;
-  constant_condition_function_includes: string list;
-  invalid_comparison_general_includes: string list;
-  invalid_comparison_null_check_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -114,10 +108,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_array_object_literal_implicit_instantiation_fix: bool;
   natural_inference_array_object_literal_implicit_instantiation_fix_excludes: Str.regexp list;
-  natural_inference_jsx_literal: bool;
-  natural_inference_jsx_literal_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
@@ -216,16 +207,6 @@ val enable_enums : t -> bool
 val enable_jest_integration : t -> bool
 
 val enable_pattern_matching : t -> bool
-
-val enable_constant_condition_boolean_literal : t -> bool
-
-val enable_constant_condition_null_void : t -> bool
-
-val enable_constant_condition_function : t -> bool
-
-val enable_invalid_comparison_general : t -> bool
-
-val enable_invalid_comparison_null_check : t -> bool
 
 val enable_relay_integration : t -> bool
 
@@ -357,8 +338,6 @@ val max_workers : t -> int
 val missing_module_generators : t -> (Str.regexp * string) list
 
 val natural_inference_array_object_literal_implicit_instantiation_fix : t -> bool
-
-val natural_inference_jsx_literal : t -> bool
 
 val no_unchecked_indexed_access : t -> bool
 

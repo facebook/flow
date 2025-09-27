@@ -1908,7 +1908,7 @@ Cannot cast `x` to `B` because properties `foo` and `tag` of `A` [1] are not exa
 
 The above-mentioned two types must be the same because properties `foo` and `tag` are invariantly typed. To fix the
 error,
-- Either make `A` [1] and `B` [2] exactly the same
+- Either make `A` [3] and `B` [4] exactly the same
 - Or make properties `foo` and `tag` in `B` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
 
@@ -1920,6 +1920,12 @@ References:
    refinement.js:61:11
    61|       (x: B); // error A ~> B
                  ^ [2]
+   refinement.js:53:12
+   53|   type A = { tag: 'A', foo: number };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   refinement.js:54:12
+   54|   type B = { tag: 'B', foo: string };
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:72:8

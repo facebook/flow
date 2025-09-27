@@ -48,12 +48,6 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   pattern_matching_includes: string list;
-  constant_condition: bool;
-  constant_condition_boolean_literal_includes: string list;
-  constant_condition_null_void_includes: string list;
-  constant_condition_function_includes: string list;
-  invalid_comparison_general_includes: string list;
-  invalid_comparison_null_check_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -64,10 +58,7 @@ type metadata = {
   max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
-  natural_inference_array_object_literal_implicit_instantiation_fix: bool;
   natural_inference_array_object_literal_implicit_instantiation_fix_excludes: Str.regexp list;
-  natural_inference_jsx_literal: bool;
-  natural_inference_jsx_literal_excludes: Str.regexp list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
@@ -313,13 +304,6 @@ let metadata_of_options options =
     enable_jest_integration = Options.enable_jest_integration options;
     enable_pattern_matching = Options.enable_pattern_matching options;
     pattern_matching_includes = Options.pattern_matching_includes options;
-    constant_condition = Options.constant_condition options;
-    constant_condition_boolean_literal_includes =
-      Options.constant_condition_boolean_literal_includes options;
-    constant_condition_null_void_includes = Options.constant_condition_null_void_includes options;
-    constant_condition_function_includes = Options.constant_condition_function_includes options;
-    invalid_comparison_general_includes = Options.invalid_comparison_general_includes options;
-    invalid_comparison_null_check_includes = Options.invalid_comparison_null_check_includes options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -330,12 +314,8 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
-    natural_inference_array_object_literal_implicit_instantiation_fix =
-      Options.natural_inference_array_object_literal_implicit_instantiation_fix options;
     natural_inference_array_object_literal_implicit_instantiation_fix_excludes =
       Options.natural_inference_array_object_literal_implicit_instantiation_fix_excludes options;
-    natural_inference_jsx_literal = Options.natural_inference_jsx_literal options;
-    natural_inference_jsx_literal_excludes = Options.natural_inference_jsx_literal_excludes options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
     opaque_type_new_bound_syntax = Options.opaque_type_new_bound_syntax options;
     projects_options = Options.projects_options options;
@@ -574,56 +554,6 @@ let enable_pattern_matching cx =
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
-let enable_constant_condition_boolean_literal cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_boolean_literal_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_constant_condition_null_void cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_null_void_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_constant_condition_function cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.constant_condition_function_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_invalid_comparison_general cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.invalid_comparison_general_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
-let enable_invalid_comparison_null_check cx =
-  cx.metadata.constant_condition
-  &&
-  match cx.metadata.invalid_comparison_null_check_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
-
 let is_utility_type_deprecated cx t =
   match SMap.find_opt t cx.metadata.deprecated_utilities with
   | None -> false
@@ -807,16 +737,11 @@ let max_workers cx = cx.metadata.max_workers
 let missing_module_generators cx = cx.metadata.missing_module_generators
 
 let natural_inference_array_object_literal_implicit_instantiation_fix cx =
-  cx.metadata.natural_inference_array_object_literal_implicit_instantiation_fix
-  && not
-       (in_dirlist
-          cx
-          cx.metadata.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
-       )
-
-let natural_inference_jsx_literal cx =
-  cx.metadata.natural_inference_jsx_literal
-  && not (in_dirlist cx cx.metadata.natural_inference_jsx_literal_excludes)
+  not
+    (in_dirlist
+       cx
+       cx.metadata.natural_inference_array_object_literal_implicit_instantiation_fix_excludes
+    )
 
 let no_unchecked_indexed_access cx = cx.metadata.no_unchecked_indexed_access
 

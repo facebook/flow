@@ -405,6 +405,45 @@ let insert_jsdoc_code_actions ~options ~ast uri loc =
     ]
   | _ -> []
 
+let convert_type_to_readonly_form_code_actions ~options ~ast ~only uri loc =
+  if include_rewrite_refactors only then
+    match
+      Convert_type_to_readonly_form.convert
+        ~ts_readonly_name:(Options.ts_utility_syntax options)
+        ast
+        loc
+    with
+    | None -> []
+    | Some (ast', conversion_kind) ->
+      let edits =
+        Flow_ast_differ.program ast ast'
+        |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+        |> flow_loc_patch_to_lsp_edits
+      in
+      let title =
+        match conversion_kind with
+        | Convert_type_to_readonly_form.ConversionToReadOnlyArray -> "Make the array readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlyObject -> "Make the object readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlyMap -> "Make the Map readonly"
+        | Convert_type_to_readonly_form.ConversionToReadOnlySet -> "Make the Set readonly"
+      in
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.refactor_rewrite;
+            diagnostics = [];
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command ~title ~diagnostic_title:"refactor_rewrite_readonly_conversion"
+                );
+          };
+      ]
+  else
+    []
+
 let refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc =
   if include_rewrite_refactors only then
     match Refactor_arrow_functions.add_or_remove_braces ~ast ~scope_info loc with
@@ -1357,6 +1396,7 @@ let ast_transforms_of_error
               ( LazyExplanationInvariantSubtypingDueToMutableArray
                   {
                     lower_array_loc = lower_loc;
+                    upper_array_loc = upper_loc;
                     lower_array_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
                     upper_array_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
@@ -1364,6 +1404,7 @@ let ast_transforms_of_error
               | LazyExplanationInvariantSubtypingDueToMutableProperty
                   {
                     lower_obj_loc = lower_loc;
+                    upper_obj_loc = upper_loc;
                     lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
                     upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
@@ -1371,10 +1412,19 @@ let ast_transforms_of_error
               | LazyExplanationInvariantSubtypingDueToMutableProperties
                   {
                     lower_obj_loc = lower_loc;
+                    upper_obj_loc = upper_loc;
                     lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
                     upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                     _;
                   } ));
+        _;
+      }
+  | Error_message.EPropsNotFoundInInvariantSubtyping
+      {
+        lower_obj_loc = lower_loc;
+        upper_obj_loc = upper_loc;
+        lower_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+        upper_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
         _;
       }
     when match lower_desc with
@@ -1393,38 +1443,60 @@ let ast_transforms_of_error
         else
           None
     in
-    (match error_loc_opt with
-    | None -> []
-    | Some _ ->
-      let transform ~cx ~file_sig ~ast ~typed_ast _ =
-        let ast' =
-          Insert_type.insert_type_ty
-            ~cx
-            ~loc_of_aloc
-            ~get_ast_from_shared_mem
-            ~get_haste_module_info
-            ~get_type_sig
-            ~file_sig
-            ~typed_ast
-            ~strict:false
-            ast
-            lower_loc
-            (Ty_utils.simplify_type ~merge_kinds:true upper_ty)
-        in
-        if ast == ast' then
-          None
-        else
-          Some ast'
+    let make_readonly_code_action upper_ty =
+      let transform ~cx ~file_sig:_ ~ast ~typed_ast:_ loc =
+        Convert_type_to_readonly_form.convert
+          ~ts_readonly_name:(Context.ts_utility_syntax cx)
+          ast
+          loc
+        |> Base.Option.map ~f:fst
       in
       [
         {
-          title = "Add suggested annotation to the literal";
-          diagnostic_title = "fix_invariant_subtyping_error_with_annot";
+          title =
+            Utils_js.spf
+              "Make `%s` readonly"
+              (Ty_printer.string_of_t_single_line ~ts_syntax:true upper_ty);
+          diagnostic_title = "fix_invariant_subtyping_error_with_readonly_conversion";
           transform;
-          target_loc = lower_loc;
+          target_loc = upper_loc;
           confidence = BestEffort;
         };
-      ])
+      ]
+    in
+    (match error_loc_opt with
+    | None -> []
+    | Some _ ->
+      let upper_ty = Ty_utils.simplify_type ~merge_kinds:true upper_ty in
+      (let transform ~cx ~file_sig ~ast ~typed_ast _ =
+         let ast' =
+           Insert_type.insert_type_ty
+             ~cx
+             ~loc_of_aloc
+             ~get_ast_from_shared_mem
+             ~get_haste_module_info
+             ~get_type_sig
+             ~file_sig
+             ~typed_ast
+             ~strict:false
+             ast
+             lower_loc
+             upper_ty
+         in
+         if ast == ast' then
+           None
+         else
+           Some ast'
+       in
+       {
+         title = "Add suggested annotation to the literal";
+         diagnostic_title = "fix_invariant_subtyping_error_with_annot";
+         transform;
+         target_loc = lower_loc;
+         confidence = BestEffort;
+       }
+      )
+      :: make_readonly_code_action upper_ty)
   | error_message ->
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissingInLookup
@@ -1786,6 +1858,7 @@ let code_actions_at_loc
       uri
       loc
     @ insert_jsdoc_code_actions ~options ~ast uri loc
+    @ convert_type_to_readonly_form_code_actions ~options ~ast ~only uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     @ refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc
     @ add_jsx_props_code_actions

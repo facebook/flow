@@ -256,16 +256,10 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (_, MixedT Mixed_function) -> ConstCond_Unknown
   | DefT (reason, NullT)
   | DefT (reason, VoidT) ->
-    if Context.enable_constant_condition_null_void cx then
-      ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
-    else
-      ConstCond_Unknown
+    ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
   | DefT (_, SymbolT) -> ConstCond_Unknown
   | DefT (reason, FunT _) ->
-    if Context.enable_constant_condition_function cx then
-      ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
-    else
-      ConstCond_Unknown
+    ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
   | DefT (_, ObjT _) -> ConstCond_Unknown
   | DefT (_, ArrT _) -> ConstCond_Unknown
   | DefT (_, ClassT _) -> ConstCond_Unknown
@@ -288,9 +282,7 @@ let try_eval_concrete_type_truthyness cx t =
     else
       ConstCond_Unknown
   | DefT (reason, SingletonBoolT { value; _ }) ->
-    if not (Context.enable_constant_condition_boolean_literal cx) then
-      ConstCond_Unknown
-    else if value then
+    if value then
       ConstCond_Truthy { constant_condition_kind = ConstCond_General; reason = Some reason }
     else
       ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
@@ -658,52 +650,38 @@ let check_strict_comparison cx all_strict_comparisons =
         allowed
       | (DefT (_, EmptyT), DefT (_, EmptyT)) -> allowed
       | (DefT (_, EmptyT), _) ->
-        if Context.enable_invalid_comparison_general cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Left };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Left };
+            }
+        )
       | (_, DefT (_, EmptyT)) ->
-        if Context.enable_invalid_comparison_general cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Right };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonEmpty { empty_side = `Right };
+            }
+        )
       | (other, DefT (_, NullT)) when not (has_null_type cx other) ->
-        if Context.enable_invalid_comparison_null_check cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Right };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Right };
+            }
+        )
       | (DefT (_, NullT), other) when not (has_null_type cx other) ->
-        if Context.enable_invalid_comparison_null_check cx then
-          Base.Option.map banned ~f:(fun banned ->
-              {
-                banned with
-                kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Left };
-              }
-          )
-        else
-          allowed
+        Base.Option.map banned ~f:(fun banned ->
+            {
+              banned with
+              kind = Flow_intermediate_error_types.StrictComparisonNull { null_side = `Left };
+            }
+        )
       | _ ->
         if filter_maybe_and_check_is_subtyping cx left_conc_t right_conc_t then
           allowed
-        else if Context.enable_invalid_comparison_general cx then
-          banned
         else
-          allowed
+          banned
   )
 
 let detect_invalid_strict_comparison cx =
@@ -835,7 +813,8 @@ let detect_non_voidable_properties cx =
       check_properties private_property_map private_property_errors)
     (Context.voidable_checks cx)
 
-let detect_matching_props_violations cx =
+(* TODO(samzhou19815): Remove and cleanup `Context.matching_props` *)
+let _detect_matching_props_violations cx =
   let open Type in
   let peek =
     let open Type in
@@ -932,7 +911,8 @@ let detect_matching_props_violations cx =
   in
   Base.List.iter ~f:step matching_props_checks
 
-let detect_literal_subtypes =
+(* TODO(samzhou19815): Remove and cleanup `Context.literal_subtypes` *)
+let _detect_literal_subtypes =
   let open Type in
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
   let rec unwrap = function
@@ -1625,19 +1605,7 @@ let post_merge_checks cx file_sig ast tast metadata =
   detect_unnecessary_optional_chains cx;
   detect_constant_conditions cx;
   detect_import_export_errors cx ast metadata;
-  if Context.enable_invalid_comparison_general cx || Context.enable_invalid_comparison_null_check cx
-  then begin
-    detect_invalid_strict_comparison cx
-  end;
-  if
-    not
-      (Context.enable_invalid_comparison_general cx
-      && Context.enable_invalid_comparison_null_check cx
-      )
-  then begin
-    detect_matching_props_violations cx;
-    detect_literal_subtypes cx
-  end;
+  detect_invalid_strict_comparison cx;
   detect_unused_promises cx;
   check_union_opt cx;
   check_spread_prop_keys cx tast;

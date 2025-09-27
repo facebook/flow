@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Make the Set readonly",
+      "kind": "refactor.rewrite",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/map_and_set.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 9,
+                  "character": 13
+                },
+                "end": {
+                  "line": 9,
+                  "character": 16
+                }
+              },
+              "newText": "ReadonlySet"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_rewrite_readonly_conversion",
+          "Make the Set readonly"
+        ]
+      }
+    }
+  ]
+}

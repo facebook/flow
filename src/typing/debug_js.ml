@@ -1231,15 +1231,32 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
-    | EPropsNotFoundInSubtyping
-        { prop_names; reason_lower; reason_upper; use_op; due_to_neutral_optional_property } ->
+    | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
       spf
-        "EPropsNotFoundInSubtyping ([%s], %s, %s, %s, due_to_neutral_optional_property=%b)"
+        "EPropsNotFoundInSubtyping ([%s], %s, %s, %s)"
         (Nel.map display_string_of_name prop_names |> Nel.to_list |> Base.String.concat ~sep:",")
         (dump_reason cx reason_lower)
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
-        due_to_neutral_optional_property
+    | EPropsNotFoundInInvariantSubtyping
+        {
+          prop_names;
+          reason_lower;
+          reason_upper;
+          lower_obj_loc;
+          upper_obj_loc;
+          lower_obj_desc = _;
+          upper_obj_desc = _;
+          use_op;
+        } ->
+      spf
+        "EPropsNotFoundInSubtyping ([%s], %s, %s, %s, %s, %s)"
+        (Nel.map display_string_of_name prop_names |> Nel.to_list |> Base.String.concat ~sep:",")
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_aloc lower_obj_loc)
+        (string_of_aloc upper_obj_loc)
+        (string_of_use_op use_op)
     | EIndexerCheckFailed { prop_name = prop; reason_lower; reason_upper; reason_indexer; use_op }
       ->
       spf

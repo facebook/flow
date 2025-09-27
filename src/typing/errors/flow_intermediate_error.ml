@@ -904,22 +904,45 @@ let rec make_intermediate_error :
       use_op
       (MessagePropMissing { lower; upper = Some upper; prop; suggestion; reason_indexer })
   in
-  let mk_props_missing_in_subtyping_error ~due_to_neutral_optional_property props lower upper use_op
-      =
+  let mk_props_missing_in_subtyping_error props lower upper use_op =
     let loc = loc_of_reason lower in
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
-    let explanation =
-      if due_to_neutral_optional_property then
-        let props_plural =
-          match props with
-          | (_, []) -> false
-          | (_, _ :: _) -> true
-        in
-        Some (ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper })
-      else
-        None
-    in
+    let explanation = None in
     mk_use_op_error loc use_op ?explanation (MessagePropsMissing { lower; upper; props })
+  in
+  let mk_props_missing_in_invariant_subtyping_error
+      ~props
+      ~reason_lower
+      ~reason_upper
+      ~lower_obj_loc
+      ~upper_obj_loc
+      ~lower_obj_desc
+      ~upper_obj_desc
+      ~use_op =
+    let reason_lower = mod_lower_reason_according_to_use_ops reason_lower use_op in
+    let explanation =
+      let props_plural =
+        match props with
+        | (_, []) -> false
+        | (_, _ :: _) -> true
+      in
+      Some
+        (ExplanationPropertyMissingDueToNeutralOptionalProperty
+           {
+             props_plural;
+             lower_obj_loc;
+             upper_obj_loc;
+             lower_obj_desc;
+             upper_obj_desc;
+             upper_object_reason = reason_upper;
+           }
+        )
+    in
+    mk_use_op_error
+      (loc_of_reason reason_lower)
+      use_op
+      ?explanation
+      (MessagePropsMissing { lower = reason_lower; upper = reason_upper; props })
   in
   (* An error that occurs when some arbitrary "use" is incompatible with the
    * "lower" type. The use_op describes the path which we followed to find this
@@ -1017,16 +1040,30 @@ let rec make_intermediate_error :
         reason_upper
         reason_indexer
         use_op
+    | (None, PropsMissingInSubtyping { props; reason_lower; reason_upper; use_op }) ->
+      mk_props_missing_in_subtyping_error props reason_lower reason_upper use_op
     | ( None,
-        PropsMissingInSubtyping
-          { props; reason_lower; reason_upper; use_op; due_to_neutral_optional_property }
+        PropsMissingInInvariantSubtyping
+          {
+            props;
+            reason_lower;
+            reason_upper;
+            lower_obj_loc;
+            upper_obj_loc;
+            lower_obj_desc;
+            upper_obj_desc;
+            use_op;
+          }
       ) ->
-      mk_props_missing_in_subtyping_error
-        ~due_to_neutral_optional_property
-        props
-        reason_lower
-        reason_upper
-        use_op
+      mk_props_missing_in_invariant_subtyping_error
+        ~props
+        ~reason_lower
+        ~reason_upper
+        ~lower_obj_loc
+        ~upper_obj_loc
+        ~lower_obj_desc
+        ~upper_obj_desc
+        ~use_op
     | ( None,
         PropsExtraAgainstExactObject { props; reason_l_obj = lower; reason_r_obj = upper; use_op }
       ) ->
@@ -1168,28 +1205,51 @@ let to_printable_error :
         text
           "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
       ]
-    | ExplanationPropertyMissingDueToNeutralOptionalProperty { props_plural; lower; upper } ->
+    | ExplanationPropertyMissingDueToNeutralOptionalProperty
+        {
+          props_plural;
+          lower_obj_loc;
+          upper_obj_loc;
+          lower_obj_desc;
+          upper_obj_desc;
+          upper_object_reason;
+        } ->
       ( if props_plural then
-        [text "These optional properties of "; ref upper; text " are"]
+        [text "These optional properties of "; ref upper_object_reason; text " are"]
       else
-        [text "This optional property of "; ref upper; text " is"]
+        [text "This optional property of "; ref upper_object_reason; text " is"]
       )
       @ [text " invariantly typed. To fix,\n- Either "]
-      @ (match desc_of_reason lower with
-        | RObjectLit
-        | RObjectLit_UNSOUND ->
-          [text "annotate "; ref lower; text " with the type of "; ref upper]
-        | _ -> [text "make "; ref lower; text " and "; ref upper; text " exactly the same"])
+      @ (match (lower_obj_desc, upper_obj_desc) with
+        | (Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc), Ok _)
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc lower_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+          ]
+        | (Ok _, Error ((RObjectLit | RObjectLit_UNSOUND | RArrayLit | RArrayLit_UNSOUND) as desc))
+          ->
+          [
+            text "annotate ";
+            ref (mk_reason desc upper_obj_loc);
+            text " with ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+          ]
+        | _ ->
+          [
+            text "make ";
+            ref_of_ty_or_desc lower_obj_loc lower_obj_desc;
+            text " and ";
+            ref_of_ty_or_desc upper_obj_loc upper_obj_desc;
+            text " exactly the same";
+          ])
       @ [text "\n- Or make "]
-      @ ( if props_plural then
-          [text "these optional properties"]
-        else
-          [text "this optional property"]
-        )
       @ [
-          text " readonly in ";
-          ref upper;
-          text "\nSee ";
+          ref upper_object_reason;
+          text " readonly. ";
+          text "See ";
           text
             "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
         ]

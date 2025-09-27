@@ -77,7 +77,7 @@ function singleton() {
   function test3(x: AorB & AorC) {
     switch (x.type) {
       case A: break;
-      case B: break; // error B is not included in 'A'
+      case B: break; // Ok. Ideally should error since `x.type` should just evaluate to `A`, but our intersection support is buggy.
       case C: break; // error C is not included in 'A'
       case D: break; // error D is not included in 'A'
     }
@@ -85,7 +85,7 @@ function singleton() {
 
   function test4(x: AorB & AorC) {
     if (x.type === A) {};
-    if (x.type === B) {}; // error B is not included in 'A'
+    if (x.type === B) {}; // Ok. Ideally should error since `x.type` should just evaluate to `A`, but our intersection support is buggy.
     if (x.type === C) {}; // error C is not included in 'A'
     if (x.type === D) {}; // error D is not included in 'A'
   }
@@ -138,7 +138,7 @@ function literal_types() {
   function test3(x: AorB & AorC) {
     switch (x.type) {
       case A: break;
-      case B: break; // error B is not included in 'A'
+      case B: break; // Ok. Ideally should error since `x.type` should just evaluate to `A`, but our intersection support is buggy.
       case C: break; // error C is not included in 'A'
       case D: break; // error D is not included in 'A'
     }
@@ -146,7 +146,7 @@ function literal_types() {
 
   function test4(x: AorB & AorC) {
     if (x.type === A) {};
-    if (x.type === B) {}; // error B is not included in 'A'
+    if (x.type === B) {}; // Ok. Ideally should error since `x.type` should just evaluate to `A`, but our intersection support is buggy.
     if (x.type === C) {}; // error C is not included in 'A'
     if (x.type === D) {}; // error D is not included in 'A'
   }

@@ -29,7 +29,7 @@ type saved_state_fetcher =
 
 module ReactRefAsProp = struct
   type t =
-    | StoreRefInPropsNoSpecialCase  (** Store ref as a regular prop *)
+    | Legacy  (** Only in component syntax: ban ref prop in spread *)
     | FullSupport  (** Implement full React 19 behavior *)
 end
 
@@ -154,10 +154,7 @@ type t = {
   opt_module_name_mappers: (Str.regexp * string) list;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_natural_inference_array_object_literal_implicit_instantiation_fix: bool;
   opt_natural_inference_array_object_literal_implicit_instantiation_fix_excludes: Str.regexp list;
-  opt_natural_inference_jsx_literal: bool;
-  opt_natural_inference_jsx_literal_excludes: Str.regexp list;
   opt_no_unchecked_indexed_access: bool;
   opt_node_main_fields: string list;
   opt_node_package_export_conditions: string list;
@@ -165,12 +162,6 @@ type t = {
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
   opt_opaque_type_new_bound_syntax: bool;
   opt_pattern_matching_includes: string list;
-  opt_constant_condition: bool;
-  opt_constant_condition_boolean_literal_includes: string list;
-  opt_constant_condition_null_void_includes: string list;
-  opt_constant_condition_function_includes: string list;
-  opt_invalid_comparison_general_includes: string list;
-  opt_invalid_comparison_null_check_includes: string list;
   opt_profile: bool;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
@@ -273,19 +264,6 @@ let enable_pattern_matching opts = opts.opt_enable_pattern_matching
 
 let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
-let constant_condition opts = opts.opt_constant_condition
-
-let constant_condition_boolean_literal_includes opts =
-  opts.opt_constant_condition_boolean_literal_includes
-
-let constant_condition_function_includes opts = opts.opt_constant_condition_function_includes
-
-let constant_condition_null_void_includes opts = opts.opt_constant_condition_null_void_includes
-
-let invalid_comparison_general_includes opts = opts.opt_invalid_comparison_general_includes
-
-let invalid_comparison_null_check_includes opts = opts.opt_invalid_comparison_null_check_includes
-
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
@@ -352,15 +330,8 @@ let module_system opts = opts.opt_module
 
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 
-let natural_inference_array_object_literal_implicit_instantiation_fix opts =
-  opts.opt_natural_inference_array_object_literal_implicit_instantiation_fix
-
 let natural_inference_array_object_literal_implicit_instantiation_fix_excludes opts =
   opts.opt_natural_inference_array_object_literal_implicit_instantiation_fix_excludes
-
-let natural_inference_jsx_literal opts = opts.opt_natural_inference_jsx_literal
-
-let natural_inference_jsx_literal_excludes opts = opts.opt_natural_inference_jsx_literal_excludes
 
 let no_unchecked_indexed_access opts = opts.opt_no_unchecked_indexed_access
 

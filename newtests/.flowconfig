@@ -9,6 +9,7 @@
 .*/json5/test/parse-cases/.*
 .*/newtests/.*
 !.*/newtests/.*/test.js
+!.*/newtests/.*/test-utils.js
 !.*/newtests/Tester.js
 
 [options]
