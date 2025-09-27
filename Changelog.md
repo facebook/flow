@@ -1,3 +1,17 @@
+### 0.287.0
+
+Breaking Changes:
+*  We will stop publishing new versions of flow-parser-bin. If you want to parse flow code with native-like performance, you should use `hermes-parser` package, which is running on wasm.
+
+Likely to cause new Flow errors:
+* The deprecated `React$Element` type is now removed. You should use `React.Node` or `React.MixedElement` in most cases. If you really want exact react elements, you can use `ExactReactElement_DEPRECATED`
+
+New Features:
+* Flow has full React 19 ref-as-prop support. Since this version, you are allowed to spread ref prop in component syntax components.
+
+IDE:
+* We now provide a rewrite refactor to convert arrays, map, set, and object types into their readonly forms.
+
 ### 0.286.0
 
 Breaking Changes:
