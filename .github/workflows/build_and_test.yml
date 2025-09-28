@@ -528,10 +528,6 @@ jobs:
         ls -lR .
         cp dist/flow_parser.js packages/flow-parser/dist/flow_parser.js
         make dist/npm-flow-parser.tgz
-    - name: Pack flow-parser-bin
-      run: |
-        mkdir -p packages/flow-parser-bin/dist/release/
-        make dist/npm-flow-parser-bin.tgz
     - name: Pack flow-remove-types and flow-node
       run: |
         rm -rf packages/flow-node
@@ -544,7 +540,6 @@ jobs:
         name: npm_pack
         path: |
           dist/npm-flow-parser.tgz
-          dist/npm-flow-parser-bin.tgz
           dist/npm-flow-node.tgz
           dist/npm-flow-remove-types.tgz
     - name: Deploy to npm
