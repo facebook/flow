@@ -97,6 +97,8 @@ jobs:
       run: |-
         opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/linux && cp bin/flow bin/linux/flow
+    - name: Create artifacts
+      run: cp dist/flow.zip dist/flow-linux64.zip
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_linux_bin
@@ -140,6 +142,8 @@ jobs:
       run: |-
         opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/linux && cp bin/flow bin/linux/flow
+    - name: Create artifacts
+      run: cp dist/flow.zip dist/flow-linux64-arm64.zip
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_linux_arm64_dist
@@ -176,10 +180,17 @@ jobs:
       run: |-
         arch --x86_64 opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/macos && cp bin/flow bin/macos/flow
+    - name: Create artifacts
+      run: cp dist/flow.zip dist/flow-osx.zip
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_bin
         path: bin/macos/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_macos_dist
+        path: |
+          dist/flow-osx.zip
   build_macos_arm64:
     runs-on: macos-13-xlarge
     steps:
@@ -211,10 +222,17 @@ jobs:
       run: |-
         opam exec -- make bin/flow dist/flow.zip
         mkdir -p bin/macos-arm64 && cp bin/flow bin/macos-arm64/flow
+    - name: Create artifacts
+      run: cp dist/flow.zip dist/flow-osx-arm64.zip
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_macos_arm64_bin
         path: bin/macos-arm64/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_macos_arm64_dist
+        path: |
+          dist/flow-osx-arm64.zip
   build_win:
     runs-on: windows-2022
     env:
@@ -510,6 +528,10 @@ jobs:
         ls -lR .
         cp dist/flow_parser.js packages/flow-parser/dist/flow_parser.js
         make dist/npm-flow-parser.tgz
+    - name: Pack flow-parser-bin
+      run: |
+        mkdir -p packages/flow-parser-bin/dist/release/
+        make dist/npm-flow-parser-bin.tgz
     - name: Pack flow-remove-types and flow-node
       run: |
         rm -rf packages/flow-node
