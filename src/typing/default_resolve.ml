@@ -31,11 +31,10 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
           exp_reason = _;
           lhs_reason = _;
           methodcalltype = { meth_tout; _ };
-          voided_out = tout;
+          voided_out_collector = _;
           return_hint = _;
           specialized_callee;
         } ->
-      resolve tout;
       resolve_tvar meth_tout;
       resolve_specialized_callee specialized_callee
     | CallM { methodcalltype = { meth_tout; _ }; return_hint = _; specialized_callee } ->
@@ -157,9 +156,7 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
   | ConcretizeT _ -> _TODO
-  | OptionalChainT { t_out; voided_out; _ } ->
-    resolve voided_out;
-    default_resolve_touts ~flow cx loc t_out
+  | OptionalChainT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) -> resolve_spread_resolve rrt_resolve_to
   | CondT (_, _, _, t) -> resolve t
   | ExtendsUseT _ -> ()

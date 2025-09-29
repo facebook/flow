@@ -785,8 +785,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjRestT (_, xs, arg, _) -> p t ~extra:(spf "[%s], %s" (String.concat "; " xs) (kid arg))
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
-    | OptionalChainT { t_out; voided_out; _ } ->
-      p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
+    | OptionalChainT { t_out; _ } -> p ~extra:(spf "%s" (use_kid t_out)) t
     | OptionalIndexedAccessT { index = OptionalIndexedAccessTypeIndex index_type; _ } ->
       p ~extra:(kid index_type) t
     | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->

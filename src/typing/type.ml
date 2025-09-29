@@ -758,7 +758,7 @@ module rec TypeTerm : sig
         reason: reason;
         lhs_reason: reason;
         t_out: use_t;
-        voided_out: t_out;
+        voided_out_collector: TypeCollector.t option;
       }
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
@@ -942,7 +942,7 @@ module rec TypeTerm : sig
         exp_reason: reason;
         lhs_reason: reason;
         methodcalltype: methodcalltype;
-        voided_out: t_out;
+        voided_out_collector: TypeCollector.t option;
         return_hint: lazy_hint_t;
         specialized_callee: specialized_callee option;
       }
@@ -958,7 +958,7 @@ module rec TypeTerm : sig
         exp_reason: reason;
         lhs_reason: reason;
         opt_methodcalltype: opt_methodcalltype;
-        voided_out: t_out;
+        voided_out_collector: TypeCollector.t option;
         return_hint: lazy_hint_t;
         specialized_callee: specialized_callee option;
       }
@@ -4459,13 +4459,20 @@ let apply_opt_action action t_out =
         specialized_callee;
       }
   | OptChainM
-      { exp_reason; lhs_reason; opt_methodcalltype; voided_out; return_hint; specialized_callee } ->
+      {
+        exp_reason;
+        lhs_reason;
+        opt_methodcalltype;
+        voided_out_collector;
+        return_hint;
+        specialized_callee;
+      } ->
     ChainM
       {
         exp_reason;
         lhs_reason;
         methodcalltype = apply_opt_methodcalltype opt_methodcalltype t_out;
-        voided_out;
+        voided_out_collector;
         return_hint;
         specialized_callee;
       }

@@ -720,11 +720,13 @@ struct
         (******************************)
         (* optional chaining - part A *)
         (******************************)
-        | (DefT (_, VoidT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
+        | (DefT (_, VoidT), OptionalChainT { reason; lhs_reason; voided_out_collector; t_out; _ })
+          ->
           CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
           Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
-          rec_flow_t ~use_op:unknown_use cx trace (l, voided_out)
-        | (DefT (r, NullT), OptionalChainT { reason; lhs_reason; voided_out; t_out; _ }) ->
+          Base.Option.iter voided_out_collector ~f:(fun c -> TypeCollector.add c l)
+        | (DefT (r, NullT), OptionalChainT { reason; lhs_reason; voided_out_collector; t_out; _ })
+          ->
           CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
           let void =
             match desc_of_reason r with
@@ -736,7 +738,7 @@ struct
             | _ -> DefT (r, VoidT)
           in
           Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
-          rec_flow_t ~use_op:unknown_use cx trace (void, voided_out)
+          Base.Option.iter voided_out_collector ~f:(fun c -> TypeCollector.add c void)
         (***************************)
         (* optional indexed access *)
         (***************************)
@@ -1915,7 +1917,7 @@ struct
         (******************************)
         (* The remaining cases of OptionalChainT will be handled after union-like,
          * intersections and type applications have been resolved *)
-        | (_, OptionalChainT { reason; lhs_reason; t_out; voided_out = _ }) ->
+        | (_, OptionalChainT { reason; lhs_reason; t_out; voided_out_collector = _ }) ->
           Context.mark_optional_chain
             cx
             (loc_of_reason reason)
@@ -5437,7 +5439,7 @@ struct
             exp_reason;
             lhs_reason;
             methodcalltype = mct;
-            voided_out;
+            voided_out_collector;
             return_hint;
             specialized_callee;
           } ->
@@ -5446,7 +5448,7 @@ struct
             exp_reason;
             lhs_reason;
             methodcalltype = { mct with meth_generic_this = Some l };
-            voided_out;
+            voided_out_collector;
             return_hint;
             specialized_callee;
           }
@@ -8925,7 +8927,7 @@ struct
           exp_reason;
           lhs_reason;
           methodcalltype = app;
-          voided_out = vs;
+          voided_out_collector = vs;
           return_hint;
           specialized_callee;
         } ->
@@ -8942,7 +8944,7 @@ struct
                   call_action = Funcalltype (call_of_method_app this_arg specialized_callee app);
                   return_hint;
                 };
-            voided_out = vs;
+            voided_out_collector = vs;
           }
       in
       rec_flow cx trace (l, u)

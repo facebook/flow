@@ -611,7 +611,7 @@ module Make
   let method_call_opt_use
       cx
       opt_state
-      ~voided_out
+      ~voided_out_collector
       reason
       ~use_op
       ~private_
@@ -632,18 +632,18 @@ module Make
       match opt_state with
       | AssertChain
       | NewChain ->
-        let (voided_out, exp_reason) =
+        let (voided_out_collector, exp_reason) =
           if opt_state = NewChain then
-            (voided_out, mk_reason ROptionalChain chain_loc)
+            (Some voided_out_collector, mk_reason ROptionalChain chain_loc)
           else
-            (MixedT.make (reason_of_t voided_out), mk_reason (RCustom "!") chain_loc)
+            (None, mk_reason (RCustom "!") chain_loc)
         in
         OptChainM
           {
             exp_reason;
             lhs_reason = mk_expression_reason expr;
             opt_methodcalltype;
-            voided_out;
+            voided_out_collector;
             return_hint = Type.hint_unavailable;
             specialized_callee;
           }
@@ -719,7 +719,7 @@ module Make
 
   let elem_call_opt_use
       opt_state
-      ~voided_out
+      ~voided_out_collector
       ~use_op
       ~reason_call
       ~reason_lookup
@@ -734,18 +734,18 @@ module Make
       match opt_state with
       | AssertChain
       | NewChain ->
-        let voided_out =
+        let voided_out_collector =
           if opt_state = NewChain then
-            voided_out
+            Some voided_out_collector
           else
-            MixedT.make (reason_of_t voided_out)
+            None
         in
         OptChainM
           {
             exp_reason = reason_chain;
             lhs_reason = reason_expr;
             opt_methodcalltype;
-            voided_out;
+            voided_out_collector;
             return_hint = Type.hint_unavailable;
             specialized_callee;
           }
@@ -4534,17 +4534,14 @@ module Make
       let reason = get_reason chain_t in
       let chain_reason = mk_reason ROptionalChain loc in
       let mem_tvar = (reason, Tvar.mk_no_wrap cx reason) in
-      let voided_out =
-        Tvar.mk_where cx reason (fun t ->
-            Base.List.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
-        )
-      in
+      let voided_out_collector = TypeCollector.create () in
+      Base.List.iter ~f:(TypeCollector.add voided_out_collector) voided_t;
       let opt_use = get_opt_use subexpression_types reason in
-      let chain_voided_out =
+      let chain_voided_out_collector =
         if assertion then
-          MixedT.make reason
+          None
         else
-          voided_out
+          Some voided_out_collector
       in
       Flow.flow
         cx
@@ -4554,11 +4551,13 @@ module Make
               reason = chain_reason;
               lhs_reason;
               t_out = apply_opt_use opt_use mem_tvar;
-              voided_out = chain_voided_out;
+              voided_out_collector = chain_voided_out_collector;
             }
         );
       let mem_t = OpenT mem_tvar in
-      let voided_out = normalize_voided_out voided_out in
+      let voided_out =
+        normalize_voided_out (TypeCollector.collect voided_out_collector |> union_of_ts reason)
+      in
       let lhs_t =
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx reason (fun t ->
             Flow.flow_t cx (mem_t, t);
@@ -4885,7 +4884,7 @@ module Make
         let specialized_callee = Context.new_specialized_callee cx in
         let ( filtered_out,
               lookup_voided_out,
-              call_voided_out,
+              call_voided_out_collector,
               member_lhs_t,
               prop_t,
               obj_filtered_out,
@@ -4912,7 +4911,7 @@ module Make
                 )
             in
             let prop_t = Tvar.mk cx reason_prop in
-            let call_voided_out = Tvar.mk cx reason_call in
+            let call_voided_out_collector = TypeCollector.create () in
             let private_ =
               match property with
               | Member.PropertyExpression _ ->
@@ -4924,7 +4923,7 @@ module Make
               method_call_opt_use
                 cx
                 opt_state
-                ~voided_out:call_voided_out
+                ~voided_out_collector:call_voided_out_collector
                 reason_call
                 ~use_op
                 ~private_
@@ -4937,17 +4936,18 @@ module Make
             in
             let handle_refined_callee argts obj_t f =
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason_call (fun t ->
+                  let voided_out_collector = TypeCollector.create () in
                   let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
                   Flow.unify cx f prop_t;
                   let call_t =
                     match opt_state with
                     | AssertChain
                     | NewChain ->
-                      let (chain_reason, voided_out) =
+                      let (chain_reason, voided_out_collector_opt) =
                         if opt_state = NewChain then
-                          (mk_reason ROptionalChain loc, OpenT t)
+                          (mk_reason ROptionalChain loc, Some voided_out_collector)
                         else
-                          (mk_reason (RCustom "!") loc, MixedT.make reason_call)
+                          (mk_reason (RCustom "!") loc, None)
                       in
                       let lhs_reason = mk_expression_reason callee in
                       OptionalChainT
@@ -4962,7 +4962,7 @@ module Make
                                 call_action = Funcalltype app;
                                 return_hint = Type_env.get_hint cx loc;
                               };
-                          voided_out;
+                          voided_out_collector = voided_out_collector_opt;
                         }
                     | _ ->
                       CallT
@@ -4973,7 +4973,10 @@ module Make
                           return_hint = Type_env.get_hint cx loc;
                         }
                   in
-                  Flow.flow cx (f, call_t)
+                  Flow.flow cx (f, call_t);
+                  TypeCollector.iter voided_out_collector ~f:(fun void_t ->
+                      Flow.flow_t cx (void_t, OpenT t)
+                  )
               )
             in
             let get_mem_t argts reason obj_t =
@@ -5014,7 +5017,7 @@ module Make
             in
             ( filtered_out,
               lookup_voided_out,
-              call_voided_out,
+              call_voided_out_collector,
               member_lhs_t,
               prop_t,
               obj_filtered_out,
@@ -5038,12 +5041,12 @@ module Make
                    }
                 )
             in
-            let call_voided_out = Tvar.mk cx expr_reason in
+            let call_voided_out_collector = TypeCollector.create () in
             let prop_t = Tvar.mk cx reason_lookup in
             let get_opt_use (argts, elem_t) _ =
               elem_call_opt_use
                 opt_state
-                ~voided_out:call_voided_out
+                ~voided_out_collector:call_voided_out_collector
                 ~use_op
                 ~reason_call
                 ~reason_lookup
@@ -5086,7 +5089,7 @@ module Make
             in
             ( filtered_out,
               lookup_voided_out,
-              call_voided_out,
+              call_voided_out_collector,
               member_lhs_t,
               prop_t,
               obj_filtered_out,
@@ -5097,7 +5100,10 @@ module Make
             )
         in
         let voided_out =
-          join_optional_branches lookup_voided_out call_voided_out |> normalize_voided_out
+          join_optional_branches
+            lookup_voided_out
+            (TypeCollector.collect call_voided_out_collector |> union_of_ts expr_reason)
+          |> normalize_voided_out
         in
         let lhs_t =
           Tvar_resolver.mk_tvar_and_fully_resolve_where cx (reason_of_t member_lhs_t) (fun t ->
@@ -5572,11 +5578,10 @@ module Make
              delete a?.b
               is equivalent to
              a == null ? true : delete a.b
-           So if a is null, no work has to be done. Hence, the nullable output
-           for the optional chain is mixed.
+           So if a is null, no work has to be done. Hence, we don't collect
+           the nullable output for the optional chain.
         *)
-        let mixed = MixedT.at lhs_loc in
-        OptionalChainT { reason; lhs_reason; t_out = use_t; voided_out = mixed }
+        OptionalChainT { reason; lhs_reason; t_out = use_t; voided_out_collector = None }
       | _ -> use_t
     in
     let typecheck_object obj =
