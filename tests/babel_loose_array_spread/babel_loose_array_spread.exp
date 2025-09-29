@@ -26,8 +26,8 @@ property `@@iterator` of type argument `A`. [incompatible-type]
                        ^^
 
 References:
-   <BUILTINS>/core.js:1938:19
-   1938|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:1943:19
+   1943|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:1180:17
    1180|   @@iterator(): Iterator<T>;
