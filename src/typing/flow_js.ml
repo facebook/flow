@@ -1153,8 +1153,6 @@ struct
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (OptionalT _, ResolveUnionT { reason; resolved; unresolved; upper; id }) ->
           resolve_union cx trace reason id resolved unresolved l upper
-        | (OptionalT { reason = _; type_ = t; use_desc = _ }, ExtractReactRefT _) ->
-          rec_flow cx trace (t, u)
         | (OptionalT { reason = r; type_ = t; use_desc }, _)
           when match u with
                | ConditionalT { distributive_tparam_name; _ } ->
@@ -1163,9 +1161,6 @@ struct
           let void = VoidT.why_with_use_desc ~use_desc r in
           rec_flow cx trace (void, u);
           rec_flow cx trace (t, u)
-        | (_, ExtractReactRefT (reason, tout)) ->
-          let t_ = ImplicitInstantiationKit.run_ref_extractor cx ~use_op:unknown_use ~reason l in
-          rec_flow_t cx ~use_op:unknown_use trace (t_, tout)
         (*********************)
         (* type applications *)
         (*********************)
@@ -1702,9 +1697,7 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
         | (UnionT (_, rep), _)
           when match u with
-               | WriteComputedObjPropCheckT _
-               | ExtractReactRefT _ ->
-                 false
+               | WriteComputedObjPropCheckT _ -> false
                | ConditionalT { distributive_tparam_name; _ } ->
                  Option.is_some distributive_tparam_name
                | _ -> true ->
@@ -5939,7 +5932,6 @@ struct
     (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
        true *)
     | HasOwnPropT _
-    | ExtractReactRefT _
     | ImplementsT _
     | SetPrivatePropT _
     | SetProtoT _

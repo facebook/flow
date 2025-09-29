@@ -81,9 +81,6 @@ module type KIT = sig
     false_t:Type.t ->
     Type.t
 
-  val run_ref_extractor :
-    Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
-
   val run_render_extractor :
     Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 

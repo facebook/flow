@@ -173,7 +173,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | HooklikeT tvar
   | DeepReadOnlyT (tvar, _) ->
     resolve_tvar tvar
-  | ExtractReactRefT (_, t)
   | FilterOptionalT (_, t)
   | FilterMaybeT (_, t) ->
     resolve t

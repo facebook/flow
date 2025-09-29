@@ -419,7 +419,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ConcretizeT _
     | FilterOptionalT _
     | FilterMaybeT _
-    | ExtractReactRefT _
     | SealGenericT _ ->
       UpperNonT u
     | DeepReadOnlyT (tout, _) -> identity_reverse_upper_bound cx seen tvar (OpenT tout)
@@ -1495,9 +1494,6 @@ module type KIT = sig
     false_t:Type.t ->
     Type.t
 
-  val run_ref_extractor :
-    Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
-
   val run_render_extractor :
     Context.t -> use_op:Type.use_op -> reason:Reason.reason -> Type.t -> Type.t
 
@@ -1586,37 +1582,6 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
         let t = instantiate_poly_with_subst_map cx trace t soln ~use_op ~reason_op ~reason_tapp in
         (t, inferred_targs)
     )
-
-  let run_ref_extractor cx ~use_op ~reason t =
-    let lhs =
-      Flow_js_utils.ImportExportUtils.get_implicitly_imported_react_type
-        cx
-        (loc_of_reason reason)
-        ~singleton_concretize_type_for_imports_exports:
-          FlowJs.singleton_concretize_type_for_imports_exports
-        ~purpose:Flow_intermediate_error_types.ReactModuleForReactRefSetterType
-    in
-    match get_t cx lhs with
-    | DefT (_, PolyT { tparams_loc; tparams = ({ name; _ }, []) as ids; t_out; _ }) ->
-      let poly_t = (tparams_loc, ids, t_out) in
-      let check =
-        {
-          Implicit_instantiation_check.lhs;
-          poly_t;
-          operation = (use_op, reason, Implicit_instantiation_check.SubtypeLowerPoly t);
-        }
-      in
-      Context.run_in_implicit_instantiation_mode cx (fun () ->
-          let (map, _) =
-            Instantiation_solver.solve_targs cx ~use_op ~allow_underconstrained:false check
-          in
-          let { Generalized_targ.generalized; _ } = Subst_name.Map.find name map in
-          generalized
-      )
-    | _ ->
-      (* If the internal definition for React$RefSetter isn't polymorphic, either we're running with
-         no-flowlib or things have gone majorly sideways. Either way, just use mixed *)
-      MixedT.make reason
 
   let run_render_extractor cx ~use_op ~reason t =
     let name = Subst_name.Name "T" in

@@ -826,7 +826,6 @@ module rec TypeTerm : sig
         reason: reason;
         async: bool;
       }
-    | ExtractReactRefT of reason * t
     | WriteComputedObjPropCheckT of {
         reason: reason;
         reason_key: reason option;
@@ -4222,7 +4221,6 @@ let string_of_use_ctor = function
   | DestructuringT _ -> "DestructuringT"
   | ResolveUnionT _ -> "ResolveUnionT"
   | FilterOptionalT _ -> "FilterOptionalT"
-  | ExtractReactRefT _ -> "ExtractReactRefT"
   | FilterMaybeT _ -> "FilterMaybeT"
   | DeepReadOnlyT _ -> "DeepReadOnlyT"
   | HooklikeT _ -> "HooklikeT"

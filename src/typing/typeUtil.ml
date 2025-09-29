@@ -92,7 +92,6 @@ and reason_of_use_t = function
   | ValueToTypeReferenceT (_, reason, _, _) -> reason
   | TypeCastT (_, t) -> reason_of_t t
   | FilterOptionalT (_, t) -> reason_of_t t
-  | ExtractReactRefT (reason, _) -> reason
   | FilterMaybeT (_, t) -> reason_of_t t
   | DeepReadOnlyT ((r, _), _) -> r
   | HooklikeT (r, _) -> r
@@ -291,7 +290,6 @@ let rec util_use_op_of_use_t :
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
   | ConcretizeT _
-  | ExtractReactRefT _
   | OptionalChainT _
   | CondT (_, _, _, _)
   | DestructuringT _
