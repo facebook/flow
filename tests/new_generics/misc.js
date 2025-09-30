@@ -80,7 +80,7 @@ function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
   }
 }
 
-// OptionalChainT
+// OptionalChain.run
 function oc<
   T: $ReadOnly<{id: ?string, ...}>,
   L: ?$ReadOnly<{

@@ -31,7 +31,13 @@ module type OUTPUT = sig
     Context.t -> Type.DepthTrace.t -> Type.use_t -> Reason.reason -> Type.InterRep.t -> unit
 
   val try_custom :
-    Context.t -> ?use_op:use_op -> no_match_error_loc:ALoc.t -> (unit -> unit) list -> unit
+    Context.t ->
+    ?use_op:use_op ->
+    ?use_t:use_t ->
+    ?default_resolve:(unit -> unit) ->
+    no_match_error_loc:ALoc.t ->
+    (unit -> unit) list ->
+    unit
 
   (**
    * [try_singleton_throw_on_failure cx trace reason t u] runs the constraint
@@ -67,6 +73,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | CustomCases of {
         use_op: use_op option;
         no_match_error_loc: ALoc.t;
+        use_t: Type.use_t option;
+        default_resolve: (unit -> unit) option;
         cases: (unit -> unit) list;
       }
 
@@ -100,7 +108,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       call_callee_hint_ref := new_callee_hint
     | NoInformationForSynthesisLogging -> ()
 
-  let rec log_specialized_use cx use case speculation_id =
+  let log_specialized_use use case speculation_id =
     match use with
     | CallT { call_action = Funcalltype { call_specialized_callee = Some c; _ }; _ }
     | MethodT
@@ -115,12 +123,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let spec_id = (speculation_id, case.Speculation_state.case_id) in
       Base.List.find data.speculative_candidates ~f:(fun (_, spec_id') -> spec_id = spec_id')
       |> Base.Option.iter ~f:(fun (l, _) -> data.finalized <- l :: data.finalized)
-    | OptionalChainT { t_out; _ } -> log_specialized_use cx t_out case speculation_id
     | _ -> ()
 
-  let log_specialized_callee cx spec case speculation_id =
+  let log_specialized_callee spec case speculation_id =
     match spec with
-    | IntersectionCases { use_t; _ } -> log_specialized_use cx use_t case speculation_id
+    | IntersectionCases { use_t; _ }
+    | CustomCases { use_t = Some use_t; _ } ->
+      log_specialized_use use_t case speculation_id
     | _ -> ()
 
   type case_spec =
@@ -199,8 +208,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
     let ls = InterRep.members rep in
     speculative_matches cx trace (IntersectionCases { intersection_reason; ls; use_t })
 
-  and try_custom cx ?use_op ~no_match_error_loc cases =
-    speculative_matches cx DepthTrace.dummy_trace (CustomCases { use_op; no_match_error_loc; cases })
+  and try_custom cx ?use_op ?use_t ?default_resolve ~no_match_error_loc cases =
+    speculative_matches
+      cx
+      DepthTrace.dummy_trace
+      (CustomCases { use_op; no_match_error_loc; use_t; default_resolve; cases })
 
   and try_singleton_throw_on_failure cx trace t u =
     speculative_matches cx trace (SingletonCase (t, u))
@@ -335,13 +347,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ("SingletonCase should not have exactly one error, but we got "
             ^ string_of_int (List.length msgs)
             ))
-      | CustomCases { use_op; no_match_error_loc; cases } ->
+      | CustomCases { use_op; no_match_error_loc; use_t = _; default_resolve; cases } ->
         assert (List.length cases = List.length msgs);
         add_output
           cx
           (Error_message.EIncompatibleSpeculation
              { use_op; loc = no_match_error_loc; branches = msgs }
-          )
+          );
+        Base.Option.iter default_resolve ~f:(fun f -> f ())
       | IntersectionCases { intersection_reason = r; ls; use_t = upper } ->
         let err =
           let reason_lower = mk_intersection_reason r ls in
@@ -385,7 +398,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | SingletonCase (l, u) ->
       [(0, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))]
     | SingletonUnifyCase (t1, use_op, t2) -> [(0, UnifyCase (t1, Op (Speculation use_op), t2))]
-    | CustomCases { use_op = _; no_match_error_loc = _; cases } ->
+    | CustomCases { use_op = _; no_match_error_loc = _; use_t = _; default_resolve = _; cases } ->
       Base.List.mapi cases ~f:(fun i f -> (i, CustomCase f))
 
   (* spec optimization *)
@@ -527,6 +540,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   and fire_actions cx trace spec case speculation_id =
     log_synthesis_result cx trace case speculation_id;
-    log_specialized_callee cx spec case speculation_id;
+    log_specialized_callee spec case speculation_id;
     List.iter (add_output cx) case.Speculation_state.errors
 end

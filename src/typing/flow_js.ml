@@ -164,6 +164,7 @@ struct
 
   module InstantiationKit = Instantiation_kit (InstantiationHelper)
   module ImplicitInstantiationKit = Implicit_instantiation.Kit (FlowJs) (InstantiationHelper)
+  module OptionalChainKit = Optional_chain_kit.Make (FlowJs)
   include InstantiationKit
 
   let speculative_subtyping_succeeds cx l u =
@@ -717,28 +718,6 @@ struct
               }
           ) ->
           TypeCollector.add collector t
-        (******************************)
-        (* optional chaining - part A *)
-        (******************************)
-        | (DefT (_, VoidT), OptionalChainT { reason; lhs_reason; voided_out_collector; t_out; _ })
-          ->
-          CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
-          Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
-          Base.Option.iter voided_out_collector ~f:(fun c -> TypeCollector.add c l)
-        | (DefT (r, NullT), OptionalChainT { reason; lhs_reason; voided_out_collector; t_out; _ })
-          ->
-          CalleeRecorder.add_callee_use cx CalleeRecorder.Tast l t_out;
-          let void =
-            match desc_of_reason r with
-            | RNull ->
-              (* to avoid error messages like "null is incompatible with null",
-                 give VoidT that arise from `null` annotations a new description
-                 explaining why it is void and not null *)
-              DefT (replace_desc_reason RVoidedNull r, VoidT)
-            | _ -> DefT (r, VoidT)
-          in
-          Context.mark_optional_chain cx (loc_of_reason reason) lhs_reason ~useful:true;
-          Base.Option.iter voided_out_collector ~f:(fun c -> TypeCollector.add c void)
         (***************************)
         (* optional indexed access *)
         (***************************)
@@ -1776,62 +1755,6 @@ struct
                   hint;
                 }
             )
-        | ( IntersectionT _,
-            OptionalChainT
-              ( {
-                  t_out =
-                    GetPropT
-                      {
-                        use_op;
-                        reason;
-                        id = Some _;
-                        from_annot;
-                        skip_optional;
-                        propref;
-                        tout;
-                        hint;
-                      };
-                  _;
-                } as opt_chain
-              )
-          ) ->
-          rec_flow
-            cx
-            trace
-            ( l,
-              OptionalChainT
-                {
-                  opt_chain with
-                  t_out =
-                    GetPropT
-                      { use_op; reason; id = None; from_annot; skip_optional; propref; tout; hint };
-                }
-            )
-        | ( IntersectionT _,
-            OptionalChainT
-              ({ t_out = TestPropT { use_op; reason; id = _; propref; tout; hint }; _ } as opt_chain)
-          ) ->
-          rec_flow
-            cx
-            trace
-            ( l,
-              OptionalChainT
-                {
-                  opt_chain with
-                  t_out =
-                    GetPropT
-                      {
-                        use_op;
-                        reason;
-                        id = None;
-                        from_annot = false;
-                        skip_optional = false;
-                        propref;
-                        tout;
-                        hint;
-                      };
-                }
-            )
         | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
           destruct cx ~trace reason kind l selector tout id
         (* extends **)
@@ -1890,18 +1813,15 @@ struct
             ConcretizeT
               {
                 reason = _;
-                kind = ConcretizeForOperatorsChecking | ConcretizeForObjectAssign;
+                kind =
+                  ( ConcretizeForOptionalChain | ConcretizeForOperatorsChecking
+                  | ConcretizeForObjectAssign );
                 seen = _;
                 collector;
               }
           ) ->
           TypeCollector.add collector l
         | (IntersectionT (r, rep), u) ->
-          let u' =
-            match u with
-            | OptionalChainT { t_out; _ } -> t_out
-            | u -> u
-          in
           (* We only call CalleeRecorder here for sig-help information. As far as
            * the typed AST is concerned when dealing with intersections we record
            * the specific branch that was selected. Therefore, we do not record
@@ -1910,26 +1830,10 @@ struct
            * speculation job (this is a Flow error) and fall back to the
            * intersection as the type for the callee node. (This happens in
            * Default_resolver.) *)
-          CalleeRecorder.add_callee_use cx CalleeRecorder.SigHelp l u';
+          CalleeRecorder.add_callee_use cx CalleeRecorder.SigHelp l u;
           SpeculationKit.try_intersection cx trace u r rep
-        (******************************)
-        (* optional chaining - part B *)
-        (******************************)
-        (* The remaining cases of OptionalChainT will be handled after union-like,
-         * intersections and type applications have been resolved *)
-        | (_, OptionalChainT { reason; lhs_reason; t_out; voided_out_collector = _ }) ->
-          Context.mark_optional_chain
-            cx
-            (loc_of_reason reason)
-            lhs_reason
-            ~useful:
-              (match l with
-              | AnyT (_, AnyError _) -> false
-              | DefT (_, MixedT _)
-              | AnyT _ ->
-                true
-              | _ -> false);
-          rec_flow cx trace (l, t_out)
+        | (_, ConcretizeT { reason = _; kind = ConcretizeForOptionalChain; seen = _; collector }) ->
+          TypeCollector.add collector l
         (*************************)
         (* Resolving rest params *)
         (*************************)
@@ -5486,8 +5390,8 @@ struct
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
       | ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector = _ }
+      | ConcretizeT { reason = _; kind = ConcretizeForOptionalChain; seen = _; collector = _ }
       | TestPropT _
-      | OptionalChainT _
       | OptionalIndexedAccessT _
       | UseT (Op (Coercion _), DefT (_, (StrGeneralT _ | SingletonStrT _))) ->
         rec_flow cx trace (reposition_reason cx reason bound, u);
@@ -5884,7 +5788,6 @@ struct
     | ObjRestT _
     | ObjTestProtoT _
     | ObjTestT _
-    | OptionalChainT _
     | OptionalIndexedAccessT _
     | PrivateMethodT _
     | ReactKitT _
@@ -8927,27 +8830,26 @@ struct
           exp_reason;
           lhs_reason;
           methodcalltype = app;
-          voided_out_collector = vs;
+          voided_out_collector;
           return_hint;
           specialized_callee;
         } ->
-      let u =
-        OptionalChainT
-          {
-            reason = exp_reason;
-            lhs_reason;
-            t_out =
-              CallT
-                {
-                  use_op;
-                  reason = reason_call;
-                  call_action = Funcalltype (call_of_method_app this_arg specialized_callee app);
-                  return_hint;
-                };
-            voided_out_collector = vs;
-          }
-      in
-      rec_flow cx trace (l, u)
+      OptionalChainKit.run
+        cx
+        trace
+        l
+        ~reason:exp_reason
+        ~lhs_reason
+        ~upper:
+          (CallT
+             {
+               use_op;
+               reason = reason_call;
+               call_action = Funcalltype (call_of_method_app this_arg specialized_callee app);
+               return_hint;
+             }
+          )
+        ~voided_out_collector
     | NoMethodAction prop_t -> rec_flow_t cx trace ~use_op:unknown_use (l, prop_t)
 
   and perform_elem_action cx trace ~use_op ~restrict_deletes reason_op l value action =
@@ -9393,6 +9295,9 @@ struct
     | [] -> EmptyT.make reason
     | [t] -> t
     | t1 :: t2 :: ts -> UnionT (reason, UnionRep.make t1 t2 ts)
+
+  and possible_concrete_types_for_optional_chain cx reason t =
+    possible_concrete_types ConcretizeForOptionalChain cx reason t
 
   and possible_concrete_types_for_inspection cx reason t =
     possible_concrete_types ConcretizeForInspection cx reason t

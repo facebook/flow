@@ -23,6 +23,12 @@ open Func_class_sig_types
 open Type_operation_utils
 module Eq_test = Eq_test.Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
 
+module OptionalChain = struct
+  module Kit = Optional_chain_kit.Make (Flow.FlowJs)
+
+  let run cx = Kit.run cx DepthTrace.unit_trace
+end
+
 module Make
     (Destructuring : Destructuring_sig.S)
     (Func_stmt_config : Func_stmt_config_sig.S with module Types := Func_stmt_config_types.Types)
@@ -4500,8 +4506,8 @@ module Make
     let handle_new_chain ~assertion conf lhs_reason loc (chain_t, voided_t, object_ast) =
       let { ChainingConf.subexpressions; get_reason; get_opt_use; _ } = conf in
       (* We've encountered an optional chaining operator.
-         We need to flow the "success" type of obj_ into a OptionalChainT
-         type, which will "filter out" VoidT and NullT from the type of
+         We need to flow the "success" type of obj_ into a OptionalChain.run,
+         which will "filter out" VoidT and NullT from the type of
          obj_ and flow them into `voided_out`, and then flow any non-void
          type into a use_t created by applying an opt_use_t (representing the
          operation that will occur on the upper bound) to a new "output" tvar.
@@ -4509,7 +4515,7 @@ module Make
          This might not be the first optional chain operator in the chain, so
          we need to take chain_t, which is equivalent to T1 above and
          represents the result if any previous operator succeeded--this is the
-         type that we want to flow into the OptionalChainT, because if the
+         type that we want to flow into the OptionalChain.run, because if the
          previous operator failed we wouldn't reach this point in the chain in
          the first place. We also take voided_t, equivalent to T2 above and
          representing any previous chain short-circuits, and it will
@@ -4525,7 +4531,7 @@ module Make
          already filtered out the nullish case on `a`. The receiver instead
          should be {b?: () => number} (not optional). The bind_t parameter is
          (if present) the receiver of the method call, and is included in the
-         OptionalChainT; see the rules in flow_js for how it's used, but
+         OptionalChain.run; see the rules in flow_js for how it's used, but
          essentially the successfully filtered receiver of the function call
          is flowed into it, and it is used as the `this`-parameter of the
          calltype that the method call will flow into.
@@ -4543,17 +4549,13 @@ module Make
         else
           Some voided_out_collector
       in
-      Flow.flow
+      OptionalChain.run
         cx
-        ( chain_t,
-          OptionalChainT
-            {
-              reason = chain_reason;
-              lhs_reason;
-              t_out = apply_opt_use opt_use mem_tvar;
-              voided_out_collector = chain_voided_out_collector;
-            }
-        );
+        chain_t
+        ~reason:chain_reason
+        ~lhs_reason
+        ~upper:(apply_opt_use opt_use mem_tvar)
+        ~voided_out_collector:chain_voided_out_collector;
       let mem_t = OpenT mem_tvar in
       let voided_out =
         normalize_voided_out (TypeCollector.collect voided_out_collector |> union_of_ts reason)
@@ -4939,7 +4941,7 @@ module Make
                   let voided_out_collector = TypeCollector.create () in
                   let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
                   Flow.unify cx f prop_t;
-                  let call_t =
+                  let () =
                     match opt_state with
                     | AssertChain
                     | NewChain ->
@@ -4950,30 +4952,34 @@ module Make
                           (mk_reason (RCustom "!") loc, None)
                       in
                       let lhs_reason = mk_expression_reason callee in
-                      OptionalChainT
-                        {
-                          reason = chain_reason;
-                          lhs_reason;
-                          t_out =
-                            CallT
-                              {
-                                use_op;
-                                reason = reason_call;
-                                call_action = Funcalltype app;
-                                return_hint = Type_env.get_hint cx loc;
-                              };
-                          voided_out_collector = voided_out_collector_opt;
-                        }
+                      OptionalChain.run
+                        cx
+                        f
+                        ~reason:chain_reason
+                        ~lhs_reason
+                        ~upper:
+                          (CallT
+                             {
+                               use_op;
+                               reason = reason_call;
+                               call_action = Funcalltype app;
+                               return_hint = Type_env.get_hint cx loc;
+                             }
+                          )
+                        ~voided_out_collector:voided_out_collector_opt
                     | _ ->
-                      CallT
-                        {
-                          use_op;
-                          reason = reason_call;
-                          call_action = Funcalltype app;
-                          return_hint = Type_env.get_hint cx loc;
-                        }
+                      Flow.flow
+                        cx
+                        ( f,
+                          CallT
+                            {
+                              use_op;
+                              reason = reason_call;
+                              call_action = Funcalltype app;
+                              return_hint = Type_env.get_hint cx loc;
+                            }
+                        )
                   in
-                  Flow.flow cx (f, call_t);
                   TypeCollector.iter voided_out_collector ~f:(fun void_t ->
                       Flow.flow_t cx (void_t, OpenT t)
                   )
@@ -5562,7 +5568,7 @@ module Make
       cx ?(optional = NonOptional) ~make_op ~t ~lhs_loc ~lhs_prop_reason ~reconstruct_ast ~mode lhs
       =
     let open Ast.Expression in
-    let maybe_chain lhs_reason use_t =
+    let run_maybe_optional_chain lhs lhs_reason use_t =
       match (optional, mode) with
       | ((NewChain | AssertChain), Delete) ->
         let reason =
@@ -5581,8 +5587,8 @@ module Make
            So if a is null, no work has to be done. Hence, we don't collect
            the nullable output for the optional chain.
         *)
-        OptionalChainT { reason; lhs_reason; t_out = use_t; voided_out_collector = None }
-      | _ -> use_t
+        OptionalChain.run cx lhs ~reason ~lhs_reason ~upper:use_t ~voided_out_collector:None
+      | _ -> Flow.flow cx (lhs, use_t)
     in
     let typecheck_object obj =
       (* If we're deleting a member expression, it's allowed to be an optional chain, and we
@@ -5662,14 +5668,12 @@ module Make
             let use_op =
               make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
             in
-            let upper =
-              maybe_chain
-                lhs_reason
-                (SetPrivatePropT
-                   (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
-                )
-            in
-            Flow.flow cx (o, upper)
+            run_maybe_optional_chain
+              o
+              lhs_reason
+              (SetPrivatePropT
+                 (use_op, reason, name, mode, class_entries, false, wr_ctx, t, Some prop_t)
+              )
         )
       in
       ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments } prop_t)
@@ -5695,21 +5699,19 @@ module Make
             let use_op =
               make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) prop_loc)
             in
-            let upper =
-              maybe_chain
-                lhs_reason
-                (SetPropT
-                   ( use_op,
-                     reason,
-                     mk_named_prop ~reason:prop_reason prop_name,
-                     mode,
-                     wr_ctx,
-                     t,
-                     Some prop_t
-                   )
-                )
-            in
-            Flow.flow cx (o, upper)
+            run_maybe_optional_chain
+              o
+              lhs_reason
+              (SetPropT
+                 ( use_op,
+                   reason,
+                   mk_named_prop ~reason:prop_reason prop_name,
+                   mode,
+                   wr_ctx,
+                   t,
+                   Some prop_t
+                 )
+              )
         )
       in
       let lhs_t =
@@ -5734,8 +5736,7 @@ module Make
       let (o, _object) = typecheck_object _object in
       let (((_, i), _) as index) = expression ~encl_ctx:IndexContext cx index in
       let use_op = make_op ~lhs:reason ~prop:(mk_reason (desc_of_reason lhs_prop_reason) iloc) in
-      let upper = maybe_chain lhs_reason (SetElemT (use_op, reason, i, mode, t, None)) in
-      Flow.flow cx (o, upper);
+      run_maybe_optional_chain o lhs_reason (SetElemT (use_op, reason, i, mode, t, None));
 
       (* types involved in the assignment itself are computed
          in pre-havoc environment. it's the assignment itself

@@ -754,12 +754,6 @@ module rec TypeTerm : sig
         seen: ISet.t ref;
         collector: TypeCollector.t;
       }
-    | OptionalChainT of {
-        reason: reason;
-        lhs_reason: reason;
-        t_out: use_t;
-        voided_out_collector: TypeCollector.t option;
-      }
     (* Spread elements show up in a bunch of places: array literals, function
      * parameters, function call arguments, method arguments. constructor
      * arguments, etc. Often we have logic that depends on what the spread
@@ -1647,6 +1641,7 @@ module rec TypeTerm : sig
    * respective catch-all cases appears in flow_js.ml. *)
   and concretization_kind =
     | ConcretizeForCJSExtractNamedExportsAndTypeExports
+    | ConcretizeForOptionalChain
     | ConcretizeForImportsExports
     | ConcretizeForInspection
     | ConcretizeForPredicate of predicate_concretizer_variant
@@ -4171,6 +4166,7 @@ let string_of_use_ctor = function
       | ConcretizeForImportsExports -> "ConcretizeForImportsExports"
       | ConcretizeForCJSExtractNamedExportsAndTypeExports ->
         "ConcretizeForCJSExtractNamedExportsAndTypeExports"
+      | ConcretizeForOptionalChain -> "ConcretizeForOptionalChain"
       | ConcretizeForInspection -> "ConcretizeForInspection"
       | ConcretizeForPredicate v ->
         "ConcretizeForPredicate(" ^ string_of_predicate_concretizer_variant v ^ ")"
@@ -4188,7 +4184,6 @@ let string_of_use_ctor = function
   | ObjRestT _ -> "ObjRestT"
   | ObjTestProtoT _ -> "ObjTestProtoT"
   | ObjTestT _ -> "ObjTestT"
-  | OptionalChainT _ -> "OptionalChainT"
   | ReactKitT _ -> "ReactKitT"
   | ReposLowerT _ -> "ReposLowerT"
   | ReposUseT _ -> "ReposUseT"

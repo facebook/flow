@@ -156,7 +156,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     resolve t
   | ReactKitT (_, _, tool) -> resolve_react_tool tool
   | ConcretizeT _ -> _TODO
-  | OptionalChainT { t_out; _ } -> default_resolve_touts ~flow cx loc t_out
   | ResolveSpreadT (_, _, { rrt_resolve_to; _ }) -> resolve_spread_resolve rrt_resolve_to
   | CondT (_, _, _, t) -> resolve t
   | ExtendsUseT _ -> ()

@@ -72,7 +72,6 @@ and reason_of_use_t = function
   | ObjRestT (reason, _, _, _) -> reason
   | ObjTestProtoT (reason, _) -> reason
   | ObjTestT (reason, _, _) -> reason
-  | OptionalChainT { reason; _ } -> reason
   | OptionalIndexedAccessT { reason; _ } -> reason
   | PrivateMethodT (_, reason, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
@@ -290,7 +289,6 @@ let rec util_use_op_of_use_t :
   | ObjTestT (_, _, _)
   | GetValuesT (_, _)
   | ConcretizeT _
-  | OptionalChainT _
   | CondT (_, _, _, _)
   | DestructuringT _
   | ResolveUnionT _

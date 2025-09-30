@@ -101,6 +101,8 @@ val get_builtin_react_typeapp :
 val mk_instance :
   Context.t -> ?type_t_kind:Type.type_t_kind -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
+val possible_concrete_types_for_optional_chain : Context.t -> Reason.reason -> Type.t -> Type.t list
+
 val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val possible_concrete_types_for_imports_exports :

@@ -6,7 +6,13 @@
  *)
 
 val try_custom :
-  Context.t -> ?use_op:Type.use_op -> no_match_error_loc:ALoc.t -> (unit -> unit) list -> unit
+  Context.t ->
+  ?use_op:Type.use_op ->
+  ?use_t:Type.use_t ->
+  ?default_resolve:(unit -> unit) ->
+  no_match_error_loc:ALoc.t ->
+  (unit -> unit) list ->
+  unit
 
 val is_flow_successful : Context.t -> Type.t -> Type.use_t -> bool
 
