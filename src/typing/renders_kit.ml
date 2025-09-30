@@ -122,8 +122,9 @@ module Make (Flow : INPUT) : S = struct
         trace
         ~use_op:(Frame (RendersCompatibility, use_op))
         (reconstruct_render_type reasonl l, t)
-    | ( StructuralRenders
-          { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ },
+    | ( ( StructuralRenders
+            { renders_variant = RendersMaybe | RendersStar; renders_structural_type = _ }
+        | DefaultRenders ),
         NominalRenders _
       ) ->
       Flow_js_utils.add_output
@@ -183,17 +184,6 @@ module Make (Flow : INPUT) : S = struct
         DefaultRenders
       ) ->
       ()
-    | (DefaultRenders, _) ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EIncompatibleWithUseOp
-           {
-             reason_lower = reasonl;
-             reason_upper = reasonu;
-             use_op = Frame (RendersCompatibility, use_op);
-             explanation = None;
-           }
-        )
 
   let possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq) =
     let on_concretized_types ts =
